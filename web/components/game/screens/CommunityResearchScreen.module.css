@@ -1,0 +1,11 @@
+.shell { display: flex; flex-direction: column; gap: 14px; padding: 16px; max-width: 640px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.eyebrow { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ln-world-trim-blue); }
+.title { margin: 0; font: 800 28px var(--ln-font-display); color: var(--ln-world-outline); }
+.back { min-height: 44px; min-width: 44px; padding: 0 16px; border: 2px solid var(--ln-world-outline); border-radius: 8px; background: var(--ln-world-hull-lit); color: var(--ln-world-outline); font: 800 14px var(--ln-font-display); text-transform: uppercase; }
+.event { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 2px solid var(--ln-world-outline); border-radius: 14px; background: linear-gradient(var(--ln-world-hull-lit), var(--ln-world-hull)); color: var(--ln-world-outline); }
+.live { font: 800 14px var(--ln-font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ln-world-trim-blue); }
+.eventTitle { margin: 0; font: 800 22px var(--ln-font-display); }
+.note { margin: 0; font: 600 14px/1.4 var(--ln-font-body); }
+.mine { font: 800 14px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.cta { min-height: 44px; padding: 0 16px; border: 2px solid var(--ln-world-outline); border-radius: 8px; background: var(--ln-world-trim-blue); color: #fff; font: 800 14px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }

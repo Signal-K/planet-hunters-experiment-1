@@ -259,6 +259,14 @@
    "tickets": []
   },
   {
+   "id": "community-research",
+   "name": "Community research",
+   "flow": "records",
+   "web": "ui-community-research",
+   "native": null,
+   "tickets": ["SSL-691"]
+  },
+  {
    "id": "market",
    "name": "Market",
    "flow": "progression",

@@ -52,7 +52,7 @@
     "menu": {
       "description": "Reference, selection and record surfaces; cards are allowed here.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["intro", "mission-history", "missions", "narrative-ledger", "skills", "targets"]
+      "routes": ["intro", "mission-history", "missions", "narrative-ledger", "community-research", "skills", "targets"]
     }
   },
   "objectContract": {

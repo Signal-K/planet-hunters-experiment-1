@@ -14,6 +14,7 @@ import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { BaseDock } from '@/components/game/hub/BaseDock'
+import { liveEventWeek } from '@/lib/research/event-week'
 import { BaseMenuSheet, type BaseMenuItem } from '@/components/game/hub/BaseMenuSheet'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useBaseCamera } from '@/lib/hooks/useBaseCamera'
@@ -394,6 +395,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     || player.deepSpaceTelescopeBuilt
     || !!player.deepSpaceTelescopeLaunchedAt
     || !!player.saturnImagerLaunchedAt
+  const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
@@ -403,6 +405,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         ? [{ id: 'control-station', icon: 'station' as const, label: hasControlStation ? 'Control station' : 'Instruments', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
         : []
     ),
+    { id: 'community-research', icon: 'research', label: 'Community research', detail: liveSkyEvent ? `${liveSkyEvent.name} week, shared with every player` : 'Daily stamps and the shared monthly goal', onSelect: () => onOpenScene('community-research') },
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     { id: 'ledger', icon: 'log', label: 'Narrative ledger', detail: 'What is live, adapting and planned', onSelect: () => onOpenScene('narrative-ledger') },
     { id: 'friends', icon: 'friends', label: 'Friends', detail: 'Callsign, requests, gifts and visits', onSelect: openFriends },

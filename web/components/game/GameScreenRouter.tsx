@@ -43,6 +43,7 @@ const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/Tess
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
+const CommunityResearchScreen = dynamic(() => import('@/components/game/screens/CommunityResearchScreen'), { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
@@ -104,7 +105,7 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market', game.setPlayer)
+  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market' || screen === 'community-research', game.setPlayer)
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -522,6 +523,19 @@ function ScreenBody({
           onChooseMission={() => game.goToMissions()}
           onBuildRocket={game.onPurchaseRocket}
           onBack={onBackFromHangar ?? game.returnFromHangar}
+        />
+      )
+
+    case 'community-research':
+      return (
+        <CommunityResearchScreen
+          player={game.player}
+          communityResearch={communityResearch}
+          onBack={() => game.goBack('hub')}
+          onOpenEvents={() => {
+            requestMissionBoardEvent('orionids-2026')
+            game.goToMissions()
+          }}
         />
       )
 

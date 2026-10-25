@@ -531,6 +531,48 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "community-research",
+      "type": "menu",
+      "route": "community-research",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/CommunityResearchScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "event-week",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "The live meteor shower week with the player's event stamps and a join button."
+        },
+        {
+          "id": "research-calendar",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Daily stamps, the streak and the shared community bar."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
+        }
+      ]
+    },
+    {
       "id": "debrief",
       "type": "travel",
       "route": "debrief",

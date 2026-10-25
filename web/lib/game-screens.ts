@@ -30,6 +30,7 @@ const SCREEN_LIST = {
   'instrument-hub': true,
   'mission-history': true,
   'narrative-ledger': true,
+  'community-research': true,
 } as const satisfies Record<Screen, true>
 
 export const GAME_SCREENS: readonly Screen[] = Object.keys(SCREEN_LIST) as Screen[]
