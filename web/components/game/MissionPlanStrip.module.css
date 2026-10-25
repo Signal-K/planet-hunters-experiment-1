@@ -15,7 +15,7 @@
 .slot strong { font-size: 14px; }
 .slot em { font-size: 14px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
 .slot:disabled { opacity: .6; }
-.primary { display: none; min-height: 48px; padding: 0 28px; color: var(--ln-blueprint-paper); font: 800 16px/1 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; background: var(--ln-blueprint-blue); border: 2px solid var(--ln-blueprint-ink); border-radius: 10px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent); cursor: pointer; }
+.primary { position: relative; z-index: 30; display: none; min-height: 48px; padding: 0 28px; color: var(--ln-blueprint-paper); font: 800 16px/1 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; background: var(--ln-blueprint-blue); border: 2px solid var(--ln-blueprint-ink); border-radius: 10px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent); cursor: pointer; }
 .primary:disabled { color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper-2); cursor: default; }
 .showerField { display: flex; align-items: center; gap: 12px; width: min(620px, 100%); padding: 8px 14px; color: var(--ln-world-outline); background: color-mix(in srgb, var(--ln-world-night-mid) 82%, var(--ln-world-hull-lit)); border: 1px solid var(--ln-world-accent); }
 .showerField svg { flex: 0 0 180px; width: 180px; height: 48px; fill: none; stroke: var(--ln-world-accent); stroke-width: 1.5; }
