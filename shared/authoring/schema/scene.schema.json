@@ -41,6 +41,11 @@
       "description": "Game checkpoints to show. These carry the campaign with them (tutorial, balance, prompts), so they are tucked away; presets are the way to look at a scene.",
       "items": { "$ref": "#/definitions/state" }
     },
+    "dials": {
+      "type": "object",
+      "description": "Pick-one or pick-any lists of things that only change a stage switch or one game-state value, such as time of day or weather. Each line becomes one thing per option, so a six-option dial is one line instead of six tables.",
+      "additionalProperties": { "$ref": "#/definitions/dial" }
+    },
     "things": {
       "type": "array",
       "description": "Everything that can be in this scene. Switch things on in the Studio to see them in the real game, then save the combination as a preset.",
@@ -107,6 +112,19 @@
         "label": { "type": "string", "description": "Text on the object, when it has any." },
         "status": { "enum": ["implemented", "proposed"], "description": "implemented: exists in the game. proposed: drawn in the Studio as a request for an agent to build." },
         "note": { "type": "string", "description": "Plain-language instruction for this object." }
+      }
+    },
+    "dial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["options"],
+      "properties": {
+        "label": { "type": "string", "description": "The heading the options are listed under. Defaults to the dial's name." },
+        "pick": { "enum": ["one", "any"], "description": "one: the options are choices. any: each can be switched on separately. Default one." },
+        "query": { "type": "string", "pattern": "^[a-z]+$", "description": "The stage switch each option sets, such as time or sky." },
+        "state": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9.]*$", "description": "Or a game-state path each option sets, such as player.earthBiome." },
+        "default": { "type": "string", "description": "The option that is on when the scene starts." },
+        "options": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*(=[a-z0-9,-]+)?$" }, "description": "Option ids. Write id=value when the value sent differs from the id, such as rocket-launch=launch." }
       }
     },
     "thing": {

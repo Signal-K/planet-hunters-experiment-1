@@ -1,55 +1,45 @@
 # Earth Base fixtures: the sample players and switches the Studio and the preview use. The scene script is scenes/hub.toml.
 # Not game content. A fixture says 'show the base as this player would see it'; the game's real state lives in the save.
+#
+# Start here:  [dials]  time, season, weather, landscape, sky events (one line each)
+#              [[presets]]  the named setups people open (3)
+#              [[things]]  structures, craft, instruments, overlays (switch on to see them)
+#              [[states]]  game checkpoints, tucked away
 
-# Game checkpoints: the base at points of a real playthrough. They carry the campaign with them (tutorial, balance,
-# prompts), so the Studio keeps them out of the way. To look at the base, use the things and presets below.
-[[states]]
-id = "first-pad"
-label = "First launchpad"
-preset = "m1-hub"
-note = "Launchpad built. The Extraction coach is active."
+# One line per list of options; each option becomes a thing (pick = "one" makes them choices).
+[dials]
+time = { label = "Time of day", query = "time", default = "midday", options = ["dawn", "morning", "midday", "afternoon", "dusk", "night"] }
+season = { label = "Season", query = "season", default = "summer", options = ["spring", "summer", "autumn", "winter"] }
+land = { label = "Landscape", state = "player.earthBiome", default = "mountains", options = ["mountains", "desert", "tundra", "coast"] }
+weather = { label = "Weather", query = "sky", default = "clear", options = ["clear", "cloudy", "windy", "rain", "storm", "fog"] }
+sky-events = { label = "Sky events", pick = "any", query = "sky", options = ["meteors", "rocket-launch=launch", "balloon", "satellite", "aurora", "comet", "eclipse", "venus"] }
 
-[[states]]
-id = "transport-lesson"
-label = "Transport lesson"
-preset = "transport-hub"
-note = "One mission done. The Transport coach asks for a two-leg client job."
+[[presets]]
+id = "fresh-base"
+name = "Fresh base"
+things = ["launchpad", "midday", "summer", "mountains", "clear"]
+instructions = """
+A new base: the pad and nothing else, on flat steppe with low escarpments. No people, no planet discs, nothing built that
+the player did not build. The camera starts centred on the pad. Tap the pad: it should answer.
+"""
 
-[[states]]
-id = "silo-next"
-label = "Silo next"
-preset = "storage-hub"
-note = "Both guided missions done. No silo yet and Free Ops is still locked."
+[[presets]]
+id = "full-base"
+name = "Full base"
+things = ["launchpad", "exchange", "silo", "control-station", "midday", "summer", "mountains", "clear"]
+instructions = """
+Every structure the base draws. Each one rests on the ground line with no gap, and each is tappable. The silo has no
+body above ground. Pan along the whole strip: nothing should pop in or tear.
+"""
 
-[[states]]
-id = "free-ops-telescope"
-label = "Free Ops and telescope"
-preset = "telescope-hub"
-note = "Post-onboarding. Free Ops is unlocked and a telescope is built."
-
-[[states]]
-id = "early"
-label = "About 15 minutes in"
-preset = "cp-early"
-
-[[states]]
-id = "mid"
-label = "About 35 minutes in"
-preset = "cp-mid"
-note = "Silo, academy and refinery built."
-
-[[states]]
-id = "late"
-label = "About 55 minutes in"
-preset = "cp-late"
-note = "Every building is built."
-
-# ---------------------------------------------------------------------------------------------------------------
-# Everything that can be on the base. Switch things on in the Studio (Things tab) to see them in the real game, then
-# save the combination as a preset. Tables merge, lists gain entries, anything else is replaced.
-# The base has four build plots (0 pad, 1 exchange, 2 silo, 3 ops), so the hangar cannot stand beside the control
-# station yet: that is why they are a choice.
-# ---------------------------------------------------------------------------------------------------------------
+[[presets]]
+id = "telescope-night"
+name = "Telescope at night"
+things = ["launchpad", "control-station", "telescope-in-orbit", "night", "summer", "mountains", "clear", "satellite"]
+instructions = """
+The base once the first telescope is in orbit. The orbital network should be readable over the base without covering the
+pad or the control station. Stars show; the moon is the only luminary.
+"""
 
 [[things]]
 id = "launchpad"
@@ -136,202 +126,6 @@ group = "Instruments"
 state = { player = { deepSpaceTelescopeBuilt = true, deepSpaceTelescopeLevel = 1, transitSatelliteLevel = 2 } }
 
 [[things]]
-id = "dawn"
-label = "Dawn"
-group = "Time of day"
-exclusive = "time"
-query = { time = "dawn" }
-
-[[things]]
-id = "morning"
-label = "Morning"
-group = "Time of day"
-exclusive = "time"
-query = { time = "morning" }
-
-[[things]]
-id = "midday"
-label = "Midday"
-group = "Time of day"
-exclusive = "time"
-default = true
-query = { time = "midday" }
-
-[[things]]
-id = "afternoon"
-label = "Afternoon"
-group = "Time of day"
-exclusive = "time"
-query = { time = "afternoon" }
-
-[[things]]
-id = "dusk"
-label = "Dusk"
-group = "Time of day"
-exclusive = "time"
-query = { time = "dusk" }
-
-[[things]]
-id = "night"
-label = "Night"
-group = "Time of day"
-exclusive = "time"
-query = { time = "night" }
-
-[[things]]
-id = "spring"
-label = "Spring"
-group = "Season"
-exclusive = "season"
-query = { season = "spring" }
-
-[[things]]
-id = "summer"
-label = "Summer"
-group = "Season"
-exclusive = "season"
-default = true
-query = { season = "summer" }
-
-[[things]]
-id = "autumn"
-label = "Autumn"
-group = "Season"
-exclusive = "season"
-query = { season = "autumn" }
-
-[[things]]
-id = "winter"
-label = "Winter"
-group = "Season"
-exclusive = "season"
-query = { season = "winter" }
-
-[[things]]
-id = "mountains"
-label = "Mountains"
-group = "Landscape"
-exclusive = "land"
-default = true
-state = { player = { earthBiome = "mountains" } }
-
-[[things]]
-id = "desert"
-label = "Desert"
-group = "Landscape"
-exclusive = "land"
-state = { player = { earthBiome = "desert" } }
-
-[[things]]
-id = "tundra"
-label = "Tundra"
-group = "Landscape"
-exclusive = "land"
-state = { player = { earthBiome = "tundra" } }
-
-[[things]]
-id = "coast"
-label = "Coast"
-group = "Landscape"
-exclusive = "land"
-state = { player = { earthBiome = "coast" } }
-
-[[things]]
-id = "clear"
-label = "Clear"
-group = "Weather"
-exclusive = "weather"
-default = true
-query = { sky = "clear" }
-
-[[things]]
-id = "cloudy"
-label = "Cloudy"
-group = "Weather"
-exclusive = "weather"
-query = { sky = "cloudy" }
-
-[[things]]
-id = "windy"
-label = "Windy"
-group = "Weather"
-exclusive = "weather"
-query = { sky = "windy" }
-
-[[things]]
-id = "rain"
-label = "Rain"
-group = "Weather"
-exclusive = "weather"
-query = { sky = "rain" }
-
-[[things]]
-id = "storm"
-label = "Storm"
-group = "Weather"
-exclusive = "weather"
-query = { sky = "storm" }
-
-[[things]]
-id = "fog"
-label = "Fog"
-group = "Weather"
-exclusive = "weather"
-query = { sky = "fog" }
-
-[[things]]
-id = "meteors"
-label = "Meteor shower"
-group = "Sky events"
-note = "Best at night."
-query = { sky = "meteors" }
-
-[[things]]
-id = "rocket-launch"
-label = "A rocket launching"
-group = "Sky events"
-query = { sky = "launch" }
-
-[[things]]
-id = "balloon"
-label = "Weather balloon"
-group = "Sky events"
-query = { sky = "balloon" }
-
-[[things]]
-id = "satellite"
-label = "Satellite pass"
-group = "Sky events"
-note = "Best at dusk or night."
-query = { sky = "satellite" }
-
-[[things]]
-id = "aurora"
-label = "Aurora"
-group = "Sky events"
-note = "Best at night, strongest on the tundra."
-query = { sky = "aurora" }
-
-[[things]]
-id = "comet"
-label = "Comet"
-group = "Sky events"
-query = { sky = "comet" }
-
-[[things]]
-id = "eclipse"
-label = "Eclipse"
-group = "Sky events"
-query = { sky = "eclipse" }
-
-[[things]]
-id = "venus"
-label = "Venus"
-group = "Sky events"
-note = "A planet is only a point of light. No planet discs."
-query = { sky = "venus" }
-
-[[things]]
 id = "orionids-banner"
 label = "Orionids banner"
 group = "Overlays"
@@ -355,29 +149,52 @@ query = { hud = "1" }
 # Presets: named setups with plain-language instructions. The agent treats the instructions as the test for the setup.
 # ---------------------------------------------------------------------------------------------------------------
 
-[[presets]]
-id = "fresh-base"
-name = "Fresh base"
-things = ["launchpad", "midday", "summer", "mountains", "clear"]
-instructions = """
-A new base: the pad and nothing else, on flat steppe with low escarpments. No people, no planet discs, nothing built that
-the player did not build. The camera starts centred on the pad. Tap the pad: it should answer.
-"""
+# Game checkpoints: the base at points of a real playthrough. They carry the campaign with them (tutorial, balance,
+# prompts), so the Studio keeps them out of the way. To look at the base, use the things and presets below.
+[[states]]
+id = "first-pad"
+label = "First launchpad"
+preset = "m1-hub"
+note = "Launchpad built. The Extraction coach is active."
 
-[[presets]]
-id = "full-base"
-name = "Full base"
-things = ["launchpad", "exchange", "silo", "control-station", "midday", "summer", "mountains", "clear"]
-instructions = """
-Every structure the base draws. Each one rests on the ground line with no gap, and each is tappable. The silo has no
-body above ground. Pan along the whole strip: nothing should pop in or tear.
-"""
+[[states]]
+id = "transport-lesson"
+label = "Transport lesson"
+preset = "transport-hub"
+note = "One mission done. The Transport coach asks for a two-leg client job."
 
-[[presets]]
-id = "telescope-night"
-name = "Telescope at night"
-things = ["launchpad", "control-station", "telescope-in-orbit", "night", "summer", "mountains", "clear", "satellite"]
-instructions = """
-The base once the first telescope is in orbit. The orbital network should be readable over the base without covering the
-pad or the control station. Stars show; the moon is the only luminary.
-"""
+[[states]]
+id = "silo-next"
+label = "Silo next"
+preset = "storage-hub"
+note = "Both guided missions done. No silo yet and Free Ops is still locked."
+
+[[states]]
+id = "free-ops-telescope"
+label = "Free Ops and telescope"
+preset = "telescope-hub"
+note = "Post-onboarding. Free Ops is unlocked and a telescope is built."
+
+[[states]]
+id = "early"
+label = "About 15 minutes in"
+preset = "cp-early"
+
+[[states]]
+id = "mid"
+label = "About 35 minutes in"
+preset = "cp-mid"
+note = "Silo, academy and refinery built."
+
+[[states]]
+id = "late"
+label = "About 55 minutes in"
+preset = "cp-late"
+note = "Every building is built."
+
+# ---------------------------------------------------------------------------------------------------------------
+# Everything that can be on the base. Switch things on in the Studio (Things tab) to see them in the real game, then
+# save the combination as a preset. Tables merge, lists gain entries, anything else is replaced.
+# The base has four build plots (0 pad, 1 exchange, 2 silo, 3 ops), so the hangar cannot stand beside the control
+# station yet: that is why they are a choice.
+# ---------------------------------------------------------------------------------------------------------------

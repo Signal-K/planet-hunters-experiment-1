@@ -7,6 +7,7 @@ import { compileAll } from './compile.ts'
 import { applyEdits } from './edit.ts'
 import { readFocus, writeFocus } from './focus.ts'
 import { FIXTURE_TABLES, fixturesFile, markerFor, readSceneText, remapDiagnostics, splitSceneText } from './fixtures-merge.ts'
+import { withDials } from './dials.ts'
 import { listScenes } from './scenes.ts'
 import type { CompileSummary, DataDocBundle, DocBundle, Fixture, FlowSummary, SceneBundle, StudioIndex, StudioResponse } from './studio-types.ts'
 import { AUTHORING_DIR, docKindOf, hasErrors, loadContext, loadSchema, validateDocument } from './validate.ts'
@@ -39,7 +40,7 @@ export function readDoc(root: string, file: string, context: AuthoringContext): 
   if (!existsSync(abs)) return { file, exists: false, text: '', hash: hashOf(''), value: null, diagnostics: [] }
   const text = readSceneText(root, file)
   const { doc, diagnostics } = validateDocument(text, file, context)
-  return { file, exists: true, text, hash: hashOf(text), value: doc?.value ?? null, diagnostics: remapDiagnostics(text, diagnostics) }
+  return { file, exists: true, text, hash: hashOf(text), value: doc && docKindOf(file) === 'scene' ? withDials(doc.value as unknown as SceneDoc) as unknown as Record<string, unknown> : doc?.value ?? null, diagnostics: remapDiagnostics(text, diagnostics) }
 }
 
 /** Cheap change detector: a hash of every file behind a bundle. The Studio polls with it and only refetches on change. */

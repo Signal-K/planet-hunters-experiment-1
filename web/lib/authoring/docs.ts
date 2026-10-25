@@ -89,6 +89,7 @@ export interface SceneDoc {
   runtime: { surface: 'canvas' | 'dom'; web?: string[]; native?: string[]; engine?: string[]; data?: string[] }
   preview: { route: string; state?: string }
   states?: SceneState[]
+  dials?: Record<string, import('./dials.ts').Dial>
   things?: Thing[]
   presets?: ScenePreset[]
   objects?: SceneObject[]

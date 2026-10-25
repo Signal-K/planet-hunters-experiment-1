@@ -2,6 +2,7 @@
 // can all point at the exact bytes. Schema checks come from shared/authoring/schema/; cross-reference rules live here
 // and only run once a document has passed its schema, so they can rely on the shapes in docs.ts.
 import { existsSync, readFileSync } from 'node:fs'
+import { withDials } from './dials.ts'
 import { readSceneText } from './fixtures-merge.ts'
 import { basename, join } from 'node:path'
 import { closest, validateSchema } from './schema.ts'
@@ -377,7 +378,7 @@ export function validateDocument(text: string, relPath: string, context: Authori
   if (!issues.length) {
     const scope = { relPath: file, context, report }
     // The schema has passed, so the document has exactly the shape docs.ts describes.
-    if (kind === 'scene') sceneRules({ ...scope, value: doc.value as unknown as SceneDoc })
+    if (kind === 'scene') sceneRules({ ...scope, value: withDials(doc.value as unknown as SceneDoc) })
     else if (kind === 'mission') missionRules({ ...scope, value: doc.value as unknown as MissionDoc })
     else if (kind === 'world') worldRules({ ...scope, value: doc.value as unknown as WorldDoc })
     else if (kind === 'flow') flowRules({ ...scope, value: doc.value as unknown as FlowDoc })
