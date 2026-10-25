@@ -76,12 +76,12 @@ final class LaunchScene: SKScene {
 
     /// Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
     private func buildGround() {
-        if let padImage = Art.image("base/v7/launchpad/pad-complex.png"),
-           let rocketImage = UIImage(named: "scene-launchpad-rocket-multistage") {
+        if let padImage = Art.image("base/v7/structures/launchpad.png"),
+           let rocketImage = Art.image("base/kit/pad-rocket.png") {
             usesAuthoredLaunchpad = true
             let padTexture = SKTexture(image: padImage)
             let pad = SKSpriteNode(texture: padTexture)
-            let scale = min(size.width * 0.96 / max(padTexture.size().width, 1), size.height * 0.72 / max(padTexture.size().height, 1))
+            let scale = min(size.width * 0.72 / max(padTexture.size().width, 1), size.height * 0.62 / max(padTexture.size().height, 1))
             pad.anchorPoint = CGPoint(x: 0.5, y: 0)
             pad.size = CGSize(width: padTexture.size().width * scale, height: padTexture.size().height * scale)
             pad.position = CGPoint(x: size.width / 2, y: padY)
@@ -90,14 +90,15 @@ final class LaunchScene: SKScene {
             authoredPad = pad
 
             let rocketTexture = SKTexture(image: rocketImage)
-            let frame = CGRect(x: 0.2308, y: 0.261, width: 0.1904, height: 0.647)
             let rocket = SKSpriteNode(texture: rocketTexture)
-            let rocketScale = frame.width * pad.size.width / max(rocketTexture.size().width, 1)
+            // Mirrors PixelStructure's shared mount: 44 kit pixels on a
+            // 112-unit launchpad, with its engine 17 units above the footing.
+            let rocketScale = (44.0 / 112.0) * pad.size.width / max(rocketTexture.size().width, 1)
             rocket.anchorPoint = CGPoint(x: 0.5, y: 0)
             rocket.size = CGSize(width: rocketTexture.size().width * rocketScale, height: rocketTexture.size().height * rocketScale)
             rocket.position = CGPoint(
-                x: pad.position.x - pad.size.width / 2 + (frame.minX + frame.width / 2) * pad.size.width,
-                y: pad.position.y + pad.size.height - (frame.minY + frame.height) * pad.size.height
+                x: pad.position.x - pad.size.width / 2 + (60.0 / 112.0) * pad.size.width,
+                y: pad.position.y + (17.0 / 136.48) * pad.size.height
             )
             rocket.zPosition = 4
             world.addChild(rocket)
