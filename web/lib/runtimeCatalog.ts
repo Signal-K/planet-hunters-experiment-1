@@ -99,7 +99,9 @@ export function buildRuntimeCatalog({
   const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
-  const shouldIncludeOrionidsTarget = missionId === ORIONIDS_NIGHT_RUN_ID || player?.orionidsEventStage === 0
+  const skyRead = player?.fireballSpotter?.passedAt != null
+  const shouldOfferOrionidsMission = freeOperations && player?.orionidsEventStage === 0 && skyRead
+  const shouldIncludeOrionidsTarget = missionId === ORIONIDS_NIGHT_RUN_ID || shouldOfferOrionidsMission || player?.orionidsEventStage === 0
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeOrionidsTarget && !existingTargetIds.has(ORIONIDS_SHOWER_TARGET.id) ? [ORIONIDS_SHOWER_TARGET] : []),
@@ -135,6 +137,9 @@ export function buildRuntimeCatalog({
     ? catalog.missions
     : [...catalog.missions, fallbackSelfDirectedMining]
   if (missionId === ORIONIDS_NIGHT_RUN_ID && !relationshipMissions.some(mission => mission.id === ORIONIDS_NIGHT_RUN_ID)) {
+    relationshipMissions = [...relationshipMissions, orionidsNightRun()]
+  }
+  if (shouldOfferOrionidsMission && !relationshipMissions.some(mission => mission.id === ORIONIDS_NIGHT_RUN_ID)) {
     relationshipMissions = [...relationshipMissions, orionidsNightRun()]
   }
   if (player?.orionidsEventStage === 1 && !relationshipMissions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {

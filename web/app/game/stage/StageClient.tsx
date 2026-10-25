@@ -15,6 +15,7 @@ import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
+import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 
 // In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
 // `?hud=1` brings them back for a look at how the chrome sits over the scene.
@@ -59,7 +60,24 @@ function Stage() {
   useEffect(() => {
     if (!game.hydrated || patched.current) return
     patched.current = true
-    const raw = new URLSearchParams(window.location.search).get('patch')
+    const params = new URLSearchParams(window.location.search)
+    const flowCheck = params.get('t') === 'orionids-flow-check' || params.get('preset') === 'ui-orionids-ready'
+    const raw = params.get('patch')
+    if (flowCheck) {
+      // The followable Orionids check starts after the field guide. It remains
+      // a preview-only patch, so a clean campaign or saved account is untouched.
+      game.setPlayer(player => ({
+        ...player,
+        missionsDone: Math.max(player.missionsDone, 3),
+        freeOperations: true,
+        fireballSpotter: { readAt: 1, passedAt: 1 },
+        orionidsEventStage: 0,
+      }))
+      requestMissionBoardEvent('orionids-2026')
+      game.setMissionId(null)
+      game.setTargetId(null)
+      game.setScreenFromUrl('missions')
+    }
     if (!raw) return
     try {
       const patch = JSON.parse(raw)

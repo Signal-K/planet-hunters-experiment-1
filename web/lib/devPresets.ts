@@ -160,6 +160,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
       { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
+      { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -482,6 +483,22 @@ function fixture(name: string): Partial<GameState> | null {
       // Shower run done (event stage 1): the Events board offers the rover surface observation.
       { const board = fixture('ui-mission-board')!
       return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 }, badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: Date.UTC(2026, 9, 23) } } } } }
+    case 'ui-orionids-ready':
+      return {
+        screen: 'missions',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          fireballSpotter: { readAt: 1, passedAt: 1 },
+          orionidsEventStage: 0,
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
     case 'ui-mission-board':
       return {
         screen: 'missions',

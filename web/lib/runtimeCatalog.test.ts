@@ -41,6 +41,17 @@ describe('buildRuntimeCatalog', () => {
     })
     expect(complete.missions.some(mission => mission.id === 'self-directed-orionids-surface-research')).toBe(false)
   })
+
+  it('offers the Orionids shower mission after the field guide is complete', () => {
+    const ready = buildRuntimeCatalog({
+      catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
+      freeOperations: true,
+      missionsDone: 3,
+      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 0, fireballSpotter: { readAt: 1, passedAt: 1 } },
+    })
+    expect(ready.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
+    expect(ready.targets.find(target => target.id === 'orionids-shower-field')?.name).toBe('Orionids shower field')
+  })
   it('adds a stored-haul mission for missing construction focus materials', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
