@@ -349,6 +349,8 @@ export interface Player {
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event')[]>
   /** End of the community research bonus week (SSL-673), from `/api/community/research`. Exchange sales pay +3% before it. */
   researchBonusUntil?: number
+  /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
+  researchPath?: { week: string; path: 'explorer' | 'trader' }
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>
