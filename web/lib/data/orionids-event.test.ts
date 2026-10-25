@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
-import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, generateSelfDirectedMiningPool, orionidsSurfaceResearchMission } from './missions'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, generateSelfDirectedMiningPool, orionidsSurfaceResearchMission } from './missions'
 import { isDebrisEventActive } from './sky-events'
 import { isFreeHaulEligibleMission, isFreeHaulMission } from './mission-primers'
 import { localSkyEventWindow } from './sky-event-window'
@@ -38,13 +38,13 @@ describe('SSL-578 Orionids event', () => {
     expect(generateSelfDirectedMiningPool(local(10, 14, 12)).some(m => m.id === ORIONIDS_NIGHT_RUN_ID)).toBe(false)
     const run = generateSelfDirectedMiningPool(local(10, 20, 12)).find(m => m.id === ORIONIDS_NIGHT_RUN_ID)
     expect(run?.client).toBeUndefined()
-    expect(run?.requires.minerals).toEqual({ orionid_debris: ORIONIDS_FRAGMENT_GOAL })
-    expect(run?.targetId).toBe('eros')
+    expect(run?.requires.minerals).toEqual({})
+    expect(run?.targetId).toBe(ORIONIDS_SHOWER_TARGET_ID)
     expect(run?.requires.cargo_min).toBe(0)
     expect(run && isFreeHaulEligibleMission(run)).toBe(false)
     expect(run && isFreeHaulMission(run, { orionid_debris: ORIONIDS_FRAGMENT_GOAL })).toBe(false)
     expect(run?.title).toBe('Orionids shower run')
-    expect(run?.brief).toContain('Launch through the shower')
+    expect(run?.brief).toContain("Orion's pattern")
     expect(run?.payout.francs).toBeGreaterThan(0)
   })
 

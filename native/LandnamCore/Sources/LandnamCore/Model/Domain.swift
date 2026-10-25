@@ -53,7 +53,7 @@ public struct RocketModel: Equatable, Sendable {
     public let unlockHint: String
 }
 
-public enum TargetType: String, Codable, Sendable { case planet, asteroid, exoplanet }
+public enum TargetType: String, Codable, Sendable { case planet, asteroid, exoplanet, eventField = "event-field" }
 public enum TargetArchetype: String, Codable, Sendable { case C, S, M, icy, gasGiant = "gas-giant" }
 
 public struct Target: Codable, Equatable, Identifiable, Sendable {

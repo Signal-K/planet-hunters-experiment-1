@@ -95,10 +95,10 @@ public enum OrionidsRun {
         let price = Double(Minerals.byId["orionid_debris"]?.price ?? 0)
         return Mission(
             id: missionId, title: "Orionids shower run",
-            brief: "No client. Launch through the shower and catch \(fragmentGoal) Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double.",
+            brief: "No client. Fly into the Orionids pattern, catch \(fragmentGoal) fragments, and mine any minerals you want along the way. Peak night pays double.",
             client: nil, tag: "FREE OPS", difficulty: "L1", locked: false, sequence: MissionGenerator.freeOpsMissionSequence,
-            unlockAt: "Reach Free Operations", targetId: "eros",
-            requires: MissionRequirements(minerals: ["orionid_debris": fragmentGoal], cargoMin: 0, drillTier: 1, maxOrbit: 5),
+            unlockAt: "Reach Free Operations", targetId: "orionids-shower-field",
+            requires: MissionRequirements(minerals: [:], cargoMin: 0, drillTier: 1, maxOrbit: 2),
             payout: MissionPayout(francs: MissionGenerator.normalizePayout(raw: price * Double(fragmentGoal), sequence: MissionGenerator.freeOpsMissionSequence), affinity: 0))
     }
 

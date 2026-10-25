@@ -19,7 +19,8 @@ describe('buildRuntimeCatalog', () => {
       missionsDone: 0,
     })
 
-    expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('eros')
+    expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
+    expect(catalog.targets.find(target => target.id === 'orionids-shower-field')?.type).toBe('event-field')
   })
   it('offers the next Orionids tier only after debris capture', () => {
     const next = buildRuntimeCatalog({

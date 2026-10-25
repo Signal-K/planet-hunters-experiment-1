@@ -132,7 +132,7 @@ export interface Mission {
 export interface Target {
   id: string
   name: string
-  type: 'planet' | 'asteroid' | 'exoplanet'
+  type: 'planet' | 'asteroid' | 'exoplanet' | 'event-field'
   orbit: number
   difficulty: string
   brief: string

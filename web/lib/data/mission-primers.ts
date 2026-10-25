@@ -135,6 +135,15 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
     }
   }
 
+  if (isOrionidsEventMission(mission)) {
+    return {
+      label: 'Orionids shower run',
+      summary: 'Fly into the Orionids pattern, catch the required fragments, and mine any minerals you want along the way.',
+      steps: ['Launch', 'Catch fragments', 'Mine freely', 'Return'],
+      owner,
+    }
+  }
+
   if (mission.payload?.type === 'rover') {
     return {
       label: 'Rover drop',

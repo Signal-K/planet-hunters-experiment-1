@@ -37,6 +37,9 @@ public enum Targets {
     }
 
     public static let all: [Target] = [
+        Target(id: "orionids-shower-field", name: "Orionids shower field", type: .eventField, orbit: 2, difficulty: "L1",
+               brief: "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids.",
+               minerals: ["iron", "silicon", "ice", "carbon", "nickel", "cobalt", "copper", "aluminium", "hydrogen", "uranium", "platinum", "palladium", "iridium", "rhodium", "gold", "rare"], archetype: nil),
         landmark("mercury", "Mercury", .planet, 1, "L2", "Scorched inner planet, rich in iron and trace silicates.", .S),
         landmark("venus", "Venus", .planet, 2, "L3", "High-pressure surface. The assigned program site remains unavailable until pressure-rated construction equipment is fitted.", .S),
         landmark("mars", "Mars", .planet, 4, "L1", "Iron-rich rusty plains, well-mapped, starter-friendly.", .S, recommended: true),

@@ -260,7 +260,7 @@ export function eventsBoard(
     status,
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
-    blurb: 'Launch through the shower and catch fragments on the way up. They fall any time in the window.',
+    blurb: "Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.",
     actionLabel: orionidsEventStage === 1 ? 'Continue research' : eventActionLabel(status),
     rewardLabel: orionidsEventStage === 1 ? 'Tier 2 · surface observation ready' : eventRewardLabel(status, earned),
   }

@@ -15,6 +15,12 @@
 .slot strong { font-size: 14px; }
 .slot em { font-size: 14px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
 .slot:disabled { opacity: .6; }
+.showerField { display: flex; align-items: center; gap: 12px; width: min(620px, 100%); padding: 8px 14px; color: var(--ln-world-outline); background: color-mix(in srgb, var(--ln-world-night-mid) 82%, var(--ln-world-hull-lit)); border: 1px solid var(--ln-world-accent); }
+.showerField svg { flex: 0 0 180px; width: 180px; height: 48px; fill: none; stroke: var(--ln-world-accent); stroke-width: 1.5; }
+.showerField circle { fill: var(--ln-world-accent); stroke: var(--ln-world-hull-lit); stroke-width: 2; }
+.showerField span { display: grid; gap: 2px; min-width: 0; }
+.showerField b { font: 800 14px var(--ln-font-display); letter-spacing: .1em; }
+.showerField small { font-size: 14px; line-height: 1.2; }
 .hold { margin: 0; padding: 4px 16px; font-size: 14px; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
 .link { min-height: 44px; padding: 0 8px; color: inherit; font: inherit; font-weight: 800; text-decoration: underline; background: none; border: 0; cursor: pointer; }
 .sheet { position: fixed; z-index: 60; box-sizing: border-box; left: 0; right: 0; bottom: 0; max-height: 60vh; overflow: auto; padding: 16px; background: var(--ln-world-hull-lit); border-top: 2px solid var(--ln-world-outline); pointer-events: auto; }
@@ -31,6 +37,7 @@
 .sheetHead button { min-height: 44px; padding: 0 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
 @media (orientation: landscape) and (max-height: 520px) { .host { top: 4px; left: 64px; right: 64px; } .rail { display: none; } .sheet { left: 25%; right: 25%; max-height: 80vh; } }
 @media (max-width: 720px) { .sheet li button { gap: 8px; padding: 8px; } .vehicleOptionArt { flex-basis: 72px; width: 72px; height: 42px; } .vehicleOptionStats { display: none; } .vehicleOptionAction { min-width: 86px; font-size: 11px; } }
+@media (max-width: 520px) { .showerField { align-items: flex-start; } .showerField svg { flex-basis: 112px; width: 112px; } }
 
 /* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
 @media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 12px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }

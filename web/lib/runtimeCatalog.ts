@@ -3,7 +3,7 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } 
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun, orionidsSurfaceResearchMission } from './data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun, orionidsSurfaceResearchMission } from './data/missions'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -50,6 +50,24 @@ export const SATURN_IMAGER_TARGET: Target = {
   minerals: [],
 }
 
+export const ORIONIDS_SHOWER_TARGET: Target = {
+  id: ORIONIDS_SHOWER_TARGET_ID,
+  name: 'Orionids shower field',
+  type: 'event-field',
+  orbit: 2,
+  difficulty: 'L1',
+  brief: "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids.",
+  minerals: Object.keys(catalogMineralIds()),
+}
+
+function catalogMineralIds(): Record<string, true> {
+  return {
+    iron: true, silicon: true, ice: true, carbon: true, nickel: true,
+    cobalt: true, copper: true, aluminium: true, hydrogen: true, uranium: true,
+    platinum: true, palladium: true, iridium: true, rhodium: true, gold: true, rare: true,
+  }
+}
+
 interface RuntimeCatalogOpts {
   catalog: Catalog
   discoveredTargets?: Record<string, Target>
@@ -81,8 +99,10 @@ export function buildRuntimeCatalog({
   const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
+  const shouldIncludeOrionidsTarget = missionId === ORIONIDS_NIGHT_RUN_ID || player?.orionidsEventStage === 0
   const mergedTargets = [
     ...catalog.targets,
+    ...(shouldIncludeOrionidsTarget && !existingTargetIds.has(ORIONIDS_SHOWER_TARGET.id) ? [ORIONIDS_SHOWER_TARGET] : []),
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...(shouldIncludeSaturnImagerMission && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
@@ -23,7 +23,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   const { mission, target, player } = game
   const autoStaged = useRef(false)
   // A new player has one free vehicle and no staged rocket: stage it, so the pad shows a rocket and Launch is ready.
-  const freeStart = !!mission && !!target && !player.stagedRockets?.length
+  const freeStart = !!mission && !!target && !player.stagedRockets?.length && !isOrionidsEventMission(mission)
   useEffect(() => {
     if (!freeStart || autoStaged.current || !mission || !target) return
     const free = ROCKET_MODELS.filter(model => !model.locked && model.costFrancs === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
@@ -62,8 +62,17 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
         <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
-        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{minerals.join(', ') || 'None'}</strong></div>
+        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{isOrionidsEventMission(mission) ? 'Fragments + any minerals' : (minerals.join(', ') || 'None')}</strong></div>
       </div>
+      {isOrionidsEventMission(mission) && (
+        <div className={styles.showerField} data-testid="orionids-shower-field" aria-label="Anonymous meteor points arranged in Orion's pattern">
+          <svg viewBox="0 0 280 72" role="img" aria-label="Orionids shower points arranged like Orion">
+            <path d="M42 19 86 34 126 18 166 35 211 20M86 34 92 58 126 18 149 57 166 35 196 59" />
+            {[[42, 19], [86, 34], [126, 18], [166, 35], [211, 20], [92, 58], [149, 57], [196, 59]].map(([cx, cy], index) => <circle key={index} cx={cx} cy={cy} r="5" />)}
+          </svg>
+          <span><b>ORIONIDS SHOWER FIELD</b><small>Anonymous meteor points follow Orion's pattern. Catch fragments; mine anything else you want.</small></span>
+        </div>
+      )}
       {noSilo && !launched && (
         <p className={styles.hold} data-testid="plan-no-silo" role="status">
           {activeEvent ? `${activeEvent.label.replace(' debris', '')} storage is free during the event. ` : 'No storage silo: ore you mine is sold when you land. '}

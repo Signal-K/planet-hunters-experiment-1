@@ -46,6 +46,7 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 export const ORIONIDS_SURFACE_RESEARCH_MISSION_ID = 'self-directed-orionids-surface-research'
+export const ORIONIDS_SHOWER_TARGET_ID = 'orionids-shower-field'
 
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
@@ -56,17 +57,16 @@ export function orionidsNightRun(): Mission {
   return {
     id: ORIONIDS_NIGHT_RUN_ID,
     title: 'Orionids shower run',
-    brief: `No client. Launch through the shower and catch ${amount} Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double. One fireball fragment falls at 02:00 on 22 Oct.`,
+    brief: `No client. Fly into the Orionids shower field and catch ${amount} fragments. The meteor points follow Orion's pattern, not a catalogue of named rocks. Mine any minerals you want while you are there. Peak night pays double.`,
     tag: 'FREE OPS',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
-    // The shower is collected during ascent; Eros supplies the ordinary
-    // starter-compatible mining leg so the run can use the normal loop.
-    targetId: 'eros',
-    // Event evidence is not an ordinary cargo haul. Do not ask the player to choose hydrogen or reserve hold space.
-    requires: { minerals: { orionid_debris: amount }, cargo_min: 0, drill_tier: 1, max_orbit: 5 },
+    targetId: ORIONIDS_SHOWER_TARGET_ID,
+    // Event evidence is the only required objective. Ordinary minerals are
+    // optional discoveries in the shower field, never a named-rock order.
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 2 },
     payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
   }
 }
