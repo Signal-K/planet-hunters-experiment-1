@@ -2,6 +2,7 @@
 // can all point at the exact bytes. Schema checks come from shared/authoring/schema/; cross-reference rules live here
 // and only run once a document has passed its schema, so they can rely on the shapes in docs.ts.
 import { existsSync, readFileSync } from 'node:fs'
+import { readSceneText } from './fixtures-merge.ts'
 import { basename, join } from 'node:path'
 import { closest, validateSchema } from './schema.ts'
 import type { Schema } from './schema.ts'
@@ -292,7 +293,7 @@ function isOwnAncestor(start: SceneObject, objects: SceneObject[], index: Map<st
 function readScene(context: AuthoringContext, id: string): { presets: string[] } | null {
   const file = join(context.root, AUTHORING_DIR, 'scenes', `${id}.toml`)
   if (!existsSync(file)) return null
-  const parsed = parseToml(readFileSync(file, 'utf8'))
+  const parsed = parseToml(readSceneText(context.root, `${AUTHORING_DIR}/scenes/${id}.toml`))
   if (!parsed.ok) return { presets: [] }
   const presets = (parsed.doc.value as { presets?: { id?: unknown }[] }).presets ?? []
   return { presets: presets.map(p => p.id).filter((id): id is string => typeof id === 'string') }

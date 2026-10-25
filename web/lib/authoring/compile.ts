@@ -2,6 +2,7 @@
 // CI and the Scene Studio's save, so what you see after saving is exactly what a build would produce.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { readSceneText, remapDiagnostics } from './fixtures-merge.ts'
 import { AUTHORING_DIR, docKindOf, hasErrors, loadContext, scrapePresetKeys, validateDocument } from './validate.ts'
 import type { AuthoringContext, DocKind, Diagnostic } from './validate.ts'
 import type { MissionDoc, SceneDoc, WorldDoc } from './docs.ts'
@@ -116,11 +117,12 @@ export function compileAll(options: CompileOptions): CompileResult {
   const context: AuthoringContext = loadContext(root, options.presets ?? scrapePresetKeys(root))
   const diagnostics: Diagnostic[] = [...(context.contractDiagnostics ?? [])]
   const valid = new Map<string, unknown>()
-  const readText = (relPath: string) => overlay[relPath] ?? readFileSync(join(root, relPath), 'utf8')
+  const readText = (relPath: string) => readSceneText(root, relPath, overlay)
 
   for (const { relPath } of listDocs(root)) {
-    const result = validateDocument(readText(relPath), relPath, context)
-    diagnostics.push(...result.diagnostics)
+    const text = readText(relPath)
+    const result = validateDocument(text, relPath, context)
+    diagnostics.push(...remapDiagnostics(text, result.diagnostics))
     if (result.doc && !hasErrors(result.diagnostics)) valid.set(relPath, result.doc.value)
   }
 

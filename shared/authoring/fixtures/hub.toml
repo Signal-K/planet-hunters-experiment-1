@@ -1,0 +1,383 @@
+# Earth Base fixtures: the sample players and switches the Studio and the preview use. The scene script is scenes/hub.toml.
+# Not game content. A fixture says 'show the base as this player would see it'; the game's real state lives in the save.
+
+# Game checkpoints: the base at points of a real playthrough. They carry the campaign with them (tutorial, balance,
+# prompts), so the Studio keeps them out of the way. To look at the base, use the things and presets below.
+[[states]]
+id = "first-pad"
+label = "First launchpad"
+preset = "m1-hub"
+note = "Launchpad built. The Extraction coach is active."
+
+[[states]]
+id = "transport-lesson"
+label = "Transport lesson"
+preset = "transport-hub"
+note = "One mission done. The Transport coach asks for a two-leg client job."
+
+[[states]]
+id = "silo-next"
+label = "Silo next"
+preset = "storage-hub"
+note = "Both guided missions done. No silo yet and Free Ops is still locked."
+
+[[states]]
+id = "free-ops-telescope"
+label = "Free Ops and telescope"
+preset = "telescope-hub"
+note = "Post-onboarding. Free Ops is unlocked and a telescope is built."
+
+[[states]]
+id = "early"
+label = "About 15 minutes in"
+preset = "cp-early"
+
+[[states]]
+id = "mid"
+label = "About 35 minutes in"
+preset = "cp-mid"
+note = "Silo, academy and refinery built."
+
+[[states]]
+id = "late"
+label = "About 55 minutes in"
+preset = "cp-late"
+note = "Every building is built."
+
+# ---------------------------------------------------------------------------------------------------------------
+# Everything that can be on the base. Switch things on in the Studio (Things tab) to see them in the real game, then
+# save the combination as a preset. Tables merge, lists gain entries, anything else is replaced.
+# The base has four build plots (0 pad, 1 exchange, 2 silo, 3 ops), so the hangar cannot stand beside the control
+# station yet: that is why they are a choice.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[things]]
+id = "launchpad"
+label = "Launchpad"
+group = "Structures"
+default = true
+state = { player = { placed = ["launchpad"], placementPlots = { launchpad = 0 } } }
+
+[[things]]
+id = "exchange"
+label = "Exchange"
+group = "Structures"
+note = "A real building on the base, not a menu item."
+state = { player = { placed = ["market"], placementPlots = { market = 1 } } }
+
+[[things]]
+id = "silo"
+label = "Silo"
+group = "Structures"
+note = "No body above ground. The lift shaft is the silo door."
+state = { player = { placed = ["surface-silo"], placementPlots = { surface-silo = 2 } } }
+
+[[things]]
+id = "control-station"
+label = "Control station"
+group = "Structures"
+exclusive = "plot-3"
+state = { player = { placed = ["control-station"], placementPlots = { control-station = 3 } } }
+
+[[things]]
+id = "hangar"
+label = "Hangar"
+group = "Structures"
+exclusive = "plot-3"
+note = "Shares the fourth plot with the control station."
+state = { player = { placed = ["hangar"], placementPlots = { hangar = 3 } } }
+
+[[things]]
+id = "pad-callout"
+label = "Prompt on the pad"
+group = "Structures"
+note = "The callout that suggests the next step. Off in the sandbox unless you bring it in."
+state = { player = { dismissedHubPrompts = { transit-telescope = 0 } } }
+
+[[things]]
+id = "rocket-on-pad"
+label = "Rocket on the pad"
+group = "Craft"
+exclusive = "craft"
+state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "launchpad", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } }
+
+[[things]]
+id = "rocket-in-hangar"
+label = "Rocket in the hangar"
+group = "Craft"
+exclusive = "craft"
+state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "explorer", rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" }, location = "hangar", source = "company", missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu" }] } }
+
+[[things]]
+id = "craft-in-flight"
+label = "Craft in flight"
+group = "Craft"
+exclusive = "craft"
+state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "transit", transitStartedAt = "@now-5m", arrivalAt = "@now+1h" } }
+
+[[things]]
+id = "craft-mining"
+label = "Craft mining"
+group = "Craft"
+exclusive = "craft"
+state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "mining" } }
+
+[[things]]
+id = "telescope-in-orbit"
+label = "Telescope in orbit"
+group = "Instruments"
+note = "Shows the orbital instrument network over the base."
+state = { player = { transitSatelliteLaunchedAt = "@now-1d", transitSatelliteLevel = 1 } }
+
+[[things]]
+id = "deep-space-telescope"
+label = "Deep-space telescope"
+group = "Instruments"
+state = { player = { deepSpaceTelescopeBuilt = true, deepSpaceTelescopeLevel = 1, transitSatelliteLevel = 2 } }
+
+[[things]]
+id = "dawn"
+label = "Dawn"
+group = "Time of day"
+exclusive = "time"
+query = { time = "dawn" }
+
+[[things]]
+id = "morning"
+label = "Morning"
+group = "Time of day"
+exclusive = "time"
+query = { time = "morning" }
+
+[[things]]
+id = "midday"
+label = "Midday"
+group = "Time of day"
+exclusive = "time"
+default = true
+query = { time = "midday" }
+
+[[things]]
+id = "afternoon"
+label = "Afternoon"
+group = "Time of day"
+exclusive = "time"
+query = { time = "afternoon" }
+
+[[things]]
+id = "dusk"
+label = "Dusk"
+group = "Time of day"
+exclusive = "time"
+query = { time = "dusk" }
+
+[[things]]
+id = "night"
+label = "Night"
+group = "Time of day"
+exclusive = "time"
+query = { time = "night" }
+
+[[things]]
+id = "spring"
+label = "Spring"
+group = "Season"
+exclusive = "season"
+query = { season = "spring" }
+
+[[things]]
+id = "summer"
+label = "Summer"
+group = "Season"
+exclusive = "season"
+default = true
+query = { season = "summer" }
+
+[[things]]
+id = "autumn"
+label = "Autumn"
+group = "Season"
+exclusive = "season"
+query = { season = "autumn" }
+
+[[things]]
+id = "winter"
+label = "Winter"
+group = "Season"
+exclusive = "season"
+query = { season = "winter" }
+
+[[things]]
+id = "mountains"
+label = "Mountains"
+group = "Landscape"
+exclusive = "land"
+default = true
+state = { player = { earthBiome = "mountains" } }
+
+[[things]]
+id = "desert"
+label = "Desert"
+group = "Landscape"
+exclusive = "land"
+state = { player = { earthBiome = "desert" } }
+
+[[things]]
+id = "tundra"
+label = "Tundra"
+group = "Landscape"
+exclusive = "land"
+state = { player = { earthBiome = "tundra" } }
+
+[[things]]
+id = "coast"
+label = "Coast"
+group = "Landscape"
+exclusive = "land"
+state = { player = { earthBiome = "coast" } }
+
+[[things]]
+id = "clear"
+label = "Clear"
+group = "Weather"
+exclusive = "weather"
+default = true
+query = { sky = "clear" }
+
+[[things]]
+id = "cloudy"
+label = "Cloudy"
+group = "Weather"
+exclusive = "weather"
+query = { sky = "cloudy" }
+
+[[things]]
+id = "windy"
+label = "Windy"
+group = "Weather"
+exclusive = "weather"
+query = { sky = "windy" }
+
+[[things]]
+id = "rain"
+label = "Rain"
+group = "Weather"
+exclusive = "weather"
+query = { sky = "rain" }
+
+[[things]]
+id = "storm"
+label = "Storm"
+group = "Weather"
+exclusive = "weather"
+query = { sky = "storm" }
+
+[[things]]
+id = "fog"
+label = "Fog"
+group = "Weather"
+exclusive = "weather"
+query = { sky = "fog" }
+
+[[things]]
+id = "meteors"
+label = "Meteor shower"
+group = "Sky events"
+note = "Best at night."
+query = { sky = "meteors" }
+
+[[things]]
+id = "rocket-launch"
+label = "A rocket launching"
+group = "Sky events"
+query = { sky = "launch" }
+
+[[things]]
+id = "balloon"
+label = "Weather balloon"
+group = "Sky events"
+query = { sky = "balloon" }
+
+[[things]]
+id = "satellite"
+label = "Satellite pass"
+group = "Sky events"
+note = "Best at dusk or night."
+query = { sky = "satellite" }
+
+[[things]]
+id = "aurora"
+label = "Aurora"
+group = "Sky events"
+note = "Best at night, strongest on the tundra."
+query = { sky = "aurora" }
+
+[[things]]
+id = "comet"
+label = "Comet"
+group = "Sky events"
+query = { sky = "comet" }
+
+[[things]]
+id = "eclipse"
+label = "Eclipse"
+group = "Sky events"
+query = { sky = "eclipse" }
+
+[[things]]
+id = "venus"
+label = "Venus"
+group = "Sky events"
+note = "A planet is only a point of light. No planet discs."
+query = { sky = "venus" }
+
+[[things]]
+id = "orionids-banner"
+label = "Orionids banner"
+group = "Overlays"
+note = "The live-event chip and sky. Normally only seen in its real dates."
+query = { shower = "1" }
+
+[[things]]
+id = "menu-open"
+label = "Menu open"
+group = "Overlays"
+query = { menu = "1" }
+
+[[things]]
+id = "balance-and-clock"
+label = "Balance and clock"
+group = "Overlays"
+note = "The sandbox hides them so the scene is the subject. Bring them in to check how the chrome sits."
+query = { hud = "1" }
+
+# ---------------------------------------------------------------------------------------------------------------
+# Presets: named setups with plain-language instructions. The agent treats the instructions as the test for the setup.
+# ---------------------------------------------------------------------------------------------------------------
+
+[[presets]]
+id = "fresh-base"
+name = "Fresh base"
+things = ["launchpad", "midday", "summer", "mountains", "clear"]
+instructions = """
+A new base: the pad and nothing else, on flat steppe with low escarpments. No people, no planet discs, nothing built that
+the player did not build. The camera starts centred on the pad. Tap the pad: it should answer.
+"""
+
+[[presets]]
+id = "full-base"
+name = "Full base"
+things = ["launchpad", "exchange", "silo", "control-station", "midday", "summer", "mountains", "clear"]
+instructions = """
+Every structure the base draws. Each one rests on the ground line with no gap, and each is tappable. The silo has no
+body above ground. Pan along the whole strip: nothing should pop in or tear.
+"""
+
+[[presets]]
+id = "telescope-night"
+name = "Telescope at night"
+things = ["launchpad", "control-station", "telescope-in-orbit", "night", "summer", "mountains", "clear", "satellite"]
+instructions = """
+The base once the first telescope is in orbit. The orbital network should be readable over the base without covering the
+pad or the control station. Stars show; the moon is the only luminary.
+"""

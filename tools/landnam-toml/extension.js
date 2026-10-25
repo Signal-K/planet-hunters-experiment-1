@@ -4,7 +4,7 @@ const vscode = require('vscode')
 const fs = require('fs')
 const path = require('path')
 
-const isScene = d => d && /shared[\\/]authoring[\\/](scenes|missions|flows)[\\/][^\\/]+\.toml$/.test(d.fileName)
+const isScene = d => d && /shared[\\/]authoring[\\/](scenes|fixtures|missions|flows)[\\/][^\\/]+\.toml$/.test(d.fileName)
 const HEADER = /^\s*\[\[?\s*([A-Za-z0-9_.-]+)\s*\]\]?\s*(#.*)?$/
 const BIG = new Set(['things', 'states', 'presets'])
 
