@@ -114,11 +114,13 @@ export default function MarketScreen({
               <span>Regular fragments</span><b>{researchFragments}</b>
               <span>Universal fragments</span><b>{researchUniversalFragments}</b>
             </div>
-            <p className={styles.note}>Convert {RESEARCH_FRAGMENT_CONVERSION_RATE} regular fragments into 1 universal fragment. Weekly badges stay permanent.</p>
+            <p className={styles.note}>{RESEARCH_FRAGMENT_CONVERSION_RATE} regular = 1 universal. Badges stay.</p>
             <button type="button" className={styles.btn} data-testid="research-convert" disabled={researchFragments < RESEARCH_FRAGMENT_CONVERSION_RATE} onClick={onConvertResearchFragments}>
-              Convert {Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE)} bundle{Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE) === 1 ? '' : 's'}
+              {researchFragments < RESEARCH_FRAGMENT_CONVERSION_RATE
+                ? `Need ${RESEARCH_FRAGMENT_CONVERSION_RATE} fragments`
+                : `Convert ${Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE)} bundle${Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE) === 1 ? '' : 's'}`}
             </button>
-            <p className={styles.note}>Permanent items never expire. Each bonus purchase costs more than the last.</p>
+            <p className={styles.note}>Permanent. No expiry. Bonus costs rise.</p>
             <ul className={styles.rows} data-testid="research-marketplace-items">
               {RESEARCH_MARKETPLACE_ITEMS.map(item => {
                 const count = researchItemPurchaseCount({ researchPurchases }, item.id)
