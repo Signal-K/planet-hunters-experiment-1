@@ -48,6 +48,7 @@ describe('R1 mission setup', () => {
     expect(board).toContain("onAccept(ORIONIDS_NIGHT_RUN_ID)")
     expect(board).toContain("onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)")
     expect(board).toContain('data-event-focused')
+    expect(read('./MissionBoard.module.css')).toContain(".eventCard[data-event-focused='true']")
   })
 
   it('keeps the internal setup states on the one canonical missions URL', () => {
@@ -55,6 +56,14 @@ describe('R1 mission setup', () => {
 
     expect(gameRoute).toContain("if (screen === 'targets' || screen === 'rocket-buy') return 'missions'")
     expect(gameRoute).toContain("if (screen === 'fab' && missionId && targetId) return 'missions'")
+  })
+
+  it('returns from the sky reading to the focused event brief before mission setup', () => {
+    const router = read('./GameScreenRouter.tsx')
+
+    expect(router).toContain("requestMissionBoardEvent('orionids-2026')")
+    expect(router).toContain('game.goToMissions()')
+    expect(router).not.toContain("game.onPickMission(missionId, 'sell')")
   })
 
   it('moves legacy hangar staging automatically and lets inline changes stay in setup', () => {

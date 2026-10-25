@@ -45,7 +45,7 @@ const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -307,8 +307,11 @@ function ScreenBody({
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
           onOpenEvents={() => {
-            const missionId = game.player.orionidsEventStage === 1 ? ORIONIDS_SURFACE_RESEARCH_MISSION_ID : ORIONIDS_NIGHT_RUN_ID
-            game.onPickMission(missionId, 'sell')
+            // Completing the sky reading should reveal the event brief first.
+            // Accepting the focused event is the explicit step that starts
+            // mission setup and lets the player choose a ship.
+            requestMissionBoardEvent('orionids-2026')
+            game.goToMissions()
           }}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))

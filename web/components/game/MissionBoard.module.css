@@ -165,6 +165,10 @@ button.start {
   overflow: hidden;
 }
 .eventCard { display: grid; grid-template-columns: minmax(112px, .65fr) minmax(0, 1.35fr); flex: 0 0 auto; }
+.eventCard[data-event-focused='true'] {
+  border-color: var(--ln-board-teal);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ln-board-teal) 24%, transparent), 4px 4px 0 var(--ln-board-ink);
+}
 
 .heroArt, .eventArt {
   position: relative;
