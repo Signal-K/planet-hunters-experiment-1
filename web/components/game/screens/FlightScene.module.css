@@ -100,8 +100,8 @@
   top: 50%;
   right: 10%;
   z-index: 2;
-  width: calc(48 * var(--k));
-  height: calc(40 * var(--k));
+  width: calc(72 * var(--k));
+  height: calc(60 * var(--k));
   transform: translate(var(--shift), -50%);
   animation: drift 9s ease-in-out infinite;
   pointer-events: none;
@@ -196,7 +196,7 @@
   .stage { top: 72px; bottom: 112px; }
   /* SSL-534: the ship rides high and the asteroid sits low and larger, so the tall phone screen is used and the body is never cut off at the edge. */
   .ship { left: 42%; top: 30%; }
-  .body { right: 10%; top: 64%; width: calc(64 * var(--k)); height: calc(53 * var(--k)); }
+  .body { right: 8%; top: 64%; width: calc(80 * var(--k)); height: calc(66 * var(--k)); }
   .progress { bottom: 96px; width: min(320px, calc(100% - 32px)); }
 }
 

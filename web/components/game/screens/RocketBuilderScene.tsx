@@ -256,7 +256,7 @@ export default function RocketBuilderScene({
       </div>
 
       {launching && onLaunchComplete && (
-        <LaunchSequenceCanvas rocketName={launchRocketName} rocketImageSrc={launchRocketSrc} targetName={target?.name ?? 'orbit'} onComplete={onLaunchComplete} />
+        <LaunchSequenceCanvas rocketName={launchRocketName} rocketImageSrc={launchRocketSrc} targetName={target?.name ?? 'orbit'} earthBiome={biome} onComplete={onLaunchComplete} />
       )}
     </div>
   )

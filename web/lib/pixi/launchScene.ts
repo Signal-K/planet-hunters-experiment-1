@@ -39,6 +39,7 @@ import {
   type SpriteStack,
 } from './launchSprites'
 import { drawPlanet } from './transitScene'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 
 export { LAUNCH_TIMELINE, LAUNCH_W, LAUNCH_H, launchFrameDt } from './launchTimeline'
 export {
@@ -73,6 +74,13 @@ const C = {
   skyTop: 0x9fd0ee,
   skyHorizon: 0xd5ecf7,
 } as const
+
+const LANDSCAPE_PALETTE: Record<EarthBiomeId, { skyTop: number; skyHorizon: number; far: number; near: number; ground: number; groundDark: number }> = {
+  mountains: { skyTop: C.skyTop, skyHorizon: C.skyHorizon, far: C.mountainFar, near: C.mountainNear, ground: C.dirt, groundDark: C.dirtDark },
+  desert: { skyTop: 0xd9b67f, skyHorizon: 0xf0d5a0, far: 0xc9935f, near: 0xa8754f, ground: 0xd4b27d, groundDark: 0xa77a55 },
+  tundra: { skyTop: 0xa9d7e8, skyHorizon: 0xe4f3f6, far: 0xc9e1e7, near: 0x9dbcc8, ground: 0xeaf5f5, groundDark: 0xb7d0d5 },
+  coast: { skyTop: 0x8bc9df, skyHorizon: 0xd8eff0, far: 0x9bbfc8, near: 0x668f9b, ground: 0xd9e9e8, groundDark: 0x9db8b8 },
+}
 
 interface SmokeParticle {
   sprite: Sprite
@@ -184,12 +192,13 @@ function buildProceduralLaunchStack(variant: 'explorer' | 'prospector'): LaunchS
 
 export function buildLaunchScene(
   app: Application,
-  opts: { rocketName: string; rocketImageSrc?: string; targetName: string; onComplete: () => void },
+  opts: { rocketName: string; rocketImageSrc?: string; targetName: string; earthBiome?: EarthBiomeId; onComplete: () => void },
 ) {
   const W = app.screen.width
   const H = app.screen.height
   const T = LAUNCH_TIMELINE
   const layout = launchPadLayout(W, H)
+  const landscape = LANDSCAPE_PALETTE[opts.earthBiome ?? 'mountains']
   const variant: 'explorer' | 'prospector' = /prospector/i.test(opts.rocketName) ? 'prospector' : 'explorer'
 
   const skyGfx = new Graphics()
@@ -205,7 +214,7 @@ export function buildLaunchScene(
     const bandH = H / bands + 1
     for (let i = 0; i < bands; i++) {
       const localT = i / (bands - 1)
-      const day = lerpColor(C.skyTop, C.skyHorizon, localT)
+      const day = lerpColor(landscape.skyTop, landscape.skyHorizon, localT)
       skyGfx.rect(0, i * (H / bands), W, bandH).fill(lerpColor(day, C.void, skyT))
     }
   }
@@ -222,7 +231,7 @@ export function buildLaunchScene(
   }))
 
   const orbitCenter = { x: W * 0.5, y: H * 0.58 }
-  const orbitRadius = Math.min(W * 0.28, H * 0.28)
+  const orbitRadius = Math.min(W * 0.32, H * 0.32)
   const orbitScene = new Graphics()
   orbitScene.alpha = 0
   app.stage.addChild(orbitScene)
@@ -238,25 +247,25 @@ export function buildLaunchScene(
     farPeaks.push((W * i) / 8, layout.groundTop - H * farHeights[i] * 0.55)
   }
   farPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(farPeaks).fill(C.mountainFar).stroke({ width: 2, color: C.ink })
+  mountains.poly(farPeaks).fill(landscape.far).stroke({ width: 2, color: C.ink })
   const nearPeaks: number[] = [0, layout.groundTop]
   const nearHeights = [0.14, 0.22, 0.10, 0.26, 0.16, 0.20, 0.12]
   for (let i = 0; i <= 6; i++) {
     nearPeaks.push((W * i) / 6, layout.groundTop - H * nearHeights[i] * 0.42)
   }
   nearPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(nearPeaks).fill(C.mountainNear).stroke({ width: 2.5, color: C.ink })
+  mountains.poly(nearPeaks).fill(landscape.near).stroke({ width: 2.5, color: C.ink })
   padContainer.addChild(mountains)
 
   const groundGfx = new Graphics()
-  groundGfx.rect(0, layout.groundTop, W, layout.groundHeight + 4).fill(C.dirt)
-  groundGfx.rect(0, layout.groundTop, W, 14).fill(C.grass)
+  groundGfx.rect(0, layout.groundTop, W, layout.groundHeight + 4).fill(landscape.ground)
+  groundGfx.rect(0, layout.groundTop, W, 14).fill(landscape.groundDark)
   groundGfx.moveTo(0, layout.groundTop).lineTo(W, layout.groundTop).stroke({ width: 3, color: C.ink })
-  groundGfx.moveTo(0, layout.groundTop + 14).lineTo(W, layout.groundTop + 14).stroke({ width: 1.5, color: C.dirtDark })
+  groundGfx.moveTo(0, layout.groundTop + 14).lineTo(W, layout.groundTop + 14).stroke({ width: 1.5, color: landscape.groundDark })
   const padW = Math.min(W * 0.38, 320)
   const padX = W / 2 - padW / 2
   groundGfx.rect(padX - 18 + 4, layout.padDeckY - 4 + 4, padW + 36, 22).fill({ color: C.shade, alpha: 0.5 })
-  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(C.dirtDark).stroke({ width: 2.5, color: C.ink })
+  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(landscape.groundDark).stroke({ width: 2.5, color: C.ink })
   groundGfx.rect(padX, layout.padDeckY - 10, padW, 20).fill(C.pad).stroke({ width: 2.5, color: C.ink })
   groundGfx.rect(W / 2 - 16, layout.padDeckY - 4, 32, 22).fill(C.void).stroke({ width: 2, color: C.ink })
   groundGfx.rect(padX + 12, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.9 })
@@ -596,7 +605,7 @@ export function buildLaunchScene(
       sunGfx.alpha = 0
       orbitScene.alpha = Math.min(1, orbitT / 0.4)
       orbitScene.clear()
-      drawPlanet(orbitScene, orbitCenter.x, orbitCenter.y, orbitRadius * 0.54, 'earth', orbitT * 0.35)
+      drawPlanet(orbitScene, orbitCenter.x, orbitCenter.y, orbitRadius * 0.70, 'earth', orbitT * 0.35)
       orbitScene.circle(orbitCenter.x, orbitCenter.y, radius).stroke({ color: C.cyan, alpha: 0.28, width: 1 })
     } else {
       rocketRoot.rotation = 0

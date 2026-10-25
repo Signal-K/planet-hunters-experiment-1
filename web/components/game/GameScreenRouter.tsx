@@ -434,7 +434,16 @@ function ScreenBody({
     case 'rover-survey':
     case 'delivery':
     case 'debrief':
-      if (!transitTarget || !debriefOriginTarget) return null
+      if (!transitTarget || !debriefOriginTarget) {
+        return (
+          <div className="game-screen theme-blueprint" data-testid="mission-operation-recovery" role="status" style={{ display: 'grid', placeItems: 'center', padding: 24 }}>
+            <div style={{ maxWidth: 520, padding: 24, color: 'var(--ln-blueprint-ink)', background: 'var(--ln-blueprint-paper)', border: '2px solid var(--ln-blueprint-ink)', textAlign: 'center' }}>
+              <p style={{ margin: '0 0 16px' }}>The flight details are still loading.</p>
+              <button type="button" onClick={() => game.go('missions')} style={{ minHeight: 44, padding: '0 16px', color: 'var(--ln-blueprint-paper)', background: 'var(--ln-blueprint-blue)', border: '2px solid var(--ln-blueprint-ink)', font: '800 14px var(--ln-font-display)', letterSpacing: '.08em', textTransform: 'uppercase' }}>Back to missions</button>
+            </div>
+          </div>
+        )
+      }
       return (
         <MissionOperationRoutes
           screen={screen}

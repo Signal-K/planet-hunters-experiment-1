@@ -8,12 +8,14 @@ import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
 interface Props {
   rocketName: string
   rocketImageSrc?: string
   targetName: string
+  earthBiome?: EarthBiomeId
   onComplete: () => void
 }
 
@@ -29,7 +31,7 @@ interface Props {
 // can strand a player: worst case they wait a fixed ceiling, not forever.
 const LAUNCH_WATCHDOG_MS = 18_000
 
-export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
+export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, earthBiome, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(onComplete)
   const firedRef = useRef(false)
@@ -120,6 +122,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         rocketName,
         rocketImageSrc,
         targetName,
+        earthBiome,
         onComplete: fireComplete,
       })
 
@@ -145,7 +148,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         canvas.remove()
       }
     }
-  }, [rocketImageSrc, rocketName, targetName, isDesktop])
+  }, [earthBiome, rocketImageSrc, rocketName, targetName, isDesktop])
 
   return (
     <SequenceDesktopFrame
