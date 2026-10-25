@@ -21,6 +21,7 @@ export function DevFollow() {
     if (localStorage.getItem('dev-follow') !== '1') return
     let last = Number(localStorage.getItem('dev-follow-ts') ?? 0)
     let lastActs = Number(localStorage.getItem('dev-acts-ts') ?? 0)
+    let lastScene = Number(localStorage.getItem('dev-scene-ts') ?? 0)
     let stopped = false
     type Act = { key?: string; hold?: number; click?: string; wait?: number; see?: string; gone?: string; within?: number }
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -105,7 +106,24 @@ export function DevFollow() {
       try {
         const res = await fetch('/api/dev/follow', { cache: 'no-store' })
         if (!res.ok) return
-        const { route, ts, actions, actionsTs, id } = (await res.json()) as { route: string | null; ts: number; actions?: Act[]; actionsTs?: number; id?: string | null }
+        const { route, ts, actions, actionsTs, id, sceneChange } = (await res.json()) as {
+          route: string | null; ts: number; actions?: Act[]; actionsTs?: number; id?: string | null
+          sceneChange?: { ts: number; state: 'ok' | 'error'; file: string; detail?: string } | null
+        }
+        // scripts/scene-live.mjs recompiled a TOML: mark it in the tab, then reload with the new data.
+        if (sceneChange && sceneChange.ts > lastScene) {
+          const first = lastScene === 0 && Date.now() - sceneChange.ts > 15000
+          lastScene = sceneChange.ts
+          localStorage.setItem('dev-scene-ts', String(sceneChange.ts))
+          if (!first) {
+            if (sceneChange.state === 'error') showBanner(false, `${sceneChange.file}: ${sceneChange.detail ?? 'compile error'}`)
+            else {
+              sessionStorage.setItem('dev-scene-banner', `${sceneChange.file} updated ${new Date(sceneChange.ts).toLocaleTimeString('en-GB')}`)
+              window.location.reload()
+              return
+            }
+          }
+        }
         if (route) {
           if (ts > last) {
             last = ts
@@ -124,6 +142,8 @@ export function DevFollow() {
         }
       } catch { /* server restarting */ }
     }
+    const pending = sessionStorage.getItem('dev-scene-banner')
+    if (pending) { sessionStorage.removeItem('dev-scene-banner'); showBanner(true, pending) }
     void tick()
     const id = window.setInterval(tick, 1000)
     const reconnect = () => { void tick() }

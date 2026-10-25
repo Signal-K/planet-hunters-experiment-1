@@ -50,6 +50,7 @@ tests/.report
 /public/takeon-go/
 /.dev-follow.json
 .dev-actions.json
+.dev-scene-change.json
 
 /.storyboard/
 

@@ -14,7 +14,9 @@ export async function GET() {
   try { act = JSON.parse(await readFile(actionsFile(), 'utf8')) } catch { /* none yet */ }
   let result: unknown = null
   try { result = JSON.parse(await readFile(resultFile(), 'utf8')) } catch { /* none yet */ }
-  return Response.json({ ...follow, ...act, result }, {
+  let sceneChange: unknown = null
+  try { sceneChange = JSON.parse(await readFile(join(process.cwd(), '.dev-scene-change.json'), 'utf8')) } catch { /* none yet */ }
+  return Response.json({ ...follow, ...act, result, sceneChange }, {
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       Pragma: 'no-cache',
