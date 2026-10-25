@@ -189,16 +189,20 @@ struct MiningScreen: View {
         let showerRun = store.mission?.id == OrionidsRun.missionId
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: showerRun ? (OrionidsRun.catches(store.player) < 3 ? "STEER UNDER A FRAGMENT · NO LASER" : nil) : (targetCue ?? trainingCue), showerCaught: store.mission?.id == OrionidsRun.missionId ? OrionidsRun.catches(store.player) : nil)
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
+        let objective = OrionidsRunObjective(catches: OrionidsRun.catches(store.player), onReturn: { handleReturn(field) })
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
                 if narrow {
-                    order
-                    // Phones: the hold sits under the order line, so neither covers the other or the top-right buttons.
-                    CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                    if showerRun { objective }
+                    else {
+                        order
+                        // Phones: the hold sits under the order line, so neither covers the other or the top-right buttons.
+                        CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                    }
                 }
                 // The shower run shows its count in the order line only; the chip stays on Base (matches web).
                 if !showerRun { SkyEventChip().frame(maxWidth: .infinity, alignment: .leading) }
@@ -208,12 +212,15 @@ struct MiningScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             if !narrow {
-                order
+                Group {
+                    if showerRun { objective }
+                    else { order }
+                }
                     .padding(.top, insets.top + zones.topLeft.inset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            if !narrow {
+            if !narrow && !showerRun {
                 CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
                     .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
@@ -235,15 +242,17 @@ struct MiningScreen: View {
             }
 
             // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
-            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
-                .padding(.trailing, compact ? insets.trailing + 16 : 0)
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
+            if !showerRun {
+                LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
+                    .padding(.trailing, compact ? insets.trailing + 16 : 0)
+                    .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
+            }
 
             VStack(spacing: 8) {
                 Spacer()
                 BaseDock(tile: 44, zones: zones.dock, items: [
-                    ("Fire", "bolt.fill", {}),
+                    (showerRun ? "Mine optional" : "Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
                 ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) }, glass: true)
             }
@@ -281,7 +290,7 @@ struct MiningScreen: View {
             let fragments = f.cargo["orionid_debris", default: 0]
             if fragments > fragmentsCounted { store.fragmentsMined(fragments - fragmentsCounted); fragmentsCounted = fragments }
         }
-        s.onTargetCue = { cue in targetCue = cue }
+        s.onTargetCue = { cue in if mission.id != OrionidsRun.missionId { targetCue = cue } }
         s.onObstacleAhead = { obstacleAhead = $0 }
         s.reducedMotion = reduceMotion
         #if DEBUG
@@ -353,6 +362,36 @@ struct MiningActionRow: View {
         .frame(maxWidth: 720)
         .background(showFire ? Theme.paper : .clear, in: RoundedRectangle(cornerRadius: 22))
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(showFire ? Theme.border : .clear, lineWidth: 1))
+    }
+}
+
+/// The shower is a catch run, not a mineral order: one labelled count and one
+/// instruction make the progress and the required action unambiguous.
+struct OrionidsRunObjective: View {
+    let catches: Int
+    let onReturn: () -> Void
+
+    private var caught: Int { min(catches, OrionidsRun.fragmentGoal) }
+
+    var body: some View {
+        Button(action: onReturn) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text("ORIONIDS SHOWER").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Glass.cyan)
+                HStack {
+                    Text("CATCH FRAGMENTS").font(AppFont.display(16)).foregroundStyle(Glass.ink)
+                    Spacer()
+                    Text("\(caught) / \(OrionidsRun.fragmentGoal)").font(AppFont.display(16)).monospacedDigit().foregroundStyle(Glass.cyan)
+                }
+                ProgressTrack(value: Double(caught) / Double(OrionidsRun.fragmentGoal))
+                Text(caught >= OrionidsRun.fragmentGoal ? "FRAGMENTS COMPLETE · RETURN" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
+                    .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(2)
+            }
+            .padding(12)
+            .frame(maxWidth: 300, alignment: .leading)
+            .glowPanel(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Catch fragments. \(caught) of \(OrionidsRun.fragmentGoal) caught.")
     }
 }
 

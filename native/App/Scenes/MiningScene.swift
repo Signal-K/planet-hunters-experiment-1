@@ -748,7 +748,7 @@ final class MiningScene: SKScene {
         if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 3 else { continue }   // web MAX_RAIN
+            guard falling.count < 1 else { continue }   // web MAX_RAIN
             let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
             let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
             node.setScale(px * 0.7)   // web draws shower fragments at 0.45

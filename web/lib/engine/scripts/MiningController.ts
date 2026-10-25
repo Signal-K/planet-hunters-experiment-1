@@ -225,14 +225,14 @@ const DEBRIS_RADIUS = 36
 const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
-/** Auto-collected shower fragments: more can be in the air, and one banks only if the ship is under it when it lands. */
-const MAX_RAIN = 3
+/** One clear catch at a time keeps the Orionids objective readable. */
+const MAX_RAIN = 1
 const CATCH_RADIUS = 100
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
 const RAIN_SPREAD = 300
-const MAX_STREAKS = 3
-/** Decorative streaks per second, fixed: the sky should feel busy, not scale with how many fragments fall. */
-const STREAKS_PER_SECOND = 0.25
+const MAX_STREAKS = 1
+/** Decorative only: a sparse reminder of the shower, never visual noise. */
+const STREAKS_PER_SECOND = 0.08
 /** Visual-only meteor streak. */
 interface Streak {
   g: Graphics | null
