@@ -191,18 +191,6 @@
 .payloadManifest strong { font: 700 16px/1.15 var(--ln-font-display); }
 .payloadManifest span:last-child { color: var(--ln-blueprint-blue); letter-spacing: 0.04em; text-transform: none; }
 
-/* Ground under the complex: it follows the pad's foot, so it never floats above a tall parts panel. */
-.pad::before {
-  content: '';
-  position: absolute;
-  left: -12px;
-  right: -12px;
-  top: calc(100% - 28px);
-  height: 100vh;
-  pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-hull-lit) 38%, var(--ln-world-asphalt)) 0, var(--ln-world-asphalt) 6px, var(--ln-world-asphalt) 100%);
-}
-
 .complex {
   position: relative;
   width: min(100cqw, 127.6cqh);

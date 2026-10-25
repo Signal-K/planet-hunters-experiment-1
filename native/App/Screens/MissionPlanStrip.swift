@@ -27,7 +27,13 @@ struct MissionPlanStrip: View {
 
     /// A run on your own account keeps nothing without a silo: say so before launch, not after landing.
     private var noSilo: Bool {
-        guard let mission = store.mission, mission.isOwnProgram, mission.construction == nil, store.state.deliveryTargetId == nil else { return false }
+        guard let mission = store.mission,
+              mission.id != OrionidsRun.missionId,
+              mission.id != OrionidsRun.surfaceResearchMissionId,
+              mission.isOwnProgram,
+              mission.construction == nil,
+              store.state.deliveryTargetId == nil
+        else { return false }
         return !HomeDelivery.silo(store.player, cargo: [:]).built
     }
 

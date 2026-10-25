@@ -8,8 +8,6 @@ import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
-import { activeDebrisPreset } from '@/lib/data/sky-events'
-import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import styles from './MissionPlanStrip.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -38,9 +36,10 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
   const selectedRocket = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId) : null
   const minerals = Object.keys(mission.requires.minerals).map(id => game.catalog.minerals[id]?.name ?? id)
   const step = launched ? 2 : 1
-  const activeEvent = activeDebrisPreset(debrisNow())
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
-  const noSilo = isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
+  // Orionids fragments are event evidence rather than player cargo, and the
+  // event supplies its own storage. Do not add a contradictory silo prompt.
+  const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
     ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
@@ -75,9 +74,9 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
       )}
       {noSilo && !launched && (
         <p className={styles.hold} data-testid="plan-no-silo" role="status">
-          {activeEvent ? 'Event storage is free. ' : 'No silo: ore is sold on landing. '}
+          No silo: ore is sold on landing.
           <button type="button" className={styles.link} onClick={() => game.go('build')}>Build a silo</button>{' '}
-          {activeEvent ? 'to keep minerals.' : 'to keep it.'}
+          to keep it.
         </p>
       )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
