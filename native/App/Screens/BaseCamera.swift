@@ -44,6 +44,7 @@ final class BaseCamera {
     /// Set once the camera has been framed on what is built, so it does not jump back when the player pans.
     var homed = false
     static let maxZoom: CGFloat = 2.6
+    static let minZoom: CGFloat = 0.1
     private var returnX: CGFloat = 0
     private(set) var diving: Bool
 
@@ -55,7 +56,23 @@ final class BaseCamera {
 
     func clamp(_ value: CGFloat, _ world: BaseWorld) -> CGFloat { min(max(value, 0), world.maxX) }
 
-    func clampZoom(_ value: CGFloat) -> CGFloat { min(max(value, 1), Self.maxZoom) }
+    func clampZoom(_ value: CGFloat) -> CGFloat { min(max(value, Self.minZoom), Self.maxZoom) }
+
+    func fitZoom(_ world: BaseWorld) -> CGFloat { min(1, world.w / max(world.worldW, world.w)) }
+
+    func overview(_ world: BaseWorld) {
+        withAnimation(.easeInOut(duration: 0.35)) {
+            zoom = fitZoom(world)
+            x = 0
+        }
+    }
+
+    var position: CGFloat { x }
+
+    func setPosition(_ value: CGFloat, _ world: BaseWorld) {
+        let clamped = min(max(value, 0), 1)
+        x = world.maxX * clamped
+    }
 
     func pan(by delta: CGFloat, _ world: BaseWorld, animated: Bool = true) {
         let target = clamp(x + delta, world)

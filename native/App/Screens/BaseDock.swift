@@ -28,6 +28,10 @@ struct BaseDock: View {
     var locationLabel: String?
     var locationNavigationDisabled = false
     var compact = false
+    /// Base camera controls are part of the location toolbar, not a floating overlay.
+    var onOverview: (() -> Void)?
+    var overviewPosition: Double = 0
+    var onOverviewPositionChange: ((Double) -> Void)?
 
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } })] + (onMission.map { m in [("Mission", "paperplane", { m() })] } ?? []) + [onMenu.map { menu in ("Menu", "list.bullet", { menu() }) } ?? ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
@@ -70,24 +74,52 @@ struct BaseDock: View {
         // Side by side when the width allows it; on narrow phones in portrait the actions drop below the location
         // picker. A single HStack here overflowed 393pt and dragged the whole base scene off centre (SSL-626).
         ViewThatFits(in: .horizontal) {
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 0) {
                 locationPicker(label)
-                Spacer(minLength: 0)
+                if let onOverview, let onOverviewPositionChange { overviewControl(onOverview: onOverview, position: overviewPosition, onChange: onOverviewPositionChange) }
                 locationActions
             }
             VStack(alignment: .leading, spacing: 8) {
                 locationPicker(label)
+                if let onOverview, let onOverviewPositionChange { overviewControl(onOverview: onOverview, position: overviewPosition, onChange: onOverviewPositionChange) }
                 locationActions.frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(4)
+        .padding(.horizontal, 20)
+        .fixedSize(horizontal: true, vertical: false)
+        .background(Theme.hex(0x07111D, 0.92), in: RoundedRectangle(cornerRadius: 7))
+        .overlay(RoundedRectangle(cornerRadius: 7).stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Location and scene actions")
     }
 
+    private func overviewControl(onOverview: @escaping () -> Void, position: Double, onChange: @escaping (Double) -> Void) -> some View {
+        HStack(spacing: 7) {
+            Button(action: onOverview) {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 15, weight: .bold))
+                    .frame(width: 34, height: 34)
+            }
+                .foregroundStyle(Theme.hudInk)
+                .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 7))
+                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Theme.hudInk, lineWidth: 1))
+                .buttonStyle(.plain)
+                .accessibilityLabel("Show whole base")
+                .accessibilityHint("Fit the whole base in view")
+            Slider(value: Binding(get: { position }, set: { value in
+                MainActor.assumeIsolated { onChange(value) }
+            }), in: 0...1)
+                .tint(Theme.hudMint)
+                .frame(width: 76)
+                .accessibilityLabel("Base position")
+        }
+        .padding(.horizontal, 10).frame(height: 44)
+    }
+
     private func locationPicker(_ label: String) -> some View {
         HStack(spacing: 0) {
-            locationArrow("chevron.left", label: "Previous location") { onPrev?() }
+            locationArrow("chevron.left", label: locationNavigationDisabled ? "Previous location" : "Scroll left") { onPrev?() }
             Label(label, systemImage: "globe")
                 .font(AppFont.display(14)).tracking(0.6)
                 .lineLimit(1)
@@ -98,9 +130,8 @@ struct BaseDock: View {
                 // leading inset to the screen edge and over the previous arrow.
                 .background(Theme.blue, ignoresSafeAreaEdges: [])
                 .accessibilityLabel("Selected location \(label)")
-            locationArrow("chevron.right", label: "Next location") { onNext?() }
+            locationArrow("chevron.right", label: locationNavigationDisabled ? "Next location" : "Scroll right") { onNext?() }
         }
-        .overlay(Rectangle().stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
     }
 
     private var locationActions: some View {
@@ -116,8 +147,7 @@ struct BaseDock: View {
         // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
         .fixedSize(horizontal: false, vertical: true)
         .padding(4)
-        .background(Theme.hex(0x07111D, 0.9), ignoresSafeAreaEdges: [])
-        .overlay(Rectangle().stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
+        .background(Color.clear, ignoresSafeAreaEdges: [])
     }
 
     private func locationArrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {

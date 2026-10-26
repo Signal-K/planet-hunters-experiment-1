@@ -31,6 +31,10 @@ type BaseDockProps = {
   locationLabel?: string
   locationNavigationDisabled?: boolean
   showLocationBuild?: boolean
+  /** Base camera controls live in the location toolbar, not as a floating overlay. */
+  onOverview?: () => void
+  overviewPosition?: number
+  onOverviewPositionChange?: (position: number) => void
 }
 
 /** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
@@ -156,6 +160,15 @@ function MenuIcon() {
   )
 }
 
+function OverviewIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" />
+      <path d="m3 3 5 5M21 3l-5 5M3 21l5-5M21 21l-5-5" opacity=".55" />
+    </svg>
+  )
+}
+
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
 export function BaseDock({
   onPrev,
@@ -180,6 +193,9 @@ export function BaseDock({
   locationLabel,
   locationNavigationDisabled = false,
   showLocationBuild = true,
+  onOverview,
+  overviewPosition = 0,
+  onOverviewPositionChange,
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = buildLabel
@@ -187,11 +203,15 @@ export function BaseDock({
     return (
       <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
         <div className="scene-location-selector" aria-label={`Selected location ${locationLabel}`}>
-          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous location" disabled={locationNavigationDisabled} />
+          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label={locationNavigationDisabled ? 'Previous location' : 'Scroll left'} disabled={locationNavigationDisabled} />
           <span className="scene-location-label"><LocationIcon /><span>{locationLabel}</span></span>
-          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next location" disabled={locationNavigationDisabled} />
+          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
         </div>
         <div className="scene-location-actions">
+          {onOverview && onOverviewPositionChange && <div className="scene-location-overview" aria-label="Base camera controls">
+            <button type="button" onClick={onOverview} data-testid="base-overview-button" aria-label="Show whole base" title="Show whole base"><OverviewIcon /></button>
+            <input type="range" min="0" max="1" step="0.001" value={overviewPosition} onChange={event => onOverviewPositionChange(Number(event.target.value))} data-testid="base-overview-slider" aria-label="Base position" />
+          </div>}
           {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}

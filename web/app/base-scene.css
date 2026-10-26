@@ -94,7 +94,12 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
-  width: calc(100vw - 24px);
+  width: calc(100vw - 48px);
+  padding: 4px;
+  border: 2px solid var(--ln-world-outline);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ln-world-outline) 92%, var(--ln-world-trim-blue));
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
   pointer-events: none;
 }
 .scene-location-selector,
@@ -103,12 +108,37 @@
   align-items: center;
   gap: 0;
   padding: 0;
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 3px;
-  background: var(--ln-world-hull-lit);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   pointer-events: auto;
 }
+.scene-location-overview {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 4px 8px;
+  border-right: 4px solid var(--ln-world-glass);
+  background: color-mix(in srgb, var(--ln-world-outline) 92%, var(--ln-world-trim-blue));
+}
+.scene-location-overview button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 7px;
+  background: var(--ln-cyan);
+  color: var(--ln-world-outline);
+  font: 800 11px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.scene-location-overview input { width: 72px; accent-color: var(--ln-cyan); }
 .scene-location-label {
   display: flex;
   place-items: center;
@@ -160,17 +190,21 @@
   border-right: 4px solid var(--ln-world-trim-blue) !important;
 }
 @media (max-width: 700px) {
-  .scene-location-dock { gap: 6px; width: calc(100vw - 12px); }
+  .scene-location-dock { gap: 6px; width: calc(100vw - 32px); }
   .scene-location-label { min-width: 62px; padding-inline: 6px; }
   .scene-location-label svg { display: none; }
   .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
+  .scene-location-overview { padding-inline: 6px; }
+  .scene-location-overview input { width: 56px; }
 }
 
 /* Narrow phones (390px): the arrows, label and three action words need ~410px, so the dock lost "Menu" off the right edge.
    Drop the action icons and the extra padding, and wrap the selector above the actions if it still does not fit. */
 @media (max-width: 479px) {
-  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; }
+  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; width: calc(100vw - 24px); }
   .scene-location-actions { margin-left: auto; max-width: 100%; }
   .scene-location-actions .scene-dock-word { min-width: 0; padding-inline: 10px; gap: 0; }
   .scene-location-actions .scene-dock-word svg { display: none; }
+  .scene-location-overview { flex: 1 1 100%; justify-content: center; border-right: 0; border-bottom: 3px solid var(--ln-world-glass); }
+  .scene-location-overview input { width: min(38vw, 120px); }
 }

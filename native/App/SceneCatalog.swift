@@ -786,7 +786,9 @@ enum SceneCatalog {
 }
 
 /// Shown instead of RootView when the app is launched with `-scene <id>`.
-/// `-scene list` prints the index on screen. DEBUG builds only.
+/// `-scene list` prints the index on screen. DEBUG builds only. The older
+/// `-landnam.scene <id>` spelling remains accepted so existing review actions
+/// cannot accidentally fall through to the authenticated app shell.
 /// `-landnam.fullscreen YES` lays any fixture out full-screen with the real safe areas, to check it at the device's own size.
 struct SceneHost: View {
     let id: String
@@ -815,11 +817,16 @@ struct SceneHost: View {
         }
     }
 
-    /// The `-scene` launch argument, if present.
+    /// The scene launch argument, if present. Scene fixtures are intentionally
+    /// auth-free: this is the review harness, not a player session.
     static var requested: String? {
         #if DEBUG
         let a = ProcessInfo.processInfo.arguments
-        if let i = a.firstIndex(of: "-scene"), a.indices.contains(i + 1) { return a[i + 1] }
+        for flag in ["-scene", "-landnam.scene"] {
+            if let i = a.firstIndex(of: flag), a.indices.contains(i + 1) {
+                return a[i + 1]
+            }
+        }
         #endif
         return nil
     }

@@ -65,6 +65,7 @@ struct HubScreen: View {
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
         let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: !store.player.placed.isEmpty)
+        let cameraWorld = BaseWorld(w: size.width, h: size.height)
         let portrait = layout.portrait
         return ZStack(alignment: .topLeading) {
             BaseWorldScene(
@@ -100,8 +101,11 @@ struct HubScreen: View {
                      onMenu: { menuOpen = true },
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
-                     locationNavigationDisabled: true,
-                     compact: !portrait)
+                     locationNavigationDisabled: false,
+                     compact: !portrait,
+                     onOverview: !placing ? { camera.overview(cameraWorld) } : nil,
+                     overviewPosition: cameraWorld.maxX == 0 ? 0 : min(max(Double(camera.x / cameraWorld.maxX), 0), 1),
+                     onOverviewPositionChange: !placing ? { camera.setPosition(CGFloat($0), cameraWorld) } : nil)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -261,14 +265,16 @@ struct HubScreen: View {
                 SkyEventChip(allDay: true)
             }
         }
-        .padding(.leading, insets.leading + z.inset).padding(.top, insets.top + z.inset)
+        .padding(.leading, max(insets.leading + z.inset, 12))
+        .padding(.top, max(insets.top + z.inset, 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
         return HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
-        .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
+        .padding(.trailing, max(insets.trailing + z.inset, 12))
+        .padding(.top, max(insets.top + z.inset, 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }
 

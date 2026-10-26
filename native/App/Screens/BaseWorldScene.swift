@@ -58,9 +58,8 @@ struct BaseWorldScene: View {
                 ZStack(alignment: .topLeading) {
                     // The world rides inside the camera container (so it dives and zooms with the structures) but
                     // counter-offsets the pan: it draws its own parallax from `camX`.
-                    BaseWorldCanvas(px: world.px, camX: -cx, biome: biome.rawValue, grade: grade ?? WorldAssets.grade())
-                        .frame(width: w, height: h)
-                        .offset(x: cx)
+                    BaseWorldCanvas(px: world.px, camX: 0, zoom: 1, biome: biome.rawValue, grade: grade ?? WorldAssets.grade())
+                        .frame(width: world.worldW, height: h)
                     BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft, active: camera.depth > 0)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
@@ -77,9 +76,8 @@ struct BaseWorldScene: View {
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
                 .offset(x: -cx, y: -lift)
-                .scaleEffect(camera.zoom, anchor: .center)
+                .scaleEffect(x: camera.zoom, y: camera.zoom < 1 ? 1 : camera.zoom, anchor: .topLeading)
                 if showsControls {
-                    edgeHints(world: world, cx: cx)
                     depthButton(world: world)
                 }
             }
@@ -144,27 +142,6 @@ struct BaseWorldScene: View {
         .buttonStyle(.plain)
         .accessibilityLabel(down ? "Go underground" : "Back to the surface")
         .position(x: world.w - insets.trailing - 34, y: world.h * 0.38)
-    }
-
-    /// Faint chevrons at the screen edges while more of the base lies offscreen that way.
-    private func edgeHints(world: BaseWorld, cx: CGFloat) -> some View {
-        ZStack {
-            if cx > 2 { hint("chevron.left", x: insets.leading + 22, world: world) }
-            if cx < world.maxX - 2 { hint("chevron.right", x: world.w - insets.trailing - 22, world: world) }
-        }
-    }
-
-    private func hint(_ symbol: String, x: CGFloat, world: BaseWorld) -> some View {
-        Button { camera.pan(by: symbol == "chevron.left" ? -world.w * 0.55 : world.w * 0.55, world) } label: {
-            Image(systemName: symbol).font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.hudInk)
-                .frame(width: 28, height: 56)
-                .background(Capsule().fill(Theme.hudPanel.opacity(0.55)))
-                .opacity(pulse ? 0.9 : 0.45)
-                .frame(width: 44, height: 56)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(symbol == "chevron.left" ? "Scroll left" : "Scroll right")
-        .position(x: x, y: world.h * 0.38 + 72)
     }
 
     /// Surface marker over the shaft: the lift head once the silo is built. Nothing stands there before (the world starts empty).
@@ -233,6 +210,7 @@ struct BaseWorldScene: View {
             .frame(width: width, height: height, alignment: .bottomLeading)
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
+            .scaleEffect(kind == "launchpad" ? 0.82 : 1, anchor: .bottom)
         }
         .buttonStyle(.plain)
         .position(x: centerX, y: bottom - height / 2)

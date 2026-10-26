@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { BASE_CAMERA_HOME, clampCamera, focusOn, inertiaStep, softClampCamera, zoomAt } from './base-camera'
+import { BASE_CAMERA_HOME, clampCamera, fitZoom, focusOn, inertiaStep, softClampCamera, zoomAt } from './base-camera'
 
 const view = { w: 1000, h: 500 }
 
 describe('base camera', () => {
   it('cannot pan at the whole-base zoom', () => {
     expect(clampCamera({ x: -300, y: 40, zoom: 1 }, view)).toEqual({ x: 0, y: 0, zoom: 1 })
+  })
+
+  it('fits a wider authored strip without allowing a blank horizontal edge', () => {
+    const overview = fitZoom({ w: 390, h: 844, worldW: 2800 })
+    expect(overview).toBeCloseTo(390 / 2800)
+    expect(clampCamera({ x: 0, y: 0, zoom: overview }, { w: 390, h: 844, worldW: 2800 })).toEqual({ x: 0, y: 0, zoom: overview })
   })
 
   it('clamps zoom and keeps the world covering the view', () => {

@@ -110,6 +110,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
   const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
+  const overviewPosition = camera.cam.x === 0 ? 0 : Math.max(0, Math.min(1, camera.cam.x / Math.min(0, viewSize.w - worldW * camera.cam.zoom)))
+  const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
   const [editMode, setEditMode] = useState(placementMode)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
@@ -437,8 +439,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
         >
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
-          <BaseWorldCanvas px={px} camera={camera.cam} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
+          <BaseWorldCanvas px={px} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
@@ -637,14 +639,17 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         }}>
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
-              onPrev={() => undefined}
-              onNext={() => undefined}
+              onPrev={() => moveBase(-0.22)}
+              onNext={() => moveBase(0.22)}
               onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
               onMission={!subsurface && !editMode && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
-              locationNavigationDisabled
+              locationNavigationDisabled={false}
               showLocationBuild={buildOptions.length > 0}
+              onOverview={!subsurface ? camera.overview : undefined}
+              overviewPosition={overviewPosition}
+              onOverviewPositionChange={!subsurface ? camera.setPosition : undefined}
               buildLabel={editMode ? 'Done' : 'Build'}
               buildTestId={editMode ? 'hub-build-done-btn' : 'hub-build-btn'}
             />
