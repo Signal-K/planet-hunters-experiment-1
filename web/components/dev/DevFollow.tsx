@@ -11,6 +11,10 @@ import { useEffect } from 'react'
 export function DevFollow() {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return
+    // A framed page (the scene sheet, the Studio stage) must never navigate itself: only the top tab follows.
+    if (window.self !== window.top) return
+    // The Studio is a place you stay on: it is never a follow target, and it never rewrites its own address.
+    if (window.location.pathname.startsWith('/game/studio')) return
     const initialParams = new URLSearchParams(window.location.search)
     if (initialParams.has('follow')) {
       localStorage.setItem('dev-follow', initialParams.get('follow') === '0' ? '0' : '1')
