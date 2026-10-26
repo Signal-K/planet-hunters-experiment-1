@@ -14,12 +14,14 @@ import process from "node:process";
 const base = process.env.LANDNAM_WEB_URL ?? "http://localhost:4320";
 const logPath = join(tmpdir(), "landnam-warm-studio.log");
 
-// In the order the Studio asks for them. The open route answers 415 with no body, which still compiles it.
+// The connected preview is the first thing someone sees. Warm its playable
+// stage before the slower authoring routes; Studio can finish in the background.
+// The open route answers 415 with no body, which still compiles it.
 const ROUTES = [
+  ["GET", "/game/stage?preset=sandbox%3Acp-mid&follow=1&preview=1"],
   ["GET", "/game/studio"],
   ["GET", "/api/dev/studio?index=1"],
   ["POST", "/api/dev/studio/open"],
-  ["GET", "/game/stage?preset=sandbox%3Asandbox-hub"],
 ];
 
 if (!process.argv.includes("--wait")) {

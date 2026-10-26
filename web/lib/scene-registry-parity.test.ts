@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { DEV_GROUPS, SANDBOX_FIXTURES } from './devPresets'
 import { readdirSync } from 'node:fs'
@@ -30,5 +30,11 @@ describe('scene registry parity', () => {
     const tomls = readdirSync(join(root, 'shared/authoring/scenes')).filter(f => f.endsWith('.toml')).map(f => f.slice(0, -5))
     const ids = new Set(registry.map(s => s.id))
     expect(tomls.filter(id => !ids.has(id))).toEqual([])
+  })
+  it('every authored scene has a standalone fixture file', () => {
+    const tomls = readdirSync(join(root, 'shared/authoring/scenes')).filter(f => f.endsWith('.toml')).map(f => f.slice(0, -5))
+    const authored = new Set(tomls)
+    expect(tomls.filter(id => !existsSync(join(root, 'shared/authoring/fixtures', `${id}.toml`)))).toEqual([])
+    expect(registry.filter(({ id }) => authored.has(id) && !existsSync(join(root, 'shared/authoring/fixtures', `${id}.toml`))).map(({ id }) => id)).toEqual([])
   })
 })

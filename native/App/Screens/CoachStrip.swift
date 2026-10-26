@@ -79,7 +79,7 @@ struct CoachStrip: View {
             .frame(maxWidth: .infinity, minHeight: 56)
             .background(Theme.hudPanel.opacity(0.96), in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.hudInk, lineWidth: 2))
-            .shadow(color: Theme.hudInk.opacity(0.24), radius: 0, x: 0, y: 4)
+            .hardShadow(Theme.hudInk.opacity(0.24), y: 4, radius: 10)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("\(coach.kicker). \(coach.objective). \(coach.radio)")
             .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: coach.kicker)
@@ -246,15 +246,16 @@ struct CoachPlacement: View {
         } else {
             GeometryReader { geo in
                 let landscapePhone = geo.size.height < 500 && geo.size.width > 640
-                // Folded (hidden or off the tutorial path) the "?" chip sits in the top-left corner under the gear and clock.
+                // Folded (hidden or off the tutorial path) the "?" chip sits under the gear and clock in portrait. In landscape the
+                // top-left is the contract card on the hub and the back button and title everywhere else, so it centres on the top edge.
                 CoachStrip(coach: coach, screen: screen, summoned: $summoned)
                     // geo is already inside the safe area. Landscape band: starts after the gear, clock and sky-event chip (~190pt) and ends
                     // before the francs and stash chips (~210pt from the right), so the strip never lands on either.
                     .frame(maxWidth: chipOnly ? 56 : (landscapePhone ? min(430, max(280, geo.size.width - 420)) : 560))
-                    .padding(.leading, chipOnly ? 12 : (landscapePhone ? 204 : 8))
+                    .padding(.leading, chipOnly ? (landscapePhone ? 0 : 12) : (landscapePhone ? 204 : 8))
                     .padding(.trailing, chipOnly || landscapePhone ? 0 : 8)
-                    .padding(.top, chipOnly ? 68 : (landscapePhone ? 8 : 68))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly || landscapePhone ? .topLeading : .top)
+                    .padding(.top, landscapePhone ? 8 : 68)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: chipOnly ? (landscapePhone ? .top : .topLeading) : (landscapePhone ? .topLeading : .top))
             }
             .allowsHitTesting(true)
         }

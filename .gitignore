@@ -98,3 +98,4 @@ __pycache__/
 # Retired runner output retained locally, never committed
 /web/cypress/screenshots/
 /web/cypress/videos/
+web/.dev-follower.json

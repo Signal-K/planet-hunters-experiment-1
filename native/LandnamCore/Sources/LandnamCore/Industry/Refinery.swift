@@ -80,9 +80,9 @@ public enum Refinery {
         return n
     }
 
-    /// One finished good now: its recipe value, +3% inside the community research week (web `refinedUnitPrice`, SSL-673).
+    /// One finished good now: its recipe value.
     public static func unitPrice(_ r: RefineryRecipe, player: Player, now: Double) -> Int {
-        ResearchStampRules.bonusActive(player, now: now) ? Int((Double(r.price) * (1 + ResearchStampRules.bonusRate)).rounded()) : r.price
+        r.price
     }
 
     /// Sell finished goods at their recipe output value.

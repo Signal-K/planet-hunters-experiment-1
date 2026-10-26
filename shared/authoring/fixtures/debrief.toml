@@ -1,0 +1,28 @@
+# Named setups for debrief. Keep scene structure in scenes/debrief.toml.
+
+[[things]]
+id = "telescope-deployed"
+label = "Telescope deployed"
+group = "Outcome"
+exclusive = "outcome"
+default = true
+state = { missionId = "story-transit-telescope-launch", targetId = "earth-orbit-transit-telescope", lastCargo = {}, player = { transitSatelliteLaunchedAt = "@now", transitSatelliteLevel = 1 } }
+
+[[things]]
+id = "courier-delivered"
+label = "Courier run delivered"
+group = "Outcome"
+exclusive = "outcome"
+state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", deliveryTargetId = "vesta", lastCargo = { iron = 8, nickel = 2 }, player = { missionPhase = "debrief", activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, homeDeliveryPending = true } }
+
+[[presets]]
+id = "telescope-in-orbit"
+name = "Telescope in orbit"
+things = ["telescope-deployed"]
+instructions = """
+The end of the first satellite launch. One card: the telescope is online and a daily instrument feed is unlocked. The one
+action logs the outcome and returns to the base. No money talk: a telescope earns nothing by itself.
+"""
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.

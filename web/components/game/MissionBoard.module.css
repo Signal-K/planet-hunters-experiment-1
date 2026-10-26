@@ -694,6 +694,30 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractTake { box-sizing: border-box; width: min(220px, 100%); max-width: 100%; min-height: 54px; padding: 0 12px; border: 0; border-radius: 4px; color: #152033; background: #f4efe4; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
 .contractTake:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Contracts and the player's programme are one work control: two rows make
+   the distinction clear without sending either path behind a separate rail
+   slot. The cool client row and warm programme row retain their identities
+   at every viewport. */
+.workTabs { display: grid; grid-template-rows: repeat(2, 44px); gap: 4px; }
+.rail .workTabs button.tab { width: 184px; justify-content: flex-start; }
+.rail .workTabs button.tab[data-tab='contracts'] { background: rgba(19, 63, 97, .88); color: #d9f5ff; border-color: #3c83ab; }
+.rail .workTabs button.tab[data-tab='program'] { background: rgba(35, 104, 111, .88); color: #e3fbf6; border-color: #52aaa6; }
+.rail .workTabs button.tab[data-active='true'] { background: #ecebe8; color: #16171a; border-color: #ecebe8; }
+.tabCopy { display: grid; gap: 1px; text-align: left; }
+.tabCopy small { color: currentColor; font: 700 11px/1 var(--ln-font-body); letter-spacing: .04em; opacity: .72; }
+
+@media (orientation: portrait) and (max-width: 700px) {
+  .rail .workTabs { grid-template-rows: repeat(2, 44px); }
+  .rail .workTabs button.tab { width: 44px; padding: 0; justify-content: center; }
+  .rail .workTabs .tabCopy { display: none; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .rail .workTabs { grid-template-rows: repeat(2, 40px); gap: 3px; }
+  .rail .workTabs button.tab { min-height: 40px; width: 156px; }
+  .tabCopy small { display: none; }
+}
+
 @media (orientation: portrait) and (max-width: 700px) {
   .contractWorkspace { top: 0; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto; }
   .contractWorkspace > section { padding: 14px 16px; }

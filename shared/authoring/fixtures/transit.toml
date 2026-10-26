@@ -1,0 +1,179 @@
+# Named setups for transit. Keep scene structure in scenes/transit.toml.
+
+[[things]]
+id = "telescope-flight"
+label = "Telescope to Earth orbit"
+group = "Destination"
+exclusive = "destination"
+note = "The story flight that carries the space telescope up."
+state = { missionId = "story-transit-telescope-launch", targetId = "earth-orbit-transit-telescope", player = { activeMission = { id = "story-transit-telescope-launch", label = "Launch Space Telescope" } } }
+
+[[things]]
+id = "mercury"
+label = "Mercury"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "mercury" }
+
+[[things]]
+id = "mars"
+label = "Mars"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "mars" }
+
+[[things]]
+id = "eros"
+label = "Eros"
+group = "Destination"
+exclusive = "destination"
+default = true
+state = { targetId = "eros" }
+
+[[things]]
+id = "vesta"
+label = "Vesta"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "vesta" }
+
+[[things]]
+id = "itokawa"
+label = "Itokawa"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "itokawa" }
+
+[[things]]
+id = "ryugu"
+label = "Ryugu"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "ryugu" }
+
+[[things]]
+id = "psyche"
+label = "Psyche"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "psyche" }
+
+[[things]]
+id = "bennu"
+label = "Bennu"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "bennu" }
+
+[[things]]
+id = "ceres"
+label = "Ceres"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "ceres" }
+
+[[things]]
+id = "lutetia"
+label = "Lutetia"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "lutetia" }
+
+[[things]]
+id = "jupiter"
+label = "Jupiter"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "jupiter" }
+
+[[things]]
+id = "europa"
+label = "Europa"
+group = "Destination"
+exclusive = "destination"
+state = { targetId = "europa" }
+
+[[things]]
+id = "outbound"
+label = "Outbound"
+group = "Direction"
+exclusive = "direction"
+default = true
+
+[[things]]
+id = "returning"
+label = "Returning to Earth"
+group = "Direction"
+exclusive = "direction"
+note = "The destination becomes Earth."
+state = { player = { returningToEarth = true } }
+
+[[things]]
+id = "delivery-leg"
+label = "Delivery leg to Vesta"
+group = "Leg"
+note = "The second leg of a two-leg client run."
+state = { deliveryTargetId = "vesta", player = { headingToDelivery = true } }
+
+[[things]]
+id = "starter-ship"
+label = "Starter ship"
+group = "Ship"
+exclusive = "ship"
+default = true
+note = "Explorer: no parts fitted."
+
+[[things]]
+id = "tier-2-ship"
+label = "Tier 2 ship"
+group = "Ship"
+exclusive = "ship"
+state = { rocket = { chassis = "hull-mk2", propulsion = "fusion-b2", drill = "laser-t2" }, player = { shipCustomizerParts = { engine = "fusion-thruster-t2", booster = "strap-booster-t1", cockpit = "cockpit-command-t1", payload = "cargo-payload-t1", fuel-stage = "kerosene-stage-t1", fairing = "standard-fairing-t1" } } }
+
+[[things]]
+id = "tier-4-ship"
+label = "Tier 4 ship"
+group = "Ship"
+exclusive = "ship"
+state = { rocket = { chassis = "hull-mk3", propulsion = "ion-a3", drill = "plasma-t3" }, player = { shipCustomizerParts = { engine = "array-thruster-t4", booster = "vulcan-booster-t1", cockpit = "guidance-cockpit-t1", payload = "storage-silo-t4", fuel-stage = "lox-lh2-stage-t1", fairing = "heavy-fairing-t1", docking-port = "magnetic-port-t1", heat-shield = "ceramic-shield-t1" } } }
+
+[[things]]
+id = "flight-progress"
+label = "Minutes into the flight"
+group = "Progress"
+note = "A 55 minute flight. At the far end the ship arrives and the scene moves on, as it does in the game."
+range = { min = 0, max = 55, step = 1, value = 20 }
+state = { player = { transitStartedAt = "@now-{value}m", arrivalAt = "@now+{rest}m" } }
+
+[[presets]]
+id = "outbound-to-eros"
+name = "Outbound to Eros"
+things = ["eros", "outbound", "starter-ship"]
+values = { flight-progress = 20 }
+instructions = """
+The first flight. The ship crosses a starfield toward a small grey asteroid that grows as the trip goes on. The bar fills
+from the left. Boost is the only action; Back returns to the base. Nothing explains itself with a paragraph.
+"""
+
+[[presets]]
+id = "telescope-ride"
+name = "Telescope to orbit"
+things = ["telescope-flight", "outbound", "tier-2-ship"]
+values = { flight-progress = 25 }
+instructions = """
+Launching the telescope, in flight. The ship is the one the player built, so the fitted parts show on it. The
+destination is Earth orbit: check that what lies ahead of the ship makes sense for that.
+"""
+
+[[presets]]
+id = "homeward"
+name = "Coming home"
+things = ["eros", "returning", "tier-4-ship"]
+values = { flight-progress = 40 }
+instructions = """
+The return leg. The body ahead is Earth. The tier 4 ship carries every part it has: none may overlap another or clip the
+flame. Check phone portrait, phone landscape and desktop.
+"""
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.

@@ -294,6 +294,15 @@ public enum Loop {
         if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = 2 }
         if missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId { ResearchStampRules.add(&n.player, .event, at: now) }
         let isOrionidsEvent = missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId
+        if isOrionidsEvent {
+            ResearchFragments.record(
+                &n.player,
+                id: "orionids-2026",
+                title: "Orionids shower",
+                fragments: showerFilled ? OrionidsRun.fragmentGoal : 1,
+                badgeId: n.player.badges["orionids-2026"]?.eventId,
+            )
+        }
         let isFreeHaul = !isOrionidsEvent && (mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false)
             && haulCargo.values.contains { $0 > 0 }
         if isFreeHaul && !s.player.cargoSettledOffworld {

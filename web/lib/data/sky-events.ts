@@ -38,6 +38,8 @@ export interface SkyEvent {
   /** Exclusive end instant (UTC): first moment after the event period. */
   endUtc: string
   activities: ReadonlyArray<SkyActivityKind>
+  /** When set, the gold window opens at the local midnight represented by `startUtc`. */
+  startAtLocalMidnight?: boolean
   /** Recurring monthly event: later occurrences do not re-open the gold window. */
   recurring?: 'new-moon'
 }
@@ -81,6 +83,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     startUtc: '2026-10-19T00:00:00Z',
     endUtc: '2026-11-08T00:00:00Z',
     activities: ['debris-mining'],
+    startAtLocalMidnight: true,
   },
   {
     id: 'leonids-2026',
@@ -120,7 +123,10 @@ export function badgeTierFor(eventId: string, at: Date | number): BadgeTier | nu
   if (!event) return null
   const t = toMs(at)
   if (!Number.isFinite(t)) return null
-  const open = event.id === 'orionids-2026' ? orionidsLocalStartMs() : Date.parse(event.startUtc)
+  const start = new Date(event.startUtc)
+  const open = event.startAtLocalMidnight
+    ? localMidnightMs(start.getUTCFullYear(), start.getUTCMonth() + 1, start.getUTCDate())
+    : Date.parse(event.startUtc)
   if (t < open) return null
   return t < Date.parse(event.endUtc) ? 'gold' : 'silver'
 }
@@ -209,6 +215,8 @@ export interface DebrisEventPreset {
   chipLabel: string
   /** When set, debris falls for the whole window, not only at night. */
   allHours?: boolean
+  /** When set, the event opens at the local midnight represented by `startUtc`. */
+  startAtLocalMidnight?: boolean
 }
 
 /** Local night: 22:00 until dawn (06:00). */
@@ -242,6 +250,7 @@ export const ORIONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   resourceId: 'orionid_debris',
   chipLabel: 'Orionids active',
   allHours: true,
+  startAtLocalMidnight: true,
 }
 
 export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
@@ -305,19 +314,21 @@ export function isLocalNight(at: Date | number): boolean {
   return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
 }
 
-/** Inclusive window open. Orionids uses local midnight on 19 Oct; other presets use UTC. */
+/** Inclusive window open. A preset may opt into a local-midnight opening. */
 export function debrisWindowStartMs(preset: DebrisEventPreset): number {
-  if (preset.eventId === 'orionids-2026') return orionidsLocalStartMs()
+  if (preset.startAtLocalMidnight) {
+    const start = new Date(preset.startUtc)
+    return localMidnightMs(start.getUTCFullYear(), start.getUTCMonth() + 1, start.getUTCDate())
+  }
   return Date.parse(preset.startUtc)
 }
 
-/** Window (start inclusive / end exclusive). All-hour showers skip the night gate. Draconids stays night-only, with the Orionids peak night as its own extra. Pure. */
+/** Window (start inclusive / end exclusive). All-hour showers skip the night gate. Pure. */
 export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
   const t = toMs(now)
   if (!Number.isFinite(t)) return false
   if (t < debrisWindowStartMs(preset) || t >= Date.parse(preset.endUtc)) return false
   if (preset.allHours) return true
-  if (preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t)) return true
   return isLocalNight(t)
 }
 

@@ -45,6 +45,7 @@ struct BaseMenu: View {
     }
 
     var body: some View {
+        GeometryReader { geo in
         ZStack {
             Color.black.opacity(0.45).ignoresSafeArea().onTapGesture(perform: onClose)
             ScrollView {
@@ -63,10 +64,13 @@ struct BaseMenu: View {
                 }
                 .padding(16)
             }
-            .frame(maxWidth: 640, maxHeight: 520)
+            // Bounded by the real window: a landscape phone is under 400pt tall, so a fixed 520 ran off both edges.
+            .frame(maxWidth: 640, maxHeight: min(520, max(200, geo.size.height - 24)))
             .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
             .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
         }
         .accessibilityIdentifier("base-menu")
     }

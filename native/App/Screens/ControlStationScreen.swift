@@ -52,7 +52,6 @@ struct ControlStationScreen: View {
         .task {
             guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
             community = res
-            store.noteResearchBonus(until: res.bonusUntil)
         }
     }
 
@@ -279,6 +278,7 @@ struct CommunityResearchScreen: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("THIS WEEK'S PATH").font(AppFont.display(14)).tracking(1.7).foregroundStyle(Theme.hex(0x9FD6E4))
             Text("Choose one route. It locks until Monday UTC.").font(AppFont.body(16)).foregroundStyle(Theme.hex(0xFAF7F0))
+            researchLedger
             HStack(spacing: 10) {
                 pathButton(.explorer, title: "EXPLORER", detail: "Signals and scans", icon: "viewfinder")
                 pathButton(.trader, title: "TRADER", detail: "Exchange and contracts", icon: "chart.line.uptrend.xyaxis")
@@ -375,11 +375,7 @@ struct CommunityResearchScreen: View {
                     Text("Step 5: permanent badge and Breakthrough")
                 }
             }
-            HStack {
-                Text("REGULAR FRAGMENTS").font(AppFont.display(14, "ExtraBold")).tracking(1.1)
-                Spacer()
-                Text("\(store.player.researchFragments)").font(AppFont.display(18, "ExtraBold"))
-            }.foregroundStyle(Theme.hex(0xFAF7F0))
+            researchLedger
             let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month))
             console(title: "COMMUNITY \(bar.total) / \(bar.goal)") { Bar(value: bar.fill) }
             if step.id == "breakthrough" && p.have >= p.need {
@@ -389,6 +385,66 @@ struct CommunityResearchScreen: View {
             PrimaryButton(title: step.kind == .event ? "JOIN" : "GO") { go(step.kind) }
                 .accessibilityIdentifier("community-research-go")
         }
+    }
+
+    private var researchLedger: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("RESEARCH INK").font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                Spacer()
+                Text("\(store.player.researchUniversalFragments)").font(AppFont.display(18, "ExtraBold"))
+            }
+            .foregroundStyle(Theme.hex(0xFAF7F0))
+            Text("A general currency for future fragment store cosmetics. Nothing spends it yet.")
+                .font(AppFont.body(14)).foregroundStyle(Theme.hex(0x9FD6E4))
+            HStack {
+                Text("REGULAR FRAGMENTS").font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                Spacer()
+                Text("\(store.player.researchFragments)").font(AppFont.display(18, "ExtraBold"))
+            }
+            .foregroundStyle(Theme.hex(0xFAF7F0))
+            Button("CONVERT \(ResearchFragments.conversionRate) TO 1 INK") { store.convertResearchFragments() }
+                .font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                .foregroundStyle(store.player.researchFragments >= ResearchFragments.conversionRate ? Theme.ink : Theme.paper.opacity(0.6))
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(store.player.researchFragments >= ResearchFragments.conversionRate ? Theme.hex(0xF2C24C) : Theme.ink.opacity(0.55))
+                .overlay(Rectangle().stroke(Theme.paper, lineWidth: 2))
+                .buttonStyle(.plain)
+                .disabled(store.player.researchFragments < ResearchFragments.conversionRate)
+                .accessibilityIdentifier("research-ink-convert")
+            Divider().overlay(Theme.hex(0x9FD6E4).opacity(0.5))
+            Text("RESEARCH HISTORY").font(AppFont.display(14, "ExtraBold")).tracking(1.1).foregroundStyle(Theme.hex(0x9FD6E4))
+            if store.player.researchFragmentHistory.isEmpty && store.player.orionidsFragments.caught == 0 {
+                Text("Complete a research week or sky event to add a permanent record here.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hex(0x9FD6E4))
+            }
+            ForEach(store.player.researchFragmentHistory) { entry in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.title.uppercased()).font(AppFont.body(14, "Bold"))
+                        Text("\(entry.fragmentsEarned) regular fragments recorded\(entry.badgeId == nil ? "" : " · badge kept")")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.hex(0x9FD6E4))
+                    }
+                    Spacer()
+                }
+                .foregroundStyle(Theme.hex(0xFAF7F0))
+            }
+            if store.player.orionidsFragments.caught > 0 {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("ORIONIDS SHOWER").font(AppFont.body(14, "Bold"))
+                        Text("\(store.player.orionidsFragments.caught) fragments caught · \(store.player.orionidsFragments.redeemed) redeemed")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.hex(0x9FD6E4))
+                    }
+                    Spacer()
+                }
+                .foregroundStyle(Theme.hex(0xFAF7F0))
+            }
+        }
+        .padding(12)
+        .background(Theme.hex(0x1A2744), in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.hex(0x9FD6E4).opacity(0.65), lineWidth: 2))
+        .accessibilityIdentifier("research-ink-ledger")
     }
 
     private var stampedDays: Int {

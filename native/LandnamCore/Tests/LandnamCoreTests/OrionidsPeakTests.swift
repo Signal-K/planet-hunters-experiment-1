@@ -20,4 +20,9 @@ final class OrionidsPeakTests: XCTestCase {
     func testShareTextNamesTier() {
         XCTAssertTrue(SkyEvents.orionidsShareText(.gold).contains("gold Orionids 2026 badge"))
     }
+
+    func testShowerPresetOwnsAllHoursRule() {
+        XCTAssertTrue(SkyEvents.orionids.allHours)
+        XCTAssertFalse(SkyEvents.draconids.allHours)
+    }
 }

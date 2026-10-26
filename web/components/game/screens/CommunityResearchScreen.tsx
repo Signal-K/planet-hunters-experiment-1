@@ -70,6 +70,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const d = new Date(now)
   const bar = communityBar(stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth()), communityResearch)
   const finished = progress.filter(p => p.have >= p.need).length
+  const eventHistory = Object.entries(stamps)
+    .filter(([, kinds]) => kinds.includes('event'))
+    .sort(([a], [b]) => b.localeCompare(a))
   const color = path ? step.color : '#58d0ea'
   const rewardSignature = `${path ?? 'picker'}:${player.researchPath?.claimedSteps?.join('.') ?? ''}:${steps.map((researchStep, index) => `${researchStep.id}:${progress[index].have >= progress[index].need ? 'done' : 'open'}`).join('|')}`
   useEffect(() => {
@@ -113,6 +116,12 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => onChoosePath(selectedPath)}>START {selectedPath.toUpperCase()}</button>
+                {eventHistory.length > 0 && (
+                  <section className={styles.facts} data-testid="community-research-history" aria-label="Research history">
+                    <b>Research history</b>
+                    <em>Orionids shower contribution recorded on {eventHistory[0][0]}</em>
+                  </section>
+                )}
               </section>
             </>
           ) : (
@@ -172,6 +181,12 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                     <div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} />
                   </div>
                 </div>
+                {eventHistory.length > 0 && (
+                  <section className={styles.facts} data-testid="community-research-history" aria-label="Research history">
+                    <b>Research history</b>
+                    <em>Orionids shower contribution recorded on {eventHistory[0][0]}</em>
+                  </section>
+                )}
                 <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>
                   {step.kind === 'event' ? 'JOIN' : 'GO'}
                 </button>

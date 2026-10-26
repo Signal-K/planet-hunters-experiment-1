@@ -41,7 +41,7 @@ import Testing
     }
 
     @Test func theDebriefPaysAFilledRunAndKeepsItsFragments() {
-        #expect(OrionidsRun.mission().requires.minerals["orionid_debris"] == 20)
+        #expect(OrionidsRun.mission().requires.cargoMin == 0)
         var d = GameState()
         d.player.freeOperations = true
         d.player.missionsDone = 5
@@ -56,6 +56,7 @@ import Testing
         #expect(OrionidsRun.catches(done.player) == 0)
         #expect(done.screen == .missions)
         #expect(done.player.stash["orionid_debris"] == nil, "fragments are not sold or stored as haul")
+        #expect(done.player.researchFragmentHistory == [.init(id: "orionids-2026", title: "Orionids shower", fragmentsEarned: 20)])
     }
 
     @Test func theLedgerRoundTripsThroughTheSave() throws {

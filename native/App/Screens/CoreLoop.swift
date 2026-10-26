@@ -6,7 +6,8 @@ private func francs(_ n: Int) -> String { Economy.format(francs: n) }
 /// Mission board (mirrors web `MissionSetupRoutes` "Choose a contract"): one contract slide at a time with
 /// previous / next arrows, the client mark, facts, required cargo and ACCEPT & PREPARE.
 /// The mission board is a scene, not a page (SSL-423): contracts arrive as client transmissions over the live base.
-/// One compact work order carries the deal (client, job, cargo, pay, accept); Program is one tap away on the rail.
+/// One compact work order carries the deal (client, job, cargo, pay, accept); the player's programme lives with
+/// client work in the same two-row work control, so it reads as the agency they are building rather than a utility tab.
 /// Mirrors web `MissionBoard` dispatch: same base, same order, same rail.
 struct MissionsScreen: View {
     @Environment(GameStore.self) private var store
@@ -57,37 +58,30 @@ struct MissionsScreen: View {
         let index = entries.isEmpty ? 0 : min(selected, entries.count - 1)
         let side = max(insets.leading, 12)
         let railTop = insets.top + 60
+        // A landscape phone is ~370pt tall: the rail drops its sub-labels and shrinks so Back, tabs and LOG all fit.
+        let compact = !portrait && size.height < 500
+        let contentLeading = side + (portrait ? 0 : compact ? Self.compactRailWidth + 8 : Self.railWidth + 16)
         return ZStack(alignment: .topLeading) {
             Color.clear
             if tab != 0 { Theme.ink.opacity(0.18).allowsHitTesting(false) }
 
-            if tab == 0 {
-                Button { store.go(.hub) } label: {
-                    Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.paper)
-                        .frame(width: 44, height: 44).background(Theme.ink.opacity(0.72), in: Circle())
-                        .overlay(Circle().stroke(Theme.paper.opacity(0.35), lineWidth: 2))
-                }
-                .buttonStyle(.plain).accessibilityLabel("Back")
-                .padding(.top, insets.top + 12).padding(.leading, side)
-                .zIndex(4)
-            } else {
-                HStack(alignment: .top) {
-                    HudGearClock { showSettings = true }
-                    Spacer()
-                    HudChips(francs: store.player.francs)
-                }
-                .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
-
-                rail(portrait: portrait)
-                    .padding(.top, railTop).padding(.leading, side)
+            HStack(alignment: .top) {
+                HudGearClock { showSettings = true }
+                Spacer()
+                // The contract workspace fills the landscape phone edge to edge and would bury the chips: leave them off there.
+                if !(compact && tab == 0 && !entries.isEmpty) { HudChips(francs: store.player.francs) }
             }
+            .padding(.top, insets.top + 8).padding(.leading, side).padding(.trailing, max(insets.trailing, 12))
+
+            rail(portrait: portrait, compact: compact)
+                .padding(.top, compact ? insets.top + 52 : railTop).padding(.leading, side)
 
             if tab == 3 {
                 FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked && ($0.id != OrionidsRun.surfaceResearchMissionId || store.player.orionidsEventStage == 1) }, eventFocus: eventFocus) { store.pickMission($0) }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
-                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.leading, contentLeading)
                     .padding(.trailing, max(insets.trailing, 12))
                     .padding(.bottom, insets.bottom + 12)
             } else if tab == 1 || tab == 2 {
@@ -95,7 +89,7 @@ struct MissionsScreen: View {
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)
-                    .padding(.leading, portrait ? side : side + 144)
+                    .padding(.leading, contentLeading)
                     .padding(.trailing, max(insets.trailing, 12))
                     .padding(.bottom, insets.bottom + 12)
             } else if entries.isEmpty {
@@ -109,6 +103,8 @@ struct MissionsScreen: View {
                 ContractWorkspace(entries: entries, selectedIndex: index, player: store.player, portrait: portrait, topInset: insets.top,
                                   onSelect: { selected = $0 }, onTake: { store.pickMission(e.id) })
                 .id(e.id)
+                // Landscape: keep the rail (Back, tabs, LOG) clear of the workspace so it stays tappable.
+                .padding(.leading, portrait ? 0 : max(0, contentLeading - 20))
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -225,36 +221,55 @@ struct MissionsScreen: View {
             .padding(.trailing, max(insets.trailing, 12) + (portrait ? 0 : 4))
     }
 
-    private func rail(portrait: Bool) -> some View {
-        let layout = portrait ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+    static let railWidth: CGFloat = 164
+    static let compactRailWidth: CGFloat = 136
+
+    private func rail(portrait: Bool, compact: Bool) -> some View {
+        let layout = portrait ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(alignment: .leading, spacing: compact ? 6 : 8))
         return layout {
             Button { store.go(.hub) } label: {
                 Image(systemName: "chevron.left").font(.system(size: 18, weight: .bold)).foregroundStyle(Theme.ink)
                     .frame(width: 44, height: 44).background(Theme.paper, in: Circle()).overlay(Circle().stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Back")
-            railTab(0, "Contracts", "chart.line.uptrend.xyaxis", portrait: portrait)
-            railTab(1, "Program", "list.clipboard", portrait: portrait)
-            railTab(2, "Events", "star", portrait: portrait)
-            if store.player.freeOperations { railTab(3, "Free run", "scope", portrait: portrait) }
+            workTabs(portrait: portrait, compact: compact)
+            railTab(2, "Events", "star", portrait: portrait, compact: compact)
+            if store.player.freeOperations { railTab(3, "Free run", "scope", portrait: portrait, compact: compact) }
             Button { archiveFocus = nil; showArchive = true } label: {
                 Text("LOG").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
-                    .frame(minWidth: portrait ? 56 : 132, minHeight: 44)
+                    .frame(minWidth: portrait ? 56 : (compact ? Self.compactRailWidth : Self.railWidth), minHeight: 44)
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 14))
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Archive and pathways")
         }
     }
 
-    private func railTab(_ i: Int, _ title: String, _ symbol: String, portrait: Bool) -> some View {
+    /// Client-paid work and self-directed programme work share one physical
+    /// slot. The two tones make their different purpose legible at a glance.
+    private func workTabs(portrait: Bool, compact: Bool) -> some View {
+        VStack(spacing: 4) {
+            railTab(0, "Contracts", "chart.line.uptrend.xyaxis", detail: "CLIENT WORK", portrait: portrait, compact: compact, tint: Theme.blue)
+            railTab(1, "Program", "list.clipboard", detail: "BUILD YOUR AGENCY", portrait: portrait, compact: compact, tint: Theme.hex(0x2A9AA3))
+        }
+        .padding(4)
+        .background(Theme.ink.opacity(0.28), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.paper.opacity(0.32), lineWidth: 1))
+    }
+
+    private func railTab(_ i: Int, _ title: String, _ symbol: String, detail: String? = nil, portrait: Bool, compact: Bool = false, tint: Color = Theme.blue) -> some View {
         let on = tab == i
         return Button { tab = i } label: {
             HStack(spacing: 6) {
                 Image(systemName: symbol).font(.system(size: 18, weight: .bold))
-                if !portrait { Text(title).font(AppFont.display(14)) }
+                if !portrait {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(title).font(AppFont.display(14))
+                        if let detail, !compact { Text(detail).font(AppFont.mono(10)).tracking(0.8).opacity(0.76) }
+                    }
+                }
             }
             .foregroundStyle(on ? Color.white : Theme.ink)
-            .frame(width: portrait ? 52 : 132, height: portrait ? 52 : 48)
-            .background(on ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 14))
+            .frame(width: portrait ? 52 : (compact ? Self.compactRailWidth - 8 : Self.railWidth), height: portrait ? 52 : (compact ? 44 : 48))
+            .background(on ? tint : Theme.paper, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.ink, lineWidth: on ? 3 : 2))
         }
         .buttonStyle(.plain).accessibilityLabel(title).accessibilityAddTraits(on ? .isSelected : [])
@@ -326,6 +341,7 @@ private struct ContractWorkspace: View {
         let client = mission.client.flatMap { Clients.byId[$0] }
         let level = client.map { 1 + max(0, player.clientMissions[$0.id] ?? 0) / Clients.affinityMissionThreshold }
         let layout = portrait ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+        let edgeInset: CGFloat = portrait ? 12 : 20
         layout {
             offers
                 .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
@@ -335,7 +351,7 @@ private struct ContractWorkspace: View {
                 Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
                     .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hex(0xB8C8C0)).lineLimit(1)
                 Text(mission.title).font(AppFont.display(portrait ? 24 : 28)).foregroundStyle(Theme.hex(0xF4EFE4))
-                    .multilineTextAlignment(.center).lineLimit(2)
+                    .multilineTextAlignment(.center).lineLimit(3).minimumScaleFactor(0.8)
                 Text(mission.brief).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF4EFE4))
                     .multilineTextAlignment(.center).lineLimit(portrait ? 3 : 4)
                 Text("\(selectedIndex + 1) / \(entries.count)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xB8C8C0))
@@ -347,6 +363,10 @@ private struct ContractWorkspace: View {
                 .frame(maxWidth: .infinity, maxHeight: portrait ? nil : .infinity)
                 .background(Theme.hex(0x176A94).opacity(0.96))
         }
+        .clipShape(RoundedRectangle(cornerRadius: portrait ? 18 : 24))
+        .overlay(RoundedRectangle(cornerRadius: portrait ? 18 : 24).stroke(Theme.paper.opacity(0.22), lineWidth: 1))
+        .padding(.horizontal, edgeInset)
+        .padding(.vertical, edgeInset)
         .ignoresSafeArea()
     }
 
@@ -355,14 +375,14 @@ private struct ContractWorkspace: View {
             Text("CONTRACTS").font(AppFont.display(18)).tracking(2).foregroundStyle(Theme.hex(0xA8DCF2))
             let count = min(5, entries.count)
             let start = selectedIndex - count / 2
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 10), count: portrait ? 5 : 3), spacing: 10) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 14), count: portrait ? 5 : 3), spacing: 14) {
                 ForEach(0..<count, id: \.self) { offset in
                     let index = (start + offset + entries.count) % entries.count
                     let contract = entries[index].mission
                     let client = contract.client.flatMap { Clients.byId[$0] }
                     Button { onSelect(index) } label: {
                         ZStack(alignment: .bottomTrailing) {
-                            clientMark(client).frame(width: 52, height: 52)
+                            clientMark(client, size: 52)
                             Text("\(index + 1)").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xF4EFE4))
                         }
                         .frame(width: 56, height: 56)
@@ -375,7 +395,7 @@ private struct ContractWorkspace: View {
 
     private func action(_ entry: MissionBoard.Entry, mission: Mission) -> some View {
         VStack(spacing: portrait ? 10 : 20) {
-            Text("REQUIREMENTS").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x9DE7EF))
+            Text("REQUIREMENTS").font(AppFont.display(18)).tracking(portrait ? 1.5 : 0.6).lineLimit(1).foregroundStyle(Theme.hex(0x9DE7EF))
             HStack(spacing: 18) {
                 ForEach(mission.requires.minerals.sorted { $0.key < $1.key }, id: \.key) { id, amount in
                     if let meta = Minerals.byId[id] {
@@ -394,15 +414,16 @@ private struct ContractWorkspace: View {
                 Text("ACCEPT").font(AppFont.display(18)).tracking(1.5).foregroundStyle(Theme.hex(0x152033))
                     .frame(maxWidth: 220, minHeight: 52).background(Theme.hex(0xF4EFE4), in: RoundedRectangle(cornerRadius: 4))
             }.buttonStyle(.plain).disabled(!entry.unlocked)
-        }.padding(portrait ? 14 : 24)
+        }.padding(portrait ? 14 : 16)
     }
 
-    private func clientMark(_ client: Client?) -> some View {
+    /// The 68pt mark is the hero avatar; the offer grid passes its cell size so neighbours never overlap.
+    private func clientMark(_ client: Client?, size: CGFloat = 68) -> some View {
         ZStack {
             Circle().fill(mixWhite(client?.colorHex, 0.35, fallback: Theme.paper2))
             Circle().stroke(Theme.hex(0x152033), lineWidth: 2)
-            Text(client?.initial ?? "OP").font(AppFont.display(18)).foregroundStyle(Theme.hex(0x152033))
-        }.frame(width: 68, height: 68)
+            Text(client?.initial ?? "OP").font(AppFont.display(size < 60 ? 16 : 18)).foregroundStyle(Theme.hex(0x152033))
+        }.frame(width: size, height: size)
     }
 }
 
@@ -666,15 +687,10 @@ struct DebriefScreen: View {
                     } else {
                         CreamCard {
                             statusLine(status, crit: store.player.shipDestroyed)
-                            HStack(alignment: .top, spacing: 28) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("MISSION").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
-                                    Text(m?.title ?? "Contract").font(AppFont.display(22)).foregroundStyle(Theme.ink)
-                                }
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(program ? "STATIONED AT" : "RETURNED FROM").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
-                                    Text(target?.name ?? "—").font(AppFont.display(22)).foregroundStyle(Theme.ink)
-                                }
+                            // Side by side when both titles fit on a line; stacked on a narrow card so no word breaks mid-letter.
+                            ViewThatFits(in: .horizontal) {
+                                HStack(alignment: .top, spacing: 28) { debriefMissionColumn(m?.title); debriefTargetColumn(program: program, target: target?.name) }
+                                VStack(alignment: .leading, spacing: 12) { debriefMissionColumn(m?.title); debriefTargetColumn(program: program, target: target?.name) }
                             }
                         }
                     }
@@ -870,6 +886,23 @@ struct LaserCapacitorPanel: View {
                 Text(LaserCapacitor.tiers.last { $0.level == level }?.name ?? "Laser Capacitor").font(AppFont.display(22)).foregroundStyle(Theme.ink)
                 Text("\(LaserCapacitor.bonus(level)) charges on every run.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
             }
+        }
+    }
+}
+
+
+private extension DebriefScreen {
+    func debriefMissionColumn(_ title: String?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("MISSION").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+            Text(title ?? "Contract").font(AppFont.display(22)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    func debriefTargetColumn(program: Bool, target: String?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(program ? "STATIONED AT" : "RETURNED FROM").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+            Text(target ?? "—").font(AppFont.display(22)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

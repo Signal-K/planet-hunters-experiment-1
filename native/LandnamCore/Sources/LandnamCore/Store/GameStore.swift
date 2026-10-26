@@ -160,6 +160,12 @@ public final class GameStore {
         if changed { apply(n) }
     }
 
+    public func convertResearchFragments() {
+        var n = state
+        guard ResearchFragments.convertAvailable(&n.player) > 0 else { return }
+        apply(n)
+    }
+
     public func openMissionBoard(tab: Int) {
         requestedMissionBoardTab = tab
         go(.missions)
@@ -304,12 +310,6 @@ public final class GameStore {
         guard let preset = SkyEvents.presets.first(where: { $0.resourceId == resourceId }) else { return }
         var n = state
         SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
-        apply(n)
-    }
-    /// SSL-673: keep the community research bonus window the server reported, so Exchange sells pay it offline too.
-    public func noteResearchBonus(until: Double?) {
-        var n = state
-        guard ResearchStampRules.noteBonus(&n.player, until: until) else { return }
         apply(n)
     }
     /// Fragments mined with the laser count toward the ledger (web `addCaughtFragments(mined, 1, 'count')`).

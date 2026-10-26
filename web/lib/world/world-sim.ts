@@ -24,6 +24,8 @@ export interface BodyDef {
   wind?: number
   drag?: number
   ground?: GroundMode
+  /** Prefab spawned where a 'splash' body lands (default: splash). */
+  impact?: string
   bounce?: number
   life?: number
   /** Scale growth per second (exhaust puffs). */
@@ -185,7 +187,8 @@ export function stepBodies(world: World, dt: number): void {
     }
     if (b.ground && b.ground !== 'none' && e.y <= e.floor) {
       if (b.ground === 'splash') {
-        const s = PREFABS.splash ? makeEntity(world, PREFABS.splash, { x: e.x, y: e.floor, event: e.event }) : null
+        const hit = PREFABS[b.impact ?? 'splash']
+        const s = hit ? makeEntity(world, hit, { x: e.x, y: e.floor, event: e.event }) : null
         if (s) born.push(s)
         continue
       }
@@ -226,16 +229,17 @@ export function applySky(world: World, sky: SkyState, view: WorldView, dt: numbe
       startEvent(world, ev, view)
     }
     if (ev.kind === 'meteors' && ev.perMinute) emitAtRate(world, `m:${ev.id}`, ev.perMinute / 60, dt, () => {
-      const angle = (world.rng.next() < 0.5 ? -1 : 1) * world.rng.range(0.35, 0.75)
-      const speed = world.rng.range(100, 130)
-      spawn(world, 'meteor', { x: world.rng.range(0, view.w), y: world.rng.range(view.h * 0.78, view.h * 0.98), vx: Math.sin(angle) * speed, vy: -Math.cos(angle) * speed, event: ev.id })
+      const angle = (world.rng.next() < 0.5 ? -1 : 1) * world.rng.range(0.12, 0.45)
+      const speed = world.rng.range(30, 42)
+      // Enter near the top of the sky and fall to the ground, landing in a flash.
+      spawn(world, 'meteor', { x: world.rng.range(0, view.w), y: world.rng.range(view.h * 0.9, view.h), vx: Math.sin(angle) * speed, vy: -Math.cos(angle) * speed, floor: world.rng.range(-30, 0), event: ev.id })
     })
   }
   for (const id of [...world.activeEvents]) if (!live.has(id)) world.activeEvents.delete(id)
   const w = sky.weather
   const snow = w.precip === 'snow'
   if (w.rainPerSecond > 0) emitAtRate(world, 'rain', w.rainPerSecond * (snow ? 0.6 : 1), dt, () => {
-    spawn(world, snow ? 'snowflake' : 'raindrop', { x: stripXAt(view, world.rng.range(-0.05, 1.05), 0.9), y: view.h, vy: snow ? -14 : -150, floor: world.rng.range(-36, 4) })
+    spawn(world, snow ? 'snowflake' : 'raindrop', { x: stripXAt(view, world.rng.range(-0.05, 1.05), 0.9), y: view.h, vy: snow ? -14 : -30, floor: world.rng.range(-36, 4) })
   })
   if (w.dust) emitAtRate(world, 'dust', 8, dt, () => {
     spawn(world, 'dust', { x: stripXAt(view, world.rng.range(-0.1, 0.9), 0.7), y: world.rng.range(0, 28), vx: w.wind })

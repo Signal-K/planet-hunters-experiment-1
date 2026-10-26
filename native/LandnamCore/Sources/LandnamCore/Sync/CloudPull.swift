@@ -59,7 +59,9 @@ public enum CloudPull {
         n.player.asteroidClassifications.merge(local.player.asteroidClassifications) { _, mine in mine }
         n.player.saturnClassifications.merge(local.player.saturnClassifications) { _, mine in mine }
         n.player.researchStamps = ResearchStampRules.merge(n.player.researchStamps, local.player.researchStamps)
-        ResearchStampRules.noteBonus(&n.player, until: ResearchStampRules.bonusUntil(local.player))
+        n.player.researchUniversalFragments = max(n.player.researchUniversalFragments, local.player.researchUniversalFragments)
+        n.player.researchFragments = max(n.player.researchFragments, local.player.researchFragments)
+        n.player.researchFragmentHistory = ResearchFragments.mergeHistory(local.player.researchFragmentHistory, n.player.researchFragmentHistory)
         for (id, badge) in local.player.badges {
             if let theirs = n.player.badges[id], !(badge.tier == .gold && theirs.tier != .gold) { continue }
             n.player.badges[id] = badge

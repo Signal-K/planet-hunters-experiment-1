@@ -47,11 +47,13 @@ public struct FriendGift: Codable, Equatable, Sendable, Identifiable {
 
 public enum FriendsAPIError: LocalizedError, Sendable {
     case unavailable
+    case sessionExpired
     case rejected(String)
 
     public var errorDescription: String? {
         switch self {
-        case .unavailable: return "Friends is unavailable right now."
+        case .unavailable: return "Friends are unavailable right now. Check your connection and try again."
+        case .sessionExpired: return "Your session timed out. Reconnecting now, try again in a moment."
         case .rejected(let message): return message
         }
     }
@@ -61,11 +63,14 @@ public struct FriendsAPI: Sendable {
     public var baseURL: URL
     public var token: String
     public var session: URLSession
+    /// Fired on a 401/403 so the app can renew the token; the caller sees `sessionExpired`, never the server's wording.
+    public var onUnauthorized: (@Sendable () -> Void)?
 
-    public init(baseURL: URL, token: String, session: URLSession = .shared) {
+    public init(baseURL: URL, token: String, session: URLSession = .shared, onUnauthorized: (@Sendable () -> Void)? = nil) {
         self.baseURL = baseURL
         self.token = token
         self.session = session
+        self.onUnauthorized = onUnauthorized
     }
 
     public func list() async throws -> FriendsList { try await request("list") }
@@ -101,6 +106,7 @@ public struct FriendsAPI: Sendable {
         catch { throw FriendsAPIError.unavailable }
         guard let http = response as? HTTPURLResponse else { throw FriendsAPIError.unavailable }
         guard (200..<300).contains(http.statusCode) else {
+            if http.statusCode == 401 || http.statusCode == 403 { onUnauthorized?(); throw FriendsAPIError.sessionExpired }
             let message = (try? JSONDecoder().decode(ErrorReply.self, from: data))?.message ?? "Friends request failed."
             throw FriendsAPIError.rejected(message)
         }

@@ -19,6 +19,7 @@ public struct WorldScene: Decodable, Sendable {
         public var vx: Double?, vy: Double?, ax: Double?, ay: Double?
         public var gravity: Double?, wind: Double?, drag: Double?
         public var ground: String?
+        public var impact: String?
         public var bounce: Double?, life: Double?, grow: Double?
         public var fade: Bool?
         public var pitch: Double?

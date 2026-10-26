@@ -24,6 +24,7 @@ public struct DebrisPreset: Equatable, Sendable {
     public let startMs: Double, endMs: Double, peakMs: Double
     public let peakRatePerMinute: Double, baseRatePerMinute: Double
     public let speedFactor: Double
+    public let allHours: Bool
     public let label: String, resourceId: String, chipLabel: String
 }
 
@@ -94,10 +95,10 @@ public enum SkyEvents {
     // MARK: debris showers
     public static let orionids = DebrisPreset(eventId: "orionids-2026", startMs: localMidnight(2026, 10, 19), endMs: utc(2026, 11, 8), peakMs: utc(2026, 10, 22),
                                                peakRatePerMinute: 12, baseRatePerMinute: 4, speedFactor: 1,
-                                               label: "Orionid debris", resourceId: "orionid_debris", chipLabel: "Orionids active")
+                                               allHours: true, label: "Orionid debris", resourceId: "orionid_debris", chipLabel: "Orionids active")
     public static let draconids = DebrisPreset(eventId: "draconids-2026", startMs: utc(2026, 10, 6), endMs: utc(2026, 10, 11), peakMs: utc(2026, 10, 8),
                                                 peakRatePerMinute: 2, baseRatePerMinute: 0.5, speedFactor: 0.4,
-                                                label: "Dragon dust", resourceId: "draconid_debris", chipLabel: "Draconids active")
+                                                allHours: false, label: "Dragon dust", resourceId: "draconid_debris", chipLabel: "Draconids active")
     public static let presets = [orionids, draconids]
     public static let debrisResourceIds = presets.map(\.resourceId)
     /// Event catches remain attached to the run until debrief; they are never jettisonable.
@@ -110,8 +111,8 @@ public enum SkyEvents {
     }
 
     public static func isActive(_ p: DebrisPreset, at ms: Double, calendar: Calendar = .current) -> Bool {
-        // Orionids is live every hour of its window (web `allHours`, SSL-578); other showers fall at local night only.
-        ms >= p.startMs && ms < p.endMs && (p.eventId == orionids.eventId || isLocalNight(ms, calendar: calendar))
+        // The preset owns whether a shower is live all day or only at local night.
+        ms >= p.startMs && ms < p.endMs && (p.allHours || isLocalNight(ms, calendar: calendar))
     }
 
     public static func activePreset(at ms: Double, calendar: Calendar = .current) -> DebrisPreset? {

@@ -745,7 +745,12 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-community-research':
       return {
         screen: 'community-research',
-        player: { ...POST_ONBOARDING_PLAYER, },
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          // Existing-save acceptance fixture: the Orionids run has already
+          // stamped today's event contribution for the community history view.
+          researchStamps: { [new Date().toISOString().slice(0, 10)]: ['event'] },
+        },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

@@ -7,13 +7,13 @@ import styles from './MeteorShowerWeather.module.css'
 
 const COUNT = 4
 
-/** True while the Orionids window is open (or the dev force flag is set). */
-function useOrionidsWeather(): boolean {
+/** True while any configured meteor-shower window is open (or the dev force flag is set). */
+function useMeteorShowerWeather(): boolean {
   const [on, setOn] = useState(false)
   useEffect(() => {
     const check = () => {
       const dev = isDevLauncherEnabled()
-      const active = activeDebrisPreset(skyEventNow(dev))?.eventId === 'orionids-2026'
+      const active = activeDebrisPreset(skyEventNow(dev)) != null
       setOn(active || (dev && orionidsDevForced()))
     }
     check()
@@ -28,7 +28,7 @@ function useOrionidsWeather(): boolean {
  * fading tails on stepped animation. Seeded layout so SSR and client agree.
  */
 export function MeteorShowerWeather() {
-  const on = useOrionidsWeather()
+  const on = useMeteorShowerWeather()
   const streaks = useMemo(() => {
     let seed = 1021
     const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff }
@@ -44,7 +44,7 @@ export function MeteorShowerWeather() {
   }, [])
   if (!on) return null
   return (
-    <div className={styles.layer} data-layer="weather" data-weather="orionids" aria-hidden="true">
+    <div className={styles.layer} data-layer="weather" data-weather="meteor-shower" aria-hidden="true">
       {streaks.map((s, i) => (
         <span
           key={i}

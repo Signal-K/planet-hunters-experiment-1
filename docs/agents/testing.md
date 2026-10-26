@@ -1,6 +1,6 @@
 # Scene verification
 
-The workspace-owned **Landnam Preview** extension is the web interaction surface. It opens a disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, shows its follower heartbeat, and starts the stack only when needed. Install `tools/landnam-preview/landnam-preview-0.1.1.vsix` locally during development. There is no
+The workspace-owned **Landnam Preview** extension is a thin web interaction surface. It opens a populated disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, and shows its follower heartbeat. It never manages the local stack: run `make ensure` separately when needed. Its bridge turns ordinary game-screen targets and authoring-file changes into playable stage fixtures. Scene updates do not require reloading Cursor. Install `tools/landnam-preview/landnam-preview-0.1.5.vsix` locally during development. There is no
 Playwright, Cypress, Chromium, Chrome, headless runner, screenshot matrix, or
 test stack.
 

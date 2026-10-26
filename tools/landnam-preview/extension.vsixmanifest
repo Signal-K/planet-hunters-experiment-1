@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
   <Metadata>
-    <Identity Id="landnam-preview" Version="0.1.1" Publisher="landnam" />
+    <Identity Id="landnam-preview" Version="0.1.5" Publisher="landnam" />
     <DisplayName>Landnam Preview</DisplayName>
     <Description>A resilient in-editor preview for Landnam scenes.</Description>
   </Metadata>

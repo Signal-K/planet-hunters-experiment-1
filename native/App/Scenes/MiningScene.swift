@@ -193,7 +193,7 @@ final class MiningScene: SKScene {
         for l in 1..<max(cols.count, 1) { for x in 0..<w { cols[l][x] = max(cols[l][x], cols[l - 1][x] + 3) } }   // layers never invert
         let tone = tops.indices.map { hash($0, 4, seed) - 0.5 }
         let topP = max(2, w / 18)
-        return pixelTexture(width: w, height: h) { x, y in
+        return pixelTexture(width: w, height: h) { (x: Int, y: Int) -> UInt32? in
             // Uneven crust: slow swells plus a ragged 3-column jitter, so the surface is never a ruler edge.
             let rim = 1 + wrapNoise(CGFloat(x), cell: CGFloat(w) / CGFloat(topP), period: topP, seed: seed + 91) * 8 + hash(x / 3, 5, seed) * 3
             let fy = CGFloat(y)
@@ -238,7 +238,7 @@ final class MiningScene: SKScene {
             [(6, 15, 4, 8), (11, 15, 4, 13), (16, 15, 4, 6)],
         ]
         let crystals = sets[variant % sets.count]
-        return pixelTexture(width: w, height: h) { x, y in
+        return pixelTexture(width: w, height: h) { (x: Int, y: Int) -> UInt32? in
             let dx = CGFloat(x) - 11.5, dy = CGFloat(y) - 9.5
             let inPocket = (dx * dx) / 132 + (dy * dy) / 62 < 1
             for (cx, by, cw, ch) in crystals {

@@ -167,12 +167,14 @@ final class Services {
     /// therefore never enter the offline outbox.
     func friendsAPI() -> FriendsAPI? {
         guard let session else { return nil }
-        return FriendsAPI(baseURL: api.baseURL, token: session.token)
+        let bad = unauthorized
+        return FriendsAPI(baseURL: api.baseURL, token: session.token, onUnauthorized: { bad.fire() })
     }
 
     func notificationsAPI() -> NotificationsAPI? {
         guard let session else { return nil }
-        return NotificationsAPI(baseURL: api.baseURL, token: session.token)
+        let bad = unauthorized
+        return NotificationsAPI(baseURL: api.baseURL, token: session.token, onUnauthorized: { bad.fire() })
     }
 
     func refreshFriendPresence() {
@@ -208,9 +210,10 @@ final class Services {
     func pullIfNeeded() {
         guard let session, let store, !pulling else { return }
         let id = session.userId
-        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await sync.setUser(id) } }
+        let capturedSync = sync
+        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await capturedSync.setUser(id) } }
         pulling = true
-        let base = api.baseURL, tok = session.token, sync = sync
+        let base = api.baseURL, tok = session.token
         Task { @MainActor in
             defer { pulling = false }
             let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
@@ -220,17 +223,17 @@ final class Services {
             case .none: break
             case .unavailable: return
             }
-            await sync.enqueue(NativeRecords.pushSubscription(userId: id, endpoint: LocalNotifications.endpoint))
+            await capturedSync.enqueue(NativeRecords.pushSubscription(userId: id, endpoint: LocalNotifications.endpoint))
             if TakeonPersistence.load("moon") == nil,
                let (_, snap) = await NativeRecords.fetchWorld(baseURL: base, token: tok, userId: id, targetId: "moon"), let snap {
                 TakeonPersistence.storeLocal("moon", snap)
             }
             if let runs = await MissionRuns.fetchOpen(baseURL: base, token: tok, userId: id), self.session?.userId == id {
-                for op in store.repairRuns(runs) { await sync.enqueue(op) }
+                for op in store.repairRuns(runs) { await capturedSync.enqueue(op) }
             }
             UserDefaults.standard.set(true, forKey: pulledKey(id))
-            await sync.setUser(id)
-            await sync.save(store.state)
+            await capturedSync.setUser(id)
+            await capturedSync.save(store.state)
         }
     }
 

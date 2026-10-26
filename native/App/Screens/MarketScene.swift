@@ -17,10 +17,21 @@ struct MarketScreen: View {
     private let zones = HUDZones.standard
 
     var body: some View {
+        // The inner reader ignores the safe area to fill the screen, which zeroes its own insets: read them out here.
+        GeometryReader { outer in content(safe: outer.safeAreaInsets) }
+            .background(Theme.tokenBlueprintBg.ignoresSafeArea())
+            .task(id: armed) {
+                guard armed else { return }
+                try? await Task.sleep(nanoseconds: 4_000_000_000)
+                if !Task.isCancelled { armed = false }
+            }
+    }
+
+    private func content(safe: EdgeInsets) -> some View {
         GeometryReader { geo in
             let short = geo.size.height < 520
             let wide = geo.size.width >= 900 && geo.size.height >= 640
-            let safe = geo.safeAreaInsets
+            let landscapeSideInset = short ? max(24, safe.leading + 12) : max(12, safe.leading + 8)
             let coachInset: CGFloat = FlightPlan.coach(store.player, screen: .market, includeHidden: true) == nil ? 0 : 68
             ZStack(alignment: .topLeading) {
                 Image("scene-exchange-plate-dock")
@@ -41,31 +52,20 @@ struct MarketScreen: View {
                     .frame(maxWidth: wide ? 720 : .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(.top, max((short ? 56 : 76) + coachInset, safe.top + 56 + coachInset))
                     .padding(.bottom, short ? max(68, safe.bottom + 60) : 88)
-                    .padding(.leading, max(12, safe.leading + 8))
-                    .padding(.trailing, max(12, safe.trailing + 8))
+                    .padding(.leading, landscapeSideInset)
+                    .padding(.trailing, short ? max(24, safe.trailing + 12) : max(12, safe.trailing + 8))
                     .frame(maxWidth: .infinity, alignment: .center)
                 Button("BACK") { store.go(.hub) }
                     .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.ink)
                     .frame(minWidth: 44, minHeight: 44).padding(.horizontal, 12)
                     .background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
                     .buttonStyle(.plain)
-                    .padding(.leading, max(12, safe.leading + 8))
+                    .padding(.leading, landscapeSideInset)
                     .padding(.top, max(12, safe.top + 8))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
         .ignoresSafeArea(edges: [.top, .horizontal])
-        .background(Theme.tokenBlueprintBg.ignoresSafeArea())
-        .task(id: armed) {
-            guard armed else { return }
-            try? await Task.sleep(nanoseconds: 4_000_000_000)
-            if !Task.isCancelled { armed = false }
-        }
-        .task {
-            // SSL-673: pick up a bonus week opened since the Control Station was last open.
-            guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
-            store.noteResearchBonus(until: res.bonusUntil)
-        }
     }
 
     // MARK: panel
@@ -93,12 +93,6 @@ struct MarketScreen: View {
                     .font(AppFont.display(16, "ExtraBold")).foregroundStyle(Theme.ink)
                     .accessibilityLabel("Balance \(Economy.format(francs: store.player.francs))")
                     .accessibilityIdentifier("market-balance")
-            }
-            if tab == .sell && ResearchStampRules.bonusActive(store.player, now: store.now) {
-                // SSL-673, web `market-research-bonus`.
-                Text("Community research bonus: sales pay +\(ResearchStampRules.communityWeeklyRevenuePct)% this week.".uppercased())
-                    .font(AppFont.body(14, "SemiBold")).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("market-research-bonus")
             }
             HStack(spacing: 6) {
                 ForEach(Tab.allCases, id: \.self) { t in

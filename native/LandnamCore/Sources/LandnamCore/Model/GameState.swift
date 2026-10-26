@@ -112,6 +112,10 @@ public struct Player: Codable, Equatable, Sendable {
     /// Weekly community research path and permanent regular fragments (SSL-694).
     public var researchPath: ResearchPathChoice?
     public var researchFragments: Int = 0
+    /// General Research Ink. It is earned by converting regular fragments and will fund future fragment-store cosmetics.
+    public var researchUniversalFragments: Int = 0
+    /// Immutable source records keep completed research weeks visible after their fragments become Research Ink.
+    public var researchFragmentHistory: [ResearchFragmentHistoryEntry] = []
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
 
@@ -162,7 +166,7 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("orionidsEventStage", &orionidsEventStage); get("researchStamps", &researchStamps); getOpt("researchPath", &researchPath); get("researchFragments", &researchFragments); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("orionidsEventStage", &orionidsEventStage); get("researchStamps", &researchStamps); getOpt("researchPath", &researchPath); get("researchFragments", &researchFragments); get("researchUniversalFragments", &researchUniversalFragments); get("researchFragmentHistory", &researchFragmentHistory); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         Self.mergeTelescope(&self)
@@ -224,7 +228,7 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("orionidsEventStage", orionidsEventStage); try put("researchStamps", researchStamps); try putOpt("researchPath", researchPath); try put("researchFragments", researchFragments); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("orionidsEventStage", orionidsEventStage); try put("researchStamps", researchStamps); try putOpt("researchPath", researchPath); try put("researchFragments", researchFragments); try put("researchUniversalFragments", researchUniversalFragments); try put("researchFragmentHistory", researchFragmentHistory); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 

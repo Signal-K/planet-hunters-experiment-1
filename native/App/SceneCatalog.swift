@@ -295,6 +295,8 @@ enum SceneCatalog {
         scene("intro-biome-landscape", 402, w: 874) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-desktop", 900, w: 1440) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
+        scene("takeon-live-landscape", 402, w: 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
+        scene("friends-landscape", 428, w: 926) { FriendsSheet(onClose: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
         scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
@@ -445,6 +447,13 @@ enum SceneCatalog {
             var gs = GameState()
             gs.player.freeOperations = true
             gs.player.placed = ["launchpad", "market"]
+            gs.player.researchFragments = 25
+            gs.player.researchUniversalFragments = 3
+            gs.player.researchFragmentHistory = [
+                .init(id: "community-research-2026-10-19", title: "Explorer week of 2026-10-19", fragmentsEarned: 25, badgeId: "community-research-2026-10-19")
+            ]
+            gs.player.badges["community-research-2026-10-19"] = PlayerBadge(eventId: "community-research-2026-10-19", tier: .gold, earnedAt: wswNoon)
+            gs.player.orionidsFragments = OrionidsFragments(caught: 20, redeemed: 0)
             gs.screen = .communityResearch
             return CommunityResearchScreen().environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },
@@ -680,12 +689,6 @@ enum SceneCatalog {
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
-        // SSL-673: inside the community research bonus week, ore quotes pay +3% and the note says so.
-        scene("exchange-research-bonus-phone", 874) {
-            var gs = exchangeState()
-            ResearchStampRules.noteBonus(&gs.player, until: Date().timeIntervalSince1970 * 1000 + 86_400_000)
-            return MarketScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
-        },
         scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
         scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },
@@ -758,6 +761,19 @@ enum SceneCatalog {
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
         scene("base-menu-phone", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("base-menu-live", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        // Active contract plus the folded coach "?" chip in a landscape phone: the chip must not sit on the contract card.
+        scene("hub-contract-chip-live", 874) {
+            var gs = landscapeBase()
+            gs.player.activeMission = ActiveMission(id: "m", label: "Belt Courier Run")
+            gs.player.missionPhase = .mining
+            gs.player.flightPlan.hidden = true
+            let st = GameStore(state: gs)
+            return ZStack {
+                HubScreen()
+                if let coach = FlightPlan.coach(st.player, screen: .hub, includeHidden: true) { CoachPlacement(coach: coach, screen: .hub) }
+            }.environment(st)
+        },
         scene("base-menu-desktop", 900, w: 1440) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
         scene("hub-silo-surface-phone", 874) {
             let world = BaseWorld(w: phone, h: 874)
@@ -771,22 +787,31 @@ enum SceneCatalog {
 
 /// Shown instead of RootView when the app is launched with `-scene <id>`.
 /// `-scene list` prints the index on screen. DEBUG builds only.
+/// `-landnam.fullscreen YES` lays any fixture out full-screen with the real safe areas, to check it at the device's own size.
 struct SceneHost: View {
     let id: String
     var body: some View {
-        if let s = SceneCatalog.find(id), id.contains("-live") || id.hasPrefix("coach-") || id.hasPrefix("try-") {
-            // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
-            s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
-                #if os(iOS)
-                .onAppear { OrientationPreference.current.apply() }
-                #endif
-        } else if let s = SceneCatalog.find(id) {
-            ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
-        } else {
-            ScrollView { VStack(alignment: .leading, spacing: 8) {
-                Text(id == "list" ? "Scenes" : "No scene \"\(id)\"").font(.headline)
-                ForEach(SceneCatalog.all) { Text($0.id).font(.system(size: 15, design: .monospaced)) }
-            }.padding(16) }
+        GeometryReader { proxy in
+            let landscapeHubReview = id == "hub-phone" && proxy.size.width > proxy.size.height
+            let resolvedID = landscapeHubReview ? "hub-phone-landscape" : id
+            let landscapeFixture = landscapeHubReview || resolvedID.hasSuffix("-landscape")
+            if let s = SceneCatalog.find(resolvedID), resolvedID.contains("-live") || resolvedID.hasPrefix("coach-") || resolvedID.hasPrefix("try-") || landscapeFixture || UserDefaults.standard.bool(forKey: "landnam.fullscreen") {
+                // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
+                s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg).ignoresSafeArea()
+                    #if os(iOS)
+                    .onAppear { (landscapeFixture ? .landscape : OrientationPreference.current).apply() }
+                    #endif
+            } else if let s = SceneCatalog.find(resolvedID) {
+                ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
+                    #if os(iOS)
+                    .onAppear { if landscapeFixture { OrientationPreference.landscape.apply() } }
+                    #endif
+            } else {
+                ScrollView { VStack(alignment: .leading, spacing: 8) {
+                    Text(id == "list" ? "Scenes" : "No scene \"\(id)\"").font(.headline)
+                    ForEach(SceneCatalog.all) { Text($0.id).font(.system(size: 15, design: .monospaced)) }
+                }.padding(16) }
+            }
         }
     }
 

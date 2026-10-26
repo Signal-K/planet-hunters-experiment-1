@@ -1,9 +1,14 @@
 # Landnam Preview
 
-This VS Code/Cursor extension owns the editor preview lifecycle. It opens one
-workspace-scoped, anonymous stage fixture, starts the stack only when its dev
-bridge is unavailable, and exposes the follower's heartbeat in the status bar.
-It never uses a signed-in account or persisted player progress.
+This VS Code/Cursor extension is a thin web preview. It embeds one
+workspace-scoped, anonymous stage fixture and exposes the follower heartbeat in
+the status bar. The bridge translates ordinary game-screen targets and authored
+scene files into populated, disposable stage fixtures, so it never uses a
+signed-in account, persisted player progress, or the Studio grid.
+
+The panel points straight at the local web server. Run `make ensure` separately
+when the server is not already running. Scene updates use normal web hot reload
+and the page bridge, so they do not require reloading Cursor.
 
 Both Codex and Claude keep using `node scripts/scene.mjs <scene> --check`.
 Neither agent needs editor-specific automation.

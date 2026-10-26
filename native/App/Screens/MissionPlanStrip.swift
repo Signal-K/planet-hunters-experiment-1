@@ -53,7 +53,7 @@ struct MissionPlanStrip: View {
                 .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 1))
                 .accessibilityLabel("Mission step \(launching ? 3 : 2) of 3")
                 HStack(spacing: 8) {
-                    slot("DESTINATION", target.name, change: .destination, id: "plan-destination")
+                    slot("TARGET", target.name, change: .destination, id: "plan-destination", spoken: "Destination")
                     slot("VEHICLE", rocketName, change: .vehicle, id: "plan-vehicle")
                     slot("CARGO", cargo, change: nil, id: "plan-cargo")
                 }
@@ -80,7 +80,7 @@ struct MissionPlanStrip: View {
         }
     }
 
-    @ViewBuilder private func slot(_ label: String, _ value: String, change: PlanSheet?, id: String) -> some View {
+    @ViewBuilder private func slot(_ label: String, _ value: String, change: PlanSheet?, id: String, spoken: String? = nil) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
             Text(label).font(AppFont.display(14, "Bold")).tracking(0.3).lineLimit(1).opacity(0.75)
             Text(value).font(AppFont.body(14, "Bold")).lineLimit(1)
@@ -90,7 +90,7 @@ struct MissionPlanStrip: View {
         .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
         if let change, !launching {
-            Button { sheet = change } label: { content }.buttonStyle(.plain).accessibilityIdentifier(id).accessibilityLabel("\(label), \(value), change")
+            Button { sheet = change } label: { content }.buttonStyle(.plain).accessibilityIdentifier(id).accessibilityLabel("\(spoken ?? label), \(value), change")
         } else {
             content.accessibilityIdentifier(id)
         }

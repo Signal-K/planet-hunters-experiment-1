@@ -28,7 +28,8 @@
     "lint:design-tokens": "node scripts/lint-design-tokens.mjs",
     "lint": "npm run lint:design-tokens && npm run verify:hue-palette && npm run verify:native-text-floor && npm run verify:native-tap-targets && npm run verify:native-contrast && npm run verify:scene-surfaces && npm run typecheck",
     "test:file": "vitest run",
-    "test:related": "vitest related --run"
+    "test:related": "vitest related --run",
+    "test:cypress:ssl-695": "cypress run --spec cypress/e2e/ssl-695-marketplace.cy.ts"
   },
   "dependencies": {
     "@clerk/react": "6.17.8",
@@ -53,6 +54,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "cypress": "^13.17.0",
     "esbuild": "^0.28.2",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",

@@ -2,7 +2,7 @@
   "name": "landnam-preview",
   "displayName": "Landnam Preview",
   "description": "A resilient in-editor preview for Landnam scenes.",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "publisher": "landnam",
   "engines": { "vscode": "^1.80.0" },
   "categories": ["Other"],
@@ -17,8 +17,7 @@
     "configuration": {
       "title": "Landnam Preview",
       "properties": {
-        "landnamPreview.port": { "type": "number", "default": 4320, "description": "Landnam web preview port." },
-        "landnamPreview.startCommand": { "type": "string", "default": "make ensure", "description": "Workspace command used when the preview server is unavailable." }
+        "landnamPreview.port": { "type": "number", "default": 4320, "description": "Landnam web preview port." }
       }
     }
   }

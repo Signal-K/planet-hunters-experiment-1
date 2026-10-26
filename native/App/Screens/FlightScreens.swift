@@ -252,7 +252,7 @@ struct MiningScreen: View {
             VStack(spacing: 8) {
                 Spacer()
                 BaseDock(tile: 44, zones: zones.dock, items: [
-                    (showerRun ? "Mine optional" : "Fire", "bolt.fill", {}),
+                    (showerRun ? "Mine" : "Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
                 ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) }, glass: true)
             }

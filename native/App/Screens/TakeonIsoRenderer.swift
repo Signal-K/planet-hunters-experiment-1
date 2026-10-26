@@ -15,7 +15,10 @@ struct TakeonIsoRenderer {
 
     /// Screen offset (relative to view centre) of a ground point, before camera.
     static func project(_ x: Double, _ y: Double, _ z: Double) -> CGPoint {
-        CGPoint(x: (x - y) * tw / 2, y: (x + y) * th / 2 - z * zh)
+        let xf = CGFloat(x)
+        let yf = CGFloat(y)
+        let zf = CGFloat(z)
+        return CGPoint(x: (xf - yf) * tw / 2, y: (xf + yf) * th / 2 - zf * zh)
     }
 
     func origin(in size: CGSize) -> CGPoint {

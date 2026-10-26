@@ -100,7 +100,8 @@ struct HubScreen: View {
                      onMenu: { menuOpen = true },
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
-                     locationNavigationDisabled: true)
+                     locationNavigationDisabled: true,
+                     compact: !portrait)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -231,8 +232,9 @@ struct HubScreen: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
         .padding(.horizontal, 16)
-        .padding(.bottom, aboveDock(insets))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .padding(.top, insets.top + 68)
+        .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
     }
 
@@ -255,7 +257,9 @@ struct HubScreen: View {
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
             }
-            SkyEventChip(allDay: true)
+            if portrait && !(placing && upgrading != nil) {
+                SkyEventChip(allDay: true)
+            }
         }
         .padding(.leading, insets.leading + z.inset).padding(.top, insets.top + z.inset)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -381,6 +385,12 @@ private struct HudBar: View {
 }
 
 extension View {
+    /// Hard offset drop shadow drawn behind the shape. `.shadow` on the finished view also shadows its text, which ghosts
+    /// through any translucent fill; this only ever shadows the silhouette.
+    func hardShadow(_ color: Color, x: CGFloat = 0, y: CGFloat = 0, radius: CGFloat = 10) -> some View {
+        background { RoundedRectangle(cornerRadius: radius).fill(color).offset(x: x, y: y) }
+    }
+
     /// White rounded panel with a thin black outline (base HUD surface).
     func hudPanel(radius: CGFloat = 12) -> some View {
         background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: radius))

@@ -199,7 +199,7 @@ struct RocketBuilderScreen: View {
                 .foregroundStyle(enabled ? Theme.paper : Theme.ink)
                 .background(enabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
-                .shadow(color: Theme.ink.opacity(0.35), radius: 0, x: 4, y: 4)
+                .hardShadow(Theme.ink.opacity(0.35), x: 4, y: 4)
         }
         .buttonStyle(.plain).disabled(!enabled).accessibilityIdentifier(phase == .design ? "prepare-launch-btn" : "launch-btn")
     }
@@ -330,12 +330,13 @@ struct RocketBuilderScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading).padding(9)
         .background(LinearGradient(colors: [Theme.paper, Theme.paper2], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.7), lineWidth: 2))
-        .shadow(color: Theme.ink.opacity(0.45), radius: 0, x: 3, y: 3)
+        .hardShadow(Theme.ink.opacity(0.45), x: 3, y: 3)
     }
 
     @ViewBuilder private func statMark(_ label: String) -> some View {
         if label == "CAPACITY" {
             RoundedRectangle(cornerRadius: 3).stroke(Theme.blue, lineWidth: 2).overlay(HStack(spacing: 2) { Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue) }.padding(3))
+                .frame(width: 18, height: 18)
         } else if label == "RANGE" {
             Image(systemName: "location.north.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.blue)
         } else {

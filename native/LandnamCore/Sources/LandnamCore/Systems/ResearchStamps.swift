@@ -16,6 +16,53 @@ public struct ResearchPathChoice: Codable, Equatable, Sendable {
     }
 }
 
+/// An event or weekly path's permanent fragment record. The source remains after the player converts its fragments to Research Ink.
+public struct ResearchFragmentHistoryEntry: Codable, Equatable, Identifiable, Sendable {
+    public let id: String
+    public var title: String
+    public var fragmentsEarned: Int
+    public var badgeId: String?
+
+    public init(id: String, title: String, fragmentsEarned: Int = 0, badgeId: String? = nil) {
+        self.id = id
+        self.title = title
+        self.fragmentsEarned = max(0, fragmentsEarned)
+        self.badgeId = badgeId
+    }
+}
+
+/// Conversion rules for the future fragment store. Research Ink is only collected at present, never spent.
+public enum ResearchFragments {
+    public static let conversionRate = 10
+
+    @discardableResult public static func convertAvailable(_ player: inout Player) -> Int {
+        let converted = max(0, player.researchFragments) / conversionRate
+        guard converted > 0 else { return 0 }
+        player.researchFragments -= converted * conversionRate
+        player.researchUniversalFragments += converted
+        return converted
+    }
+
+    public static func record(_ player: inout Player, id: String, title: String, fragments: Int, badgeId: String? = nil) {
+        guard fragments > 0 else { return }
+        if let index = player.researchFragmentHistory.firstIndex(where: { $0.id == id }) {
+            player.researchFragmentHistory[index].fragmentsEarned += fragments
+            if player.researchFragmentHistory[index].badgeId == nil { player.researchFragmentHistory[index].badgeId = badgeId }
+        } else {
+            player.researchFragmentHistory.append(.init(id: id, title: title, fragmentsEarned: fragments, badgeId: badgeId))
+        }
+    }
+
+    public static func mergeHistory(_ local: [ResearchFragmentHistoryEntry], _ remote: [ResearchFragmentHistoryEntry]) -> [ResearchFragmentHistoryEntry] {
+        var merged = Dictionary(uniqueKeysWithValues: remote.map { ($0.id, $0) })
+        for entry in local {
+            guard let theirs = merged[entry.id] else { merged[entry.id] = entry; continue }
+            merged[entry.id] = .init(id: entry.id, title: theirs.title, fragmentsEarned: max(entry.fragmentsEarned, theirs.fragmentsEarned), badgeId: theirs.badgeId ?? entry.badgeId)
+        }
+        return merged.values.sorted { $0.id > $1.id }
+    }
+}
+
 public enum ResearchPathID: String, Codable, CaseIterable, Sendable { case explorer, trader }
 
 public struct ResearchPathStep: Equatable, Identifiable, Sendable {
@@ -79,9 +126,12 @@ public enum ResearchPathRules {
         guard !claimed.contains(marker) else { return false }
         claimed.append(marker); claimed.sort()
         p.researchPath = ResearchPathChoice(week: choice.week, path: choice.path, claimedSteps: claimed)
-        p.researchFragments += marker == 2 ? 5 : marker == 4 ? 10 : 25
+        let fragments = marker == 2 ? 5 : marker == 4 ? 10 : 25
+        p.researchFragments += fragments
+        let badgeId = marker == 5 ? "community-research-\(choice.week)" : nil
+        ResearchFragments.record(&p, id: "community-research-\(choice.week)", title: "\(choice.path.rawValue.capitalized) week of \(choice.week)", fragments: fragments, badgeId: badgeId)
         if marker == 5 {
-            let id = "community-research-\(choice.week)"
+            let id = badgeId!
             if p.badges[id] == nil { p.badges[id] = PlayerBadge(eventId: id, tier: .gold, earnedAt: now) }
         }
         return true
@@ -120,7 +170,6 @@ public struct CalendarCell: Equatable, Sendable {
 public enum ResearchStampRules {
     /// Mirrors pocketbase/research.go and web `COMMUNITY_GOAL`: every player's stamps this UTC month add to one bar.
     public static let communityGoal = 1000
-    public static let communityWeeklyRevenuePct = 3
     static let dayMs: Double = 86_400_000
 
     private static let utc: Calendar = { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "UTC")!; return c }()
@@ -183,32 +232,12 @@ public enum ResearchStampRules {
         return s.days.reduce(0) { $0 + ($1.key.hasPrefix(prefix) ? $1.value.count : 0) }
     }
 
-    public struct CommunityBar: Equatable, Sendable {
-        public let total: Int, goal: Int, fill: Double, reached: Bool, bonusPct: Int, bonusUntil: Double?
-    }
+    public struct CommunityBar: Equatable, Sendable { public let total: Int, goal: Int, fill: Double, reached: Bool }
     /// SSL-673: `server.others` leaves out this player, so own stamps not yet synced count once.
     public static func communityBar(own: Int, server: CommunityResearch? = nil) -> CommunityBar {
         let goal = server?.goal ?? communityGoal
         let total = (server?.others ?? 0) + own
-        return CommunityBar(total: total, goal: goal, fill: min(1, Double(total) / Double(goal)), reached: server?.reachedAt != nil,
-                            bonusPct: server?.bonusPct ?? communityWeeklyRevenuePct, bonusUntil: server?.bonusUntil)
-    }
-
-    /// Exchange sales (ore and finished goods) pay this much more while the bonus week is open (web `RESEARCH_BONUS_RATE`).
-    public static var bonusRate: Double { Double(communityWeeklyRevenuePct) / 100 }
-
-    /// Web saves the window as `player.researchBonusUntil`; native keeps it in `extras` so it round-trips.
-    public static func bonusUntil(_ p: Player) -> Double? {
-        if case let .number(v)? = p.extras["researchBonusUntil"], v.isFinite { return v }
-        return nil
-    }
-    public static func bonusActive(_ p: Player, now: Double) -> Bool { bonusUntil(p).map { now < $0 } ?? false }
-    /// Keep the latest window the server reported. Returns false when nothing changes.
-    @discardableResult
-    public static func noteBonus(_ p: inout Player, until: Double?) -> Bool {
-        guard let until, until.isFinite, until > (bonusUntil(p) ?? 0) else { return false }
-        p.extras["researchBonusUntil"] = .number(until)
-        return true
+        return CommunityBar(total: total, goal: goal, fill: min(1, Double(total) / Double(goal)), reached: server?.reachedAt != nil)
     }
 
     /// Today's research tasks, one per stamp kind a player can earn now. Same copy as web `DAILY_TASKS`.
@@ -223,7 +252,7 @@ public enum ResearchStampRules {
     public static let discoveryTask: (kind: StampKind, label: String) = (.discoveryMission, "Fly a survey to a world you discovered")
     public static func tasks(hasDiscovery: Bool) -> [(kind: StampKind, label: String)] { hasDiscovery ? dailyTasks + [discoveryTask] : dailyTasks }
     public static let title = "Daily research"
-    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost."
+    public static let blurb = "Do one research task a day to earn a stamp. Every stamp fills the community bar and keeps your research record growing. Miss a day and nothing is lost."
 }
 
 /// `GET /api/community/research` (pocketbase/research.go).

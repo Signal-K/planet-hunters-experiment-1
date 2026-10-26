@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
+import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, ORIONIDS_DEBRIS_PRESET, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_PEAK_REMINDER, debrisRatePerMinute, debrisWindowStartMs, isOrionidsPeakNight, orionidsPeakReminderMs, orionidsPhase, orionidsShareText } from './sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, generateSelfDirectedMiningPool, orionidsSurfaceResearchMission } from './missions'
 import { isDebrisEventActive } from './sky-events'
 import { isFreeHaulEligibleMission, isFreeHaulMission } from './mission-primers'
@@ -21,6 +21,10 @@ describe('SSL-578 Orionids event', () => {
     expect(debrisRatePerMinute(ORIONIDS_DEBRIS_PRESET, local(10, 21, 18))).toBeGreaterThan(0)
     expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 28, 12))).toBe(true)
     expect(isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, local(10, 18, 12))).toBe(false)
+  })
+
+  it('keeps the local-midnight opening rule on the preset, not the event id', () => {
+    expect(debrisWindowStartMs(ORIONIDS_DEBRIS_PRESET)).toBe(local(10, 19, 0))
   })
 
   it('doubles the debris rate on peak night only', () => {

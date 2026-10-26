@@ -1,7 +1,7 @@
 import SwiftUI
 import LandnamCore
 
-/// Orionids meteor-shower weather for the base sky (SSL-521). Mirrors web MeteorShowerWeather:
+/// Meteor-shower weather for the base sky (SSL-521). Mirrors web MeteorShowerWeather:
 /// thin 2pt pixel streaks with fading tails, stepped on a fixed grid, no orange.
 struct MeteorShowerWeather: View {
     @Environment(GameStore.self) private var store
@@ -18,7 +18,7 @@ struct MeteorShowerWeather: View {
     ]
 
     var body: some View {
-        if SkyEvents.activePreset(at: store.now)?.eventId == "orionids-2026" {
+        if SkyEvents.activePreset(at: store.now) != nil {
             TimelineView(.animation(minimumInterval: 1.0 / 12, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
                 Canvas { gc, size in

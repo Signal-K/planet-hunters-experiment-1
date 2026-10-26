@@ -203,7 +203,7 @@
           9
         ],
         "clouds": 1,
-        "rainPerSecond": 90
+        "rainPerSecond": 40
       },
       {
         "id": "storm",
@@ -213,8 +213,8 @@
           14
         ],
         "clouds": 1,
-        "rainPerSecond": 160,
-        "boltEvery": 6
+        "rainPerSecond": 80,
+        "boltEvery": 12
       },
       {
         "id": "fog",
