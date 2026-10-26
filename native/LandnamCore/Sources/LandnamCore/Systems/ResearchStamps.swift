@@ -232,6 +232,32 @@ public enum ResearchStampRules {
         return s.days.reduce(0) { $0 + ($1.key.hasPrefix(prefix) ? $1.value.count : 0) }
     }
 
+    public struct MonthSummary: Equatable, Sendable, Identifiable {
+        public let key: String
+        public let label: String
+        public let stamps: Int
+        public var id: String { key }
+    }
+
+    /// Recent personal contribution totals, newest month first.
+    public static func monthHistory(_ stamps: ResearchStamps, now: Double, count: Int = 6) -> [MonthSummary] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let date = Date(timeIntervalSince1970: now / 1000)
+        let current = calendar.dateComponents([.year, .month], from: date)
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMMM yyyy"
+        return (0..<count).compactMap { offset in
+            guard let monthDate = calendar.date(from: DateComponents(year: current.year, month: current.month)) .flatMap({ calendar.date(byAdding: .month, value: -offset, to: $0) }) else { return nil }
+            let parts = calendar.dateComponents([.year, .month], from: monthDate)
+            guard let year = parts.year, let month = parts.month else { return nil }
+            let key = String(format: "%04d-%02d", year, month)
+            return MonthSummary(key: key, label: formatter.string(from: monthDate), stamps: stampsIn(stamps, year: year, month: month))
+        }
+    }
+
     public struct CommunityBar: Equatable, Sendable { public let total: Int, goal: Int, fill: Double, reached: Bool }
     /// SSL-673: `server.others` leaves out this player, so own stamps not yet synced count once.
     public static func communityBar(own: Int, server: CommunityResearch? = nil) -> CommunityBar {

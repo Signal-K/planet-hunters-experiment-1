@@ -377,7 +377,19 @@ struct CommunityResearchScreen: View {
             }
             researchLedger
             let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month))
-            console(title: "COMMUNITY \(bar.total) / \(bar.goal)") { Bar(value: bar.fill) }
+            console(title: "SHARED TOTAL \(bar.total) / \(bar.goal)") {
+                Bar(value: bar.fill)
+                Text("Your contributions: \(ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month)) this month")
+            }
+            console(title: "RESEARCH MONTH HISTORY") {
+                ForEach(ResearchStampRules.monthHistory(store.player.researchStamps, now: store.now)) { month in
+                    HStack {
+                        Text(month.label)
+                        Spacer()
+                        Text("\(month.stamps) stamp\(month.stamps == 1 ? "" : "s")").font(AppFont.body(14, "Bold"))
+                    }
+                }
+            }
             if step.id == "breakthrough" && p.have >= p.need {
                 Text("A permanent weekly badge and 25 regular fragments. The badge stays in your collection.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF2C24C))

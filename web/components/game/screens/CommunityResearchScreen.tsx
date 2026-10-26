@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { liveEventWeek } from '@/lib/research/event-week'
-import { communityBar, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
+import { communityBar, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import board from '@/components/game/MissionBoard.module.css'
@@ -68,7 +68,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const days = weekDays(now)
   const stampedDays = days.filter(d => (stamps[d.key] ?? []).length > 0).length
   const d = new Date(now)
-  const bar = communityBar(stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth()), communityResearch)
+  const ownThisMonth = stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth())
+  const bar = communityBar(ownThisMonth, communityResearch)
+  const monthHistory = researchMonthHistory(stamps, now)
   const finished = progress.filter(p => p.have >= p.need).length
   const eventHistory = Object.entries(stamps)
     .filter(([, kinds]) => kinds.includes('event'))
@@ -176,9 +178,15 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   <p className={styles.breakthrough} data-testid="community-research-breakthrough">{WEEKLY_RESEARCH_REWARDS.breakthrough.explanation}</p>
                 )}
                 <div className={styles.bar} data-testid="research-community-bar">
-                  <div className={styles.barLabel}><span>Community</span><span>{bar.total} / {bar.goal}</span></div>
+                  <div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div>
                   <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps">
                     <div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} />
+                  </div>
+                </div>
+                <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history">
+                  <div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div>
+                  <div className={styles.historyRows}>
+                    {monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} stamp{month.stamps === 1 ? '' : 's'}</b></div>)}
                   </div>
                 </div>
                 {eventHistory.length > 0 && (

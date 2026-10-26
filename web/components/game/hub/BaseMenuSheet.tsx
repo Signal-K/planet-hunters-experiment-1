@@ -64,7 +64,7 @@ export function BaseMenuSheet({ items, onClose }: { items: readonly BaseMenuItem
         </div>
         <div className={styles.sectionLabel}>Actions</div>
         <ul className={`${styles.list} ${styles.mainList}`}>{primary.map(row)}</ul>
-        {rest.length > 0 && <div className={styles.sectionLabel}>Records and systems</div>}
+        {rest.length > 0 && <div className={styles.sectionLabel}>Agency and research</div>}
         <ul className={styles.list}>{rest.map(row)}</ul>
       </div>
     </div>

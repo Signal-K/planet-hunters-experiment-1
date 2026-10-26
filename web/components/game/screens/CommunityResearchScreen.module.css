@@ -26,6 +26,10 @@
 .track { height: 12px; border-radius: 6px; background: rgba(8, 16, 34, .45); overflow: hidden; }
 .fill { height: 100%; background: #58d0ea; }
 .bar small { font: 600 14px/1.25 var(--ln-font-body); color: #c9d0c2; }
+.history { width: 100%; display: grid; gap: 6px; color: #f4efe4; }
+.historyRows { display: grid; gap: 4px; max-height: 132px; overflow: auto; text-align: left; }
+.historyRow { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid rgba(244, 239, 228, .22); color: #c9d0c2; font: 600 14px/1.2 var(--ln-font-body); }
+.historyRow b { color: #f4efe4; font-weight: 800; }
 .paths { display: flex; gap: 12px; justify-content: center; width: 100%; }
 .path { flex: 0 0 92px; min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 16px; border: 2px solid rgba(244, 239, 228, .35); background: rgba(8, 16, 34, .3); color: #f4efe4; font: 800 14px/1.1 var(--ln-font-display); }
 .path small { font: 700 14px/1 var(--ln-font-body); color: #c9d0c2; }

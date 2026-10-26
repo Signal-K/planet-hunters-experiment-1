@@ -86,6 +86,29 @@ export function stampsInMonth(stamps: ResearchStamps | undefined, year: number, 
   return Object.entries(stamps ?? {}).reduce((n, [day, kinds]) => n + (day.startsWith(prefix) ? kinds.length : 0), 0)
 }
 
+export interface ResearchMonthSummary {
+  key: string
+  label: string
+  stamps: number
+}
+
+/** Recent personal contribution totals, newest month first. */
+export function researchMonthHistory(stamps: ResearchStamps | undefined, now: number, count = 6): ResearchMonthSummary[] {
+  const date = new Date(now)
+  const result: ResearchMonthSummary[] = []
+  for (let offset = 0; offset < count; offset += 1) {
+    const monthDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - offset, 1))
+    const year = monthDate.getUTCFullYear()
+    const month = monthDate.getUTCMonth()
+    result.push({
+      key: `${year}-${String(month + 1).padStart(2, '0')}`,
+      label: monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+      stamps: stampsInMonth(stamps, year, month),
+    })
+  }
+  return result
+}
+
 /** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
 export const COMMUNITY_GOAL = 1000
 

@@ -60,6 +60,7 @@ struct BaseMenu: View {
                         }.buttonStyle(.plain)
                     }
                     grid(primary, single: true)
+                    Text("AGENCY AND RESEARCH").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
                     grid(rest)
                 }
                 .padding(16)
