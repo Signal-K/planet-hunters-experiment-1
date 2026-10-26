@@ -1,0 +1,34 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.constellation { position: absolute; inset: 0; pointer-events: none; }
+.lines { position: absolute; inset: 0; width: 100%; height: 52%; overflow: visible; opacity: .34; }
+.lines polyline { fill: none; stroke: var(--ln-cyan-bright); stroke-width: .7; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.star { position: absolute; width: 16px; height: 16px; transform: translate(-50%, -50%); padding: 0; border: 2px solid var(--ln-cyan-bright); border-radius: 50%; background: var(--ln-world-dusk); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ln-cyan-bright) 18%, transparent), 0 0 12px color-mix(in srgb, var(--ln-cyan-bright) 55%, transparent); pointer-events: auto; cursor: pointer; }
+.star:hover, .star:focus-visible { background: var(--ln-cyan-bright); outline: 3px solid color-mix(in srgb, var(--ln-cyan-bright) 32%, transparent); }
+.archive { position: absolute; top: clamp(110px, 25%, 190px); left: max(16px, env(safe-area-inset-left)); width: min(260px, calc(100% - 32px)); padding: 12px; border: 1px solid color-mix(in srgb, var(--ln-cyan-bright) 52%, var(--ln-world-outline)); border-radius: 16px; background: linear-gradient(145deg, color-mix(in srgb, var(--ln-void) 92%, transparent), color-mix(in srgb, var(--ln-world-dusk) 88%, transparent)); color: var(--ln-world-hull-lit); box-shadow: 0 12px 28px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 12%); pointer-events: auto; }
+.archiveHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.archiveKicker { color: var(--ln-cyan-bright); font: 700 14px/1 var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.archiveCount { color: color-mix(in srgb, var(--ln-world-hull-lit) 64%, transparent); font: 700 10px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.archiveIntro { margin: 7px 0 8px; color: color-mix(in srgb, var(--ln-world-hull-lit) 78%, transparent); font: 14px/1.25 var(--ln-font-body); }
+.entries { display: grid; gap: 6px; }
+.entry { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 9px; width: 100%; min-height: 44px; padding: 7px 8px; border: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 22%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--ln-void) 42%, transparent); color: inherit; text-align: left; cursor: pointer; }
+.entry:hover, .entry:focus-visible, .entrySelected { border-color: var(--ln-cyan-bright); background: color-mix(in srgb, var(--ln-cyan-bright) 13%, var(--ln-void)); outline: none; }
+.entryMarker { width: 8px; height: 8px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan-bright) 60%, transparent); }
+.entryCopy { display: grid; gap: 3px; min-width: 0; }
+.entryCopy strong { overflow: hidden; color: var(--ln-world-hull-lit); font: 700 12px/1 var(--ln-font-display); letter-spacing: .07em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.entryCopy small { overflow: hidden; color: color-mix(in srgb, var(--ln-world-hull-lit) 64%, transparent); font: 12px/1.1 var(--ln-font-body); text-overflow: ellipsis; white-space: nowrap; }
+.entryArrow { color: var(--ln-cyan-bright); font-size: 22px; line-height: 1; }
+.explanation { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent); }
+.explanationLabel { color: var(--ln-cyan-bright); font: 700 10px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.explanation p { margin: 0; color: color-mix(in srgb, var(--ln-world-hull-lit) 86%, transparent); font: 14px/1.3 var(--ln-font-body); }
+.explanation small { color: color-mix(in srgb, var(--ln-cyan-bright) 86%, white); font: 12px/1.2 var(--ln-font-body); }
+
+@media (max-width: 640px) {
+  .archive { top: 104px; width: min(252px, calc(100% - 32px)); padding: 12px; }
+  .archiveIntro { font-size: 13px; }
+}

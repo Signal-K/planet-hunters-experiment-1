@@ -80,6 +80,7 @@ struct HubScreen: View {
                 padCore: homecoming,
                 padLift: padLift,
                 padDismantle: padDismantle,
+                player: store.player,
                 insets: insets,
                 camera: camera,
                 onStructure: { openStructure($0) },

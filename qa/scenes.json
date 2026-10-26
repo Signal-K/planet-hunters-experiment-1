@@ -46,6 +46,16 @@
    ]
   },
   {
+   "id": "constellation-hub",
+   "name": "Base with unlocked constellation",
+   "flow": "core-loop",
+   "web": "constellation-hub",
+   "native": "hub-constellations-landscape",
+   "tickets": [
+    "SSL-684"
+   ]
+  },
+  {
    "id": "hub-structures",
    "name": "Base with structures",
    "flow": "core-loop",

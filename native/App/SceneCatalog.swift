@@ -302,6 +302,13 @@ enum SceneCatalog {
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
         scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
+        scene("hub-constellations-landscape", 402, w: 874) {
+            var gs = landscapeBase()
+            gs.player.completedMissions = [
+                CompletedMissionRecord(id: "m1", title: "First mission", targetId: "eros", clientName: "Vulcan", targetName: "Eros", completedAt: 1, runId: "constellation-fixture", kind: .client)
+            ]
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: gs))
+        },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
         scene("hub-biome-desert-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .desert).environment(GameStore()) },
@@ -786,9 +793,10 @@ enum SceneCatalog {
 }
 
 /// Shown instead of RootView when the app is launched with `-scene <id>`.
-/// `-scene list` prints the index on screen. DEBUG builds only. The older
-/// `-landnam.scene <id>` spelling remains accepted so existing review actions
-/// cannot accidentally fall through to the authenticated app shell.
+/// `-scene list` prints the index on screen. The older `-landnam.scene <id>`
+/// spelling remains accepted so review actions cannot accidentally fall through
+/// to the authenticated app shell. This lookup is intentionally available to
+/// Release/test builds too: the review harness must not require a session.
 /// `-landnam.fullscreen YES` lays any fixture out full-screen with the real safe areas, to check it at the device's own size.
 struct SceneHost: View {
     let id: String
@@ -820,14 +828,12 @@ struct SceneHost: View {
     /// The scene launch argument, if present. Scene fixtures are intentionally
     /// auth-free: this is the review harness, not a player session.
     static var requested: String? {
-        #if DEBUG
         let a = ProcessInfo.processInfo.arguments
         for flag in ["-scene", "-landnam.scene"] {
             if let i = a.firstIndex(of: flag), a.indices.contains(i + 1) {
                 return a[i + 1]
             }
         }
-        #endif
         return nil
     }
 }

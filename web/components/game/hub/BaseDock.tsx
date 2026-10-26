@@ -33,8 +33,6 @@ type BaseDockProps = {
   showLocationBuild?: boolean
   /** Base camera controls live in the location toolbar, not as a floating overlay. */
   onOverview?: () => void
-  overviewPosition?: number
-  onOverviewPositionChange?: (position: number) => void
 }
 
 /** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
@@ -194,8 +192,6 @@ export function BaseDock({
   locationNavigationDisabled = false,
   showLocationBuild = true,
   onOverview,
-  overviewPosition = 0,
-  onOverviewPositionChange,
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = buildLabel
@@ -208,9 +204,8 @@ export function BaseDock({
           <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
         </div>
         <div className="scene-location-actions">
-          {onOverview && onOverviewPositionChange && <div className="scene-location-overview" aria-label="Base camera controls">
+          {onOverview && <div className="scene-location-overview" aria-label="Base camera controls">
             <button type="button" onClick={onOverview} data-testid="base-overview-button" aria-label="Show whole base" title="Show whole base"><OverviewIcon /></button>
-            <input type="range" min="0" max="1" step="0.001" value={overviewPosition} onChange={event => onOverviewPositionChange(Number(event.target.value))} data-testid="base-overview-slider" aria-label="Base position" />
           </div>}
           {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>

@@ -42,6 +42,7 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import { BaseConstellations } from '@/components/game/hub/BaseConstellations'
 
 function hubQuery(): URLSearchParams {
   return new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
@@ -110,7 +111,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
   const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
-  const overviewPosition = camera.cam.x === 0 ? 0 : Math.max(0, Math.min(1, camera.cam.x / Math.min(0, viewSize.w - worldW * camera.cam.zoom)))
+  const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
+  const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
   const [editMode, setEditMode] = useState(placementMode)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
@@ -189,7 +191,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 105, market: 110, 'control-station': 60, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 84, market: 92, 'control-station': 52, 'surface-silo': 52, refinery: 70, 'deep-space-telescope': 72, 'astronaut-academy': 74, command: 72 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -441,6 +443,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
           <BaseWorldCanvas px={px} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
+          <BaseConstellations player={player} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
@@ -648,8 +651,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               locationNavigationDisabled={false}
               showLocationBuild={buildOptions.length > 0}
               onOverview={!subsurface ? camera.overview : undefined}
-              overviewPosition={overviewPosition}
-              onOverviewPositionChange={!subsurface ? camera.setPosition : undefined}
               buildLabel={editMode ? 'Done' : 'Build'}
               buildTestId={editMode ? 'hub-build-done-btn' : 'hub-build-btn'}
             />

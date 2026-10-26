@@ -32,7 +32,7 @@ const MOUNTAIN_LAYERS: readonly BiomeLayer[] = [
 ]
 
 /** Launch complex stays this wide at every tier. Portrait CSS may ease it so neighbours keep a gap. */
-export const LAUNCHPAD_SCENE_WIDTH_PCT = 55
+export const LAUNCHPAD_SCENE_WIDTH_PCT = 42
 
 /**
  * Centre of a starter structure, as a percent of scene width.

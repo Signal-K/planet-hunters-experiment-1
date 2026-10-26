@@ -93,13 +93,13 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  width: calc(100vw - 48px);
-  padding: 4px;
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--ln-world-outline) 92%, var(--ln-world-trim-blue));
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
+  gap: 8px;
+  width: min(900px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--ln-cyan) 52%, var(--ln-world-outline));
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ln-world-outline) 96%, var(--ln-world-trim-blue)), color-mix(in srgb, var(--ln-void) 88%, var(--ln-world-outline)));
+  box-shadow: 0 12px 30px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 12%);
   pointer-events: none;
 }
 .scene-location-selector,
@@ -108,20 +108,24 @@
   align-items: center;
   gap: 0;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 20%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ln-void) 38%, transparent);
+  overflow: hidden;
   box-shadow: none;
   pointer-events: auto;
 }
+.scene-location-selector { flex: 0 0 auto; }
+.scene-location-actions { min-width: 0; flex: 1 1 auto; }
 .scene-location-overview {
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: center;
   height: 44px;
-  padding: 4px 8px;
-  border-right: 4px solid var(--ln-world-glass);
-  background: color-mix(in srgb, var(--ln-world-outline) 92%, var(--ln-world-trim-blue));
+  width: 48px;
+  padding: 0 4px;
+  border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent);
+  background: transparent;
 }
 .scene-location-overview button {
   width: 34px;
@@ -129,16 +133,15 @@
   display: grid;
   place-items: center;
   padding: 0;
-  border: 1px solid var(--ln-cyan);
-  border-radius: 7px;
-  background: var(--ln-cyan);
-  color: var(--ln-world-outline);
+  border: 1px solid color-mix(in srgb, var(--ln-cyan) 50%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ln-cyan) 14%, transparent);
+  color: var(--ln-world-hull-lit);
   font: 800 11px/1 var(--ln-font-display);
   letter-spacing: .06em;
   text-transform: uppercase;
   cursor: pointer;
 }
-.scene-location-overview input { width: 72px; accent-color: var(--ln-cyan); }
 .scene-location-label {
   display: flex;
   place-items: center;
@@ -148,9 +151,9 @@
   min-width: 88px;
   min-height: 44px;
   padding: 0 10px;
-  border-inline: 2px solid var(--ln-world-outline);
-  border-bottom: 4px solid var(--ln-world-glass);
-  background: color-mix(in srgb, var(--ln-world-outline) 90%, var(--ln-world-trim-blue));
+  border-inline: 0;
+  border-bottom: 3px solid var(--ln-cyan);
+  background: var(--ln-world-trim-blue);
   color: var(--ln-world-hull-lit);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.04em;
@@ -160,29 +163,31 @@
   min-height: 44px;
   border: 0 !important;
   border-radius: 0;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-world-outline) !important;
+  background: transparent !important;
+  color: var(--ln-world-hull-lit) !important;
 }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-arrow,
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-word {
   border: 0 !important;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-world-outline) !important;
+  background: transparent !important;
+  color: var(--ln-world-hull-lit) !important;
 }
 .scene-location-dock .scene-dock-arrow:disabled { opacity: 0.38; cursor: default; }
 .scene-location-actions .scene-dock-word {
+  flex: 1 1 0;
+  min-width: 0;
   gap: 8px;
-  min-width: 118px;
-  padding: 0 12px 0 8px;
-  border-right: 4px solid var(--ln-world-glass) !important;
-  font-size: 14px;
+  padding: 0 12px 0 10px;
+  border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important;
+  font-size: 13px;
   font-style: italic;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: none;
 }
-.scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 2px solid var(--ln-world-outline) !important; }
-.scene-location-actions .scene-dock-word svg { width: 25px; height: 25px; padding-right: 7px; border-right: 1px solid color-mix(in srgb, var(--ln-world-outline) 52%, transparent); }
+.scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important; }
+.scene-location-actions .scene-dock-word svg { width: 22px; height: 22px; padding-right: 7px; border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 28%, transparent); }
+.scene-location-actions .scene-dock-word span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scene-location-action--mission {
   border-right-color: var(--ln-world-trim-blue) !important;
 }
@@ -190,21 +195,19 @@
   border-right: 4px solid var(--ln-world-trim-blue) !important;
 }
 @media (max-width: 700px) {
-  .scene-location-dock { gap: 6px; width: calc(100vw - 32px); }
+  .scene-location-dock { gap: 6px; width: calc(100vw - 24px); }
   .scene-location-label { min-width: 62px; padding-inline: 6px; }
   .scene-location-label svg { display: none; }
   .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
-  .scene-location-overview { padding-inline: 6px; }
-  .scene-location-overview input { width: 56px; }
+  .scene-location-overview { width: 44px; padding-inline: 0; }
 }
 
 /* Narrow phones (390px): the arrows, label and three action words need ~410px, so the dock lost "Menu" off the right edge.
    Drop the action icons and the extra padding, and wrap the selector above the actions if it still does not fit. */
 @media (max-width: 479px) {
-  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; width: calc(100vw - 24px); }
+  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; width: calc(100vw - 16px); }
   .scene-location-actions { margin-left: auto; max-width: 100%; }
   .scene-location-actions .scene-dock-word { min-width: 0; padding-inline: 10px; gap: 0; }
   .scene-location-actions .scene-dock-word svg { display: none; }
-  .scene-location-overview { flex: 1 1 100%; justify-content: center; border-right: 0; border-bottom: 3px solid var(--ln-world-glass); }
-  .scene-location-overview input { width: min(38vw, 120px); }
+  .scene-location-overview { flex: 0 0 44px; border-right: 0; border-bottom: 3px solid var(--ln-world-glass); }
 }

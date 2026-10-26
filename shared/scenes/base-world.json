@@ -5,7 +5,7 @@
     "gravity": -60,
     "fixedStep": 0.0166667,
     "groundY": 0,
-    "windScale": 0.4
+    "windScale": 1
   },
   "sprites": {
     "escarpment-a-mid": {
@@ -429,9 +429,7 @@
       "sky": true,
       "body": {
         "gravity": 0,
-        "life": 8,
-        "ground": "splash",
-        "impact": "meteor-flash"
+        "life": 0.28
       }
     },
     "raindrop": {
@@ -443,8 +441,7 @@
       "layer": 40,
       "depth": 0.9,
       "body": {
-        "gravity": 0.8,
-        "drag": 1.5,
+        "gravity": 1.2,
         "wind": 0.6,
         "ground": "splash",
         "life": 3
@@ -571,20 +568,6 @@
         "gravity": 0,
         "wind": 1,
         "life": 3
-      }
-    },
-    "meteor-flash": {
-      "shape": "puff",
-      "colour": "#ffe2b0",
-      "radius": 1.6,
-      "alpha": 0.8,
-      "layer": 41,
-      "depth": 0.9,
-      "body": {
-        "gravity": 0,
-        "life": 0.4,
-        "grow": 1.5,
-        "fade": true
       }
     }
   },

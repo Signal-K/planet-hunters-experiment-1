@@ -271,6 +271,20 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
+    case 'constellation-hub':
+      return {
+        screen: 'hub',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 1,
+          completedMissions: [{ id: FIRST_MISSION.id, title: FIRST_MISSION.title, targetId: 'eros', completedAt: 42, runId: 'constellation-fixture', kind: 'client' }],
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
     case 'm1-fab':
       return {
         screen: 'fab',
