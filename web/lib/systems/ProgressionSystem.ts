@@ -79,6 +79,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       francs: Math.max(0, s.player.francs - penalty),
       activeMission: null,
       missionRunId: undefined,
+      missionStartedAt: undefined,
       missionPhase: undefined,
       pausedMissionRuns: (s.player.pausedMissionRuns ?? []).filter(run => {
         if (scrubRunId && run.missionRunId === scrubRunId) return false

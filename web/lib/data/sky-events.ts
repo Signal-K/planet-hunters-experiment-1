@@ -117,6 +117,21 @@ function toMs(at: Date | number): number {
   return at instanceof Date ? at.getTime() : at
 }
 
+/** A run started inside an event keeps that grade for this long after the event closes. */
+export const RUN_START_GRACE_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Instants a run-graded badge is judged at: the run's launch (when still within
+ * the grace window) and now. Grants never downgrade, so granting at both keeps
+ * gold for a run that began during the event and finished just after it.
+ */
+export function runGradingTimes(startedAt: number | null | undefined, now: number): number[] {
+  if (typeof startedAt === 'number' && Number.isFinite(startedAt) && startedAt <= now && now - startedAt <= RUN_START_GRACE_MS) {
+    return [startedAt, now]
+  }
+  return [now]
+}
+
 /** Gold during the event period, silver after it, null before it opens. */
 export function badgeTierFor(eventId: string, at: Date | number): BadgeTier | null {
   const event = getSkyEvent(eventId)
@@ -457,8 +472,15 @@ export function applyDebrisMined<T extends BadgePlayer>(
   preset: DebrisEventPreset,
   at: Date | number,
 ): { player: T; badge: PlayerBadge | null } {
-  const { player: next, granted } = grantBadgesForActivity(player, 'debris-mining', at, preset.eventId)
-  return { player: next, badge: granted[0] ?? null }
+  let next = player
+  let badge: PlayerBadge | null = null
+  const startedAt = (player as { missionStartedAt?: number | null }).missionStartedAt
+  for (const time of runGradingTimes(startedAt, toMs(at))) {
+    const result = grantBadgesForActivity(next, 'debris-mining', time, preset.eventId)
+    next = result.player
+    badge = result.granted[0] ?? badge
+  }
+  return { player: next, badge }
 }
 
 // ---- New Moon --------------------------------------------------------------

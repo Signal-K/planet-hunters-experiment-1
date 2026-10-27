@@ -74,6 +74,7 @@ function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
     lastCargo: state.lastCargo,
     deliveredCargo: state.deliveredCargo,
     missionRunId: state.player.missionRunId,
+    missionStartedAt: state.player.missionStartedAt,
     missionPhase: state.player.missionPhase,
     miningCargoInProgress: state.player.miningCargoInProgress,
     miningLaserCharges: state.player.miningLaserCharges,
@@ -224,6 +225,7 @@ function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot):
       ...state.player,
       activeMission: snapshot.activeMission,
       missionRunId: snapshot.missionRunId,
+      missionStartedAt: snapshot.missionStartedAt,
       missionPhase: snapshot.missionPhase,
       miningCargoInProgress: snapshot.miningCargoInProgress,
       miningLaserCharges: snapshot.miningLaserCharges,
@@ -259,8 +261,8 @@ function grantSkyBadges(player: Player, kind: SkyActivityKind, at: number): Play
 }
 
 // Our own World Space Week mission-type badges (wsw-badges.ts), same clock.
-function grantWswBadges(player: Player, type: WswMissionType, at: number): Player {
-  const { player: next, granted } = grantWswBadge(player, type, at)
+function grantWswBadges(player: Player, type: WswMissionType, at: number, startedAt?: number | null): Player {
+  const { player: next, granted } = grantWswBadge(player, type, at, startedAt)
   if (granted) {
     const key = `${granted.eventId}:${granted.tier}`
     if (!reportedBadges.has(key)) {
@@ -585,6 +587,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           // is fast, but it must resume from its real position after a remount
           // instead of restarting at the first frame.
           transitStartedAt,
+          missionStartedAt: at,
           missionPhase: 'transit',
           activeMission: mission && target
             ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name }
@@ -1246,6 +1249,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         constructionPlayer,
         wswMissionTypeFor(mission, s.player.freeOperations),
         skyEventNow(isDevLauncherEnabled()),
+        s.player.missionStartedAt,
       )
       // SSL-674: a survey flight to a world the player discovered is community research.
       const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
@@ -1266,6 +1270,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           researchXP: (wswBadgedPlayer.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
           activeMission: null,
           missionRunId: undefined,
+          missionStartedAt: undefined,
           missionPhase: undefined,
           miningCargoInProgress: undefined,
           miningLaserCharges: undefined,

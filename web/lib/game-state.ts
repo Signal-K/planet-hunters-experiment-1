@@ -404,6 +404,7 @@ function dropRetiredOnboardingRun(input: GameState): GameState {
         activeMission: null,
         missionPhase: undefined,
         missionRunId: undefined,
+        missionStartedAt: undefined,
         debriefPending: false,
         pendingLaunch: false,
         pendingRocketId: undefined,
@@ -734,6 +735,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   if (!current.player.activeMission && remoteActiveMission && !remoteStageIsOlder) {
     merged.player.activeMission = remoteActiveMission
     merged.player.missionRunId = remoteState.player?.missionRunId
+    merged.player.missionStartedAt = remoteState.player?.missionStartedAt
     merged.player.missionPhase = remoteState.player?.missionPhase
     merged.player.arrivalAt = remoteState.player?.arrivalAt
     merged.player.transitStartedAt = remoteState.player?.transitStartedAt
@@ -756,6 +758,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       ...merged.player,
       activeMission: current.player.activeMission,
       missionRunId: current.player.missionRunId,
+      missionStartedAt: current.player.missionStartedAt,
       missionPhase: current.player.missionPhase,
       arrivalAt: current.player.arrivalAt,
       transitStartedAt: current.player.transitStartedAt,

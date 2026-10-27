@@ -609,6 +609,7 @@ export function useAuthSync({
                 ...current.player,
                 activeMission: { id: missionId, label },
                 missionRunId: run.id,
+                missionStartedAt: transitStartedAt,
                 missionPhase: phase,
                 pendingLaunch: false,
                 pendingRocketId: undefined,
