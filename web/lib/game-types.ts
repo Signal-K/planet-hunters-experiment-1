@@ -47,6 +47,7 @@ export interface MissionRunSnapshot {
   lastCargo: Record<string, number> | null
   deliveredCargo?: Record<string, number> | null
   missionRunId?: string
+  missionStartedAt?: number | null
   missionPhase?: MissionPhase
   miningCargoInProgress?: Record<string, number>
   miningLaserCharges?: number
@@ -358,6 +359,8 @@ export interface Player {
   // arrivalAt lets the transit animation resume at the correct visual time
   // after a tab switch or screen remount.
   transitStartedAt?: number | null
+  /** Launch time of the active run. Event badges are graded at this time as well as at completion. */
+  missionStartedAt?: number | null
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string

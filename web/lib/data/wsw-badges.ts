@@ -8,7 +8,7 @@
 
 import type { Mission } from './types'
 import type { Player } from '@/lib/game-types'
-import { badgeTierFor, type BadgeTier, type PlayerBadge } from './sky-events'
+import { badgeTierFor, runGradingTimes, type BadgeTier, type PlayerBadge } from './sky-events'
 
 export type WswMissionType =
   | 'onboarding-relay'
@@ -70,8 +70,12 @@ export function grantWswBadge<T extends Pick<Player, 'badges'>>(
   player: T,
   type: WswMissionType,
   at: Date | number,
+  /** Launch time of the run being graded; a run begun inside WSW keeps gold. */
+  startedAt?: number | null,
 ): { player: T; granted: PlayerBadge | null } {
-  const tier = wswBadgeTier(at)
+  const ms = at instanceof Date ? at.getTime() : at
+  const tiers = runGradingTimes(startedAt, ms).map(wswBadgeTier)
+  const tier: BadgeTier | null = tiers.includes('gold') ? 'gold' : tiers.includes('silver') ? 'silver' : null
   if (!tier) return { player, granted: null }
   const { badgeId } = wswBadgeFor(type)
   const existing = player.badges?.[badgeId]

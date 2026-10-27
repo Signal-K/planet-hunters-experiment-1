@@ -33,6 +33,7 @@ export function clearActiveRunPlayer(player: Player): Player {
     ...player,
     activeMission: null,
     missionRunId: undefined,
+    missionStartedAt: undefined,
     missionPhase: undefined,
     miningCargoInProgress: undefined,
     miningLaserCharges: undefined,

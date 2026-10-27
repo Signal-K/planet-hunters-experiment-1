@@ -49,6 +49,29 @@ describe('grantWswBadge', () => {
   })
 })
 
+describe('runs started inside the event keep gold', () => {
+  const startedInside = Date.parse('2026-10-10T22:00:00Z')
+  const finishedAfter = Date.parse('2026-10-11T03:00:00Z')
+  it('grades WSW at launch within the 24h grace, not beyond it', () => {
+    expect(grantWswBadge(blank(), 'rover-surface-ops', finishedAfter).granted?.tier).toBe('silver')
+    const kept = grantWswBadge(blank(), 'rover-surface-ops', finishedAfter, startedInside)
+    expect(kept.granted?.tier).toBe('gold')
+    expect(kept.granted?.earnedAt).toBe(finishedAfter)
+    const stale = Date.parse('2026-10-14T03:00:00Z')
+    expect(grantWswBadge(blank(), 'rover-surface-ops', stale, startedInside).granted?.tier).toBe('silver')
+  })
+  it('starting before the event opens still earns the in-event tier at completion', () => {
+    const before = Date.parse('2026-10-03T22:00:00Z')
+    const during = Date.parse('2026-10-04T02:00:00Z')
+    expect(grantWswBadge(blank(), 'rover-surface-ops', during, before).granted?.tier).toBe('gold')
+  })
+  it('grades debris mining at the run launch too', () => {
+    const player = { ...blank(), missionStartedAt: startedInside }
+    expect(applyDebrisMined(blank(), DRACONIDS_DEBRIS_PRESET, finishedAfter).badge?.tier).toBe('silver')
+    expect(applyDebrisMined(player, DRACONIDS_DEBRIS_PRESET, finishedAfter).badge?.tier).toBe('gold')
+  })
+})
+
 describe('badges fire today (fake clock, 9 Oct 2026)', () => {
   it('launch and Draconids badges are gold', () => {
     vi.useFakeTimers()
