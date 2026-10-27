@@ -23,7 +23,7 @@ struct BaseMenu: View {
     private var primary: [Item] {
         let hasMarket = store.player.placed.contains("market")
         return [
-            Item(id: "build", label: "Build", detail: "New structures, a control station, satellites", symbol: "building.2", primary: true, run: onBuild),
+            Item(id: "build", label: "Build", detail: "New structures and launch support", symbol: "building.2", primary: true, run: onBuild),
             Item(id: "contracts", label: "New mission", detail: "Client contracts and free runs", symbol: "paperplane", primary: true, run: { store.go(.missions) }),
             Item(id: "market", label: "Marketplace", detail: marketDetail(hasMarket), symbol: "cart", primary: true,
                  run: { store.go(.market) }),
@@ -37,7 +37,7 @@ struct BaseMenu: View {
             || store.player.deepSpaceTelescopeLaunchedAt != nil
             || store.player.saturnImagerLaunchedAt != nil
         let hasControlStation = store.player.placed.contains("control-station")
-        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
+        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "instruments", label: "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
         rows.append(Item(id: "narrative-ledger", label: "Narrative ledger", detail: "What is live, adapting and planned", symbol: "map", run: { store.go(.narrativeLedger) }))
         rows.append(Item(id: "community-research", label: "Community research", detail: "Choose a weekly path and earn permanent rewards", symbol: "telescope", run: { store.go(.communityResearch) }))

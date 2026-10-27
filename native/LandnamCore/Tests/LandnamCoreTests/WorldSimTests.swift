@@ -145,8 +145,8 @@ import Testing
         #expect(m.homeSite("market")?.id == "exchange")
         #expect(m.homeSite("refinery") == nil)
         #expect(m.scale(w: 390, h: 844) == 1.56)
-        #expect(m.scale(w: 926, h: 428) == 2)
-        #expect(m.scale(w: 1440, h: 900) == 3)
+        #expect(m.scale(w: 926, h: 428) == 1.78)
+        #expect(m.scale(w: 1440, h: 900) == 2.77)
     }
 
     @Test func framesWhatIsBuilt() throws {

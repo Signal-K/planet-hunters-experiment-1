@@ -43,7 +43,9 @@ struct BaseWorldScene: View {
     @State private var dragVertical: Bool?
     private let pulse = true
 
-    private var shownKinds: [String] { placed }
+    /// Instrument access is a Menu surface, not a redundant physical building
+    /// on the early Base. Keep legacy placement data intact but do not render it.
+    private var shownKinds: [String] { placed.filter { $0 != "control-station" } }
 
     private var siloPlaced: Bool { placed.contains("surface-silo") }
     private var siloBuilt: Bool { siloPlaced && excavated }

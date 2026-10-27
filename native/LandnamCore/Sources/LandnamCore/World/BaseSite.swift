@@ -60,7 +60,8 @@ public struct BaseSiteMap: Decodable, Sendable {
     /// Points per kit unit: portrait fits the hangar and pad across the width (1.5 to 2); landscape 2 under 600 pt tall, else 3.
     public func scale(w: Double, h: Double) -> Double {
         if h > w * 1.15 { return (min(kitScale.phone, max(kitScale.portraitMin, w / kitScale.portraitFit)) * 100).rounded() / 100 }
-        return h < kitScale.largeMinHeight ? kitScale.phone : kitScale.large
+        let preferred = h < kitScale.largeMinHeight ? kitScale.phone : kitScale.large
+        return (min(preferred, w / strip.width) * 100).rounded() / 100
     }
 
     public func structure(_ kind: String) -> Structure? { structures[kind == "garage" ? "hangar" : kind] }
