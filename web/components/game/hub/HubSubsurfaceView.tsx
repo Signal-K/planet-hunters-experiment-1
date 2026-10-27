@@ -111,6 +111,9 @@ function RoomScene({
     const displayedMinerals = minerals.slice(0, 4)
     return (
       <div className={styles.roomScene} aria-hidden="true">
+        <img className={styles.assetWall} src="/game/assets/base/kit/ug-wall.png" alt="" />
+        <img className={styles.assetPipe} src="/game/assets/base/kit/ug-pipe.png" alt="" />
+        <img className={styles.assetTank} src={`/game/assets/base/kit/${id === 'deep-mineral-vault' ? 'ug-tank-small' : 'ug-tank-big'}.png`} alt="" />
         <div className={styles.roomCeiling}>
           <span />
           <span />
@@ -217,11 +220,8 @@ function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capaci
           {totalUnits}<span>/ {capacity} U</span>
         </div>
         <div className={`${styles.siloReadState} ${full ? styles.siloReadStateFull : ''}`}>
-          {full ? 'Silo full' : `${Math.round(filledPct)}% full · Silo 01`}
+          {full ? 'FULL' : `${Math.round(filledPct)}% · SILO 01`}
         </div>
-        <p className={styles.siloReadCopy}>
-          One silo, filling by mineral. Overflow past capacity is sold on return.
-        </p>
       </div>
     </div>
   )
@@ -231,35 +231,24 @@ function MineralVault({ minerals, capacity, overallCapacity, siloTotal, onOpenMa
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
-      <div className={styles.detailSummary}>
-        <div>
-          <div className={styles.metricValue}>{totalUnits}</div>
-          <div className={styles.metricLabel}>Units in secure storage</div>
-          <p className={styles.summaryCopy}>
-            Ore you keep sits in the silo until you sell it at the Commodity
-            Exchange or spend it on your own builds. Selling later, when prices
-            are up, beats the fixed payout for auto-selling on return.
-          </p>
-        </div>
-        <span className={styles.status}>{minerals.length} species catalogued</span>
+      <div className={styles.vaultStructure} aria-hidden="true">
+        <img className={styles.vaultWall} src="/game/assets/base/kit/ug-wall.png" alt="" />
+        <img className={styles.vaultPipe} src="/game/assets/base/kit/ug-pipe.png" alt="" />
+        <img className={styles.vaultTank} src="/game/assets/base/kit/ug-tank-big.png" alt="" />
+        <img className={styles.vaultConsole} src="/game/assets/base/kit/ug-console-0.png" alt="" />
+        <span className={styles.craftingMarker}>CRAFTING<br /><b>NEXT CYCLE</b></span>
       </div>
       <StorageSilo minerals={minerals} capacity={overallCapacity} />
       <div className={styles.storageAllowance} data-testid="subsurface-storage-allowance">
-        <span>EARTH STORAGE ALLOWANCE</span>
         <strong>{totalUnits} / {overallCapacity} U</strong>
-        <small>{siloTotal} silo{siloTotal === 1 ? '' : 's'} online · surface and subsurface share this allowance</small>
+        <span>{siloTotal} SILO{siloTotal === 1 ? '' : 'S'} ONLINE</span>
       </div>
-      <PrimaryBtn testId="subsurface-silo-sell" full={false} onClick={onOpenMarket}>
-        Sell cargo at market
-      </PrimaryBtn>
       <div className={styles.craftingStub} data-testid="subsurface-crafting-stub">
-        <div>
-          <div className={styles.craftingEyebrow}>CRAFTING BAY · SILO SERVICE DECK</div>
-          <h3>Fabrication recipes</h3>
-          <p>See what your stored minerals can make here next cycle.</p>
-        </div>
+        <img src="/game/assets/base/kit/ug-console-0.png" alt="" />
+        <strong>CRAFTING BAY</strong>
         <span>COMING NEXT CYCLE</span>
       </div>
+      <PrimaryBtn testId="subsurface-silo-sell" full={false} onClick={onOpenMarket}>Sell at Exchange</PrimaryBtn>
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -501,11 +490,9 @@ export function HubSubsurfaceView({
             <div className={styles.deckHeader}>
               <div>
                 <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
-                <h2 className={styles.deckTitle}>Build storage below the fixed surface base</h2>
+                <h2 className={styles.deckTitle}>SUBSURFACE</h2>
               </div>
-              <div className={styles.deckSummary}>
-                {totalMineralUnits} mineral units · {parts.length} registered parts
-              </div>
+              <div className={styles.deckSummary}>{totalMineralUnits} U · {parts.length} PARTS</div>
             </div>
             <div className={styles.facilityShell} data-testid="subsurface-facility-cutaway">
               <div className={styles.utilityTrunk} aria-hidden="true">
@@ -537,7 +524,7 @@ export function HubSubsurfaceView({
                       ) : (
                         <UnbuiltRoomScene room={room} />
                       )}
-                      <p className={styles.roomDescription}>{room.description}</p>
+                      <span className={styles.roomDescription}>{built ? 'ONLINE' : 'BUILD'}</span>
                       <div className={styles.roomCardFooter}>
                         <span className={`${styles.status} ${!built ? styles.statusLocked : ''}`}>
                           {built ? 'Online' : 'Unbuilt'}

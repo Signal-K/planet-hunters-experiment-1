@@ -42,7 +42,7 @@ describe('HubSubsurfaceView', () => {
     act(() => (container.querySelector('[data-testid="subsurface-room-mineral-vault"]') as HTMLElement).click())
     const markup = container.innerHTML
     expect(markup).toContain('data-testid="subsurface-storage-allowance"')
-    expect(markup).toContain('surface and subsurface share this allowance')
+    expect(markup).toContain('SILOS ONLINE')
     expect(markup).toContain('data-testid="subsurface-crafting-stub"')
     act(() => root.unmount())
   })
@@ -61,7 +61,7 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
-    expect(markup).toContain('Build storage below the fixed surface base')
+    expect(markup).toContain('SUBSURFACE')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
     expect(markup).toContain('Unbuilt')
@@ -77,7 +77,7 @@ describe('HubSubsurfaceView', () => {
         subsurfaceBuilt={['mineral-vault']}
       />,
     )
-    expect(markup).toContain('12 mineral units')
+    expect(markup).toContain('12 U')
     expect(markup).toContain('Online')
   })
 
