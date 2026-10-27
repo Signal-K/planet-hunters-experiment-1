@@ -9,8 +9,37 @@
   --hub-structure-max: 9999px;
 }
 
+.worldSlide {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 200%;
+  overflow: hidden;
+  transform: translateY(0);
+  transition: transform 720ms cubic-bezier(.2, .82, .22, 1);
+  will-change: transform;
+}
+
+.worldSlide[data-subsurface] {
+  transform: translateY(-50%);
+}
+
 .surface {
   overflow: hidden;
+}
+
+.subsurfaceWorld {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 50%;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .worldSlide { transition: none; }
 }
 
 .buildPicker {

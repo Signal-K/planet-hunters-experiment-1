@@ -23,6 +23,7 @@ import {
 } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { mineralSourceHints } from '@/lib/data/mineral-sources'
+import { storageCapacity, siloCount } from '@/lib/systems/EconomySystem'
 import { PrimaryBtn } from '@/components/ui/Button'
 import styles from './HubSubsurfaceView.module.css'
 
@@ -32,6 +33,8 @@ interface HubSubsurfaceViewProps {
   francs?: number
   subsurfaceExcavated?: boolean
   subsurfaceBuilt?: string[]
+  placed?: string[]
+  buildingLevels?: Record<string, number>
   onExcavate?: () => void
   onExcavateUnavailable?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
@@ -224,7 +227,7 @@ function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capaci
   )
 }
 
-function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMineral[]; capacity: number; onOpenMarket?: () => void }) {
+function MineralVault({ minerals, capacity, overallCapacity, siloTotal, onOpenMarket }: { minerals: StoredMineral[]; capacity: number; overallCapacity: number; siloTotal: number; onOpenMarket?: () => void }) {
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
@@ -240,10 +243,23 @@ function MineralVault({ minerals, capacity, onOpenMarket }: { minerals: StoredMi
         </div>
         <span className={styles.status}>{minerals.length} species catalogued</span>
       </div>
-      <StorageSilo minerals={minerals} capacity={capacity} />
+      <StorageSilo minerals={minerals} capacity={overallCapacity} />
+      <div className={styles.storageAllowance} data-testid="subsurface-storage-allowance">
+        <span>EARTH STORAGE ALLOWANCE</span>
+        <strong>{totalUnits} / {overallCapacity} U</strong>
+        <small>{siloTotal} silo{siloTotal === 1 ? '' : 's'} online · surface and subsurface share this allowance</small>
+      </div>
       <PrimaryBtn testId="subsurface-silo-sell" full={false} onClick={onOpenMarket}>
         Sell cargo at market
       </PrimaryBtn>
+      <div className={styles.craftingStub} data-testid="subsurface-crafting-stub">
+        <div>
+          <div className={styles.craftingEyebrow}>CRAFTING BAY · SILO SERVICE DECK</div>
+          <h3>Fabrication recipes</h3>
+          <p>See what your stored minerals can make here next cycle.</p>
+        </div>
+        <span>COMING NEXT CYCLE</span>
+      </div>
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -379,38 +395,28 @@ function ExcavatePrompt({
     missingAluminium > 0 ? `${missingAluminium} aluminium (you have ${availableAluminium})` : null,
   ].filter((entry): entry is string => !!entry)
   return (
-    <div className={styles.trainingPanel} data-testid="subsurface-excavate-prompt">
-      <div>
-        <span className={styles.trainingLock}>
-          <Shovel size={28} strokeWidth={1.8} />
-        </span>
-        <h2 className={styles.trainingTitle}>Below-grade area unexcavated</h2>
-        <p className={styles.trainingCopy}>
-          The surface only holds so much surface plot — the agency&apos;s
-          buildable footprint above ground is fixed. Excavating this deck
-          opens space below the soil for storage and habitat facilities
-          without needing more land on the surface.
-        </p>
-        <p className={styles.trainingCopy}>
-          Excavation cost: <strong>{formatRoomCost(SUBSURFACE_EXCAVATE_COST)}</strong>
-        </p>
-        {!affordable && (
-          <p className={styles.trainingCopy} data-testid="subsurface-excavate-lock-copy">
-            Need {missing.join(' and ')}.{missingAluminium > 0 ? ` ${mineralSourceHints(['aluminium'])}` : ''}
-          </p>
-        )}
-        <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>
-          <PrimaryBtn
-            testId="subsurface-excavate-cta"
+    <div className={styles.bedrockPrompt} data-testid="subsurface-excavate-prompt">
+      <div className={styles.bedrockAction}>
+        <div className={styles.excavateActions}>
+          <button
+            type="button"
+            className={styles.bedrockExcavate}
+            data-testid="subsurface-excavate-cta"
             onClick={() => {
               if (affordable) onExcavate?.()
               else onExcavateUnavailable?.()
             }}
-            ariaDisabled={!affordable}
+            aria-disabled={!affordable}
           >
-            Excavate deck
-          </PrimaryBtn>
-          {!affordable && <button type="button" className={styles.focusButton} data-testid="subsurface-focus-excavation" onClick={() => onFocusResources?.('Subsurface excavation', SUBSURFACE_EXCAVATE_COST.costMaterials)}>FOCUS MATERIALS</button>}
+            <Shovel size={19} strokeWidth={2} />
+            <span>EXCAVATE</span>
+            <b>{formatRoomCost(SUBSURFACE_EXCAVATE_COST)}</b>
+          </button>
+          {!affordable && <button type="button" className={styles.bedrockNeed} data-testid="subsurface-focus-excavation" onClick={() => onFocusResources?.('Subsurface excavation', SUBSURFACE_EXCAVATE_COST.costMaterials)}>
+            <span data-testid="subsurface-excavate-lock-copy">Need {missing.join(' + ')}</span>
+            <span>Find aluminium</span>
+            {missingAluminium > 0 && <span className={styles.srOnly}>{mineralSourceHints(['aluminium'])}</span>}
+          </button>}
         </div>
       </div>
     </div>
@@ -423,6 +429,8 @@ export function HubSubsurfaceView({
   francs = 0,
   subsurfaceExcavated = false,
   subsurfaceBuilt = [],
+  placed = [],
+  buildingLevels = {},
   onExcavate,
   onExcavateUnavailable,
   onBuildRoom,
@@ -435,6 +443,8 @@ export function HubSubsurfaceView({
   const totalMineralUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   const activeDefinition = SUBSURFACE_ROOMS.find(room => room.id === activeRoom)
   const builtSet = new Set(subsurfaceBuilt)
+  const overallCapacity = storageCapacity({ placed, subsurfaceBuilt, buildingLevels: buildingLevels ?? {} })
+  const siloTotal = siloCount({ placed, subsurfaceBuilt })
 
   const roomMetric = (room: SubsurfaceRoomDefinition, built: boolean) => {
     if (!built) return formatRoomCost(room)
@@ -444,32 +454,22 @@ export function HubSubsurfaceView({
   }
 
   return (
-    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Base subsurface">
+    <section className={`${styles.root} ${!subsurfaceExcavated ? styles.unexcavated : ''}`} data-testid="hub-subsurface-view" aria-label="Base subsurface">
       <div className={styles.geology} aria-hidden="true">
         <span className={styles.surfaceCap} data-testid="subsurface-surface-continuation" />
         <span className={styles.crust} />
-        <span className={`${styles.stratum} ${styles.stratumOne}`} />
-        <span className={`${styles.stratum} ${styles.stratumTwo}`} />
-        <span className={styles.serviceShaft} />
-        <div className={styles.depthRail}>
-          {[0, 25, 50, 75, 100].map(depth => (
-            <span key={depth}>
-              <i className={styles.depthTick} style={{ top: `${depth}%` }} />
-              <b className={styles.depthLabel} style={{ top: `${depth}%` }}>{depth * 4}M</b>
-            </span>
-          ))}
-        </div>
+        <span className={styles.aggregate} />
+        <span className={styles.rockField}>
+          {Array.from({ length: 14 }, (_, index) => <i key={index} />)}
+        </span>
+        <span className={styles.mineralPockets}>
+          <i /><i /><i /><i />
+        </span>
       </div>
 
       <div className={styles.content}>
         {!subsurfaceExcavated ? (
-          <div className={styles.detailView}>
-            <div className={styles.deckHeader}>
-              <div>
-                <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
-                <h2 className={styles.deckTitle}>Unexcavated</h2>
-              </div>
-            </div>
+          <div className={styles.detailView} aria-label="Bedrock, unexcavated">
             <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onExcavateUnavailable={onExcavateUnavailable} onFocusResources={onFocusResources} />
           </div>
         ) : activeRoom && activeDefinition ? (
@@ -491,7 +491,7 @@ export function HubSubsurfaceView({
             {!builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} onFocusResources={onFocusResources} />
             ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
-              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} onOpenMarket={onOpenMarket} />
+              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} overallCapacity={overallCapacity} siloTotal={siloTotal} onOpenMarket={onOpenMarket} />
             ) : (
               <PartsLocker parts={parts} />
             )}

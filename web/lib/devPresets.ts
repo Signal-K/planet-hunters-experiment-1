@@ -180,7 +180,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
       { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
       { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
-      { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view with a silo and stash', stage: 'free-ops' },
+      { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view before excavation', stage: 'free-ops' },
+      { key: 'ui-subsurface-dug-out', label: 'Subsurface: dug out', hint: 'Excavated subsurface with a built Mineral Vault and stored cargo', stage: 'free-ops' },
       { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
       { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo and refinery built, tier 2 rocket', stage: 'free-ops' },
       { key: 'cp-late', label: 'Checkpoint: late', hint: 'About 55 min in: 20 missions done, tier 3 rocket, all buildings, rich stash', stage: 'free-ops' },
@@ -827,6 +828,24 @@ function fixture(name: string): Partial<GameState> | null {
           placed: ['launchpad', 'surface-silo'],
           placementPlots: { launchpad: 0, 'surface-silo': 1 },
           stash: { iron: 30, nickel: 12, silicates: 8 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'ui-subsurface-dug-out':
+      return {
+        screen: 'hub-subsurface',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          francs: 500_000_000,
+          placed: ['launchpad', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'surface-silo': 1 },
+          subsurfaceExcavated: true,
+          subsurfaceBuilt: ['mineral-vault'],
+          stash: { iron: 46, nickel: 28, silicates: 12 },
         },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,

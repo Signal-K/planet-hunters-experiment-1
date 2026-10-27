@@ -439,10 +439,10 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
 
-      {/* Base stays mounted at its authored camera frame while a tray is open.
-          The former 200%-tall slider moved the whole world before revealing
-          Subsurface, which made close feel like a navigation reset. */}
-      <div style={{ position: 'absolute', inset: 0 }}>
+      {/* One continuous vertical world: surface above, soil and bedrock below.
+          Subsurface moves this canvas down instead of replacing the Hub with
+          an overlay, so the player is travelling below the same base. */}
+      <div className={layoutStyles.worldSlide} data-subsurface={subsurface || undefined}>
 
         {/* ─── ABOVE GROUND ─── top half of slider */}
         {/* The scene still runs full-bleed behind the translucent dock — that
@@ -458,7 +458,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           data-testid="base-camera"
           data-zoom={camera.cam.zoom.toFixed(2)}
           {...camera.handlers}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', touchAction: 'none' }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden', touchAction: 'none' }}
         >
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
@@ -550,12 +550,13 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           </div>
         </div>
 
-        {/* Subsurface is a tray over the still-mounted Base, never a camera slide. */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 30, overflow: 'auto', display: subsurface ? 'block' : 'none', background: 'var(--ln-void)' }}>
+        <div className={layoutStyles.subsurfaceWorld} aria-hidden={!subsurface}>
           <HubSubsurfaceView
             stash={player.stash}
             installedParts={player.shipCustomizerParts}
             francs={player.francs}
+            placed={player.placed}
+            buildingLevels={player.buildingLevels}
             subsurfaceExcavated={player.subsurfaceExcavated}
             subsurfaceBuilt={player.subsurfaceBuilt}
             onExcavate={onExcavateSubsurface}

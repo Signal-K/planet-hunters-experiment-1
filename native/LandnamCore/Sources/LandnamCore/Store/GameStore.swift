@@ -351,6 +351,37 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    /// Clears the unbuilt bedrock below a placed surface silo. Kept in the
+    /// store so native applies the same one-time cost as the web Hub.
+    @discardableResult public func excavateSubsurface() -> Bool {
+        let cost = 2_000_000
+        let aluminium = 10
+        guard state.player.placed.contains("surface-silo"), !state.player.subsurfaceExcavated,
+              state.player.francs >= cost, state.player.stash["aluminium", default: 0] >= aluminium else { return false }
+        var next = state
+        next.player.francs -= cost
+        next.player.stash["aluminium", default: 0] -= aluminium
+        next.player.subsurfaceExcavated = true
+        apply(next)
+        return true
+    }
+    /// Builds an underground silo after excavation. The surface silo remains
+    /// the lift connection; these rooms add capacity below the same base.
+    @discardableResult public func buildSubsurfaceSilo(deep: Bool = false) -> Bool {
+        guard state.player.subsurfaceExcavated else { return false }
+        let id = deep ? "deep-mineral-vault" : "mineral-vault"
+        guard !state.player.subsurfaceBuilt.contains(id) else { return false }
+        let cost = deep ? 8_000_000 : 3_000_000
+        let materials = deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8]
+        guard state.player.francs >= cost,
+              materials.allSatisfy({ state.player.stash[$0.key, default: 0] >= $0.value }) else { return false }
+        var next = state
+        next.player.francs -= cost
+        for (mineral, amount) in materials { next.player.stash[mineral, default: 0] -= amount }
+        next.player.subsurfaceBuilt.append(id)
+        apply(next)
+        return true
+    }
     @discardableResult public func upgradeBuilding(_ id: String) -> Bool {
         let next = BuildingLevels.applyUpgrade(state, id: id)
         guard next != state else { return false }

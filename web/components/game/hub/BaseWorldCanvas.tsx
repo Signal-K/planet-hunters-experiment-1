@@ -151,13 +151,14 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
   g.addColorStop(1, grade.horizon)
   ctx.fillStyle = g
   ctx.fillRect(0, 0, w, h)
-  // Continue the paving with a grade, not a flat colour block, while the
-  // authored ground sprite loads and where its finite frame ends.
+  // The authored paving sprite ends before the viewport does on tall screens.
+  // Continue it as textured, marked concrete instead of a flat colour band.
   const apron = ctx.createLinearGradient(0, groundY, 0, h)
   apron.addColorStop(0, GROUND.deep)
   apron.addColorStop(1, mixHex(GROUND.deep, '#263544', 0.28))
   ctx.fillStyle = apron
   ctx.fillRect(0, groundY, w, h - groundY)
+  drawApronContinuation(ctx, groundY, w, h, px)
   if (grade.stars > 0) drawStars(ctx, w, groundY, grade.stars, t)
   drawMilkyWay(ctx, w, groundY, grade.stars, t)
   drawLuminary(ctx, grade, sky, w, groundY, px, t, gloom)
@@ -195,6 +196,23 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
     ctx.fillRect(0, 0, w, h)
     ctx.globalAlpha = 1
   }
+}
+
+function drawApronContinuation(ctx: CanvasRenderingContext2D, groundY: number, w: number, h: number, px: number) {
+  const row = Math.max(26, 18 * px)
+  ctx.save()
+  ctx.strokeStyle = 'rgb(49 65 74 / 24%)'
+  ctx.lineWidth = 1
+  for (let y = groundY + row; y < h; y += row) {
+    ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke()
+  }
+  for (let x = -row; x < w + row; x += row * 1.65) {
+    ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x + row * 0.3, h); ctx.stroke()
+  }
+  ctx.fillStyle = 'rgb(223 230 227 / 20%)'
+  const dashY = groundY + Math.min(44 * px, (h - groundY) * 0.42)
+  for (let x = 24 * px; x < w; x += 56 * px) ctx.fillRect(x, dashY, 24 * px, Math.max(1, px * 0.65))
+  ctx.restore()
 }
 
 function drawSprite(ctx: CanvasRenderingContext2D, e: Entity, sx: number, sy: number, k: number) {

@@ -30,9 +30,15 @@ struct BaseWorldScene: View {
     var camera: BaseCamera
     /// Off for backdrop use (the mission board): no edge chevrons or depth button over the scene.
     var showsControls: Bool = true
+    /// The dock's Subsurface action drives the same physical camera dive as a
+    /// vertical gesture, rather than only changing the dock label.
+    var subsurfaceActive: Bool = false
     var onStructure: (String) -> Void
     var onShaft: () -> Void
     var onBuildSilo: () -> Void
+    var onBuildSubsurfaceSilo: () -> Void = {}
+    var onBuildDeepSubsurfaceSilo: () -> Void = {}
+    var onExcavate: () -> Void = {}
     /// Placement mode: the picked structure's home site is marked while it is free.
     var placing: Bool = false
     var pickedKind: String? = nil
@@ -70,7 +76,7 @@ struct BaseWorldScene: View {
                     // counter-offsets the pan: it draws its own parallax from `camX`.
                     BaseWorldCanvas(px: world.px, camX: 0, zoom: 1, biome: biome.rawValue, grade: grade ?? WorldAssets.grade())
                         .frame(width: world.worldW, height: h)
-                    BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft, active: camera.depth > 0)
+                    BaseUnderground(world: world, built: siloBuilt, excavated: excavated, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSubsurfaceSilo, onBuildDeep: onBuildDeepSubsurfaceSilo, onExcavate: onExcavate, onOpen: onShaft, active: camera.depth > 0)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
                     if placed.contains("launchpad") { operationsApron(world: world) }
@@ -102,6 +108,10 @@ struct BaseWorldScene: View {
                 // Frame what is built (the pad site on a fresh base) once; the player pans from there.
                 if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds) }
                 camera.homed = true
+                if subsurfaceActive { camera.dive(true, world, reduceMotion: reduceMotion) }
+            }
+            .onChange(of: subsurfaceActive) { _, active in
+                camera.dive(active, world, reduceMotion: reduceMotion)
             }
             .onChange(of: placed) { old, now in
                 if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now) } }
@@ -187,10 +197,6 @@ struct BaseWorldScene: View {
     /// unbuilt Hangar, Exchange or Control Station gameplay state.
     private func operationsApron(world: BaseWorld) -> some View {
         ZStack(alignment: .topLeading) {
-            Rectangle()
-                .fill(Theme.blue.opacity(0.72))
-                .frame(width: 350 * world.u, height: max(2, world.u))
-                .position(x: 257 * world.px, y: world.ground - 4 * world.u)
             if let props = WorldAssets.site?.operationsApron?.props {
                 ForEach(props, id: \.id) { prop in
                     apronProp(prop, world: world)

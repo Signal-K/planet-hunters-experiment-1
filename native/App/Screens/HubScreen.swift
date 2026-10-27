@@ -82,9 +82,13 @@ struct HubScreen: View {
                 player: store.player,
                 insets: insets,
                 camera: camera,
+                subsurfaceActive: store.screen == .hubSubsurface,
                 onStructure: { openStructure($0) },
                 onShaft: { if !offerUpgrade("surface-silo") { store.go(.hubSubsurface) } },
                 onBuildSilo: { buildSilo() },
+                onBuildSubsurfaceSilo: { _ = store.buildSubsurfaceSilo() },
+                onBuildDeepSubsurfaceSilo: { _ = store.buildSubsurfaceSilo(deep: true) },
+                onExcavate: { _ = store.excavateSubsurface() },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
@@ -114,7 +118,7 @@ struct HubScreen: View {
 
     /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.
     private var oreFraction: Double {
-        let capacity = 40 * BuildingLevels.siloCapacityMultiplier(store.player.buildingLevels["surface-silo"] ?? 1)
+        let capacity = Market.storageCapacity(store.player)
         let held = store.player.stash.values.reduce(0, +)
         return min(1, Double(held) / Double(max(capacity, 1)))
     }

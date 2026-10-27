@@ -6,216 +6,136 @@
   background: var(--ln-void);
 }
 
-/* Recolored 2026-08-22 (KES-228): this deck sits directly beneath the Hub
-   surface scene in the same slide, and the old soil-brown strata (#244649 /
-   #2c241c / #191713, #92785d etc.) read as a different game's palette next
-   to the new dark-navy/cyan/pink diorama above it. Same geology-cutaway
-   shapes, recolored into that world instead of literal dirt tones. */
-/* Underground landscape (KES-271). This deck sits directly under the Hub
-   surface in the same vertical slide, so the cross-section must READ as the
-   ground continuing down from the surface seam — soil crust at the very top
-   (matching the near-ground silhouette colour used on the surface), darkening
-   through subsoil and rock to bedrock at depth — rather than starting on a sky
-   tone. Kept in the dark-navy Hub palette (KES-228) with faint semantic-mineral
-   ore veins for the "ore in the ground" texture. */
+/* The cutaway begins with the same concrete apron that ends the surface view.
+   From there it becomes compacted soil and, at depth, solid bedrock. It is
+   terrain first: no instrumentation, grid, shaft, or synthetic ore overlay. */
 .geology {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--hub-hill-far) 88%, var(--ln-panel-2)) 0 3%,
-      color-mix(in srgb, var(--hub-hill-near) 90%, #000) 3% 26%,
-      color-mix(in srgb, var(--hub-hill-near) 72%, #000) 26% 58%,
-      color-mix(in srgb, var(--ln-void) 90%, var(--hub-hill-near)) 58% 100%
-    );
+  background: #756f60;
 }
 
-/* The subsurface is the lower half of the same vertical world slide. This
-   shallow, faceted cap is the visual hand-off from the surface ground lip to
-   the darker excavation deck; it keeps the view from starting as an unrelated
-   navy panel when the player moves below grade. */
 .surfaceCap {
   position: absolute;
   top: 0;
   right: 0;
   left: 0;
   z-index: 1;
-  height: 72px;
+  height: 38px;
   pointer-events: none;
-  background:
-    linear-gradient(
-      180deg,
-      var(--hub-hill-far) 0 8px,
-      color-mix(in srgb, var(--hub-hill-far) 82%, var(--ln-panel-2)) 8px 34px,
-      color-mix(in srgb, var(--hub-hill-near) 78%, var(--ln-void)) 34px 100%
-    );
-  border-bottom: 1px solid color-mix(in srgb, var(--hub-cyan) 30%, var(--hub-outline));
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--ln-void) 46%, transparent);
+  background: #a39d92;
+  box-shadow: inset 0 -3px 0 #706c64;
 }
 
 .surfaceCap::before {
+  content: '';
   position: absolute;
   right: 0;
-  bottom: 18px;
+  bottom: -6px;
   left: 0;
-  height: 18px;
-  content: '';
-  opacity: 0.65;
-  background:
-    linear-gradient(
-      135deg,
-      transparent 0 12%,
-      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 12% 18%,
-      transparent 18% 36%,
-      color-mix(in srgb, var(--hub-hill-near) 72%, var(--ln-panel-2)) 36% 43%,
-      transparent 43% 62%,
-      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 62% 69%,
-      transparent 69% 100%
-    );
+  height: 8px;
+  background: #605b4d;
 }
 
-.surfaceCap::after {
-  position: absolute;
-  top: 8px;
-  right: 4%;
-  left: 4%;
-  height: 2px;
-  content: '';
-  background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
-  opacity: 0.55;
-}
-
-/* Soil crust lip: a lit topsoil edge right at the surface seam so the deck
-   visually attaches to the ground plane of the Hub scene above it. */
 .crust {
   position: absolute;
-  top: 64px;
+  top: 38px;
   left: 0;
   right: 0;
   z-index: 2;
-  height: 12px;
+  height: 34px;
   pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--hub-hill-far) 70%, transparent), transparent);
-  border-top: 1.5px solid color-mix(in srgb, var(--hub-cyan) 26%, var(--hub-outline));
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--ln-void) 60%, transparent);
+  background: #756b56;
+  box-shadow: inset 0 -3px 0 #59554b;
 }
+
+/* Small, low-contrast material variation keeps the soil from becoming a flat
+   colour field. These are embedded in the ground, never floating over it. */
+.aggregate {
+  position: absolute;
+  top: 78px;
+  right: 0;
+  left: 0;
+  height: 31%;
+  opacity: .42;
+  background:
+    radial-gradient(ellipse 7px 3px at 7% 20%, #4e4b3f 0 65%, transparent 68%),
+    radial-gradient(ellipse 5px 3px at 18% 72%, #9a8d6d 0 65%, transparent 68%),
+    radial-gradient(ellipse 9px 4px at 31% 31%, #4e4b3f 0 65%, transparent 68%),
+    radial-gradient(ellipse 5px 3px at 46% 68%, #8d8268 0 65%, transparent 68%),
+    radial-gradient(ellipse 8px 3px at 60% 18%, #4e4b3f 0 65%, transparent 68%),
+    radial-gradient(ellipse 6px 3px at 75% 61%, #92876c 0 65%, transparent 68%),
+    radial-gradient(ellipse 8px 4px at 91% 38%, #4e4b3f 0 65%, transparent 68%);
+}
+
+.rockField,
+.mineralPockets {
+  position: absolute;
+  inset: 0;
+}
+
+.rockField i {
+  position: absolute;
+  width: 20px;
+  height: 12px;
+  opacity: .48;
+  background: url('/game/assets/base/kit/prop-rock.png') center / contain no-repeat;
+}
+
+.rockField i:nth-child(1) { top: 22%; left: 8%; transform: scale(1.25); }
+.rockField i:nth-child(2) { top: 31%; left: 26%; transform: scale(.8); }
+.rockField i:nth-child(3) { top: 18%; left: 49%; transform: scale(.7); }
+.rockField i:nth-child(4) { top: 38%; left: 73%; transform: scale(1.1); }
+.rockField i:nth-child(5) { top: 43%; left: 13%; transform: scale(.7); }
+.rockField i:nth-child(6) { top: 51%; left: 41%; transform: scale(1.25); }
+.rockField i:nth-child(7) { top: 58%; left: 88%; transform: scale(.8); }
+.rockField i:nth-child(8) { top: 64%; left: 22%; transform: scale(1.15); }
+.rockField i:nth-child(9) { top: 69%; left: 57%; transform: scale(.7); }
+.rockField i:nth-child(10) { top: 74%; left: 79%; transform: scale(1.35); }
+.rockField i:nth-child(11) { top: 79%; left: 8%; transform: scale(.9); }
+.rockField i:nth-child(12) { top: 85%; left: 36%; transform: scale(1.2); }
+.rockField i:nth-child(13) { top: 89%; left: 66%; transform: scale(.75); }
+.rockField i:nth-child(14) { top: 92%; left: 93%; transform: scale(1.1); }
+
+.mineralPockets i {
+  position: absolute;
+  width: 13px;
+  height: 7px;
+  border-radius: 48% 52% 42% 58%;
+  opacity: .55;
+  background: #a58d5e;
+  box-shadow: inset 0 -2px 0 rgb(47 50 48 / 38%);
+}
+
+.mineralPockets i:nth-child(1) { top: 47%; left: 18%; transform: rotate(-11deg); }
+.mineralPockets i:nth-child(2) { top: 56%; left: 70%; transform: rotate(9deg); background: #877b67; }
+.mineralPockets i:nth-child(3) { top: 76%; left: 47%; transform: rotate(-7deg); background: #a58d5e; }
+.mineralPockets i:nth-child(4) { top: 87%; left: 84%; transform: rotate(12deg); background: #877b67; }
 
 .geology::before {
   position: absolute;
-  inset: 0;
+  top: 46%;
+  right: 0;
+  bottom: 0;
+  left: 0;
   content: '';
-  opacity: 0;
-  background: none;
+  background: #575855;
+  clip-path: polygon(0 7%, 9% 3%, 19% 8%, 31% 4%, 44% 9%, 57% 2%, 70% 6%, 82% 1%, 100% 5%, 100% 100%, 0 100%);
 }
 
-/* Ore veins scattered through the strata — semantic mineral tints (iron rust,
-   silicon pale-blue, gold warm), the same locked ore palette SoilCrossSection
-   uses on the surface, so the deposits below match what glows above the seam. */
 .geology::after {
   position: absolute;
-  inset: 0;
-  content: '';
-  opacity: 0.5;
-  background-image:
-    radial-gradient(ellipse 22px 12px at 12% 30%, rgba(80, 217, 188, 0.4), transparent 70%),
-    radial-gradient(ellipse 18px 10px at 82% 44%, rgba(185, 216, 255, 0.34), transparent 70%),
-    radial-gradient(ellipse 26px 12px at 30% 72%, rgba(121, 209, 236, 0.26), transparent 70%),
-    radial-gradient(ellipse 16px 10px at 68% 84%, rgba(80, 217, 188, 0.3), transparent 70%);
-  background-repeat: no-repeat;
-}
-
-.stratum {
-  position: absolute;
-  left: -4%;
-  width: 108%;
-  height: 10%;
-  border-top: 1px solid var(--hub-outline);
-  border-bottom: 1px solid var(--ln-divider);
-  transform: skewY(-2deg);
-}
-
-.stratumOne {
-  top: 26%;
-  background: color-mix(in srgb, var(--hub-hill-far) 30%, transparent);
-}
-
-.stratumTwo {
-  top: 58%;
-  transform: skewY(1.5deg);
-  background: color-mix(in srgb, var(--ln-void) 40%, transparent);
-}
-
-.serviceShaft {
-  position: absolute;
-  top: 72px;
+  top: 72%;
+  right: 0;
   bottom: 0;
-  left: 50%;
-  width: 48px;
-  transform: translateX(-50%);
-  border-right: 1px solid var(--ln-cyan-border);
-  border-left: 1px solid var(--ln-cyan-border);
-  background: color-mix(in srgb, var(--ln-void) 88%, transparent);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--ln-cyan) 12%, transparent);
-}
-
-.serviceShaft::before,
-.serviceShaft::after {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  content: '';
-  background: var(--ln-hairline);
-}
-
-.serviceShaft::before {
-  left: 16px;
-}
-
-.serviceShaft::after {
-  right: 16px;
-}
-
-.depthRail {
-  position: absolute;
-  top: 80px;
-  right: 8px;
-  bottom: 160px;
-  width: 32px;
-  border-left: 1px solid var(--ln-hairline);
-}
-
-.depthTick {
-  position: absolute;
   left: 0;
-  width: 8px;
-  height: 1px;
-  background: var(--ln-hairline-strong);
+  content: '';
+  background: #3e4140;
+  clip-path: polygon(0 8%, 13% 2%, 25% 7%, 38% 1%, 52% 6%, 65% 2%, 78% 7%, 90% 1%, 100% 5%, 100% 100%, 0 100%);
 }
 
-.depthLabel {
-  position: absolute;
-  left: 8px;
-  transform: translateY(-50%);
-  color: var(--ln-text-muted);
-  font: 700 14px var(--ln-font-mono);
-  letter-spacing: 0.08em;
-}
-
-/* KES-228, second correction: the previous fix reserved 72px on the right
-   for the depth rail and only 24px on the left, on the theory that the
-   card should be centered in the space "left over" once the rail's width
-   is excluded. That produced a card that's visibly NOT symmetric on the
-   actual screen — more empty space on one side than the other — which
-   reads as an off-centre bug regardless of the rationale. Fixed for real
-   this time: equal insets on both sides, full stop. `.content` (z-index 2)
-   now simply sits in front of `.depthRail` (no z-index, so it stacks below
-   by document order) and covers it wherever the card overlaps — a ruler
-   digit or two disappearing behind the card is far less visible than an
-   asymmetric layout, and this is the only way to guarantee true center. */
 .content {
   position: absolute;
   top: 72px;
@@ -229,6 +149,13 @@
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
+}
+
+/* Before excavation there is no deck, panel, or chamber. The only foreground
+   element is the excavation action resting on the exposed bedrock. */
+.unexcavated .content {
+  inset: 0;
+  max-width: none;
 }
 
 .deckHeader,
@@ -867,6 +794,34 @@
   line-height: 1.5;
 }
 
+.storageAllowance,
+.craftingStub {
+  grid-column: 1 / -1;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-surface) 70%, transparent);
+}
+
+.storageAllowance span,
+.craftingEyebrow {
+  color: var(--ln-text-muted);
+  font: 700 14px var(--ln-font-mono);
+  letter-spacing: .08em;
+}
+
+.storageAllowance strong { color: var(--ln-cyan-bright); font: 800 16px var(--ln-font-mono); }
+.storageAllowance small { color: var(--ln-text-dim); font-size: 14px; }
+.craftingStub { align-items: flex-start; border-color: var(--ln-cyan-border); }
+.craftingStub h3 { margin: 4px 0 2px; color: var(--ln-text); font: 800 18px var(--ln-font-display); }
+.craftingStub p { margin: 0; color: var(--ln-text-dim); font-size: 14px; }
+.craftingStub > span { flex: 0 0 auto; color: var(--ln-amber); font: 800 14px var(--ln-font-mono); letter-spacing: .08em; }
+
 .inventoryList,
 .partsList {
   display: flex;
@@ -976,6 +931,31 @@
   background: transparent;
   text-align: center;
 }
+
+/* Before excavation this is terrain, not an empty facility or an essay.
+   The action sits on a visible face of bedrock and becomes the single clear
+   affordance for opening the deck. */
+.bedrockPrompt {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  overflow: visible;
+  place-items: end center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.bedrockAction { position: relative; z-index: 1; width: min(360px, calc(100% - 32px)); margin-bottom: 146px; text-align: center; }
+.excavateActions { display: grid; gap: 6px; }
+.bedrockExcavate, .bedrockNeed { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--ln-world-outline); color: var(--ln-world-outline); background: var(--ln-world-hull-lit); box-shadow: 3px 3px 0 rgb(26 40 50 / 28%); cursor: pointer; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.bedrockExcavate { border-radius: var(--ln-r-md); }
+.bedrockExcavate b { color: var(--ln-world-glass); font: 800 12px/1 var(--ln-font-mono); }
+.bedrockNeed { min-height: 30px; justify-content: space-between; padding: 0 10px; border-color: #665c46; color: #443f34; background: #c4b997; font-size: 11px; }
+.bedrockNeed > span:nth-child(2) { color: #675f4f; }
+.bedrockExcavate:focus-visible, .bedrockNeed:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .trainingLock {
   display: grid;

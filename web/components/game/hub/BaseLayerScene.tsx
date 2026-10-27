@@ -31,7 +31,6 @@ function OperationsApron() {
     <img key={id} src={`/game/assets/${src}`} alt="" draggable={false} data-apron-prop={id} className={`${styles.apronProp} ${styles[id] ?? ''}`} style={{ left: units(x), width: units(width), bottom: aboveGround(lift) }} />
   )
   return <div className={styles.operationsApron} data-testid="base-operations-apron" aria-hidden="true">
-    <div className={styles.serviceSpine} />
     {OPERATIONS_APRON.props.map(facility)}
   </div>
 }
