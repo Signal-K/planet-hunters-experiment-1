@@ -349,7 +349,7 @@ private struct ContractWorkspace: View {
             VStack(spacing: portrait ? 8 : 12) {
                 clientMark(client)
                 Text("\((client?.name ?? "Your program").uppercased())\(level.map { " · L\($0)" } ?? "")")
-                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hex(0xB8C8C0)).lineLimit(1)
+                    .font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hex(0xB8C8C0)).lineLimit(2).multilineTextAlignment(.center).minimumScaleFactor(0.85)
                 Text(mission.title).font(AppFont.display(portrait ? 24 : 28)).foregroundStyle(Theme.hex(0xF4EFE4))
                     .multilineTextAlignment(.center).lineLimit(3).minimumScaleFactor(0.8)
                 Text(mission.brief).font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF4EFE4))

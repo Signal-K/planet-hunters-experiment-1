@@ -237,7 +237,7 @@ struct HubScreen: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
         .padding(.horizontal, 16)
-        .padding(.top, insets.top + 68)
+        .padding(.top, insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
         .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
