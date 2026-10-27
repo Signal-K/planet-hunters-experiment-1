@@ -95,7 +95,8 @@ import Testing
         let view = WorldView(w: 463, h: 214)
         var comps = DateComponents(); comps.year = 2026; comps.month = 10; comps.day = 21; comps.hour = 22
         let night = WorldSkyClock.sky(cal, at: Calendar.current.date(from: comps)!, grade: "night", biome: "mountains", force: ["meteors", "storm", "aurora", "comet"])
-        for _ in 0..<60 { world.applySky(night, view: view, dt: 1 / 20) }
+        // Forced showers run at 8 a minute, so give a streak time to spawn.
+        for _ in 0..<1800 { world.applySky(night, view: view, dt: 1 / 20) }
         for shape in ["streak", "line", "ribbon", "comet"] { #expect(world.entities.contains { $0.def.shape == shape }, "\(shape)") }
         var clear = night
         clear.events = []

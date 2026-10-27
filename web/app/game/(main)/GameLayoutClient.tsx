@@ -239,7 +239,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const eventMissionActive = game.missionId === 'self-directed-orionids-night-run' || game.player.activeMission?.id === 'self-directed-orionids-night-run'
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const flightStep = activeTry
-    ? trainingTryStep(activeTry, currentScreen, { returning: !!game.player.returningToEarth })
+    ? trainingTryStep(activeTry, currentScreen)
     : undefined
   const coach = useMemo(() => {
     // A Menu Replay re-arms its try even after Free Ops, when the tutorial flag is off.

@@ -259,6 +259,7 @@ struct CommunityResearchScreen: View {
     @Environment(GameStore.self) private var store
     @State private var selectedPath: ResearchPathID = .explorer
     @State private var selectedStep = 0
+    @State private var showingRewards = false
 
     private var lockedPath: ResearchPathID? { ResearchPathRules.pathThisWeek(store.player.researchPath, now: store.now) }
     private var activePath: ResearchPathID { lockedPath ?? selectedPath }
@@ -266,6 +267,12 @@ struct CommunityResearchScreen: View {
     private var week: String { ResearchPathRules.weekKey(store.now) }
     private var progress: [(have: Int, need: Int)] { steps.map { ResearchPathRules.progress($0, stamps: store.player.researchStamps, week: week, now: store.now) } }
     private var currentStep: Int { min(selectedStep, max(0, steps.count - 1)) }
+    private var historicalContributions: [String: Int] {
+        let submittedAt = Array(store.player.tessClassifications.values.map(\.submittedAt))
+            + Array(store.player.asteroidClassifications.values.map(\.submittedAt))
+            + Array(store.player.saturnClassifications.values.map(\.submittedAt))
+        return ResearchStampRules.historicalContributionMonths(store.player.researchStamps, submittedAt: submittedAt, now: store.now)
+    }
 
     var body: some View {
         ScreenFrame(title: "Community research", back: { store.go(.hub) }, night: true) {
@@ -278,7 +285,6 @@ struct CommunityResearchScreen: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("THIS WEEK'S PATH").font(AppFont.display(14)).tracking(1.7).foregroundStyle(Theme.hex(0x9FD6E4))
             Text("Choose one route. It locks until Monday UTC.").font(AppFont.body(16)).foregroundStyle(Theme.hex(0xFAF7F0))
-            researchLedger
             HStack(spacing: 10) {
                 pathButton(.explorer, title: "EXPLORER", detail: "Signals and scans", icon: "viewfinder")
                 pathButton(.trader, title: "TRADER", detail: "Exchange and contracts", icon: "chart.line.uptrend.xyaxis")
@@ -306,8 +312,8 @@ struct CommunityResearchScreen: View {
             .foregroundStyle(selectedPath == path ? Theme.paper : Theme.ink)
             .frame(maxWidth: .infinity, minHeight: 108, alignment: .leading)
             .padding(12)
-            .background(selectedPath == path ? Theme.blue : Theme.paper)
-            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+            .background(selectedPath == path ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.ink, lineWidth: 2))
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("research-path-\(path.rawValue)")
@@ -324,7 +330,7 @@ struct CommunityResearchScreen: View {
         }
         .foregroundStyle(Theme.ink.opacity(0.62))
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper.opacity(0.72)).overlay(Rectangle().stroke(Theme.ink.opacity(0.55), lineWidth: 2))
+        .background(Theme.paper.opacity(0.72), in: RoundedRectangle(cornerRadius: 18)).overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.ink.opacity(0.55), lineWidth: 2))
     }
 
     private var board: some View {
@@ -335,28 +341,36 @@ struct CommunityResearchScreen: View {
                 Text(activePath.rawValue.uppercased()).font(AppFont.display(14, "ExtraBold")).tracking(1.3)
                 Text("WEEK OF \(week)").font(AppFont.body(14))
             }.foregroundStyle(Theme.hex(0x9FD6E4))
+            HStack(spacing: 0) {
+                readoutTab("MISSION", selected: !showingRewards) { showingRewards = false }
+                readoutTab("REWARDS", selected: showingRewards) { showingRewards = true }
+            }
+            .overlay(Rectangle().stroke(Theme.hex(0x9FD6E4).opacity(0.7), lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(Array(steps.enumerated()), id: \.element.id) { index, item in
                         let done = progress[index].have >= progress[index].need
-                        Button { selectedStep = index } label: {
+                        Button { selectedStep = index; showingRewards = false } label: {
                             VStack(spacing: 5) {
-                                Image(systemName: item.icon).font(.system(size: 20, weight: .light))
+                                Image(systemName: item.icon).font(.system(size: 20, weight: .medium))
+                                    .frame(width: 32, height: 32)
+                                    .background((index == currentStep ? Theme.paper : Theme.blue).opacity(0.18), in: Circle())
                                 Text(done ? "✓" : "\(progress[index].have)/\(progress[index].need)").font(AppFont.display(14, "ExtraBold"))
                             }
                             .foregroundStyle(index == currentStep ? Theme.paper : Theme.ink)
-                            .frame(width: 64, height: 68)
-                            .background(index == currentStep ? Theme.blue : Theme.paper)
-                            .overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+                            .frame(width: 70, height: 72)
+                            .background(index == currentStep ? Theme.blue : Theme.paper, in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
                         }.buttonStyle(.plain)
                     }
                 }
             }
+            if !showingRewards {
             console(title: "STEP \(currentStep + 1) OF \(steps.count) · \(p.have)/\(p.need)") {
-                Image(systemName: step.icon).font(.system(size: 42, weight: .light)).foregroundStyle(Theme.hex(0x9FD6E4))
-                Text(step.title).font(AppFont.display(20, "ExtraBold")).foregroundStyle(Theme.hex(0xFAF7F0))
-                Text(step.brief).font(AppFont.body(16)).foregroundStyle(Theme.hex(0xFAF7F0))
-                Text(step.why).font(AppFont.body(14)).foregroundStyle(Theme.hex(0x9FD6E4))
+                Image(systemName: step.icon).font(.system(size: 42, weight: .light)).foregroundStyle(Theme.ink)
+                Text(step.title).font(AppFont.display(20, "ExtraBold")).foregroundStyle(Theme.ink)
+                Text(step.brief).font(AppFont.body(16)).foregroundStyle(Theme.ink)
+                Text(step.why).font(AppFont.body(14)).foregroundStyle(Theme.ink.opacity(0.78))
             }
             console(title: activePath == .trader ? "TRADER WEEK" : "EXPLORER WEEK") {
                 Text("Research days stamped: \(stampedDays) of 7").font(AppFont.body(16))
@@ -368,35 +382,56 @@ struct CommunityResearchScreen: View {
                 }
                 Text("Steps finished: \(progress.filter { $0.have >= $0.need }.count) of \(steps.count)").font(AppFont.body(16))
             }
-            if !(store.player.researchPath?.claimedSteps?.contains(5) ?? false) {
-                console(title: "HOW IT WORKS") {
-                    Text("Step 2: 5 regular fragments")
-                    Text("Step 4: 10 regular fragments")
-                    Text("Step 5: permanent badge and Breakthrough")
-                }
-            }
-            researchLedger
-            let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month))
-            console(title: "SHARED TOTAL \(bar.total) / \(bar.goal)") {
-                Bar(value: bar.fill)
-                Text("Your contributions: \(ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month)) this month")
-            }
-            console(title: "RESEARCH MONTH HISTORY") {
-                ForEach(ResearchStampRules.monthHistory(store.player.researchStamps, now: store.now)) { month in
-                    HStack {
-                        Text(month.label)
-                        Spacer()
-                        Text("\(month.stamps) stamp\(month.stamps == 1 ? "" : "s")").font(AppFont.body(14, "Bold"))
-                    }
-                }
-            }
             if step.id == "breakthrough" && p.have >= p.need {
                 Text("A permanent weekly badge and 25 regular fragments. The badge stays in your collection.")
                     .font(AppFont.body(14)).foregroundStyle(Theme.hex(0xF2C24C))
             }
             PrimaryButton(title: step.kind == .event ? "JOIN" : "GO") { go(step.kind) }
                 .accessibilityIdentifier("community-research-go")
+            } else {
+                rewardsReadout
+            }
         }
+    }
+
+    private var rewardsReadout: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                rewardMilestone(step: 2, amount: 5, symbol: "waveform.path", earned: progress[1].have >= progress[1].need)
+                rewardMilestone(step: 4, amount: 10, symbol: "viewfinder", earned: progress[3].have >= progress[3].need)
+                rewardMilestone(step: 5, amount: nil, symbol: "star.fill", earned: progress[4].have >= progress[4].need)
+            }
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles").font(.system(size: 22, weight: .medium)).foregroundStyle(Theme.hex(0xF2C24C))
+                    .frame(width: 42, height: 42).background(Theme.hex(0xF2C24C).opacity(0.16), in: Circle())
+                Text("FRAGMENTS").font(AppFont.display(14, "ExtraBold")).tracking(1.1)
+                Spacer()
+                Text("\(store.player.researchFragments)").font(AppFont.display(24, "ExtraBold")).foregroundStyle(Theme.hex(0xF2C24C))
+            }
+            .padding(12).background(Theme.hex(0x1A2744), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.hex(0x9FD6E4).opacity(0.65), lineWidth: 2))
+            let bar = ResearchStampRules.communityBar(own: ResearchStampRules.stampsIn(store.player.researchStamps, year: year, month: month))
+            console(title: "SHARED TOTAL \(bar.total) / \(bar.goal)") { Bar(value: bar.fill) }
+            console(title: "CONTRIBUTION HISTORY") {
+                ForEach(ResearchStampRules.monthHistory(store.player.researchStamps, now: store.now, historicalContributions: historicalContributions)) { month in
+                    HStack { Text(month.label); Spacer(); Text("\(month.stamps) contribution\(month.stamps == 1 ? "" : "s")").font(AppFont.body(14, "Bold")) }
+                }
+            }
+        }
+    }
+
+    private func rewardMilestone(step: Int, amount: Int?, symbol: String, earned: Bool) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: symbol).font(.system(size: 22, weight: .medium))
+                .frame(width: 42, height: 42).background(Theme.hex(0xF2C24C).opacity(0.16), in: Circle())
+            Text("STEP \(step)").font(AppFont.display(12, "ExtraBold")).tracking(0.8)
+            Text(amount.map { "\($0)" } ?? "BADGE").font(AppFont.display(17, "ExtraBold")).foregroundStyle(Theme.hex(0xF2C24C))
+            Text(amount == nil ? "BREAKTHROUGH" : "FRAGMENTS").font(AppFont.body(11, "Bold")).foregroundStyle(Theme.hex(0x9FD6E4))
+        }
+        .frame(maxWidth: .infinity, minHeight: 126)
+        .foregroundStyle(earned ? Theme.paper : Theme.hex(0x9FD6E4))
+        .background(earned ? Theme.hex(0x274E61) : Theme.hex(0x1A2744), in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(earned ? Theme.hex(0xF2C24C) : Theme.hex(0x9FD6E4).opacity(0.5), lineWidth: 2))
     }
 
     private var researchLedger: some View {
@@ -458,6 +493,12 @@ struct CommunityResearchScreen: View {
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.hex(0x9FD6E4).opacity(0.65), lineWidth: 2))
         .accessibilityIdentifier("research-ink-ledger")
     }
+    private func readoutTab(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) { Text(title).font(AppFont.display(14, "ExtraBold")).tracking(1.1).frame(maxWidth: .infinity, minHeight: 44) }
+            .foregroundStyle(selected ? Theme.ink : Theme.paper)
+            .background(selected ? Theme.paper : Theme.ink.opacity(0.45))
+            .buttonStyle(.plain)
+    }
 
     private var stampedDays: Int {
         (0..<7).filter(dayStamped).count
@@ -475,7 +516,7 @@ struct CommunityResearchScreen: View {
         VStack(alignment: .leading, spacing: 9) {
             Text(title).font(AppFont.display(14, "ExtraBold")).tracking(1.3).foregroundStyle(Theme.ink)
             content().font(AppFont.body(14)).foregroundStyle(Theme.ink)
-        }.padding(12).frame(maxWidth: .infinity, alignment: .leading).background(Theme.paper).overlay(Rectangle().stroke(Theme.ink, lineWidth: 2))
+        }.padding(14).frame(maxWidth: .infinity, alignment: .leading).background(Theme.paper, in: RoundedRectangle(cornerRadius: 18)).overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.ink, lineWidth: 2))
     }
     private func go(_ kind: StampKind) {
         switch kind {

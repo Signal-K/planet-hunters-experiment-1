@@ -47,6 +47,12 @@ struct BaseWorldScene: View {
 
     private var siloPlaced: Bool { placed.contains("surface-silo") }
     private var siloBuilt: Bool { siloPlaced && excavated }
+    private var constellationSkyVisible: Bool {
+        switch grade ?? WorldAssets.grade() {
+        case "night", "dusk", "dawn": true
+        default: false
+        }
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -75,7 +81,7 @@ struct BaseWorldScene: View {
                         }
                     }
                     if placing { siteMarker(world: world) }
-                    ConstellationLayer(player: player, world: world)
+                    if constellationSkyVisible { ConstellationLayer(player: player, world: world) }
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
                 .offset(x: -cx, y: -lift)
@@ -213,7 +219,7 @@ struct BaseWorldScene: View {
             .frame(width: width, height: height, alignment: .bottomLeading)
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
-            .scaleEffect(kind == "launchpad" ? 0.72 : 1, anchor: .bottom)
+            .scaleEffect(kind == "launchpad" ? 0.68 : 1, anchor: .bottom)
         }
         .buttonStyle(.plain)
         .position(x: centerX, y: bottom - height / 2)
@@ -298,7 +304,8 @@ private struct ConstellationLayer: View {
     }
 
     private var active: (SkyConstellation, String)? {
-        unlocked.first { $0.0.id == selected } ?? unlocked.first
+        guard let selected else { return nil }
+        return unlocked.first { $0.0.id == selected }
     }
 
     var body: some View {
@@ -306,14 +313,14 @@ private struct ConstellationLayer: View {
             ForEach(unlocked, id: \.0.id) { item in
                 constellation(item.0, earnedBy: item.1)
             }
-            archivePanel
+            if selected != nil { archivePanel }
         }
         .frame(width: world.worldW, height: world.h, alignment: .topLeading)
         .allowsHitTesting(true)
     }
 
     private var archivePanel: some View {
-        let width = min(300, max(238, world.worldW * 0.34))
+        let width = min(240, max(220, world.worldW * 0.28))
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("SKY ARCHIVE")
@@ -326,41 +333,17 @@ private struct ConstellationLayer: View {
                     .tracking(0.7)
                     .foregroundStyle(Theme.hudPanel.opacity(0.65))
             }
-            Text("Milestones recorded in the sky.")
-                .font(AppFont.body(14))
-                .foregroundStyle(Theme.hudPanel.opacity(0.82))
-                .fixedSize(horizontal: false, vertical: true)
-            ForEach(unlocked, id: \.0.id) { item in
-                Button { selected = item.0.id } label: {
-                    HStack(spacing: 9) {
-                        Circle()
-                            .fill(Theme.tokenCyanBright)
-                            .frame(width: 8, height: 8)
-                            .shadow(color: Theme.tokenCyanBright.opacity(0.65), radius: 5)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(item.0.name.uppercased())
-                                .font(AppFont.display(12))
-                                .tracking(0.8)
-                                .lineLimit(1)
-                            Text(item.1)
-                                .font(AppFont.body(14))
-                                .foregroundStyle(Theme.hudPanel.opacity(0.64))
-                                .lineLimit(1)
-                        }
-                        Spacer(minLength: 4)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Theme.tokenCyanBright)
-                    }
-                    .padding(.horizontal, 9)
-                    .frame(minHeight: 44)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(selected == item.0.id ? Theme.tokenCyanBright.opacity(0.14) : Theme.hudPanel.opacity(0.08)))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(selected == item.0.id ? Theme.tokenCyanBright : Theme.hudPanel.opacity(0.22), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Sky archive record \(item.0.name), \(item.1)")
-            }
             if let active {
+                Text("RECORDED MILESTONE")
+                    .font(AppFont.display(10))
+                    .tracking(1)
+                    .foregroundStyle(Theme.hudPanel.opacity(0.65))
+                Text(active.0.name.uppercased())
+                    .font(AppFont.display(14))
+                    .tracking(0.9)
+                Text(active.1)
+                    .font(AppFont.body(14))
+                    .foregroundStyle(Theme.tokenCyanBright)
                 Divider().overlay(Theme.hudPanel.opacity(0.18))
                 Text("ABOUT THIS PATTERN")
                     .font(AppFont.display(10))
@@ -384,7 +367,7 @@ private struct ConstellationLayer: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.tokenCyanBright.opacity(0.52), lineWidth: 1))
         .shadow(color: .black.opacity(0.28), radius: 14, y: 8)
-        .position(x: min(world.worldW - width / 2 - 16, width / 2 + 16), y: min(world.h * 0.52, world.h - 130))
+        .position(x: min(world.worldW - width / 2 - 16, width / 2 + 16), y: min(world.h * 0.38, world.h - 130))
     }
 
     private func constellation(_ item: SkyConstellation, earnedBy: String) -> some View {
@@ -394,13 +377,13 @@ private struct ConstellationLayer: View {
                 path.move(to: point(first))
                 for pair in item.points.dropFirst() where pair.count == 2 { path.addLine(to: point(pair)) }
             }
-            .stroke(Theme.tokenCyanBright.opacity(0.6), style: StrokeStyle(lineWidth: 1.4, lineCap: .round, lineJoin: .round))
+            .stroke(Theme.tokenCyanBright.opacity(0.24), style: StrokeStyle(lineWidth: 0.8, lineCap: .round, lineJoin: .round))
             ForEach(Array(item.points.enumerated()), id: \.offset) { _, pair in
                 if pair.count == 2 {
                     Button { selected = selected == item.id ? nil : item.id } label: {
-                        Circle().fill(Theme.tokenCyanBright).frame(width: 12, height: 12)
-                            .overlay(Circle().stroke(Theme.hudPanel, lineWidth: 2))
-                            .shadow(color: Theme.tokenCyanBright.opacity(0.7), radius: 7)
+                        Circle().fill(Theme.tokenCyanBright).frame(width: 7, height: 7)
+                            .overlay(Circle().stroke(Theme.hudPanel.opacity(0.8), lineWidth: 1))
+                            .shadow(color: Theme.tokenCyanBright.opacity(0.45), radius: 4)
                     }
                     .buttonStyle(.plain)
                     .frame(width: 44, height: 44)

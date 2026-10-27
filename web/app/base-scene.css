@@ -90,7 +90,8 @@
 /* SSL-628: scene-first Base controls. Small instrument plates hug the lower
    edges, leaving the landscape between them instead of forming a website nav. */
 .scene-location-dock {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
@@ -116,32 +117,7 @@
   pointer-events: auto;
 }
 .scene-location-selector { flex: 0 0 auto; }
-.scene-location-actions { min-width: 0; flex: 1 1 auto; }
-.scene-location-overview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  width: 48px;
-  padding: 0 4px;
-  border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent);
-  background: transparent;
-}
-.scene-location-overview button {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--ln-cyan) 50%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-cyan) 14%, transparent);
-  color: var(--ln-world-hull-lit);
-  font: 800 11px/1 var(--ln-font-display);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
+.scene-location-actions { min-width: 0; width: 100%; flex: 1 1 auto; }
 .scene-location-label {
   display: flex;
   place-items: center;
@@ -153,7 +129,7 @@
   padding: 0 10px;
   border-inline: 0;
   border-bottom: 3px solid var(--ln-cyan);
-  background: var(--ln-world-trim-blue);
+  background: color-mix(in srgb, var(--ln-void) 42%, transparent);
   color: var(--ln-world-hull-lit);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.04em;
@@ -175,9 +151,9 @@
 .scene-location-dock .scene-dock-arrow:disabled { opacity: 0.38; cursor: default; }
 .scene-location-actions .scene-dock-word {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 88px;
   gap: 8px;
-  padding: 0 12px 0 10px;
+  padding-inline: 12px;
   border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important;
   font-size: 13px;
   font-style: italic;
@@ -186,8 +162,8 @@
   text-transform: none;
 }
 .scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important; }
-.scene-location-actions .scene-dock-word svg { width: 22px; height: 22px; padding-right: 7px; border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 28%, transparent); }
-.scene-location-actions .scene-dock-word span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scene-location-actions .scene-dock-word svg { flex: 0 0 19px; width: 19px; height: 19px; }
+.scene-location-actions .scene-dock-word span { overflow: visible; text-overflow: clip; white-space: nowrap; text-align: center; }
 .scene-location-action--mission {
   border-right-color: var(--ln-world-trim-blue) !important;
 }
@@ -199,15 +175,48 @@
   .scene-location-label { min-width: 62px; padding-inline: 6px; }
   .scene-location-label svg { display: none; }
   .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
-  .scene-location-overview { width: 44px; padding-inline: 0; }
 }
 
-/* Narrow phones (390px): the arrows, label and three action words need ~410px, so the dock lost "Menu" off the right edge.
-   Drop the action icons and the extra padding, and wrap the selector above the actions if it still does not fit. */
+@media (max-width: 1100px) {
+  .scene-location-dock { grid-template-columns: 1fr; }
+  .scene-location-selector { justify-self: center; }
+  .scene-location-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .scene-location-actions[data-action-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word {
+    min-width: 0;
+    width: 100%;
+    padding-inline: 6px;
+    gap: 6px;
+  }
+  .scene-location-actions .scene-dock-word span {
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
+
+/* Narrow phones keep the same named controls, but use a deliberate two-column
+   command grid so every icon and label remains visible and tappable. */
 @media (max-width: 479px) {
   .scene-location-dock { flex-wrap: wrap; row-gap: 6px; width: calc(100vw - 16px); }
-  .scene-location-actions { margin-left: auto; max-width: 100%; }
-  .scene-location-actions .scene-dock-word { min-width: 0; padding-inline: 10px; gap: 0; }
-  .scene-location-actions .scene-dock-word svg { display: none; }
-  .scene-location-overview { flex: 0 0 44px; border-right: 0; border-bottom: 3px solid var(--ln-world-glass); }
+  .scene-location-actions { width: 100%; margin-left: 0; max-width: none; }
+  .scene-location-actions .scene-dock-word {
+    grid-column: span 1;
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 12px;
+    font-style: normal;
+    letter-spacing: 0;
+  }
+  .scene-location-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word svg { display: block; }
+  .scene-location-actions .scene-dock-word span {
+    overflow-wrap: anywhere;
+    white-space: normal;
+    text-align: center;
+  }
 }

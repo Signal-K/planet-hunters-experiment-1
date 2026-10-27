@@ -16,6 +16,9 @@ struct BaseDock: View {
     var onBuild: (() -> Void)?
     /// When set, the second base button is Menu (opens the base menu) instead of Hub.
     var onMenu: (() -> Void)?
+    /// Explicitly switches between the surface and subsurface base scenes.
+    var onSubsurface: (() -> Void)?
+    var subsurface = false
     /// When set, the first middle button is press-and-hold (true on press, false on release) instead of a tap. Mining Fire uses this.
     var holdFirst: ((Bool) -> Void)?
     /// Minimal glass dock (mining): no arrows, glowing outline.
@@ -28,11 +31,6 @@ struct BaseDock: View {
     var locationLabel: String?
     var locationNavigationDisabled = false
     var compact = false
-    /// Base camera controls are part of the location toolbar, not a floating overlay.
-    var onOverview: (() -> Void)?
-    var overviewPosition: Double = 0
-    var onOverviewPositionChange: ((Double) -> Void)?
-
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } })] + (onMission.map { m in [("Mission", "paperplane", { m() })] } ?? []) + [onMenu.map { menu in ("Menu", "list.bullet", { menu() }) } ?? ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
     }
@@ -76,12 +74,10 @@ struct BaseDock: View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .bottom, spacing: 0) {
                 locationPicker(label)
-                if let onOverview, let onOverviewPositionChange { overviewControl(onOverview: onOverview, position: overviewPosition, onChange: onOverviewPositionChange) }
                 locationActions
             }
             VStack(alignment: .leading, spacing: 8) {
                 locationPicker(label)
-                if let onOverview, let onOverviewPositionChange { overviewControl(onOverview: onOverview, position: overviewPosition, onChange: onOverviewPositionChange) }
                 locationActions.frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
@@ -92,29 +88,6 @@ struct BaseDock: View {
         .overlay(RoundedRectangle(cornerRadius: 7).stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Location and scene actions")
-    }
-
-    private func overviewControl(onOverview: @escaping () -> Void, position: Double, onChange: @escaping (Double) -> Void) -> some View {
-        HStack(spacing: 7) {
-            Button(action: onOverview) {
-                Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    .font(.system(size: 15, weight: .bold))
-                    .frame(width: 34, height: 34)
-            }
-                .foregroundStyle(Theme.hudInk)
-                .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 7))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Theme.hudInk, lineWidth: 1))
-                .buttonStyle(.plain)
-                .accessibilityLabel("Show whole base")
-                .accessibilityHint("Fit the whole base in view")
-            Slider(value: Binding(get: { position }, set: { value in
-                MainActor.assumeIsolated { onChange(value) }
-            }), in: 0...1)
-                .tint(Theme.hudMint)
-                .frame(width: 76)
-                .accessibilityLabel("Base position")
-        }
-        .padding(.horizontal, 10).frame(height: 44)
     }
 
     private func locationPicker(_ label: String) -> some View {
@@ -136,13 +109,17 @@ struct BaseDock: View {
 
     private var locationActions: some View {
         HStack(spacing: 0) {
-                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } }, compact: compact)
+                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
                 if let onMission {
                 Divider().overlay(Theme.hudInk)
-                DockButton(title: "Find mission", symbol: "paperplane", action: onMission, compact: compact)
+                DockButton(title: "Missions", symbol: "paperplane", action: onMission)
             }
             Divider().overlay(Theme.hudInk)
-            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } }, compact: compact)
+            if let onSubsurface {
+                DockButton(title: subsurface ? "Surface" : "Subsurface", symbol: "arrow.down.to.line.compact", action: onSubsurface)
+                Divider().overlay(Theme.hudInk)
+            }
+            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
         }
         // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
         .fixedSize(horizontal: false, vertical: true)

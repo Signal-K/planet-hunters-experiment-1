@@ -34,8 +34,10 @@ import Foundation
 
     @Test func targetsAndFloorsMatchWeb() throws {
         let web = try load()
-        #expect(Targets.all.map(\.id) == web.targets.map(\.id))
-        for (s, w) in zip(Targets.all, web.targets) {
+        // The Orionids shower field is an event-only target (SSL-641); the fixture covers the year-round list.
+        let swift = Targets.all.filter { $0.id != "orionids-shower-field" }
+        #expect(swift.map(\.id) == web.targets.map(\.id))
+        for (s, w) in zip(swift, web.targets) {
             #expect(s.orbit == w.orbit && s.minerals.sorted() == w.minerals, "\(w.id)")
         }
         #expect([1, 2, 3, 4, 5, 9].map { MissionGenerator.payoutFloor(sequence: $0) } == web.floors)

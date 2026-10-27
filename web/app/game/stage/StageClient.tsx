@@ -140,7 +140,7 @@ function Stage() {
   }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const planStep = plan && activeTry
-    ? trainingTryStep(activeTry, game.screen, { returning: !!game.player.returningToEarth })
+    ? trainingTryStep(activeTry, game.screen)
     : undefined
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
 

@@ -57,6 +57,15 @@ final class ResearchStampsTests: XCTestCase {
         XCTAssertEqual(ResearchStampRules.communityBar(own: 4).total, 4)
     }
 
+    func testHistoricalCitizenScienceCountsSeptemberWithoutRetroactiveStamps() {
+        let now = 1_792_972_800_000.0 // 2026-10-26 UTC
+        let september = 1_788_739_200_000.0 // 2026-09-03 UTC
+        let october = 1_791_158_400_000.0 // 2026-10-01 UTC
+        let history = ResearchStampRules.historicalContributionMonths(ResearchStamps(), submittedAt: [september, october], now: now)
+        XCTAssertEqual(history["2026-09"], 1)
+        XCTAssertEqual(ResearchStampRules.monthHistory(ResearchStamps(), now: now, count: 2, historicalContributions: history)[1].stamps, 1)
+    }
+
     func testSaveRoundTripKeepsWebStamps() throws {
         let json = #"{"researchStamps":{"2026-10-22":["classification","event"]}}"#
         let p = try JSONDecoder().decode(Player.self, from: Data(json.utf8))

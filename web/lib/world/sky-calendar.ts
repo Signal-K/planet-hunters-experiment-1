@@ -166,7 +166,9 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
 
   let weather = pickWeather(now, grade, biome)
   for (const f of force) {
-    if (f === 'meteors') events.push({ id: 'forced-meteors', kind: 'meteors', name: 'Meteor shower', perMinute: 30 })
+    // Preview showers need to be visibly alive without becoming a white wall
+    // of trails. The real calendar controls live event intensity separately.
+    if (f === 'meteors') events.push({ id: 'forced-meteors', kind: 'meteors', name: 'Meteor shower', perMinute: 8 })
     if (f === 'launch') events.push({ id: 'forced-launch', kind: 'launch', name: calendar.launches.name, elapsed: 0 })
     if (f === 'balloon') events.push({ id: 'forced-balloon', kind: 'balloon', name: calendar.balloons.name, elapsed: 0 })
     if (f === 'satellite') events.push({ id: 'forced-satellite', kind: 'satellite', name: 'Satellite pass', elapsed: 0 })

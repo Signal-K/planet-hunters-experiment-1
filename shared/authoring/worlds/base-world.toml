@@ -388,12 +388,12 @@ sky = true
 [prefabs.meteor]
 shape = "streak"
 colour = "#f4f8fb"
-length = 6
-width = 1.4
+length = 3.8
+width = 1.1
 layer = 4
 depth = 0
 sky = true
-body = { gravity = 0, life = 0.28 }
+body = { gravity = 0, life = 0.18 }
 
 [prefabs.raindrop]
 shape = "line"

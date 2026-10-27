@@ -404,6 +404,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures, a control station, satellites', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
+    { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
     ...(
       hasControlStation || ownsOrbitalInstrument
         ? [{ id: 'control-station', icon: 'station' as const, label: hasControlStation ? 'Control station' : 'Instruments', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
@@ -443,7 +444,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
           <BaseWorldCanvas px={px} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} />
-          <BaseConstellations player={player} />
+          <BaseConstellations player={player} visible={skyGrade === 'night' || skyGrade === 'dusk' || skyGrade === 'dawn'} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
@@ -646,11 +647,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               onNext={() => moveBase(0.22)}
               onBuild={() => { setPlaceNote(null); setEditMode(value => !value) }}
               onMission={!subsurface && !editMode && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
+              onSubsurface={() => setSubsurface(!subsurface)}
+              subsurface={subsurface}
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
               locationNavigationDisabled={false}
               showLocationBuild={buildOptions.length > 0}
-              onOverview={!subsurface ? camera.overview : undefined}
               buildLabel={editMode ? 'Done' : 'Build'}
               buildTestId={editMode ? 'hub-build-done-btn' : 'hub-build-btn'}
             />

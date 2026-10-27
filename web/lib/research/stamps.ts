@@ -92,18 +92,42 @@ export interface ResearchMonthSummary {
   stamps: number
 }
 
+/**
+ * Counts older citizen-science records in the month they were actually made.
+ * Community Research began in October 2026, so older records are history only:
+ * they never create retroactive weekly stamps or rewards.
+ */
+export function historicalContributionMonths(stamps: ResearchStamps | undefined, contributionTimes: readonly number[], now: number): Record<string, number> {
+  const launch = Date.UTC(2026, 9, 1)
+  const counts: Record<string, number> = {}
+  for (const submittedAt of contributionTimes) {
+    if (!Number.isFinite(submittedAt) || submittedAt >= launch || submittedAt > now) continue
+    const key = new Date(submittedAt).toISOString().slice(0, 7)
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  // Before Community Research existed, a classification stamp could only have
+  // been imported by an earlier client. Keep it as a floor, never a duplicate.
+  for (const [day, kinds] of Object.entries(stamps ?? {})) {
+    if (day >= '2026-10-01' || !kinds.includes('classification')) continue
+    const key = day.slice(0, 7)
+    counts[key] = Math.max(counts[key] ?? 0, kinds.length)
+  }
+  return counts
+}
+
 /** Recent personal contribution totals, newest month first. */
-export function researchMonthHistory(stamps: ResearchStamps | undefined, now: number, count = 6): ResearchMonthSummary[] {
+export function researchMonthHistory(stamps: ResearchStamps | undefined, now: number, count = 6, historicalContributions: Record<string, number> = {}): ResearchMonthSummary[] {
   const date = new Date(now)
   const result: ResearchMonthSummary[] = []
   for (let offset = 0; offset < count; offset += 1) {
     const monthDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - offset, 1))
     const year = monthDate.getUTCFullYear()
     const month = monthDate.getUTCMonth()
+    const key = `${year}-${String(month + 1).padStart(2, '0')}`
     result.push({
-      key: `${year}-${String(month + 1).padStart(2, '0')}`,
+      key,
       label: monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
-      stamps: stampsInMonth(stamps, year, month),
+      stamps: stampsInMonth(stamps, year, month) + (historicalContributions[key] ?? 0),
     })
   }
   return result

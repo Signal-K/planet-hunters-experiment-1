@@ -63,6 +63,9 @@ describe('base world layers', () => {
     lockBaseWorldPreview(new URLSearchParams('time=night&season=winter'))
     expect(lockedWorldTime()).toBe('night')
     expect(lockedSeason()).toBe('winter')
+    lockBaseWorldPreview(new URLSearchParams())
+    expect(lockedWorldTime()).toBeNull()
+    expect(lockedSeason()).toBeNull()
   })
 
   it('keeps a chosen biome through save normalisation and rejects unknown values', () => {

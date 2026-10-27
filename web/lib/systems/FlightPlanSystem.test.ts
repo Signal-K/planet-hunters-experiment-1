@@ -10,7 +10,7 @@ import {
   skipFlightPlan,
   startFlightPlan,
 } from './FlightPlanSystem'
-import { trainingStepOnPath, trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
+import { TRAINING_TRIES, trainingStepOnPath, trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
 
 describe('FlightPlanSystem', () => {
   it('starts mining and reveals only one idle hint after eight seconds', () => {
@@ -72,38 +72,42 @@ describe('FlightPlanSystem', () => {
   })
 
   it('SSL-478: every screen of the mining run shows a mining objective that matches it', () => {
-    const run = ['launchpad', 'missions', 'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery']
-    for (const screen of run) {
+    for (const screen of ['missions', 'fab', 'mining', 'debrief']) {
       const step = trainingTryStep('mining', screen)
       expect(step?.try, screen).toBe('mining')
       expect(step?.screen, screen).toBe(screen)
     }
+    // SSL-675: launch prep shares the launch step; flight and landing carry no step; the rover is not a first-run stop.
+    for (const screen of ['targets', 'rocket-buy', 'rover-survey']) expect(trainingTryStep('mining', screen)?.id, screen).toBe('mine-launch')
+    for (const screen of ['transit', 'landing', 'delivery']) {
+      expect(trainingTryStep('mining', screen), screen).toBeUndefined()
+      expect(trainingTryStep('scan', screen), screen).toBeUndefined()
+    }
+    expect(TRAINING_TRIES.filter(step => step.try === 'mining').length).toBeLessThanOrEqual(7)
+    expect(TRAINING_TRIES.some(step => step.screen === 'rover-survey')).toBe(false)
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
     expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Galaxy map')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
-    expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Go back to the base and tap the tower')
+    expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')
     expect(trainingTryStep('mining', 'build')?.objective).toBe('Place the launchpad')
-    expect(trainingTryStep('mining', 'hub')?.objective).toBe('Tap the tower')
-    expect(trainingTryStep('mining', 'transit')?.objective).toBe('Fly the cargo home')
-    expect(trainingTryStep('mining', 'transit', { returning: false })?.objective).toBe('Boost toward the target')
-    expect(trainingTryStep('mining', 'transit', { returning: true })?.objective).toBe('Fly the cargo home')
+    expect(trainingTryStep('mining', 'hub')?.objective).toBe('Tap the tower to open client contracts')
   })
 
-  it('SSL-447: places the laser at step 5 of the six-milestone mining run', () => {
+  it('SSL-675: puts the laser at stop 4 of the five-stop spine', () => {
     const position = (screen: string) => trainingTryPosition(trainingTryStep('mining', screen)!)
-    expect(position('missions')).toEqual({ index: 1, total: 6 })
-    expect(position('fab')).toEqual({ index: 2, total: 6 })
-    expect(position('targets')).toEqual({ index: 3, total: 6 })
-    expect(position('rover-survey')).toEqual({ index: 4, total: 6 })
-    expect(position('mining')).toEqual({ index: 5, total: 6 })
-    expect(position('delivery')).toEqual({ index: 6, total: 6 })
+    expect(position('build')).toEqual({ index: 1, total: 5 })
+    expect(position('missions')).toEqual({ index: 2, total: 5 })
+    expect(position('fab')).toEqual({ index: 3, total: 5 })
+    expect(position('targets')).toEqual({ index: 3, total: 5 })
+    expect(position('mining')).toEqual({ index: 4, total: 5 })
+    expect(position('debrief')).toEqual({ index: 5, total: 5 })
   })
 
-  it('SSL-446: stitches the six real mining milestones and two scan/part steps', () => {
-    expect(trainingPatchProgress('mining', 'mining', false, true)).toEqual({ stitched: 4, total: 6 })
-    expect(trainingPatchProgress('mining', 'delivery', false, true)).toEqual({ stitched: 5, total: 6 })
-    expect(trainingPatchProgress('mining', 'delivery', true, false)).toEqual({ stitched: 6, total: 6 })
+  it('SSL-446: stitches the five mining stops and two scan/part steps', () => {
+    expect(trainingPatchProgress('mining', 'mining', false, true)).toEqual({ stitched: 3, total: 5 })
+    expect(trainingPatchProgress('mining', 'debrief', false, true)).toEqual({ stitched: 4, total: 5 })
+    expect(trainingPatchProgress('mining', 'debrief', true, false)).toEqual({ stitched: 5, total: 5 })
     expect(trainingPatchProgress('scan', 'hub', false, true)).toEqual({ stitched: 0, total: 2 })
     expect(trainingPatchProgress('scan', 'galaxy', false, true)).toEqual({ stitched: 1, total: 2 })
     expect(trainingPatchProgress('part', 'hangar', true, false)).toEqual({ stitched: 2, total: 2 })

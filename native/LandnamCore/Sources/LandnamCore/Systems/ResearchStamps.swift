@@ -239,8 +239,23 @@ public enum ResearchStampRules {
         public var id: String { key }
     }
 
+    /// Historic citizen-science records remain contributions, but never become retroactive path progress or rewards.
+    public static func historicalContributionMonths(_ stamps: ResearchStamps, submittedAt: [Double], now: Double) -> [String: Int] {
+        let launch = 1_791_158_400_000.0 // 2026-10-01 UTC
+        var result: [String: Int] = [:]
+        for value in submittedAt where value.isFinite && value < launch && value <= now {
+            let key = String(dayKey(value).prefix(7))
+            result[key, default: 0] += 1
+        }
+        for (day, kinds) in stamps.days where day < "2026-10-01" && kinds.contains(.classification) {
+            let key = String(day.prefix(7))
+            result[key] = max(result[key] ?? 0, kinds.count)
+        }
+        return result
+    }
+
     /// Recent personal contribution totals, newest month first.
-    public static func monthHistory(_ stamps: ResearchStamps, now: Double, count: Int = 6) -> [MonthSummary] {
+    public static func monthHistory(_ stamps: ResearchStamps, now: Double, count: Int = 6, historicalContributions: [String: Int] = [:]) -> [MonthSummary] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "UTC")!
         let date = Date(timeIntervalSince1970: now / 1000)
@@ -254,7 +269,7 @@ public enum ResearchStampRules {
             let parts = calendar.dateComponents([.year, .month], from: monthDate)
             guard let year = parts.year, let month = parts.month else { return nil }
             let key = String(format: "%04d-%02d", year, month)
-            return MonthSummary(key: key, label: formatter.string(from: monthDate), stamps: stampsIn(stamps, year: year, month: month))
+            return MonthSummary(key: key, label: formatter.string(from: monthDate), stamps: stampsIn(stamps, year: year, month: month) + (historicalContributions[key] ?? 0))
         }
     }
 

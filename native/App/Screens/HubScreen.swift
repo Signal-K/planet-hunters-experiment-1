@@ -65,7 +65,6 @@ struct HubScreen: View {
 
     private func scene(size: CGSize, insets: EdgeInsets) -> some View {
         let layout = BaseLayout(size: size, insets: insets, zones: zones, hasPlaced: !store.player.placed.isEmpty)
-        let cameraWorld = BaseWorld(w: size.width, h: size.height)
         let portrait = layout.portrait
         return ZStack(alignment: .topLeading) {
             BaseWorldScene(
@@ -100,13 +99,12 @@ struct HubScreen: View {
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
                      onMenu: { menuOpen = true },
+                     onSubsurface: { store.go(store.screen == .hubSubsurface ? .hub : .hubSubsurface) },
+                     subsurface: store.screen == .hubSubsurface,
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
                      locationNavigationDisabled: false,
-                     compact: !portrait,
-                     onOverview: !placing ? { camera.overview(cameraWorld) } : nil,
-                     overviewPosition: cameraWorld.maxX == 0 ? 0 : min(max(Double(camera.x / cameraWorld.maxX), 0), 1),
-                     onOverviewPositionChange: !placing ? { camera.setPosition(CGFloat($0), cameraWorld) } : nil)
+                     compact: false)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { liveEventWeek } from '@/lib/research/event-week'
-import { communityBar, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
+import { communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import board from '@/components/game/MissionBoard.module.css'
@@ -32,15 +32,15 @@ function weekDays(now: number): { key: string; letter: string; today: boolean; f
   })
 }
 
-const ICONS: Record<PathStep['icon'], string> = {
-  signal: 'M3 12h4l2-6 4 12 2-6h6',
-  scan: 'M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 12h8',
-  world: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',
-  sky: 'M4 20 16 8M10 4l1 3 3 1-3 1-1 3-1-3-3-1 3-1ZM17 13l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7Z',
-  star: 'm12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7Z',
-}
 function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }) {
-  return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={ICONS[icon]} /></svg>
+  const art = {
+    signal: <><path d="M2.5 12h3.8l2-5.5 4.1 11 2.1-5.5h6.9" /><circle cx="18.5" cy="6" r="1.5" fill="currentColor" stroke="none" /></>,
+    scan: <><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4" /><rect x="8" y="8" width="8" height="8" rx="2" fill="currentColor" fillOpacity=".18" /><path d="M10 12h4M12 10v4" /></>,
+    world: <><circle cx="12" cy="12" r="9" fill="currentColor" fillOpacity=".14" /><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" /><path d="m5.5 7 2 1.2L6.2 10M18.5 15l-2-1.2 1.3-1.8" /></>,
+    sky: <><path d="M4 20 16 8" /><path d="m10 4 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z" fill="currentColor" fillOpacity=".22" /><path d="m17 13 .7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7Z" fill="currentColor" fillOpacity=".22" /></>,
+    star: <><path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7Z" fill="currentColor" fillOpacity=".18" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /></>,
+  }[icon]
+  return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>
 }
 
 const HOW_IT_WORKS = [
@@ -48,6 +48,14 @@ const HOW_IT_WORKS = [
   'Finish its five steps in any order. Missing a day costs nothing.',
   'Every step is a stamp that also fills the shared community bar.',
 ]
+
+function contributionTimes(player: Player): number[] {
+  return [
+    ...Object.values(player.tessClassifications ?? {}).map(record => record.submittedAt),
+    ...Object.values(player.asteroidClassifications ?? {}).map(record => record.submittedAt),
+    ...Object.values(player.saturnClassifications ?? {}).map(record => record.submittedAt),
+  ].filter((submittedAt): submittedAt is number => typeof submittedAt === 'number')
+}
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
 export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo }: CommunityResearchScreenProps) {
@@ -63,6 +71,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
+  const [readout, setReadout] = useState<'mission' | 'rewards'>('mission')
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -70,7 +79,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const d = new Date(now)
   const ownThisMonth = stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth())
   const bar = communityBar(ownThisMonth, communityResearch)
-  const monthHistory = researchMonthHistory(stamps, now)
+  const monthHistory = researchMonthHistory(stamps, now, 6, historicalContributionMonths(stamps, contributionTimes(player), now))
   const finished = progress.filter(p => p.have >= p.need).length
   const eventHistory = Object.entries(stamps)
     .filter(([, kinds]) => kinds.includes('event'))
@@ -129,75 +138,48 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
-                <div className={`${board.contractOffers} ${styles.tiles}`} aria-label="Path steps">
-                  <div className={board.offerStrip}>
-                    {steps.map((st, i) => (
-                      <button key={st.id} type="button" data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
-                        data-testid={`research-step-${st.id}`} data-done={progress[i].have >= progress[i].need} onClick={() => setPicked(i)}>
-                        <span className={styles.stepIcon} style={{ color: st.color }}><StepIcon icon={st.icon} /></span>
-                        <span>{progress[i].have >= progress[i].need ? '\u2713' : `${progress[i].have}/${progress[i].need}`}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className={styles.pathHeader}>
+                  <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
+                  <span>{finished}/{steps.length} complete</span>
                 </div>
-                <div className={styles.focus}>
-                  <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
-                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
-                  <h2 data-testid="community-research-title">{step.title}</h2>
-                  <p>{step.brief}</p>
-                  <p className={styles.why} data-testid="community-research-why">{step.why}</p>
+                <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
+                  {steps.map((st, i) => (
+                    <button key={st.id} type="button" className={styles.pathStep} data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
+                      data-testid={`research-step-${st.id}`} data-done={progress[i].have >= progress[i].need} onClick={() => { setPicked(i); setReadout('mission') }}>
+                      <span className={styles.pathMarker} style={{ '--step-color': st.color } as React.CSSProperties}><StepIcon icon={st.icon} /></span>
+                      <span className={styles.pathCopy}><b>Step {i + 1}</b><strong>{st.title}</strong></span>
+                      <span className={styles.pathCount}>{progress[i].have >= progress[i].need ? 'Done' : `${progress[i].have}/${progress[i].need}`}</span>
+                    </button>
+                  ))}
                 </div>
               </section>
               <section className={styles.right}>
-                <h2>{path === 'trader' ? 'Trader week' : 'Explorer week'}</h2>
-                <div className={styles.week} role="list" aria-label="This week" data-testid="community-research-week">
-                  {days.map(day => (
-                    <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}
-                      aria-label={`${day.key}${(stamps[day.key] ?? []).length ? ', stamped' : ''}`}>
-                      <i aria-hidden="true" />
-                      <span>{day.letter}</span>
-                    </div>
-                  ))}
+                <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
+                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
+                  <button type="button" role="tab" aria-selected={readout === 'rewards'} onClick={() => setReadout('rewards')}>Rewards</button>
                 </div>
-                <div className={styles.facts} data-testid="community-research-facts">
-                  <b>{finished} of {steps.length} steps</b>
-                  <em>{stampedDays} of 7 days stamped</em>
-                </div>
-                {(!player.researchPath?.claimedSteps?.includes(5)) && (
-                  <div className={styles.rewards} data-testid="community-research-rewards">
-                    <strong>How it works</strong>
-                    <span>Step 2: {WEEKLY_RESEARCH_REWARDS['step-2'].fragments} fragments</span>
-                    <span>Step 4: {WEEKLY_RESEARCH_REWARDS['step-4'].fragments} fragments</span>
-                    <span>Step 5: a permanent badge and Breakthrough</span>
+                {readout === 'mission' ? <>
+                  <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
+                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
+                  <h2 data-testid="community-research-title">{step.title}</h2>
+                  <p className={styles.readoutCopy}>{step.brief}</p>
+                  <p className={styles.why} data-testid="community-research-why">{step.why}</p>
+                  <div className={styles.week} role="list" aria-label="This week" data-testid="community-research-week">
+                    {days.map(day => <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}><i aria-hidden="true" /><span>{day.letter}</span></div>)}
                   </div>
-                )}
-                <div className={styles.ledger} data-testid="community-research-ledger">
-                  <span>Regular fragments</span><b>{player.researchFragments ?? 0}</b>
-                </div>
-                {step.id === 'breakthrough' && progress[at].have >= progress[at].need && (
-                  <p className={styles.breakthrough} data-testid="community-research-breakthrough">{WEEKLY_RESEARCH_REWARDS.breakthrough.explanation}</p>
-                )}
-                <div className={styles.bar} data-testid="research-community-bar">
-                  <div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div>
-                  <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps">
-                    <div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} />
+                  <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
+                </> : <>
+                  <h2>Your rewards</h2>
+                  <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
+                    <div className={styles.rewardCard} data-earned={progress[1]?.have >= progress[1]?.need}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={progress[3]?.have >= progress[3]?.need}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={progress[4]?.have >= progress[4]?.need}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
                   </div>
-                </div>
-                <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history">
-                  <div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div>
-                  <div className={styles.historyRows}>
-                    {monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} stamp{month.stamps === 1 ? '' : 's'}</b></div>)}
-                  </div>
-                </div>
-                {eventHistory.length > 0 && (
-                  <section className={styles.facts} data-testid="community-research-history" aria-label="Research history">
-                    <b>Research history</b>
-                    <em>Orionids shower contribution recorded on {eventHistory[0][0]}</em>
-                  </section>
-                )}
-                <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>
-                  {step.kind === 'event' ? 'JOIN' : 'GO'}
-                </button>
+                  <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
+                  <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
+                  {eventHistory.length > 0 && <section className={styles.facts} data-testid="community-research-history" aria-label="Research history"><b>Research history</b><em>Orionids shower contribution recorded on {eventHistory[0][0]}</em></section>}
+                </>}
               </section>
             </>
           )}

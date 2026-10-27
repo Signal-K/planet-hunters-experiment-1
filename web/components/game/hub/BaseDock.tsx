@@ -11,6 +11,8 @@ type BaseDockProps = {
   onNext: () => void
   onBuild: (event?: MouseEvent<HTMLButtonElement>) => void
   onHub: () => void
+  onSubsurface?: () => void
+  subsurface?: boolean
   /** Flight reuses this dock with Boost in the Build slot. Mining uses Fire. */
   buildLabel?: string
   buildTestId?: string
@@ -31,8 +33,6 @@ type BaseDockProps = {
   locationLabel?: string
   locationNavigationDisabled?: boolean
   showLocationBuild?: boolean
-  /** Base camera controls live in the location toolbar, not as a floating overlay. */
-  onOverview?: () => void
 }
 
 /** Dock controls. Arrows sit at the ends; Build and Hub sit in the middle. */
@@ -158,11 +158,11 @@ function MenuIcon() {
   )
 }
 
-function OverviewIcon() {
+function SubsurfaceIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" />
-      <path d="m3 3 5 5M21 3l-5 5M3 21l5-5M21 21l-5-5" opacity=".55" />
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M7 7v13h10V7M9 11h6M9 15h6" />
+      <path d="M12 3v4" />
     </svg>
   )
 }
@@ -173,6 +173,8 @@ export function BaseDock({
   onNext,
   onBuild,
   onHub,
+  onSubsurface,
+  subsurface = false,
   buildLabel = 'Build',
   buildTestId = 'hub-build-btn',
   buildIcon,
@@ -191,10 +193,10 @@ export function BaseDock({
   locationLabel,
   locationNavigationDisabled = false,
   showLocationBuild = true,
-  onOverview,
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = buildLabel
+  const locationActionCount = Number(showLocationBuild) + Number(Boolean(onMission)) + Number(Boolean(onSubsurface)) + 1
   if (locationLabel) {
     return (
       <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
@@ -203,15 +205,15 @@ export function BaseDock({
           <span className="scene-location-label"><LocationIcon /><span>{locationLabel}</span></span>
           <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
         </div>
-        <div className="scene-location-actions">
-          {onOverview && <div className="scene-location-overview" aria-label="Base camera controls">
-            <button type="button" onClick={onOverview} data-testid="base-overview-button" aria-label="Show whole base" title="Show whole base"><OverviewIcon /></button>
-          </div>}
+        <div className="scene-location-actions" data-action-count={locationActionCount}>
           {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
-            <MissionIcon /><span>Find mission</span>
+            <MissionIcon /><span>Missions</span>
+          </DockWordButton>}
+          {onSubsurface && <DockWordButton className="scene-location-action--subsurface" data-testid="hub-subsurface-btn" onClick={onSubsurface}>
+            <SubsurfaceIcon /><span>{subsurface ? 'Surface' : 'Subsurface'}</span>
           </DockWordButton>}
           <DockWordButton className="scene-location-action--menu" data-testid={hubTestId} onClick={onHub}>
             {hubIcon ?? <MenuIcon />}<span>{hubLabel === 'Hub' ? 'Menu' : hubLabel}</span>

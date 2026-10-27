@@ -456,6 +456,9 @@ enum SceneCatalog {
             gs.player.placed = ["launchpad", "market"]
             gs.player.researchFragments = 25
             gs.player.researchUniversalFragments = 3
+            gs.player.researchPath = ResearchPathChoice(week: ResearchPathRules.weekKey(wswNoon), path: .explorer, claimedSteps: [2, 4])
+            let monday = ResearchPathRules.weekKey(wswNoon)
+            gs.player.researchStamps.days[monday] = [.classification]
             gs.player.researchFragmentHistory = [
                 .init(id: "community-research-2026-10-19", title: "Explorer week of 2026-10-19", fragmentsEarned: 25, badgeId: "community-research-2026-10-19")
             ]

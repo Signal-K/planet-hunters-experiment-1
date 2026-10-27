@@ -5,42 +5,34 @@ import type { Player } from '@/lib/game-types'
 import { unlockedConstellations, type UnlockedConstellation } from '@/lib/data/constellations'
 import styles from './BaseConstellations.module.css'
 
-export function BaseConstellations({ player }: { player: Player }) {
+/** Earned patterns are a night-sky detail, not a daytime HUD layer. */
+export function BaseConstellations({ player, visible = true }: { player: Player; visible?: boolean }) {
   const unlocked = unlockedConstellations(player)
-  const [selected, setSelected] = useState<string | null>(() => unlocked[0]?.id ?? null)
-  if (unlocked.length === 0) return null
-  const active = unlocked.find(constellation => constellation.id === selected) ?? unlocked[0]
+  const [selected, setSelected] = useState<string | null>(null)
+  if (!visible || unlocked.length === 0) return null
 
   return <div className={styles.layer} aria-label="Unlocked constellations" data-testid="base-constellations">
-    {unlocked.map(constellation => <Constellation key={constellation.id} constellation={constellation} selected={selected === constellation.id} onSelect={() => setSelected(constellation.id)} />)}
-    <aside className={styles.archive} aria-label="Sky archive">
+    {unlocked.map(constellation => <Constellation key={constellation.id} constellation={constellation} selected={selected === constellation.id} onSelect={() => setSelected(selected === constellation.id ? null : constellation.id)} />)}
+    {selected && <aside className={styles.archive} aria-label="Sky archive">
+      {(() => {
+        const active = unlocked.find(constellation => constellation.id === selected)
+        if (!active) return null
+        return <>
       <div className={styles.archiveHeader}>
         <span className={styles.archiveKicker}>Sky archive</span>
-        <span className={styles.archiveCount}>{unlocked.length} recorded</span>
+        <button type="button" className={styles.archiveClose} onClick={() => setSelected(null)} aria-label="Close sky archive">×</button>
       </div>
-      <p className={styles.archiveIntro}>Milestones recorded in the sky.</p>
-      <div className={styles.entries} role="list">
-        {unlocked.map(constellation => <button
-          key={constellation.id}
-          type="button"
-          className={`${styles.entry} ${selected === constellation.id ? styles.entrySelected : ''}`}
-          onClick={() => setSelected(constellation.id)}
-          aria-pressed={selected === constellation.id}
-        >
-          <span className={styles.entryMarker} aria-hidden="true" />
-          <span className={styles.entryCopy}>
-            <strong>{constellation.name}</strong>
-            <small>{constellation.earnedBy}</small>
-          </span>
-          <span className={styles.entryArrow} aria-hidden="true">›</span>
-        </button>)}
-      </div>
+      <span className={styles.archiveEyebrow}>Recorded milestone</span>
+      <strong className={styles.archiveTitle}>{active.name}</strong>
+      <span className={styles.archiveSource}>{active.earnedBy}</span>
       <div className={styles.explanation}>
         <span className={styles.explanationLabel}>About this pattern</span>
         <p>{active.description}</p>
         <small>Recorded from {active.earnedBy}</small>
       </div>
-    </aside>
+        </>
+      })()}
+    </aside>}
   </div>
 }
 

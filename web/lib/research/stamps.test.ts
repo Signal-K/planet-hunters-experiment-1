@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addStamp, type ResearchStamps, communityBar, mergeStamps, monthGrid, researchMonthHistory, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth } from './stamps'
+import { addStamp, type ResearchStamps, communityBar, historicalContributionMonths, mergeStamps, monthGrid, researchMonthHistory, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth } from './stamps'
 
 const D = 86_400_000
 const t = Date.UTC(2026, 9, 22, 12)
@@ -46,5 +46,10 @@ describe('research stamps', () => {
       { key: '2026-10', label: 'October 2026', stamps: 1 },
       { key: '2026-09', label: 'September 2026', stamps: 2 },
     ])
+  })
+  it('adds citizen science records from September and earlier without making retroactive rewards', () => {
+    const history = historicalContributionMonths({}, [Date.UTC(2026, 8, 3), Date.UTC(2026, 8, 18), Date.UTC(2026, 9, 1)], Date.UTC(2026, 9, 26))
+    expect(history).toEqual({ '2026-09': 2 })
+    expect(researchMonthHistory({}, Date.UTC(2026, 9, 26), 2, history)[1]).toMatchObject({ key: '2026-09', stamps: 2 })
   })
 })

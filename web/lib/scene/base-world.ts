@@ -32,7 +32,7 @@ const MOUNTAIN_LAYERS: readonly BiomeLayer[] = [
 ]
 
 /** Launch complex stays this wide at every tier. Portrait CSS may ease it so neighbours keep a gap. */
-export const LAUNCHPAD_SCENE_WIDTH_PCT = 42
+export const LAUNCHPAD_SCENE_WIDTH_PCT = 38
 
 /**
  * Centre of a starter structure, as a percent of scene width.
@@ -124,9 +124,12 @@ export function lockBaseWorldPreview(params: { get(name: string): string | null 
   const time = sanitizeWorldTime(params.get('time'))
   const season = sanitizeSeason(params.get('season'))
   const sky = params.get('sky')
-  if (time) previewTime = time
-  if (season) previewSeasonLock = season
-  if (sky) previewSky = sky.split(',').map(s => s.trim()).filter(s => /^[a-z-]{2,20}$/.test(s)).slice(0, 8)
+  // A stage fixture strips its query after reading it, so retain a valid lock
+  // for that mount. A later ordinary route must clear it again: previously a
+  // midday fixture could leave a sun painted over the player's real midnight.
+  previewTime = time
+  previewSeasonLock = season
+  previewSky = sky ? sky.split(',').map(s => s.trim()).filter(s => /^[a-z-]{2,20}$/.test(s)).slice(0, 8) : []
 }
 
 export function lockedSky(): readonly string[] {

@@ -112,7 +112,10 @@ describe('base world', () => {
     const world = createWorld()
     const view = { w: 463, h: 214 }
     const night = skyAt(new Date(2026, 9, 21, 22, 0, 0), 'night', 'mountains', ['meteors', 'storm', 'aurora', 'comet'])
-    for (let i = 0; i < 60; i += 1) applySky(world, night, view, 1 / 20)
+    expect(night.events.find(event => event.id === 'forced-meteors')?.perMinute).toBe(8)
+    // The restrained preview shower is deliberately sparse, so give its
+    // irregular emitter a full visual window rather than assuming a burst.
+    for (let i = 0; i < 400; i += 1) applySky(world, night, view, 1 / 20)
     expect(world.entities.some(e => e.def.shape === 'streak')).toBe(true)
     expect(world.entities.some(e => e.def.shape === 'line')).toBe(true)
     expect(world.entities.some(e => e.def.shape === 'ribbon')).toBe(true)
