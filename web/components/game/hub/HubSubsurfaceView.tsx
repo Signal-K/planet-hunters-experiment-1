@@ -232,11 +232,7 @@ function MineralVault({ minerals, capacity, overallCapacity, siloTotal, onOpenMa
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
       <div className={styles.vaultStructure} aria-hidden="true">
-        <img className={styles.vaultWall} src="/game/assets/base/kit/ug-wall.png" alt="" />
-        <img className={styles.vaultPipe} src="/game/assets/base/kit/ug-pipe.png" alt="" />
-        <img className={styles.vaultTank} src="/game/assets/base/kit/ug-tank-big.png" alt="" />
-        <img className={styles.vaultConsole} src="/game/assets/base/kit/ug-console-0.png" alt="" />
-        <span className={styles.craftingMarker}>CRAFTING<br /><b>NEXT CYCLE</b></span>
+        <img className={styles.vaultAsset} src="/game/assets/base/subsurface_cutaway.png" alt="" />
       </div>
       <StorageSilo minerals={minerals} capacity={overallCapacity} />
       <div className={styles.storageAllowance} data-testid="subsurface-storage-allowance">

@@ -24,6 +24,7 @@
   "base_surface_silo_flat": "/game/assets/base/surface_silo_flat.png",
   "base_hangar_flat": "/game/assets/base/hangar_flat.png",
   "base_exchange_flat": "/game/assets/base/exchange_flat.png",
+  "base_subsurface_cutaway": "/game/assets/base/subsurface_cutaway.png",
   "terrain_mtn_peak_tall": "/game/assets/terrain/mtn_peak_tall.png",
   "terrain_mtn_peak_broad": "/game/assets/terrain/mtn_peak_broad.png",
   "terrain_mtn_shoulder": "/game/assets/terrain/mtn_shoulder.png",
