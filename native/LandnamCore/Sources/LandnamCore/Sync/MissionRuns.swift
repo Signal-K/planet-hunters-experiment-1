@@ -143,7 +143,7 @@ public enum CloudMerge {
         // Run resumability: keep a local in-flight run unless the remote stage moved past it; adopt a remote run when local has none.
         if l.activeMission != nil, both || r.missionsDone <= l.missionsDone {
             n.player.activeMission = l.activeMission; n.player.missionPhase = l.missionPhase
-            n.player.transitStartedAt = l.transitStartedAt; n.player.arrivalAt = l.arrivalAt
+            n.player.transitStartedAt = l.transitStartedAt; n.player.arrivalAt = l.arrivalAt; n.player.missionStartedAt = l.missionStartedAt
             n.player.returningToEarth = l.returningToEarth; n.player.debriefPending = l.debriefPending
             n.player.homeDeliveryPending = l.homeDeliveryPending
             MissionRuns.setRunId(&n.player, MissionRuns.runId(l))
@@ -151,7 +151,7 @@ public enum CloudMerge {
             n.deliveryTargetId = local.deliveryTargetId
         } else if l.activeMission == nil, r.activeMission != nil, r.missionsDone >= l.missionsDone {
             n.player.activeMission = r.activeMission; n.player.missionPhase = r.missionPhase
-            n.player.transitStartedAt = r.transitStartedAt; n.player.arrivalAt = r.arrivalAt
+            n.player.transitStartedAt = r.transitStartedAt; n.player.arrivalAt = r.arrivalAt; n.player.missionStartedAt = r.missionStartedAt
             n.player.returningToEarth = r.returningToEarth; n.player.debriefPending = r.debriefPending
             MissionRuns.setRunId(&n.player, MissionRuns.runId(r))
             n.missionId = remote.missionId; n.targetId = remote.targetId; n.lastCargo = remote.lastCargo; n.deliveredCargo = remote.deliveredCargo

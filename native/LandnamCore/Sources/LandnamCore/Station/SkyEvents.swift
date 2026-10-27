@@ -67,6 +67,15 @@ public enum SkyEvents {
         return ms < e.endMs ? .gold : .silver
     }
 
+    /// A run started inside an event keeps that grade for this long after the event closes (web RUN_START_GRACE_MS).
+    public static let runStartGraceMs: Double = 24 * 60 * 60 * 1000
+
+    /// Instants a run-graded badge is judged at: the run's launch (within the grace window) and now.
+    public static func gradingTimes(startedAt: Double?, now: Double) -> [Double] {
+        guard let s = startedAt, s.isFinite, s <= now, now - s <= runStartGraceMs else { return [now] }
+        return [s, now]
+    }
+
     /// Idempotent grant: never downgrades gold, upgrades silver when gold is earned later.
     public static func grant(_ badges: inout [String: PlayerBadge], eventId: String, at ms: Double) {
         guard let tier = badgeTier(eventId, at: ms) else { return }

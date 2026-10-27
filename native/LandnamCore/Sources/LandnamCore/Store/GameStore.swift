@@ -309,7 +309,9 @@ public final class GameStore {
     public func debrisMined(_ resourceId: String) {
         guard let preset = SkyEvents.presets.first(where: { $0.resourceId == resourceId }) else { return }
         var n = state
-        SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
+        for t in SkyEvents.gradingTimes(startedAt: n.player.missionStartedAt, now: now) {
+            SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: t, only: preset.eventId)
+        }
         apply(n)
     }
     /// Fragments mined with the laser count toward the ledger (web `addCaughtFragments(mined, 1, 'count')`).

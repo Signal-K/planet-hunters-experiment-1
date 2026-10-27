@@ -176,6 +176,7 @@ public enum Loop {
         n.player.selectedStagedRocketId = next?.id
         n.player.arrivalAt = travelArrival(target: target, player: s.player, now: now)
         n.player.transitStartedAt = now
+        n.player.missionStartedAt = now
         n.player.missionPhase = .transit
         n.player.activeMission = ActiveMission(id: mission.id, label: "\(mission.title) → \(target.name)")
         // The ascent flies through the shower: fragments are home at once (web applyLaunchCatch, SSL-578).
@@ -350,13 +351,14 @@ public enum Loop {
         n.player.missionsDone = missionsDone
         n.player.freeOperations = Transitions.freeOperationsUnlocked(n.player)
         let justFinishedOnboarding = !wasFreeOps && n.player.freeOperations
-        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now)
+        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now, startedAt: s.player.missionStartedAt)
         n.popup = justFinishedOnboarding ? "tutorial-complete" : s.popup
         n.player.missionCount = catalog.missions.filter { $0.sequence == missionsDone + 1 }.count
         if let client = mission?.client, !isStory, !program { n.player.lastClient = client }
         // Single-use vehicle is spent; clear the run.
         n.player.activeMission = nil
         n.player.missionRunId = nil
+        n.player.missionStartedAt = nil
         n.player.missionPhase = nil
         n.player.debriefPending = false
         n.player.homeDeliveryPending = false
@@ -395,6 +397,7 @@ public enum Loop {
         var n = s
         n.player.activeMission = nil
         n.player.missionRunId = nil
+        n.player.missionStartedAt = nil
         n.player.missionPhase = nil
         n.player.arrivalAt = nil
         n.player.transitStartedAt = nil

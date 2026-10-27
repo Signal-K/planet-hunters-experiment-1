@@ -21,6 +21,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var francs: Int = Economy.startingFrancs
     public var activeMission: ActiveMission?
     public var missionRunId: String?
+    /// Launch time of the active run; event badges are graded at launch as well as completion.
+    public var missionStartedAt: Double?
     public var missionPhase: MissionPhase?
     public var miningCargoInProgress: Cargo?
     public var deliveryUnloadStartedAt: Double?
@@ -135,7 +137,7 @@ public struct Player: Codable, Equatable, Sendable {
             consumed.insert(key)
             if let value = try? c.decodeIfPresent(T.self, forKey: AnyKey(key)) { keep = value }
         }
-        get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId)
+        get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId); getOpt("missionStartedAt", &missionStartedAt)
         getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress)
         getOpt("deliveryUnloadStartedAt", &deliveryUnloadStartedAt); getOpt("landingStartedAt", &landingStartedAt)
         getOpt("landingReturnStartedAt", &landingReturnStartedAt); getOpt("hasLanded", &hasLanded)
@@ -197,7 +199,7 @@ public struct Player: Codable, Equatable, Sendable {
         for (key, value) in extras { try c.encode(value, forKey: AnyKey(key)) }
         func put<T: Encodable>(_ key: String, _ value: T) throws { try c.encode(value, forKey: AnyKey(Player.renamed[key] ?? key)) }
         func putOpt<T: Encodable>(_ key: String, _ value: T?) throws { if let value { try c.encode(value, forKey: AnyKey(key)) } }
-        try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId)
+        try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId); try putOpt("missionStartedAt", missionStartedAt)
         try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress)
         try putOpt("deliveryUnloadStartedAt", deliveryUnloadStartedAt); try putOpt("landingStartedAt", landingStartedAt)
         try putOpt("landingReturnStartedAt", landingReturnStartedAt); try putOpt("hasLanded", hasLanded)
