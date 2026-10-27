@@ -151,6 +151,118 @@
   box-sizing: border-box;
 }
 
+.subsurfaceStage {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 46%, rgb(33 66 79 / 28%), transparent 48%),
+    #050b14;
+}
+
+.stageAsset {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.stageReadout,
+.stageFooter {
+  position: absolute;
+  display: flex;
+  color: var(--ln-cyan-bright);
+  font: 800 12px var(--ln-font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.stageReadout {
+  top: 18px;
+  right: 20px;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-end;
+  text-shadow: 0 2px 0 #050b14;
+}
+
+.stageFooter {
+  right: 20px;
+  bottom: 16px;
+  left: 20px;
+  justify-content: space-between;
+  color: var(--ln-text-muted);
+  font-size: 11px;
+}
+
+.stageHotspots {
+  position: absolute;
+  right: 0;
+  bottom: 18%;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8%;
+  pointer-events: none;
+}
+
+.stageHotspot {
+  display: grid;
+  min-width: 150px;
+  padding: 9px 12px;
+  grid-template-columns: auto 1fr;
+  gap: 3px 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-text);
+  background: rgb(5 11 20 / 82%);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 26%);
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: left;
+}
+
+.stageHotspot:hover {
+  border-color: var(--ln-cyan);
+  background: rgb(10 28 42 / 92%);
+}
+
+.stageHotspotVault { transform: translateY(14px); }
+.stageHotspotLocker { transform: translateY(-4px); }
+
+.stageHotspotIcon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  grid-row: span 2;
+  place-items: center;
+  color: var(--ln-cyan-bright);
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 50%;
+}
+
+.stageHotspotLabel {
+  align-self: end;
+  font: 800 13px var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.stageHotspotState {
+  color: var(--ln-cyan);
+  font: 700 11px var(--ln-font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.stageHotspotStateLocked { color: var(--ln-amber); }
+
 /* Before excavation there is no deck, panel, or chamber. The only foreground
    element is the excavation action resting on the exposed bedrock. */
 .unexcavated .content {

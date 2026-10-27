@@ -61,10 +61,10 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
-    expect(markup).toContain('SUBSURFACE')
+    expect(markup).toContain('Subsurface storage cutaway')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
-    expect(markup).toContain('Unbuilt')
+    expect(markup).toContain('UNBUILT')
     expect(markup).not.toContain('Commodity Exchange')
   })
 
@@ -78,7 +78,7 @@ describe('HubSubsurfaceView', () => {
       />,
     )
     expect(markup).toContain('12 U')
-    expect(markup).toContain('Online')
+    expect(markup).toContain('ONLINE')
   })
 
   it('sorts positive mineral inventory by stored amount', () => {

@@ -482,62 +482,36 @@ export function HubSubsurfaceView({
             )}
           </div>
         ) : (
-          <>
-            <div className={styles.deckHeader}>
-              <div>
-                <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
-                <h2 className={styles.deckTitle}>SUBSURFACE</h2>
-              </div>
-              <div className={styles.deckSummary}>{totalMineralUnits} U · {parts.length} PARTS</div>
+          <div className={styles.subsurfaceStage} data-testid="subsurface-facility-cutaway">
+            <img className={styles.stageAsset} src="/game/assets/base/subsurface_cutaway.png" alt="Subsurface storage cutaway" />
+            <div className={styles.stageReadout} aria-label="Subsurface storage status">
+              <span>{totalMineralUnits} U STORED</span>
+              <span>{siloTotal} SILO{siloTotal === 1 ? '' : 'S'} ONLINE</span>
             </div>
-            <div className={styles.facilityShell} data-testid="subsurface-facility-cutaway">
-              <div className={styles.utilityTrunk} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-                <b>BELOW-SOIL SERVICE TRUNK</b>
-              </div>
-              <div className={styles.roomGrid}>
-                {SUBSURFACE_ROOMS.map((room, index) => {
-                  const built = builtSet.has(room.id)
-                  return (
-                    <button
-                      className={styles.roomCard}
-                      data-testid={`subsurface-room-${room.id}`}
-                      key={room.id}
-                      onClick={() => setActiveRoom(room.id)}
-                    >
-                      <div className={styles.roomCardTop}>
-                        <span className={styles.roomIcon}><RoomIcon id={room.id} /></span>
-                        <div>
-                          <div className={styles.roomEyebrow}>{room.eyebrow}</div>
-                          <div className={styles.roomName}>{room.name}</div>
-                        </div>
-                        <span className={styles.bayNumber}>0{index + 1}</span>
-                      </div>
-                      {built ? (
-                        <RoomScene id={room.id} minerals={minerals} parts={parts} />
-                      ) : (
-                        <UnbuiltRoomScene room={room} />
-                      )}
-                      <span className={styles.roomDescription}>{built ? 'ONLINE' : 'BUILD'}</span>
-                      <div className={styles.roomCardFooter}>
-                        <span className={`${styles.status} ${!built ? styles.statusLocked : ''}`}>
-                          {built ? 'Online' : 'Unbuilt'}
-                        </span>
-                        <span className={styles.roomMetric}>{roomMetric(room, built)}</span>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-              <div className={styles.accessCorridor} aria-hidden="true">
-                <span className={styles.corridorLine} />
-                <span className={styles.corridorCart} />
-                <b>ACCESS CORRIDOR · PRESSURE NOMINAL</b>
-              </div>
+            <div className={styles.stageHotspots}>
+              {SUBSURFACE_ROOMS.map((room, index) => {
+                const built = builtSet.has(room.id)
+                return (
+                  <button
+                    className={`${styles.stageHotspot} ${index === 0 ? styles.stageHotspotVault : styles.stageHotspotLocker}`}
+                    data-testid={`subsurface-room-${room.id}`}
+                    key={room.id}
+                    onClick={() => setActiveRoom(room.id)}
+                  >
+                    <span className={styles.stageHotspotIcon}><RoomIcon id={room.id} size={20} /></span>
+                    <span className={styles.stageHotspotLabel}>{built ? room.name : `BUILD ${room.name}`}</span>
+                    <span className={`${styles.stageHotspotState} ${!built ? styles.stageHotspotStateLocked : ''}`}>
+                      {built ? roomMetric(room, built) || 'ONLINE' : 'UNBUILT'}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-          </>
+            <div className={styles.stageFooter}>
+              <span>EXCAVATION COMPLETE</span>
+              <span>{parts.length} PARTS REGISTERED</span>
+            </div>
+          </div>
         )}
       </div>
     </section>
