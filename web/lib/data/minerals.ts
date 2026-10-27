@@ -1,7 +1,7 @@
 // Landnam game data — minerals
 
 import type { MineralMeta, Mission } from './types'
-import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, ORIONID_FRAGMENT_BOOK, type MineralRarity } from './economy'
+import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, ORIONID_FRAGMENT_BOOK, type MineralRarity } from './economy.ts'
 
 // Ore shapes are chosen so that every mineral pool an archetype can actually
 // produce together (see ARCHETYPE_POOLS in target-archetypes.ts) has distinct
