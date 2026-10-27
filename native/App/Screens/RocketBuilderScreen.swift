@@ -249,13 +249,11 @@ struct RocketBuilderScreen: View {
             let w = min(g.size.width, g.size.height * 1.276)
             let h = w / 1.276
             let progress: Double = phase == .building ? (previewProgress ?? buildProgress) : (phase == .ready ? 1 : 0)
+            let biome = EarthBiome(rawValue: store.player.earthBiome) ?? .mountains
+            let px = max(1.5, min(2, g.size.width / 460))
             ZStack(alignment: .topLeading) {
-                Theme.ink.opacity(0.82)
-                    .frame(width: g.size.width + 600, height: 1400)
-                    .position(x: g.size.width / 2, y: g.size.height - 28 + 700)
-                Theme.paper.opacity(0.24)
-                    .frame(width: g.size.width + 600, height: 4)
-                    .position(x: g.size.width / 2, y: g.size.height - 28 + 2)
+                BaseWorldCanvas(px: px, camX: 0, biome: biome.rawValue, grade: WorldAssets.grade())
+                    .frame(width: g.size.width, height: g.size.height)
                 complex(w: w, h: h, phase: phase, progress: progress)
                     .frame(width: w, height: h)
                     .position(x: g.size.width / 2, y: g.size.height - 4 - h / 2)

@@ -57,6 +57,21 @@
   pointer-events: none;
 }
 
+/* A quiet service spine connects facilities without pretending they are all
+ * player-owned from day one. It sits behind structures and follows the shared
+ * apron line. */
+.serviceSpine {
+  position: absolute;
+  z-index: 1;
+  left: calc(82 * var(--px, 3px));
+  width: calc(350 * var(--px, 3px));
+  bottom: calc(var(--hub-ground) + 4 * var(--px, 3px));
+  height: calc(3 * var(--px, 3px));
+  border-top: 1px solid color-mix(in srgb, var(--ln-world-trim-blue) 76%, var(--ln-world-outline));
+  border-bottom: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 50%, var(--ln-world-outline));
+  background: repeating-linear-gradient(90deg, transparent 0 calc(18 * var(--px, 3px)), color-mix(in srgb, var(--ln-world-trim-blue) 72%, transparent) calc(18 * var(--px, 3px)) calc(21 * var(--px, 3px)));
+}
+
 .apronProp {
   position: absolute;
   display: block;

@@ -187,6 +187,10 @@ struct BaseWorldScene: View {
     /// unbuilt Hangar, Exchange or Control Station gameplay state.
     private func operationsApron(world: BaseWorld) -> some View {
         ZStack(alignment: .topLeading) {
+            Rectangle()
+                .fill(Theme.blue.opacity(0.72))
+                .frame(width: 350 * world.u, height: max(2, world.u))
+                .position(x: 257 * world.px, y: world.ground - 4 * world.u)
             if let props = WorldAssets.site?.operationsApron?.props {
                 ForEach(props, id: \.id) { prop in
                     apronProp(prop, world: world)

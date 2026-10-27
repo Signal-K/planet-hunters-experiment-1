@@ -9,6 +9,7 @@ import { rocketModelForConfig, type RocketConfig, type Target } from '@/lib/data
 import { BASE_CAMERA_HOME } from '@/lib/scene/base-camera'
 import { kitScale } from '@/lib/scene/base-site'
 import { sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import styles from './RocketBuilderScene.module.css'
 import {
   BLUEPRINT_MODULES,
@@ -95,6 +96,7 @@ export default function RocketBuilderScene({
     return () => window.removeEventListener('resize', onResize)
   }, [])
   const px = kitScale(viewSize)
+  const { grade } = useTimeOfDay()
   const biome = sanitizeEarthBiome(earthBiome)
   // The pad and the cinematic must resolve the physical vehicle from the
   // same config. A display name is copy; it is not a stable visual identity.
@@ -137,7 +139,7 @@ export default function RocketBuilderScene({
       style={{ '--lb-build-ms': `${ROLLOUT_MS}ms` } as CSSProperties}
     >
       <div className={styles.sceneBackdrop} data-testid="rocket-builder-landscape" aria-hidden="true">
-        <BaseWorldCanvas px={px} camera={BASE_CAMERA_HOME} time="midday" biome={biome} />
+        <BaseWorldCanvas px={px} camera={BASE_CAMERA_HOME} time={grade} biome={biome} />
       </div>
 
 

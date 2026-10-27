@@ -118,8 +118,11 @@ struct BaseWorldCanvas: View {
         g.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), with: .linearGradient(
             Gradient(stops: [.init(color: color(grade.top), location: 0), .init(color: color(grade.mid), location: 0.55), .init(color: color(grade.horizon), location: 1)]),
             startPoint: .zero, endPoint: CGPoint(x: 0, y: groundY)))
-        // Below the ground line the paving continues past the ground image.
-        g.fill(Path(CGRect(x: 0, y: groundY, width: w, height: h - groundY)), with: .color(color(site.ground.deep)))
+        // Grade the continuation under the finite paving sprite so it does
+        // not read as an unrelated, flat colour band.
+        g.fill(Path(CGRect(x: 0, y: groundY, width: w, height: h - groundY)), with: .linearGradient(
+            Gradient(colors: [color(site.ground.deep), color("#74716B")]),
+            startPoint: CGPoint(x: 0, y: groundY), endPoint: CGPoint(x: 0, y: h)))
         if grade.stars > 0 { drawStars(&g, w: w, groundY: groundY, alpha: grade.stars, t: t) }
         drawMilkyWay(&g, w: w, groundY: groundY, stars: grade.stars, t: t)
         drawLuminary(&g, grade: grade, sky: runner.sky, w: w, groundY: groundY, t: t, gloom: gloom)

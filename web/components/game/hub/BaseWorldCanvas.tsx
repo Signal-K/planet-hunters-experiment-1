@@ -151,8 +151,12 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
   g.addColorStop(1, grade.horizon)
   ctx.fillStyle = g
   ctx.fillRect(0, 0, w, h)
-  // Below the ground line the paving continues past the ground image.
-  ctx.fillStyle = GROUND.deep
+  // Continue the paving with a grade, not a flat colour block, while the
+  // authored ground sprite loads and where its finite frame ends.
+  const apron = ctx.createLinearGradient(0, groundY, 0, h)
+  apron.addColorStop(0, GROUND.deep)
+  apron.addColorStop(1, mixHex(GROUND.deep, '#263544', 0.28))
+  ctx.fillStyle = apron
   ctx.fillRect(0, groundY, w, h - groundY)
   if (grade.stars > 0) drawStars(ctx, w, groundY, grade.stars, t)
   drawMilkyWay(ctx, w, groundY, grade.stars, t)
