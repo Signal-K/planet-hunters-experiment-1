@@ -157,20 +157,196 @@
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(circle at 50% 46%, rgb(33 66 79 / 28%), transparent 48%),
-    #050b14;
+  background: #3a3835;
 }
 
-.stageAsset {
+.stageSoil {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: 18%;
+  background:
+    linear-gradient(#8a7a64 0 68%, #6f6252 68% 80%, #4a3f38 80%),
+    #8a7a64;
+  box-shadow: inset 0 -3px 0 #16293b;
+}
+
+.stageCavern {
+  position: absolute;
+  top: 17%;
+  right: 3.5%;
+  bottom: 11%;
+  left: 3.5%;
+  overflow: hidden;
+  border: 2px solid #16293b;
+  border-top: 0;
+  background:
+    linear-gradient(90deg, rgb(74 63 56 / 88%), rgb(58 56 53 / 92%) 16%, #252b31 48%, rgb(58 56 53 / 92%) 84%, rgb(74 63 56 / 88%)),
+    #3a3835;
+  box-shadow: inset 0 0 0 4px rgb(22 41 59 / 24%);
+}
+
+.stageRockCells {
+  position: absolute;
+  inset: 4% 0 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-auto-rows: minmax(42px, 1fr);
+  opacity: .34;
+}
+
+.stageRockCells i {
+  border: 1px solid rgb(22 41 59 / 58%);
+  background:
+    linear-gradient(135deg, transparent 47%, rgb(22 41 59 / 22%) 48% 52%, transparent 53%),
+    #3a3835;
+}
+
+.stageConduit {
+  position: absolute;
+  top: 58%;
+  left: 11%;
+  width: 78%;
+  height: 16px;
+  border: 2px solid #16293b;
+  border-radius: 12px;
+  background: #c9c4b8;
+  box-shadow: 0 4px 0 rgb(22 41 59 / 32%);
+}
+
+.stageConduit i {
+  position: absolute;
+  top: 4px;
+  right: 10px;
+  left: 10px;
+  height: 4px;
+  border-radius: 4px;
+  background: #2a9aa3;
+  animation: conduitPulse 2.4s linear infinite;
+}
+
+.stageShaft {
+  position: absolute;
+  top: -9%;
+  left: 5%;
+  z-index: 2;
+  width: clamp(58px, 9.4vw, 104px);
+  height: 78%;
+  object-fit: contain;
+  object-position: top;
+  image-rendering: pixelated;
+}
+
+.stageModules {
   position: absolute;
   inset: 0;
+  z-index: 3;
+}
+
+.sceneModule {
+  position: absolute;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sceneModule img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: bottom center;
   image-rendering: pixelated;
+  filter: drop-shadow(5px 6px 0 rgb(22 41 59 / 25%));
+}
+
+.sceneModulemineralvault {
+  bottom: 10%;
+  left: 16%;
+  width: 29%;
+  height: 43%;
+}
+
+.sceneModuledeepmineralvault {
+  right: 25%;
+  bottom: 10%;
+  width: 32%;
+  height: 45%;
+}
+
+.sceneModulepartslocker {
+  right: 4%;
+  bottom: 10%;
+  width: 22%;
+  height: 40%;
+}
+
+.sceneModule:hover img { transform: translateY(-3px); }
+
+.sceneModuleName {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  display: none;
+  width: max-content;
+  transform: translateX(-50%);
+  color: var(--ln-text);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sceneModule:hover .sceneModuleName,
+.sceneModule:focus-visible .sceneModuleName { display: block; }
+
+.sceneModuleState {
+  position: absolute;
+  right: 10%;
+  bottom: 8%;
+  width: 10px;
+  height: 10px;
+  overflow: hidden;
+  border: 2px solid #16293b;
+  border-radius: 50%;
+  background: #2a9aa3;
+  color: transparent;
+}
+
+.sceneModuleStateLocked { background: #d9733a; }
+
+.emptyBay {
+  position: absolute;
+  inset: 15% 8% 8%;
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgb(201 196 184 / 54%);
+  background: rgb(58 56 53 / 48%);
+  color: #c9c4b8;
+}
+
+.emptyBay::before,
+.emptyBay::after {
+  position: absolute;
+  content: '';
+  background: rgb(201 196 184 / 34%);
+}
+
+.emptyBay::before { width: 72%; height: 2px; }
+.emptyBay::after { width: 2px; height: 72%; }
+.emptyBay b { position: relative; z-index: 1; font: 500 30px/1 var(--ln-font-mono); }
+
+@keyframes conduitPulse {
+  from { transform: translateX(-7%); opacity: .45; }
+  50% { opacity: 1; }
+  to { transform: translateX(7%); opacity: .45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageConduit i { animation: none; }
 }
 
 .stageReadout,
@@ -201,75 +377,6 @@
   font-size: 9px;
 }
 
-.stageHotspots {
-  position: absolute;
-  right: 0;
-  bottom: 22%;
-  left: 0;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 13%;
-  pointer-events: none;
-}
-
-.stageHotspot {
-  display: grid;
-  width: 52px;
-  min-width: 52px;
-  height: 52px;
-  padding: 0;
-  place-items: center;
-  border: 0;
-  border-radius: 50%;
-  color: var(--ln-text);
-  background: transparent;
-  box-shadow: 0 5px 16px rgb(0 0 0 / 32%);
-  cursor: pointer;
-  pointer-events: auto;
-  text-align: left;
-}
-
-.stageHotspot:hover {
-  background: rgb(10 28 42 / 30%);
-}
-
-.stageHotspotVault { transform: translateY(14px); }
-.stageHotspotLocker { transform: translateY(-4px); }
-
-.stageHotspotIcon {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  color: var(--ln-cyan-bright);
-  border: 2px solid var(--ln-cyan);
-  border-radius: 50%;
-  background: rgb(5 11 20 / 84%);
-}
-
-.stageHotspotLabel {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.stageHotspotState {
-  position: absolute;
-  right: -3px;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  overflow: hidden;
-  border: 2px solid #050b14;
-  border-radius: 50%;
-  background: var(--ln-cyan);
-  color: transparent;
-}
-
-.stageHotspotStateLocked { background: var(--ln-amber); }
 
 /* Before excavation there is no deck, panel, or chamber. The only foreground
    element is the excavation action resting on the exposed bedrock. */

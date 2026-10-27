@@ -62,6 +62,7 @@ describe('HubSubsurfaceView', () => {
 
     expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
     expect(markup).toContain('Subsurface storage cutaway')
+    expect(markup).toContain('/game/assets/base/subsurface_shaft.png')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
     expect(markup).toContain('UNBUILT')
@@ -79,6 +80,7 @@ describe('HubSubsurfaceView', () => {
     )
     expect(markup).toContain('12 U')
     expect(markup).toContain('ONLINE')
+    expect(markup).toContain('/game/assets/base/subsurface_vault.png')
   })
 
   it('sorts positive mineral inventory by stored amount', () => {

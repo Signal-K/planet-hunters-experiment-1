@@ -57,6 +57,12 @@ interface RegisteredPart {
   kind: string
 }
 
+const ROOM_STAGE_ASSETS: Partial<Record<SubsurfaceRoomId, string>> = {
+  'mineral-vault': '/game/assets/base/subsurface_vault.png',
+  'deep-mineral-vault': '/game/assets/base/subsurface_deep_vault.png',
+  'parts-locker': '/game/assets/base/subsurface_parts_locker.png',
+}
+
 export function storedMinerals(stash: Record<string, number> = {}): StoredMineral[] {
   return Object.entries(stash)
     .filter(([, amount]) => amount > 0)
@@ -483,33 +489,42 @@ export function HubSubsurfaceView({
           </div>
         ) : (
           <div className={styles.subsurfaceStage} data-testid="subsurface-facility-cutaway">
-            <img className={styles.stageAsset} src="/game/assets/base/subsurface_cutaway.png" alt="Subsurface storage cutaway" />
+            <div className={styles.stageSoil} aria-hidden="true" />
+            <div className={styles.stageCavern} aria-label="Subsurface storage cutaway">
+              <div className={styles.stageRockCells} aria-hidden="true">
+                {Array.from({ length: 32 }, (_, index) => <i key={index} />)}
+              </div>
+              <div className={styles.stageConduit} aria-hidden="true"><i /></div>
+              <img className={styles.stageShaft} src="/game/assets/base/subsurface_shaft.png" alt="" />
+              <div className={styles.stageModules}>
+                {SUBSURFACE_ROOMS.map(room => {
+                  const built = builtSet.has(room.id)
+                  const asset = ROOM_STAGE_ASSETS[room.id]
+                  return (
+                    <button
+                      className={`${styles.sceneModule} ${styles[`sceneModule${room.id.replaceAll('-', '')}`]} ${built ? styles.sceneModuleBuilt : styles.sceneModuleEmpty}`}
+                      data-testid={`subsurface-room-${room.id}`}
+                      key={room.id}
+                      onClick={() => setActiveRoom(room.id)}
+                      aria-label={built ? `${room.name}, online` : `Build ${room.name}`}
+                    >
+                      {built && asset ? <img src={asset} alt="" /> : <span className={styles.emptyBay} aria-hidden="true"><b>+</b></span>}
+                      <span className={styles.sceneModuleName}>{built ? room.name : `Build ${room.name}`}</span>
+                      <span className={`${styles.sceneModuleState} ${built ? '' : styles.sceneModuleStateLocked}`}>
+                        {built ? roomMetric(room, built) || 'ONLINE' : 'UNBUILT'}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
             <div className={styles.stageReadout} aria-label="Subsurface storage status">
               <span>{totalMineralUnits} U STORED</span>
               <span>{siloTotal} SILO{siloTotal === 1 ? '' : 'S'} ONLINE</span>
             </div>
-            <div className={styles.stageHotspots}>
-              {SUBSURFACE_ROOMS.map((room, index) => {
-                const built = builtSet.has(room.id)
-                return (
-                  <button
-                    className={`${styles.stageHotspot} ${index === 0 ? styles.stageHotspotVault : styles.stageHotspotLocker}`}
-                    data-testid={`subsurface-room-${room.id}`}
-                    key={room.id}
-                    onClick={() => setActiveRoom(room.id)}
-                  >
-                    <span className={styles.stageHotspotIcon}><RoomIcon id={room.id} size={20} /></span>
-                    <span className={styles.stageHotspotLabel}>{built ? room.name : `BUILD ${room.name}`}</span>
-                    <span className={`${styles.stageHotspotState} ${!built ? styles.stageHotspotStateLocked : ''}`}>
-                      {built ? roomMetric(room, built) || 'ONLINE' : 'UNBUILT'}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
             <div className={styles.stageFooter}>
-              <span>EXCAVATION COMPLETE</span>
-              <span>{parts.length} PARTS REGISTERED</span>
+              <span>SHAFT ONLINE</span>
+              <span>{parts.length} PARTS</span>
             </div>
           </div>
         )}
