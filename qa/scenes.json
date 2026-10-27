@@ -277,6 +277,16 @@
    "tickets": ["SSL-691", "SSL-694"]
   },
   {
+   "id": "economy-arrival",
+   "name": "Welcome back: market board",
+   "flow": "progression",
+   "web": "ui-economy-arrival",
+   "native": "economy-arrival-phone",
+   "tickets": [
+    "SSL-701"
+   ]
+  },
+  {
    "id": "market",
    "name": "Market",
    "flow": "progression",

@@ -34,6 +34,7 @@ import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
+import { economyArrivalSummary } from '@/lib/systems/EconomyArrival'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -92,6 +93,8 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
+  /** Clears the welcome-back market note once read. */
+  onDismissEconomyArrival?: () => void
   onOpenEvents?: () => void
   subsurface?: boolean
   /** SSL-553: the rocket is touching down on the pad after the trip home. */
@@ -101,7 +104,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onOpenEvents, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -261,6 +264,21 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
     : undefined
 
+  // Welcome back: the daily board moved while the player was away. It speaks
+  // from the Exchange when there is one, otherwise from a quiet launchpad.
+  const arrival = player.economyArrival
+  const economyCallout: BuildingCallout | undefined = arrival && !onboardingActive && !coachVisible && onDismissEconomyArrival
+    ? {
+      title: 'Welcome back',
+      body: economyArrivalSummary(arrival),
+      cta: 'Open Market',
+      placement: 'viewport-clear',
+      onCta: () => { onDismissEconomyArrival(); onOpenMarket?.() },
+      onDismiss: onDismissEconomyArrival,
+    }
+    : undefined
+  const economyCalloutAt = !economyCallout ? null : placed.includes('market') ? 'market' : launchpadCallout ? null : 'launchpad'
+
   // One sky control for the craft: flying, arrived and waiting on the pad.
   const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
     if (padLanding || homecoming) return null
@@ -295,7 +313,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: menuOpen || editMode ? undefined : launchpadCallout,
+        callout: menuOpen || editMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
         onClick: () => onFocusBuilding('launchpad'),
       }
     }
@@ -314,6 +332,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         sub: 'SELL ORE',
         status: 'ok' as const,
         w: 150,
+        callout: menuOpen || editMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
         onClick: () => onFocusBuilding('market'),
       }
     }
@@ -448,6 +467,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
             siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
+            operationsOnline={(player.placed ?? []).includes('launchpad')}
             onOpenSilo={() => setSubsurface(true)}
           />
 

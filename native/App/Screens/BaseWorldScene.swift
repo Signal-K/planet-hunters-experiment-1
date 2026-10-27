@@ -41,6 +41,7 @@ struct BaseWorldScene: View {
     @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
     @State private var dragVertical: Bool?
+    @State private var serviceVehicleMoved = false
     private let pulse = true
 
     private var shownKinds: [String] { placed }
@@ -71,6 +72,7 @@ struct BaseWorldScene: View {
                     BaseUnderground(world: world, built: siloBuilt, siloPlaced: siloPlaced, secondTank: secondTank, oreFraction: oreFraction, onBuild: onBuildSilo, onOpen: onShaft, active: camera.depth > 0)
                         .offset(y: ground)
                         .allowsHitTesting(camera.underground)
+                    if placed.contains("launchpad") { operationsApron(world: world) }
                     shaftHead(world: world)
                     ForEach(shownKinds, id: \.self) { kind in
                         structure(kind, world: world)
@@ -99,6 +101,8 @@ struct BaseWorldScene: View {
                 // Frame what is built (the pad site on a fresh base) once; the player pans from there.
                 if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds) }
                 camera.homed = true
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) { serviceVehicleMoved = true }
             }
             .onChange(of: placed) { old, now in
                 if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now) } }
@@ -177,6 +181,29 @@ struct BaseWorldScene: View {
             }
         }
         .allowsHitTesting(camera.depth < 0.5)
+    }
+
+    /// The first successful launch brings the small ground-support complex online.
+    /// It makes the Base read as an operating agency without granting the player
+    /// unbuilt Hangar, Exchange or Control Station gameplay state.
+    private func operationsApron(world: BaseWorld) -> some View {
+        ZStack(alignment: .topLeading) {
+            if let props = WorldAssets.site?.operationsApron?.props {
+                ForEach(props, id: \.id) { prop in
+                    apronProp(prop, world: world)
+                        .opacity(prop.id == "lights" ? 0.72 : 1)
+                        .offset(x: prop.id == "truck" && serviceVehicleMoved ? 24 * world.u : 0)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private func apronProp(_ prop: BaseSiteMap.ApronProp, world: BaseWorld) -> some View {
+        Art.view(prop.src).resizable().interpolation(.none)
+            .frame(width: CGFloat(prop.width) * world.u, height: CGFloat(prop.height) * world.u)
+            .position(x: CGFloat(prop.x) * world.px, y: world.ground - CGFloat(prop.lift) * world.u - CGFloat(prop.height) * world.u / 2)
     }
 
     private func kindLabel(_ kind: String) -> String {

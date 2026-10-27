@@ -371,6 +371,7 @@ public final class GameStore {
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
     public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
+    public func dismissEconomyArrival() { apply(EconomyArrival.applyDismiss(state)) }
     public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target, now: now)) }
     public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
     /// Returns the alerts that fired this call so the caller can notify the player.

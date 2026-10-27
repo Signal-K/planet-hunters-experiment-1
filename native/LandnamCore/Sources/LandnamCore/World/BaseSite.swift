@@ -25,6 +25,14 @@ public struct BaseSiteMap: Decodable, Sendable {
             return left + width / 2 - body / 2
         }
     }
+    public struct ApronProp: Decodable, Sendable {
+        public let id: String, src: String
+        public let x: Double, width: Double, height: Double, lift: Double
+    }
+    public struct OperationsApron: Decodable, Sendable {
+        public let after: String
+        public let props: [ApronProp]
+    }
     public struct Site: Decodable, Sendable, Identifiable {
         public let id: String
         public let x: Double, half: Double
@@ -43,6 +51,7 @@ public struct BaseSiteMap: Decodable, Sendable {
     public let kitScale: KitScale
     public let ground: Ground
     public let structures: [String: Structure]
+    public let operationsApron: OperationsApron?
     public let sites: [Site]
     public let sky: Sky
 

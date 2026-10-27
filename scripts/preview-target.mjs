@@ -18,7 +18,7 @@ const pending = `${out}.${process.pid}.tmp`
 // touched. These fixtures are deliberately representative rather than saved
 // campaign state; use `node scripts/scene.mjs <id>` for an authored scene.
 const SCREENS = [
-  ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
+  ['economyarrival', 'ui-economy-arrival'], ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
   ['mining', 'm1-mining'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],

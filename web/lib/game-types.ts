@@ -229,6 +229,8 @@ export interface Player {
   priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
+  /** Board changes since the last snapshot the player saw; cleared once read. */
+  economyArrival?: import('@/lib/systems/EconomyArrival').EconomyArrival
   /** Immutable evidence that a player-built client structure completed. */
   clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>

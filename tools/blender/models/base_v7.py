@@ -243,40 +243,83 @@ def build_preview(style="mountains", pad_x=150.0, width=402.0):
     camera_for(0, width, screen_v(0, -SOIL_H) + 0.5)
 
 
+# ---------------------------------------------------------------- shared structure modules (SSL-703)
+# Every player building is built from the same parts so the Base reads as one family: a concrete plinth with a
+# blue trim, white hull walls under a blue roof cap, a teal personnel door and a beacon mast. What differs is
+# one large working element that says what the building is for.
+
+PLINTH_H = 2.5
+
+
+def _plinth(name, x0, w, d):
+    box(name, x0 - 1, 0, w + 2, PLINTH_H, d=d + 2, y=STRUCT_Y - 1, colours=("concrete_lit", "concrete", "concrete_dark"))
+    box(f"{name}_trim", x0 - 1, 0.8, w + 2, 0.9, d=0.4, y=STRUCT_Y - 1.3, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
+
+
+def _cap(name, x0, w, z, d, y=None):
+    # A front fascia, not a slab: the tilted camera would show a full-depth cap as a big blue roof.
+    box(name, x0 - 0.6, z, w + 1.2, 2.2, d=1.6, y=(STRUCT_Y if y is None else y) - 0.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
+    box(f"{name}_roof", x0, z + 2.2 - 0.01, w, 0.5, d=d, y=STRUCT_Y if y is None else y, colours=("hull_lit", "hull", "hull_shade"), outline=0.5)
+
+
+def _door(name, x, y=None):
+    box(name, x, PLINTH_H, 5.5, 8.5, d=0.6, y=(STRUCT_Y if y is None else y) - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    box(f"{name}_lamp", x + 1.5, PLINTH_H + 9.4, 2.5, 1.0, d=1.2, y=(STRUCT_Y if y is None else y) - 1.2, colours=("glass", "glass", "glass_dark"), outline=0.3)
+
+
+def _beacon(name, x, z, y):
+    box(f"{name}_mast", x - 0.6, z, 1.2, 9, d=1.2, y=y, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
+    box(f"{name}_lamp", x - 1.3, z + 9, 2.6, 2.0, d=2.6, y=y - 0.7, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+
+
+def _ore_heap(name, cx, z, half, h, y, d, colours):
+    prism(name, [(cx - half, z), (cx + half, z), (cx + half * 0.55, z + h * 0.7), (cx + half * 0.1, z + h), (cx - half * 0.45, z + h * 0.8)], d, y=y, colours=colours, outline=0.6)
+
+
 # ---------------------------------------------------------------- hangar
 
 HANGAR_W = 52.0
 
 
 def build_hangar(fresh=True, frame=True):
-    """Assembly hall: white panelled walls, angled roof, a big blue-framed door, a glazed clerestory."""
+    """Assembly hall: an open bay with a rocket stage standing inside under an overhead crane, so the building
+    reads as where craft are put together. Office annex on the right with the shared door and beacon."""
     if fresh:
         reset_scene()
-    d = 30.0
-    y = STRUCT_Y
-    box("hall", 0, 0, HANGAR_W, 30, d=d, y=y, colours=("hull_lit", "hull", "hull_shade"))
-    # Angled roof: a prism along x whose ridge sits toward the back.
-    roof = [(0, 30), (HANGAR_W, 30), (HANGAR_W - 4, 38), (4, 38)]
-    prism("roof", roof, d, y=y, colours=("hull_lit", "hull_shade", "hull_shade"))
-    box("roof_band", 0, 29, HANGAR_W, 2, d=0.6, y=y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
-    # Panel seams: thin vertical recesses on the front wall.
-    for i in range(1, 5):
-        x = i * HANGAR_W / 5
-        box(f"seam{i}", x - 0.3, 1, 0.6, 27, d=0.3, y=y - 0.2, colours=("seam", "seam", "seam"), outline=0)
-    # Big door: blue frame, segmented shutter.
-    box("door_frame", 5, 0, 24, 22, d=0.8, y=y - 0.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
-    for i in range(6):
-        box(f"shutter{i}", 7, 0.4 + i * 3.4, 20, 2.8, d=0.5, y=y - 0.9, colours=("steel_lit", "steel_lit", "steel"), outline=0)
-    # Clerestory glazing and a side window block.
-    box("glass", 33, 14, 14, 8, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
-    for i in range(1, 3):
-        box(f"mullion{i}", 33 + i * 4.7 - 0.4, 14, 0.8, 8, d=0.4, y=y - 0.9, colours=("hull_lit", "hull_lit", "hull_lit"), outline=0)
-    box("side_door", 38, 0, 6, 9, d=0.6, y=y - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
-    # Roof kit: two vents and an antenna mast with a teal beacon.
-    for x in (8, 16):
-        box(f"vent{x}", x, 37, 5, 3.5, d=5, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    box("antenna", 44, 37, 1.2, 12, d=1.2, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
-    box("antenna_tip", 43.4, 49, 2.4, 1.8, d=2.4, y=y + 13.4, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    y, d, top = STRUCT_Y, 30.0, 38.0
+    bay0, bay1 = 5.0, 33.0
+    _plinth("plinth", 0, HANGAR_W, d)
+    # Bay walls: a left pier, the dark interior back wall, the annex block on the right.
+    box("pier", 0, PLINTH_H, bay0, top - PLINTH_H, d=d, y=y)
+    box("bay_back", bay0, PLINTH_H, bay1 - bay0, top - PLINTH_H, d=3, y=y + d - 3, colours=("steel", "steel_dark", "steel_dark"), outline=0)
+    box("bay_floor", bay0, PLINTH_H - 0.2, bay1 - bay0, 0.4, d=d - 3, y=y, colours=("concrete_dark", "concrete_dark", "concrete_dark"), outline=0)
+    box("annex", bay1, PLINTH_H, HANGAR_W - bay1, 24 - PLINTH_H, d=d, y=y)
+    # Gabled roof over the bay, with the rolled-up door shutter under its eave.
+    prism("roof", [(0, top), (bay1, top), (bay1 - 3, top + 7), (3, top + 7)], d, y=y, colours=("hull_lit", "hull", "hull_shade"))
+    _cap("roof_cap", 0, bay1, top - 1.4, d)
+    box("shutter", bay0, top - 5.6, bay1 - bay0, 4.2, d=1.2, y=y - 0.2, colours=("steel_lit", "steel_lit", "steel"), outline=0.5)
+    for i in range(3):
+        box(f"slat{i}", bay0, top - 5 + i * 1.3, bay1 - bay0, 0.3, d=0.3, y=y - 0.4, colours=("steel", "steel", "steel"), outline=0)
+    # Rocket stage on its stand inside the bay.
+    rx, ry = (bay0 + bay1) / 2, y + 15
+    box("stand", rx - 7, PLINTH_H, 14, 2, d=10, y=ry - 5, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    cylinder("stage", rx, PLINTH_H + 2, 4.6, 15, y=ry, colours=("hull_lit", "hull", "hull_shade"), outline=0.8, verts=18)
+    cylinder("stage_band", rx, PLINTH_H + 11, 4.75, 2.2, y=ry, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0, verts=18)
+    bpy.ops.mesh.primitive_cone_add(vertices=18, radius1=4.6, radius2=0.6, depth=7, location=(rx, ry, PLINTH_H + 2 + 15 + 3.5))
+    nose = bpy.context.active_object
+    nose.name = "nose"
+    faceted(nose, "hull_lit", "hull", "hull_shade")
+    ink(nose, 0.8)
+    for sx in (-1, 1):
+        prism(f"fin{sx}", [(rx + sx * 4.4, PLINTH_H + 2), (rx + sx * 8.4, PLINTH_H + 2), (rx + sx * 4.4, PLINTH_H + 8)], 1.2, y=ry - 0.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.6)
+    # Overhead crane: a rail across the bay and its trolley parked over the nose.
+    box("crane_rail", bay0, top - 9, bay1 - bay0, 1.6, d=2, y=y + 2, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
+    box("trolley", rx - 2.5, top - 11.2, 5, 2.2, d=3, y=y + 1.5, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    # Annex: control window, the shared door and beacon.
+    box("annex_glass", bay1 + 3, 14, HANGAR_W - bay1 - 6, 6, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
+    _cap("annex_cap", bay1, HANGAR_W - bay1, 24 - 1.4, d)
+    _door("door", bay1 + 7)
+    _beacon("beacon", HANGAR_W - 4, 24.8, y + 12)
     cast_shadow("hangar_shadow", 0, HANGAR_W, STRUCT_Y, STRUCT_Y + 30, 10)
     if frame:
         camera_for(-3, HANGAR_W + 13, SHADOW_V0)
@@ -288,37 +331,71 @@ def build_hangar(fresh=True, frame=True):
 STATION_W = 60.0
 
 
+def _dish(name, cx, cz, r, y, tilt_deg):
+    """Parabolic dish: the lower half of a sphere flattened into a bowl, tipped toward the sky on the left."""
+    import math as _m
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=20, ring_count=10, radius=r, location=(0, 0, 0))
+    o = bpy.context.active_object
+    o.name = name
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z > 0.01], context="VERTS")
+    bm.to_mesh(o.data)
+    bm.free()
+    o.scale = (1, 1, 0.42)
+    o.rotation_euler = (0, _m.radians(-tilt_deg), 0)
+    o.location = (cx, y, cz)
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
+    faceted(o, "hull_lit", "hull", "hull_shade", "steel_lit")
+    ink(o, 0.7)
+    return o
+
+
 def build_control_station(fresh=True, frame=True):
-    """Control station: a white operations block under a glazed control room, a dish on the roof and a lattice
-    mast with a teal beacon. The hub for satellites and telescopes."""
+    """Control station: a big tracking dish on a pedestal and an observatory dome over the operations block,
+    so it reads as where telescopes and satellites are run."""
+    import math as _m
     if fresh:
         reset_scene()
-    y = STRUCT_Y
-    # Ground block: white panels, blue base band, a teal side door.
-    box("block", 0, 0, STATION_W, 18, d=26, y=y, colours=("hull_lit", "hull", "hull_shade"))
-    box("block_band", 0, 1.2, STATION_W, 1.6, d=0.6, y=y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
-    for i in range(1, 5):
-        x = i * STATION_W / 5
-        box(f"seam{i}", x - 0.3, 4, 0.6, 12, d=0.3, y=y - 0.2, colours=("seam", "seam", "seam"), outline=0.0)
-    box("door", 6, 0, 8, 11, d=0.6, y=y - 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.6)
-    box("block_glass", 20, 6, 24, 6, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
-    # Control room: a narrower upper floor with a long glazed band and a blue roof edge.
-    box("room", 4, 18, 36, 12, d=20, y=y + 3, colours=("hull_lit", "hull", "hull_shade"))
-    box("room_glass", 7, 21, 30, 6, d=0.6, y=y + 2.4, colours=("glass", "glass", "glass_dark"), outline=0.6)
-    for i in range(1, 6):
-        box(f"room_mullion{i}", 7 + i * 5 - 0.4, 21, 0.8, 6, d=0.4, y=y + 2.1, colours=("hull_lit", "hull_lit", "hull_lit"), outline=0)
-    box("room_cap", 3, 29.4, 38, 2, d=22, y=y + 2.5, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0.7)
-    # Roof dish: a shallow bowl on a short stem, tilted toward the sky.
-    box("dish_stem", 19.2, 31.4, 1.6, 5, d=1.6, y=y + 11, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    prism("dish", [(8, 40), (31, 40), (26, 36.4), (13, 36.4)], 3, y=y + 10, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
-    box("dish_feed", 19.4, 40, 1.2, 4, d=1.2, y=y + 10.9, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
-    # Lattice mast on the right, with cross rungs and a teal beacon.
-    for lx in (46, 51.6):
-        box(f"mast_leg{lx}", lx, 18, 1.4, 38, d=1.4, y=y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    for i in range(7):
-        box(f"mast_rung{i}", 46, 20 + i * 5, 7, 1.0, d=1.2, y=y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.3)
-    box("mast_beacon", 47.2, 56, 3.6, 2.4, d=3.6, y=y + 7.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.5)
-    box("mast_mount", 44, 16, 11, 3, d=12, y=y + 4, colours=("hull_lit", "hull", "hull_shade"), outline=0.6)
+    y, d = STRUCT_Y, 26.0
+    _plinth("plinth", 0, STATION_W, d)
+    # Operations block with a long glazed console band, the shared door and roof cap.
+    box("block", 0, PLINTH_H, 36, 16 - PLINTH_H, d=d, y=y)
+    box("console_glass", 11, 8, 22, 5, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
+    for i in range(1, 4):
+        box(f"mullion{i}", 11 + i * 5.5 - 0.4, 8, 0.8, 5, d=0.4, y=y - 0.9, colours=("hull_lit",) * 3, outline=0)
+    _door("door", 3)
+    _cap("block_cap", 0, 36, 16 - 1.4, d)
+    # Observatory dome on the roof, with its shutter slit open to the sky.
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=20, ring_count=10, radius=9, location=(17, y + 13, 16.8))
+    dome = bpy.context.active_object
+    dome.name = "dome"
+    bm = bmesh.new()
+    bm.from_mesh(dome.data)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z < -0.01], context="VERTS")
+    bm.to_mesh(dome.data)
+    bm.free()
+    faceted(dome, "hull_lit", "hull", "hull_shade")
+    ink(dome, 0.8)
+    prism("slit", [(15.6, 17.2), (18.4, 17.2), (18.4, 25.6), (15.6, 25.6)], 0.6, y=y + 3.6, colours=("steel_dark",) * 3, outline=0)
+    box("scope", 16.2, 23, 1.6, 4.5, d=1.6, y=y + 5, colours=("steel_lit", "steel", "steel_dark"), outline=0.3)
+    # Tracking dish on a pedestal and yoke to the right, the station's working end.
+    box("pedestal", 41, PLINTH_H, 12, 10, d=12, y=y + 6, colours=("hull_lit", "hull", "hull_shade"))
+    _cap("pedestal_cap", 41, 12, 11.4, 12, y=y + 6)
+    box("yoke", 45.6, 13.6, 2.8, 9, d=2.8, y=y + 10.6, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    _dish("dish", 47, 31, 13, y + 12, 32)
+    tip = (47 - _m.sin(_m.radians(32)) * 9, 31 + _m.cos(_m.radians(32)) * 9)
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    feed = bpy.context.active_object
+    feed.name = "feed_arm"
+    feed.scale = (0.8, 0.8, 9.5)
+    feed.rotation_euler = (0, _m.radians(-32), 0)
+    feed.location = ((47 + tip[0]) / 2, y + 11, (25.6 + tip[1]) / 2)
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
+    faceted(feed, "steel_lit", "steel", "steel_dark")
+    ink(feed, 0.4)
+    box("feed", tip[0] - 1.3, tip[1] - 1, 2.6, 2.6, d=2.6, y=y + 9.7, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    _beacon("beacon", 4, 16.8, y + 8)
     cast_shadow("station_shadow", 0, STATION_W, STRUCT_Y, STRUCT_Y + 26, 8)
     if frame:
         camera_for(-3, STATION_W + 11, SHADOW_V0)
@@ -507,35 +584,47 @@ EXCHANGE_W = 110.0
 
 
 def build_exchange(fresh=True, frame=True):
-    """Cargo dock: a sell pad, a conveyor carrying crates into a white dock shed, a price board on a mast."""
+    """Ore exchange: hoppers of sorted ore feed a conveyor into an open trading warehouse stacked with sold
+    crates, under a price board showing one price up and one down. It reads as where ore is sold."""
     if fresh:
         reset_scene()
-    y = STRUCT_Y
-    # Sell pad: low concrete platform with a blue edge band.
-    box("sellpad", 0, 0, 34, 4, d=26, y=y + 2, colours=("concrete_lit", "concrete", "concrete_dark"))
-    box("sellpad_band", 0, 1.4, 34, 1.2, d=0.6, y=y + 1.6, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
-    # Conveyor from the pad to the shed: belt on legs, rollers along the face.
-    box("belt", 30, 9, 44, 2.4, d=8, y=y + 9, colours=("steel_lit", "steel", "steel_dark"), outline=0.7)
-    for lx in (34, 50, 66):
-        box(f"leg{lx}", lx, 0, 2, 9, d=2, y=y + 12, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    for i in range(10):
-        cylinder(f"roller{i}", 32 + i * 4.2, 9.2, 0.9, 1.6, y=y + 8.6, colours=("steel_dark",) * 3, outline=0, verts=8)
-    # Crates riding the belt and stacked on the pad.
-    crates = [(36, 11.4, 6, 5, "hull"), (47, 11.4, 5, 5, "trim_blue"), (57, 11.4, 6, 6, "hull"), (4, 4, 8, 7, "trim_teal"), (13, 4, 7, 6, "hull"), (6, 11, 6, 5, "hull")]
-    for i, (cx, cz, w, h, c) in enumerate(crates):
+    y, d = STRUCT_Y, 26.0
+    _plinth("plinth", 0, EXCHANGE_W, d)
+    # Three ore hoppers on legs, each heaped with a different ore.
+    ores = [("rock_lit", "rock", "rock_dark"), ("mesa_lit", "mesa", "mesa_dark"), ("glass", "trim_teal", "trim_blue_dark")]
+    for i, ore in enumerate(ores):
+        hx = 2 + i * 11
+        for lx in (hx + 1, hx + 7.4):
+            box(f"hopper{i}_leg{lx}", lx, PLINTH_H, 1.4, 6, d=1.4, y=y + 8, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
+        prism(f"hopper{i}", [(hx + 2.4, PLINTH_H + 6), (hx + 7.6, PLINTH_H + 6), (hx + 10, PLINTH_H + 14), (hx, PLINTH_H + 14)], 9, y=y + 4, colours=("steel_lit", "steel", "steel_dark"), outline=0.6)
+        box(f"hopper{i}_band", hx, PLINTH_H + 12, 10, 1.2, d=0.4, y=y + 3.7, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
+        _ore_heap(f"ore{i}", hx + 5, PLINTH_H + 14, 4.6, 4.2, y + 5, 7, ore)
+    # Conveyor from the hoppers up into the warehouse.
+    belt = prism("belt", [(30, PLINTH_H + 7), (72, PLINTH_H + 13), (72, PLINTH_H + 15.2), (30, PLINTH_H + 9.2)], 7, y=y + 9, colours=("steel_lit", "steel", "steel_dark"), outline=0.6)
+    for lx, h in ((40, 8.4), (54, 10.4), (66, 12.1)):
+        box(f"belt_leg{lx}", lx, PLINTH_H, 1.6, h, d=1.6, y=y + 12, colours=("steel_lit", "steel", "steel_dark"), outline=0.4)
+    for i, (cx, c) in enumerate(((38, "rock"), (50, "mesa"), (61, "trim_teal"))):
+        z = PLINTH_H + 9.2 + (cx - 30) * 6 / 42
+        _ore_heap(f"belt_ore{i}", cx, z, 2.2, 2.4, y + 10, 5, (c + "_lit" if c != "trim_teal" else "glass", c, c + "_dark" if c != "trim_teal" else "trim_blue_dark"))
+    # Open warehouse: two piers and a gabled roof over a dark hall with sold crates stacked inside.
+    w0, w1, top = 72.0, EXCHANGE_W, 26.0
+    box("hall_back", w0, PLINTH_H, w1 - w0, top - PLINTH_H, d=3, y=y + d - 3, colours=("steel", "steel_dark", "steel_dark"), outline=0)
+    box("pier_l", w0, PLINTH_H, 4, top - PLINTH_H, d=d, y=y)
+    box("pier_r", w1 - 4, PLINTH_H, 4, top - PLINTH_H, d=d, y=y)
+    prism("hall_roof", [(w0 - 1, top), (w1 + 1, top), (w1 - 3, top + 6), (w0 + 3, top + 6)], d, y=y, colours=("hull_lit", "hull", "hull_shade"))
+    _cap("hall_cap", w0, w1 - w0, top - 1.4, d)
+    crates = [(78, 0, 7, "trim_blue"), (86, 0, 7, "hull"), (94, 0, 7, "trim_teal"), (82, 7, 6, "hull"), (90, 7, 6, "trim_blue")]
+    for i, (cx, cz, s, c) in enumerate(crates):
         shade = {"hull": ("hull_lit", "hull", "hull_shade"), "trim_blue": ("trim_blue", "trim_blue", "trim_blue_dark"), "trim_teal": ("trim_teal", "trim_teal", "trim_blue_dark")}[c]
-        box(f"crate{i}", cx, cz, w, h, d=w, y=y + 10 if cz > 10 and cx > 30 else y + 6, colours=shade, outline=0.6)
-    # Dock shed the belt runs into.
-    box("shed", 72, 0, 38, 24, d=26, y=y, colours=("hull_lit", "hull", "hull_shade"))
-    prism("shed_roof", [(72, 24), (110, 24), (107, 29), (75, 29)], 26, y=y, colours=("hull_lit", "hull_shade", "hull_shade"))
-    box("shed_band", 72, 22, 38, 2, d=0.6, y=y - 0.4, colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
-    box("shed_door", 74, 8, 12, 9, d=0.6, y=y - 0.6, colours=("steel_dark", "steel_dark", "steel_dark"), outline=0.6)
-    box("shed_window", 92, 10, 14, 6, d=0.6, y=y - 0.6, colours=("glass", "glass", "glass_dark"), outline=0.6)
-    # Price board on a mast: dark panel with three teal price rows.
-    box("mast", 22, 4, 1.6, 30, d=1.6, y=y + 14, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
-    box("board", 12, 30, 22, 13, d=1.6, y=y + 12, colours=("trim_blue_dark", "trim_blue_dark", "outline"), outline=0.7)
-    for r in range(3):
-        box(f"row{r}", 14, 32 + r * 3.6, 18 - r * 4, 1.6, d=0.4, y=y + 11.7, colours=("trim_teal", "trim_teal", "trim_teal"), outline=0)
+        box(f"crate{i}", cx, PLINTH_H + cz, s, s, d=s, y=y + 14, colours=shade, outline=0.6)
+    _beacon("beacon", w1 - 6, top + 6, y + 13)
+    # Price board on a mast between the hoppers and the hall: one price up, one down.
+    box("board_mast", 50, PLINTH_H, 1.6, 30, d=1.6, y=y + 16, colours=("steel_lit", "steel", "steel_dark"), outline=0.5)
+    box("board", 40, 30, 22, 12, d=1.6, y=y + 15, colours=("trim_blue_dark", "trim_blue_dark", "outline"), outline=0.7)
+    prism("price_up", [(43, 36.6), (48, 36.6), (45.5, 40.2)], 0.4, y=y + 14.7, colours=("trim_teal",) * 3, outline=0)
+    box("price_up_row", 50, 37.4, 9, 1.6, d=0.4, y=y + 14.7, colours=("trim_teal",) * 3, outline=0)
+    prism("price_down", [(43, 35.2), (48, 35.2), (45.5, 31.6)], 0.4, y=y + 14.7, colours=("glass",) * 3, outline=0)
+    box("price_down_row", 50, 32.6, 6, 1.6, d=0.4, y=y + 14.7, colours=("glass",) * 3, outline=0)
     cast_shadow("exchange_shadow", 0, EXCHANGE_W, STRUCT_Y, STRUCT_Y + 26, 8)
     if frame:
         camera_for(-3, EXCHANGE_W + 11, SHADOW_V0)

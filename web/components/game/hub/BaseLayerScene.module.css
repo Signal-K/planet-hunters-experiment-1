@@ -50,13 +50,42 @@
   cursor: pointer;
 }
 
+.operationsApron {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.apronProp {
+  position: absolute;
+  display: block;
+  height: auto;
+  bottom: calc(var(--hub-ground) + 1 * var(--px, 3px));
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 1px rgb(14 28 42 / 28%));
+}
+.lights { bottom: calc(var(--hub-ground) + 3 * var(--px, 3px)); opacity: .72; }
+.truck {
+  z-index: 2;
+  bottom: calc(var(--hub-ground) + 1 * var(--px, 3px));
+  animation: apronTruck 12s ease-in-out infinite alternate;
+}
+
+@keyframes apronTruck {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(calc(-50% + 24 * var(--px, 3px))); }
+}
+
 @keyframes shaftPulse {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shaftButton { animation: none; }
+  .shaftButton, .truck { animation: none; }
 }
 
 .padStack {

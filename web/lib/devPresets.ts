@@ -164,6 +164,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base with the Exchange built and a new daily market board since the last visit: price moves and a client level-up', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -861,6 +862,28 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
+
+    case 'ui-economy-arrival': {
+      const base = fixture('cp-late') as GameState
+      return {
+        ...base,
+        player: {
+          ...base.player,
+          // The hub scene authors plots 0-3 only, so the Exchange needs a real one. All four base structures
+          // stand here so the set can be reviewed together.
+          placed: ['launchpad', 'market', 'hangar', 'control-station'],
+          placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
+          economyArrival: {
+            fromDate: '2026-10-24', toDate: '2026-10-27', idempotencyKey: 'daily-economy:2026-10-27',
+            moves: [
+              { materialId: 'nickel', materialName: 'Nickel', changePct: 11 },
+              { materialId: 'copper', materialName: 'Copper', changePct: -6 },
+            ],
+            levelUps: [{ clientId: 'atlas-aggregate', clientName: 'Atlas Aggregate', levelAfter: 3 }],
+          },
+        },
+      }
+    }
 
     case 'cp-late':
       return {

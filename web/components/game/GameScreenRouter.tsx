@@ -309,6 +309,7 @@ function ScreenBody({
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
+          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined }))}
           onOpenEvents={() => {
             // Completing the sky reading should reveal the event brief first.
             // Accepting the focused event is the explicit step that starts

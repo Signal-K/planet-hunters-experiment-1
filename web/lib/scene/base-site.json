@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site.",
+  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no player-owned buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site. After that first build, an agency-operated support apron comes online without changing the player's owned structures.",
   "strip": {
     "width": 520
   },
@@ -29,7 +29,7 @@
       "body": 52,
       "left": -3,
       "width": 68,
-      "height": 56.845,
+      "height": 55.165,
       "foot": 4.5
     },
     "launchpad": {
@@ -51,7 +51,7 @@
       "body": 60,
       "left": -3,
       "width": 74,
-      "height": 63.176,
+      "height": 46.555,
       "foot": 4.5
     },
     "market": {
@@ -60,12 +60,74 @@
       "body": 110,
       "left": -3,
       "width": 124,
-      "height": 48.954,
+      "height": 49.059,
       "foot": 4.5
     },
     "surface-silo": {
       "site": "shaft"
     }
+  },
+  "operationsApron": {
+    "after": "launchpad",
+    "about": "Non-owned launch-support dressing that appears after the first launchpad. Width, height and footing are authored here for web and native parity; this does not unlock or replace any player-built structure.",
+    "props": [
+      {
+        "id": "hangar",
+        "src": "base/kit/starter-hangar.png",
+        "x": 37,
+        "width": 72,
+        "height": 39,
+        "lift": 3
+      },
+      {
+        "id": "cabin",
+        "src": "base/kit/starter-cabin.png",
+        "x": 83,
+        "width": 30,
+        "height": 32,
+        "lift": 3
+      },
+      {
+        "id": "tower",
+        "src": "base/kit/water-tower.png",
+        "x": 230,
+        "width": 28,
+        "height": 39,
+        "lift": 2
+      },
+      {
+        "id": "solar",
+        "src": "base/kit/starter-solar-hut.png",
+        "x": 279,
+        "width": 58,
+        "height": 28,
+        "lift": 3
+      },
+      {
+        "id": "shed",
+        "src": "base/kit/starter-shed.png",
+        "x": 360,
+        "width": 48,
+        "height": 23,
+        "lift": 3
+      },
+      {
+        "id": "lights",
+        "src": "base/kit/streetlights-fence.png",
+        "x": 294,
+        "width": 88,
+        "height": 25,
+        "lift": 3
+      },
+      {
+        "id": "truck",
+        "src": "base/kit/truck-a.png",
+        "x": 52,
+        "width": 28,
+        "height": 16,
+        "lift": 1
+      }
+    ]
   },
   "sites": [
     {

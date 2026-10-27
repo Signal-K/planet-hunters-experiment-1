@@ -46,6 +46,22 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Base with the Exchange and a new daily board since the last visit (web `ui-economy-arrival`).
+    static func economyArrivalState() -> GameState {
+        var gs = webHubState()
+        gs.player.placed = ["launchpad", "market", "hangar", "control-station"]
+        gs.player.placementPlots = ["launchpad": 0, "market": 1, "hangar": 2, "control-station": 3]
+        gs.player.extras["economyArrival"] = .object([
+            "fromDate": .string("2026-10-24"), "toDate": .string("2026-10-27"),
+            "moves": .array([
+                .object(["materialId": .string("nickel"), "materialName": .string("Nickel"), "changePct": .number(11)]),
+                .object(["materialId": .string("copper"), "materialName": .string("Copper"), "changePct": .number(-6)]),
+            ]),
+            "levelUps": .array([.object(["clientId": .string("atlas-aggregate"), "clientName": .string("Atlas Aggregate"), "levelAfter": .number(3)])]),
+        ])
+        return gs
+    }
+
     static func basePlayer() -> GameState {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
@@ -298,6 +314,7 @@ enum SceneCatalog {
         scene("takeon-live-landscape", 402, w: 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("friends-landscape", 428, w: 926) { FriendsSheet(onClose: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
+        scene("economy-arrival-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: economyArrivalState())) },
         scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
         scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },

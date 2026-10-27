@@ -259,6 +259,8 @@ struct HubScreen: View {
             HudGearClock(onSettings: { showSettings = true }, onFriends: { showFriends = true }, onNotifications: { showNotifications = true }, notificationCount: notificationCount)
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
+            } else if !placing, let summary = EconomyArrival.summary(store.player) {
+                ArrivalNote(width: z.contractCard.width, summary: summary)
             }
             if portrait && !(placing && upgrading != nil) {
                 SkyEventChip(allDay: true)
@@ -368,6 +370,47 @@ private struct ContractCard: View {
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
                     }.buttonStyle(.plain)
                 }
+            }
+            .padding(10)
+            .background(Theme.hudPanel, in: UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12))
+            .overlay(UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12).stroke(Theme.hudInk, lineWidth: 1.5))
+        }
+        .frame(width: width)
+    }
+}
+
+/// Welcome back: what moved on the shared daily market board while the player was away (SSL-701).
+private struct ArrivalNote: View {
+    @Environment(GameStore.self) private var store
+    let width: CGFloat
+    let summary: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                Text("WELCOME BACK").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudMint)
+                    .padding(.horizontal, 12).frame(height: 24)
+                    .background(Theme.hudInk, in: UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
+                Spacer(minLength: 0)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 4) {
+                    Text(summary).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button { store.dismissEconomyArrival() } label: {
+                        Image(systemName: "xmark").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
+                            .frame(width: 44, height: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel("Dismiss")
+                    .padding(.top, -10).padding(.trailing, -8)
+                }
+                Button { store.dismissEconomyArrival(); store.go(.market) } label: {
+                    Text("OPEN MARKET").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
+                }.buttonStyle(.plain)
             }
             .padding(10)
             .background(Theme.hudPanel, in: UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12))

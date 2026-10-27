@@ -19,6 +19,7 @@ export type SiteId = 'hall' | 'pad' | 'ops' | 'exchange' | 'shaft'
 export interface BaseSite { id: SiteId; x: number; half: number; plot: number | null; label: string }
 /** `body` is the structure's own width; the sprite (`left`, `width`) is wider by the shadow it casts to the right. */
 export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
+export interface ApronProp { id: string; src: string; x: number; width: number; height: number; lift: number }
 export interface SkyGrade {
   top: string
   mid: string
@@ -31,6 +32,7 @@ export interface SkyGrade {
 
 export const SITES = site.sites as BaseSite[]
 const STRUCTURES = site.structures as Record<string, StructureSprite>
+export const OPERATIONS_APRON = site.operationsApron as { after: string; props: ApronProp[] }
 const WEB_SITE_COMPRESSION = 0.84
 
 /**
