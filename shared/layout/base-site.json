@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no player-owned buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site. After that first build, an agency-operated support apron comes online without changing the player's owned structures.",
+  "about": "Base site map shared by web (web/lib/scene/base-site.json, copied by scripts/sync-base-site.mjs) and native (bundled). Kit units: the base strip is 520 units wide; one unit is `kitScale` pt on screen. Art comes from tools/blender/models/base_v7.py and terrain_v7.py; sprite metrics are the Blender camera frames. The base is a paved launch complex on flat land: no mountains, no forest, no player-owned buildings until the player builds them. A fresh base asks for the launchpad first, on the pad site. Early activity comes from the authored range and sky traffic, not unowned surface facilities.",
   "strip": {
     "width": 520
   },
@@ -13,7 +13,7 @@
     "rule": "Portrait: view width / portraitFit, kept between portraitMin and phone, so the hangar and pad both fit. Landscape: phone (2) under 600 pt tall, else large (3)."
   },
   "ground": {
-    "lineFromBottom": 0.2,
+    "lineFromBottom": 0.3,
     "about": "One paved ground image under the whole strip (concrete apron, service road, drains). `above` and `below` are kit units above and below the ground line (the strip's front edge); `left` is where the image starts on the strip. Below the image the ground continues in `deep`.",
     "src": "base/v7/ground/ground-complex.jpg",
     "left": -80,

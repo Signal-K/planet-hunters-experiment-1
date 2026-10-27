@@ -36,10 +36,10 @@ describe('base site map', () => {
     }
   })
 
-  it('fits the complete strip across a landscape view while preserving the portrait fit', () => {
+  it('fits the active Base footprint across landscape while preserving the portrait fit', () => {
     expect(kitScale({ w: 390, h: 844 })).toBe(1.56)
-    expect(kitScale({ w: 926, h: 428 })).toBe(1.78)
-    expect(kitScale({ w: 1440, h: 900 })).toBe(2.77)
+    expect(kitScale({ w: 926, h: 428 })).toBe(2)
+    expect(kitScale({ w: 1440, h: 900 })).toBe(3)
   })
 
   it('frames what is built: the pad site on a fresh base, hangar and pad whole on every phone', () => {

@@ -50,7 +50,10 @@ export function kitScale(view: { w: number; h: number }): number {
   const k = site.kitScale
   if (view.h > view.w * 1.15) return Math.round(Math.min(k.phone, Math.max(k.portraitMin, view.w / k.portraitFit)) * 100) / 100
   const preferred = view.h < k.largeMinHeight ? k.phone : k.large
-  return Math.round(Math.min(preferred, view.w / STRIP_W) * 100) / 100
+  // The sites themselves occupy the middle 460 units. Framing that active
+  // Base keeps every early facility visible without shrinking the scene to
+  // include empty range on both sides.
+  return Math.round(Math.min(preferred, view.w / 460) * 100) / 100
 }
 
 /** Strip x (kit units) the camera starts centred on: the middle of everything built, or the pad site on a fresh

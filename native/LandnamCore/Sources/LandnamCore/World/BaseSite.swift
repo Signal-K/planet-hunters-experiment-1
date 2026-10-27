@@ -61,7 +61,7 @@ public struct BaseSiteMap: Decodable, Sendable {
     public func scale(w: Double, h: Double) -> Double {
         if h > w * 1.15 { return (min(kitScale.phone, max(kitScale.portraitMin, w / kitScale.portraitFit)) * 100).rounded() / 100 }
         let preferred = h < kitScale.largeMinHeight ? kitScale.phone : kitScale.large
-        return (min(preferred, w / strip.width) * 100).rounded() / 100
+        return (min(preferred, w / 460) * 100).rounded() / 100
     }
 
     public func structure(_ kind: String) -> Structure? { structures[kind == "garage" ? "hangar" : kind] }

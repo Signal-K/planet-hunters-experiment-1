@@ -100,7 +100,7 @@
       "h": 428
     },
     "kinds": [],
-    "scale": 1.78,
+    "scale": 2,
     "center": 218,
     "rects": []
   },
@@ -112,14 +112,14 @@
     "kinds": [
       "launchpad"
     ],
-    "scale": 1.78,
+    "scale": 2,
     "center": 218,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 470.12,
-        "width": 199.36,
-        "height": 175.576
+        "centerX": 471,
+        "width": 224,
+        "height": 197.276
       }
     ]
   },
@@ -132,20 +132,20 @@
       "launchpad",
       "hangar"
     ],
-    "scale": 1.78,
+    "scale": 2,
     "center": 183.3,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 531.886,
-        "width": 199.36,
-        "height": 175.576
+        "centerX": 540.4,
+        "width": 224,
+        "height": 197.276
       },
       {
         "kind": "hangar",
-        "centerX": 369.194,
-        "width": 121.04,
-        "height": 98.194
+        "centerX": 357.6,
+        "width": 136,
+        "height": 110.33
       }
     ]
   },
@@ -160,32 +160,32 @@
       "control-station",
       "market"
     ],
-    "scale": 1.78,
+    "scale": 2,
     "center": 266.1,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 384.502,
-        "width": 199.36,
-        "height": 175.576
+        "centerX": 374.8,
+        "width": 224,
+        "height": 197.276
       },
       {
         "kind": "hangar",
-        "centerX": 221.81,
-        "width": 121.04,
-        "height": 98.194
+        "centerX": 192,
+        "width": 136,
+        "height": 110.33
       },
       {
         "kind": "control-station",
-        "centerX": 519.07,
-        "width": 131.72,
-        "height": 82.868
+        "centerX": 526,
+        "width": 148,
+        "height": 93.11
       },
       {
         "kind": "market",
-        "centerX": 668.59,
-        "width": 220.72,
-        "height": 87.325
+        "centerX": 694,
+        "width": 248,
+        "height": 98.118
       }
     ]
   },
@@ -195,7 +195,7 @@
       "h": 900
     },
     "kinds": [],
-    "scale": 2.77,
+    "scale": 3,
     "center": 218,
     "rects": []
   },
@@ -207,14 +207,14 @@
     "kinds": [
       "launchpad"
     ],
-    "scale": 2.77,
+    "scale": 3,
     "center": 218,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 731.08,
-        "width": 310.24,
-        "height": 273.227
+        "centerX": 732,
+        "width": 336,
+        "height": 295.914
       }
     ]
   },
@@ -227,20 +227,20 @@
       "launchpad",
       "hangar"
     ],
-    "scale": 2.77,
+    "scale": 3,
     "center": 183.3,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 827.199,
-        "width": 310.24,
-        "height": 273.227
+        "centerX": 836.1,
+        "width": 336,
+        "height": 295.914
       },
       {
         "kind": "hangar",
-        "centerX": 574.021,
-        "width": 188.36,
-        "height": 152.807
+        "centerX": 561.9,
+        "width": 204,
+        "height": 165.495
       }
     ]
   },
@@ -255,32 +255,32 @@
       "control-station",
       "market"
     ],
-    "scale": 2.77,
+    "scale": 3,
     "center": 266.1,
     "rects": [
       {
         "kind": "launchpad",
-        "centerX": 597.843,
-        "width": 310.24,
-        "height": 273.227
+        "centerX": 587.7,
+        "width": 336,
+        "height": 295.914
       },
       {
         "kind": "hangar",
-        "centerX": 344.665,
-        "width": 188.36,
-        "height": 152.807
+        "centerX": 313.5,
+        "width": 204,
+        "height": 165.495
       },
       {
         "kind": "control-station",
-        "centerX": 807.255,
-        "width": 204.98,
-        "height": 128.957
+        "centerX": 814.5,
+        "width": 222,
+        "height": 139.665
       },
       {
         "kind": "market",
-        "centerX": 1039.935,
-        "width": 343.48,
-        "height": 135.893
+        "centerX": 1066.5,
+        "width": 372,
+        "height": 147.177
       }
     ]
   }

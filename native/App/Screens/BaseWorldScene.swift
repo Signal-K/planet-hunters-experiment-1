@@ -243,7 +243,7 @@ struct BaseWorldScene: View {
             .frame(width: width, height: height, alignment: .bottomLeading)
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
-            .scaleEffect(kind == "launchpad" ? 0.58 : 1, anchor: .bottom)
+            .scaleEffect(kind == "launchpad" ? 0.82 : 1, anchor: .bottom)
         }
         .buttonStyle(.plain)
         .position(x: centerX, y: bottom - height / 2)
