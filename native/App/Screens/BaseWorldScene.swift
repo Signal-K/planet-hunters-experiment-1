@@ -41,7 +41,6 @@ struct BaseWorldScene: View {
     @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
     @State private var dragVertical: Bool?
-    @State private var serviceVehicleMoved = false
     private let pulse = true
 
     private var shownKinds: [String] { placed }
@@ -101,8 +100,6 @@ struct BaseWorldScene: View {
                 // Frame what is built (the pad site on a fresh base) once; the player pans from there.
                 if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds) }
                 camera.homed = true
-                guard !reduceMotion else { return }
-                withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) { serviceVehicleMoved = true }
             }
             .onChange(of: placed) { old, now in
                 if now.contains("launchpad") && !old.contains("launchpad") { withAnimation(.easeInOut(duration: 0.5)) { camera.x = world.homeX(now) } }
@@ -191,8 +188,6 @@ struct BaseWorldScene: View {
             if let props = WorldAssets.site?.operationsApron?.props {
                 ForEach(props, id: \.id) { prop in
                     apronProp(prop, world: world)
-                        .opacity(prop.id == "lights" ? 0.72 : 1)
-                        .offset(x: prop.id == "truck" && serviceVehicleMoved ? 24 * world.u : 0)
                 }
             }
         }
@@ -246,7 +241,7 @@ struct BaseWorldScene: View {
             .frame(width: width, height: height, alignment: .bottomLeading)
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
-            .scaleEffect(kind == "launchpad" ? 0.68 : 1, anchor: .bottom)
+            .scaleEffect(kind == "launchpad" ? 0.58 : 1, anchor: .bottom)
         }
         .buttonStyle(.plain)
         .position(x: centerX, y: bottom - height / 2)

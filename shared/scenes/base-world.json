@@ -416,6 +416,40 @@
         660
       ],
       "sky": true
+    },
+    {
+      "id": "range-balloon",
+      "sprite": "balloon",
+      "x": 330,
+      "y": 155,
+      "depth": 0.08,
+      "layer": 4,
+      "body": {
+        "wind": 1,
+        "vx": 0.35
+      },
+      "wrap": [
+        -40,
+        560
+      ],
+      "sky": true
+    },
+    {
+      "id": "range-rocket",
+      "sprite": "far-rocket",
+      "x": 430,
+      "y": 112,
+      "depth": 0.06,
+      "layer": 4,
+      "body": {
+        "wind": 1,
+        "vx": 0.18
+      },
+      "wrap": [
+        -30,
+        550
+      ],
+      "sky": true
     }
   ],
   "prefabs": {
