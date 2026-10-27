@@ -174,18 +174,21 @@ export function compileAll(options: CompileOptions): CompileResult {
     for (const path of paths) outputs.push({ path, content: json(runtime), sources: [source] })
   }
 
-  const constellationText = readText(CONSTELLATION_SOURCE)
-  const constellationParsed = parseToml(constellationText)
-  if (!constellationParsed.ok) {
-    diagnostics.push({ file: CONSTELLATION_SOURCE, severity: 'error', code: 'toml-syntax', message: constellationParsed.error.message, line: constellationParsed.error.line, column: constellationParsed.error.column, endLine: constellationParsed.error.line, endColumn: constellationParsed.error.column + 1 })
-  } else {
-    const { format: _format, ...runtime } = constellationParsed.doc.value as Record<string, unknown>
-    const text = json(runtime)
-    outputs.push(
-      { path: CONSTELLATION_OUTPUTS[0], content: text, sources: [CONSTELLATION_SOURCE] },
-      { path: CONSTELLATION_OUTPUTS[1], content: text, sources: [CONSTELLATION_SOURCE] },
-      { path: CONSTELLATION_OUTPUTS[2], content: swiftConstellationSource(text), sources: [CONSTELLATION_SOURCE] },
-    )
+  const constellationPath = join(root, CONSTELLATION_SOURCE)
+  if (existsSync(constellationPath) || Object.hasOwn(overlay, CONSTELLATION_SOURCE)) {
+    const constellationText = readText(CONSTELLATION_SOURCE)
+    const constellationParsed = parseToml(constellationText)
+    if (!constellationParsed.ok) {
+      diagnostics.push({ file: CONSTELLATION_SOURCE, severity: 'error', code: 'toml-syntax', message: constellationParsed.error.message, line: constellationParsed.error.line, column: constellationParsed.error.column, endLine: constellationParsed.error.line, endColumn: constellationParsed.error.column + 1 })
+    } else {
+      const { format: _format, ...runtime } = constellationParsed.doc.value as Record<string, unknown>
+      const text = json(runtime)
+      outputs.push(
+        { path: CONSTELLATION_OUTPUTS[0], content: text, sources: [CONSTELLATION_SOURCE] },
+        { path: CONSTELLATION_OUTPUTS[1], content: text, sources: [CONSTELLATION_SOURCE] },
+        { path: CONSTELLATION_OUTPUTS[2], content: swiftConstellationSource(text), sources: [CONSTELLATION_SOURCE] },
+      )
+    }
   }
 
   const missionSources = listDocs(root).filter(d => d.kind === 'mission').map(d => d.relPath)
