@@ -206,7 +206,7 @@ export function BaseDock({
           <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
         </div>
         <div className="scene-location-actions" data-action-count={locationActionCount}>
-          {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
+          {showLocationBuild && <DockWordButton className="scene-location-action--build" data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>

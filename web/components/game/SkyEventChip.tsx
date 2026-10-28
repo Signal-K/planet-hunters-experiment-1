@@ -71,7 +71,10 @@ export default function SkyEventChip({
     captureGameEvent('sky_event_seen', { event_id: preset.eventId, surface })
   }, [preset, surface])
 
-  if (!preset) return null
+  // The badge is the player's completed-event receipt. Keeping a live-event
+  // launcher visible after that point turns a finished loop into permanent HUD
+  // clutter; the badge remains available in the event history instead.
+  if (!preset || (surface === 'base' && orionids && badgeTier)) return null
   return (
     <>
       {orionids && (

@@ -170,6 +170,10 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
+      { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
+      { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
+      { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
+      { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -273,6 +277,21 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'hub-biome-mountains':
+    case 'hub-biome-desert':
+    case 'hub-biome-tundra':
+    case 'hub-biome-coast': {
+      const earthBiome = name.replace('hub-biome-', '') as Player['earthBiome']
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, earthBiome, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+    }
 
     case 'constellation-hub':
       return {

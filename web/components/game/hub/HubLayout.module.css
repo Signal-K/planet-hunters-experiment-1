@@ -56,6 +56,23 @@
   pointer-events: none;
 }
 
+/* Build choices are a compact command shelf, not overlapping price pills.
+   The grid keeps each structure's name and cost together on small phones. */
+.buildOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 8px;
+  width: min(720px, calc(100vw - 24px));
+  max-height: 124px;
+  overflow-y: auto;
+  padding: 2px;
+  pointer-events: auto;
+}
+
+@media (max-width: 520px) {
+  .buildOptions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .topHud {
   position: absolute;
   inset: 0 0 auto;

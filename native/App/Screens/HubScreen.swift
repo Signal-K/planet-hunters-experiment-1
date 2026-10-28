@@ -266,9 +266,6 @@ struct HubScreen: View {
             } else if !placing, let summary = EconomyArrival.summary(store.player) {
                 ArrivalNote(width: z.contractCard.width, summary: summary)
             }
-            if portrait && !(placing && upgrading != nil) {
-                SkyEventChip(allDay: true)
-            }
         }
         .padding(.leading, max(insets.leading + z.inset, 12))
         .padding(.top, max(insets.top + z.inset, 12))
@@ -277,7 +274,10 @@ struct HubScreen: View {
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
-        return HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
+        return VStack(alignment: .trailing, spacing: 8) {
+            if !(placing && upgrading != nil) { SkyEventChip(allDay: true) }
+            HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
+        }
         .padding(.trailing, max(insets.trailing + z.inset, 12))
         .padding(.top, max(insets.top + z.inset, 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)

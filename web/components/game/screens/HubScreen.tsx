@@ -629,7 +629,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             : buildOptions.length === 0
             ? <span style={{ pointerEvents: 'auto', padding: '8px 14px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>Nothing to build yet</span>
             : (
-              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: '100%', pointerEvents: 'auto' }}>
+              <div className={layoutStyles.buildOptions}>
                 {buildOptions.map(option => (
                   <button
                     key={option.id}
@@ -638,7 +638,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                     aria-pressed={pickedBuild === option.id}
                     onClick={() => { setPickedBuild(option.id); setPlaceNote(option.affordable ? null : `${option.name} · ${option.reason ?? 'Not enough resources'}`) }}
                     style={{
-                      minHeight: 44, padding: '0 16px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
+                      minHeight: 48, padding: '8px 12px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'normal', width: '100%',
                       border: '2px solid var(--ln-world-outline)',
                       background: pickedBuild === option.id ? 'var(--ln-world-outline)' : 'var(--ln-world-hull-lit)',
                       color: pickedBuild === option.id ? 'var(--ln-world-hull-lit)' : 'var(--ln-world-outline)',

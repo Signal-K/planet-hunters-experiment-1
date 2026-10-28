@@ -10,6 +10,9 @@ struct SkyEventChip: View {
     var allDay = false
 
     var body: some View {
+        // A completed event belongs in the player's badge history, not in the
+        // persistent Base HUD.
+        if store.player.badges["orionids-2026"] == nil {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
             let preset = SkyEvents.activePreset(at: store.now)
             let daytime = allDay && preset == nil && SkyEvents.isOrionidsWindow(store.now)
@@ -18,6 +21,7 @@ struct SkyEventChip: View {
             } else if daytime {
                 chip(label: "ORIONIDS TONIGHT", orionids: true, note: SkyEvents.orionidsPanelPeak)
             }
+        }
         }
     }
 

@@ -164,6 +164,10 @@
 .scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important; }
 .scene-location-actions .scene-dock-word svg { flex: 0 0 19px; width: 19px; height: 19px; }
 .scene-location-actions .scene-dock-word span { overflow: visible; text-overflow: clip; white-space: nowrap; text-align: center; }
+.scene-location-action--build svg { color: var(--ln-world-trim-teal); }
+.scene-location-action--mission svg { color: var(--ln-cyan); }
+.scene-location-action--subsurface svg { color: var(--ln-world-hull-shade); }
+.scene-location-action--menu svg { color: var(--ln-world-glass); }
 .scene-location-action--mission {
   border-right-color: var(--ln-world-trim-blue) !important;
 }

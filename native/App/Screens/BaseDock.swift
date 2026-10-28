@@ -109,17 +109,17 @@ struct BaseDock: View {
 
     private var locationActions: some View {
         HStack(spacing: 0) {
-                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
+                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } }, iconColor: Theme.teal)
                 if let onMission {
                 Divider().overlay(Theme.hudInk)
-                DockButton(title: "Missions", symbol: "paperplane", action: onMission)
+                DockButton(title: "Missions", symbol: "paperplane", action: onMission, iconColor: Glass.cyan)
             }
             Divider().overlay(Theme.hudInk)
             if let onSubsurface {
-                DockButton(title: subsurface ? "Surface" : "Subsurface", symbol: "arrow.down.to.line.compact", action: onSubsurface)
+                DockButton(title: subsurface ? "Surface" : "Subsurface", symbol: "arrow.down.to.line.compact", action: onSubsurface, iconColor: Theme.textMuted)
                 Divider().overlay(Theme.hudInk)
             }
-            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
+            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } }, iconColor: Theme.blueBright)
         }
         // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
         .fixedSize(horizontal: false, vertical: true)
@@ -201,12 +201,13 @@ struct DockButton: View {
     let action: () -> Void
     var coachTarget: String? = nil
     var compact = false
+    var iconColor: Color? = nil
     @Environment(\.glassHud) private var glass
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: compact ? 0 : 6) {
-                Image(systemName: symbol).font(.system(size: 14, weight: .bold))
+                Image(systemName: symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(iconColor ?? (glass ? Color.white : Glass.ink))
                 if !compact { Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).lineLimit(1).fixedSize() }
             }
             .foregroundStyle(glass ? Color.white : Glass.ink)
