@@ -108,6 +108,19 @@ nativeAsset = "base/v7/launchpad/pad-scaffold.png"
 note = "Assembly animation uses the rocket frame for its welding path."
 
 [[objects]]
+id = "service-motion"
+kind = "structure"
+mechanics = ["rocket-assembly"]
+parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-activity.png"
+nativeAsset = "base/v7/launchpad/pad-activity.png"
+components = ["LaunchTowerAnimation"]
+note = "Blender-authored moving service trolley, cable, arm and beacon layered over the permanent launch complex."
+
+[[objects]]
 id = "back-control"
 kind = "button"
 mechanics = ["mission-planning"]

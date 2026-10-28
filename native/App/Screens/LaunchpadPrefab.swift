@@ -3,19 +3,25 @@ import LandnamCore
 
 /// Real rendered prefab. Host screens provide mission commands; shared declarations own local geometry and art.
 struct LaunchpadPrefab: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let phase: PadPhase
     let progress: Double
     let width: CGFloat
     let height: CGFloat
     let onChooseMission: () -> Void
+    @State private var serviceOffset: CGFloat = -4
 
     var body: some View {
         let parts = LaunchpadParts(width: width, height: height)
         let apron = parts.part("apron")
         let control = parts.part("launch-control")
+        let service = parts.part("service-motion")
         ZStack(alignment: .topLeading) {
             Art.view(apron.object.nativeAsset!).resizable().interpolation(.none)
                 .prefabFrame(apron.frame)
+            Art.view(service.object.nativeAsset!).resizable().interpolation(.none)
+                .prefabFrame(service.frame)
+                .offset(x: serviceOffset, y: serviceOffset * -0.18)
             PadBuild(phase: phase, p: progress, w: width, h: height)
             Button { if control.object.action == "choose-mission" { onChooseMission() } } label: { Color.clear }
                 .buttonStyle(.plain)
@@ -25,6 +31,12 @@ struct LaunchpadPrefab: View {
                 .accessibilityIdentifier("launchpad-status-card")
         }
         .frame(width: width, height: height)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
+                serviceOffset = 5
+            }
+        }
     }
 }
 

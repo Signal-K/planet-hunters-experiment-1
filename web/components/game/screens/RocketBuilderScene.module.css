@@ -249,6 +249,15 @@
 
 .scaffold { inset: 0; width: 100%; height: 100%; opacity: 0; }
 
+/* Blender-authored service equipment moves independently of the permanent pad. */
+.serviceMotion {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 34% 44%;
+  animation: service-cycle 5.6s ease-in-out infinite;
+}
+
 .weld {
   position: absolute;
   left: var(--rocket-center);
@@ -292,10 +301,17 @@
   100% { bottom: var(--rocket-top); }
 }
 
+@keyframes service-cycle {
+  0%, 100% { transform: translateX(-0.9%) translateY(0); opacity: 0.78; }
+  42% { transform: translateX(1.1%) translateY(0.35%); opacity: 1; }
+  58% { transform: translateX(1.1%) translateY(0.35%); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pad[data-phase='building'] .rocket,
   .pad[data-phase='building'] .scaffold,
   .pad[data-phase='building'] .weld { animation: none; }
+  .serviceMotion { animation: none; }
   .pad[data-phase='building'] .scaffold { opacity: 1; }
 }
 

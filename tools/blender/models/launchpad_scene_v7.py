@@ -7,6 +7,7 @@ complex (pad, gantry, rail, hangar) underneath, rocket revealed bottom-up on the
     exec(open(".../tools/blender/models/base_v7.py").read())
     exec(open(".../tools/blender/models/launchpad_scene_v7.py").read())
     build_pad_complex(); render("pad-complex", "launchpad")
+    build_pad_activity(); render("pad-activity", "launchpad")
     build_pad_scaffold(); render("pad-scaffold", "launchpad")
 """
 
@@ -74,3 +75,38 @@ def build_pad_scaffold():
     box("beacon", left - 8.0, top + 3.0, 2.6, 2.2, d=2.6, y=y + 0.6, colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
     _frame()
     return "pad-scaffold"
+
+
+def build_pad_activity():
+    """A transparent, animated service pass for the launch complex.
+
+    The base sprite carries the permanent architecture. This pass carries the
+    things that make the site feel staffed: a trolley travelling on the tower
+    rail, its cable and hook, a service arm, and a live beacon. Keeping it
+    separate means the game can give it a small, readable motion loop without
+    wobbling the pad or hangar underneath.
+    """
+    reset_scene()
+    tower_x = 31.0
+    rail_z = 74.0
+    # Horizontal rail and travelling hoist on the tower face.
+    box("service_rail", tower_x, rail_z, 29.0, 1.4, d=2.4, y=7.0,
+        colours=("steel_lit", "steel", "steel_dark"), outline=0.45)
+    box("service_trolley", tower_x + 10.0, rail_z - 3.0, 7.0, 5.2, d=5.0, y=5.7,
+        colours=("hull_lit", "hull", "hull_shade"), outline=0.65)
+    box("service_trolley_band", tower_x + 10.0, rail_z - 1.4, 7.0, 1.25, d=0.7, y=5.15,
+        colours=("trim_blue", "trim_blue", "trim_blue_dark"), outline=0)
+    box("service_cable", tower_x + 13.1, rail_z - 22.0, 0.8, 19.5, d=0.8, y=5.0,
+        colours=("steel_lit", "steel", "steel_dark"), outline=0.25)
+    box("service_hook", tower_x + 11.6, rail_z - 24.6, 3.6, 3.2, d=2.8, y=4.8,
+        colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.45)
+    # A telescoping arm reaches toward the rocket position, suggesting active checks.
+    box("service_arm", tower_x + 16.0, 50.0, 17.0, 2.4, d=3.4, y=6.0,
+        colours=("steel_lit", "steel", "steel_dark"), outline=0.55)
+    box("service_arm_cap", tower_x + 31.2, 48.0, 3.0, 6.4, d=5.0, y=5.3,
+        colours=("hull_lit", "hull", "hull_shade"), outline=0.65)
+    # The beacon is deliberately isolated in this pass so its pulse is legible at game scale.
+    box("service_beacon", tower_x + 1.5, 103.0, 3.0, 3.0, d=3.0, y=6.2,
+        colours=("trim_teal", "trim_teal", "trim_blue_dark"), outline=0.4)
+    _frame()
+    return "pad-activity"

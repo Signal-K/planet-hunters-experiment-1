@@ -102,6 +102,7 @@ describe('production hub, terrain and actor sprites', () => {
       '/game/assets/base/kit/exchange-dock.png',
       // Rocket Builder renders these large compositing plates directly rather than loading them as engine sprites.
       '/game/assets/base/v7/launchpad/pad-complex.png',
+      '/game/assets/base/v7/launchpad/pad-activity.png',
       '/game/assets/base/v7/launchpad/pad-scaffold.png',
       // Drawn directly by the Hangar and the base road, not through the engine.
       '/game/assets/actors/crew.png',
