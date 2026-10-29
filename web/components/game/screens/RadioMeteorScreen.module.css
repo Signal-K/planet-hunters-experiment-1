@@ -106,3 +106,18 @@
   .eyebrow { white-space: normal; }
   .comms p { font-size: 16px; }
 }
+
+/* SSL-714: Orionids mission 3 — the three story items and how many recordings are confirmed. */
+.mission { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.mission > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.mission > b { grid-column: 2; grid-row: 1; color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; }
+.mission[data-complete] > b { color: #f2c24c; }
+.mission ol { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mission li { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid rgba(244, 239, 228, .35); border-radius: 999px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); }
+.mission li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor; }
+.mission li[data-held] { border-color: #f4efe4; color: #f4efe4; }
+.mission li[data-held]::before { background: #6fe39a; border-color: #6fe39a; }
+@media (max-height: 520px) {
+  .mission { padding: 6px 10px; gap: 4px 10px; }
+  .mission li { min-height: 24px; }
+}

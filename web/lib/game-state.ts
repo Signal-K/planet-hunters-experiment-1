@@ -178,10 +178,11 @@ export function normalizeState(input: PartialSave): GameState {
   const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
   const completedMissions = normalizeCompletedMissions(player.completedMissions)
   const orionidsProgress = detectOrionidsProgress({ ...player, completedMissions })
+  // Raises only: a save that already finished the radio mission (stage 3) keeps it.
   const orionidsEventStage = orionidsProgress.surfaceCompleted
-    ? 2 as const
+    ? Math.max(player.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
     : orionidsProgress.attempted
-      ? Math.max(player.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
+      ? Math.max(player.orionidsEventStage ?? 0, 1) as 0 | 1 | 2 | 3
       : player.orionidsEventStage ?? 0
   const researchXP = Number.isFinite(player.researchXP)
     ? Math.max(0, Math.floor(player.researchXP ?? 0))
@@ -680,7 +681,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
-  merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2
+  merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)
   merged.player.fireball2026CaughtAt = earliestStamp(current.player.fireball2026CaughtAt, remoteState.player?.fireball2026CaughtAt) ?? null

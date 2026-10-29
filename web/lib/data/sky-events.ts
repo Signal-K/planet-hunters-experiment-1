@@ -41,6 +41,8 @@ export interface SkyEvent {
   id: string
   name: string
   communityInstrument?: CommunityInstrument
+  /** SSL-714: the badge comes at the end of the event's mission chain, not from the first debris mined. */
+  badgeAfterMissions?: boolean
   /** Inclusive start instant (UTC). */
   startUtc: string
   /** Exclusive end instant (UTC): first moment after the event period. */
@@ -92,6 +94,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     startUtc: '2026-10-19T00:00:00Z',
     endUtc: '2026-11-08T00:00:00Z',
     communityInstrument: { callsign: 'ORI-1', name: 'Orionids receiver' },
+    badgeAfterMissions: true,
     activities: ['debris-mining'],
     startAtLocalMidnight: true,
   },
@@ -484,6 +487,7 @@ export function applyDebrisMined<T extends BadgePlayer>(
   preset: DebrisEventPreset,
   at: Date | number,
 ): { player: T; badge: PlayerBadge | null } {
+  if (getSkyEvent(preset.eventId)?.badgeAfterMissions) return { player, badge: null }
   let next = player
   let badge: PlayerBadge | null = null
   const startedAt = (player as { missionStartedAt?: number | null }).missionStartedAt

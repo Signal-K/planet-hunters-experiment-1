@@ -161,6 +161,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
       { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
+      { key: 'ui-orionids-rover-debrief', label: 'Orionids: rover debrief', hint: 'Mission 2 of 3 done: the impact bearing is unlocked and the community launches ORI-1', stage: 'free-ops' },
+      { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 3 on ORI-1', stage: 'free-ops' },
+      { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 3 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -521,7 +524,11 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-orionids-events-stage1':
       // Shower run done (event stage 1): the Events board offers the rover surface observation.
       { const board = fixture('ui-mission-board')!
-      return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 }, badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: Date.UTC(2026, 9, 23) } } } } }
+      return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 } } } }
+    case 'ui-orionids-events-stage2':
+      // Rover observation done (event stage 2): the Orionids card opens mission 3 on ORI-1.
+      { const board = fixture('ui-mission-board')!
+      return { ...board, player: { ...board.player!, orionidsEventStage: 2, orionidsFragments: { caught: 25, redeemed: 0 } } } }
     case 'ui-orionids-ready':
       return {
         screen: 'missions',
@@ -630,6 +637,28 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-orionids-rover-debrief':
+      // Mission 2 of 3 done: the debrief hands over the impact bearing and shows ORI-1 going up.
+      return {
+        screen: 'debrief',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 6,
+          freeOperations: true,
+          orionidsEventStage: 1,
+          orionidsFragments: { caught: 25, redeemed: 0 },
+          missionPhase: 'debrief',
+          activeMission: { id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID, label: 'Orionids surface observation' },
+        },
+        tutorial: false,
+        doneSteps: EXTRACTION_DONE,
+        missionId: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: {},
+        popup: null,
+      }
+
     case 'ui-orionids-rover':
       // The event's second step: the surface observation on Eros with the Orionids field rover.
       return {
@@ -689,9 +718,18 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'ui-radio-meteors':
+    case 'ui-radio-meteors-last':
+      // SSL-714: Orionids mission 3 on ORI-1. The "last" fixture has two recordings already checked.
       return {
         screen: 'radio-meteors',
-        player: { ...POST_ONBOARDING_PLAYER },
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          orionidsEventStage: 2,
+          orionidsFragments: { caught: 25, redeemed: 0 },
+          radioMeteorClassifications: name === 'ui-radio-meteors-last' ? Object.fromEntries(['fixture-a', 'fixture-b'].map(id => [id, {
+            subjectId: id, workflowId: '33017', imageUrl: '', filename: '', imageWidth: 949, imageHeight: 543, boxes: [], submittedAt: Date.UTC(2026, 9, 29),
+          }])) : undefined,
+        },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

@@ -77,12 +77,12 @@ export function orionidsSurfaceResearchMission(): Mission {
   return {
     id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
     title: 'Orionids surface observation',
-    brief: 'Drive the rover over the meteor, scan a rock formation, and log it for the community research record.',
+    brief: 'Your fragment sample points back to a fresh impact on Eros. Drive the rover to it, scan the rock formation, and take a bearing for the community research record.',
     tag: 'EVENT RESEARCH',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Complete the Orionids debris capture',
+    unlockAt: 'Bring back a fragment sample from the Orionids shower run',
     targetId: 'eros',
     payload: { type: 'rover', name: 'Orionids field rover', cargoCost: 0 },
     survey: {

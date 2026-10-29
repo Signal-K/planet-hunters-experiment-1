@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
@@ -46,6 +47,8 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
   // Orionids fragments are event evidence rather than player cargo, and the
   // event supplies its own storage. Do not add a contradictory silo prompt.
+  // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
+  const showerRun = mission?.id === ORIONIDS_NIGHT_RUN_ID
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
@@ -63,17 +66,17 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
       </ol>
       <div className={styles.slots}>
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
-          <span>Destination</span><strong>{isOrionidsEventMission(mission) ? 'Orionids field' : target.name}</strong><em>Change</em>
+          <span>Destination</span><strong>{showerRun ? 'Orionids field' : target.name}</strong><em>Change</em>
         </button>
         <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
-        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{isOrionidsEventMission(mission) ? 'Fragments + minerals' : (minerals.join(', ') || 'None')}</strong></div>
+        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{showerRun ? 'Fragments + minerals' : mission.payload?.type === 'rover' ? mission.payload.name : (minerals.join(', ') || 'None')}</strong></div>
       </div>
       {primaryAction && primaryLabel && (
         <button type="button" className={styles.primary} data-testid="plan-launch-btn" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
       )}
-      {isOrionidsEventMission(mission) && (
+      {showerRun && (
         <div className={styles.showerField} data-testid="orionids-shower-field" aria-label="Anonymous meteor points arranged in Orion's pattern">
           <svg viewBox="0 0 280 72" role="img" aria-label="Orionids shower points arranged like Orion">
             <path d="M42 19 86 34 126 18 166 35 211 20M86 34 92 58 126 18 149 57 166 35 196 59" />

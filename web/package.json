@@ -29,7 +29,8 @@
     "lint": "npm run lint:design-tokens && npm run verify:hue-palette && npm run verify:native-text-floor && npm run verify:native-tap-targets && npm run verify:native-contrast && npm run verify:scene-surfaces && npm run typecheck",
     "test:file": "vitest run",
     "test:related": "vitest related --run",
-    "test:cypress:ssl-695": "cypress run --spec cypress/e2e/ssl-695-marketplace.cy.ts"
+    "test:cypress:ssl-695": "cypress run --spec cypress/e2e/ssl-695-marketplace.cy.ts",
+    "test:cypress:orionids": "CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://localhost:4320} cypress run --spec cypress/e2e/orionids-chain.cy.ts"
   },
   "dependencies": {
     "@clerk/react": "6.17.8",

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { getSkyEvent } from '@/lib/data/sky-events'
+import { ORIONIDS_CHAIN, showerItems } from '@/lib/orionids/chain'
 import type { Player } from '@/lib/game-types'
 import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
@@ -68,7 +69,7 @@ function Dial({ label, readout, value, min, max, step, disabled, testId, onChang
   const ticks = Array.from({ length: 11 }, (_, i) => -135 + i * 27)
   const down = (e: PointerEvent<HTMLDivElement>) => {
     if (disabled) return
-    e.currentTarget.setPointerCapture?.(e.pointerId)
+    try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch { /* synthetic pointers cannot be captured */ }
     drag.current = { x: e.clientX, y: e.clientY, v: value }
   }
   const move = (e: PointerEvent<HTMLDivElement>) => {
@@ -119,6 +120,12 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const event = getSkyEvent(eventId)
   const instrument = event?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
   const BRIEFING = briefingLines(instrument.callsign, event?.name ?? 'shower')
+  // SSL-714: Orionids mission 3 is checking recordings here; the chain finishes on this screen.
+  const stage = player.orionidsEventStage ?? 0
+  const [enteredStage] = useState(stage)
+  const onMission = stage === 2
+  const justCompleted = enteredStage === 2 && stage === 3
+  const badgeTier = player.badges?.[ORIONIDS_CHAIN.eventId]?.tier ?? null
   const done = player.radioMeteorClassifications ?? {}
   const total = Object.keys(done).length
   const [queue, setQueue] = useState<RadioMeteorSubject[]>([])
@@ -160,7 +167,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     if (e.button !== 0 || !size) return
     const p = point(e)
     if (!p) return
-    e.currentTarget.setPointerCapture?.(e.pointerId)
+    try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch { /* synthetic pointers cannot be captured */ }
     setSelected(null)
     setDraft({ x0: p.x, y0: p.y, x1: p.x, y1: p.y })
   }
@@ -207,7 +214,9 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   }
 
   const station = subject?.station ?? 'BRAMS'
-  const line = briefing != null ? BRIEFING[briefing]
+  const line = justCompleted && (last?.kind === 'logged' || last?.kind === 'quiet')
+    ? `That’s ${ORIONIDS_CHAIN.radioTarget} recordings confirmed. The Orionids record is complete. Thank you. ${instrument.callsign} keeps listening if you want to stay on.`
+    : briefing != null ? BRIEFING[briefing]
     : loading ? 'Tuning in. Pulling the next recording off the Belgian network.'
     : failed ? 'I can’t reach the archive from here. Check your connection and come back.'
     : !subject ? (last?.kind === 'logged' || last?.kind === 'quiet' ? 'That was the last one in this batch. Nice work. More come in as the stations upload.' : 'Nothing waiting in the queue right now. More come in as the stations upload.')
@@ -217,6 +226,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     : last?.kind === 'deleted' ? (boxes.length ? `Box removed. ${boxes.length} left on this one.` : 'Box removed. Back to a clean sheet.')
     : last?.kind === 'logged' ? `Logged ${last.echoes} echo${last.echoes === 1 ? '' : 'es'} from ${last.at}. Next recording, from ${station}.`
     : last?.kind === 'quiet' ? `Quiet sweep from ${last.at}, logged. That counts too. Here’s the next one, from ${station}.`
+    : onMission ? `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Check ${ORIONIDS_CHAIN.radioTarget - Math.min(total, ORIONIDS_CHAIN.radioTarget)} more to confirm the shower. Box every meteor, or tell me it’s quiet.`
     : `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Box every meteor, or tell me it’s quiet.`
 
   // The view: zoom scales both axes about the beacon line; pan moves along time.
@@ -327,6 +337,19 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                 </button>
               )}
             </div>
+            {(onMission || justCompleted) && (
+              <div className={styles.mission} data-testid="radio-mission" data-complete={justCompleted || undefined}>
+                <span>{justCompleted ? 'Orionids · complete' : 'Orionids · 3 of 3'}</span>
+                <ol>
+                  {ORIONIDS_CHAIN.items.map((item, i) => (
+                    <li key={item.id} data-held={i < showerItems(ORIONIDS_CHAIN, stage).length || undefined}>{item.name}</li>
+                  ))}
+                </ol>
+                {justCompleted
+                  ? <b data-testid="radio-mission-badge">{badgeTier ? `${badgeTier.toUpperCase()} BADGE EARNED` : 'RECORD COMPLETE'}</b>
+                  : <b data-testid="radio-mission-progress">{Math.min(total, ORIONIDS_CHAIN.radioTarget)} / {ORIONIDS_CHAIN.radioTarget} CONFIRMED</b>}
+              </div>
+            )}
             <div className={styles.tally}>
               <span><b data-testid="radio-echoes">{boxes.length}</b>echoes</span>
               <span><b data-testid="radio-checked">{total}</b>checked</span>

@@ -73,6 +73,10 @@ to be visible to him as it happens.
   Android, desktop, Electron, Godot, or e2e test suites (Playwright/Cypress
   specs, scripted playthroughs). `scripts/scene-drive.mjs` drives the real
   scene by hand and is allowed.
+  Two Cypress specs exist at Liam's request and are the only exceptions:
+  `web/cypress/e2e/ssl-695-marketplace.cy.ts` and the Orionids badge chain,
+  `web/cypress/e2e/orionids-chain.cy.ts` (`npm run test:cypress:orionids`,
+  local stack only). Do not add others.
 - Every gameplay surface is an in-world scene, not a card grid. Every scene and
   mission must have an authored fixture and a deep link. Register it in
   `qa/scenes.json` and `scripts/preview-target.mjs` so it can be launched alone.

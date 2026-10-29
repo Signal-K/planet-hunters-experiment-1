@@ -292,7 +292,7 @@ public enum Loop {
         let cargo = showerFilled ? OrionidsRun.withoutFragments(haulCargo) : haulCargo
         if showerFilled { OrionidsRun.settle(&n.player, missionsDone: s.player.missionsDone) }
         if missionId == OrionidsRun.missionId { n.player.orionidsEventStage = max(n.player.orionidsEventStage, 1) }
-        if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = 2 }
+        if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = max(n.player.orionidsEventStage, 2) }
         if missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId { ResearchStampRules.add(&n.player, .event, at: now) }
         let isOrionidsEvent = missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId
         if isOrionidsEvent {

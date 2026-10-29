@@ -324,7 +324,8 @@ export interface Player {
   /** Fragments caught during the shower, and how many were redeemed for research. Synced in game_states. */
   orionidsFragments?: { caught: number; redeemed: number } | null
   /** Orionids event chain: 0 capture, 1 surface observation available, 2 complete. */
-  orionidsEventStage?: 0 | 1 | 2
+  /** SSL-714: 0 → shower run → 1 → rover observation → 2 → radio confirmation on ORI-1 → 3 (badge). */
+  orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
   /** Unix ms when the Atlas looked-up check-in was granted. */

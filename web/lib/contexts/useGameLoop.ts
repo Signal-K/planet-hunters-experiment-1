@@ -23,6 +23,7 @@ import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { queueRadioMeteorClassification, type RadioMeteorClassification } from '@/lib/radio-meteors'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
+import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
@@ -1092,15 +1093,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const submitRadioMeteorClassification = useCallback((classification: RadioMeteorClassification) => {
     if (stateRef.current.player.radioMeteorClassifications?.[classification.subjectId]) return
     stampResearch('classification')
-    setState(s => ({
-      ...s,
-      player: {
+    const at = skyEventNow(isDevLauncherEnabled())
+    const classified = {
+      ...stateRef.current.player,
+      radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
+    }
+    // Orionids mission 3: enough recordings checked on ORI-1 completes the chain and grades the badge.
+    const preview = completeRadioMission(classified, at)
+    setState(s => {
+      const player = {
         ...s.player,
         radioMeteorClassifications: { ...(s.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
-      },
-    }))
-    queueRadioMeteorClassification(classification, 'orionids-2026')
+      }
+      const done = completeRadioMission(player, at)
+      return { ...s, player: done.completed ? addStamp(done.player, 'event', Date.now()) : done.player }
+    })
+    queueRadioMeteorClassification(classification, ORIONIDS_CHAIN.eventId)
     captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length })
+    if (preview.completed) {
+      const badge = preview.player.badges?.[ORIONIDS_CHAIN.eventId]
+      captureGameEvent('orionids_chain_completed', { tier: badge?.tier ?? null })
+      if (badge) captureGameEvent('badge_earned', { event_id: ORIONIDS_CHAIN.eventId, tier: badge.tier, activity: 'radio-confirmation' })
+    }
   }, [setState, stateRef])
 
   // Player picks where the satellite points for the *next* daily downlink
@@ -1122,7 +1136,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) requestMissionBoardTab('events')
+    // SSL-714: each Orionids mission hands over to the next one on the Events board.
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) requestMissionBoardTab('events')
     if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
@@ -1275,9 +1290,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
-        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 1) as 0 | 1 | 2
+        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 1) as 0 | 1 | 2 | 3
         : mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
-          ? 2 as const
+          ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
           : wswBadgedPlayer.orionidsEventStage ?? 0
       const next: GameState = {
         ...s,
@@ -1343,7 +1358,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
-            : mission?.id === ORIONIDS_NIGHT_RUN_ID
+            : mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
               ? 'missions'
               : isProgramOperation
               ? 'launchpad'

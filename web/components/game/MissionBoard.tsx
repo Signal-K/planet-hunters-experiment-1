@@ -44,7 +44,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
-  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors') => void
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
@@ -402,6 +402,11 @@ export default function MissionBoard({
       if (event.status === 'upcoming') return
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
+      // SSL-714: mission 3 (and listening on afterwards) happens on the community receiver, ORI-1.
+      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 2) {
+        onOpenEvent('radio-meteors')
+        return
+      }
       if (event.id === 'orionids-2026' && player.orionidsEventStage === 1 && catalog.missions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {
         onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
         return
@@ -509,7 +514,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Next mission ready · surface observation' : 'Launch catches fragments · no cargo used'}</span>
+          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
