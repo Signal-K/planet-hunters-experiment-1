@@ -236,7 +236,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [targetCue, setTargetCue] = useState<{ mineral: string; inRange: boolean } | null>(null)
   // The shower run has one objective: catch fragments. Ground ore is optional,
   // so its normal "Gold · wait" laser cue must never compete with that goal.
-  targetCueRef.current = (mineral, inRange) => setTargetCue(!nightRun && mineral ? { mineral, inRange } : null)
+  targetCueRef.current = (mineral, inRange) => {
+    setTargetCue(!nightRun && mineral ? { mineral, inRange } : null)
+    setFireReady(!!mineral && inRange)
+  }
+  const [fireReady, setFireReady] = useState(false)
   const obstacleAheadRef = useRef<((ahead: boolean) => void) | null>(null)
   const [obstacleAhead, setObstacleAhead] = useState(false)
   obstacleAheadRef.current = ahead => setObstacleAhead(current => current === ahead ? current : ahead)
@@ -891,6 +895,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           max={MAX_CHARGES}
           charging={isCharging}
           firing={firingHeld}
+          ready={fireReady}
           disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
           onPress={() => { setFiringHeld(true); beginFireHold() }}
           onRelease={() => { setFiringHeld(false); endFireHold() }}

@@ -133,6 +133,12 @@
 .fire[data-state='low'] .fireRing { background: conic-gradient(var(--ln-crit) var(--charge), color-mix(in srgb, var(--ln-bp-paper) 22%, transparent) 0); }
 .fire[data-state='empty'] .fireFace { border-color: var(--ln-crit); color: var(--ln-crit); }
 .fire:disabled { cursor: default; opacity: 0.55; }
+/* SSL-710: a seam is under the aim line, so the button says "now". */
+.fire[data-ready] .fireFace { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); }
+.fire[data-ready] .fireCount { color: var(--ln-bp-ink); }
+.fire[data-ready] { animation: fireReady 0.7s ease-in-out infinite; }
+@keyframes fireReady { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .fire[data-ready] { animation: none; } }
 .fire:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
 
 .progress {

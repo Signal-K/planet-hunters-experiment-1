@@ -62,11 +62,13 @@ export function MiningDPad({ disabled, onAltitude, onSpeed, obstacleAhead = fals
  * action button, like a controller. The ring shows laser charge, so there is
  * no separate gauge overlay. Hold re-fires as soon as the laser is ready.
  */
-export function MiningFireButton({ charges, max, charging, firing, disabled, onPress, onRelease, onKeyFire }: {
+export function MiningFireButton({ charges, max, charging, firing, ready = false, disabled, onPress, onRelease, onKeyFire }: {
   charges: number
   max: number
   charging: boolean
   firing: boolean
+  /** SSL-710: a shot fired now would hit a seam. */
+  ready?: boolean
   disabled?: boolean
   onPress: () => void
   onRelease: () => void
@@ -83,6 +85,7 @@ export function MiningFireButton({ charges, max, charging, firing, disabled, onP
       data-state={state}
       data-charging={charging || undefined}
       data-firing={firing || undefined}
+      data-ready={(ready && charges > 0) || undefined}
       disabled={disabled}
       aria-label={charges <= 0 ? 'Fire laser, depleted' : `Fire laser, ${charges} of ${max} charges`}
       style={{ ['--charge' as string]: `${pct * 360}deg` }}

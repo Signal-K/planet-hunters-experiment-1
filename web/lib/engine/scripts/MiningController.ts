@@ -21,6 +21,8 @@ export const SHIP_Y = 112
 export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
 const HIT_TOLERANCE = 56
+/** Time a player takes to press FIRE after it lights up (SSL-710). */
+const REACTION_SECONDS = 0.2
 // Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
 const REQUIRED_ORE_SHARE = 0.85
 // First nodes are copies of the requested ore, close and shallow, so a few shots hit it.
@@ -277,6 +279,8 @@ interface OreEntity {
   hero?: boolean
   /** Collected the moment it lands on the surface; the laser is not needed. */
   autoCollect?: boolean
+  /** SSL-710: dark backing and mineral-coloured rim that lifts a seam off the soil. */
+  halo?: Graphics | null
 }
 
 interface LaserEntity {
@@ -314,6 +318,9 @@ export class MiningController extends ScriptBehaviour {
   private debrisAccumulator = 0
   /** Catch zone marker on the surface under the ship, shown while shower fragments are auto-collected. */
   private catchZone: Graphics | null = null
+  /** SSL-710: dashed line from the ship to the soil showing where a shot lands. */
+  private aimLine: Graphics | null = null
+  private aimTarget: OreEntity | null = null
   private streakAccumulator = 0
   /** First active frame drops a chunk immediately so the shower is visible. */
   private debrisPrimed = false
@@ -402,6 +409,7 @@ export class MiningController extends ScriptBehaviour {
       // SSL-344: draw on whole pixels. Fractional x on pixelated art shimmers between frames and reads as the deposit jittering. Hit tests keep the exact position.
       if (ore.sprite) ore.sprite.x = Math.round(ore.go.transform.position.x)
       if (ore.chip) ore.chip.x = Math.round(ore.go.transform.position.x)
+      if (ore.halo) ore.halo.x = Math.round(ore.go.transform.position.x)
       if (ore.label) {
         const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
         const oreX = ore.go.transform.position.x
@@ -463,7 +471,9 @@ export class MiningController extends ScriptBehaviour {
 
     const needed = this.opts.neededMineralsRef?.current
     const heroes = this.ores.filter(o => o.go.active && o.hero)
-    const seamTargets = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    // SSL-710: a seam deeper than the laser reaches is never a target, so FIRE only lights up for a shot that can hit.
+    const reach = this.laserFloor()
+    const seamTargets = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && o.go.transform.position.y - o.radius <= reach && (!needed || needed.size === 0 || needed.has(o.mineral)))
     const targetOres = heroes.length > 0 ? heroes : seamTargets
     const target = targetOres.reduce<OreEntity | null>((best, ore) => {
       if (!best) return ore
@@ -471,16 +481,61 @@ export class MiningController extends ScriptBehaviour {
     }, null)
     const targetDistance = target ? Math.abs(target.go.transform.position.x - this.currentShipX()) : Number.POSITIVE_INFINITY
     const landed = !target?.phase || target.phase === 'intact'
-    const inRange = landed && targetDistance < HIT_TOLERANCE
+    // SSL-710: judge range where the seam will be when a shot fired now (plus a moment to react)
+    // reaches it. The ground keeps scrolling while the beam falls, so a seam that is under the ship
+    // only as it slides past is already gone by impact.
+    const impactLead = target && !target.phase
+      ? this.scrollSpeed * this.devSpeed * (Math.max(0, target.go.transform.position.y - ((this.opts.shipY ?? SHIP_Y) + 16)) / LASER_SPEED + REACTION_SECONDS)
+      : 0
+    const impactDistance = target ? Math.abs(target.go.transform.position.x - impactLead - this.currentShipX()) : Number.POSITIVE_INFINITY
+    const inRange = landed && targetDistance < HIT_TOLERANCE && impactDistance < HIT_TOLERANCE - 8
     const targetState = target ? `${target.mineral}:${inRange}` : ''
     if (targetState !== this.targetCueState) {
       this.targetCueState = targetState
       this.opts.onTargetCue?.(target?.mineral ?? null, inRange)
     }
+    this.updateAim(target, inRange)
     const anyNear = inRange
     if (anyNear !== this.oreNearState) {
       this.oreNearState = anyNear
       this.opts.onOreNearby?.(anyNear)
+    }
+  }
+
+  /** Deepest y the current laser reaches; a seam below it cannot be hit. */
+  private laserFloor(): number {
+    const tier = this.opts.maxLaserTier ?? 3
+    const laserDepth = this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3])
+    return (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
+  }
+
+  /** SSL-710: show where the shot lands, and make an in-range seam unmistakable. */
+  private updateAim(target: OreEntity | null, inRange: boolean): void {
+    if (!this.aimLine) {
+      this.aimLine = new Graphics()
+      this.opts.container.addChild(this.aimLine)
+    }
+    const g = this.aimLine
+    const x = Math.round(this.currentShipX())
+    const top = (this.opts.shipY ?? SHIP_Y) + 26
+    // The line stops where the beam stops: at the targeted seam, or at the laser's reach.
+    const bottom = inRange && target && !target.phase ? target.go.transform.position.y : this.laserFloor()
+    g.clear()
+    if (inRange) {
+      g.rect(x - 2, top, 4, Math.max(0, bottom - top)).fill({ color: 0xbfefff, alpha: 0.85 })
+    } else {
+      for (let y = top; y < bottom; y += 14) g.rect(x - 1, y, 2, Math.min(7, bottom - y)).fill({ color: 0xbfefff, alpha: 0.45 })
+    }
+    const next = inRange ? target : null
+    if (this.aimTarget && this.aimTarget !== next && this.aimTarget.halo) {
+      this.aimTarget.halo.scale.set(1)
+      this.aimTarget.halo.alpha = 1
+    }
+    this.aimTarget = next
+    if (next?.halo) {
+      const pulse = this.opts.reducedMotion ? 1 : 1 + 0.12 * (0.5 + 0.5 * Math.sin(performance.now() / 110))
+      next.halo.scale.set(pulse)
+      next.halo.alpha = 1
     }
   }
 
@@ -799,6 +854,12 @@ export class MiningController extends ScriptBehaviour {
    * and step up and down so they are not one line under the crust.
    * Higher tiers sit below the previous laser so a stock beam cannot mine them.
    */
+  /** Level 1: just under the crust, comfortably inside the starting laser's reach. */
+  private levelOneDepth(): number {
+    const px = this.opts.pixelScale ?? 1
+    return this.clampPixelDepth(Math.min(PIXEL_BURIAL_SRC * px, this.pixelLaserReach(1) - 16 * px - 12), 0, px)
+  }
+
   private pixelDepositDepth(tier: number, salt: number): number {
     const px = this.opts.pixelScale ?? 1
     const wobble = (salt % (tier <= 1 ? 5 : 4)) * 4 * px
@@ -839,7 +900,10 @@ export class MiningController extends ScriptBehaviour {
     let depth = picked.seeded
       ? 8 + Math.random() * 14
       : cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
-    if (this.opts.pixelScale) depth = this.pixelDepositDepth(tier, this.oreCounter + mineralSalt(mineral))
+    // Level 1 mining (starting laser): every deposit sits in the shallow band the laser reaches, never deeper (Liam, 2026-10-29).
+    const levelOne = (this.opts.maxLaserTier ?? 3) <= 1
+    if (this.opts.pixelScale) depth = levelOne ? this.levelOneDepth() : this.pixelDepositDepth(tier, this.oreCounter + mineralSalt(mineral))
+    else if (levelOne) depth = Math.min(depth, ORE_TIER[1].depthMax)
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
     const colorHex = this.opts.mineralColors[mineral] ?? ORE_FILL
@@ -854,6 +918,9 @@ export class MiningController extends ScriptBehaviour {
     let renderer: ShapeRenderer | null = null
     let sprite: Sprite | null = null
 
+    // SSL-710: the halo is added before the deposit art so it sits behind it.
+    const halo = new Graphics()
+    this.opts.container.addChild(halo)
     if (texture && frames && this.opts.pixelScale) {
       sprite = new Sprite(texture)
       sprite.anchor.set(0.5)
@@ -904,8 +971,15 @@ export class MiningController extends ScriptBehaviour {
     const labelY = chip ? surface - 50 : surface - 24
     const label = this.createLabel(mineral, x, labelY, radius)
 
+    const haloW = Math.max(radius * 2, sprite ? sprite.width : 0) * 0.62 + 6
+    const haloH = Math.max(radius * 2, sprite ? sprite.height : 0) * 0.5 + 6
+    halo.ellipse(0, 0, haloW, haloH).fill({ color: 0x05080f, alpha: 0.55 })
+    halo.ellipse(0, 0, haloW, haloH).stroke({ color: mixHex(mineralColor, 0xffffff, 0.35), width: 2.5, alpha: 0.95 })
+    halo.x = Math.round(x)
+    halo.y = y
+
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null })
+    this.ores.push({ go, renderer, sprite, label, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null, halo })
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
@@ -1031,6 +1105,7 @@ export class MiningController extends ScriptBehaviour {
       return
     }
     ore.go.active = false
+    if (ore.halo) ore.halo.visible = false
     if (ore.phase) this.playDebrisMine(ore)
     if (ore.sprite) ore.sprite.visible = false
     if (ore.chip) ore.chip.visible = false
@@ -1070,12 +1145,15 @@ export class MiningController extends ScriptBehaviour {
         this.opts.container.removeChild(ore.chip)
         ore.chip.destroy()
       }
+      if (ore.halo) {
+        this.opts.container.removeChild(ore.halo)
+        ore.halo.destroy()
+      }
+      if (this.aimTarget === ore) this.aimTarget = null
       return false
     })
 
-    const tier = this.opts.maxLaserTier ?? 3
-    const laserDepth = this.opts.pixelScale ? this.pixelLaserReach(tier) : (LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3])
-    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
+    const laserFloor = this.laserFloor()
     this.lasers = this.lasers.filter(laser => {
       if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
       const wasMiss = laser.go.active
