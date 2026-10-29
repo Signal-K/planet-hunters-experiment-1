@@ -554,6 +554,8 @@ function ScreenBody({
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           onGo={kind => {
+            // SSL-714: from mission 3 on, the Orionids step happens on ORI-1, not the mission board.
+            if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
             if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')

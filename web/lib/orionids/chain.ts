@@ -71,6 +71,18 @@ export function completeRadioMission<T extends ChainPlayer>(player: T, at: numbe
   return { player: badgeTierFor(chain.eventId, at) ? grantBadge(staged, chain.eventId, at) : staged, completed: true }
 }
 
+/** Community research's weekly event step, worded for where the player is in the chain. */
+export function orionidsResearchStep(stage: number | undefined): { title: string; brief: string } {
+  // A non-breaking hyphen keeps ORI-1 on one line in the step title.
+  const callsign = chainInstrument().callsign.replace('-', '\u2011')
+  switch (stage ?? 0) {
+    case 0: return { title: 'Orionids 1 of 3: fly the shower run', brief: 'Catch fragments in the shower. You bring back the sample the next mission needs.' }
+    case 1: return { title: 'Orionids 2 of 3: observe the impact', brief: 'Take the field rover to the impact on Eros and take a bearing.' }
+    case 2: return { title: `Orionids 3 of 3: listen on ${callsign}`, brief: `Check recordings on ${callsign}, the receiver everyone launched. Three confirm the shower.` }
+    default: return { title: `Orionids: keep listening on ${callsign}`, brief: 'The record is complete. Every recording you check still fills the shared bar.' }
+  }
+}
+
 /** The community instrument launched for the chain's shower. */
 export function chainInstrument(chain: ShowerChain = ORIONIDS_CHAIN) {
   return getSkyEvent(chain.eventId)?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }

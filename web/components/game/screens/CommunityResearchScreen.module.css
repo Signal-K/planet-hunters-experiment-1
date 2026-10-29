@@ -70,7 +70,9 @@
 .ledger b { color: #f2c24c; font: 800 20px/1 var(--ln-font-display); }
 .breakthrough { margin: 0; color: #f2c24c; font: 700 14px/1.25 var(--ln-font-body); }
 @media (orientation: portrait) and (max-width: 700px) {
-  .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  /* Six steps (an event week) are taller than half a phone, so the halves stack and scroll together. */
+  .workspace { display: block; overflow-y: auto; }
+  .right { padding-bottom: 24px; }
   .left { padding-top: 70px; gap: 8px; }
   .pathway { max-width: none; }
   .pathStep { min-height: 56px; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; }
@@ -92,3 +94,12 @@
 @media (max-height: 520px) {
   .bar small { display: none; }
 }
+/* SSL-714: the Orionids chain in the research history. */
+.record { width: min(100%, 390px); display: grid; justify-items: center; gap: 8px; color: #f4efe4; }
+.record b { font: 800 16px/1.1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.record ol { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.record li { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid rgba(244, 239, 228, .35); border-radius: 999px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); }
+.record li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor; }
+.record li[data-held] { border-color: #f4efe4; color: #f4efe4; }
+.record li[data-held]::before { background: #6fe39a; border-color: #6fe39a; }
+.record em { color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); font-style: normal; }

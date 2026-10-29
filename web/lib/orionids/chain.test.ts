@@ -3,7 +3,8 @@ import { applyDebrisMined, ORIONIDS_DEBRIS_PRESET } from '@/lib/data/sky-events'
 import { normalizeState } from '@/lib/game-state'
 import type { Player } from '@/lib/game-types'
 import type { RadioMeteorClassification } from '@/lib/radio-meteors'
-import { completeRadioMission, ORIONIDS_CHAIN, showerItems } from './chain'
+import { explorerSteps } from '@/lib/research/paths'
+import { completeRadioMission, ORIONIDS_CHAIN, orionidsResearchStep, showerItems } from './chain'
 
 const IN_EVENT = Date.parse('2026-10-29T12:00:00Z')
 const AFTER_EVENT = Date.parse('2026-11-20T12:00:00Z')
@@ -48,5 +49,14 @@ describe('Orionids chain (SSL-714)', () => {
     expect(afterRover.player.orionidsEventStage).toBe(2)
     const finished = normalizeState({ player: { completedMissions: [rover], orionidsEventStage: 3 } as Partial<Player> } as never)
     expect(finished.player.orionidsEventStage).toBe(3)
+  })
+
+  it('words the Community research event step for the next mission in the chain', () => {
+    const step = (stage: number) => explorerSteps({ hasDiscovery: false, eventName: 'Orionids', eventStep: orionidsResearchStep(stage) }).find(s => s.id === 'event')!
+    expect(step(0).title).toBe('Orionids 1 of 3: fly the shower run')
+    expect(step(1).title).toBe('Orionids 2 of 3: observe the impact')
+    expect(step(2).title).toBe('Orionids 3 of 3: listen on ORI\u20111')
+    expect(step(3).title).toBe('Orionids: keep listening on ORI\u20111')
+    expect(step(2).kind).toBe('event')
   })
 })

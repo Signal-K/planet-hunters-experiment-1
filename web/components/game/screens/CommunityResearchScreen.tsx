@@ -6,6 +6,7 @@ import { liveEventWeek } from '@/lib/research/event-week'
 import { communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
+import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
@@ -43,6 +44,21 @@ function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>
 }
 
+/** SSL-714: the Orionids chain in the research history: the three story items and what ORI-1 has heard. */
+function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
+  const stage = player.orionidsEventStage ?? 0
+  const held = showerItems(ORIONIDS_CHAIN, stage).length
+  const recordings = radioChecked(player)
+  if (!stage && !recordedOn) return null
+  return (
+    <section className={styles.record} data-testid="community-research-history" aria-label="Orionids record">
+      <b>{stage >= 3 ? 'Orionids record complete' : `Orionids · ${held} of 3 items`}</b>
+      <ol>{ORIONIDS_CHAIN.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
+      {recordings > 0 && <em>{chainInstrument().callsign} · {recordings} recording{recordings === 1 ? '' : 's'} checked</em>}
+    </section>
+  )
+}
+
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
   'Finish its five steps in any order. Missing a day costs nothing.',
@@ -54,6 +70,7 @@ function contributionTimes(player: Player): number[] {
     ...Object.values(player.tessClassifications ?? {}).map(record => record.submittedAt),
     ...Object.values(player.asteroidClassifications ?? {}).map(record => record.submittedAt),
     ...Object.values(player.saturnClassifications ?? {}).map(record => record.submittedAt),
+    ...Object.values(player.radioMeteorClassifications ?? {}).map(record => record.submittedAt),
   ].filter((submittedAt): submittedAt is number => typeof submittedAt === 'number')
 }
 
@@ -64,9 +81,11 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
+  // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
+  const eventStep = event?.id === 'orionids' ? orionidsResearchStep(player.orionidsEventStage) : undefined
   const steps = (path ?? selectedPath) === 'trader'
-    ? traderSteps({ eventName: event?.name ?? null })
-    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null })
+    ? traderSteps({ eventName: event?.name ?? null, eventStep })
+    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
@@ -127,12 +146,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => onChoosePath(selectedPath)}>START {selectedPath.toUpperCase()}</button>
-                {eventHistory.length > 0 && (
-                  <section className={styles.facts} data-testid="community-research-history" aria-label="Research history">
-                    <b>Research history</b>
-                    <em>Orionids shower contribution recorded on {eventHistory[0][0]}</em>
-                  </section>
-                )}
+                <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
             </>
           ) : (
@@ -178,7 +192,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
-                  {eventHistory.length > 0 && <section className={styles.facts} data-testid="community-research-history" aria-label="Research history"><b>Research history</b><em>Orionids shower contribution recorded on {eventHistory[0][0]}</em></section>}
+                  <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}
               </section>
             </>

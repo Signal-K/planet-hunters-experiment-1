@@ -24,6 +24,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
+import { isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
@@ -1094,6 +1095,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (stateRef.current.player.radioMeteorClassifications?.[classification.subjectId]) return
     stampResearch('classification')
     const at = skyEventNow(isDevLauncherEnabled())
+    // Checking ORI-1 recordings during the shower is the community's event research too.
+    if (isOrionidsWindow(at)) stampResearch('event')
     const classified = {
       ...stateRef.current.player,
       radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },

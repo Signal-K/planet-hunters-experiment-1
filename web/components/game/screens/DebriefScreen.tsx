@@ -169,7 +169,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </svg>
               <div>
                 <strong>{instrument.callsign} is up</strong>
-                <p className={styles.note}>Everyone flying the Orionids launched {instrument.callsign}, the {instrument.name}, together. It listens on 49.97 MHz along your bearing.</p>
+                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz along your bearing.</p>
               </div>
             </div>
           </section>
@@ -188,7 +188,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {isOrionidsRun && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-orionids-knowledge">
             <p className={styles.kicker}>Orionids knowledge log</p>
-            <p className={styles.note}>This run is saved to your Data Pad as a meteor-shower observation. Add your own Orionids photos in the Atlas app to keep building the event record.</p>
+            <p className={styles.note}>Saved to your Data Pad. Add your own Orionids photos in Atlas.</p>
             <a href="https://playlandnam.space" target="_blank" rel="noreferrer" className={styles.link}>Open Atlas photos</a>
           </section>
         )}

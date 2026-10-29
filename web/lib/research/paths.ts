@@ -39,7 +39,10 @@ export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title:
   breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge and 25 regular fragments. The badge stays in your collection.' },
 }
 
-export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string | null }): PathStep[] {
+/** SSL-714: a shower with a mission chain words its event step for where the player is in it. */
+export type EventStepCopy = { title: string; brief: string }
+
+export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string | null; eventStep?: EventStepCopy }): PathStep[] {
   const steps: PathStep[] = [
     { id: 'classify', kind: 'classification', days: 1, icon: 'signal', color: '#58d0ea', title: 'Classify a signal',
       brief: 'Open your instruments, pick something your telescopes found and say what it is.',
@@ -60,14 +63,14 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
       why: 'A full week of steady research is what turns scattered reports into a result.' },
   ]
   if (opts.eventName) steps.splice(4, 0, {
-    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: `Catch debris in the ${opts.eventName}`,
-    brief: 'Everyone is out there this week. Fly the shower run and bring a stamp home for the whole community.',
+    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: opts.eventStep?.title ?? `Catch debris in the ${opts.eventName}`,
+    brief: opts.eventStep?.brief ?? 'Everyone is out there this week. Fly the shower run and bring a stamp home for the whole community.',
     why: 'Event weeks are shared research. Every player who joins fills the same bar.',
   })
   return steps
 }
 
-export function traderSteps(opts: { eventName: string | null }): PathStep[] {
+export function traderSteps(opts: { eventName: string | null; eventStep?: EventStepCopy }): PathStep[] {
   const steps: PathStep[] = [
     { id: 'sale', kind: 'exchange-sale', days: 1, icon: 'signal', color: '#58d0ea', title: 'Make an Exchange sale',
       brief: 'Sell one eligible mineral or refined good at the Exchange.',
@@ -86,8 +89,8 @@ export function traderSteps(opts: { eventName: string | null }): PathStep[] {
       why: 'The full chain connects contracts, prices and player decisions into one market picture.' },
   ]
   if (opts.eventName) steps.splice(4, 0, {
-    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: `Catch debris in the ${opts.eventName}`,
-    brief: 'Join the shared event run and bring a stamp home for the whole community.',
+    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: opts.eventStep?.title ?? `Catch debris in the ${opts.eventName}`,
+    brief: opts.eventStep?.brief ?? 'Join the shared event run and bring a stamp home for the whole community.',
     why: 'Trader weeks can still contribute to shared sky research.'
   })
   return steps

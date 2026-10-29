@@ -1,3 +1,4 @@
+import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
@@ -173,6 +174,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-community-research-orionids', label: 'Community research: Orionids 3 of 3', hint: 'Explorer path this week, on Orionids mission 3 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
@@ -866,6 +868,25 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+
+    case 'ui-community-research-orionids': {
+      // SSL-714: the Orionids chain inside Community research.
+      const today = new Date().toISOString().slice(0, 10)
+      const checkedAt = Date.now()
+      return {
+        ...fixture('ui-community-research')!,
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          researchPath: { week: weekKey(checkedAt), path: 'explorer' },
+          researchStamps: { [today]: ['classification', 'event'] },
+          orionidsEventStage: 2,
+          orionidsFragments: { caught: 25, redeemed: 0 },
+          radioMeteorClassifications: Object.fromEntries(['fixture-a', 'fixture-b'].map(id => [id, {
+            subjectId: id, workflowId: '33017', imageUrl: '', filename: '', imageWidth: 949, imageHeight: 543, boxes: [], submittedAt: checkedAt,
+          }])),
+        },
+      }
+    }
 
     case 'ui-launchpad':
       return {

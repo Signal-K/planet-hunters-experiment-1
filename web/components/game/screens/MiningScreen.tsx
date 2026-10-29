@@ -21,6 +21,7 @@ import { FIREBALL_FRAGMENT_ID, FIREBALL_FRAGMENT_PRICE, fireballDue } from '@/li
 import { isProtectedEventReward } from '@/lib/orionids/rewards'
 import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
+import gateStyles from './MiningStorageGate.module.css'
 import styles from './MiningTargetCue.module.css'
 
 // SSL-711: the no-client explanation lives in the start card (centre of the scene, fades), not a panel across the top.
@@ -564,43 +565,24 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           overlay (explainer/guide/success/failure/warning) since nothing
           about the run can proceed while it's open. */}
       {gateOpen && (
-        <div className="mining-storage-gate-overlay" style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(4, 10, 20, 0.72)' }}>
-          <Panel accent="var(--ln-cyan)" surface="solid" style={{ padding: 16, width: '100%', maxWidth: 340 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
-              Choose Storage Destination
-            </div>
-            <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
-              {'No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.'}
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button
-                type="button"
-                data-testid="mining-gate-sell"
-                onClick={() => setEarthDisposition('sell')}
-                style={{
-                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
-                }}
-              >
-                <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Sell On Earth</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>At market price</div>
+        <div className={`mining-storage-gate-overlay ${gateStyles.overlay}`}>
+          <section className={gateStyles.gate} aria-label="Choose where this haul goes">
+            <span className={gateStyles.eyebrow}>Free run · your haul</span>
+            <h2>Where does it go?</h2>
+            <p>No client is owed this haul. Choose before you start drilling.</p>
+            <div className={gateStyles.choices}>
+              <button type="button" className={gateStyles.choice} data-testid="mining-gate-sell" onClick={() => setEarthDisposition('sell')}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M14.5 9.5c-.6-.9-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.7 5.4 1.4 5.4 4 0 1.1-1.1 1.9-2.7 1.9-1.2 0-2.2-.5-2.8-1.4M12 6.5v11" /></svg>
+                <b>Sell on Earth</b>
+                <small>At market price</small>
               </button>
-              <button
-                type="button"
-                data-testid="mining-gate-store"
-                onClick={() => hasEarthStorage && setEarthDisposition('store')}
-                disabled={!hasEarthStorage}
-                style={{
-                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: hasEarthStorage ? 'pointer' : 'not-allowed',
-                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
-                  opacity: hasEarthStorage ? 1 : 0.5,
-                }}
-              >
-                <div style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Store On Earth</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</div>
+              <button type="button" className={gateStyles.choice} data-testid="mining-gate-store" onClick={() => hasEarthStorage && setEarthDisposition('store')} disabled={!hasEarthStorage}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5z" /><path d="M4 9 12 4l8 5M9 13h6" /></svg>
+                <b>Store on Earth</b>
+                <small>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</small>
               </button>
             </div>
-          </Panel>
+          </section>
         </div>
       )}
 
