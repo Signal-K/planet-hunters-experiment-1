@@ -2032,14 +2032,23 @@
           "note": "Drag to box a meteor echo, tap to drop a standard box. Source-pixel rectangles, the Panoptes rectangle-tool shape."
         },
         {
-          "id": "verdict-controls",
-          "kind": "panel",
+          "id": "receiver-dials",
+          "kind": "instrument",
           "parent": "radio-spectrogram",
           "layout": "host",
           "mechanics": [
             "sky-events"
           ],
-          "note": "No meteors / Submit. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."
+          "note": "GAIN (contrast), ZOOM (both axes about the beacon line) and SWEEP (along the five minutes). Drag, scroll or arrow keys turn them; the time bar shows what is on screen."
+        },
+        {
+          "id": "radio-desk",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "Two-tone right half. The radio desk briefs first-timers in three lines, then reacts to each box, delete and send. UNDO/DELETE BOX, NO METEORS, SEND ECHOES. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."
         }
       ]
     },
