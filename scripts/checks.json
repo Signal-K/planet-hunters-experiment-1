@@ -1,0 +1,81 @@
+{
+  "hub-loads": {
+    "route": "/game/hub",
+    "steps": [
+      {
+        "see": "[data-testid], button",
+        "within": 15000
+      }
+    ]
+  },
+  "orionids-board": {
+    "route": "/game/stage?preset=ui-orionids-events-stage1",
+    "steps": [
+      {
+        "wait": 1500
+      },
+      {
+        "click": "Events"
+      },
+      {
+        "see": "orionids",
+        "within": 15000
+      }
+    ]
+  },
+  "orionids-shower-mining": {
+    "route": "/game/stage?preset=ui-orionids-shower-mining-fresh",
+    "steps": [
+      {
+        "see": "[data-stage-ready=\"true\"]",
+        "within": 20000
+      },
+      {
+        "see": "[data-testid=\"mining-order-readout\"]"
+      }
+    ]
+  },
+  "orionids-cue": {
+    "route": "/game/stage?preset=ui-orionids-shower-mining-fresh",
+    "fresh": true,
+    "steps": [
+      {
+        "see": "[data-stage-ready=\"true\"]",
+        "within": 20000
+      },
+      {
+        "see": "STEER UNDER A FRAGMENT",
+        "within": 6000
+      }
+    ]
+  },
+  "orionids-first-catch": {
+    "route": "/game/stage?preset=ui-orionids-shower-mining-fresh",
+    "fresh": true,
+    "timeout": 90000,
+    "steps": [
+      {
+        "see": "[data-stage-ready=\"true\"]",
+        "within": 20000
+      },
+      {
+        "see": "fragments: 1 of 20",
+        "within": 70000
+      }
+    ]
+  },
+  "friends-sheet": {
+    "route": "/game/stage?preset=storage-hub&menu=1",
+    "steps": [
+      { "click": "Friends" },
+      { "see": "Field comms", "within": 8000 }
+    ]
+  },
+  "narrative-ledger": {
+    "route": "/game/stage?preset=ui-ledger",
+    "steps": [
+      { "see": "Friends", "within": 8000 },
+      { "see": "Crew and Academy" }
+    ]
+  }
+}

@@ -12,7 +12,6 @@ public enum MissionBoard {
         public let feasibleTargets: Int
     }
 
-    public struct CrewStatus: Equatable, Sendable { public let met: Bool; public let reason: String }
 
     /// In Free Ops the board lists client work; the player's own programme lives on the Launchpad.
     public static func isBoardMission(_ m: Mission, freeOps: Bool) -> Bool { !freeOps || !m.isOwnProgram }
@@ -33,19 +32,6 @@ public enum MissionBoard {
         return best.map { [$0.0, $0.1] } ?? Array(candidates.prefix(2))
     }
 
-    public static func crewStatus(_ req: CrewRequirement?, crew: [CrewMember]) -> CrewStatus {
-        guard let req else { return CrewStatus(met: true, reason: "No crew needed") }
-        let fit = crew.filter { $0.condition == .fit }
-        let matches = fit.filter { m in
-            (m.specialisations.first { $0.branch == req.branch }?.tier ?? 0) >= req.minTier && Academy.crewLevel(m) >= req.minLevel
-        }
-        let need = max(1, req.count ?? 1)
-        let what = "\(req.branch) specialist, tier \(req.minTier), level \(req.minLevel)"
-        if matches.count >= need { return CrewStatus(met: true, reason: "\(matches[0].name) qualifies (\(what))") }
-        if crew.isEmpty { return CrewStatus(met: false, reason: "Hire and train a \(what)") }
-        if fit.isEmpty { return CrewStatus(met: false, reason: "Your crew needs rest; a fit \(what) is required") }
-        return CrewStatus(met: false, reason: "Train a \(what)")
-    }
 
     /// Everything that must hold before this mission can be taken, beyond finding a reachable target.
     public static func gate(_ m: Mission, player p: Player, now: Double) -> String? {
@@ -56,13 +42,6 @@ public enum MissionBoard {
             if m.sequence > seq { return "Complete \(m.sequence - seq) more guided contract\(m.sequence - seq == 1 ? "" : "s")" }
         }
         switch m.id {
-        case AuthoredMissions.academyStoryId:
-            if p.placed.contains("astronaut-academy") && !p.crew.isEmpty { return "Completed" }
-            if !Academy.affinityUnlocked(p) { return "Reach client level 2 with two clients" }
-        case AuthoredMissions.crewedProspectingId:
-            if !p.placed.contains("astronaut-academy") { return "Build the Astronaut Academy first" }
-            let c = crewStatus(m.requires.crew, crew: p.crew)
-            if !c.met { return c.reason }
         default: break
         }
         if let plan = m.construction, m.isOwnProgram {
@@ -76,10 +55,10 @@ public enum MissionBoard {
 
     private static func entry(_ m: Mission, catalog: Catalog, player p: Player, now: Double) -> Entry {
         let targets = Targets.feasible(for: m, targets: catalog.targets, parts: catalog.parts, missionsDone: p.missionsDone,
-                                       launchpadUpgraded: p.launchpadUpgraded, launchpadLevel: BuildingLevels.level(p, "launchpad"), skills: p.unlockedSkillNodes).count
+                                       launchpadUpgraded: p.launchpadUpgraded, launchpadLevel: BuildingLevels.level(p, "launchpad")).count
         var reason = gate(m, player: p, now: now)
         // Academy setup has no flight target; everything else needs somewhere reachable to fly.
-        if reason == nil, targets == 0, m.id != AuthoredMissions.academyStoryId, m.targetId != nil || m.requires.maxOrbit > 0 {
+        if reason == nil, targets == 0, m.targetId != nil || m.requires.maxOrbit > 0 {
             reason = "No reachable target with your current rocket parts"
         }
         return Entry(mission: m, unlocked: reason == nil, lockedReason: reason, feasibleTargets: targets)

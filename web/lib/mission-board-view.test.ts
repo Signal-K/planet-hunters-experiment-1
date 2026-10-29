@@ -47,7 +47,7 @@ describe('mission board view', () => {
     const board = eventsBoard(NOW, {}, NOW)
     expect(board.orionids.status).toBe('upcoming')
     expect(board.orionids.countdownLabel).toMatch(/to start/)
-    expect(board.orionids.blurb).toBe('Launch through the shower and catch fragments on the way up. They fall any time in the window.')
+    expect(board.orionids.blurb).toBe("Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.")
     expect(board.groups.find(group => group.status === 'upcoming')?.cards.map(card => card.id)).toEqual([
       'orionids-2026',
       'leonids-2026',

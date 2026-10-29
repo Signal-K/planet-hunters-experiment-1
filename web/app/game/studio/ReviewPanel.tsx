@@ -6,14 +6,6 @@ import type { EditOp } from '@/lib/authoring/edit'
 import type { DocBundle } from '@/lib/authoring/studio-types'
 import styles from './Studio.module.css'
 
-export interface ThreadMessage {
-  id: string
-  at: string
-  from: 'user' | 'agent'
-  text: string
-  scene?: string
-}
-
 /** Shrinks a pasted or chosen image so references stay small in the repo. */
 async function toDataUrl(file: Blob, maxSide = 1280): Promise<string> {
   const bitmap = await createImageBitmap(file)
@@ -31,8 +23,6 @@ interface Props {
   onOps: (ops: EditOp[], label: string) => void
   onRef: (dataUrl: string) => Promise<string | null>
   prompt: string
-  thread: ThreadMessage[]
-  onChat: (text: string) => void
   highlighted: number | null
 }
 
@@ -44,7 +34,6 @@ export default function ReviewPanel(p: Props) {
   const [source, setSource] = useState('')
   const [likes, setLikes] = useState('')
   const [pending, setPending] = useState<string | null>(null)
-  const [chat, setChat] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
 
   const counts = { wrong: 0, keep: 0 }
@@ -130,13 +119,6 @@ export default function ReviewPanel(p: Props) {
           </div>
         </details>
 
-        <details>
-          <summary>Messages with the agent {p.thread.length ? `(${p.thread.length})` : ''}</summary>
-          <div className={styles.body}>
-            <div className={styles.thread}>{p.thread.slice(-8).map(m => <div key={m.id} className={`${styles.msg} ${m.from === 'agent' ? styles.msgAgent : ''}`}><strong>{m.from === 'agent' ? 'Agent' : 'You'}</strong> {m.text}</div>)}</div>
-            <input className={styles.input} placeholder={`Message about ${p.sceneId}, then Enter`} value={chat} onChange={e => setChat(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && chat.trim()) { p.onChat(chat.trim()); setChat('') } }} data-testid="chat-input" />
-          </div>
-        </details>
       </section>
     </div>
   )

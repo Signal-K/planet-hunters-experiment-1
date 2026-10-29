@@ -42,7 +42,6 @@ export interface MoonSurveyChart {
   tier: 'gold' | 'silver'
   researchXpAwarded?: number
   atlasUnlockedAt?: number
-  territoryPlotClaimedAt?: number
 }
 
 /** Fixed single-frame-per-day digest; the Saturn imager has no level scaling. */

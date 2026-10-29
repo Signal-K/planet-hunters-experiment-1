@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { ROCKET_IDS, ROCKET_MODELS, hasShipCustomizer } from '@/lib/data'
+import { ROCKET_IDS, ROCKET_MODELS } from '@/lib/data'
 import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
@@ -13,13 +13,10 @@ import styles from './HangarScreen.module.css'
 interface HangarScreenProps {
   francs: number
   missionsDone: number
-  unlockedSkillNodes?: string[]
-  shipCustomizerParts?: InstalledCustomizerPartsByKind
-  crewModuleResearched?: boolean
+    shipCustomizerParts?: InstalledCustomizerPartsByKind
   landingResearched?: boolean
   pendingLaunch?: boolean
   pendingRocketName?: string
-  trainingPartTry?: boolean
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   /** Title of the mission this vehicle is being built for; null when no mission is set up yet. */
@@ -51,11 +48,10 @@ function RocketThumbnail({ rocketId, tier }: { rocketId?: string; tier: number }
 }
 
 export default function HangarScreen({
-  francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched,
-  trainingPartTry = false, onConfirmShipCustomizerBuild, onBack,
+  francs, missionsDone, shipCustomizerParts, landingResearched,
+  onConfirmShipCustomizerBuild, onBack,
   missionTitle = null, compatibleRocketIds = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket,
 }: HangarScreenProps) {
-  const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const [previewRocketId, setPreviewRocketId] = useState<string | null>(selectedRocketId)
   const installed = shipCustomizerParts ?? {}
@@ -85,7 +81,6 @@ export default function HangarScreen({
         data-testid="open-ship-customizer"
         aria-label="Vehicle blueprint"
         onClick={() => {
-          if (!customizerUnlocked) return
           captureGameEvent('hangar_customizer_opened')
           setCustomizerOpen(true)
         }}
@@ -191,7 +186,6 @@ export default function HangarScreen({
             startingFrancs={francs}
             missionsDone={missionsDone}
             installedParts={installed}
-            crewModuleResearched={crewModuleResearched}
             landingResearched={landingResearched}
             onConfirm={onConfirmShipCustomizerBuild ? (nextInstalled, prevInstalled) => {
               const ok = onConfirmShipCustomizerBuild(nextInstalled, prevInstalled)

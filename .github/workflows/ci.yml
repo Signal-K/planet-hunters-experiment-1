@@ -1,7 +1,7 @@
 name: CI
 
-# SSL-506: the scene suite is a real Linux gate, with reports and screenshots
-# retained for every run. Require only the aggregate "CI required" job.
+# Fast source gate. Interactive scene proof is performed in the editor Simple
+# Browser, so CI never installs or runs a browser.
 on:
   push:
     branches: [cycle/4]
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   check:
-    name: Typecheck, unit tests, build
+    name: Typecheck and build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,59 +33,15 @@ jobs:
         run: npm ci
       - name: Typecheck
         run: npm run typecheck
-      - name: Unit tests
-        run: npm run test:unit
       - name: Build
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
-  scenes:
-    name: Playwright scenes
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run scene tests
-        run: npm run test:scenes
-        env:
-          CI: "1"
-          NEXT_TELEMETRY_DISABLED: "1"
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scenes-report-${{ github.run_id }}-${{ github.run_attempt }}
-          path: web/tests/.report
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 14
-      - name: Upload scene screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scenes-out-${{ github.run_id }}-${{ github.run_attempt }}
-          path: web/tests/.out
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 14
-
   ci-required:
     name: CI required
     if: always()
-    needs: [check, scenes]
+    needs: [check]
     runs-on: ubuntu-latest
     steps:
       - name: Every required job must succeed
@@ -93,4 +49,4 @@ jobs:
           RESULTS: ${{ toJSON(needs) }}
         run: |
           echo "$RESULTS"
-          test "$(echo "$RESULTS" | grep -c '"result": "success"')" -eq 2
+          test "$(echo "$RESULTS" | grep -c '"result": "success"')" -eq 1

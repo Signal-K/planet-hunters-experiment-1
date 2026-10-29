@@ -1,10 +1,8 @@
 import { buildingLevel } from '@/lib/data/building-levels'
 import { useState } from 'react'
-import { ACADEMY_INTRO_MISSION_ID, feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
+import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { formatCurrency } from '@/lib/format'
-import { academyAffinityUnlocked, crewRequirementStatus } from '@/lib/systems/AcademySystem'
-import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
@@ -22,8 +20,6 @@ export interface MissionRelayCardModel {
   cardState: 'locked' | 'available'
   lockedDetail: string | undefined
   routeLabel: string | undefined
-  crewStatus: string | undefined
-  crewReady: boolean
 }
 
 export interface UseMissionRelayModelsArgs {
@@ -31,7 +27,6 @@ export interface UseMissionRelayModelsArgs {
   missionsDone: number
   freeOperations: boolean
   francs?: number
-  crew?: CrewMember[]
   player?: Player
   sceneScope?: SceneScope
 }
@@ -45,7 +40,6 @@ export function useMissionRelayModels({
   missionsDone,
   freeOperations,
   francs,
-  crew = [],
   player,
   sceneScope = { kind: 'earth-base', id: 'earth-base', label: SCENE_NAMES.base },
 }: UseMissionRelayModelsArgs) {
@@ -79,17 +73,12 @@ export function useMissionRelayModels({
   // renders, not only when the player reaches Target Picker: an impossible
   // card is already a broken contract from the player's perspective.
   const feasibleCandidates = available.filter(mission =>
-    // Academy setup has no flight target. It becomes available on the
-    // contract carousel only once the two-client relationship gate is met;
-    // every flight contract still requires a feasible destination.
-    (mission.id === ACADEMY_INTRO_MISSION_ID && !!player && academyAffinityUnlocked(player))
-    || feasibleTargetsFor(
+    feasibleTargetsFor(
       mission,
       targets,
       parts,
       missionsDone,
       player?.launchpadUpgraded ?? false,
-      player?.unlockedSkillNodes ?? [],
       player ? buildingLevel(player, 'launchpad') : 1,
     ).length > 0,
   )
@@ -110,9 +99,8 @@ export function useMissionRelayModels({
       const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
       const clientReady = freeOperations || m.sequence === sequence
       const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
-      const academyReady = m.id !== ACADEMY_INTRO_MISSION_ID || (!!player && academyAffinityUnlocked(player))
-      const unlocked = academyReady && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
-      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player?.unlockedSkillNodes ?? [], player ? buildingLevel(player, 'launchpad') : 1)
+      const unlocked = clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
+      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player ? buildingLevel(player, 'launchpad') : 1)
       const displayPayout = m.payout.francs
       const cardState = !unlocked ? 'locked' as const : 'available' as const
       const lockedDetail = !jointFundingReady
@@ -125,26 +113,16 @@ export function useMissionRelayModels({
       const routeLabel = m.deliveryTargetId
         ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
         : undefined
-      const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {
         mission: m, client, targetCount: mTargets.length, targetIds: mTargets.map(target => target.id), displayPayout,
         unlocked, isStoryMission, cardState, lockedDetail, routeLabel,
-        crewStatus: m.requires.crew
-          ? player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'
-            ? crewStatus.reason
-            : 'Crew Quarters required · research and fit in Hangar'
-          : undefined,
-        crewReady: crewStatus.met && player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1',
       }
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
   // STS-582 makes this a client-only surface in Free Ops. Owned flights are
   // filtered above and live on the Mission Board Program tab instead.
-  // A newly unlocked Academy is the player's next concrete Base action, so
-  // foreground it instead of burying it after the recurring client jobs.
-  const academyIntro = cardModels.find(card => card.mission.id === ACADEMY_INTRO_MISSION_ID && card.unlocked)
-  const effectivePreviewId = previewId ?? academyIntro?.mission.id ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
+  const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
   const selectedIndex = Math.max(0, cardModels.findIndex(c => c.mission.id === effectivePreviewId))
   const selectRelativeSignal = (offset: number) => {

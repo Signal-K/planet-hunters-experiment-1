@@ -30,12 +30,11 @@ import type { BuildingCallout } from '@/components/game/hub/Building'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
-import { openSettings } from '@/lib/mining/openChrome'
+import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
@@ -343,16 +342,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         onClick: () => onFocusBuilding('deep-space-telescope'),
       }
     }
-    if (kind === 'astronaut-academy') {
-      const activeTraining = player.crewTraining?.length ?? 0
-      return {
-        kind, label: 'Academy',
-        sub: activeTraining > 0 ? `${activeTraining} TRAINING` : player.academyFunded ? 'FUNDED' : 'PAUSED',
-        status: (activeTraining > 0 ? 'warn' : player.academyFunded ? 'ok' : 'info') as 'ok' | 'warn' | 'info',
-        w: 88,
-        onClick: () => onFocusBuilding('academy'),
-      }
-    }
     return {
       kind, label: kind,
       sub: 'BUILT',
@@ -415,7 +404,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         : []
     ),
     { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
-    ...(player.freeOperations ? [{ id: 'sites', icon: 'sites' as const, label: 'Sites', detail: 'Places to survey and settle', onSelect: () => onOpenScene('surface-ops') }] : []),
+    { id: 'ledger', icon: 'log', label: 'Narrative ledger', detail: 'What is live, adapting and planned', onSelect: () => onOpenScene('narrative-ledger') },
+    { id: 'friends', icon: 'friends', label: 'Friends', detail: 'Callsign, requests, gifts and visits', onSelect: openFriends },
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
@@ -536,7 +526,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           <HubSubsurfaceView
             stash={player.stash}
             installedParts={player.shipCustomizerParts}
-            trainingEnabled={FEATURE_FLAGS.subsurfaceHabitatTraining}
             francs={player.francs}
             subsurfaceExcavated={player.subsurfaceExcavated}
             subsurfaceBuilt={player.subsurfaceBuilt}
@@ -551,7 +540,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       </div>
       {/* ── End persistent Base world ── */}
 
-      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
+      {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same

@@ -15,7 +15,7 @@
  * (public/game/assets/rockets/launch). The procedural Graphics stack below
  * is the fallback when those textures fail to load.
  */
-import { Application, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 import {
   launchAltitude,
   launchCameraY,
@@ -39,6 +39,7 @@ import {
   type SpriteStack,
 } from './launchSprites'
 import { drawPlanet } from './transitScene'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 
 export { LAUNCH_TIMELINE, LAUNCH_W, LAUNCH_H, launchFrameDt } from './launchTimeline'
 export {
@@ -73,6 +74,24 @@ const C = {
   skyTop: 0x9fd0ee,
   skyHorizon: 0xd5ecf7,
 } as const
+
+const LANDSCAPE_PALETTE: Record<EarthBiomeId, { skyTop: number; skyHorizon: number; far: number; near: number; ground: number; groundDark: number }> = {
+  // "mountains" is the legacy id for the player-facing Steppe. Launch is
+  // always at dusk, matching the base and mission-board world rather than
+  // reverting to the retired pale-blue blueprint landscape.
+  mountains: { skyTop: 0x10182c, skyHorizon: 0xc45b6a, far: 0x51576a, near: 0x373d4d, ground: 0x4b4f57, groundDark: 0x8a7a64 },
+  desert: { skyTop: 0x17172c, skyHorizon: 0xb66c5a, far: 0x66534b, near: 0x463d39, ground: 0x5b5148, groundDark: 0x8a6b50 },
+  tundra: { skyTop: 0x0e1930, skyHorizon: 0x7896ac, far: 0x617884, near: 0x3f5664, ground: 0x59636a, groundDark: 0xa6bbc2 },
+  coast: { skyTop: 0x0e1c31, skyHorizon: 0x5e8f9d, far: 0x4e7780, near: 0x304d5b, ground: 0x475e64, groundDark: 0x8eb6b6 },
+}
+
+// The cinematic begins on the exact composed launchpad the player just left.
+// Keep these paths alongside the authored launchpad object declaration rather
+// than substituting a generic tower or a second rocket design in the first
+// seconds of a launch.
+const AUTHORED_PAD_SRC = '/game/assets/base/v7/launchpad/pad-complex.png'
+const AUTHORED_ROCKET_SRC = '/art/scenes/launchpad/launchpad-rocket-multistage.png'
+const AUTHORED_ROCKET_FRAME = { x: 0.2308, y: 0.261, w: 0.1904, h: 0.647 }
 
 interface SmokeParticle {
   sprite: Sprite
@@ -184,19 +203,22 @@ function buildProceduralLaunchStack(variant: 'explorer' | 'prospector'): LaunchS
 
 export function buildLaunchScene(
   app: Application,
-  opts: { rocketName: string; rocketImageSrc?: string; targetName: string; onComplete: () => void },
+  opts: { rocketId?: string; rocketName: string; rocketImageSrc?: string; targetName: string; earthBiome?: EarthBiomeId; onComplete: () => void },
 ) {
   const W = app.screen.width
   const H = app.screen.height
   const T = LAUNCH_TIMELINE
   const layout = launchPadLayout(W, H)
-  const variant: 'explorer' | 'prospector' = /prospector/i.test(opts.rocketName) ? 'prospector' : 'explorer'
+  const landscape = LANDSCAPE_PALETTE[opts.earthBiome ?? 'mountains']
+  // This is the same selected vehicle that is staged on the launchpad. Names
+  // are localised display copy and must not decide which launch stack appears.
+  const variant: 'explorer' | 'prospector' = opts.rocketId === 'prospector' ? 'prospector' : 'explorer'
 
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)
   const sunGfx = new Graphics()
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.045).fill({ color: 0xffffff, alpha: 0.95 })
-  sunGfx.circle(W * 0.82, H * 0.12, Math.min(W, H) * 0.09).fill({ color: 0xffffff, alpha: 0.18 })
+  sunGfx.circle(W * 0.82, H * 0.16, Math.min(W, H) * 0.04).fill({ color: 0xffd0a3, alpha: 0.78 })
+  sunGfx.circle(W * 0.82, H * 0.16, Math.min(W, H) * 0.075).fill({ color: 0xffb38b, alpha: 0.12 })
   app.stage.addChild(sunGfx)
 
   function drawSky(skyT: number) {
@@ -205,11 +227,19 @@ export function buildLaunchScene(
     const bandH = H / bands + 1
     for (let i = 0; i < bands; i++) {
       const localT = i / (bands - 1)
-      const day = lerpColor(C.skyTop, C.skyHorizon, localT)
+      const day = lerpColor(landscape.skyTop, landscape.skyHorizon, localT)
       skyGfx.rect(0, i * (H / bands), W, bandH).fill(lerpColor(day, C.void, skyT))
     }
   }
   drawSky(0)
+
+  // This is deliberately separate from the ascent sky. At orbit and
+  // departure it is an opaque deep-space floor, so a renderer clear or an
+  // asset transition can never reveal the document's white background.
+  const spaceGfx = new Graphics()
+  spaceGfx.rect(0, 0, W, H).fill(C.void)
+  spaceGfx.alpha = 0
+  app.stage.addChild(spaceGfx)
 
   const starGfx = new Graphics()
   starGfx.alpha = 0
@@ -222,7 +252,7 @@ export function buildLaunchScene(
   }))
 
   const orbitCenter = { x: W * 0.5, y: H * 0.58 }
-  const orbitRadius = Math.min(W * 0.28, H * 0.28)
+  const orbitRadius = Math.min(W * 0.32, H * 0.32)
   const orbitScene = new Graphics()
   orbitScene.alpha = 0
   app.stage.addChild(orbitScene)
@@ -233,30 +263,30 @@ export function buildLaunchScene(
   // Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
   const mountains = new Graphics()
   const farPeaks: number[] = [0, layout.groundTop]
-  const farHeights = [0.22, 0.34, 0.18, 0.40, 0.26, 0.36, 0.20, 0.32, 0.24]
+  const farHeights = [0.08, 0.13, 0.07, 0.16, 0.10, 0.14, 0.08, 0.12, 0.09]
   for (let i = 0; i <= 8; i++) {
     farPeaks.push((W * i) / 8, layout.groundTop - H * farHeights[i] * 0.55)
   }
   farPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(farPeaks).fill(C.mountainFar).stroke({ width: 2, color: C.ink })
+  mountains.poly(farPeaks).fill(landscape.far).stroke({ width: 2, color: C.ink })
   const nearPeaks: number[] = [0, layout.groundTop]
-  const nearHeights = [0.14, 0.22, 0.10, 0.26, 0.16, 0.20, 0.12]
+  const nearHeights = [0.05, 0.09, 0.04, 0.11, 0.06, 0.09, 0.05]
   for (let i = 0; i <= 6; i++) {
     nearPeaks.push((W * i) / 6, layout.groundTop - H * nearHeights[i] * 0.42)
   }
   nearPeaks.push(W, layout.groundTop, W, H, 0, H)
-  mountains.poly(nearPeaks).fill(C.mountainNear).stroke({ width: 2.5, color: C.ink })
+  mountains.poly(nearPeaks).fill(landscape.near).stroke({ width: 2.5, color: C.ink })
   padContainer.addChild(mountains)
 
   const groundGfx = new Graphics()
-  groundGfx.rect(0, layout.groundTop, W, layout.groundHeight + 4).fill(C.dirt)
-  groundGfx.rect(0, layout.groundTop, W, 14).fill(C.grass)
+  groundGfx.rect(0, layout.groundTop, W, layout.groundHeight + 4).fill(landscape.ground)
+  groundGfx.rect(0, layout.groundTop, W, 14).fill(landscape.groundDark)
   groundGfx.moveTo(0, layout.groundTop).lineTo(W, layout.groundTop).stroke({ width: 3, color: C.ink })
-  groundGfx.moveTo(0, layout.groundTop + 14).lineTo(W, layout.groundTop + 14).stroke({ width: 1.5, color: C.dirtDark })
+  groundGfx.moveTo(0, layout.groundTop + 14).lineTo(W, layout.groundTop + 14).stroke({ width: 1.5, color: landscape.groundDark })
   const padW = Math.min(W * 0.38, 320)
   const padX = W / 2 - padW / 2
   groundGfx.rect(padX - 18 + 4, layout.padDeckY - 4 + 4, padW + 36, 22).fill({ color: C.shade, alpha: 0.5 })
-  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(C.dirtDark).stroke({ width: 2.5, color: C.ink })
+  groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(landscape.groundDark).stroke({ width: 2.5, color: C.ink })
   groundGfx.rect(padX, layout.padDeckY - 10, padW, 20).fill(C.pad).stroke({ width: 2.5, color: C.ink })
   groundGfx.rect(W / 2 - 16, layout.padDeckY - 4, 32, 22).fill(C.void).stroke({ width: 2, color: C.ink })
   groundGfx.rect(padX + 12, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.9 })
@@ -285,13 +315,65 @@ export function buildLaunchScene(
   gear.rect(layout.towerRightX + 18, layout.padDeckY - 26, 18, 4).fill({ color: C.cyan, alpha: 0.8 })
   padContainer.addChild(gear)
 
+  // The launch review and departure now share the same pad and staged rocket
+  // art. The small procedural construction below remains a resilience fallback
+  // only; it is hidden as soon as the bundled authored textures resolve.
+  const authoredPad = new Sprite(Texture.EMPTY)
+  authoredPad.anchor.set(0.5, 1)
+  authoredPad.visible = false
+  padContainer.addChild(authoredPad)
+  const authoredRocket = new Sprite(Texture.EMPTY)
+  authoredRocket.anchor.set(0.5, 1)
+  authoredRocket.visible = false
+  app.stage.addChild(authoredRocket)
+  let authoredPadReady = false
+  let authoredPadBottom = 0
+  let authoredPadWidth = 0
+  let authoredPadHeight = 0
+  let authoredRocketBaseX = W / 2
+  let authoredRocketBaseY = layout.rocketPadY
+  let authoredRocketScale = 1
+
+  void Promise.all([
+    Assets.load<Texture>(AUTHORED_PAD_SRC),
+    Assets.load<Texture>(AUTHORED_ROCKET_SRC),
+  ]).then(([padTexture, rocketTexture]) => {
+    if (app.stage.destroyed) return
+    const padScale = Math.min(W * 0.96 / Math.max(padTexture.width, 1), H * 0.72 / Math.max(padTexture.height, 1))
+    authoredPad.texture = padTexture
+    authoredPad.scale.set(padScale)
+    authoredPadWidth = padTexture.width * padScale
+    authoredPadHeight = padTexture.height * padScale
+    authoredPadBottom = layout.groundTop + Math.min(layout.groundHeight * 0.72, H * 0.18)
+    authoredPad.position.set(W / 2, authoredPadBottom)
+
+    authoredRocketScale = AUTHORED_ROCKET_FRAME.w * authoredPadWidth / Math.max(rocketTexture.width, 1)
+    authoredRocket.texture = rocketTexture
+    authoredRocketBaseX = W / 2 - authoredPadWidth / 2 + (AUTHORED_ROCKET_FRAME.x + AUTHORED_ROCKET_FRAME.w / 2) * authoredPadWidth
+    authoredRocketBaseY = authoredPadBottom - authoredPadHeight + (1 - AUTHORED_ROCKET_FRAME.y - AUTHORED_ROCKET_FRAME.h) * authoredPadHeight
+    authoredRocket.position.set(authoredRocketBaseX, authoredRocketBaseY)
+    authoredRocket.scale.set(authoredRocketScale)
+    authoredPad.visible = true
+    authoredRocket.visible = true
+    authoredPadReady = true
+    mountains.visible = false
+    groundGfx.visible = false
+    towerGfx.visible = false
+    gear.visible = false
+    // The sheet stack belongs to the old synthetic launch set. Keep it only
+    // until the shared pad art is ready, then never show both vehicle designs.
+    rocketRoot.visible = false
+  }).catch(() => {
+    // A missing bundled texture must leave the dark procedural fallback intact,
+    // never a transparent canvas over the document background.
+  })
+
   const cloudContainer = new Container()
   app.stage.addChild(cloudContainer)
   const cloudLayers: { container: Container; puffs: CloudPuff[]; speed: number; parallax: number }[] = []
   const layerDefs = [
-    { count: 5, yMin: 0.42, yMax: 0.62, rMin: 28, rMax: 52, alpha: 0.72, speed: 6, parallax: 0.25 },
-    { count: 4, yMin: 0.22, yMax: 0.42, rMin: 20, rMax: 36, alpha: 0.55, speed: 10, parallax: 0.45 },
-    { count: 3, yMin: 0.08, yMax: 0.24, rMin: 14, rMax: 24, alpha: 0.4, speed: 14, parallax: 0.7 },
+    { count: 3, yMin: 0.42, yMax: 0.62, rMin: 28, rMax: 44, alpha: 0.16, speed: 6, parallax: 0.25 },
+    { count: 2, yMin: 0.22, yMax: 0.42, rMin: 20, rMax: 32, alpha: 0.12, speed: 10, parallax: 0.45 },
   ]
   for (const def of layerDefs) {
     const container = new Container()
@@ -301,9 +383,9 @@ export function buildLaunchScene(
       const y = H * (def.yMin + Math.random() * (def.yMax - def.yMin))
       const r = def.rMin + Math.random() * (def.rMax - def.rMin)
       const g = new Graphics()
-      g.circle(0, 0, r).fill({ color: 0xffffff, alpha: def.alpha })
-      g.circle(r * 0.6, r * 0.12, r * 0.7).fill({ color: 0xffffff, alpha: def.alpha })
-      g.circle(-r * 0.55, r * 0.1, r * 0.55).fill({ color: 0xf2f7ff, alpha: def.alpha * 0.9 })
+      g.circle(0, 0, r).fill({ color: landscape.skyHorizon, alpha: def.alpha })
+      g.circle(r * 0.6, r * 0.12, r * 0.7).fill({ color: landscape.skyHorizon, alpha: def.alpha })
+      g.circle(-r * 0.55, r * 0.1, r * 0.55).fill({ color: landscape.far, alpha: def.alpha * 0.9 })
       g.x = x
       g.y = y
       container.addChild(g)
@@ -403,7 +485,7 @@ export function buildLaunchScene(
       hookSchedule = buildHookSchedule(sheets.meta, T)
       padFx = new FxLayer(sheets)
       sepFx = new FxLayer(sheets)
-      // Sprite sheets resolve asynchronously. Cypress can advance away from
+      // Sprite sheets resolve asynchronously. A scene can advance away from
       // the launch scene before this continuation runs, which removes the
       // root from the stage and made getChildIndex throw during M1/visual QA.
       const stage = app.stage
@@ -594,9 +676,14 @@ export function buildLaunchScene(
       cloudContainer.alpha = 0
       highAtmosContainer.alpha = 0
       sunGfx.alpha = 0
-      orbitScene.alpha = Math.min(1, orbitT / 0.4)
+      skyGfx.alpha = 0
+      spaceGfx.alpha = 1
+      // Earth establishes the orbital insertion, then clears before the
+      // departure burn. The burn should read as deep space, not as a pale
+      // globe or cloud layer left over from the launch pad.
+      orbitScene.alpha = Math.min(1, orbitT / 0.4) * Math.max(0, 1 - departureT / 0.6)
       orbitScene.clear()
-      drawPlanet(orbitScene, orbitCenter.x, orbitCenter.y, orbitRadius * 0.54, 'earth', orbitT * 0.35)
+      drawPlanet(orbitScene, orbitCenter.x, orbitCenter.y, orbitRadius * 0.70, 'earth', orbitT * 0.35)
       orbitScene.circle(orbitCenter.x, orbitCenter.y, radius).stroke({ color: C.cyan, alpha: 0.28, width: 1 })
     } else {
       rocketRoot.rotation = 0
@@ -605,6 +692,23 @@ export function buildLaunchScene(
       padContainer.alpha = 1
       smokeContainer.alpha = 1
       orbitScene.alpha = 0
+      skyGfx.alpha = 1
+      spaceGfx.alpha = 0
+    }
+
+    if (authoredPadReady) {
+      const liftT = Math.max(0, Math.min(1, (elapsed - T.liftoff) / 1.1))
+      authoredPad.y = authoredPadBottom
+      authoredPad.alpha = padContainer.alpha
+      if (orbitActive) {
+        authoredRocket.position.copyFrom(rocketRoot.position)
+      } else {
+        authoredRocket.x = authoredRocketBaseX + (W / 2 - authoredRocketBaseX) * liftT
+        authoredRocket.y = authoredRocketBaseY - altitude + cameraY
+      }
+      authoredRocket.scale.set(authoredRocketScale * (orbitActive ? 0.72 : 1))
+      authoredRocket.rotation = rocketRoot.rotation
+      authoredRocket.alpha = 1
     }
 
     cloudDrift += dt

@@ -1,6 +1,6 @@
 import type { ShipRoomKind } from './shipRooms'
 import { SHIP_ROOM_ASSETS, SHIP_ROOM_DETAIL_ASSETS } from './shipRooms'
-import { CREW_MODULE_PRICE, LANDER_MODULE_PRICE } from './economy'
+import { LANDER_MODULE_PRICE } from './economy'
 
 export const CUSTOMIZER_BUILD_SEQUENCE: ShipRoomKind[] = ['engine', 'booster', 'cockpit', 'payload']
 
@@ -13,11 +13,9 @@ export const BUILD_SEQUENCES: Record<number, ShipRoomKind[]> = {
 
 export function getBuildSequence(
   missionsDone: number,
-  crewModuleResearched = false,
   landingResearched = false,
 ): ShipRoomKind[] {
   const bonus: ShipRoomKind[] = [
-    ...(crewModuleResearched ? (['crew-module'] as const) : []),
     ...(landingResearched ? (['lander'] as const) : []),
   ]
   if (missionsDone >= 6) return [...BUILD_SEQUENCES[4], ...bonus]
@@ -459,76 +457,6 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     unlockedAtMissions: 6,
     img: '/game/assets/rockets/parts/ceramic-shield-t1_icon.png',
     detailImg: '/game/assets/rockets/parts/ceramic-shield-t1.png',
-  },
-  {
-    id: 'crew-quarters-t1',
-    name: 'Crew Quarters T1',
-    kind: 'crew-module',
-    price: CREW_MODULE_PRICE,
-    successBonus: 8,
-    mass: 3,
-    power: -3,
-    description: 'Pressurised two-seat quarters for trained astronauts. Requires a larger post-onboarding hull.',
-    unlockedAtMissions: 4,
-    tier: 1,
-    img: '/game/assets/rooms/crew_module_t1_icon.png',
-    detailImg: '/game/assets/rooms/crew_module_t1.png',
-  },
-  {
-    id: 'crew-transport-t2',
-    name: 'Crew Transport T2',
-    kind: 'crew-module',
-    price: Math.round(CREW_MODULE_PRICE * 1.4),
-    successBonus: 13,
-    mass: 4,
-    power: -3,
-    description: 'Stacked double bunk. Same footprint, higher crew capacity.',
-    unlockedAtMissions: 5,
-    tier: 2,
-    img: '/game/assets/rockets/parts/crew-transport-t2_icon.png',
-    detailImg: '/game/assets/rockets/parts/crew-transport-t2.png',
-  },
-  {
-    id: 'crew-transport-t3',
-    name: 'Crew Transport T3',
-    kind: 'crew-module',
-    price: Math.round(CREW_MODULE_PRICE * 1.8),
-    successBonus: 18,
-    mass: 4,
-    power: -3,
-    description: 'Two stacked bunk levels — the room reads as a real crew berth, not one bed.',
-    unlockedAtMissions: 6,
-    tier: 3,
-    img: '/game/assets/rooms/crew_module_t3_icon.png',
-    detailImg: '/game/assets/rooms/crew_module_t3.png',
-  },
-  {
-    id: 'crew-transport-t4',
-    name: 'Crew Transport T4',
-    kind: 'crew-module',
-    price: Math.round(CREW_MODULE_PRICE * 2.3),
-    successBonus: 24,
-    mass: 5,
-    power: -4,
-    description: 'A second berth against the far wall doubles pressurised sleeping capacity.',
-    unlockedAtMissions: 7,
-    tier: 4,
-    img: '/game/assets/rooms/crew_module_t4_icon.png',
-    detailImg: '/game/assets/rooms/crew_module_t4.png',
-  },
-  {
-    id: 'crew-transport-t5',
-    name: 'Crew Transport T5',
-    kind: 'crew-module',
-    price: Math.round(CREW_MODULE_PRICE * 2.9),
-    successBonus: 30,
-    mass: 5,
-    power: -4,
-    description: 'Two full double-bunk berths. Top-tier crew transport capacity.',
-    unlockedAtMissions: 8,
-    tier: 5,
-    img: '/game/assets/rockets/parts/crew-transport-t5_icon.png',
-    detailImg: '/game/assets/rockets/parts/crew-transport-t5.png',
   },
   {
     id: 'lander-module-t1',

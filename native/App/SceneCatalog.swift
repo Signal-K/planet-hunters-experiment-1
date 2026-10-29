@@ -49,11 +49,11 @@ enum SceneCatalog {
     static func basePlayer() -> GameState {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
-        gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
-        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
+        gs.player.placed = ["launchpad", "surface-silo"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
         gs.player.stash = ["copper": 6, "gold": 3, "aluminium": 30, "silicon": 12]
         gs.player.clientMissions = ["vulcan": 6, "helios": 11]
-        gs.player.academyResearched = true; gs.player.academyFunded = true; gs.player.researchXP = 180; gs.player.skillPoints = 2
+        gs.player.researchXP = 180
         return gs
     }
 
@@ -139,8 +139,6 @@ enum SceneCatalog {
     /// Base player who owns one settlement, so the « » dock tile shows enabled.
     static func landscapeBase() -> GameState {
         var gs = basePlayer()
-        var site = SurfaceSiteProgress(); site.siteAccessPurchasedAt = t0
-        gs.player.surfaceOps.sites["moon-south-pole"] = site
         return gs
     }
 
@@ -182,8 +180,8 @@ enum SceneCatalog {
             gs.rocket = RocketConfig(chassis: "hull-cargo", propulsion: "fusion-b2", drill: "laser-t2")
         default:
             gs = basePlayer(); gs.player.missionsDone = 20; gs.player.francs = 600_000_000
-            gs.player.placed = ["launchpad", "deep-space-telescope", "surface-silo", "astronaut-academy", "market"]
-            gs.player.placementPlots = ["launchpad": 0, "deep-space-telescope": 2, "surface-silo": 3, "astronaut-academy": 4, "market": 5]
+            gs.player.placed = ["launchpad", "deep-space-telescope", "surface-silo", "market"]
+            gs.player.placementPlots = ["launchpad": 0, "deep-space-telescope": 2, "surface-silo": 3, "market": 5]
             gs.player.deepSpaceTelescopeBuilt = true
             gs.player.refineryBuilt = true; gs.player.refineryUnlocked = true; gs.player.launchpadUpgraded = true
             gs.player.stash = ["iron": 120, "nickel": 60, "silicon": 40, "copper": 30, "gold": 6]
@@ -272,6 +270,17 @@ enum SceneCatalog {
         return gs
     }
 
+    /// The Orionids shower run at 0 of 20: fragments fall and bank when the ship is under them (web ui/orionids-shower-mining-fresh).
+    static func showerRunMiningState() -> GameState {
+        var gs = miningState(rover: false, target: "eros")
+        gs.player.freeOperations = true; gs.player.missionsDone = 5
+        gs.player.orionidsFragments = OrionidsFragments(caught: 5, redeemed: 0)
+        gs.player.orionidsRunBaseline = 5
+        gs.missionId = OrionidsRun.missionId
+        gs.player.activeMission = ActiveMission(id: OrionidsRun.missionId, label: "Orionids shower run")
+        return gs
+    }
+
     static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
         var gs = miningState(rover: false)
         gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
@@ -288,7 +297,6 @@ enum SceneCatalog {
         scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
         scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
-        scene("upgrade-academy-short-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "astronaut-academy").environment(GameStore(state: { var gs = basePlayer(); gs.player.francs = 1_000_000; return gs }())) },
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
         scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
@@ -304,8 +312,8 @@ enum SceneCatalog {
         scene("hub-live", 874) { HubScreen().environment(GameStore()) },
         scene("hub-live-built", 874) {
             var gs = GameState()
-            gs.player.placed = ["launchpad", "hangar", "surface-silo", "astronaut-academy"]
-            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
+            gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
             return HubScreen().environment(GameStore(state: gs))
         },
         scene("hub-pan-right-phone", 874) {
@@ -342,8 +350,8 @@ enum SceneCatalog {
         scene("hub-biome-coast-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .coast).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()
-            gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
-            gs.player.placementPlots = ["surface-silo": 0, "astronaut-academy": 2]
+            gs.player.placed = ["launchpad", "surface-silo"]
+            gs.player.placementPlots = ["surface-silo": 0]
             return HubScreen().environment(GameStore(state: gs))
         },
         scene("hub-skycraft-phone", 874) {
@@ -639,6 +647,8 @@ enum SceneCatalog {
         scene("mining-laser-live", 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
+        scene("mining-shower-live", 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
+        scene("mining-shower-live-landscape", 402, w: 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
         scene("mining-laser-live-landscape", 402, w: 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
@@ -704,21 +714,6 @@ enum SceneCatalog {
         scene("rover-touchdown-phone", 874) {
             RoverFieldScreen(initial: Prospecting()).environment(GameStore(state: GameState()))
         },
-        scene("skill-tree-phone", 1300) {
-            var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]
-            gs.player.tessClassifications = ["t": TessClassification(subjectId: "t", verdict: .planet, ranges: [], submittedAt: 1)]
-            return SkillTreeScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
-        },
-        scene("academy-phone", 1000) {
-            let gs = Academy.migrate(basePlayer(), now: t0)
-            let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
-            return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
-        },
-        scene("academy-landing-phone", 1000) {
-            var gs = Academy.migrate(basePlayer(), now: t0)
-            gs.player.missionsDone = 4; gs.player.researchXP = 150
-            return AcademyScreen(at: t0, startTab: .partners).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
-        },
         scene("launchpad-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3
             return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(GameStore(state: gs)).environment(\.flatLayout, true)
@@ -730,13 +725,6 @@ enum SceneCatalog {
         scene("build-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
             return BuildScreen().environment(GameStore(state: gs))
-        },
-        scene("surface-ops-phone", 1400) {
-            var gs = basePlayer(); gs.player.stash = ["aluminium": 4, "silicon": 6]
-            gs = SurfaceOps.applyPurchaseAccess(gs, "moon-south-pole", now: t0 - 3_000_000)
-            gs = SurfaceOps.applyBuildPad(gs, "moon-south-pole", pad: 1, now: t0 - 2_000_000)
-            gs = SurfaceOps.applyMined(gs, "moon-south-pole", mineral: "iron", amount: 12)
-            return SurfaceOpsScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
         scene("mission-log-phone", 1400) {
             var gs = basePlayer()

@@ -11,50 +11,12 @@
   color: var(--ln-blueprint-ink);
 }
 
-.land {
+.sceneBackdrop {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 45% 76%, color-mix(in srgb, var(--ln-world-dusk-horizon) 18%, transparent), transparent 38%),
-    linear-gradient(180deg, var(--ln-world-night-top) 0%, var(--ln-world-night-mid) 66%, var(--ln-world-asphalt) 66%);
-}
-
-.land::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 34%;
-  opacity: 0.46;
-  background-image: radial-gradient(circle, var(--ln-world-hull-lit) 0 1px, transparent 1.5px);
-  background-size: 91px 71px;
-  background-position: 12px 8px;
-}
-
-.land::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 34%;
-  border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 36%, var(--ln-world-asphalt));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ln-world-concrete) 80%, var(--ln-world-asphalt)) 0 12px, transparent 12px),
-    repeating-linear-gradient(90deg, transparent 0 56px, color-mix(in srgb, var(--ln-world-hull-lit) 11%, transparent) 56px 58px),
-    var(--ln-world-asphalt);
-}
-
-.wash {
-  position: absolute;
+  z-index: 1;
   pointer-events: none;
-  image-rendering: pixelated;
-}
-
-.wash {
-  inset: 0;
-  background: var(--lb-tint);
-  mix-blend-mode: multiply;
-  opacity: 0.38;
 }
 
 :global(.rocket-builder-host) :global(.launchpad-active-mission) {
@@ -184,7 +146,11 @@
   gap: 8px;
 }
 
-.body[data-parts='open'] { grid-template-columns: minmax(0, 1fr) minmax(320px, 38%); }
+.body { position: relative; }
+
+/* Customization is a panel over the same launchpad camera, not a second
+   layout. Opening it must never shrink or replace the player's landscape. */
+.body[data-parts='open'] { grid-template-columns: minmax(0, 1fr); }
 
 .pad,
 .choices {
@@ -200,6 +166,31 @@
   border: 3px solid var(--ln-blueprint-ink);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.body > .choices {
+  position: absolute;
+  z-index: 6;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(38%, 430px);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent);
+}
+
+.launchDock {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+}
+
+.launchDock .launch {
+  min-width: min(280px, 70vw);
+  min-height: 56px;
+  font-size: 16px;
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent);
 }
 
 /* The pad scene: the launch complex drawn in Blender (pad, gantry, rail, hangar), fitted to the room it has. */
@@ -229,18 +220,6 @@
 .payloadManifest strong { font: 700 16px/1.15 var(--ln-font-display); }
 .payloadManifest span:last-child { color: var(--ln-blueprint-blue); letter-spacing: 0.04em; text-transform: none; }
 
-/* Ground under the complex: it follows the pad's foot, so it never floats above a tall parts panel. */
-.pad::before {
-  content: '';
-  position: absolute;
-  left: -12px;
-  right: -12px;
-  top: calc(100% - 28px);
-  height: 100vh;
-  pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-hull-lit) 38%, var(--ln-world-asphalt)) 0, var(--ln-world-asphalt) 6px, var(--ln-world-asphalt) 100%);
-}
-
 .complex {
   position: relative;
   width: min(100cqw, 127.6cqh);
@@ -264,6 +243,7 @@
   height: 100%;
   width: 100%;
   object-fit: contain;
+  object-position: center bottom;
   image-rendering: pixelated;
 }
 
@@ -524,7 +504,8 @@
   .target { grid-column: 1 / -1; grid-row: 2; max-width: none; margin-left: 0; }
   .customize { grid-column: 1; grid-row: 3; }
   .dismantle { grid-column: 2; grid-row: 3; }
-  .body[data-parts='open'] { grid-template-columns: 1fr; grid-template-rows: minmax(200px, 42%) minmax(0, 1fr); }
+  .body > .choices { top: auto; right: 8px; bottom: 8px; left: 8px; width: auto; height: min(54%, 480px); }
+  .launchDock { bottom: 16px; }
   .stats { flex-direction: row; top: 0; left: 0; right: 0; justify-content: center; }
   .stats li { flex: 1; min-width: 0; }
   .tabs { gap: 3px; padding: 6px 4px; }
@@ -540,7 +521,9 @@
 /* Short landscape phones: tighter chrome, same two columns. */
 @media (orientation: landscape) and (max-height: 520px) {
   .stage { inset: 56px 8px 68px 8px; gap: 6px; }
-  .body[data-parts='open'] { grid-template-columns: minmax(0, 1fr) minmax(280px, 40%); }
+  .body > .choices { top: 4px; right: 4px; bottom: 4px; width: min(40%, 360px); }
+  .launchDock { bottom: 8px; }
+  .launchDock .launch { min-height: 44px; }
   .choose { left: auto; right: 0; transform: none; top: 4%; width: min(52%, 400px); min-height: 64px; padding: 8px 16px; }
   .stats li { padding: 2px 8px; min-width: 80px; }
   .stats strong { font-size: 16px; }
@@ -562,6 +545,7 @@
 
 @media (max-width: 899px) and (min-height: 521px) {
   :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 166px; }
+  :global([data-testid='mission-launch-review']) .launchDock { display: none; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {

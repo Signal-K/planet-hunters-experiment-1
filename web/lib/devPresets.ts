@@ -1,7 +1,7 @@
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -66,21 +66,6 @@ const ASTEROID_DISCOVERY_PLAYER: Player = {
   deepSpaceTelescopeBuilt: true,
   deepSpaceTelescopeLevel: 1,
   clientMissions: { 'helios-propulsion-depot': 2 },
-}
-
-// Academy management view: built + funded + one trained astronaut on the
-// roster, so the "Recent UI" shot lands on the tabbed management screen
-// (not the pre-build mission card) and the AcademyCoach fires on first load.
-// clientMissions needs TWO clients at affinity level 2 (>=10 jobs each) —
-// academyAffinityUnlocked() requires two, unlike the telescope's one.
-const ACADEMY_PLAYER: Player = {
-  ...POST_ONBOARDING_PLAYER,
-  placed: [...POST_ONBOARDING_PLAYER.placed, 'astronaut-academy'],
-  placementPlots: { ...POST_ONBOARDING_PLAYER.placementPlots, 'astronaut-academy': 2 },
-  clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-  academyResearched: true,
-  academyFunded: true,
-  crew: [],
 }
 
 export interface DevShot {
@@ -163,7 +148,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-free-ops-fab', label: 'Free Ops launch', hint: 'Free Ops with no mission opens the launch route and lands on the Mission Board', stage: 'free-ops' },
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
-      { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
@@ -173,12 +157,14 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
+      { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
+      { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
+      { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-surface-ops', label: 'Surface Ops', hint: 'Surface Ops list with site access to buy and settlements. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -193,7 +179,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
       { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view with a silo and stash', stage: 'free-ops' },
       { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
-      { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo, academy and refinery built, tier 2 rocket', stage: 'free-ops' },
+      { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo and refinery built, tier 2 rocket', stage: 'free-ops' },
       { key: 'cp-late', label: 'Checkpoint: late', hint: 'About 55 min in: 20 missions done, tier 3 rocket, all buildings, rich stash', stage: 'free-ops' },
     ],
   },
@@ -462,8 +448,6 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...BASE_PLAYER,
           missionsDone: 1,
-          skillPoints: 0,
-          unlockedSkillNodes: ['ship-customizer-1'],
         },
         tutorial: false,
         doneSteps: EXTRACTION_DONE,
@@ -481,7 +465,6 @@ function fixture(name: string): Partial<GameState> | null {
           ...BASE_PLAYER,
           missionsDone: 1,
           pendingLaunch: true,
-          unlockedSkillNodes: ['ship-customizer-1'],
         },
         tutorial: false,
         doneSteps: EXTRACTION_DONE,
@@ -496,6 +479,26 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-free-ops-fab':
       // Free Ops opens the launch route with no mission picked; it must hand over to the Mission Board.
       return { ...fixture('ui-mission-board'), screen: 'fab' }
+    case 'ui-orionids-events-stage1':
+      // Shower run done (event stage 1): the Events board offers the rover surface observation.
+      { const board = fixture('ui-mission-board')!
+      return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 }, badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: Date.UTC(2026, 9, 23) } } } } }
+    case 'ui-orionids-ready':
+      return {
+        screen: 'missions',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          fireballSpotter: { readAt: 1, passedAt: 1 },
+          orionidsEventStage: 0,
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
     case 'ui-mission-board':
       return {
         screen: 'missions',
@@ -526,33 +529,9 @@ function fixture(name: string): Partial<GameState> | null {
           placed: ['launchpad', 'surface-silo'],
           placementPlots: { launchpad: 0, 'surface-silo': 2 },
           stash: { aluminium: 20, copper: 10 },
-          surfaceOps: { sites: { 'mars-arcadia': { storage: {}, siteAccessPurchasedAt: 1 } } },
         },
         tutorial: false,
         doneSteps: TRANSPORT_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-skill-tree':
-      return {
-        screen: 'skills',
-        player: {
-          ...POST_ONBOARDING_PLAYER,
-          missionsDone: 3,
-          researchXP: 260,
-          skillPoints: 3,
-          licenseGrade: 'Grade II',
-          unlockedSkillNodes: ['laser-capacitor-1', 'ship-customizer-1'],
-          refineryBuilt: true,
-          launchpadUpgraded: true,
-          transitSatelliteLaunchedAt: Date.now(),
-        },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -612,6 +591,27 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-orionids-rover':
+      // The event's second step: the surface observation on Eros with the Orionids field rover.
+      return {
+        screen: 'rover-survey',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 6,
+          freeOperations: true,
+          orionidsEventStage: 1,
+          missionPhase: 'survey',
+          activeMission: { id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID, label: 'Orionids surface observation' },
+        },
+        tutorial: false,
+        doneSteps: EXTRACTION_DONE,
+        missionId: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+
     case 'ui-research-calendar-empty':
       return instrumentHubFixture({})
 
@@ -663,19 +663,6 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-academy':
-      return {
-        screen: 'academy',
-        player: ACADEMY_PLAYER,
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
     case 'ui-refinery':
       return {
         screen: 'refinery',
@@ -691,6 +678,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     // SSL-651: the Orionids shower run with its order filled. 25 caught in all, 5 before this run was accepted.
     case 'ui-orionids-shower-mining':
+    case 'ui-orionids-shower-mining-fresh':
     case 'ui-orionids-shower-debrief': {
       const home = name === 'ui-orionids-shower-debrief'
       const haul = { orionid_debris: 19, iron: 2 }
@@ -700,7 +688,7 @@ function fixture(name: string): Partial<GameState> | null {
           ...POST_ONBOARDING_PLAYER,
           activeMission: { id: ORIONIDS_NIGHT_RUN_ID, label: 'Orionids shower run' },
           missionPhase: home ? 'debrief' : 'mining',
-          orionidsFragments: { caught: 25, redeemed: 0 },
+          orionidsFragments: { caught: name === 'ui-orionids-shower-mining-fresh' ? 5 : 25, redeemed: 0 },
           orionidsRunBaseline: 5,
           stash: home ? haul : {},
         },
@@ -718,19 +706,6 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'market',
         player: { ...POST_ONBOARDING_PLAYER, placed: [...POST_ONBOARDING_PLAYER.placed, 'market', 'surface-silo'], stash: { iron: 20, nickel: 10, silicates: 5 }, },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-surface-ops':
-      return {
-        screen: 'surface-ops',
-        player: { ...POST_ONBOARDING_PLAYER, },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,
@@ -839,10 +814,11 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'hub',
         player: {
-          ...ACADEMY_PLAYER,
+          ...POST_ONBOARDING_PLAYER,
+          clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
           missionsDone: 8, francs: 120_000_000,
-          placed: ['launchpad', 'transit-telescope', 'surface-silo', 'astronaut-academy'],
-          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'surface-silo': 2, 'astronaut-academy': 3 },
+          placed: ['launchpad', 'transit-telescope', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'surface-silo': 2 },
           refineryBuilt: true, refineryUnlocked: true,
           stash: { iron: 40, nickel: 20, silicates: 15, copper: 8 },
         },
@@ -858,9 +834,8 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...ASTEROID_DISCOVERY_PLAYER,
           missionsDone: 20, francs: 600_000_000,
-          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo', 'astronaut-academy', 'market'],
-          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'deep-space-telescope': 2, 'surface-silo': 3, 'astronaut-academy': 4, market: 5 },
-          academyResearched: true, academyFunded: true,
+          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo', 'market'],
+          placementPlots: { launchpad: 0, 'transit-telescope': 1, 'deep-space-telescope': 2, 'surface-silo': 3, market: 4 },
           refineryBuilt: true, refineryUnlocked: true, launchpadUpgraded: true,
           clientMissions: { 'helios-propulsion-depot': 14, 'arcturus-battery-systems': 12 },
           stash: { iron: 120, nickel: 60, silicates: 40, copper: 30, gold: 6 },

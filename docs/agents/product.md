@@ -4,13 +4,14 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 
 ## Product (Cycle 4)
 
-- Landnám is a space-program game: Next.js web app in `web/`, SwiftUI native app in `native/` (cross-platform direction: web and native share one game model and one look; new features must not be web-only by design).
+- Landnám is a space-program game: Next.js web app in `web/` and SwiftUI iOS app in `native/`. They share one game model and one look; new features must not be web-only by design.
 - Cycle 4 scope: **Free Ops** (self-directed play with no contract required: mine, survey, build, trade on your own) plus **optional contracts** from clients. Contracts add direction and payout; they are never a gate to playing.
 - Scenes: every gameplay screen is a real illustrated or rendered scene with the action attached to an object or instrument in it. A card grid, generic "available actions" stack, or text-and-buttons panel is not acceptable as a gameplay screen. Cards are for reference and menu surfaces only. Reuse the existing scene component when matching another screen; do not re-tune an approximation. Resolve a mechanic from the real component (`GameScreenRouter.tsx`), not from a screen's name ("Transit" means two different things).
 - Accounts: no account-free play. No guest mode, demo routes, or "no account needed" links.
 - Offline-first: no direct client writes to the backend; use the SSL-321 outbox and upload on reconnect. Check phone sizes and Safari.
 - Terminology: "client", never "contractor", in UI copy, survey copy and new identifiers.
-- Narrative: no fictional wrapper on mainline citizen-science content. Citizen science is an instrument feed, not a mission type. Crew have no citizen-science role. Satellite Monitoring Station is deleted; do not revive it.
+- Narrative: the active game is the five-stop agency loop: Plan, Launch, Flight, Work, Result. Every screen has a role in `web/lib/narrative-surface.ts`; decisions and evidence are in `docs/narrative-audit.md` (2026-10-24). Citizen science is an instrument feed, not a mission track. Base services (Exchange, Earth refinery, Hangar) and extensions (instruments, rover) stay but never become mission tracks. Deleted 2026-10-24: Academy, crew, Skills, Sites and Surface Ops, treasury and loans, site rights, field sandbox and crafting, Friends, Community hub, Narrative Ledger, off-world construction and remote silo. Not started: off-world refinery, colonies, settlements. Satellite Monitoring Station is deleted; do not revive it.
+- Roadmap: the Narrative Ledger screen (`web/lib/data/narrative-ledger.ts`, mirrored in `NarrativeLedger.swift`) is the roadmap. A system removed before launch stays listed there as planned, with how it was previously built; Friends and the Orionids / World Space Week events are core and ship this week. Do not delete either again.
 - Do not treat any "M1/M2 active, M3 undefined" onboarding framing as current scope. Onboarding mission order is whatever the current release issue and ZenNotes decisions say.
 
 ## Names and surfaces
@@ -30,16 +31,21 @@ Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry poi
 - Colour: the spec's deep dusk palette (`docs/design/game-theme-spec.md`, section 2) governs scene and world art. Supersedes the earlier "light blueprint, no dark, no orange or purple" rule for scene layers. Orange is a small detail accent only. UI chrome on top of the world follows the spec's section 2.4.
 - Body and map text at least 14px. Tap targets at least 44px. 8pt spacing rhythm.
 - Shared palette source: `shared/tokens/tokens.json`, generated into `web/app/globals.css` and `native/App/Theme.generated.swift`. Web consumes CSS variables; native consumes `Theme`. Never hand-edit generated blocks or invent per-platform colors. World tokens currently live outside the generated block; preserve the game-theme spec and check both implementations. Read `projects/landnam/decisions/landnam-ui-design-language-style-prompt.md` and the `:root` comment in `globals.css` before visual work, since direction has changed several times.
-- Every screen must work in phone portrait, phone landscape, and desktop.
+- Every screen must work in phone portrait, phone landscape, and desktop web layouts; native acceptance is iPhone only.
 - No emoji in the UI. Status = shape + color + label. UPPERCASE with letter-spacing for instrument labels and CTAs.
 - When a redesign removes UI, build new theme-matching elements; never restore the old ones.
 
 ## Tech and layout
 
 - `web/` Next.js 16 (App Router, SPA at `app/game/page.tsx`), TypeScript strict (no `any`, no `@ts-ignore`), Tailwind v4, Framer Motion, PixiJS scenes (`web/public/game/scenes/*.scene.json`). This is not the Next.js you know: read `web/node_modules/next/dist/docs/` before Next-specific code.
-- `native/` SwiftUI app (`LandnamCore`, `TakeonKit`); `pocketbase/` Landnam backend; shared PocketBase at `~/Navigation/backend`. Hub-and-spoke auth via the shared backend. No Godot, no Electron.
+- `native/` is the iOS SwiftUI app (`LandnamCore`, `TakeonKit`); `pocketbase/` is the Landnam backend. Hub-and-spoke auth uses the shared backend. No desktop targets, Godot, Electron, or browser runners.
 - Run `npm` from `web/`; run `git` from the repo root.
 - Key files: `web/game-context.tsx`, `web/lib/data.ts`, `web/lib/catalog.ts`, `web/components/game/GameApp.tsx`.
 - Docker must start fully offline; never add a start-time network fetch.
 - PostHog survey IDs in code must resolve to real, live, non-blocking surveys.
 - Local PocketBase superuser (local only): `liam@skinetics.tech` / `ThisIsATestPassword`. Never point local tooling at a deployed instance.
+
+## Pacing rule for missions and scenes (Liam, 2026-10-24)
+Mining controls (SSL-708, Liam 2026-10-29), every mining scene and mission (Mining, Orionids shower, transport and self-directed runs), web and iOS: nothing sits across the top of the scene except one Menu button top-left; the menu holds the mission, objective and progress, the hold, how to play, recharge, switch mission, return to hub, settings and scrub. D-pad bottom-left, one round FIRE bottom-right with the laser charge as its ring, progress between them. The ship starts about a quarter of the way in, not at the left edge. The run states its goal once in the middle of the scene when it starts, then clears. FIRE never drops a press (presses during cooldown are buffered). The screen flashes or shakes only for a real hit or a real collision, measured against the ship as drawn; a miss or an early press gives no impact feedback. This replaces the shared top HUD inside mining. When to fire must be obvious (SSL-710): deposits sit on a dark backing with a mineral-coloured rim, a dashed aim line drops from the ship to the laser's reach and turns solid on a seam that a shot fired now would hit (judged where the seam will be when the beam lands), and FIRE turns solid while that is true. Level 1 mining (starting laser) keeps every deposit just under the crust, inside the starting laser's reach; deeper levels are defined in SSL-712.
+
+A mining run, catch or other scene objective should finish in about one minute of play and must need some weaving or varied input, not the same action held for the whole minute. Tune the spawn rate and the catch window so a player who stays put gets roughly a quarter to half of the goal and a player who steers under the targets finishes in under a minute. Orionids shower run: `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE` (web `lib/data/sky-events.ts`, native `OrionidsRun.fragmentsPerMinute`), catch radius 80 under the ship.

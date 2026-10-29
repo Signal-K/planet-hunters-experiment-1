@@ -109,11 +109,16 @@
   border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-md);
   background: var(--ln-cyan);
-  color: var(--ln-void);
+  color: var(--ln-blueprint-paper);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.participate:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 
 .actions {
@@ -254,8 +259,11 @@
   color: var(--ln-cyan);
 }
 :global(.mining-screen) .hud {
-  top: 112px !important;
+  top: 72px !important;
 }
+/* On mining the badge is a 44px mark under the help and menu buttons, so it never competes with the order line or the gauge. */
+:global(.mining-screen) .badge { padding: 0; min-width: 44px; justify-content: center; }
+:global(.mining-screen) .badge strong { display: none; }
 
 .peakTag {
   min-height: 44px;

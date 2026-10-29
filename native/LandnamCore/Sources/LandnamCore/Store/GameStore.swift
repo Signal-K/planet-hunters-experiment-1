@@ -14,8 +14,6 @@ public final class GameStore {
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
     /// Fires once per new citizen-science verdict, after the local save, so the app can queue the shared upload.
-    /// Fires after a site deed is bought locally, so the app can queue the treasury call (offline safe).
-    public var onSiteDeed: ((String) -> Void)?
     public var onClassified: ((SharedClassification) -> Void)?
     /// Every persisted transition (old, new, settled payout) so the app can write `mission_runs` receipts.
     public var onTransition: ((GameState, GameState, Int?) -> Void)?
@@ -172,6 +170,7 @@ public final class GameStore {
         apply(n)
     }
 
+
     /// Settles a server-authorised friend gift through the normal persisted
     /// state path. The server marks the gift claimed before this is called, so
     /// a network loss after that point cannot duplicate the reward.
@@ -325,17 +324,7 @@ public final class GameStore {
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
     public func abandonMission() { apply(state.player.activeMission == nil ? Loop.cancelSetup(state) : Loop.abandonMission(state)) }
     public func dismantleStagedRocket() { apply(Loop.dismantleStagedRocket(state)) }
-    public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }
-    public func researchAcademy() { apply(Academy.applyResearchAcademy(state)) }
-    public func setAcademyFunding(_ funded: Bool) { apply(Academy.applySetFunding(state, funded: funded)) }
-    public func hireCrew(_ sourceId: String) { apply(Academy.applyHire(state, sourceId: sourceId, now: now)) }
-    public func rehireCrew(_ id: String) { apply(Academy.applyRehire(state, crewId: id, now: now)) }
-    public func trainCrew(_ id: String, branch: String) { apply(Academy.applyStartTraining(state, crewId: id, branch: branch, now: now)) }
-    public func trainCandidate(branch: String) { apply(Academy.applyStartCandidate(state, branch: branch, now: now)) }
-    public func collectTraining(_ id: String) { apply(Academy.applyCollectTraining(state, sessionId: id, now: now)) }
-    public func researchCrewModule() { apply(Academy.applyResearchCrewModule(state)) }
     public func researchLanding() { apply(Transitions.applyResearchLanding(state)) }
-    public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
     @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
         let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)
         guard next != state else { return false }
@@ -346,11 +335,6 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
-    public func purchaseSiteAccess(_ id: String) {
-        let next = SurfaceOps.applyPurchaseAccess(state, id, now: now)
-        guard next != state else { return }
-        apply(next); onSiteDeed?(id)
-    }
     /// Applies a polled global confirmation; returns true when it is new news worth a notice.
     @discardableResult
     public func noteConfirmedDiscovery(_ lastConfirmedAt: String?) -> Bool {
@@ -358,16 +342,9 @@ public final class GameStore {
         if next != state { apply(next) }
         return announce
     }
-    public func buildSettlementPad(_ id: String, pad: Int) { apply(SurfaceOps.applyBuildPad(state, id, pad: pad, now: now)) }
-    public func dispatchFerry(_ id: String) { apply(SurfaceOps.applyDispatch(state, id, now: now)) }
-    public func retryFerry(_ id: String) { apply(SurfaceOps.applyRetry(state, id, now: now)) }
-    public func reconcileFerry(_ id: String) { apply(SurfaceOps.applyReconcile(state, id, now: now)) }
-    public func acknowledgeFerry(_ id: String) { apply(SurfaceOps.applyAcknowledge(state, id)) }
     public func chooseSatelliteTarget(_ subjectId: String) {
         var n = state; n.player.satelliteTargetId = subjectId; n.player.pendingRepick = false; apply(n)
     }
-    public func unlockSkill(_ id: String) { apply(Progression.applyUnlock(state, nodeId: id)) }
-    public func upgradeLicense(to grade: LicenseGrade) { apply(Progression.applyUpgrade(state, to: grade)) }
     public func startRefine(_ recipeId: String) { apply(Refinery.applyStart(state, recipeId: recipeId, now: now)) }
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }

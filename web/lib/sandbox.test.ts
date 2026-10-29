@@ -24,9 +24,7 @@ describe('sandboxify', () => {
     expect(state.player?.francs).toBe(SANDBOX_FRANCS)
     expect(state.player?.freeOperations).toBe(true)
     const player = state.player!
-    expect(isHubPromptDismissed(player, 'skills')).toBe(true)
     expect(isHubPromptDismissed(player, 'transit-telescope')).toBe(true)
-    expect(isHubPromptDismissed({ ...player, skillPoints: 50_000 }, 'skills')).toBe(true)
   })
 
   it('keeps the shape the screen needs', () => {

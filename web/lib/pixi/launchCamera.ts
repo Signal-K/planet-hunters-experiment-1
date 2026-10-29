@@ -38,9 +38,12 @@ export function launchPadLayout(W: number, H: number): LaunchPadLayout {
     : Math.max(Math.round(H * 0.18), 96)
   const groundTop = H - groundHeight
   const padDeckY = groundTop + Math.round(groundHeight * 0.18)
+  // Leave more sky around the vehicle so the ascent reads as motion rather
+  // than a rocket pasted over the whole launchpad. The target/orbit beat gets
+  // the visual emphasis later in the sequence.
   const rocketHeight = Math.min(
-    isLandscape ? H * 0.40 : H * 0.30,
-    210,
+    isLandscape ? H * 0.28 : H * 0.24,
+    176,
   )
   const rocketScale = rocketHeight / LAUNCH_ROCKET_AUTHOR_HEIGHT
   const rocketPadY = padDeckY

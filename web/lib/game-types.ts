@@ -5,12 +5,8 @@ import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, Tr
 import type { BuildingLevels } from '@/lib/data/building-levels'
 import type { EarthBiomeId } from '@/lib/scene/base-world'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
-import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
 import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
-import type { TreasuryState } from './systems/TreasurySystem'
-import type { SiteRightsState } from './systems/SiteRightsSystem'
-import type { OffworldRefineryDeployment } from './systems/OffworldRefinerySystem'
 import type { FlightPlanProgress } from './systems/FlightPlanSystem'
 import type { FlightPlanEvent, TrainingTryId } from './systems/FlightPlanSystem'
 
@@ -57,7 +53,6 @@ export interface MissionRunSnapshot {
   arrivalAt?: number | null
   transitStartedAt?: number | null
   missionRocketSource?: 'company' | 'fabricated'
-  missionCrewIds?: string[]
   debriefPending?: boolean
   cargoSettledOffworld?: boolean
   pendingRemoteDisposition?: 'store' | 'sell'
@@ -85,11 +80,8 @@ export type Screen =
   | 'market'
   | 'hangar'
   | 'rocket-buy'
-  | 'skills'
   | 'rover-survey'
   | 'launchpad'
-  | 'surface-ops'
-  | 'academy'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'instrument-hub'
@@ -101,7 +93,7 @@ export type Screen =
 // they are locations, not menus, and boxing them in the device-card chrome
 // reads as a modal sitting over the game rather than the game itself.
 // Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
-// 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// 'rocket-buy', 'debrief') are menus/UI concepts and keep
 // the boxed card treatment. The Exchange is a cargo dock, so it is a place.
 // Debrief in particular is a mission-results
 // summary/paperwork screen, not a place — it was wrongly added here in
@@ -117,9 +109,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'rover-survey',
   'delivery',
   'refinery',
-  'academy',
   'hangar',
-  'surface-ops',
   'galaxy',
   'asteroid-discovery',
   'saturn-storm-search',
@@ -130,90 +120,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'mission-history',
 ])
 
-export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
-
-export type SettlementFerryStatus = 'in-flight' | 'delivered' | 'failed'
-
-export interface SettlementLaunchpadRecord {
-  pad: 0 | 1 | 2
-  startedAt: number
-  completesAt: number
-}
-
-export interface SettlementFerryRecord {
-  id: string
-  status: SettlementFerryStatus
-  manifest: Record<string, number>
-  dispatchedAt: number
-  arrivesAt: number
-  attempts: number
-  deliveredAt?: number
-  reconciledAt?: number
-  failureReason?: string
-}
-
-export interface SurfaceSiteProgress {
-  siteAccessPurchasedAt?: number
-  launchpad?: SettlementLaunchpadRecord
-  storage: Record<string, number>
-  ferry?: SettlementFerryRecord
-  /** The host-owned identity/configuration for one resumable TakeOn field session. */
-  fieldOperation?: FieldOperation
-}
-
-export type FieldOperationObjectiveKind = 'settlement' | 'prospecting' | 'logistics'
-
-export interface FieldOperationCargo {
-  requirements: Record<string, number>
-  capacity: number
-}
-
-export interface FieldOperationObjective {
-  kind: FieldOperationObjectiveKind
-  description: string
-}
-
-export interface FieldOperationReturnPolicy {
-  owner: 'landnam'
-  reconcileAt: 'field-return'
-}
-
-export interface FieldOperation {
-  id: string
-  missionId: string
-  targetId: string
-  siteId: string
-  bodyId: string
-  seed: number
-  rover: RoverSpec
-  label: string
-  cargo: FieldOperationCargo
-  objective: FieldOperationObjective
-  returnPolicy: FieldOperationReturnPolicy
-  startedAt: number
-}
-
-export interface SurfaceOpsState {
-  sites: Record<string, SurfaceSiteProgress>
-}
-
-/** A structure the player built on a takeon field and paid Landnam for. */
-export interface FieldStructureRecord {
-  /** takeon structure id (stable across the saved mission). */
-  id: string
-  /** takeon StructureType, e.g. 'refinery', 'beacon', 'road'. */
-  type: string
-  recipeId: string
-  x: number
-  y: number
-  facing: number
-  builtAt: number
-  /** Site the field belongs to, when it is a client-territory surface site. */
-  siteId?: string
-}
-
-
-/** Operational step of a live run. `survey` is the starter-rover surface pass; extraction is always `mining` on the ship laser. */
 export type MissionPhase = 'transit' | 'landing' | 'survey' | 'mining' | 'delivery' | 'debrief'
 
 export interface ResourceFocus {
@@ -285,9 +191,7 @@ export interface Player {
   underConstruction?: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
-  skillPoints?: number
-  unlockedSkillNodes?: string[]
-  /** Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief. */
+    /** Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief. */
   laserCapacitorLevel?: number
   freeOperations: boolean
   /** Durable three-try onboarding state, persisted and synced with the save. */
@@ -352,8 +256,6 @@ export interface Player {
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
   loanOffered: boolean
-  /** Cached treasury state while the shared treasury service hydrates. */
-  treasury?: TreasuryState
   arrivalAt?: number | null
   // Wall-clock departure for the current transit leg. Keeping this alongside
   // arrivalAt lets the transit animation resume at the correct visual time
@@ -452,14 +354,6 @@ export interface Player {
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>
-  // SSL-317 ownership: divisions of a body this player has staked with a
-  // Nav Beacon in the sandbox field. Mirrored to the `territory_claims`
-  // PocketBase collection so other players' claims are visible.
-  territoryClaims?: import('@/lib/data').TerritoryClaim[]
-  // SSL-317 life: bodies whose biosphere this player has seeded, keyed by
-  // target id. Only possible once the tech tree and SETI programme are done.
-  biosphereSeeds?: Record<string, import('@/lib/data').BiosphereSeed>
-  setiProgrammeCompletedAt?: number | null
   // SSL-316 sandbox: structures the player has paid for on each takeon field,
   // keyed by Landnam target id. The takeon save owns placement; this record
   // owns the economics (what was charged, which beacon staked which claim)
@@ -468,53 +362,16 @@ export interface Player {
   activeScan?: { targetId: string; startedAt: number } | null
   /** SSL-512 bodies charted by a survey scan, with the research XP each paid. */
   chartedBodies?: Record<string, { chartedAt: number; researchXpAwarded: number }>
-  fieldStructures?: Record<string, FieldStructureRecord[]>
-  /** Field structure kits built at the Market (SSL-512), keyed by crafting recipe id. Placing one on a field spends the kit instead of francs and minerals. */
-  fieldKits?: Record<string, number>
-  /** Last refinery pass per target id, for the field processing cadence. */
-  fieldProcessedAt?: Record<string, number>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
-  /** Refineries commissioned against a specific client-territory site right. */
-  offworldRefineries?: OffworldRefineryDeployment[]
-  dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
-  licenseGrade?: LicenseGrade
   researchXP?: number
   unlockedBlueprints?: string[]
   // Persisted ship-customiser loadout for the player's owned Explorer (sr1) —
   // part id installed per room slot. Confirmed builds deduct real francs and
   // survive across sessions instead of resetting to a fresh 3B mock budget.
   shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
-  // Astronaut Academy roster (STS-591). Crew are persisted individuals —
-  // astronauts, rovers and drones — not a headcount. Rovers here are the same
-  // rovers as roverDeployments above, surfaced as roster entries by
-  // migrateCrewRoster; they are not a second, parallel rover system.
-  crew?: import('@/lib/data').CrewMember[]
-  formerCrew?: import('@/lib/data').CrewRehireOffer[]
-  crewHiresLifetime?: number
-  crewHiresThisWeek?: number
-  crewHireWeek?: string
-  crewUpkeepSettledDate?: string
-  crewTraining?: import('@/lib/data').CrewTrainingSession[]
-  trainingSessionsUsedToday?: number
-  trainingDate?: string
-  missionCrewIds?: string[]
-  crewMissionAwards?: string[]
-  crewVisitedTargets?: string[]
-  structureCrewAssignments?: Record<string, string>
-  sharedChartsByClient?: Record<string, number>
-  academyResearched?: boolean
-  academyFunded?: boolean
-  academyXP?: number
-  crewModuleResearched?: boolean
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.
   landingResearched?: boolean
-  // Surface Operations state. Ferry records retain a stable cargo-batch id
-  // and reconciliation timestamp so retries and reloads cannot credit one
-  // manifest twice.
-  surfaceOps?: SurfaceOpsState
-  /** Predefined-site build/mine rights purchased or leased from client territory (KES-287). */
-  siteRights?: SiteRightsState
 }
 
 export interface StagedRocket {
@@ -651,54 +508,24 @@ export interface GameActions {
   sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
-  unlockSkillNode: (id: string) => void
-  acceptLoan: () => void
   abandonMission: (opts?: { confirmed?: boolean }) => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
-  claimSaturnSurveyTerritory: () => void
   onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
-  purchaseSiteAccess: (siteId: string) => void
-  startFieldOperation: (siteId: string) => void
-  buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
-  recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
-  dispatchSurfaceFerry: (siteId: string) => void
-  retrySurfaceFerry: (siteId: string) => void
-  reconcileSurfaceFerry: (siteId: string) => void
-  acknowledgeSurfaceFerry: (siteId: string) => void
-  /** SSL-316 sandbox: charge a structure the engine already placed; false means the caller must demolish it. */
-  recordFieldBuild: (field: import('@/lib/systems/SandboxSystem').FieldIdentity, structure: import('@/lib/systems/SandboxSystem').FieldBuildInput) => boolean
-  recordFieldDemolish: (targetId: string, structureId: string) => void
-  runFieldRefining: (field: import('@/lib/systems/SandboxSystem').FieldIdentity) => void
-  fabricateAtField: (targetId: string, recipeId: string) => boolean
-  /** SSL-512: build a field structure kit at the Market, spent when placed on a field. */
-  buildFieldKit: (recipeId: string) => boolean
-  seedBiosphere: (target: import('@/lib/data').SurfaceTarget) => boolean
   gainResearchXP: (amount: number) => void
   /** SSL-512: point an owned telescope at a body. */
   startSurveyScan: (targetId: string) => void
   /** SSL-512: finish a scan whose time is up. */
   resolveSurveyScan: () => void
-  upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
-  unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   claimFriendGift: (giftId: string) => Promise<void>
-  researchAcademy: () => void
+  unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   researchLanding: () => void
-  setAcademyFunding: (funded: boolean) => void
-  hireCrew: (sourceId: string) => void
-  rehireCrew: (crewId: string) => void
-  startCrewTraining: (crewId: string, branch: import('@/lib/data').SkillBranch) => void
-  startCandidateTraining: (branch: import('@/lib/data').SkillBranch) => void
-  collectCrewTraining: (sessionId: string) => void
-  researchCrewModule: () => void
-  assignCrewToStructure: (structureId: string, crewId: string | null) => void
-  shareChartsWithClient: (clientId: string) => void
   toasts: Toast[]
   addToast: (message: string, kind?: Toast['kind'], options?: { sticky?: boolean }) => void
   dismissToast: (id: string) => void
@@ -706,6 +533,5 @@ export interface GameActions {
   target: Target | null
   sceneScope: SceneScope
   awaitingRemoteState: boolean
-  clearTerritoryClaimPopup: () => void
   laserChargeCap: number
 }

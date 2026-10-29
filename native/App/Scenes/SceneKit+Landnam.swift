@@ -1,12 +1,9 @@
 import SpriteKit
 import SwiftUI
+import UIKit
 import LandnamCore
 
-#if canImport(UIKit)
 typealias PlatformColor = UIColor
-#else
-typealias PlatformColor = NSColor
-#endif
 
 extension Color {
     var sk: PlatformColor { PlatformColor(self) }
@@ -32,11 +29,7 @@ enum SK {
         let size = CGSize(width: 2, height: height)
         let renderer = ImageRenderer(content: LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom).frame(width: size.width, height: size.height))
         renderer.scale = 1
-        #if canImport(UIKit)
         if let img = renderer.uiImage { return SKTexture(image: img) }
-        #else
-        if let img = renderer.nsImage { return SKTexture(image: img) }
-        #endif
         return SKTexture()
     }
 
@@ -51,11 +44,7 @@ enum SK {
         }.frame(width: d, height: d)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
-        #if canImport(UIKit)
         if let img = renderer.uiImage { return SKTexture(image: img) }
-        #else
-        if let img = renderer.nsImage { return SKTexture(image: img) }
-        #endif
         return SKTexture()
     }
 

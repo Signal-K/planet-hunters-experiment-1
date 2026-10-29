@@ -6,7 +6,7 @@ id = "narrative-ledger"
 type = "menu"
 name = "Ledger"
 summary = "The programme's narrative ledger."
-qa = ["ledger"]
+qa = ["narrative-ledger"]
 
 [runtime]
 surface = "dom"

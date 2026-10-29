@@ -5,7 +5,7 @@ import {
   DEEP_MINERAL_SILO_PRICE,
 } from './economy'
 
-export type SubsurfaceRoomId = 'mineral-vault' | 'deep-mineral-vault' | 'parts-locker' | 'habitat-training'
+export type SubsurfaceRoomId = 'mineral-vault' | 'deep-mineral-vault' | 'parts-locker'
 
 export interface SubsurfaceRoomDefinition {
   id: SubsurfaceRoomId
@@ -57,14 +57,6 @@ export const SUBSURFACE_ROOMS: readonly SubsurfaceRoomDefinition[] = [
     description: 'Rocket hardware is registered by room type and kept ready for Hangar operations.',
     cost: SUBSURFACE_ROOM_PRICES['parts-locker'],
     costMaterials: { aluminium: 15, silicon: 6 },
-  },
-  {
-    id: 'habitat-training',
-    eyebrow: 'HABITAT · BAY 03',
-    name: 'Habitat Training',
-    description: 'Below-soil mission rehearsals for astronaut crews in enclosed surface habitats.',
-    cost: SUBSURFACE_ROOM_PRICES['habitat-training'],
-    costMaterials: { aluminium: 20, copper: 10, silicon: 10 },
   },
 ] as const
 

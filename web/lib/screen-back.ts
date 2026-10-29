@@ -1,11 +1,11 @@
 import type { Screen } from '@/lib/game-types'
 
 /** Physical places that host overlay scenes. Overlays return here. */
-export const HOST_SCENES = ['hub', 'launchpad', 'academy'] as const
+export const HOST_SCENES = ['hub', 'launchpad'] as const
 export type HostScene = (typeof HOST_SCENES)[number]
 
 export function isHostScene(screen: Screen): screen is HostScene {
-  return screen === 'hub' || screen === 'launchpad' || screen === 'academy'
+  return screen === 'hub' || screen === 'launchpad'
 }
 
 /**
@@ -18,7 +18,6 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   hub: 'hub',
   'hub-subsurface': 'hub',
   launchpad: 'hub',
-  academy: 'hub',
   hangar: 'hub',
   missions: 'launchpad',
   targets: 'missions',
@@ -28,13 +27,11 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   galaxy: 'hub',
   'asteroid-discovery': 'hub',
   'saturn-storm-search': 'instrument-hub',
-  skills: 'hub',
   market: 'hub',
   refinery: 'hub',
   'mission-history': 'hub',
   'narrative-ledger': 'hub',
   'instrument-hub': 'hub',
-  'surface-ops': 'hub',
   transit: 'hub',
   landing: 'hub',
   mining: 'hub',
@@ -59,7 +56,7 @@ export function resolveLogicalBack(input: {
   if (current === 'rocket-buy') return 'targets'
   if (current === 'fab' && fallback === 'rocket-buy') return 'rocket-buy'
 
-  if (current === 'launchpad' || current === 'academy' || current === 'hub-subsurface') {
+  if (current === 'launchpad' || current === 'hub-subsurface') {
     return LOGICAL_BACK[current]
   }
 

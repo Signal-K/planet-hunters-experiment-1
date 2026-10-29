@@ -20,9 +20,9 @@ const SCREENS = [
   ['transit', 'transit'], ['landing', 'landing'], ['delivery', 'delivery'], ['debrief', 'debrief'],
   ['instrumenthub', 'instrument-hub'], ['instrumentviewport', 'instrument-hub'],
   ['refinery', 'refinery'], ['missionboard', 'missions'], ['missions', 'missions'],
-  ['galaxy', 'galaxy'], ['targets', 'targets'], ['skills', 'skills'], ['academy', 'academy'],
-  ['shower-run', 'ui/orionids-shower-debrief'],
-  ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'], ['surfaceops', 'surface-ops'],
+  ['galaxy', 'galaxy'], ['targets', 'targets'],
+  ['shower-run', 'ui/orionids-shower-debrief'], ['orionids', 'hub'], ['skyevent', 'hub'],
+  ['build', 'build'], ['intro', 'intro'], ['roveryvey', 'rover-survey'],
 ]
 
 function toRoute(input) {
@@ -33,7 +33,8 @@ function toRoute(input) {
   if (input.startsWith('/')  && !input.includes('.')) return input
   if (/^\/?(web\/)?app\/game\//.test(input.replace(root + '/', ''))) {
     const m = input.match(/app\/game\/(?:\([^)]*\)\/)?([^/]+)/)
-    if (m && m[1] !== '[screen]') return `/game/${m[1]}`
+    // A file directly in a route group (layout, loading, GameLayoutClient.tsx) is not a route; fall through.
+    if (m && m[1] !== '[screen]' && !m[1].includes('.')) return `/game/${m[1]}`
   }
   const stem = (input.split('/').pop() ?? '').replace(/\.(module\.css|test\.tsx?|tsx?|css)$/, '').toLowerCase()
   const hit = SCREENS.find(([k]) => stem.startsWith(k))
@@ -46,7 +47,7 @@ if (!input) {
   try { input = JSON.parse(readFileSync(0, 'utf8')).tool_input?.file_path } catch { /* no stdin */ }
 }
 if (!input || !/(^\/)|web\//.test(input) || /\.(test|spec)\./.test(input)) process.exit(0)
-// Whatever file is edited, keep "which scenes is this work in" current (shared with the storyboard and the Studio).
+// Whatever file is edited, keep the Scene Studio's active scene declaration current.
 spawnSync(process.execPath, ['--no-warnings', join(root, 'scripts', 'studio.mjs'), 'touch', input], { stdio: 'ignore', timeout: 8000 })
 const route = toRoute(input)
 if (!route) process.exit(0)

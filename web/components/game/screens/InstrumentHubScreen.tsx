@@ -28,7 +28,6 @@ interface InstrumentHubScreenProps {
   onBuild: () => void
   onSnoozePing?: () => void
   /** Claim the Enceladus plot from the stored survey chart. */
-  onClaimSurveyPlot?: () => void
   /** Survey scan (SSL-512): bodies a telescope can chart, and the actions that run it. */
   targets?: readonly Target[]
   onStartScan?: (targetId: string) => void
@@ -41,7 +40,7 @@ interface InstrumentHubScreenProps {
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, onClaimSurveyPlot, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub', { firstVisit: true })
@@ -86,9 +85,6 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
               chart={player.moonSurveyCharts.enceladus}
               classification={player.moonSurveyCharts.enceladus.frameId ? player.saturnClassifications?.[player.moonSurveyCharts.enceladus.frameId] : undefined}
             />
-            {player.moonSurveyCharts.enceladus.tier === 'gold' && !player.moonSurveyCharts.enceladus.territoryPlotClaimedAt && onClaimSurveyPlot && (
-              <button type="button" data-testid="control-station-claim-plot" onClick={onClaimSurveyPlot} style={{ minHeight: 44, font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Claim Enceladus plot</button>
-            )}
           </section>
         )}
         <SkyBadgeRow badges={player.badges} />

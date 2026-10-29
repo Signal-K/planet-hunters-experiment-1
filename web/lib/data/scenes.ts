@@ -79,14 +79,6 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'Catalog of the current registered Hangar hardware loadout.',
   },
   {
-    id: 'subsurface-habitat-training',
-    name: 'Habitat Training',
-    surface: 'dom',
-    location: 'earth-base-subsurface',
-    entityTypes: [],
-    description: 'Feature-gated below-soil astronaut habitat rehearsal scene. No training mechanics are active yet.',
-  },
-  {
     id: 'mining',
     name: 'Mining Run',
     surface: 'canvas',
@@ -97,16 +89,6 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'Side-on extraction run at the target. Ore nodes are spawned by the controller, not authored.',
   },
   {
-    id: 'construction-target',
-    name: 'On-Target Construction',
-    surface: 'canvas',
-    location: 'target-surface',
-    screen: 'surface-ops',
-    sceneFile: '/game/scenes/construction-target.scene.json',
-    entityTypes: ['ConstructionController'],
-    description: `Building a structure on a target body rather than at ${SCENE_NAMES.base}.`,
-  },
-  {
     id: 'delivery',
     name: 'Cargo Delivery',
     surface: 'canvas',
@@ -115,16 +97,6 @@ export const SCENES: readonly SceneDefinition[] = [
     sceneFile: '/game/scenes/delivery.scene.json',
     entityTypes: ['DeliveryController', 'UnloadPad'],
     description: 'A physical unloading berth for two-leg contracts. Cargo leaves the ship before its empty Earth-return leg.',
-  },
-  {
-    id: 'academy',
-    name: 'Astronaut Academy',
-    surface: 'canvas',
-    location: 'earth-base',
-    screen: 'academy',
-    sceneFile: '/game/scenes/academy.scene.json',
-    entityTypes: ['AcademyController', 'TrainingFacility'],
-    description: 'Earth-side crew training scene with a light editorial roster and observable Academy activity.',
   },
   {
     id: 'target-picker',
@@ -146,7 +118,6 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
-  { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
   { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept as the Control Station handoff for exoplanet review. Player nav uses instrument-hub.' },
   { id: 'instrument-hub', name: 'Control Station', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'One hub for investigative equipment (SSL-496), grouped by location. Same route as the old instrument hub. Not the retired job-board building on player.controlBuilt. Open hands a ready item to the existing classify screen.' },
@@ -167,9 +138,7 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/hub.scene.json',
   '/game/scenes/build-place.scene.json',
   '/game/scenes/mining.scene.json',
-  '/game/scenes/construction-target.scene.json',
   '/game/scenes/delivery.scene.json',
-  '/game/scenes/academy.scene.json',
   '/game/scenes/target-picker.scene.json',
 ]
 

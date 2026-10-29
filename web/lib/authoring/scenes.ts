@@ -1,4 +1,5 @@
 // The index of scene scripts: what scenes exist, which files and tickets belong to each, and what feedback is open.
+import { readSceneText } from './fixtures-merge.ts'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AUTHORING_DIR, loadContext, validateDocument } from './validate.ts'
@@ -65,7 +66,7 @@ export function listScenes(root: string, context: AuthoringContext = loadContext
   const scenes: SceneSummary[] = []
   for (const name of readdirSync(dir).filter(n => n.endsWith('.toml')).sort()) {
     const relPath = `${AUTHORING_DIR}/scenes/${name}`
-    const text = readFileSync(join(root, relPath), 'utf8')
+    const text = readSceneText(root, relPath)
     const { doc, diagnostics } = validateDocument(text, relPath, context)
     const v = (doc?.value ?? {}) as Partial<SceneDoc>
     const id = typeof v.id === 'string' ? v.id : name.replace(/\.toml$/, '')

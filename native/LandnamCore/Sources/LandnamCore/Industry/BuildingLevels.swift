@@ -3,24 +3,22 @@ import Foundation
 /// Upgradable Earth Base buildings, levels 1 to 3. Port of `web/lib/data/building-levels.ts`
 /// and `applyUpgradeBuilding`; the save key is `buildingLevels` on both platforms.
 public enum BuildingLevels {
-    public static let ids = ["launchpad", "surface-silo", "astronaut-academy"]
+    public static let ids = ["launchpad", "surface-silo"]
     public static let maxLevel = 3
 
     /// Francs to reach level 2 and level 3.
     public static let upgradeCosts: [String: [Int]] = [
         "launchpad": [Economy.launchpadUpgradePrice, Economy.launchpadUpgradePrice * 2],
         "surface-silo": [Economy.surfaceSiloPrice * 2, Economy.surfaceSiloPrice * 4],
-        "astronaut-academy": [Economy.academyPrice, Economy.academyPrice * 2],
     ]
 
     /// One concrete effect per building and level.
     public static let effects: [String: [String]] = [
         "launchpad": ["Base parts and targets", "Unlocks the parts and targets of a flown mission", "Unlocks the parts and targets of two flown missions"],
         "surface-silo": ["Holds 40 units of ore", "Holds 80 units of ore", "Holds 120 units of ore"],
-        "astronaut-academy": ["Day-long training sessions", "Training takes 25% less time", "Training takes 50% less time"],
     ]
 
-    public static let names: [String: String] = ["launchpad": "Launchpad", "surface-silo": "Surface Silo", "astronaut-academy": "Academy"]
+    public static let names: [String: String] = ["launchpad": "Launchpad", "surface-silo": "Surface Silo"]
 
     private static let siloMultiplier = [1, 2, 3]
     private static let timeMultiplier = [1.0, 0.75, 0.5]

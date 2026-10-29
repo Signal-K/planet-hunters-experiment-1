@@ -21,10 +21,10 @@
   position: absolute;
   z-index: 3;
   top: 16px;
-  left: 16px;
+  left: 72px;
   display: grid;
   gap: 4px;
-  width: min(360px, calc(100% - 32px));
+  width: min(360px, calc(100% - 88px));
   padding: 12px 14px;
   border: 2px solid var(--ln-cyan);
   border-radius: 8px;
@@ -33,7 +33,11 @@
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-blue) 30%, transparent);
 }
 
-.eventBrief span { font: 700 11px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); color: var(--ln-blueprint-blue); }
+/* Phones: the top row holds the cog, chips and the OPS strip, so the brief sits under them. */
+@media (max-width: 599px) {
+  .eventBrief { top: 140px; left: 16px; width: calc(100% - 32px); }
+}
+.eventBrief span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); color: var(--ln-blueprint-blue); }
 .eventBrief strong { font: 700 16px/1.2 var(--ln-font-display); }
 .eventBrief small { font: 14px/1.35 var(--ln-font-body); }
 

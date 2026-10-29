@@ -1,4 +1,4 @@
-.PHONY: help up follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help dev shared-dev up ensure check scene follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 export LANDNAM_HOST_ROOT := $(CURDIR)
@@ -11,6 +11,9 @@ help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
+	@echo "    dev            Run everything locally with no Docker: shared PB stand-in :8090,"
+	@echo "                   Landnam PB :$(LANDNAM_PB_DEV_PORT), web :$(LANDNAM_WEB_PORT) (scripts/dev-local.sh)"
+	@echo "    shared-dev     Run only the shared PB stand-in (pocketbase/cmd/shared-dev) on :8090"
 	@echo "    up             Start frontend + parent-owned PocketBase (:$(LANDNAM_WEB_PORT) / shared :8090 / landnam :$(LANDNAM_PB_PORT))"
 	@echo "                   Also starts the Cursor helper (lets the Studio open scripts in Cursor). The web"
 	@echo "                   container warms the Studio's routes itself every time it starts."
@@ -49,6 +52,28 @@ help:
 	@echo "    test-reset-dev-data Verify reset protection with an offline mock"
 	@echo "    docker-disk    Report Docker disk usage and the largest objects"
 	@echo "    docker-prune   Remove stale rebuildable Docker data (never volumes)"
+
+ensure:
+	@scripts/ensure-stack.sh
+
+# Fast in-tab check: make check NAME=orionids-board   (or: node scripts/dev-check.mjs --list)
+check:
+	@node scripts/dev-check.mjs $(NAME)
+
+# All source tests, ~10s: authoring contracts + colocated unit tests (dot reporter).
+test:
+	@node scripts/authoring.mjs check | tail -1
+	@cd web && npx vitest run --reporter=dot 2>&1 | grep -v '^$$' | tail -15
+	@cd shared/core && go test ./... 2>&1 | grep -v 'no test files'
+
+scene:
+	@node scripts/scene.mjs $(NAME) $(CHECK)
+
+dev:
+	./scripts/dev-local.sh
+
+shared-dev:
+	cd pocketbase && go run ./cmd/shared-dev serve --http=127.0.0.1:8090 --dir=pb_data_shared
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web

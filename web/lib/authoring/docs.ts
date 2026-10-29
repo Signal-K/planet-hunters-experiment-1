@@ -89,6 +89,9 @@ export interface SceneDoc {
   runtime: { surface: 'canvas' | 'dom'; web?: string[]; native?: string[]; engine?: string[]; data?: string[] }
   preview: { route: string; state?: string }
   states?: SceneState[]
+  dials?: Record<string, import('./dials.ts').Dial>
+  parts?: Record<string, Omit<Thing, 'id'>>
+  checkpoints?: Record<string, Omit<SceneState, 'id'>>
   things?: Thing[]
   presets?: ScenePreset[]
   objects?: SceneObject[]
@@ -128,6 +131,7 @@ export interface MissionDoc {
   payout: { francs?: number; floor_sequence?: number; affinity: number }
   tickets?: string[]
   preview?: { route?: string; state?: string }
+  harness: { scene: string; web: string; native: string; objective: string; complete: string }
   note?: string
 }
 

@@ -12,9 +12,9 @@ import Foundation
 
     @Test func catalogCarriesEveryAuthoredWebMission() {
         let ids = Set(catalog.missions.map(\.id))
-        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo", "story-astronaut-academy",
+        for id in ["program-build-mars-mining-settlement", "program-build-remote-silo",
                    "lnm_m3_relay_bennu_vesta", "lnm_m3_relay_itokawa_eros", "lnm_relay_psyche_ceres",
-                   "freeops-self-directed-mining", "freeops-crewed-prospecting"] {
+                   "freeops-self-directed-mining"] {
             #expect(ids.contains(id), "missing \(id)")
         }
     }
@@ -39,7 +39,7 @@ import Foundation
             let targets = Targets.feasible(for: entry.mission, missionsDone: 0)
             #expect(!targets.isEmpty, "\(entry.mission.title) has no target a new player can reach")
             if let target = targets.first {
-                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer, skills: []).ok, "\(entry.mission.title) is not launchable with the free Explorer")
+                #expect(catalog.parts.validate(mission: entry.mission, target: target, rocket: explorer).ok, "\(entry.mission.title) is not launchable with the free Explorer")
             }
         }
     }
@@ -59,23 +59,11 @@ import Foundation
         let p = freeOpsPlayer()
         let board = MissionBoard.clientBoard(catalog: catalog, player: p, now: now)
         #expect(board.contains { $0.id == "lnm_relay_psyche_ceres" })
-        #expect(board.contains { $0.id == "freeops-crewed-prospecting" })
         #expect(board.allSatisfy { !$0.mission.isOwnProgram })
         let programme = MissionBoard.programBoard(catalog: catalog, player: p, now: now)
         #expect(programme.contains { $0.id == "freeops-self-directed-mining" })
         #expect(programme.contains { $0.id == "program-build-remote-silo" })
         #expect(MissionBoard.programBoard(catalog: catalog, player: Player(), now: now).isEmpty)
-    }
-
-    @Test func crewedProspectingNeedsAcademyAndAQualifiedAstronaut() {
-        var p = freeOpsPlayer()
-        let m = catalog.mission("freeops-crewed-prospecting")!
-        #expect(MissionBoard.gate(m, player: p, now: now) == "Build the Astronaut Academy first")
-        p.placed = ["astronaut-academy"]
-        #expect(MissionBoard.gate(m, player: p, now: now)?.contains("Hire and train") == true)
-        p.crew = [Academy.createMember(id: "c1", crewClass: .astronaut, selfTrained: true, now: now)]
-        p.crew[0].specialisations = [CrewSpecialisation(branch: "mining", tier: 1)]
-        #expect(MissionBoard.gate(m, player: p, now: now) == nil)
     }
 
     @Test func refineryProgramBuildIsRemoved() {

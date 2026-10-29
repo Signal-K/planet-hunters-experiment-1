@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import styles from './BaseMenuSheet.module.css'
 
-export type BaseMenuIcon = 'build' | 'mission' | 'market' | 'hangar' | 'station' | 'log' | 'subsurface' | 'sites' | 'settings'
+export type BaseMenuIcon = 'build' | 'mission' | 'market' | 'hangar' | 'station' | 'log' | 'subsurface' | 'friends' | 'settings'
 
 export interface BaseMenuItem {
   id: string
@@ -24,7 +24,7 @@ const PATHS: Record<BaseMenuIcon, ReactNode> = {
   station: <><path d="M5 12a7 7 0 0 1 14 0" /><path d="M8 12a4 4 0 0 1 8 0" /><circle cx="12" cy="12" r="1.2" /><path d="M12 13v7M8 20h8" /></>,
   log: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 8h6M9 12h6M9 16h4" /></>,
   subsurface: <><path d="M3 8h18" /><path d="M7 8v12h10V8" /><path d="M10 12h4M10 16h4" /><path d="M12 3v5" /></>,
-  sites: <><circle cx="12" cy="12" r="8" /><path d="M12 4v16M4 12h16" /><path d="M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16" /></>,
+  friends: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M19 12a7 7 0 0 0-.12-1.28l2-1.55-2-3.46-2.47 1A7 7 0 0 0 14.2 5.4L13.8 3h-4l-.4 2.4a7 7 0 0 0-2.21 1.31l-2.47-1-2 3.46 2 1.55A7 7 0 0 0 4.6 12c0 .44.04.87.12 1.28l-2 1.55 2 3.46 2.47-1A7 7 0 0 0 9.4 18.6l.4 2.4h4l.4-2.4a7 7 0 0 0 2.21-1.31l2.47 1 2-3.46-2-1.55A7 7 0 0 0 19 12z" /></>,
 }
 

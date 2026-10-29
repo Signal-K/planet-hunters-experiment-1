@@ -6,6 +6,8 @@ import { dirname, join, normalize, sep } from 'node:path'
 import { compileAll } from './compile.ts'
 import { applyEdits } from './edit.ts'
 import { readFocus, writeFocus } from './focus.ts'
+import { FIXTURE_TABLES, fixturesFile, markerFor, readSceneText, remapDiagnostics, splitSceneText } from './fixtures-merge.ts'
+import { withDials } from './dials.ts'
 import { listScenes } from './scenes.ts'
 import type { CompileSummary, DataDocBundle, DocBundle, Fixture, FlowSummary, SceneBundle, StudioIndex, StudioResponse } from './studio-types.ts'
 import { AUTHORING_DIR, docKindOf, hasErrors, loadContext, loadSchema, validateDocument } from './validate.ts'
@@ -36,9 +38,9 @@ function atomicWrite(abs: string, content: string | Buffer): void {
 export function readDoc(root: string, file: string, context: AuthoringContext): DocBundle {
   const abs = safeAuthoringPath(root, file)
   if (!existsSync(abs)) return { file, exists: false, text: '', hash: hashOf(''), value: null, diagnostics: [] }
-  const text = readFileSync(abs, 'utf8')
+  const text = readSceneText(root, file)
   const { doc, diagnostics } = validateDocument(text, file, context)
-  return { file, exists: true, text, hash: hashOf(text), value: doc?.value ?? null, diagnostics }
+  return { file, exists: true, text, hash: hashOf(text), value: doc && docKindOf(file) === 'scene' ? withDials(doc.value as unknown as SceneDoc) as unknown as Record<string, unknown> : doc?.value ?? null, diagnostics: remapDiagnostics(text, diagnostics) }
 }
 
 /** Cheap change detector: a hash of every file behind a bundle. The Studio polls with it and only refetches on change. */
@@ -46,7 +48,7 @@ export function bundleSignature(root: string, files: string[]): string {
   return hashOf(files.map(f => { const abs = safeAuthoringPath(root, f); return existsSync(abs) ? readFileSync(abs, 'utf8') : '' }).join('\u0000'))
 }
 
-export const sceneFiles = (id: string): string[] => [`${AUTHORING_DIR}/scenes/${id}.toml`, `${AUTHORING_DIR}/feedback/${id}.toml`, noteFile(id, 'always'), noteFile(id, 'next')]
+export const sceneFiles = (id: string): string[] => [`${AUTHORING_DIR}/scenes/${id}.toml`, `${AUTHORING_DIR}/fixtures/${id}.toml`, `${AUTHORING_DIR}/feedback/${id}.toml`, noteFile(id, 'always'), noteFile(id, 'next')]
 
 const noteFile = (id: string, which: 'always' | 'next') => `${AUTHORING_DIR}/instructions/scenes/${id}${which === 'next' ? '.next' : ''}.md`
 const readNote = (root: string, id: string, which: 'always' | 'next'): string => {
@@ -141,7 +143,9 @@ function commit(root: string, file: string, before: string | null, text: string,
   if (expectHash !== undefined && before !== null && hashOf(before) !== expectHash) {
     return { ok: false, stale: true, error: `${file} changed on disk since you opened it. Reloaded.` }
   }
-  atomicWrite(abs, text)
+  const parts = splitSceneText(text)
+  atomicWrite(abs, parts.scene)
+  if (parts.fixtures) atomicWrite(safeAuthoringPath(root, parts.fixtures.file), parts.fixtures.text)
   const doc = readDoc(root, file, context)
   const kind = docKindOf(file)
   return { ok: true, before: before ?? '', doc, compile: kind === 'world' || kind === 'mission' ? compileSummary(root, context) : undefined }
@@ -149,21 +153,35 @@ function commit(root: string, file: string, before: string | null, text: string,
 
 export function editDocument(root: string, file: string, ops: EditOp[], context: AuthoringContext, expectHash?: string): StudioResponse {
   const abs = safeAuthoringPath(root, file)
-  let before: string | null = existsSync(abs) ? readFileSync(abs, 'utf8') : null
+  let before: string | null = existsSync(abs) ? readSceneText(root, file) : null
   if (before === null) {
     const feedback = file.match(/^shared\/authoring\/feedback\/([a-z0-9-]+)\.toml$/)
     if (!feedback) return { ok: false, error: `${file} does not exist` }
     before = feedbackTemplate(feedback[1])
     atomicWrite(abs, before)
   }
-  const result = applyEdits(before, ops)
-  if (!result.ok) return { ok: false, error: result.error }
-  return commit(root, file, before, result.text, context, expectHash)
+  // The merged text carries the fixtures after a marker line, so an edit lands in whichever file owns that table.
+  const fixtures = fixturesFile(file)
+  const hasFixtures = !!fixtures && splitSceneText(before).fixtures !== null
+  const mine = (op: EditOp) => hasFixtures && FIXTURE_TABLES.has(String(op.path[0]))
+  const parts = splitSceneText(before)
+  const sceneEdit = applyEdits(parts.scene, ops.filter(op => !mine(op)))
+  if (!sceneEdit.ok) return { ok: false, error: sceneEdit.error }
+  let merged = sceneEdit.text
+  if (parts.fixtures) {
+    const fixtureEdit = applyEdits(parts.fixtures.text, ops.filter(mine))
+    if (!fixtureEdit.ok) return { ok: false, error: fixtureEdit.error }
+    merged = readSceneTextFrom(sceneEdit.text, parts.fixtures.file, fixtureEdit.text)
+  }
+  return commit(root, file, before, merged, context, expectHash)
 }
+
+const readSceneTextFrom = (scene: string, fixtures: string, fixtureText: string): string =>
+  `${scene.endsWith('\n') ? scene : `${scene}\n`}\n${markerFor(fixtures)}${fixtureText}`
 
 export function writeDocument(root: string, file: string, text: string, context: AuthoringContext, expectHash?: string): StudioResponse {
   const abs = safeAuthoringPath(root, file)
-  const before = existsSync(abs) ? readFileSync(abs, 'utf8') : null
+  const before = existsSync(abs) ? readSceneText(root, file) : null
   if (file.endsWith('.toml')) {
     const check = validateDocument(text, file, context)
     if (check.diagnostics.some(d => d.code === 'syntax')) return { ok: false, error: `that text is not valid TOML (line ${check.diagnostics[0].line})` }

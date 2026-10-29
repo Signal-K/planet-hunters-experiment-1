@@ -10,7 +10,8 @@ import type { MineralMeta } from '@/lib/data'
 import type { PlayerLocation } from '@/lib/game-types'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
-import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { isInLocalEventBonusWindow } from '@/lib/data/sky-event-window'
+import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_RUN_FRAGMENTS_PER_MINUTE, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
@@ -111,14 +112,6 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
     observer.observe(parent)
     return () => { observer.disconnect(); if (timer) clearTimeout(timer) }
   }, [])
-  const [missFlash, setMissFlash] = useState(false)
-  const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const onMissRef = useRef<(() => void) | null>(null)
-  onMissRef.current = () => {
-    if (missFlashTimerRef.current) clearTimeout(missFlashTimerRef.current)
-    setMissFlash(true)
-    missFlashTimerRef.current = setTimeout(() => setMissFlash(false), 280)
-  }
   const [hitFlash, setHitFlash] = useState(false)
   const hitFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onHitRef = useRef<(() => void) | null>(null)
@@ -127,15 +120,6 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
     setHitFlash(true)
     hitFlashTimerRef.current = setTimeout(() => setHitFlash(false), 220)
   }
-  const [tapAck, setTapAck] = useState(false)
-  const tapAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const onTapAckRef = useRef<(() => void) | null>(null)
-  onTapAckRef.current = () => {
-    if (tapAckTimerRef.current) clearTimeout(tapAckTimerRef.current)
-    setTapAck(true)
-    tapAckTimerRef.current = setTimeout(() => setTapAck(false), 160)
-  }
-
   useEffect(() => {
     const parent = containerRef.current
     if (!parent) return
@@ -192,7 +176,9 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         ])
         if (destroyed) return
 
-        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: SHIP_X, shipY, palette, landscapeKey })
+        // SSL-708: the ship starts about a quarter of the way in, not hugging the left edge.
+        const startX = Math.round(Math.max(110, Math.min(320, worldW * 0.24)))
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey })
         if (destroyed) {
           field.backdrop.destroy({ children: true })
           field.beam.destroy({ children: true })
@@ -273,11 +259,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
               }
             }
           },
-          onMiss: () => {
-            shakeState.timer = 0.28
-            onMissRef.current?.()
-          },
-          onHit: () => { pulse.timer = 0.16; onHitRef.current?.() },
+          // SSL-708: a miss is not an impact, so it neither shakes nor flashes the screen.
+          onHit: () => { pulse.timer = 0.16; parent.style.setProperty('--hit-x', `${Math.round(shipX)}px`); onHitRef.current?.() },
           onScroll: scrollX => {
             field.ground.x = -(scrollX % field.soilW)
             field.near.x = -((scrollX * 0.45) % field.ridgeW)
@@ -296,28 +279,33 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
               if (!preset) return null
               return {
                 mineral: preset.resourceId,
-                speedFactor: preset.speedFactor,
-                ratePerMinute: debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
+                // Shower fragments drift down a little slower than other debris so there is time to line up under them, but not so slow the sky stays full.
+                speedFactor: preset.eventId === 'orionids-2026' ? 1.0 : preset.speedFactor,
+                ratePerMinute: preset.eventId === 'orionids-2026'
+                  ? ORIONIDS_RUN_FRAGMENTS_PER_MINUTE * (isInLocalEventBonusWindow(debrisNow(), skyEventLocation) ? ORIONIDS_PEAK_MULTIPLIER : 1)
+                  : debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
                 onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
                 onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
+                // Shower fragments collect themselves on landing; the laser is for ore and the fireball.
+                autoCollect: preset.eventId === 'orionids-2026',
               }
             },
           },
         })
 
         let sceneTime = 0
-        const CLIMB_SPEED = 180
-        const STEER_SPEED = 150
+        const CLIMB_SPEED = 120
+        const STEER_SPEED = 100
         const SHIP_BELLY = 14
         const SHIP_HALF_W = 30
         const BUMP_KICK = 18
         let altitude = 0
         let climb = 0
-        let shipX = SHIP_X
+        let shipX = startX
         let steering = 0
         let bumpCooldown = 0
         let lastObstacleAhead: boolean | null = null
-        const minAlt = Math.min(0, 64 - shipY)
+        const minAlt = Math.min(0, 84 - shipY)
         const maxAlt = Math.max(0, surfaceY - 56 - shipY)
         const beamTop = field.beam.y
         const beamSpan = Math.max(24, surfaceY - beamTop)
@@ -348,7 +336,10 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
             obstacleHeightAt(field, shipX + 120),
             obstacleHeightAt(field, shipX + 160),
           )
-          const hullBottom = shipY + altitude + SHIP_BELLY
+          // SSL-708: measure the hull from the ship as drawn. The fixed SHIP_BELLY guess sat
+          // ~30px below the sprite, so ridges the ship visibly cleared still "hit" it.
+          const drawnBottom = field.ship.getBounds().maxY - app.stage.y
+          const hullBottom = Number.isFinite(drawnBottom) && drawnBottom > 0 ? drawnBottom - 2 : shipY + altitude + SHIP_BELLY
           const shouldClimb = obstacleAhead > 18 && hullBottom > surfaceY - obstacleAhead - 8
           if (shouldClimb !== lastObstacleAhead) {
             lastObstacleAhead = shouldClimb
@@ -356,7 +347,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           }
           if (clear > 0 && hullBottom > surfaceY - clear + 4) {
             altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
-            if (bumpCooldown <= 0) {
+            // No damage while the run is starting: the ship is lifted clear instead.
+            if (bumpCooldown <= 0 && sceneTime > 1.5) {
               bumpCooldown = 1.6
               shakeState.timer = 0.32
               onBumpRef.current?.()
@@ -395,10 +387,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         // never owns the timer.
         let isCharging = false
         const attemptFire = () => {
-          if (isCharging) {
-            onTapAckRef.current?.()
-            return
-          }
+          if (isCharging) return
           controller.fireLaser()
           lastFireAt = performance.now()
           isCharging = true
@@ -479,9 +468,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
       cancelAnimationFrame(rafId)
       destroyed = true
       if (chargeTimer) clearTimeout(chargeTimer)
-      if (missFlashTimerRef.current) clearTimeout(missFlashTimerRef.current)
       if (hitFlashTimerRef.current) clearTimeout(hitFlashTimerRef.current)
-      if (tapAckTimerRef.current) clearTimeout(tapAckTimerRef.current)
       chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null
@@ -503,29 +490,12 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>
       {trainingMiningTry && <div className="mining-seam-brackets" data-testid="mining-seam-brackets" aria-hidden="true" />}
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
-        // Keep miss feedback at the firing lane. A full-canvas red wash reads
-        // as a damaged scene rather than a localized impact response.
-        background: 'radial-gradient(circle at 80px 62%, rgba(255,90,106,0.48) 0%, rgba(255,90,106,0.18) 18%, transparent 42%)',
-        opacity: missFlash ? 1 : 0,
-        transition: missFlash ? 'none' : 'opacity 280ms ease-out',
-      }} />
       <div data-testid="mining-hit-flash" style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
-        // Same localized-lane treatment as the miss flash, cyan instead of red
-        // so hit vs miss reads instantly without needing to watch the ore itself.
-        background: 'radial-gradient(circle at 80px 62%, rgba(156,236,255,0.42) 0%, rgba(156,236,255,0.14) 18%, transparent 42%)',
+        // Only a real hit flashes, centred on the ship's current lane (SSL-708).
+        background: 'radial-gradient(circle at var(--hit-x, 80px) 62%, rgba(156,236,255,0.42) 0%, rgba(156,236,255,0.14) 18%, transparent 42%)',
         opacity: hitFlash ? 1 : 0,
         transition: hitFlash ? 'none' : 'opacity 220ms ease-out',
-      }} />
-      <div data-testid="mining-tap-ack" style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
-        // Neutral, low-opacity: a tap during the fire cooldown, distinct from
-        // both the cyan hit flash and red miss flash so it never reads as a shot result.
-        background: 'radial-gradient(circle at 80px 62%, rgba(255,255,255,0.22) 0%, transparent 32%)',
-        opacity: tapAck ? 1 : 0,
-        transition: tapAck ? 'none' : 'opacity 160ms ease-out',
       }} />
     </div>
   )

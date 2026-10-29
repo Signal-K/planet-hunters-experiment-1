@@ -103,21 +103,12 @@ export const ROCKET_PRICES = {
 export const STRUCTURE_PRICES = {
   refinery: 8_000_000,
   garage: 6_000_000,
-  academy: 12_000_000,
   exchange: 4_000_000,
   controlStation: 3_000_000,
   launchpadUpgrade: 10_000_000,
   deepSpaceTelescope: 15_000_000,
 } as const
 
-// Solo per-target site access fees. These are not land-rights prices: v0 has
-// no shared ownership, claims, transfer, or trading. Keep the fees in the
-// single economy module so the Surface Ops quote stays on the contract scale.
-export const SURFACE_SITE_ACCESS_FEES = {
-  'moon-south-pole': 4_000_000,
-  'mars-arcadia': 5_500_000,
-  'europa-chaos': 7_500_000,
-} as const
 
 // Subsurface excavation + room construction (STS-633). Earth Base's surface
 // footprint is fixed — the below-soil deck is the player's only way to add
@@ -130,25 +121,8 @@ export const SUBSURFACE_EXCAVATION_MATERIALS = { aluminium: 10 } as const
 export const SUBSURFACE_ROOM_PRICES = {
   'mineral-vault': 3_000_000,
   'parts-locker': 3_000_000,
-  'habitat-training': 6_000_000,
 } as const
 
-// Astronaut Academy / crew economy (STS-587, STS-593, STS-597).
-export const CREW_FIRST_HIRE_COST = 1_500_000
-export const CREW_HIRE_ESCALATION = 1.6
-export const CREW_WEEKLY_HIRE_CAP = 2
-export const CREW_TOTAL_HIRED_CAP = 6
-export const CREW_DAILY_UPKEEP = 60_000
-export const ACADEMY_DAILY_UPKEEP = 200_000
-export const CREW_QUIT_REFUND_RATE = 0.5
-export const TRAINING_SESSIONS_PER_DAY = 2
-export const CREW_TRAINING_DURATION_MS = 24 * 60 * 60 * 1000
-export const ACADEMY_RESEARCH_XP_COST = 150
-export const CREW_MODULE_RESEARCH_XP_COST = 100
-export const CREW_MODULE_PRICE = 5_500_000
-export const CREW_MISSION_XP = 100
-export const CREW_TRAINING_XP = 100
-export const FIRST_CREW_ARRIVAL_BONUS = 1_000_000
 export const LANDING_RESEARCH_XP_COST = 100
 export const LANDER_MODULE_PRICE = 5_500_000
 
@@ -157,25 +131,11 @@ export const STARTING_FRANCS = 9_000_000
 
 // ── Credit ─────────────────────────────────────────────────────────────────
 
-/** The public treasury issues one transparent, no-interest loan per player;
- *  see TreasurySystem. There is deliberately no interest rate here — the
- *  private interest-bearing loan this replaced is retired. */
-export const LOAN_PRINCIPAL = 5_000_000
 
-/** Balance below which the game offers the emergency loan. */
-export const BANKRUPTCY_THRESHOLD = 2_000_000
 
-/** Provisional seed balance for the treasury until site-deed revenue is the
- *  real funding source (KES-287) — enough to cover a handful of loans. */
-export const TREASURY_STARTING_BALANCE = LOAN_PRINCIPAL * 4
 
 // ── Daily rewards ──────────────────────────────────────────────────────────
 
-export const DAILY_QUEST_REWARDS = {
-  small: 1_200_000,
-  medium: 1_500_000,
-  large: 2_000_000,
-} as const
 
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
 // A built Mineral Vault gives the player real Earth-side ore storage, drawn as

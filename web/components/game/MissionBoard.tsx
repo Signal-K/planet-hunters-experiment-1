@@ -6,7 +6,7 @@ import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
-import { clientAffinityLevel } from '@/lib/systems/AcademySystem'
+import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -26,7 +26,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
@@ -80,12 +80,10 @@ function LockIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
 }
 
-const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', academy: 'Crew', build: 'Build', mining: 'Mining', focus: 'Focus' }
+const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', mining: 'Mining', focus: 'Focus' }
 const STEP_STATE_LABEL: Record<ProgramStep['state'], string> = { done: 'Done', current: 'Next up', available: 'Open', locked: 'Locked' }
 
 function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
-  if (kind === 'academy') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19" /><path d="M4 11h16" /></svg>
-  if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11" /><path d="M10 20v-5h4v5" /></svg>
   if (kind === 'mining' || kind === 'focus') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M8 18l2-8h4l2 8M10 10V7h4v3" /></svg>
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16c3-1 5-5 8-12 3 7 5 11 8 12" /><circle cx="12" cy="16" r="2" /><path d="M8 20h8" /></svg>
 }
@@ -317,6 +315,7 @@ export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
+  const [requestedEventId] = useState(() => pendingMissionBoardEvent())
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
@@ -571,13 +570,13 @@ export default function MissionBoard({
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
             {events.groups.map(group => <section key={group.status} className={styles.eventGroup} aria-label={group.title} data-testid={`events-group-${group.status}`}>
               <div className={styles.eventGrid}>
-                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
+                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-event-focused={requestedEventId === event.id || undefined} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
                   <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
-                    <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
+                    <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
                 </article>)}
               </div>

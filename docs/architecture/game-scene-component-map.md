@@ -8,7 +8,7 @@ This is the bridge from the current Landnám application to a future scene-autho
 - `shared/engine/scene-types.json` is the approved type and slot contract. It groups every web route into six scene types and defines normalized, safe-area-relative slots.
 - `shared/authoring/` is the editable source layer: plain-language briefs and TOML scene/mission files live beside one another and are reviewable in any code editor.
 
-The generated file records gaps instead of hiding them. `routesWithoutSceneType` and `unknownSlots` are hard failures in check mode. QA entries without a web or native fixture are visible but allowed because the current storyboard already contains platform-specific cases.
+The generated file records gaps instead of hiding them. `routesWithoutSceneType` and `unknownSlots` are hard failures in check mode. A player-facing QA entry needs both a web fixture and an iOS fixture so it can be run independently.
 
 ## Current scene systems
 
@@ -16,7 +16,7 @@ The generated file records gaps instead of hiding them. `routesWithoutSceneType`
 | --- | --- | --- | --- |
 | Navigation | `web/lib/game-screens.ts`, `native/LandnamCore/.../Screen.swift` | Player-visible states | Scene IDs and transitions |
 | Runtime routing | `GameScreenRouter.tsx`, `RootView.swift` | Chooses the platform view | Platform scene adapter |
-| QA fixtures | `qa/scenes.json`, `devPresets.ts`, `SceneCatalog.swift` | Isolated states and snapshots | `engine play scene --fixture ...` |
+| QA fixtures | `qa/scenes.json`, `devPresets.ts`, `SceneCatalog.swift` | Isolated web and iOS states | `node scripts/scene.mjs <id> --check` |
 | Authored scenes | `web/public/game/scenes/*.scene.json` | Small Pixi entity trees | Shared scene files |
 | World simulation | `shared/scenes/*.json`, web/native world sims | Deterministic background entities | Shared systems and prefabs |
 | UI placement | `base-hud-zones.json` plus per-view layout | Safe areas and controls | Scene-type slots |

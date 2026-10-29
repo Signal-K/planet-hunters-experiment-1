@@ -1,7 +1,7 @@
 import { STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 
 /** Upgradable Earth Base buildings. The Garage is a future-sprint structure and has no levels yet. */
-export const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery', 'astronaut-academy'] as const
+export const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery'] as const
 export type UpgradableBuildingId = typeof UPGRADABLE_BUILDINGS[number]
 
 export const MAX_BUILDING_LEVEL = 3
@@ -14,7 +14,6 @@ export const BUILDING_UPGRADE_COSTS: Record<UpgradableBuildingId, readonly [numb
   launchpad: [STRUCTURE_PRICES.launchpadUpgrade, STRUCTURE_PRICES.launchpadUpgrade * 2],
   'surface-silo': [SURFACE_SILO_PRICE * 2, SURFACE_SILO_PRICE * 4],
   refinery: [STRUCTURE_PRICES.refinery, STRUCTURE_PRICES.refinery * 2],
-  'astronaut-academy': [STRUCTURE_PRICES.academy, STRUCTURE_PRICES.academy * 2],
 }
 
 /** One concrete effect per building and level, shown on the building sheet. */
@@ -22,7 +21,6 @@ export const BUILDING_LEVEL_EFFECTS: Record<UpgradableBuildingId, readonly [stri
   launchpad: ['Base parts and targets', 'Unlocks the parts and targets of a flown mission', 'Unlocks the parts and targets of two flown missions'],
   'surface-silo': ['Holds 40 units of ore', 'Holds 80 units of ore', 'Holds 120 units of ore'],
   refinery: ['Standard refining time', 'Refining takes 25% less time', 'Refining takes 50% less time'],
-  'astronaut-academy': ['Day-long training sessions', 'Training takes 25% less time', 'Training takes 50% less time'],
 }
 
 const SILO_CAPACITY_MULTIPLIER = [1, 2, 3] as const
@@ -80,5 +78,4 @@ export const BUILDING_NAMES: Record<UpgradableBuildingId, string> = {
   launchpad: 'Launchpad',
   'surface-silo': 'Surface Silo',
   refinery: 'Refinery',
-  'astronaut-academy': 'Academy',
 }

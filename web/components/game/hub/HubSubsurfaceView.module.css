@@ -426,24 +426,6 @@
   outline-offset: 2px;
 }
 
-.roomCardLocked {
-  background: color-mix(in srgb, var(--ln-void) 76%, var(--ln-panel));
-}
-
-.roomCardLocked::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  pointer-events: none;
-  border: 1px dashed var(--ln-hairline-strong);
-  background:
-    repeating-linear-gradient(
-      135deg,
-      transparent 0 18px,
-      color-mix(in srgb, var(--ln-warn) 4%, transparent) 18px 20px
-    );
-}
-
 .roomCardTop,
 .roomCardFooter,
 .inventoryRow,
@@ -667,130 +649,6 @@
   color: var(--ln-text-dim);
   font-size: 14px;
   font-style: normal;
-}
-
-.trainingScene::after {
-  position: absolute;
-  inset: 0;
-  content: '';
-  opacity: 0.24;
-  background: repeating-linear-gradient(
-    135deg,
-    transparent 0 16px,
-    color-mix(in srgb, var(--ln-warn) 16%, transparent) 16px 18px
-  );
-}
-
-.habitat {
-  position: absolute;
-  top: 24px;
-  right: 10%;
-  bottom: 20px;
-  left: 10%;
-  border: 1px solid var(--ln-hairline-strong);
-  border-radius: 44px 44px 4px 4px;
-  background: color-mix(in srgb, var(--ln-surface) 88%, var(--ln-void));
-}
-
-.habitat::before,
-.habitat::after {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 9px;
-  content: '';
-  border-right: 1px solid var(--ln-hairline);
-  border-left: 1px solid var(--ln-hairline);
-}
-
-.habitat::before {
-  left: 16%;
-}
-
-.habitat::after {
-  right: 16%;
-}
-
-.habitatWindow {
-  position: absolute;
-  top: 30%;
-  left: 14%;
-  display: flex;
-  width: 38%;
-  height: 40%;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: var(--ln-r-pill);
-  background: color-mix(in srgb, var(--ln-cyan) 7%, transparent);
-}
-
-.habitatWindow i {
-  position: relative;
-  width: 8px;
-}
-
-.habitatWindow i::before {
-  position: absolute;
-  top: 8px;
-  left: 1px;
-  width: 6px;
-  height: 6px;
-  content: '';
-  border-radius: 50%;
-  background: var(--ln-text-muted);
-}
-
-.habitatWindow i::after {
-  position: absolute;
-  top: 15px;
-  left: 0;
-  width: 8px;
-  height: 14px;
-  content: '';
-  border-radius: 4px 4px 2px 2px;
-  background: var(--ln-text-muted);
-}
-
-.airlockWheel {
-  position: absolute;
-  top: 50%;
-  right: 14%;
-  width: 28px;
-  height: 28px;
-  transform: translateY(-50%);
-  border: 3px double var(--ln-cyan-border);
-  border-radius: 50%;
-}
-
-.airlockWheel::before,
-.airlockWheel::after {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 18px;
-  height: 1px;
-  content: '';
-  transform: translate(-50%, -50%);
-  background: var(--ln-cyan-border);
-}
-
-.airlockWheel::after {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-
-.trainingSeal {
-  position: absolute;
-  z-index: 2;
-  right: 8px;
-  bottom: 6px;
-  left: 8px;
-  padding: 3px 4px;
-  color: var(--ln-warn);
-  background: color-mix(in srgb, var(--ln-void) 92%, transparent);
-  font: 800 14px var(--ln-font-mono);
-  letter-spacing: 0.1em;
-  text-align: center;
 }
 
 .roomDescription {
@@ -1147,23 +1005,6 @@
   font-family: var(--ln-font-body);
   font-size: 14px;
   line-height: 1.5;
-}
-
-.trainingStatus {
-  margin-top: 16px;
-  justify-content: center;
-  color: var(--ln-cyan);
-  font: 800 14px var(--ln-font-display);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.trainingStatus::before {
-  width: 6px;
-  height: 6px;
-  content: '';
-  transform: rotate(45deg);
-  background: currentColor;
 }
 
 @media (max-width: 720px) {

@@ -45,7 +45,7 @@ import Foundation
     @Test func clientsAndRocketsMatchWeb() {
         #expect(Clients.all.map(\.id).suffix(2) == ["lumen-research", "pioneer-works"])
         let lumen = Clients.byId["lumen-research"]!
-        #expect(lumen.unlockTier == 4 && lumen.payoutPremium == 0.30 && lumen.uiRole == .science && lumen.suppliesCrew)
+        #expect(lumen.unlockTier == 4 && lumen.payoutPremium == 0.30 && lumen.uiRole == .science)
         let pioneer = Clients.byId["pioneer-works"]!
         #expect(pioneer.unlockTier == 5 && pioneer.mineralPreferences == ["iron", "silicon", "nickel"])
         let surveyor = Rockets.model(id: "surveyor")!

@@ -17,6 +17,7 @@ import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, captureTutorialStepStarted, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 import { pbLandnam } from '@/lib/pb-landnam'
+import { installChunkRecovery } from '@/lib/chunk-recovery'
 import { queueEventBadge, queueFragmentLedger, queueMeteoriteMastery, queueOrionidsFind, readAtlasLookedUp } from '@/lib/orionids/persist'
 import { grantLookedUp, LOOKED_UP_BADGE_ID, LOOKED_UP_LANDNAM_SUBJECT, LOOKED_UP_MARKER } from '@/lib/orionids/looked-up'
 import { ORIONIDS_EVENT_ID } from '@/lib/orionids/finds'
@@ -25,9 +26,7 @@ import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import NotificationBell from '@/components/game/NotificationBell'
-import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
-import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
@@ -45,7 +44,6 @@ function GameChrome({ children }: { children: ReactNode }) {
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
-  const [communityOpen, setCommunityOpen] = useState(false)
   const [orionidsEntryActive, setOrionidsEntryActive] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
@@ -77,6 +75,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => {
     initPostHog()
   }, [])
+
+  useEffect(() => installChunkRecovery(message => captureGameEvent('stale_chunk_reload', { message })), [])
 
   useEffect(() => {
     const refresh = () => {
@@ -250,9 +250,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (orionidsEntryActive || eventMissionActive || settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (orionidsEntryActive || eventMissionActive || settingsOpen || friendsOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, eventMissionActive, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, orionidsEntryActive, settingsOpen])
+  }, [eventMissionActive, flightStep, game.authGateOpen, game.launchpadMissionMenuOpen, game.player, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, friendsOpen, orionidsEntryActive, settingsOpen])
 
   const coachIndex = flightStep ? ['mining', 'scan', 'part'].indexOf(flightStep.try) : -1
   // Only the required-looking onboarding (not the optional guide) changes the hub's own copy.
@@ -315,7 +315,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : 'hub'
   // Price alerts fire when a spot price reaches the target, including as supply pressure recovers over time.
   const hasPriceAlerts = (game.player.priceAlerts ?? []).some(a => a.firedAt == null)
   const checkPriceAlerts = game.checkPriceAlerts
@@ -340,7 +340,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     function onKeyDown(event: KeyboardEvent) {
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
-        setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false)
+        setSettingsOpen(false); setFriendsOpen(false)
         if (currentScreen === 'market' || currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
       } else if (action === 'open-market') {
         if (game.player.freeOperations) game.go('market')
@@ -461,12 +461,10 @@ function GameChrome({ children }: { children: ReactNode }) {
             kind={game.popup}
             onClose={() => {
               const popup = game.popup
-              if (popup === 'loan') { game.acceptLoan(); return }
               game.setPopup(null)
               if (popup === 'sr2') game.go('hub')
               if (popup === 'ship-customizer') game.go('hangar')
             }}
-            onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
         {game.authGateOpen && (
@@ -480,19 +478,11 @@ function GameChrome({ children }: { children: ReactNode }) {
             onVerifyAccount={game.verifyAccountFromGate}
           />
         )}
-        {game.pendingTerritoryClaimFor && !game.authGateOpen && (
-          <TerritoryClaimPopup
-            targetId={game.pendingTerritoryClaimFor.targetId}
-            clientId={game.pendingTerritoryClaimFor.clientId}
-            onDismiss={game.clearTerritoryClaimPopup}
-          />
-        )}
       </div>
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
       {!game.authGateOpen && !LOCATION_SCREENS.has(game.screen) && <NotificationBell />}
-      {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
     </main>
   )
 }

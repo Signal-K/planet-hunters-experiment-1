@@ -112,11 +112,6 @@ final class Services {
             let log = session.sharedUserId.flatMap { MissionRuns.logOp(old: old, new: new, sharedUserId: $0, payout: payout, now: now) }
             if !ops.isEmpty { Task { for op in ops { await sync.enqueue(op) } } }
             if let log { Task { await shared.enqueue(log); await shared.flush() } }
-            for n in NativeRecords.notifications(old: old, new: new) {
-                LocalNotifications.schedule(title: n.title, body: n.body, at: n.at)
-                let op = NativeRecords.scheduledNotification(endpoint: LocalNotifications.endpoint, title: n.title, body: n.body, at: n.at)
-                Task { await sync.enqueue(op) }
-            }
         }
         Task { @MainActor [weak self] in
             var lastRetry = Date.distantPast
@@ -140,7 +135,6 @@ final class Services {
         }
         LocalNotifications.requestProvisional()
         scheduleOrionidsPeakReminder()
-        store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
             guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }
@@ -181,15 +175,15 @@ final class Services {
         return NotificationsAPI(baseURL: api.baseURL, token: session.token)
     }
 
+    func refreshFriendPresence() {
+        guard let api = friendsAPI() else { return }
+        Task { try? await api.heartbeat() }
+    }
+
     /// SSL-673: the shared monthly research total. Read-only, so it is fetched live and never queued.
     func communityResearchAPI() -> CommunityResearchAPI? {
         guard let session else { return nil }
         return CommunityResearchAPI(baseURL: api.baseURL, token: session.token)
-    }
-
-    func refreshFriendPresence() {
-        guard let api = friendsAPI() else { return }
-        Task { try? await api.heartbeat() }
     }
 
     /// One local save per account. A different player signing in on this device starts clean (and the previous

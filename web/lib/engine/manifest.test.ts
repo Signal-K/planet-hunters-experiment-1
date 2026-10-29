@@ -103,6 +103,9 @@ describe('production hub, terrain and actor sprites', () => {
       // Rocket Builder renders these large compositing plates directly rather than loading them as engine sprites.
       '/game/assets/base/v7/launchpad/pad-complex.png',
       '/game/assets/base/v7/launchpad/pad-scaffold.png',
+      // Drawn directly by the Hangar and the base road, not through the engine.
+      '/game/assets/actors/crew.png',
+      '/game/assets/actors/road_rover.png',
     ])
     const registered = new Set(Object.values(manifest))
     const unregistered = RENDERED.flatMap(dir => walk(join(PUBLIC, dir)))
@@ -127,13 +130,5 @@ describe('production hub, terrain and actor sprites', () => {
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }
-  })
-
-  it('renders the two non-human crew archetypes', () => {
-    // Astronauts deliberately have no sprite — Q31, "just names".
-    expect('actor_rover' in manifest).toBe(true)
-    expect('actor_road_rover' in manifest).toBe(true)
-    expect('actor_drone' in manifest).toBe(true)
-    expect('actor_astronaut' in manifest).toBe(false)
   })
 })

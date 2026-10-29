@@ -27,6 +27,14 @@ public struct OrionidsFragments: Codable, Equatable, Sendable {
 /// from the moment the run is accepted, not from the lifetime ledger, and a filled run pays once.
 public enum OrionidsRun {
     public static let missionId = "self-directed-orionids-night-run"
+    /// Fragments that fall and bank on landing, per minute (web `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE`). A player weaving under
+    /// them fills the order in about a minute; parking in one spot catches roughly a quarter.
+    public static let fragmentsPerMinute = 18.0
+    /// Ground under the ship, either side, where a landing fragment banks (web `CATCH_RADIUS`).
+    public static let catchRadius = 100.0
+    public static func fragmentRate(at ms: Double, location: PlayerLocation?) -> Double {
+        fragmentsPerMinute * (SkyEventWindows.isInOrionidsBonusWindow(ms, location: location) ? SkyEvents.orionidsPeakMultiplier : 1)
+    }
     public static let surfaceResearchMissionId = "self-directed-orionids-surface-research"
     public static let fragmentGoal = 20
     /// Fragments one launch catches outside peak night.
@@ -87,17 +95,17 @@ public enum OrionidsRun {
         let price = Double(Minerals.byId["orionid_debris"]?.price ?? 0)
         return Mission(
             id: missionId, title: "Orionids shower run",
-            brief: "No client. Launch through the shower and catch \(fragmentGoal) Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double.",
+            brief: "No client. Fly into the Orionids pattern, catch \(fragmentGoal) fragments, and mine any minerals you want along the way. Peak night pays double.",
             client: nil, tag: "FREE OPS", difficulty: "L1", locked: false, sequence: MissionGenerator.freeOpsMissionSequence,
-            unlockAt: "Reach Free Operations", targetId: "eros",
-            requires: MissionRequirements(minerals: ["orionid_debris": fragmentGoal], cargoMin: 0, drillTier: 1, maxOrbit: 5),
+            unlockAt: "Reach Free Operations", targetId: "orionids-shower-field",
+            requires: MissionRequirements(minerals: [:], cargoMin: 0, drillTier: 1, maxOrbit: 2),
             payout: MissionPayout(francs: MissionGenerator.normalizePayout(raw: price * Double(fragmentGoal), sequence: MissionGenerator.freeOpsMissionSequence), affinity: 0))
     }
 
     /// The second event tier changes activity from mining to a rover observation.
     public static func surfaceResearchMission() -> Mission {
         Mission(id: surfaceResearchMissionId, title: "Orionids surface observation",
-                brief: "Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.",
+                brief: "Drive the rover over the meteor, scan a rock formation, and log it for the community research record.",
                 client: nil, tag: "EVENT RESEARCH", difficulty: "L1", locked: false,
                 sequence: MissionGenerator.freeOpsMissionSequence,
                 unlockAt: "Complete the Orionids debris capture", targetId: "eros",

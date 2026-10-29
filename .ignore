@@ -75,3 +75,6 @@ docs/landscape-playfield/
 *.zip
 *.tar.gz
 *.pdf
+
+# Cloud session scene screenshots (scripts/cloud-shot.mjs)
+.scene-shots/

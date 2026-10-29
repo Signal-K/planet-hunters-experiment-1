@@ -354,6 +354,13 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
   return preset.eventId === 'orionids-2026' && isInLocalEventBonusWindow(t, location) ? rate * ORIONIDS_PEAK_MULTIPLIER : rate
 }
 
+/**
+ * Shower-run fragments that fall and bank on landing, per minute. Chosen so a player who weaves
+ * under them fills the 20 order in about a minute, while parking in one spot catches roughly a
+ * quarter. Peak night doubles it, like the launch catch.
+ */
+export const ORIONIDS_RUN_FRAGMENTS_PER_MINUTE = 18
+
 /** SSL-578: peak-night debris boost (21-22 Oct, local night). */
 export const ORIONIDS_PEAK_MULTIPLIER = 2
 

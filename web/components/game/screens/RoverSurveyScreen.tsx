@@ -6,7 +6,6 @@ import type { Mission, SurfaceTarget, Target } from '@/lib/data'
 import { lifeStageForTarget } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import type { Player } from '@/lib/game-types'
-import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
@@ -47,11 +46,9 @@ interface RoverSurveyScreenProps {
   onBack: () => void
   rocketImageSrc?: string
   player?: Player
-  onFieldBuild?: (field: FieldIdentity, structure: FieldBuildInput) => boolean
-  onFieldDemolish?: (targetId: string, structureId: string) => void
-  onFabricate?: (targetId: string, recipeId: string) => boolean
-  onSeedBiosphere?: (target: SurfaceTarget) => boolean
 }
+
+const ORIONIDS_ROVER_FORMATION_GOAL = 3
 
 /** Takeon's own field, full screen. The rover surveys; it does not extract contract cargo. */
 export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player }: RoverSurveyScreenProps) {
@@ -59,37 +56,50 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
   const missionId = useMemo(() => `landnam-rover-survey-${mission.id}-${target.id}`, [mission.id, target.id])
   const seed = useMemo(() => stableSeed(`${mission.id}:${target.id}:takeon`), [mission.id, target.id])
-  const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
+  const lifeStage = lifeStageForTarget(target, undefined)
   const takeonHandle = useRef<TakeOnMountHandle | null>(null)
-  const loggedRef = useRef<LoggedObservation | null>(null)
+  const loggedRef = useRef<LoggedObservation[]>([])
   const [ready, setReady] = useState(false)
-  const [logged, setLogged] = useState<LoggedObservation | null>(null)
-  const [clearSweep, setClearSweep] = useState(false)
+  const [logged, setLogged] = useState<LoggedObservation[]>([])
+  const [clearSweep, setClearSweep] = useState<'range' | 'seen' | null>(null)
   loggedRef.current = logged
+  // The Orionids survey asks for three different formations, so the rover has to drive between them (about a minute).
+  const orionidsSurvey = mission.id === 'self-directed-orionids-surface-research'
+  const goal = orionidsSurvey ? ORIONIDS_ROVER_FORMATION_GOAL : 1
+  const done = logged.length >= goal
 
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
-    if (event.type !== 'scan' || loggedRef.current) return
-    const found = event.payload.found[0]
+    if (event.type !== 'scan' || loggedRef.current.length >= goal) return
+    if (event.payload.found.length === 0) {
+      setClearSweep('range')
+      return
+    }
+    const found = event.payload.found.find(f => !loggedRef.current.some(o => o.id === f.id))
     if (!found) {
-      setClearSweep(true)
+      setClearSweep('seen')
       return
     }
     const observation = { id: found.id, name: found.name }
-    setLogged(observation)
-    setClearSweep(false)
+    setLogged(list => [...list, observation])
+    setClearSweep(null)
     captureGameEvent('rover_outcrop_observed', { target_id: target.id, outcrop_id: found.id, mineral: found.type, mission_id: mission.id })
-  }, [mission.id, target.id])
+  }, [mission.id, target.id, goal])
 
   const scan = useCallback(() => {
-    if (!ready || loggedRef.current) return
+    if (!ready || loggedRef.current.length >= goal) return
     takeonHandle.current?.scan()
-  }, [ready])
+  }, [ready, goal])
 
-  const status = logged
-    ? `OBSERVATION LOGGED · ${logged.name}`
-    : clearSweep
-      ? 'Scanner range is clear. Drive closer and scan again.'
-      : 'Drive the field. Scan when a formation is in range.'
+  const latest = logged[logged.length - 1]
+  const status = done
+    ? `OBSERVATION LOGGED · ${latest.name}`
+    : clearSweep === 'seen'
+      ? 'Already logged. Drive to a different formation and scan.'
+      : clearSweep === 'range'
+        ? 'Scanner range is clear. Drive closer and scan again.'
+        : latest
+          ? `LOGGED ${logged.length} OF ${goal} · ${latest.name}. Find the next formation.`
+          : 'Drive the field. Scan when a formation is in range.'
 
   return (
     <div className={`game-screen theme-blueprint ln-scene-takeon ${styles.screen}`} data-testid="rover-survey-screen">
@@ -112,8 +122,8 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
       {mission.id === 'self-directed-orionids-surface-research' && (
         <div className={styles.eventBrief} data-testid="orionids-rover-brief">
           <span>ORIONIDS RESEARCH · FIELD ROVER DEPLOYED</span>
-          <strong>Find the blue fracture outcrop on {target.name}</strong>
-          <small>Scan it to add this meteor observation to the community research record.</small>
+          <strong>Scan {goal} rock formations on {target.name}</strong>
+          <small>Drive until one is in range, then scan. {logged.length} of {goal} logged. They are added to the community meteor record.</small>
         </div>
       )}
       <div className={styles.chrome}>
@@ -136,11 +146,11 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
         <div className={styles.hud}>
           <p className={styles.readout} data-testid="rover-survey-readout">{status}</p>
           <nav className={`scene-dock ${styles.dock}`} aria-label="Scene dock" data-testid="base-dock">
-            <DockWordButton data-testid="rover-scan" disabled={!ready || !!logged} onClick={scan}>Scan</DockWordButton>
+            <DockWordButton data-testid="rover-scan" disabled={!ready || done} onClick={scan}>Scan</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="hub-btn" onClick={onBack}>Hub</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
-            <DockWordButton data-testid="rover-continue-to-laser" disabled={!logged} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>{mission.id === 'self-directed-orionids-surface-research' ? 'Log' : 'Laser'}</DockWordButton>
+            <DockWordButton data-testid="rover-continue-to-laser" disabled={!done} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>{mission.id === 'self-directed-orionids-surface-research' ? 'Log' : 'Laser'}</DockWordButton>
           </nav>
         </div>
       </div>

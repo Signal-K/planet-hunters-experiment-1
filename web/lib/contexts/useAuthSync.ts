@@ -598,7 +598,7 @@ export function useAuthSync({
             }
             if (current.player.activeMission) return current
             const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.freeOperations
-              ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
+              ? transitStartedAt + travelDurationMs(target, 42 * 1000)
               : null
             const label = `${mission?.title ?? 'Active mission'} → ${target?.name ?? targetId}`
             return normalizeAndRepair({

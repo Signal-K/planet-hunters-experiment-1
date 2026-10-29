@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Scenes: start dev server",
+      "label": "Landnam: ensure Simple Browser preview",
       "type": "shell",
-      "command": "npm run dev",
-      "options": { "cwd": "${workspaceFolder}/web" },
+      "command": "make ensure",
+      "options": { "cwd": "${workspaceFolder}" },
       "isBackground": true,
       "problemMatcher": {
         "pattern": { "regexp": "^$" },
@@ -14,11 +14,17 @@
       "presentation": { "reveal": "silent" }
     },
     {
-      "label": "Scenes: shoot one (prompts for preset)",
+      "label": "Landnam: open scene in Simple Browser",
       "type": "shell",
-      "command": "scripts/scene.sh ${input:preset}",
+      "command": "node scripts/scene.mjs ${input:scene}",
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "Landnam: check scene in Simple Browser",
+      "type": "shell",
+      "command": "node scripts/scene.mjs ${input:scene} --check",
       "options": { "cwd": "${workspaceFolder}" }
     }
   ],
-  "inputs": [{ "id": "preset", "type": "promptString", "description": "Preset key, e.g. cp-mid (scripts/scene.sh list)" }]
+  "inputs": [{ "id": "scene", "type": "promptString", "description": "Scene id, e.g. mining (node scripts/scene.mjs list)" }]
 }

@@ -21,7 +21,6 @@ interface SaturnStormSearchScreenProps {
   onBack: () => void
   onLaunchImager: () => void
   onSubmit: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
-  onClaimTerritory: () => void
 }
 
 const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string; mark: string }> = [
@@ -36,7 +35,7 @@ function emptyCells(): CellState[] {
   return Array.from({ length: 9 }, () => ({ answer: null, storm: false }))
 }
 
-export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBack, onLaunchImager, onSubmit, onClaimTerritory }: SaturnStormSearchScreenProps) {
+export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBack, onLaunchImager, onSubmit }: SaturnStormSearchScreenProps) {
   const classifications = useMemo(() => player.saturnClassifications ?? {}, [player.saturnClassifications])
   const [candidate, setCandidate] = useState<SaturnCandidate | null>(null)
   const [loading, setLoading] = useState(true)
@@ -199,7 +198,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       answers={complete ? (
         <div className={viewportStyles.saved} data-testid="saturn-frame-complete" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
           {chart && <EnceladusSurveyChart chart={chart} classification={classification} />}
-          {chart?.tier === 'gold' && !chart.territoryPlotClaimedAt ? <button type="button" className={viewportStyles.chartAction} onClick={onClaimTerritory}>CLAIM ENCELADUS PLOT</button> : chart?.tier === 'gold' ? 'ENCELADUS PLOT CLAIMED' : 'MOON ATLAS RECORDED · RESEARCH XP AWARDED'}
+          {chart?.tier === 'gold' ? 'GOLD ATLAS RECORDED · RESEARCH XP AWARDED' : 'MOON ATLAS RECORDED · RESEARCH XP AWARDED'}
         </div>
       ) : (
         <InstrumentAnswerRow

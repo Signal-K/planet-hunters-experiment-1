@@ -19,7 +19,7 @@ struct HubScreen: View {
     @State private var placing: Bool
     @State private var picked: String?
     @State private var placeNote: String?
-    /// Build mode: tapping a placed Launchpad, Silo or Academy opens its upgrade bar (web `ActionConfirmBar`).
+    /// Build mode: tapping a placed Launchpad or Silo opens its upgrade bar (web `ActionConfirmBar`).
     @State private var upgrading: String?
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
     @State private var dockHeight: CGFloat = 112
@@ -242,7 +242,6 @@ struct HubScreen: View {
         case "launchpad": store.go(.launchpad)
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
-        case "astronaut-academy": store.go(.academy)
         case "market": store.go(.market)
         case "control-station": store.go(.instrumentHub)
         default: break
@@ -298,7 +297,6 @@ struct HubScreen: View {
         guard let api = services?.notificationsAPI() else { notificationCount = 0; return }
         notificationCount = (try? await api.list().count) ?? 0
     }
-
 }
 
 /// Contract card: active mission title plus progress. In portrait it collapses to a chip that expands on tap.

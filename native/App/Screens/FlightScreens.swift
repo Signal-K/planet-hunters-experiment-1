@@ -186,30 +186,45 @@ struct MiningScreen: View {
     private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
         let compact = narrow || short
         let zones = HUDZones.standard
+        let showerRun = store.mission?.id == OrionidsRun.missionId
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
             MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
+        let objective = OrionidsRunObjective(catches: OrionidsRun.catches(store.player), onReturn: { handleReturn(field) })
         return ZStack {
             VStack(alignment: .leading, spacing: 8) {
-                if narrow { order }
-                SkyEventChip().frame(maxWidth: .infinity, alignment: .leading)
+                if narrow {
+                    if showerRun { objective }
+                    else {
+                        order
+                        // Phones: the hold sits under the order line, so neither covers the other or the top-right buttons.
+                        CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                    }
+                }
+                // The shower run shows its count in the order line only; the chip stays on Base (matches web).
+                if !showerRun { SkyEventChip().frame(maxWidth: .infinity, alignment: .leading) }
                 Spacer()
             }
             .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             if !narrow {
-                order
+                Group {
+                    if showerRun { objective }
+                    else { order }
+                }
                     .padding(.top, insets.top + zones.topLeft.inset)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
-                .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            if !narrow && !showerRun {
+                CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
+                    .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
 
             // Phones: compact pad and gauge in the clear strip under the ground deposits.
             MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
@@ -222,20 +237,22 @@ struct MiningScreen: View {
                 Text(toast).font(AppFont.display(14)).foregroundStyle(Glass.ink)
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .glowPanel(Capsule())
-                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 112 : 64))
+                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 168 : 64))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
             // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
-            LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
-                .padding(.trailing, compact ? insets.trailing + 16 : 0)
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
+            if !showerRun {
+                LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
+                    .padding(.trailing, compact ? insets.trailing + 16 : 0)
+                    .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
+            }
 
             VStack(spacing: 8) {
                 Spacer()
                 BaseDock(tile: 44, zones: zones.dock, items: [
-                    ("Fire", "bolt.fill", {}),
+                    (showerRun ? "Mine optional" : "Fire", "bolt.fill", {}),
                     ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
                 ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) }, glass: true)
             }
@@ -255,13 +272,17 @@ struct MiningScreen: View {
         // SSL-538: a full charge lasts about twice as long (matches web MAX_CHARGES * 2).
         let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
-            : max(Skills.laserChargeCap(store.player.unlockedSkillNodes), ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
+            : max(Flight.baseLaserCharges, ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
         // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
-        let shower = SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
+        let shower = mission.id == OrionidsRun.missionId ? nil : SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
-        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower)
+        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
+        if mission.id == OrionidsRun.missionId, let preset = SkyEvents.activePreset(at: store.now) {
+            // Shower fragments fall and bank on landing; the laser is for ore (matches web autoCollect).
+            s.fragmentRain = (preset.resourceId, OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
+        }
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
@@ -269,7 +290,7 @@ struct MiningScreen: View {
             let fragments = f.cargo["orionid_debris", default: 0]
             if fragments > fragmentsCounted { store.fragmentsMined(fragments - fragmentsCounted); fragmentsCounted = fragments }
         }
-        s.onTargetCue = { cue in targetCue = cue }
+        s.onTargetCue = { cue in if mission.id != OrionidsRun.missionId { targetCue = cue } }
         s.onObstacleAhead = { obstacleAhead = $0 }
         s.reducedMotion = reduceMotion
         #if DEBUG
@@ -292,6 +313,8 @@ struct MiningActionRow: View {
     var onFire: () -> Void = {}
     var showFire = true
     var targetCue: String? = nil
+    /// Shower run: the order reads caught fragments (launch plus mined) over the full goal, like web.
+    var showerCaught: Int? = nil
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -300,8 +323,9 @@ struct MiningActionRow: View {
             Button(action: onReturn) {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(field.required.keys.sorted(), id: \.self) { id in
-                        let need = field.required[id] ?? 0
-                        let have = min(need, field.cargo[id, default: 0])
+                        let shower = id == "orionid_debris" ? showerCaught : nil
+                        let need = shower != nil ? OrionidsRun.fragmentGoal : (field.required[id] ?? 0)
+                        let have = min(need, shower ?? field.cargo[id, default: 0])
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
                             .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(1)
                     }
@@ -338,6 +362,36 @@ struct MiningActionRow: View {
         .frame(maxWidth: 720)
         .background(showFire ? Theme.paper : .clear, in: RoundedRectangle(cornerRadius: 22))
         .overlay(RoundedRectangle(cornerRadius: 22).stroke(showFire ? Theme.border : .clear, lineWidth: 1))
+    }
+}
+
+/// The shower is a catch run, not a mineral order: one labelled count and one
+/// instruction make the progress and the required action unambiguous.
+struct OrionidsRunObjective: View {
+    let catches: Int
+    let onReturn: () -> Void
+
+    private var caught: Int { min(catches, OrionidsRun.fragmentGoal) }
+
+    var body: some View {
+        Button(action: onReturn) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text("ORIONIDS SHOWER").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Glass.cyan)
+                HStack {
+                    Text("CATCH FRAGMENTS").font(AppFont.display(16)).foregroundStyle(Glass.ink)
+                    Spacer()
+                    Text("\(caught) / \(OrionidsRun.fragmentGoal)").font(AppFont.display(16)).monospacedDigit().foregroundStyle(Glass.cyan)
+                }
+                ProgressTrack(value: Double(caught) / Double(OrionidsRun.fragmentGoal))
+                Text(caught >= OrionidsRun.fragmentGoal ? "FRAGMENTS COMPLETE · RETURN" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
+                    .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(2)
+            }
+            .padding(12)
+            .frame(maxWidth: 300, alignment: .leading)
+            .glowPanel(RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Catch fragments. \(caught) of \(OrionidsRun.fragmentGoal) caught.")
     }
 }
 
@@ -411,7 +465,7 @@ struct MiningGuide: View {
     private var items: [(String, String)] {
         guard isOrionids else { return Self.baseItems }
         var items = Self.baseItems
-        items.insert(("Catch Orionid debris", "Move under the blue event fragments in the moving field and fire when they cross the beam. Event catches count toward the shower run and cannot be dropped."), at: 1)
+        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
 

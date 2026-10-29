@@ -22,11 +22,13 @@ describe('loop screens use one chrome', () => {
     expect(source).toMatch(/<TopBar/)
   })
 
-  it('MiningScreen uses the shared base dock and clock, with no scene title', () => {
+  // SSL-708: inside mining the only top control is the Menu button; d-pad left, FIRE right, no dock or clock.
+  it('MiningScreen shows only the Menu button up top and a controller layout, with no scene title', () => {
     const source = readFileSync(join(screensDir, 'MiningScreen.tsx'), 'utf8')
-    expect(source).toContain('<BaseDock')
-    expect(source).toContain('<HubClockWidget')
-    expect(source).not.toMatch(/<TopBar/)
+    expect(source).toContain('<MiningBackButton')
+    expect(source).toContain('<MiningFireButton')
+    expect(source).toContain('<MiningDPad')
+    expect(source).not.toMatch(/<BaseDock|<HubClockWidget|<TopBar/)
     expect(source).not.toContain('COURSE LOCKED')
     expect(source).not.toContain('LAUNCHPAD')
   })

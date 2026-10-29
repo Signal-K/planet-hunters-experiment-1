@@ -22,12 +22,18 @@ struct MissionPlanStrip: View {
         guard let mission = store.mission, let target = store.target else { return nil }
         let selected = store.player.stagedRockets.first { $0.id == store.player.selectedStagedRocketId }
         let model = selected.flatMap { Rockets.model(id: Rockets.canonicalId($0.rocketId)) } ?? Rockets.models[0]
-        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), skills: store.player.unlockedSkillNodes, loadoutBonus: RocketBuilder.loadoutBonus(store.player.shipCustomizerParts)).problems.first
+        return store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: model), loadoutBonus: RocketBuilder.loadoutBonus(store.player.shipCustomizerParts)).problems.first
     }
 
     /// A run on your own account keeps nothing without a silo: say so before launch, not after landing.
     private var noSilo: Bool {
-        guard let mission = store.mission, mission.isOwnProgram, mission.construction == nil, store.state.deliveryTargetId == nil else { return false }
+        guard let mission = store.mission,
+              mission.id != OrionidsRun.missionId,
+              mission.id != OrionidsRun.surfaceResearchMissionId,
+              mission.isOwnProgram,
+              mission.construction == nil,
+              store.state.deliveryTargetId == nil
+        else { return false }
         return !HomeDelivery.silo(store.player, cargo: [:]).built
     }
 
@@ -101,12 +107,12 @@ struct MissionPlanSheet: View {
     private var targets: [Target] {
         guard let mission = store.mission else { return [] }
         return Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts, missionsDone: store.player.missionsDone,
-                                launchpadUpgraded: store.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(store.player, "launchpad"), skills: store.player.unlockedSkillNodes)
+                                launchpadUpgraded: store.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(store.player, "launchpad"))
     }
     private var rockets: [RocketModel] {
         guard let mission = store.mission, let target = store.target else { return [] }
         return Rockets.models.filter { !$0.locked && $0.missionsRequired <= store.player.missionsDone && Rockets.compatible($0, with: mission)
-            && store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0), skills: store.player.unlockedSkillNodes).ok }
+            && store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0)).ok }
     }
 
     var body: some View {

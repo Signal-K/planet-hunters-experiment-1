@@ -2,12 +2,9 @@ import type { Catalog } from '@/lib/catalog'
 import type { Mission } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import {
-  ACADEMY_INTRO_MISSION_ID,
   RESOURCE_FOCUS_MISSION_ID,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from '@/lib/data/missions'
-import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
-import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import {
   SATURN_IMAGER_MISSION_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
@@ -26,7 +23,7 @@ import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from 
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
-export type ProgramStepKind = 'instrument' | 'academy' | 'build' | 'mining' | 'focus'
+export type ProgramStepKind = 'instrument' | 'mining' | 'focus'
 
 export interface ProgramStep {
   id: string
@@ -124,8 +121,7 @@ function gateProgress(step: Omit<ProgramStep, 'progress'> & { progress?: Program
 }
 
 /**
- * Own-program chain for the Program tab. Instruments, the academy story and
- * builds stay in progression order. The first step that can be started is
+ * Own-program chain for the Program tab. Instruments stay in progression order. The first step that can be started is
  * current; later open steps stay available. Repeatable mining is never current.
  */
 export function programChain(catalog: Catalog, player: Player, now = Date.now()): ProgramStep[] {
@@ -144,34 +140,6 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       kind: 'instrument',
     }
   })
-
-  const academy = missionById(catalog, ACADEMY_INTRO_MISSION_ID)
-  const academyDone = (player.placed ?? []).includes('astronaut-academy')
-  const academyLocked = !academyDone && !academyAffinityUnlocked(player)
-  steps.push({
-    id: ACADEMY_INTRO_MISSION_ID,
-    title: academy?.title ?? 'Train the First Astronaut',
-    detail: academy?.programReward?.outcome ?? 'Astronaut Academy online · crew training unlocked',
-    brief: academy?.brief,
-    lockLine: academyLocked ? (academy?.unlockAt ?? 'Reach client level 2 with two clients') : null,
-    state: academyDone ? 'done' : academyLocked ? 'locked' : 'available',
-    kind: 'academy',
-  })
-
-  const builds = catalog.missions.filter(mission => mission.construction && !mission.client)
-  for (const mission of builds) {
-    const delivered = ownProgramStructureDelivered(player, mission.construction!.structureKind)
-    const lockLine = !delivered && !free ? (mission.unlockAt ?? null) : null
-    steps.push({
-      id: mission.id,
-      title: mission.title,
-      detail: mission.programReward?.outcome ?? mission.brief,
-      brief: mission.brief,
-      lockLine,
-      state: delivered ? 'done' : lockLine ? 'locked' : 'available',
-      kind: 'build',
-    })
-  }
 
   const mining = missionById(catalog, SELF_DIRECTED_MINING_MISSION_ID)
   steps.push({
@@ -292,7 +260,7 @@ export function eventsBoard(
     status,
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
-    blurb: 'Launch through the shower and catch fragments on the way up. They fall any time in the window.',
+    blurb: "Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.",
     actionLabel: orionidsEventStage === 1 ? 'Continue research' : eventActionLabel(status),
     rewardLabel: orionidsEventStage === 1 ? 'Tier 2 · surface observation ready' : eventRewardLabel(status, earned),
   }

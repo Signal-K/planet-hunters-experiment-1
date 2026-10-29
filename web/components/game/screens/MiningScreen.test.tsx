@@ -5,6 +5,8 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { MINERAL_META, MISSIONS, TARGETS } from '@/lib/data'
+import { orionidsNightRun } from '@/lib/data/missions'
+import { ORIONIDS_SHOWER_TARGET } from '@/lib/runtimeCatalog'
 import MiningScreen from './MiningScreen'
 
 describe('MiningScreen guide', () => {
@@ -46,9 +48,36 @@ describe('MiningScreen guide', () => {
     expect(values.ln_mining_hud_guide_ack).toBeUndefined()
 
     await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="mining-guide-btn"]')?.click()
+      host.querySelector<HTMLButtonElement>('[data-testid="mining-back-btn"]')?.click()
     })
     expect(host.querySelector('.mining-guide-dock')).not.toBeNull()
+
+    await act(async () => root.unmount())
+  })
+
+  it('keeps the Orionids run focused on fragments instead of ordinary ore cues', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(
+        <MiningScreen
+          mission={orionidsNightRun()}
+          target={ORIONIDS_SHOWER_TARGET}
+          minerals={MINERAL_META}
+          onComplete={() => undefined}
+          onBack={() => undefined}
+        />,
+      )
+    })
+
+    // SSL-708: no top panel; the fragment goal lives in the progress pill beside FIRE.
+    expect(host.querySelector('[data-testid="orionids-run-objective"]')).toBeNull()
+    expect(host.querySelector('[data-testid="mining-order-progress"]')?.textContent).toContain('Fragments 0/20')
+    expect(host.querySelector('[data-testid="fire-laser-btn"]')?.textContent).toContain('Fire')
+    expect(host.querySelector('[data-testid="mining-target-cue"]')).toBeNull()
+    expect(host.querySelector('[data-testid="sky-event-mining"]')).toBeNull()
 
     await act(async () => root.unmount())
   })

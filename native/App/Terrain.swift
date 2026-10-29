@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Port of `lib/scene/terrain-kit.ts` + `compositions.ts` + `TerrainScene.tsx`: the scene is composed
 /// by placing Blender-rendered bricks in depth bands, then hazing by depth. `earthBaseWide` is the
@@ -203,17 +204,9 @@ struct TerrainScene: View {
 private extension Color {
     /// Opaque sRGB blend toward `other` (CSS `color-mix(in srgb, self, other t)`).
     func mix(_ other: Color, _ t: Double) -> Color {
-        #if canImport(UIKit)
         let a = UIColor(self), b = UIColor(other)
-        #else
-        let a = NSColor(self), b = NSColor(other)
-        #endif
         var (r1, g1, b1, a1, r2, g2, b2, a2) = (CGFloat(0), CGFloat(0), CGFloat(0), CGFloat(0), CGFloat(0), CGFloat(0), CGFloat(0), CGFloat(0))
-        #if canImport(UIKit)
         a.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
-        #else
-        a.usingColorSpace(.sRGB)?.getRed(&r1, green: &g1, blue: &b1, alpha: &a1); b.usingColorSpace(.sRGB)?.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
-        #endif
         return Color(.sRGB, red: Double(r1 + (r2 - r1) * t), green: Double(g1 + (g2 - g1) * t), blue: Double(b1 + (b2 - b1) * t))
     }
 }

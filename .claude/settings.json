@@ -1,7 +1,33 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
+    "allow": [
+      "Edit(./**)",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(make *)",
+      "Bash(go *)",
+      "Bash(scripts/*)",
+      "Bash(./scripts/*)",
+      "Bash(curl -s*localhost*)",
+      "Bash(rg *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(sed -n *)",
+      "Bash(grep *)",
+      "mcp__Linear",
+      "mcp__Craft__craft_read",
+      "ArtifactData",
+      "SendUserFile"
+    ],
     "deny": [
+      "mcp__Linear__delete_comment",
+      "mcp__Linear__delete_attachment",
+      "mcp__Linear__delete_status_update",
+      "mcp__Linear__delete_diff_comment",
+      "mcp__Linear__merge_diff",
       "Read(./web/node_modules/**)",
       "Read(./node_modules/**)",
       "Read(./web/.next/**)",
@@ -22,7 +48,6 @@
       "Read(./native/App/Resources/Art/**)",
       "Read(./native/App/Assets.xcassets/**)",
       "Read(./web/vendor/**)",
-      "Read(./docs/landscape-playfield/**)",
       "Read(./.agents/skills/landnam-design/_ds_bundle.js)",
       "Read(./.agents/skills/landnam-design/_ds_manifest.json)",
       "Read(./.agents/skills/landnam-design/ui_kits/landnam-portrait/screens-pre.tsx)",
@@ -48,17 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && (make up >/tmp/landnam-make-up.log 2>&1 &) ; echo 'Landnam stack starting (make up). Live preview: open http://localhost:4320/game/hub?follow=1 in the Simple Browser (Cmd+Shift+P, Simple Browser: Show); it follows every edit.'"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && make down >/tmp/landnam-make-down.log 2>&1 || true"
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && (scripts/ensure-stack.sh >/tmp/landnam-ensure.log 2>&1 &) ; echo 'Landnam stack ensured in the background (never restarted if healthy, and left running when sessions end). Live preview: open http://localhost:4320/game/hub?follow=1 in the Simple Browser (Cmd+Shift+P, Simple Browser: Show). Fast check in that tab: node scripts/dev-check.mjs <name> (see --list).'"
           }
         ]
       }

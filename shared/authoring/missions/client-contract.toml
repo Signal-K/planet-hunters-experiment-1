@@ -32,3 +32,10 @@ affinity = 3
 [preview]
 route = "missions"
 state = "transport-hub"
+
+[harness]
+scene = "belt-courier-run"
+web = "transport-hub"
+native = "transport-hub-live"
+objective = "Mine the requested Bennu cargo and unload it at Vesta."
+complete = "Cargo is delivered and the return debrief settles."

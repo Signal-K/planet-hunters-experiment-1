@@ -54,7 +54,7 @@ export function useUIActions(
     syncSubsurface(screen)
     setState(s => {
       if (screen === 'hangar') {
-        hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
+        hangarReturnView.current = s.screen === 'launchpad'
           ? s.screen
           : 'hub'
       }
@@ -184,9 +184,6 @@ export function useUIActions(
     setToasts(ts => ts.filter(t => t.id !== id))
   }, [])
 
-  const clearTerritoryClaimPopup = useCallback(() => {
-    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'hub' }))
-  }, [setState])
 
-  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

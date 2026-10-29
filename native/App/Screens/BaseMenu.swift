@@ -39,7 +39,7 @@ struct BaseMenu: View {
         let hasControlStation = store.player.placed.contains("control-station")
         if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
-        if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", symbol: "globe", run: { store.go(.surfaceOps) })) }
+        rows.append(Item(id: "narrative-ledger", label: "Narrative ledger", detail: "What is live, adapting and planned", symbol: "map", run: { store.go(.narrativeLedger) }))
         return rows
     }
 

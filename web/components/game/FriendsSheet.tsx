@@ -30,7 +30,6 @@ import {
   type FriendBaseSnapshot,
 } from '@/lib/friends/client'
 import { CommunityApiError, visitFriendWorld, type FriendWorldSnapshot } from '@/lib/community/client'
-import { TARGETS, LIFE_STAGE_LABELS, lifeStageForTarget } from '@/lib/data'
 
 interface FriendsSheetProps {
   onClose: () => void
@@ -543,51 +542,19 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   )
 }
 
-/**
- * A friend's worlds as a read-only summary (SSL-320): per body, what they
- * built, what they claimed and whether they seeded life. Visitors can only
- * look; there is no write path from this view by construction.
- */
+/** A friend's discoveries as a read-only summary (SSL-320). Visitors can only look. */
 function FriendWorldSummary({ world }: { world: FriendWorldSnapshot }) {
-  const now = Date.now()
-  const bodyIds = new Set<string>([
-    ...Object.keys(world.fieldStructures ?? {}),
-    ...(world.territoryClaims ?? []).map(c => c.targetId),
-    ...Object.keys(world.biosphereSeeds ?? {}),
-  ])
   const discovered = Object.values(world.discoveredExoplanetTargets ?? {})
-  if (bodyIds.size === 0 && discovered.length === 0) {
+  if (discovered.length === 0) {
     return (
       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-muted)' }}>
-        No field builds, claims or discoveries yet.
+        No discoveries yet.
       </div>
     )
   }
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      {[...bodyIds].map(bodyId => {
-        const target = TARGETS.find(t => t.id === bodyId)
-        const structures = world.fieldStructures?.[bodyId] ?? []
-        const claims = (world.territoryClaims ?? []).filter(c => c.targetId === bodyId)
-        const seed = world.biosphereSeeds?.[bodyId]
-        const stage = target ? LIFE_STAGE_LABELS[lifeStageForTarget(target, seed, now)] : seed ? 'Seeded' : 'Sterile'
-        const counts = structures.reduce<Record<string, number>>((acc, s) => { acc[s.type] = (acc[s.type] ?? 0) + 1; return acc }, {})
-        return (
-          <div key={bodyId} data-testid={`friend-world-${bodyId}`} style={{ display: 'grid', gap: 1, background: 'var(--ln-divider)', borderRadius: 10, overflow: 'hidden' }}>
-            <StatRow label={target?.name ?? bodyId} value={`${structures.length} structures`} />
-            <StatRow label="Divisions claimed" value={String(claims.length)} />
-            <StatRow label="Life stage" value={stage} />
-            {Object.keys(counts).length > 0 && (
-              <StatRow label="Built" value={Object.entries(counts).map(([type, n]) => `${n} ${type.replace(/-/g, ' ')}`).join(', ')} />
-            )}
-          </div>
-        )
-      })}
-      {discovered.length > 0 && (
-        <div style={{ display: 'grid', gap: 1, background: 'var(--ln-divider)', borderRadius: 10, overflow: 'hidden' }}>
-          {discovered.map(t => <StatRow key={t.id} label="Discovered" value={t.name} />)}
-        </div>
-      )}
+    <div style={{ display: 'grid', gap: 1, background: 'var(--ln-divider)', borderRadius: 10, overflow: 'hidden' }}>
+      {discovered.map(t => <StatRow key={t.id} label="Discovered" value={t.name} />)}
     </div>
   )
 }

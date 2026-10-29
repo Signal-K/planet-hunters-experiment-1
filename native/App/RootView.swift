@@ -27,8 +27,6 @@ struct RootView: View {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
-            case .skills: SkillTreeScreen().helpable(.skills)
-            case .academy: AcademyScreen().helpable(.academy)
             case .missionHistory: MissionHistoryScreen()
             case .narrativeLedger: NarrativeLedgerScreen()
             case .missions: MissionsScreen().helpable(.missions)
@@ -36,7 +34,6 @@ struct RootView: View {
             case .launchpad: LaunchReviewScreen()
             case .hangar: HangarScreen().helpable(.hangar)
             case .build: BuildScreen()
-            case .surfaceOps: SurfaceOpsScreen().helpable(.surfaceOps)
             case .transit: TransitScreen().helpable(.transit)
             case .roverSurvey: if TakeonSceneFlag.enabled && takeonGoRuntimeAvailable { TakeonSceneScreen(onExit: { store.go(.hub) }) } else { RoverFieldScreen() }
             case .mining: MiningScreen().helpable(.mining)

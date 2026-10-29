@@ -46,7 +46,6 @@ export default function NarrativeLedgerScreen({ onBack }: NarrativeLedgerScreenP
             <li><strong>2</strong><span>CLIENT XP<br />UPDATES</span></li>
             <li><strong>3</strong><span>NEXT-DAY DEMAND<br />IS SET</span></li>
             <li><strong>4</strong><span>MARKET PRICES<br />REFRESH</span></li>
-            <li><strong>5</strong><span>SITE REVENUE<br />FUNDS TREASURY</span></li>
           </ol>
         </section>
 

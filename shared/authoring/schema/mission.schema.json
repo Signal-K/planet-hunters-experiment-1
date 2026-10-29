@@ -4,7 +4,7 @@
   "description": "One mission definition. Compiled into shared/missions/authored-missions.json, which the web and native catalogs both read.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["format", "id", "title", "brief", "tag", "difficulty", "locked", "sequence", "requires", "payout"],
+  "required": ["format", "id", "title", "brief", "tag", "difficulty", "locked", "sequence", "requires", "payout", "harness"],
   "properties": {
     "format": { "const": 1, "description": "Authoring format version. Not copied into the compiled JSON." },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Stable mission id used by saves, the board and both platforms. Never rename a shipped mission." },
@@ -53,6 +53,7 @@
     },
     "tickets": { "type": "array", "items": { "type": "string", "pattern": "^SSL-[0-9]+$" }, "description": "Linear tickets this mission belongs to." },
     "preview": { "$ref": "#/definitions/preview" },
+    "harness": { "$ref": "#/definitions/harness" },
     "note": { "type": "string", "description": "Plain-language note for whoever edits this mission next." }
   },
   "definitions": {
@@ -63,6 +64,19 @@
       "properties": {
         "route": { "type": "string", "description": "Game screen to open, such as missions." },
         "state": { "type": "string", "description": "Stage fixture (dev preset) that puts the game in the right state." }
+      }
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Independent run contract. Both adapters must open this fixture without campaign state.",
+      "required": ["scene", "web", "native", "objective", "complete"],
+      "properties": {
+        "scene": { "type": "string", "description": "Scene harness id in qa/scenes.json." },
+        "web": { "type": "string", "description": "Web dev preset used by the independent run." },
+        "native": { "type": "string", "description": "iOS SceneCatalog fixture id." },
+        "objective": { "type": "string", "minLength": 1, "description": "One player action, in plain language." },
+        "complete": { "type": "string", "minLength": 1, "description": "Observable end condition, in plain language." }
       }
     }
   }

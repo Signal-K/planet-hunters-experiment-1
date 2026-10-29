@@ -47,14 +47,10 @@ describe('missions compiled from shared/authoring/missions', () => {
 
   it('keeps every authored mission in its original board order', () => {
     expect(AUTHORED_MISSIONS.map(m => m.id)).toEqual([
-      'program-build-mars-mining-settlement',
-      'program-build-remote-silo',
-      'story-astronaut-academy',
       'lnm_m3_relay_bennu_vesta',
       'lnm_m3_relay_itokawa_eros',
       'lnm_relay_psyche_ceres',
       'freeops-self-directed-mining',
-      'freeops-crewed-prospecting',
     ])
   })
 
