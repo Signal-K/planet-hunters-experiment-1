@@ -48,7 +48,7 @@ describe('MiningScreen guide', () => {
     expect(values.ln_mining_hud_guide_ack).toBeUndefined()
 
     await act(async () => {
-      host.querySelector<HTMLButtonElement>('[data-testid="mining-guide-btn"]')?.click()
+      host.querySelector<HTMLButtonElement>('[data-testid="mining-back-btn"]')?.click()
     })
     expect(host.querySelector('.mining-guide-dock')).not.toBeNull()
 
@@ -72,7 +72,10 @@ describe('MiningScreen guide', () => {
       )
     })
 
-    expect(host.querySelector('[data-testid="orionids-run-objective"]')?.textContent).toContain('Catch fragments')
+    // SSL-708: no top panel; the fragment goal lives in the progress pill beside FIRE.
+    expect(host.querySelector('[data-testid="orionids-run-objective"]')).toBeNull()
+    expect(host.querySelector('[data-testid="mining-order-progress"]')?.textContent).toContain('Fragments 0/20')
+    expect(host.querySelector('[data-testid="fire-laser-btn"]')?.textContent).toContain('Fire')
     expect(host.querySelector('[data-testid="mining-target-cue"]')).toBeNull()
     expect(host.querySelector('[data-testid="sky-event-mining"]')).toBeNull()
 

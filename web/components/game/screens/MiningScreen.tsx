@@ -9,12 +9,10 @@ import Panel from '@/components/ui/Panel'
 import { formatCurrency } from '@/lib/format'
 import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openSettings } from '@/lib/mining/openChrome'
-import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
-import { BaseDock, DockWordButton } from '@/components/game/hub/BaseDock'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import SkyEventChip from '@/components/game/SkyEventChip'
-import { LaserGauge, MiningDPad } from './MiningControls'
+import { MiningBackButton, MiningDPad, MiningFireButton } from './MiningControls'
+import controlStyles from './MiningControls.module.css'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
@@ -68,11 +66,10 @@ function useFreeOpsFirstSuccessAck() {
 // Thumb snaps back to center on release
 function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
   const items = [
-    { kind: 'fire', label: 'Fire Laser', desc: 'Fires the vertical beam. Scroll ore under the beam, then fire (Space/F).' },
-    { kind: 'charges', label: 'Charges', desc: 'The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops.' },
-    { kind: 'order', label: 'Order', desc: 'The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty.' },
-    { kind: 'scroll', label: 'Scroll', desc: 'The dock arrows change how fast the ground moves. They settle back to a steady crawl. Drag the field the same way.' },
-    { kind: 'inventory', label: 'Inventory', desc: 'The order lines show collected against required. Fill every line to unlock return.' },
+    { kind: 'scroll', label: 'Steer', desc: 'The pad on the left flies the ship: up and down for height, left and right to move along the ground (arrow keys or W/A/S/D).' },
+    { kind: 'fire', label: 'Fire', desc: 'The round button on the right fires the laser straight down. Line a labelled seam up under the ship, then fire (Space or F). Hold it to keep firing.' },
+    { kind: 'charges', label: 'Charge', desc: 'The ring around Fire is your laser charge. Clipping a ridge costs one. Recharge from this menu.' },
+    { kind: 'order', label: 'Order', desc: 'The panel beside Fire shows what is still owed. When it turns solid, tap it to head home.' },
     hasDelivery
       ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
@@ -102,13 +99,15 @@ function GuideMark({ kind }: { kind: string }) {
   )
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
   onComplete: (cargo: Record<string, number>, earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>, laserCharges: number) => void
+  /** Leave the run (progress kept) and open the mission board. */
+  onSwitchMission?: (cargo: Record<string, number>, laserCharges: number) => void
   /** Writes cargo and charges while the run is open, so a reload does not refill the laser or drop ore. */
   onPersist?: (cargo: Record<string, number>, laserCharges: number) => void
   /** Laser charges left before a prior "Back to hub" pause; resuming must not refill the magazine. */
@@ -193,7 +192,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   catchesRef.current = shownCatches
   const holdFullNotedRef = useRef(false)
   useEffect(() => { setCatches(count => Math.max(count, fragmentCatches ?? 0)) }, [fragmentCatches])
-  const [cargoOpen, setCargoOpen] = useState(false)
   /** Drop cargo overboard so a wrong pick-up never leaves the hold stuck. */
   const jettison = useCallback((mineral: string, all: boolean) => {
     const have = cargoRef.current[mineral] ?? 0
@@ -248,9 +246,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // oreNearRef mirrors ore-proximity, purely for the button's own display.
   const chargingRef = useRef<((charging: boolean) => void) | null>(null)
   const [isCharging, setIsCharging] = useState(false)
-  chargingRef.current = (charging: boolean) => setIsCharging(charging)
-  const [tapDenied, setTapDenied] = useState(false)
-  const tapDeniedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // SSL-708: a press during the cooldown is kept and fires the moment the
+  // laser is ready (input buffering), so no press is ever silently lost.
+  const queuedFireRef = useRef(false)
+  chargingRef.current = (charging: boolean) => {
+    setIsCharging(charging)
+    if (!charging && queuedFireRef.current) {
+      queuedFireRef.current = false
+      queueMicrotask(() => fireLaserRef.current(true))
+    }
+  }
 
   // Kept current every render (cheap Set build) so the "fire now" flash only
   // lights up for ore whose mineral is still short of the order — not any
@@ -303,8 +308,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     firedRef.current = false
     setSceneStatus('loading')
     setRunKey(k => k + 1)
-    if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
-    setTapDenied(false)
+    setStartBrief(true)
   }
 
   const onDebrisMinedRef = useRef(onDebrisMined)
@@ -372,12 +376,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   function fireLaser(quiet = false) {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     if (isCharging) {
-      if (quiet) return
-      // Tap landed mid-cooldown: acknowledge it instead of silently dropping
-      // it, so a phone tester never wonders whether the tap registered.
-      if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
-      setTapDenied(true)
-      tapDeniedTimerRef.current = setTimeout(() => setTapDenied(false), 160)
+      if (!quiet) queuedFireRef.current = true
       return
     }
     setLaserCharges(c => c - 1)
@@ -545,14 +544,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       : null
 
   const orderLines = Object.entries(mission.requires.minerals)
-  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const nudge = (dir: number) => {
-    if (sceneStatus !== 'ready') return
-    scrollRef.current?.(dir)
-    if (nudgeTimer.current) clearTimeout(nudgeTimer.current)
-    nudgeTimer.current = setTimeout(() => { scrollRef.current?.(0) }, 500)
-  }
-  useEffect(() => () => { if (nudgeTimer.current) clearTimeout(nudgeTimer.current) }, [])
+  // SSL-708: the goal is said once, in the middle of the scene, when the run starts; then the scene is clear.
+  const [startBrief, setStartBrief] = useState(true)
+  useEffect(() => {
+    if (!startBrief || sceneStatus !== 'ready') return
+    const t = window.setTimeout(() => setStartBrief(false), 4000)
+    return () => window.clearTimeout(t)
+  }, [startBrief, sceneStatus])
+  const briefGoal = nightRun
+    ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments`
+    : isFreeOps ? 'Mine any seam, then head home'
+    : `Collect ${orderLines.map(([id, amount]) => `${amount} ${minerals[id]?.name ?? id}`).join(', ')}`
 
   return (
     <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} data-scroll={pinScroll ? String(scrollScreens) : undefined} style={{ background: palette.skyCss }}>
@@ -698,84 +700,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </div>
         </div>
       )}
-      <div className="laser-chrome">
-        {!nightRun && <button type="button" className="settings-cog" data-testid="settings-button" aria-label="Settings" onClick={openSettings}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51-1z" />
-          </svg>
-        </button>}
-        {!nightRun && <div className="laser-chrome__help">{help.button}</div>}
-        {!nightRun && <HubClockWidget />}
-        {!nightRun && <button
-          type="button"
-          className="laser-chrome__clock"
-          data-testid="mining-guide-btn"
-          aria-label="Mining controls guide"
-          aria-expanded={guideOpen}
-          onClick={() => setGuideOpen(o => !o)}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
-        </button>}
-        {!nightRun && <div className="laser-chrome__chips">
-          <span className="scene-chip" data-testid="mining-francs-chip">{formatCurrency(francs, { compact: true })}</span>
-          <button type="button" className="scene-chip" aria-label={`Cargo ${freeOpsCargoUnits} units. Open hold`} aria-expanded={cargoOpen} data-testid="mining-cargo-chip" onClick={() => setCargoOpen(o => !o)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-              <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            {freeOpsCargoUnits > 0 ? <b style={{ marginLeft: 6 }}>{freeOpsCargoUnits}</b> : null}
-          </button>
-        </div>}
-        {!nightRun && cargoOpen && (
-          <div className="mining-hold" role="region" aria-label="Cargo hold" data-testid="mining-hold">
-            <div className="mining-hold__title">Hold · {freeOpsCargoUnits}</div>
-            {Object.entries(cargo).filter(([, n]) => n > 0).length === 0 ? <div className="mining-hold__empty">Empty</div> : null}
-            {Object.entries(cargo).filter(([, n]) => n > 0).map(([id, n]) => (
-              <div className="mining-hold__row" key={id}>
-                <span>{minerals[id]?.name ?? id} ×{n}</span>
-                {isProtectedEventReward(id) ? (
-                  <span className="mining-hold__protected">EVENT REWARD · PROTECTED</span>
-                ) : (
-                  <>
-                    <button type="button" onClick={() => jettison(id, false)} aria-label={`Jettison 1 ${minerals[id]?.name ?? id}`}>Drop 1</button>
-                    {n > 1 ? <button type="button" onClick={() => jettison(id, true)} aria-label={`Jettison all ${minerals[id]?.name ?? id}`}>Drop all</button> : null}
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        {(!nightRun || orderFilled) && <DockWordButton
-          className="laser-order"
-          data-testid="return-home-btn"
-          data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
-          onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
-        >
-          <span className="laser-dock__lines" data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
-            {nightRun ? (
-              <>
-                <span>Fragments complete</span>
-                <span>Return to Earth</span>
-              </>
-            ) : isFreeOps ? (
-              <span>Cargo {freeOpsCargoUnits}</span>
-            ) : (
-              orderLines.map(([id, amount]) => (
-                <span key={id}>{`${minerals[id]?.name ?? id} ${Math.min(nightRun && id === 'orionid_debris' ? shownCatches : (cargo[id] ?? 0), amount)}/${amount}`}</span>
-              ))
-            )}
-            {!nightRun && targetCue ? (
-              <span className={styles.targetCueStatus} data-testid="mining-target-cue">
-                {targetCue.mineral === FIREBALL_FRAGMENT_ID ? 'FIREBALL' : (minerals[targetCue.mineral]?.name ?? targetCue.mineral)} · {targetCue.inRange ? 'FIRE NOW' : 'WAIT'}
-              </span>
-            ) : !nightRun && fireballMoment ? (
-              <span className={styles.targetCueStatus} data-testid="mining-target-cue">FIREBALL · WAIT</span>
-            ) : trainingMiningTry && !nightRun ? <span className={styles.targetCueStatus} data-testid="mining-target-cue">Fire on a labelled seam</span> : null}
-          </span>
-        </DockWordButton>
-        }
-      </div>
+      {/* SSL-708: nothing sits across the top of the mining scene but the menu button. */}
+      <MiningBackButton open={guideOpen} onClick={() => setGuideOpen(o => !o)} />
+      {startBrief && sceneStatus === 'ready' && activeOverlay == null && (
+        <button type="button" className="mining-start-brief" data-testid="mining-start-brief" onClick={() => setStartBrief(false)}>
+          <span className="mining-start-brief__eyebrow">{nightRun ? 'Orionids shower' : mission.title}</span>
+          <strong>{briefGoal}</strong>
+          <span>{nightRun ? 'Steer under the blue fragments. Fire is for ground seams.' : 'Steer over a labelled seam, then press Fire.'}</span>
+        </button>
+      )}
 
       <div className="mining-stage">
       <div className="mining-viewport" style={{ background: palette.skyCss }}>
@@ -833,31 +766,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           fireballCaughtAt={fireballCaughtAt}
           skyEventLocation={skyEventLocation}
         />
-        {nightRun && (
-          <section className={styles.runObjective} data-testid="orionids-run-objective" aria-label={`Catch fragments: ${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL}`}>
-            <span className={styles.runEyebrow}>Orionids shower</span>
-            <div className={styles.runCount}><span>Catch fragments</span><strong>{Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} / {ORIONIDS_FRAGMENT_GOAL}</strong></div>
-            <div className={styles.runProgress} role="progressbar" aria-valuemin={0} aria-valuemax={ORIONIDS_FRAGMENT_GOAL} aria-valuenow={Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} aria-label="Fragments caught">
-              <span style={{ width: `${Math.min(100, (shownCatches / ORIONIDS_FRAGMENT_GOAL) * 100)}%` }} />
-            </div>
-            <small>Steer under blue fragments. Mining is optional.</small>
-          </section>
-        )}
         <MiningDPad
           disabled={sceneStatus !== 'ready'}
           onAltitude={dir => altitudeRef.current?.(dir)}
           onSpeed={dir => steerRef.current?.(dir)}
           obstacleAhead={obstacleAhead}
         />
-        {!nightRun && <LaserGauge charges={laserCharges} max={MAX_CHARGES} charging={isCharging} firing={firingHeld} />}
         {bumpNote ? <div className="mining-bump-note" role="status" data-testid="mining-bump">Hull bumped: −1 charge</div> : null}
-        {!nightRun && <SkyEventChip
-          surface="mining"
-          playerLocation={skyEventLocation}
-          debrisCount={nightRun ? shownCatches : (cargo.orionid_debris ?? 0)}
-          fragmentGoal={nightRun ? ORIONIDS_FRAGMENT_GOAL : undefined}
-          badgeTier={(nightRun ? shownCatches : (cargo.orionid_debris ?? 0)) > 0 ? orionidsBadgeTier : null}
-        />}
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
             <span className="mining-scene-status__eyebrow">{sceneStatus === 'failed' ? 'FIELD OFFLINE' : 'PREPARING MINING FIELD'}</span>
@@ -870,16 +785,52 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </div>
 
       {activeOverlay === 'guide' && (
-        <div className="mining-guide-dock" role="region" aria-label="Mining controls">
+        <div className="mining-guide-dock" role="region" aria-label="Mission menu" data-testid="mining-menu">
           <div className="mining-guide-top">
-            <button type="button" className="mining-guide-x" aria-label="Close" onClick={() => setGuideOpen(false)}>
+            <div className="mining-menu-head">
+              <span className="mining-menu-eyebrow">{nightRun ? 'Orionids shower' : isFreeOps ? 'Free mining' : 'Mission'}</span>
+              <strong>{nightRun ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments` : mission.title}</strong>
+              <span>{briefGoal} · {nightRun ? `${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL} caught` : isFreeOps ? `${freeOpsCargoUnits} in the hold` : `${totalCollected} of ${totalNeeded} collected`} · Laser {laserCharges}/{MAX_CHARGES}</span>
+            </div>
+            <button type="button" className="mining-guide-x" aria-label="Close menu" onClick={() => setGuideOpen(false)}>
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
                 <path d="M4 4 L14 14 M14 4 L4 14" fill="none" stroke="currentColor" strokeWidth="2" />
               </svg>
             </button>
           </div>
+          <div className="mining-guide-actions">
+            <div className="mining-guide-column">
+              <button type="button" className="mining-guide-close" data-testid="mining-resume-btn" onClick={() => setGuideOpen(false)}>Resume</button>
+              {onSwitchMission && (
+                <button type="button" className="mining-guide-close" data-testid="mining-switch-mission-btn" onClick={() => { setGuideOpen(false); onSwitchMission(cargoRef.current, laserChargesRef.current) }}>Switch mission</button>
+              )}
+              <button type="button" className="mining-guide-close" data-testid="hub-btn" onClick={() => { setGuideOpen(false); onBack(cargoRef.current, laserChargesRef.current) }}>Return to hub</button>
+              <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
+                {rechargePrice > 0 ? `Recharge laser · ${rechargePrice} fr` : 'Recharge laser'}
+              </button>
+            </div>
+          </div>
           <div className="mining-guide-scroll">
             <div className="mining-guide-column">
+              {!nightRun && freeOpsCargoUnits > 0 && (
+                <div className="mining-hold" role="region" aria-label="Cargo hold" data-testid="mining-hold">
+                  <div className="mining-hold__title">Hold · {freeOpsCargoUnits}</div>
+                  {Object.entries(cargo).filter(([, n]) => n > 0).map(([id, n]) => (
+                    <div className="mining-hold__row" key={id}>
+                      <span>{minerals[id]?.name ?? id} ×{n}</span>
+                      {isProtectedEventReward(id) ? (
+                        <span className="mining-hold__protected">EVENT REWARD · PROTECTED</span>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => jettison(id, false)} aria-label={`Jettison 1 ${minerals[id]?.name ?? id}`}>Drop 1</button>
+                          {n > 1 ? <button type="button" onClick={() => jettison(id, true)} aria-label={`Jettison all ${minerals[id]?.name ?? id}`}>Drop all</button> : null}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <span className="mining-menu-eyebrow">How to play</span>
               {miningGuide(!!deliveryTargetName, nightRun).map(item => (
                 <article key={item.label} className="mining-guide-card">
                   <GuideMark kind={item.kind} />
@@ -889,16 +840,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   </div>
                 </article>
               ))}
-            </div>
-          </div>
-          <div className="mining-guide-actions">
-            <div className="mining-guide-column">
-              <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
-                {rechargePrice > 0 ? `Recharge Laser · ${rechargePrice} fr` : 'Recharge Laser'}
-              </button>
+              <div className="mining-menu-row">
+                <button type="button" className="mining-guide-close" data-testid="mining-help-btn" onClick={() => { setGuideOpen(false); help.show() }}>More help</button>
+                <button type="button" className="mining-guide-close" data-testid="settings-button" onClick={() => { setGuideOpen(false); openSettings() }}>Settings</button>
+              </div>
               {onAbandon && (
                 <button type="button" className="mining-guide-close mining-guide-scrub" data-testid="mining-scrub-btn" onClick={() => { setGuideOpen(false); setConfirmingAbandon(true) }}>
-                  Scrub Mission
+                  Scrub mission
                 </button>
               )}
             </div>
@@ -918,26 +866,35 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               `${minerals[id]?.name ?? id}: ${Math.min(cargo[id] ?? 0, amount)} of ${amount} collected. `).join('')}
         </span>
 
-        <BaseDock
-          variant="flight"
-          buildLabel={nightRun ? 'Mine optional' : laserCharges <= 0 ? 'Depleted' : isCharging ? 'Charging' : 'Fire'}
-          buildTestId="fire-laser-btn"
-          buildBeacon="mining-fire-laser"
-          buildDisabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
-          buildCharging={isCharging}
-          buildIcon={(
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
-              <path d="M13 2 L4 14 h7 l-1 8 10-14 h-7 l0-6 z" />
-            </svg>
-          )}
-          onPrev={() => nudge(-1)}
-          onNext={() => nudge(1)}
-          onBuild={event => { if (!event || event.detail === 0) fireLaser() }}
-          onBuildPointerDown={event => { if (event.button === 0) { setFiringHeld(true); beginFireHold() } }}
-          onBuildPointerUp={() => { setFiringHeld(false); endFireHold() }}
-          onBuildPointerLeave={() => { setFiringHeld(false); endFireHold() }}
-          onBuildPointerCancel={() => { setFiringHeld(false); endFireHold() }}
-          onHub={() => onBack(cargoRef.current, laserChargesRef.current)}
+        <button
+          type="button"
+          className={controlStyles.progress}
+          data-testid="return-home-btn"
+          data-ready={orderFilled || undefined}
+          data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
+          onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
+        >
+          <span data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
+            {orderFilled ? (nightRun ? 'Run complete · Return' : 'Order filled · Return')
+              : nightRun ? `Fragments ${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)}/${ORIONIDS_FRAGMENT_GOAL}`
+              : isFreeOps ? `Cargo ${freeOpsCargoUnits}`
+              : orderLines.map(([id, amount]) => `${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`).join(' · ')}
+          </span>
+          {!orderFilled && !nightRun && targetCue ? (
+            <span className={`${controlStyles.progressCue} ${styles.targetCueStatus}`} data-testid="mining-target-cue">
+              {targetCue.mineral === FIREBALL_FRAGMENT_ID ? 'Fireball' : (minerals[targetCue.mineral]?.name ?? targetCue.mineral)} · {targetCue.inRange ? 'Fire now' : 'Line up'}
+            </span>
+          ) : null}
+        </button>
+        <MiningFireButton
+          charges={laserCharges}
+          max={MAX_CHARGES}
+          charging={isCharging}
+          firing={firingHeld}
+          disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
+          onPress={() => { setFiringHeld(true); beginFireHold() }}
+          onRelease={() => { setFiringHeld(false); endFireHold() }}
+          onKeyFire={() => fireLaser()}
         />
         {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
       </div>

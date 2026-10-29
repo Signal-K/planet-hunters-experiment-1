@@ -193,6 +193,16 @@ export default function MissionOperationRoutes({
             }))
             game.go('hub')
           }}
+          onSwitchMission={(cargo, charges) => {
+            // SSL-708: the mining menu's Switch mission keeps this run's progress, like Return to hub.
+            game.setPlayer(player => ({
+              ...player,
+              missionPhase: 'mining',
+              miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+              miningLaserCharges: charges,
+            }))
+            game.go('missions')
+          }}
           onComplete={(cargo, earthDisposition) => {
             game.completeStep(6)
             if (game.player.shipCustomizerParts?.lander) {

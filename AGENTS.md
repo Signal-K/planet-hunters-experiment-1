@@ -77,7 +77,8 @@ to be visible to him as it happens.
   `node scripts/authoring.mjs check` after changing it. Never hand-edit its
   generated runtime outputs.
 - Use shared tokens only. Text is at least 14px and taps are at least 44px.
-  Keep the shared HUD, offline outbox, sign-in requirement, and real-scene
+  Keep the shared HUD (except inside mining scenes, which show only the Menu
+  button; see docs/agents/product.md), offline outbox, sign-in requirement, and real-scene
   interaction model intact.
 - Do not use a user’s device or desktop. The editor Simple Browser and iOS
   Simulator are the supported interactive surfaces.
