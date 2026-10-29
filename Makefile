@@ -1,4 +1,4 @@
-.PHONY: help up ensure check scene follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
+.PHONY: help dev shared-dev up ensure check scene follow opener warm-studio up-ecosystem pb-up pb-stop down build web-deps logs web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 export LANDNAM_HOST_ROOT := $(CURDIR)
@@ -11,6 +11,9 @@ help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
+	@echo "    dev            Run everything locally with no Docker: shared PB stand-in :8090,"
+	@echo "                   Landnam PB :$(LANDNAM_PB_DEV_PORT), web :$(LANDNAM_WEB_PORT) (scripts/dev-local.sh)"
+	@echo "    shared-dev     Run only the shared PB stand-in (pocketbase/cmd/shared-dev) on :8090"
 	@echo "    up             Start frontend + parent-owned PocketBase (:$(LANDNAM_WEB_PORT) / shared :8090 / landnam :$(LANDNAM_PB_PORT))"
 	@echo "                   Also starts the Cursor helper (lets the Studio open scripts in Cursor). The web"
 	@echo "                   container warms the Studio's routes itself every time it starts."
@@ -65,6 +68,12 @@ test:
 
 scene:
 	@node scripts/scene.mjs $(NAME) $(CHECK)
+
+dev:
+	./scripts/dev-local.sh
+
+shared-dev:
+	cd pocketbase && go run ./cmd/shared-dev serve --http=127.0.0.1:8090 --dir=pb_data_shared
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
