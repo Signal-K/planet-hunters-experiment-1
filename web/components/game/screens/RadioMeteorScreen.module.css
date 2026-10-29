@@ -1,7 +1,7 @@
-/* SSL-714: two tones like Community research. The receiver (spectrogram and its dials) on the left, the radio desk (dialogue and verdict) on the right. */
+/* SSL-714: two tones like Community research, in radio blue and meteor red. The receiver (spectrogram and its dials) on the left, the radio desk (dialogue and verdict) on the right. */
 .workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .55); }
-.receiver { background: rgba(60, 44, 118, .5); display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 12px clamp(16px, 3vw, 40px) 16px; min-width: 0; min-height: 0; }
-.desk { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 72px clamp(16px, 3vw, 40px) 20px; min-width: 0; }
+.receiver { background: rgba(26, 66, 168, .58); display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 12px clamp(16px, 3vw, 40px) 16px; min-width: 0; min-height: 0; }
+.desk { background: rgba(168, 34, 52, .56); display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 72px clamp(16px, 3vw, 40px) 20px; min-width: 0; }
 .desk > * { width: 100%; max-width: 480px; align-self: center; }
 
 /* Clears the back button in the top-left corner. */
@@ -51,7 +51,7 @@
 
 /* Radio desk. */
 .comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
-.speaker { display: inline-flex; align-items: center; gap: 8px; color: #9de7ef; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .comms p { margin: 0; min-height: calc(3 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }
 .next, .brief { justify-self: start; min-height: 44px; padding: 0 16px; border: 2px solid #f4efe4; border-radius: 999px; background: transparent; color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
