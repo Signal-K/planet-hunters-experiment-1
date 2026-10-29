@@ -17,6 +17,10 @@ xcodebuild -project native/Landnam.xcodeproj -scheme Landnam \
 ```
 
 `make ensure` owns the local preview on port 4320. Do not start duplicate
-servers or a separate test stack. CI runs typecheck and build only. The
+servers or a separate test stack. With the parent `~/Navigation` checkout and
+Docker it runs `make up`; without them (cloud sessions) it runs `make dev`,
+which needs only Go and Node: `pocketbase/cmd/shared-dev` stands in for the
+shared backend on :8090, Landnam PocketBase runs on :8096. Sign in with
+"Local: create test account"; no Clerk keys are needed locally. CI runs typecheck and build only. The
 independent fixture is the acceptance path; no full suite, browser test, or
 Chromium installation is part of the workflow.

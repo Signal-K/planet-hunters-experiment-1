@@ -13,6 +13,11 @@ if ! mkdir "$LOCK" 2>/dev/null; then
   echo "Another session is starting the stack and it is not healthy yet. See /tmp/landnam-make-up.log" >&2; exit 1
 fi
 trap 'rmdir "$LOCK"' EXIT
-make up >/tmp/landnam-make-up.log 2>&1
+if [ -f ../docker-compose.yml ] && docker info >/dev/null 2>&1; then
+  make up >/tmp/landnam-make-up.log 2>&1
+else
+  # No parent ~/Navigation checkout or no Docker (cloud sessions): run the self-contained local stack.
+  nohup scripts/dev-local.sh >/tmp/landnam-make-up.log 2>&1 &
+fi
 for _ in $(seq 1 60); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
 echo "Stack did not become healthy. See /tmp/landnam-make-up.log" >&2; exit 1
