@@ -51,7 +51,8 @@ wait_healthy "$LANDNAM_PORT"
 
 echo "Shared PB:   http://localhost:$SHARED_PORT/_/"
 echo "Landnam PB:  http://localhost:$LANDNAM_PORT/_/"
-echo "Landnam:     http://localhost:$WEB_PORT/game/hub"
+echo "Scenes:      http://localhost:$WEB_PORT/game/stage   (no account, nothing saved; node scripts/scene.mjs list)"
+echo "Signed in:   http://localhost:$WEB_PORT/game         (Local: create test account)"
 echo "Superuser:   $SUPERUSER_EMAIL / $SUPERUSER_PASSWORD (both)"
 
 cd "$ROOT/web"
