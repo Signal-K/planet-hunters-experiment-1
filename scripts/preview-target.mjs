@@ -20,7 +20,7 @@ const pending = `${out}.${process.pid}.tmp`
 const SCREENS = [
   ['economyarrival', 'ui-economy-arrival'], ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
-  ['mining', 'm1-mining'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
+  ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],

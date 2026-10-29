@@ -118,7 +118,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                     <div className={styles.cardHead}>
                       <span className={styles.swatch} style={{ background: meta?.color ?? '#c8ccd2' }} />
                       <strong>{meta?.name ?? id}</strong>
-                      <span className={styles.units}>{cargo[id]} units</span>
+                      <span className={styles.units}>{cargo[id]} {cargo[id] === 1 ? 'unit' : 'units'}</span>
                     </div>
                     <div className={styles.choices}>
                       {CHOICES.map(choice => {
@@ -154,7 +154,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
             <footer className={styles.foot}>
               <dl className={styles.summary}>
                 <div><dt>Client</dt><dd data-testid="summary-client">{hasClient ? (fulfilled ? formatCurrency(payout) : `Short ${shortBy}`) : '—'}</dd></div>
-                <div><dt>Silo</dt><dd>{totals.silo} units</dd></div>
+                <div><dt>Silo</dt><dd>{totals.silo} {totals.silo === 1 ? 'unit' : 'units'}</dd></div>
                 <div><dt>Sell</dt><dd data-testid="summary-sell">{formatCurrency(sale)}</dd></div>
               </dl>
               <button type="button" className={styles.confirm} data-testid="delivery-confirm" onClick={settle}>

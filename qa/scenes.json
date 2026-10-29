@@ -107,6 +107,16 @@
    ]
   },
   {
+   "id": "free-mining",
+   "name": "Free mining run",
+   "flow": "core-loop",
+   "web": "ui-free-mining",
+   "native": "mining-laser-live",
+   "tickets": [
+    "SSL-711"
+   ]
+  },
+  {
    "id": "orionids-shower-mining",
    "name": "Orionids shower run",
    "flow": "core-loop",

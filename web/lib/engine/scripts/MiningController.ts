@@ -234,7 +234,7 @@ const MAX_DEBRIS = 4
 /** A few fragments in the sky at once, so a run of about a minute reaches the goal without a crowded sky. */
 const MAX_RAIN = 3
 /** SSL-711: the collector beam above the ship. A fragment inside it is caught by a CATCH press. */
-const CATCH_HALF_W = 46
+const CATCH_HALF_W = 36
 const CATCH_BEAM_H = 150
 /**
  * A catchable fragment is on screen at least this long before it reaches the ship, so a touch
@@ -246,7 +246,7 @@ const CATCH_MIN_SECONDS_TO_SHIP = 3.2
 const CATCH_BUFFER_SECONDS = 0.25
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave.
  * Kept within what the ship can steer (100 px/s) in the 3.2 s a fragment takes to reach it. */
-const RAIN_SPREAD = 240
+const RAIN_SPREAD = 270
 const MAX_STREAKS = 1
 /** Decorative only: a sparse reminder of the shower, never visual noise. */
 const STREAKS_PER_SECOND = 0.08

@@ -23,33 +23,12 @@ import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
 import styles from './MiningTargetCue.module.css'
 
-// First-time-entering-Free-Ops-mining explainer — dismiss-once, same
-// localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
-// scoped to the mining screen itself. The board explainer covers the board's
-// client/infrastructure/custom split; this covers what changes once
-// you're actually mining with no client attached (sell the haul yourself,
-// no daily limit) — the two are different moments and were previously
-// conflated, leaving the mining screen with zero "no client" first-entry cue.
-const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
+// SSL-711: the no-client explanation lives in the start card (centre of the scene, fades), not a panel across the top.
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
 // SSL-333: first-ever mining run, any mission type, opens the controls guide
 // automatically once so a player never has to discover the "?" button on
-// their own. Separate from FREE_OPS_MINING_ACK_KEY, which only covers the
-// no-client explainer and never fires on a client mission's first mining run.
+// their own.
 const HUD_GUIDE_ACK_KEY = 'ln_mining_hud_guide_ack'
-
-function useFreeOpsMiningAck(alreadyExperienced: boolean) {
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    if (alreadyExperienced) return
-    setShow(!localStorage.getItem(FREE_OPS_MINING_ACK_KEY))
-  }, [alreadyExperienced])
-  const dismiss = () => {
-    localStorage.setItem(FREE_OPS_MINING_ACK_KEY, '1')
-    setShow(false)
-  }
-  return { show, dismiss }
-}
 
 function useFreeOpsFirstSuccessAck() {
   const [dismissed, setDismissed] = useState(false)
@@ -422,7 +401,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     function onKey(e: KeyboardEvent) {
       if (e.code === 'Space' || e.code === 'KeyF') {
         e.preventDefault()
-        fireLaser()
+        // Through the ref: this listener outlives renders, and a stale fireLaser kept the storage gate shut after it closed.
+        fireLaserRef.current()
       } else if (secondaryAction && e.code === secondaryAction.key) {
         e.preventDefault()
         catchFragmentRef.current()
@@ -540,7 +520,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [trainingMiningTry, isFreeHaulEligible])
 
   const isFreeOps = !!isFreeHaulEligible
-  const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
   const freeOpsCargoUnits = Object.values(cargo).reduce((sum, amount) => sum + Math.max(0, amount), 0)
   const freeOpsDebrisReadout = Object.entries(cargo)
@@ -556,22 +535,21 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // top of the others. Order: mission-ending failure > one-time success moment >
   // active risk warning > informational guide/explainer (guide, being player-
   // initiated, wins that last tier over the passive first-entry explainer).
-  const activeOverlay: 'failure' | 'success' | 'warning' | 'guide' | 'explainer' | null =
+  const activeOverlay: 'failure' | 'success' | 'warning' | 'guide' | null =
     runFailed ? 'failure'
       : showFreeOpsSuccessPopup ? 'success'
       : chargesLow ? 'warning'
       : guideOpen ? 'guide'
-      : (isFreeOps && showFreeOpsMiningExplainer) ? 'explainer'
       : null
 
   const orderLines = Object.entries(mission.requires.minerals)
   // SSL-708: the goal is said once, in the middle of the scene, when the run starts; then the scene is clear.
   const [startBrief, setStartBrief] = useState(true)
   useEffect(() => {
-    if (!startBrief || sceneStatus !== 'ready') return
+    if (!startBrief || sceneStatus !== 'ready' || gateOpen) return
     const t = window.setTimeout(() => setStartBrief(false), 4000)
     return () => window.clearTimeout(t)
-  }, [startBrief, sceneStatus])
+  }, [startBrief, sceneStatus, gateOpen])
   const briefGoal = nightRun
     ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments`
     : isFreeOps ? 'Mine any seam, then head home'
@@ -626,34 +604,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         </div>
       )}
 
-      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). Gated on activeOverlay so it never stacks with the guide, success popup, warning, or failure overlay. */}
-      {activeOverlay === 'explainer' && (
-        <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
-          <Panel className="mining-info-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12, position: 'relative' }}>
-            <button
-              data-testid="dismiss-freeops-mining-explainer"
-              onClick={dismissFreeOpsMiningExplainer}
-              aria-label="Dismiss"
-              style={{
-                position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                border: '1px solid var(--ln-hairline-strong)', background: 'var(--ln-mining-control-fill)',
-                color: 'var(--ln-amber)', fontSize: 14, lineHeight: 1, cursor: 'pointer',
-              }}
-            >
-              ×
-            </button>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-text)', textTransform: 'uppercase', marginBottom: 6 }}>
-              {nightRun ? 'Shower Run' : 'No Client On This Run'}
-            </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
-              {nightRun
-                ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments on this run, launch included. They are protected research evidence, not ordinary cargo, and are kept when the event run is complete.`
-                : 'You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.'}
-            </div>
-          </Panel>
-        </div>
-      )}
-
       {devBars && (
         <button
           data-testid="dev-skip-mining-btn"
@@ -671,7 +621,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               First Free Ops Haul Secured
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
-              This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.
+              {earthDisposition === 'store'
+                ? 'This cargo is yours. Return to Earth and it goes into your silo instead of to a client.'
+                : 'This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
               <button
@@ -723,11 +675,13 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       {/* SSL-708: nothing sits across the top of the mining scene but the menu button. */}
       <MiningBackButton open={guideOpen} onClick={() => setGuideOpen(o => !o)} />
-      {startBrief && sceneStatus === 'ready' && activeOverlay == null && (
+      {startBrief && sceneStatus === 'ready' && !gateOpen && activeOverlay == null && (
         <button type="button" className="mining-start-brief" data-testid="mining-start-brief" onClick={() => setStartBrief(false)}>
-          <span className="mining-start-brief__eyebrow">{nightRun ? 'Orionids shower' : mission.title}</span>
+          <span className="mining-start-brief__eyebrow">{nightRun ? 'Orionids shower' : isFreeOps ? 'Free mining · no client' : mission.title}</span>
           <strong>{briefGoal}</strong>
-          <span>{secondaryAction ? secondaryAction.brief : 'Steer over a labelled seam, then press Fire.'}</span>
+          <span>{secondaryAction ? secondaryAction.brief
+            : isFreeOps ? (earthDisposition === 'store' ? 'Steer over any seam and fire. The haul goes into your Earth silo.' : 'Steer over any seam and fire. You sell the haul at market price on Earth.')
+            : 'Steer over a labelled seam, then press Fire.'}</span>
         </button>
       )}
 
@@ -899,7 +853,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
         >
           <span data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
-            {orderFilled ? (nightRun ? 'Run complete · Return' : 'Order filled · Return')
+            {orderFilled ? (nightRun ? 'Run complete · Return' : isFreeOps ? `Cargo ${freeOpsCargoUnits} · Return` : 'Order filled · Return')
               : nightRun ? `Fragments ${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)}/${ORIONIDS_FRAGMENT_GOAL}`
               : isFreeOps ? `Cargo ${freeOpsCargoUnits}`
               : orderLines.map(([id, amount]) => `${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`).join(' · ')}

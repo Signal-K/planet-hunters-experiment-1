@@ -130,11 +130,14 @@ export default function OrionidsShowerChrome() {
 
   return (
     <>
-      <div className={styles.haze} aria-hidden="true" data-testid="orionids-haze">
-        <img className={styles.sky} src={art.sky} alt="" />
-        <img className={styles.streak} src={art.streaks[0].file} alt="" />
-        <img className={styles.streakLate} src={art.streaks[2].file} alt="" />
-      </div>
+      {/* Mining draws its own meteors in the scene; this overlay would cross its controls and cards (SSL-711). */}
+      {game.screen !== 'mining' && (
+        <div className={styles.haze} aria-hidden="true" data-testid="orionids-haze">
+          <img className={styles.sky} src={art.sky} alt="" />
+          <img className={styles.streak} src={art.streaks[0].file} alt="" />
+          <img className={styles.streakLate} src={art.streaks[2].file} alt="" />
+        </div>
+      )}
       {open && (
         <div className={styles.scrim} data-testid="fireball-reading-scrim">
           <section className={styles.pad} aria-label="Fireballs in the Sky" data-testid="fireball-reading">
