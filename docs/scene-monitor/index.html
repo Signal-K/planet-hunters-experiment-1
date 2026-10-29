@@ -45,9 +45,25 @@ body {
 .live[data-state="live"] .dot { background: var(--signal); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(92,200,255,.55); } 70% { box-shadow: 0 0 0 8px rgba(92,200,255,0); } 100% { box-shadow: 0 0 0 0 rgba(92,200,255,0); } }
 @media (prefers-reduced-motion: reduce) { .live .dot { animation: none !important; } }
-.scene { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.08em; text-transform: uppercase; flex: none; }
-.ticket { font-family: var(--font-mono); font-size: 13px; color: var(--ink-dim); flex: none; }
-.doing { flex: 1 1 auto; min-width: 0; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.context { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 6px 16px; overflow: hidden; }
+.ctx { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; flex: 0 1 auto; white-space: nowrap; }
+.ctx[hidden] { display: none; }
+.ctx .label { font-size: 11px; }
+.ctx-value { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+.ctx-id { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); }
+.ticket {
+  display: grid; gap: 2px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2);
+  color: var(--ink); text-decoration: none;
+}
+.ticket[hidden] { display: none; }
+.ticket[href]:hover { border-color: var(--signal); }
+.ticket-key { font-family: var(--font-mono); font-size: 13px; color: var(--signal); }
+.ticket-title { font-size: 14px; line-height: 1.35; }
+.now { font-size: 14px; color: var(--ink); }
+.objective { font-size: 14px; color: var(--ink-dim); border-left: 2px solid var(--line); padding-left: 8px; }
+.objective[hidden], .now[hidden] { display: none; }
+.divider { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
 .waiting {
   display: none; flex: none; align-items: center;
   padding: 4px 10px; border-radius: 999px;
@@ -125,17 +141,18 @@ body {
   .screen { height: 62vh; }
   .screen img { position: absolute; }
   .notes { overflow: visible; }
-  .doing { white-space: normal; }
   .bar { flex-wrap: wrap; }
+  .context { flex-wrap: wrap; flex-basis: 100%; order: 3; }
 }
 </style>
 
 <div class="app">
   <header class="bar" aria-live="polite">
     <span class="live" id="live" data-state="idle"><span class="dot"></span><span id="liveText">CONNECTING</span></span>
-    <span class="scene" id="scene">No scene yet</span>
-    <span class="ticket" id="ticket"></span>
-    <span class="doing" id="doing">Waiting for the first step from a Claude Code session.</span>
+    <span class="context">
+      <span class="ctx" id="sceneCtx"><span class="label">Scene</span><span class="ctx-value" id="scene">None yet</span></span>
+      <span class="ctx" id="missionCtx" hidden><span class="label">Mission</span><span class="ctx-value" id="mission"></span></span>
+    </span>
     <span class="waiting" id="waiting" data-on="false">Waiting on you</span>
   </header>
 
@@ -149,6 +166,11 @@ body {
       <span class="tag" id="tag" hidden></span>
     </div>
     <aside class="notes">
+      <a class="ticket" id="ticket" hidden target="_blank" rel="noopener"><span class="ticket-key" id="ticketKey"></span><span class="ticket-title" id="ticketTitle"></span></a>
+      <span class="label">Now</span>
+      <span class="now" id="doing">Waiting for the first step from a Claude Code session.</span>
+      <span class="objective" id="objective" hidden></span>
+      <hr class="divider">
       <span class="when" id="when"></span>
       <span class="action" id="action"></span>
       <p class="caption" id="caption"></p>
@@ -187,7 +209,7 @@ body {
     if (!step) { $('when').textContent = ''; $('action').textContent = ''; $('caption').textContent = ''; return; }
     $('shot').src = step.image || '';
     $('shot').alt = step.caption ? 'Screenshot: ' + step.caption : 'Scene screenshot';
-    $('tag').textContent = [step.scene, step.viewport].filter(Boolean).join('  ·  ');
+    $('tag').textContent = [step.missionName, step.sceneName || step.scene, step.viewport].filter(Boolean).join('  ·  ');
     $('when').textContent = clock(step.at) + '  ·  ' + ago(step.at);
     $('action').textContent = step.action ? '> ' + step.action : '';
     $('caption').textContent = step.caption || '';
@@ -210,7 +232,7 @@ body {
       if (s.id === current) b.setAttribute('aria-current', 'true');
       if (s.image) b.style.backgroundImage = 'url("' + String(s.image).replace(/"/g, '%22') + '")';
       const t = document.createElement('span');
-      t.textContent = clock(s.at) + ' ' + (s.action || '');
+      t.textContent = clock(s.at) + ' ' + (s.missionName || s.sceneName || s.scene || s.action || '');
       b.append(t);
       b.addEventListener('click', () => { pinned = s.id === steps[0]?.id ? null : s.id; render(); });
       film.append(b);
@@ -232,8 +254,16 @@ body {
     $('live').dataset.state = fresh ? 'live' : 'idle';
     $('liveText').textContent = fresh ? 'LIVE' : 'IDLE';
     if (!st) return;
-    $('scene').textContent = st.scene || 'No scene yet';
-    $('ticket').textContent = st.ticket || '';
+    $('scene').textContent = st.sceneName || st.scene || 'None yet';
+    $('scene').title = st.scene || '';
+    $('missionCtx').hidden = !st.missionName;
+    $('mission').textContent = st.missionName || '';
+    $('objective').hidden = !st.objective;
+    $('objective').textContent = st.objective ? 'Objective: ' + st.objective : '';
+    $('ticket').hidden = !st.ticket;
+    $('ticketKey').textContent = st.ticket || '';
+    $('ticketTitle').textContent = st.ticketTitle || '';
+    if (st.ticketUrl && /^https:\/\/linear\.app\//.test(st.ticketUrl)) $('ticket').href = st.ticketUrl; else $('ticket').removeAttribute('href');
     $('doing').textContent = st.doing || '';
     $('waiting').dataset.on = String(Boolean(st.waiting));
   }

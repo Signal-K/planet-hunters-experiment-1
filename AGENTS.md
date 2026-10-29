@@ -45,8 +45,10 @@ to be visible to him as it happens.
   `monitor {...}` line; upload the screenshot (Artifact, `url` = monitor,
   `asset: true`, `file_paths`), then one ArtifactData `batch`: `set`
   `steps/<doc_id>` with that line's fields plus `caption` and `image: <asset
-  url>`, and `update` `status/now` (`if_version`) with `{scene, ticket,
-  doing, waiting, updatedAt}` (`waiting: true` when you need his answer).
+  url>`, and `update` `status/now` (`if_version`) with `{scene, sceneName,
+  missionName, objective}` from the same line plus `{ticket, ticketTitle,
+  ticketUrl}` from the Linear issue, `doing`, `waiting` (true when you need
+  his answer) and `updatedAt`.
   The caption says what you did and what happened. The page source is
   `docs/scene-monitor/index.html`; republish it with `url` set to the
   monitor, never as a new artifact. SendUserFile (`display: "render"`) is

@@ -22,7 +22,7 @@
  * Screenshots go to .scene-shots/ (gitignored).
  */
 import { createRequire } from 'node:module'
-import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
@@ -66,12 +66,31 @@ async function connect() {
   }
 }
 
+// Names for the Scene Monitor: which registered scene and mission are open.
+// `open` records them in .scene-shots/current.json so later commands report them too.
+const currentFile = join(shotsDir, 'current.json')
+
+function describe(target) {
+  const registry = JSON.parse(readFileSync(join(root, 'qa', 'scenes.json'), 'utf8'))
+  const mission = (registry.missions ?? []).find(e => e.id === target)
+  const scene = (registry.scenes ?? []).find(e => e.id === (mission ? mission.scene : target))
+  if (!mission && !scene) return null
+  return {
+    sceneId: scene?.id ?? mission?.scene ?? '',
+    sceneName: scene?.name ?? '',
+    flow: scene?.flow ?? '',
+    missionId: mission?.id ?? '',
+    missionName: mission?.name ?? '',
+    objective: mission?.objective ?? '',
+    web: (mission ?? scene).web ?? '',
+  }
+}
+
 function resolveRoute(target) {
   if (target.startsWith('/')) return target
-  const registry = JSON.parse(readFileSync(join(root, 'qa', 'scenes.json'), 'utf8'))
-  const entry = [...(registry.scenes ?? []), ...(registry.missions ?? [])].find(e => e.id === target)
-  if (!entry) throw new Error(`Unknown scene "${target}". Run: node scripts/scene.mjs list`)
-  return entry.web ? `/game/stage?preset=${encodeURIComponent(entry.web)}` : '/game/stage'
+  const info = describe(target)
+  if (!info) throw new Error(`Unknown scene "${target}". Run: node scripts/scene.mjs list`)
+  return info.web ? `/game/stage?preset=${encodeURIComponent(info.web)}` : '/game/stage'
 }
 
 function nextShot(label) {
@@ -115,6 +134,8 @@ switch (command) {
     if (size) { const [w, h] = size.split('x').map(Number); await page.setViewportSize({ width: w, height: h }) }
     const route = resolveRoute(positional[0] ?? '/game/stage')
     await page.goto(WEB + route, { waitUntil: 'domcontentloaded', timeout: 90_000 })
+    mkdirSync(shotsDir, { recursive: true })
+    writeFileSync(currentFile, JSON.stringify({ ...(describe(positional[0] ?? '') ?? {}), route }))
     label = `open-${positional[0]}`
     break
   }
@@ -189,7 +210,10 @@ if (command !== 'look') {
   // Fields for the Scene Monitor step row (AGENTS.md, Cloud sessions); add caption and image.
   const at = new Date().toISOString()
   const vp = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
-  const scene = new URL(page.url()).searchParams.get('preset') ?? new URL(page.url()).pathname
-  console.log('monitor ' + JSON.stringify({ doc_id: at.replace(/[-:.]/g, ''), at, scene, action: [command, ...rest].join(' '), viewport: vp ? `${vp.width}x${vp.height}` : '', errors: errors.slice(0, 5) }))
+  let current = {}
+  try { current = JSON.parse(readFileSync(currentFile, 'utf8')) } catch {}
+  const preset = new URL(page.url()).searchParams.get('preset') ?? new URL(page.url()).pathname
+  const { sceneId = '', sceneName = '', missionId = '', missionName = '', objective = '' } = current
+  console.log('monitor ' + JSON.stringify({ doc_id: at.replace(/[-:.]/g, ''), at, scene: sceneId || preset, sceneName, missionId, missionName, objective, preset, action: [command, ...rest].join(' '), viewport: vp ? `${vp.width}x${vp.height}` : '', errors: errors.slice(0, 5) }))
 }
 await browser.close() // disconnects; the served browser keeps running
