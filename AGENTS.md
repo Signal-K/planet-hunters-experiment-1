@@ -38,13 +38,19 @@ to be visible to him as it happens.
   carries over. Each action saves a screenshot; look at it.
 - Show Liam the scene before the first edit and after every visible change on
   the Landnam Scene Monitor, https://claude.ai/artifact/3ZGpA51ywSzD3mXd9Dy1Hu
-  (he keeps it open in the Claude app). Per step: upload the screenshot with
-  the Artifact tool (`url` set to the monitor, `asset: true`, `file_paths`),
-  then one ArtifactData `batch`: set `steps/<NNNN>` to `{n, scene, action,
-  caption, image: <asset url>, viewport, errors, at}` and set `status/now` to
-  `{scene, ticket, doing, waiting, updatedAt}` (`waiting: true` when you
-  need his answer). The caption says what you did and what happened.
-  SendUserFile with `display: "render"` is the fallback. Send the three viewports
+  (he keeps it open in the Claude app; every session posts to this one URL).
+  Once per session: `Artifact` `action: "read"` on that URL (uploads to an
+  artifact the session has not read are refused) and ArtifactData `get`
+  `status/now` for its `version`. Per step: `scene-drive.mjs` prints a
+  `monitor {...}` line; upload the screenshot (Artifact, `url` = monitor,
+  `asset: true`, `file_paths`), then one ArtifactData `batch`: `set`
+  `steps/<doc_id>` with that line's fields plus `caption` and `image: <asset
+  url>`, and `update` `status/now` (`if_version`) with `{scene, ticket,
+  doing, waiting, updatedAt}` (`waiting: true` when you need his answer).
+  The caption says what you did and what happened. The page source is
+  `docs/scene-monitor/index.html`; republish it with `url` set to the
+  monitor, never as a new artifact. SendUserFile (`display: "render"`) is
+  the fallback. Send the three viewports
   (`shot --all`) before committing.
 - Stop at each shown change long enough for feedback when Liam is responding;
   his feedback on the current scene beats the plan.
