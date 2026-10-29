@@ -58,6 +58,9 @@ to be visible to him as it happens.
   (`shot --all`) before committing.
 - Stop at each shown change long enough for feedback when Liam is responding;
   his feedback on the current scene beats the plan.
+- Feedback that applies beyond the current scene is a rule: write it as a
+  note in `notes/decisions/` and a line in `docs/agents/product.md` in the same
+  commit, and mirror the note into Craft (folder Landnam decisions).
 - Work in the account-free stage fixture (`/game/stage?preset=`). Use a local
   account only to check the signed-in path before a commit that touches it.
 - Never write an e2e test or scripted flow to prove a change works. Driving
@@ -122,5 +125,6 @@ the current `cycle/<N>` branch, then add the proof and remaining caveats to Line
 | Scene contracts | `shared/authoring/` + `web/lib/engine/` | `shared/authoring/` + `LandnamCore/Scene/` |
 | State and sync | `web/lib/game-state*.ts`, `web/lib/offline/` | `native/LandnamCore/Sync/`, `native/App/Store/` |
 
-Read `docs/agents/product.md` for product rules, `docs/agents/studio.md` for
+Read `notes/decisions/` (Liam's decisions, a ZenNotes vault; newest wins) and
+`docs/agents/product.md` for product rules, `docs/agents/studio.md` for
 scene authoring, and `docs/agents/testing.md` before calling a ticket complete.
