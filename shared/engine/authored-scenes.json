@@ -1705,24 +1705,34 @@
           "note": "Pointer-driven beam and extraction."
         },
         {
-          "id": "cargo-readout",
-          "kind": "panel",
+          "id": "menu-button",
+          "kind": "button",
           "parent": "mining-field",
           "layout": "host",
           "mechanics": [
-            "laser-mining"
+            "mission-planning"
           ],
-          "note": "Capacity and mined cargo from canonical state."
+          "note": "SSL-708: the only control at the top of the scene. Opens the mission menu: mission and objective, progress, hold, how to play, recharge, switch mission, return to hub, settings, scrub."
         },
         {
-          "id": "mining-controls",
-          "kind": "panel",
+          "id": "steer-pad",
+          "kind": "ui",
           "parent": "mining-field",
           "layout": "host",
           "mechanics": [
             "laser-mining"
           ],
-          "note": "Charges, tools and extraction controls."
+          "note": "SSL-708: d-pad bottom-left. Up/down altitude, left/right along the ground."
+        },
+        {
+          "id": "fire-button",
+          "kind": "ui",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped."
         },
         {
           "id": "return-action",
@@ -1732,7 +1742,7 @@
           "mechanics": [
             "delivery"
           ],
-          "note": "Finish mining and start the delivery or home leg."
+          "note": "Progress pill between the pad and FIRE (above FIRE on phone portrait). Turns solid when the order is filled; tap to finish mining and start the delivery or home leg."
         },
         {
           "id": "training-guide",

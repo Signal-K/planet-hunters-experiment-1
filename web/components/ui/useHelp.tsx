@@ -23,6 +23,8 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   layer: ReactNode
   reportAction: (actionId: string) => void
   open: boolean
+  /** Opens the help sheet from a caller's own menu (the mining back menu). */
+  show: () => void
 } {
   const topic = useMemo(() => getHelpTopic(screen), [screen])
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -93,9 +95,10 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
     })
   }, [track, trackStep])
 
-  if (!topic) return { button: null, layer: null, reportAction, open: false }
+  if (!topic) return { button: null, layer: null, reportAction, open: false, show: () => {} }
 
   return {
+    show: openSheet,
     // The sheet owns the active help surface. Leaving its trigger mounted in
     // the top bar puts it physically behind the sheet's Close control on
     // narrow instrument screens, which is both visually noisy and creates
