@@ -36,9 +36,15 @@ to be visible to him as it happens.
   screen and where), `click "<text>"`, `tap x y`, `key ArrowDown --hold 800`,
   `wait`, `shot --all`. One browser stays open between commands, so state
   carries over. Each action saves a screenshot; look at it.
-- Show Liam the scene before the first edit and after every visible change:
-  send the screenshot with SendUserFile (`display: "render"`) and a one-line
-  caption of what you did and what happened. Send the three viewports
+- Show Liam the scene before the first edit and after every visible change on
+  the Landnam Scene Monitor, https://claude.ai/artifact/3ZGpA51ywSzD3mXd9Dy1Hu
+  (he keeps it open in the Claude app). Per step: upload the screenshot with
+  the Artifact tool (`url` set to the monitor, `asset: true`, `file_paths`),
+  then one ArtifactData `batch`: set `steps/<NNNN>` to `{n, scene, action,
+  caption, image: <asset url>, viewport, errors, at}` and set `status/now` to
+  `{scene, ticket, doing, waiting, updatedAt}` (`waiting: true` when you
+  need his answer). The caption says what you did and what happened.
+  SendUserFile with `display: "render"` is the fallback. Send the three viewports
   (`shot --all`) before committing.
 - Stop at each shown change long enough for feedback when Liam is responding;
   his feedback on the current scene beats the plan.

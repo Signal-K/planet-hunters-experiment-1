@@ -18,7 +18,9 @@
       "Bash(sed -n *)",
       "Bash(grep *)",
       "mcp__Linear",
-      "mcp__Craft__craft_read"
+      "mcp__Craft__craft_read",
+      "ArtifactData",
+      "SendUserFile"
     ],
     "deny": [
       "mcp__Linear__delete_comment",
