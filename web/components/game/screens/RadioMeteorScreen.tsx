@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
+import { getSkyEvent } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
 import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
@@ -11,6 +12,8 @@ interface RadioMeteorScreenProps {
   player: Player
   onBack: () => void
   onSubmit: (classification: RadioMeteorClassification) => void
+  /** The shower whose community receiver this is. */
+  eventId?: string
 }
 
 /** A tap (no drag) drops a box this size, in source pixels: about one meteor echo on a BRAMS spectrogram. */
@@ -32,8 +35,8 @@ const toBox = (d: Draft): RadioMeteorBox => ({
   height: Math.round(Math.abs(d.y1 - d.y0)),
 })
 
-const BRIEFING = [
-  'Radio desk here. Our transmitter at Dourbes sends one steady tone at 49.97 MHz. That is the bright line across the middle.',
+const briefingLines = (callsign: string, eventName: string) => [
+  `Radio desk here. ${callsign} is the receiver the whole community launched for the ${eventName}. With the BRAMS network in Belgium it hears one tone at 49.97 MHz: the bright line across the middle.`,
   'When a meteor burns up, its trail bounces that tone back to us for a moment. It shows as a short upright mark crossing the line.',
   'The long sweeping curves are aircraft, so leave those. Box every meteor, then send me the recording.',
 ]
@@ -112,7 +115,10 @@ function Dial({ label, readout, value, min, max, step, disabled, testId, onChang
   )
 }
 
-export default function RadioMeteorScreen({ player, onBack, onSubmit }: RadioMeteorScreenProps) {
+export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 'orionids-2026' }: RadioMeteorScreenProps) {
+  const event = getSkyEvent(eventId)
+  const instrument = event?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
+  const BRIEFING = briefingLines(instrument.callsign, event?.name ?? 'shower')
   const done = player.radioMeteorClassifications ?? {}
   const total = Object.keys(done).length
   const [queue, setQueue] = useState<RadioMeteorSubject[]>([])
@@ -233,10 +239,16 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit }: RadioMet
         <article className={styles.workspace}>
           <section className={styles.receiver} aria-label="Receiver">
             <header className={styles.readout}>
-              <span className={styles.eyebrow}><i className={styles.led} data-state={subject ? 'live' : failed ? 'off' : 'wait'} aria-hidden="true" />{status} · {subject ? `BRAMS ${station}` : 'BRAMS'}</span>
-              <h2 data-testid="radio-title">{subject?.recordedAt ?? 'Meteor radio'}</h2>
+              <span className={styles.eyebrow}>Community instrument · launched for the {event?.name ?? 'shower'}</span>
+              <h2 data-testid="radio-instrument">{instrument.callsign} · {instrument.name}</h2>
             </header>
             <div className={styles.console}>
+            <div className={styles.panel} data-testid="radio-console">
+            <div className={styles.titlebar}>
+              <i className={styles.led} data-state={subject ? 'live' : failed ? 'off' : 'wait'} aria-hidden="true" />
+              <span>{status}</span>
+              <b data-testid="radio-title">{subject ? `${station} · ${subject.recordedAt ?? subject.filename}` : `${instrument.callsign} · 49.97 MHz`}</b>
+            </div>
             <div className={styles.well}>
               <div className={styles.screen} style={size ? { aspectRatio: `${size.w} / ${size.h}` } : undefined} data-testid={subject ? 'radio-display' : 'radio-meteor-standby'}>
                 {subject ? (
@@ -297,6 +309,8 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit }: RadioMet
               <Dial label="GAIN" testId="radio-gain" readout={`${Math.round(gain * 100)}%`} value={gain} min={0.6} max={2.2} step={0.1} onChange={setGain} />
               <Dial label="ZOOM" testId="radio-zoom" readout={`×${zoom.toFixed(1)}`} value={zoom} min={1} max={4} step={0.5} onChange={setZoom} />
               <Dial label="SWEEP" testId="radio-sweep" readout={zoom > 1 ? `${Math.round(pan * 100)}%` : 'FULL'} value={pan} min={0} max={1} step={0.05} disabled={zoom === 1} onChange={setPan} />
+            </div>
+            <i className={styles.screw} aria-hidden="true" /><i className={styles.screw} aria-hidden="true" /><i className={styles.screw} aria-hidden="true" /><i className={styles.screw} aria-hidden="true" />
             </div>
             </div>
           </section>

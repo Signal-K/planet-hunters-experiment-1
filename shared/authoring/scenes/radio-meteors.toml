@@ -22,7 +22,7 @@ id = "radio-spectrogram"
 kind = "instrument"
 layout = "host"
 mechanics = ["sky-events"]
-note = "A real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
+note = "The console window of the shower's community instrument (ORI-1 for the Orionids; SkyEvent.communityInstrument), launched by everyone for the event. Its screen shows a real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
 
 [[objects]]
 id = "echo-boxes"

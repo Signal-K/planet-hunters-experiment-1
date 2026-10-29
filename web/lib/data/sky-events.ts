@@ -30,9 +30,17 @@ export type SkyActivityKind =
   | 'asteroid-classification'
   | 'debris-mining'
 
+/** SSL-714: the instrument the whole community launches together for a shower, the way a player launches their own telescope for long projects. */
+export interface CommunityInstrument {
+  /** Short callsign shown on the console, e.g. ORI-1. */
+  callsign: string
+  name: string
+}
+
 export interface SkyEvent {
   id: string
   name: string
+  communityInstrument?: CommunityInstrument
   /** Inclusive start instant (UTC). */
   startUtc: string
   /** Exclusive end instant (UTC): first moment after the event period. */
@@ -73,6 +81,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     name: 'Draconids Dragon Dust',
     startUtc: '2026-10-06T00:00:00Z',
     endUtc: '2026-10-11T00:00:00Z',
+    communityInstrument: { callsign: 'DRA-1', name: 'Draconids receiver' },
     activities: ['debris-mining'],
   },
   {
@@ -82,6 +91,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     // badgeTierFor reads orionidsLocalStartMs() for this id.
     startUtc: '2026-10-19T00:00:00Z',
     endUtc: '2026-11-08T00:00:00Z',
+    communityInstrument: { callsign: 'ORI-1', name: 'Orionids receiver' },
     activities: ['debris-mining'],
     startAtLocalMidnight: true,
   },
@@ -90,6 +100,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     name: 'Leonids',
     startUtc: '2026-11-17T00:00:00Z',
     endUtc: '2026-11-18T00:00:00Z',
+    communityInstrument: { callsign: 'LEO-1', name: 'Leonids receiver' },
     activities: ['debris-mining'],
   },
   {
@@ -97,6 +108,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     name: 'Geminids',
     startUtc: '2026-12-13T00:00:00Z',
     endUtc: '2026-12-15T00:00:00Z',
+    communityInstrument: { callsign: 'GEM-1', name: 'Geminids receiver' },
     activities: ['debris-mining'],
   },
   {
