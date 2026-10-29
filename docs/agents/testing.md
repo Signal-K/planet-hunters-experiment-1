@@ -1,8 +1,10 @@
 # Scene verification
 
-The editor Simple Browser is the web interaction surface. There is no
-Playwright, Cypress, Chromium, Chrome, headless runner, screenshot matrix, or
-test stack.
+Confirm a change by using the scene, never by writing an e2e test or scripted
+flow. Locally the editor Simple Browser is the surface; in a cloud session
+`node scripts/scene-drive.mjs` (open, look, click, tap, key, shot) plays the
+scene in one persistent browser and saves a screenshot per action (see "Cloud
+sessions" in AGENTS.md). There is no e2e suite or separate test stack.
 
 1. Start once: `make ensure`, then open
    `http://localhost:4320/game/hub?follow=1` with **Simple Browser: Show**.

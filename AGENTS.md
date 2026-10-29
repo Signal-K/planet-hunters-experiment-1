@@ -15,7 +15,8 @@ canonical; area files point here. Keep work small, scene-first, and fast.
 5. Open the affected scene in the VS Code/Cursor Simple Browser and inspect it.
    `node scripts/scene.mjs <scene> --check` navigates the open follower tab,
    waits for the scene to mount, and reports its real viewport. No Playwright,
-   Cypress, Chromium, Chrome, or second test stack exists in this repository.
+   Cypress spec, e2e suite, or second test stack exists in this repository;
+   confirm by using the scene (cloud: `scene-drive.mjs`), not by writing a test.
 
 Open `http://localhost:4320/game/hub?follow=1` once using **Simple Browser:
 Show**. `make ensure` starts the local stack if needed. The dev bridge follows
@@ -30,24 +31,31 @@ to be visible to him as it happens.
 - One scene or flow at a time. Name it (its `qa/scenes.json` id) before
   editing, and finish, show and commit it before starting the next. Do not
   batch several scenes into one pass.
-- Show the scene before the first edit and after every visible change:
-  `node scripts/cloud-shot.mjs <scene-id>` (`--all` for the three viewports
-  before committing), look at the image, then send it to Liam with
-  SendUserFile (`display: "render"`) and a one-line caption of what changed.
+- Confirm a change by playing the scene, the way a person would:
+  `node scripts/scene-drive.mjs open <scene-id>`, then `look` (what is on
+  screen and where), `click "<text>"`, `tap x y`, `key ArrowDown --hold 800`,
+  `wait`, `shot --all`. One browser stays open between commands, so state
+  carries over. Each action saves a screenshot; look at it.
+- Show Liam the scene before the first edit and after every visible change:
+  send the screenshot with SendUserFile (`display: "render"`) and a one-line
+  caption of what you did and what happened. Send the three viewports
+  (`shot --all`) before committing.
 - Stop at each shown change long enough for feedback when Liam is responding;
   his feedback on the current scene beats the plan.
 - Work in the account-free stage fixture (`/game/stage?preset=`). Use a local
   account only to check the signed-in path before a commit that touches it.
-- `cloud-shot.mjs` is the one exception to the no-browser-runner rule below:
-  it uses the container's own Chromium, adds no dependency, and refuses to run
-  outside a cloud session. It is not a test suite.
+- Never write an e2e test or scripted flow to prove a change works. Driving
+  the real scene with `scene-drive.mjs` is using the site; a spec file, test
+  runner or long automated playthrough is not.
 
 ## Rules
 
 - Work directly on `cycle/4`; never push to `main`. One coherent ticket outcome
   is one commit. Use Linear for the task record and handoff.
 - Web and iOS are the only supported targets. Do not add macOS, iPadOS,
-  Android, desktop, Electron, Godot, Playwright, Cypress, or browser runners.
+  Android, desktop, Electron, Godot, or e2e test suites (Playwright/Cypress
+  specs, scripted playthroughs). `scripts/scene-drive.mjs` drives the real
+  scene by hand and is allowed.
 - Every gameplay surface is an in-world scene, not a card grid. Every scene and
   mission must have an authored fixture and a deep link. Register it in
   `qa/scenes.json` and `scripts/preview-target.mjs` so it can be launched alone.
