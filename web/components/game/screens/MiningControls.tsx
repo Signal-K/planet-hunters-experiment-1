@@ -104,6 +104,34 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
   )
 }
 
+/** SSL-711: Orionids shower only. Catches the fragment inside the collector beam above the ship. */
+export function MiningCatchButton({ ready, pressed, disabled, onPress }: {
+  ready: boolean
+  pressed: boolean
+  disabled?: boolean
+  onPress: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={styles.catch}
+      data-testid="catch-fragment-btn"
+      data-ready={ready || undefined}
+      data-pressed={pressed || undefined}
+      disabled={disabled}
+      aria-label={ready ? 'Catch, a fragment is in the beam' : 'Catch'}
+      onPointerDown={e => { if (e.button !== 0) return; onPress() }}
+      onClick={e => { if (e.detail === 0) onPress() }}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M5 4 L9 15 H15 L19 4" />
+        <path d="M9 19 H15" />
+      </svg>
+      <span>Catch</span>
+    </button>
+  )
+}
+
 /** The one control at the top of the mining scene: opens the mission menu (SSL-708). */
 export function MiningBackButton({ open, onClick }: { open: boolean; onClick: () => void }) {
   return (

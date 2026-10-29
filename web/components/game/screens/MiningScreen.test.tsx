@@ -47,6 +47,8 @@ describe('MiningScreen guide', () => {
     expect(host.querySelector('.mining-guide-dock')).toBeNull()
     expect(values.ln_mining_hud_guide_ack).toBeUndefined()
 
+    expect(host.querySelector('[data-testid="catch-fragment-btn"]')).toBeNull()
+
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="mining-back-btn"]')?.click()
     })
@@ -76,6 +78,8 @@ describe('MiningScreen guide', () => {
     expect(host.querySelector('[data-testid="orionids-run-objective"]')).toBeNull()
     expect(host.querySelector('[data-testid="mining-order-progress"]')?.textContent).toContain('Fragments 0/20')
     expect(host.querySelector('[data-testid="fire-laser-btn"]')?.textContent).toContain('Fire')
+    // SSL-711: the shower run catches with its own button.
+    expect(host.querySelector('[data-testid="catch-fragment-btn"]')?.textContent).toContain('Catch')
     expect(host.querySelector('[data-testid="mining-target-cue"]')).toBeNull()
     expect(host.querySelector('[data-testid="sky-event-mining"]')).toBeNull()
 

@@ -208,6 +208,10 @@ export interface MiningControllerOptions {
    * Omit (or leave `current` null) to flash for any ore, regardless of mineral.
    */
   neededMineralsRef?: { current: Set<string> | null }
+  /** Live ship height including the d-pad climb; the collector beam follows it. Falls back to shipY. */
+  shipYNow?: () => number
+  /** SSL-711: true while a catchable fragment is inside the collector beam, so CATCH can light up. */
+  onCatchCue?: (ready: boolean) => void
   /** Skip hit-stop freezes when the player prefers reduced motion. */
   reducedMotion?: boolean
   /**
@@ -216,7 +220,7 @@ export interface MiningControllerOptions {
    */
   debris?: {
     /** Live spawn config; null (or rate 0) when the event is not active. */
-    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string; onceHero?: boolean; autoCollect?: boolean } | null
+    getSpawn: () => { mineral: string; ratePerMinute: number; speedFactor: number; onceMineral?: string; onceHero?: boolean; catchable?: boolean } | null
   }
   /** Raster shower art. Omit to keep the vector chunk fallback. */
   debrisArt?: DebrisArtSet | null
@@ -227,9 +231,11 @@ const DEBRIS_RADIUS = 36
 const DEBRIS_BASE_FALL_SPEED = 70
 /** Cap so a long run cannot fill the field with chunks. */
 const MAX_DEBRIS = 4
-/** One clear catch at a time keeps the Orionids objective readable. */
-const MAX_RAIN = 1
-const CATCH_RADIUS = 100
+/** A few fragments in the sky at once, so a run of about a minute reaches the goal without a crowded sky. */
+const MAX_RAIN = 3
+/** SSL-711: the collector beam above the ship. A fragment inside it is caught by a CATCH press. */
+const CATCH_HALF_W = 46
+const CATCH_BEAM_H = 150
 /** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
 const RAIN_SPREAD = 300
 const MAX_STREAKS = 1
@@ -277,8 +283,8 @@ interface OreEntity {
   frames?: Texture[] | null
   /** A one-off fireball. It falls on the ship and does not scroll away. */
   hero?: boolean
-  /** Collected the moment it lands on the surface; the laser is not needed. */
-  autoCollect?: boolean
+  /** SSL-711: shower fragment, caught in the air with CATCH; breaks up if it reaches the ground. */
+  catchable?: boolean
   /** SSL-710: dark backing and mineral-coloured rim that lifts a seam off the soil. */
   halo?: Graphics | null
 }
@@ -316,8 +322,10 @@ export class MiningController extends ScriptBehaviour {
   private streaks: Streak[] = []
   private liveFx: LiveFx[] = []
   private debrisAccumulator = 0
-  /** Catch zone marker on the surface under the ship, shown while shower fragments are auto-collected. */
-  private catchZone: Graphics | null = null
+  /** SSL-711: upward collector beam drawn while catchable fragments fall. */
+  private catchBeam: Graphics | null = null
+  private catchBeamFlash = 0
+  private catchCueState = false
   /** SSL-710: dashed line from the ship to the soil showing where a shot lands. */
   private aimLine: Graphics | null = null
   private aimTarget: OreEntity | null = null
@@ -387,7 +395,7 @@ export class MiningController extends ScriptBehaviour {
   /** Native stride. A phone-width pass shows one or two deposits. */
   private depositGap(): number {
     // Sparse during the shower run so labelled ore does not crowd the falling fragments.
-    return this.opts.debris?.getSpawn()?.autoCollect ? 640 : 280
+    return this.opts.debris?.getSpawn()?.catchable ? 640 : 280
   }
 
   update(realDt: number): void {
@@ -565,8 +573,9 @@ export class MiningController extends ScriptBehaviour {
     this.updateStreaks(dt)
     if (!debris) return
     const spawn = debris.getSpawn()
-    this.updateCatchZone(!!spawn?.autoCollect && (spawn.ratePerMinute ?? 0) > 0)
-    if (!spawn || !(spawn.ratePerMinute > 0)) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
+    this.updateCatchBeam(dt, !!spawn?.catchable && (spawn.ratePerMinute ?? 0) > 0)
+    const oncePending = !!spawn?.onceMineral && !this.onceDebrisSpawned
+    if (!spawn || !(spawn.ratePerMinute > 0 || oncePending)) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
     if (!this.debrisPrimed) {
       this.debrisPrimed = true
       this.debrisAccumulator = Math.max(this.debrisAccumulator, 1)
@@ -580,11 +589,11 @@ export class MiningController extends ScriptBehaviour {
     this.debrisAccumulator += (rate / 60) * dt
     this.streakAccumulator += STREAKS_PER_SECOND * dt
     let alive = this.ores.filter(o => o.phase !== undefined).length
-    const cap = spawn.autoCollect ? MAX_RAIN : MAX_DEBRIS
+    const cap = spawn.catchable ? MAX_RAIN : MAX_DEBRIS
     while (this.debrisAccumulator >= 1) {
       this.debrisAccumulator -= 1
       if (alive >= cap) continue
-      this.spawnDebris(spawn.mineral, spawn.speedFactor, false, !!spawn.autoCollect)
+      this.spawnDebris(spawn.mineral, spawn.speedFactor, false, !!spawn.catchable)
       alive += 1
     }
     while (this.streakAccumulator >= 1) {
@@ -593,21 +602,70 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  /** A bracket on the ground under the ship, CATCH_RADIUS either side: fragments landing inside it bank. */
-  private updateCatchZone(show: boolean): void {
-    if (!show) { if (this.catchZone) this.catchZone.visible = false; return }
-    if (!this.catchZone) {
-      const g = new Graphics()
-      const y = (this.opts.surfaceY ?? SURFACE_Y) - 20
-      g.rect(-CATCH_RADIUS, y - 5, CATCH_RADIUS * 2, 10).fill({ color: 0x7fd8ff, alpha: 0.85 })
-      g.rect(-CATCH_RADIUS, y - 24, 4, 34).fill({ color: 0xbfefff, alpha: 0.9 })
-      g.rect(CATCH_RADIUS - 4, y - 24, 4, 34).fill({ color: 0xbfefff, alpha: 0.9 })
-      this.opts.container.addChild(g)
-      this.catchZone = g
+  private currentShipY(): number {
+    return this.opts.shipYNow?.() ?? this.opts.shipY ?? SHIP_Y
+  }
+
+  /** The fragment a CATCH press would take now: falling, catchable and inside the beam. */
+  private fragmentInBeam(): OreEntity | null {
+    const x = this.currentShipX()
+    const shipY = this.currentShipY()
+    // Only the part of the beam on screen counts, so a press never takes a fragment the player cannot see.
+    const top = Math.max(4, shipY - CATCH_BEAM_H)
+    let best: OreEntity | null = null
+    let bestY = -Infinity
+    for (const ore of this.ores) {
+      if (!ore.go.active || !ore.catchable || ore.phase !== 'fall') continue
+      const p = ore.go.transform.position
+      // Judge where the fragment is drawn, not its anchor point.
+      const y = ore.sprite ? ore.sprite.y + (0.5 - ore.sprite.anchor.y) * ore.sprite.height : p.y
+      if (Math.abs(p.x - x) > CATCH_HALF_W + 8 || y < top || y > shipY + 12) continue
+      if (y > bestY) { best = ore; bestY = y }
     }
-    this.catchZone.visible = true
-    this.catchZone.x = this.currentShipX()
-    this.catchZone.alpha = this.opts.reducedMotion ? 1 : 0.75 + Math.sin(performance.now() / 260) * 0.25
+    return best
+  }
+
+  /** SSL-711: a short beam rising from the ship. Brightens while a fragment is inside it. */
+  private updateCatchBeam(dt: number, show: boolean): void {
+    if (!show) {
+      if (this.catchBeam) this.catchBeam.visible = false
+      if (this.catchCueState) { this.catchCueState = false; this.opts.onCatchCue?.(false) }
+      return
+    }
+    if (!this.catchBeam) {
+      this.catchBeam = new Graphics()
+      this.opts.container.addChild(this.catchBeam)
+    }
+    const inBeam = !!this.fragmentInBeam()
+    if (inBeam !== this.catchCueState) { this.catchCueState = inBeam; this.opts.onCatchCue?.(inBeam) }
+    this.catchBeamFlash = Math.max(0, this.catchBeamFlash - dt)
+    const g = this.catchBeam
+    const x = Math.round(this.currentShipX())
+    const bottom = Math.round(this.currentShipY()) - 4
+    const top = bottom - CATCH_BEAM_H
+    const flash = this.catchBeamFlash > 0
+    const fill = flash ? 0.42 : inBeam ? 0.3 : 0.12
+    g.clear()
+    // Tapered column: wide at the top where fragments enter, narrow at the hull.
+    g.poly([x - CATCH_HALF_W, top, x + CATCH_HALF_W, top, x + 10, bottom, x - 10, bottom]).fill({ color: 0x7fd8ff, alpha: fill })
+    const edge = flash || inBeam ? 0.95 : 0.5
+    g.rect(x - CATCH_HALF_W, top, CATCH_HALF_W * 2, 3).fill({ color: 0xbfefff, alpha: edge })
+    g.poly([x - CATCH_HALF_W, top, x - CATCH_HALF_W + 3, top, x - 8, bottom, x - 11, bottom]).fill({ color: 0xbfefff, alpha: edge * 0.8 })
+    g.poly([x + CATCH_HALF_W - 3, top, x + CATCH_HALF_W, top, x + 11, bottom, x + 8, bottom]).fill({ color: 0xbfefff, alpha: edge * 0.8 })
+    g.visible = true
+  }
+
+  /**
+   * SSL-711: the CATCH button. Takes the lowest fragment inside the collector
+   * beam. Returns false when the beam was empty; that press costs nothing.
+   */
+  catchFragment(): boolean {
+    this.catchBeamFlash = 0.14
+    const ore = this.fragmentInBeam()
+    if (!ore) return false
+    this.catchBeamFlash = 0.3
+    this.collectOre(ore)
+    return true
   }
 
   /** Fall until the ground contact meets the surface, play land, then sit mineable. */
@@ -625,7 +683,7 @@ export class MiningController extends ScriptBehaviour {
         ore.phase = useSheet ? 'land' : 'intact'
         if (ore.phase === 'intact') this.showIntact(ore)
         else this.showFallFrame(ore, 6)
-        if (ore.phase === 'intact' && ore.autoCollect) this.collectOre(ore)
+        if (ore.phase === 'intact' && ore.catchable) this.breakFragment(ore)
       } else if (ore.variant === 0) {
         const art = this.opts.debrisArt
         const frame = art
@@ -644,7 +702,7 @@ export class MiningController extends ScriptBehaviour {
       if (land.done) {
         ore.phase = 'intact'
         this.showIntact(ore)
-        if (ore.autoCollect) this.collectOre(ore)
+        if (ore.catchable) this.breakFragment(ore)
       }
     }
   }
@@ -671,14 +729,14 @@ export class MiningController extends ScriptBehaviour {
     ore.sprite.anchor.set(piece.ax, piece.ay)
   }
 
-  private spawnDebris(mineral: string, speedFactor: number, hero = false, autoCollect = false): void {
+  private spawnDebris(mineral: string, speedFactor: number, hero = false, catchable = false): void {
     // Aim where the ship is now, shifted by how far the ground scrolls while the fragment falls.
     const groundY = (this.opts.surfaceY ?? SURFACE_Y) - 4
     const fallTime = (groundY + 40) / (DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor))
     const rainX = this.currentShipX() + SCROLL_SPEED * fallTime + (Math.random() * 2 - 1) * RAIN_SPREAD
     const x = hero
       ? this.currentShipX()
-      : autoCollect
+      : catchable
         // Not clamped to the right edge: on a narrow phone the aim point sits past the screen and the fragment drifts in. Clamping it made every fragment land out of reach.
         ? Math.max(40, rainX)
         : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
@@ -717,13 +775,13 @@ export class MiningController extends ScriptBehaviour {
     }
     if (sprite && hero) sprite.scale.set(2.4)
     // Shower rain is drawn small so the sky stays readable.
-    if (sprite && autoCollect) sprite.scale.set(0.45)
+    if (sprite && catchable) sprite.scale.set(0.45)
     this.gameObject.addChild(go)
     this.ores.push({
       go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,
       hp: 1, maxHp: 1, radius: hero ? 56 : (art ? DEBRIS_RADIUS : 11), flashTimer: 0, mineralColor,
       fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor) * (hero ? 1.35 : 1),
-      phase: 'fall', animTime: 0, variant, hero, autoCollect,
+      phase: 'fall', animTime: 0, variant, hero, catchable,
     })
   }
 
@@ -1095,15 +1153,16 @@ export class MiningController extends ScriptBehaviour {
     }
   }
 
-  /** Bank an ore: laser kill, or a landed shower fragment collecting itself. */
+  /** A shower fragment that reached the ground uncaught breaks up and is gone. */
+  private breakFragment(ore: OreEntity): void {
+    ore.go.active = false
+    if (ore.sprite) ore.sprite.visible = false
+    if (ore.label) ore.label.visible = false
+    this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, 0x5a6b78, ore.radius * 0.6)
+  }
+
+  /** Bank an ore: laser kill, or a shower fragment caught in the collector beam. */
   private collectOre(ore: OreEntity): void {
-    if (ore.autoCollect && Math.abs(ore.go.transform.position.x - this.currentShipX()) > CATCH_RADIUS) {
-      // Missed: the fragment breaks up on the surface and is gone.
-      ore.go.active = false
-      if (ore.sprite) ore.sprite.visible = false
-      this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, 0x5a6b78, ore.radius * 0.6)
-      return
-    }
     ore.go.active = false
     if (ore.halo) ore.halo.visible = false
     if (ore.phase) this.playDebrisMine(ore)
@@ -1113,7 +1172,9 @@ export class MiningController extends ScriptBehaviour {
     const popY = ore.chip ? ore.chip.y : ore.go.transform.position.y
     if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
     this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
-    this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
+    // SSL-711: a catch says so plainly, larger than an ore pickup.
+    if (ore.catchable) this.spawnPopup(ore.go.transform.position.x, popY - 22, 'Caught +1', 24)
+    else this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
     this.opts.onCollect(ore.mineral)
   }
 
@@ -1181,8 +1242,8 @@ export class MiningController extends ScriptBehaviour {
   }
 
   /** Floating `+1 Pt` that drifts up and fades. */
-  private spawnPopup(x: number, y: number, text: string): void {
-    const t = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize: 16, fontWeight: '800', fill: 0xf4f1ea, stroke: { color: 0x1a2a3c, width: 4, join: 'round' } } })
+  private spawnPopup(x: number, y: number, text: string, fontSize = 16): void {
+    const t = new Text({ text, style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize, fontWeight: '800', fill: 0xf4f1ea, stroke: { color: 0x1a2a3c, width: 4, join: 'round' } } })
     t.anchor.set(0.5)
     t.x = x
     t.y = y

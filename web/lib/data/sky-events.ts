@@ -366,11 +366,11 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
 }
 
 /**
- * Shower-run fragments that fall and bank on landing, per minute. Chosen so a player who weaves
- * under them fills the 20 order in about a minute, while parking in one spot catches roughly a
- * quarter. Peak night doubles it, like the launch catch.
+ * Shower-run fragments per minute, caught with CATCH (SSL-711). Above the 20 goal so a player who
+ * weaves and catches most of them fills it in about a minute; one who parks catches a minority,
+ * and the rest break up on the ground. Peak night doubles it, like the launch catch.
  */
-export const ORIONIDS_RUN_FRAGMENTS_PER_MINUTE = 18
+export const ORIONIDS_RUN_FRAGMENTS_PER_MINUTE = 28
 
 /** SSL-578: peak-night debris boost (21-22 Oct, local night). */
 export const ORIONIDS_PEAK_MULTIPLIER = 2

@@ -62,6 +62,12 @@ interface MiningCanvasProps {
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
   trainingMiningTry?: boolean
+  /** SSL-711: the Orionids shower run. Only this run rains catchable fragments. */
+  showerRun?: boolean
+  /** SSL-711: set to the CATCH action; returns true when a fragment was caught. */
+  catchRef?: React.MutableRefObject<(() => boolean) | null>
+  /** SSL-711: pushed true while a fragment is inside the collector beam. */
+  onCatchCueRef?: React.MutableRefObject<((ready: boolean) => void) | null>
   /** SSL-475: sky-event debris. Omit (or event inactive) for the unchanged scene. */
   debrisPreset?: DebrisEventPreset | null
   /** Caught-at stamp. One fragment falls after local 22 Oct 02:00 until this is set. */
@@ -69,7 +75,7 @@ interface MiningCanvasProps {
   skyEventLocation?: PlayerLocation | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, showerRun = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -231,6 +237,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           surfaceY,
           shipY,
           shipX: () => shipX,
+          shipYNow: () => shipY + altitude,
+          onCatchCue: ready => { onCatchCueRef?.current?.(ready) },
           minerals,
           leadMinerals,
           scrollScreens,
@@ -281,13 +289,16 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
                 mineral: preset.resourceId,
                 // Shower fragments drift down a little slower than other debris so there is time to line up under them, but not so slow the sky stays full.
                 speedFactor: preset.eventId === 'orionids-2026' ? 1.0 : preset.speedFactor,
-                ratePerMinute: preset.eventId === 'orionids-2026'
+                // SSL-711: shower rain belongs to the shower run; ordinary mining keeps only the streaks and the fireball.
+                ratePerMinute: preset.eventId === 'orionids-2026' && !showerRun
+                  ? 0
+                  : preset.eventId === 'orionids-2026'
                   ? ORIONIDS_RUN_FRAGMENTS_PER_MINUTE * (isInLocalEventBonusWindow(debrisNow(), skyEventLocation) ? ORIONIDS_PEAK_MULTIPLIER : 1)
                   : debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
                 onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
                 onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
-                // Shower fragments collect themselves on landing; the laser is for ore and the fireball.
-                autoCollect: preset.eventId === 'orionids-2026',
+                // SSL-711: shower fragments are caught in the air with CATCH; the laser is for ore and the fireball.
+                catchable: preset.eventId === 'orionids-2026' && showerRun,
               }
             },
           },
@@ -378,6 +389,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         })
         controllerObj?.addComponent(controller)
         controllerRef.current = controller
+        if (catchRef) catchRef.current = () => controller.catchFragment()
 
         // Cooldown lives here, not in MiningScreen, because it must gate BOTH
         // entry points to controller.fireLaser(): the FIRE LASER button (via
@@ -474,6 +486,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
       scrollRef.current = null
       if (steerRef) steerRef.current = null
       if (altitudeRef) altitudeRef.current = null
+      if (catchRef) catchRef.current = null
       if (oreNearRef) oreNearRef.current = null
       controllerRef.current = null
       loop?.stop()

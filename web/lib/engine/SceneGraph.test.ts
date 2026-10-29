@@ -13,7 +13,7 @@ describe('shared authored scene graph', () => {
         for (const id of object.mechanics ?? []) expect(authoredSceneFile.mechanics.some(mechanic => mechanic.id === id)).toBe(true)
       }
     }
-    expect(authoredSceneFile.scenes.flatMap(scene => scene.objects).filter(object => object.layout === 'shared')).toHaveLength(4)
+    expect(authoredSceneFile.scenes.flatMap(scene => scene.objects).filter(object => object.layout === 'shared')).toHaveLength(5)
   })
 
   it.each([

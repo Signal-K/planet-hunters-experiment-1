@@ -141,6 +141,34 @@
 @media (prefers-reduced-motion: reduce) { .fire[data-ready] { animation: none; } }
 .fire:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
 
+/* SSL-711: CATCH sits up and to the left of FIRE, like a second face button. */
+.catch {
+  position: absolute;
+  right: calc(max(20px, env(safe-area-inset-right)) + 108px);
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 6;
+  width: 76px; height: 76px;
+  padding: 0;
+  border: 2px solid var(--ln-cyan);
+  border-radius: 50%;
+  display: grid; place-content: center; justify-items: center; gap: 2px;
+  background: var(--ln-bp-ink);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, background 120ms ease-out;
+}
+.catch[data-pressed], .catch:active { transform: scale(0.93); }
+.catch[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); animation: fireReady 0.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .catch[data-ready] { animation: none; } }
+.catch:disabled { cursor: default; opacity: 0.55; }
+.catch:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
+
 .progress {
   position: absolute;
   left: 50%;
@@ -168,10 +196,12 @@
 @media (max-width: 600px) {
   .fire { width: 88px; height: 88px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); }
   .dpad { bottom: calc(24px + env(safe-area-inset-bottom)); left: 12px; }
+  .catch { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
   .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
 }
 @media (max-height: 520px) {
   .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .catch { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
   .progress { bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 

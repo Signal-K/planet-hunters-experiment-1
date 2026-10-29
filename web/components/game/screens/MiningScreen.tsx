@@ -11,7 +11,7 @@ import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openSettings } from '@/lib/mining/openChrome'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import { MiningBackButton, MiningDPad, MiningFireButton } from './MiningControls'
+import { MiningBackButton, MiningCatchButton, MiningDPad, MiningFireButton } from './MiningControls'
 import controlStyles from './MiningControls.module.css'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
@@ -75,7 +75,7 @@ function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
   if (isOrionids) {
-    items.splice(1, 0, { kind: 'event', label: 'Catch Orionid debris', desc: 'Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped.' })
+    items.splice(1, 0, { kind: 'event', label: 'Catch', desc: 'Blue fragments fall from the shower. Steer so one drops into the light beam above the ship; CATCH lights up, then press it (C). A fragment that reaches the ground breaks up. Fire is only for ground seams. Catches count toward the run and cannot be dropped.' })
   }
   return items
 }
@@ -241,6 +241,20 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setFireReady(!!mineral && inRange)
   }
   const [fireReady, setFireReady] = useState(false)
+  // SSL-711: CATCH takes a fragment out of the collector beam above the ship.
+  const catchRef = useRef<(() => boolean) | null>(null)
+  const catchCueRef = useRef<((ready: boolean) => void) | null>(null)
+  const [catchReady, setCatchReady] = useState(false)
+  catchCueRef.current = ready => setCatchReady(ready)
+  const [catchPressed, setCatchPressed] = useState(false)
+  const catchFragment = () => {
+    if (sceneStatus !== 'ready') return
+    catchRef.current?.()
+    setCatchPressed(true)
+    window.setTimeout(() => setCatchPressed(false), 140)
+  }
+  const catchFragmentRef = useRef(catchFragment)
+  catchFragmentRef.current = catchFragment
   const obstacleAheadRef = useRef<((ahead: boolean) => void) | null>(null)
   const [obstacleAhead, setObstacleAhead] = useState(false)
   obstacleAheadRef.current = ahead => setObstacleAhead(current => current === ahead ? current : ahead)
@@ -409,6 +423,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       if (e.code === 'Space' || e.code === 'KeyF') {
         e.preventDefault()
         fireLaser()
+      } else if (e.code === 'KeyC' && nightRun) {
+        e.preventDefault()
+        catchFragmentRef.current()
       } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
         e.preventDefault()
         altitudeRef.current?.(-1)
@@ -710,7 +727,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <button type="button" className="mining-start-brief" data-testid="mining-start-brief" onClick={() => setStartBrief(false)}>
           <span className="mining-start-brief__eyebrow">{nightRun ? 'Orionids shower' : mission.title}</span>
           <strong>{briefGoal}</strong>
-          <span>{nightRun ? 'Steer under the blue fragments. Fire is for ground seams.' : 'Steer over a labelled seam, then press Fire.'}</span>
+          <span>{nightRun ? 'Steer a fragment into the beam above the ship, then press Catch.' : 'Steer over a labelled seam, then press Fire.'}</span>
         </button>
       )}
 
@@ -766,6 +783,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
+          showerRun={nightRun}
+          catchRef={catchRef}
+          onCatchCueRef={catchCueRef}
           debrisPreset={debrisPreset}
           fireballCaughtAt={fireballCaughtAt}
           skyEventLocation={skyEventLocation}
@@ -901,6 +921,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onRelease={() => { setFiringHeld(false); endFireHold() }}
           onKeyFire={() => fireLaser()}
         />
+        {nightRun ? (
+          <MiningCatchButton
+            ready={catchReady}
+            pressed={catchPressed}
+            disabled={gateOpen || sceneStatus !== 'ready'}
+            onPress={catchFragment}
+          />
+        ) : null}
         {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
       </div>
 
