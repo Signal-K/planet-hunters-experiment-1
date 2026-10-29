@@ -8,7 +8,7 @@
  * This is for using the site, not for tests: no assertions, no scripted
  * flows, nothing to run in CI. See "Cloud sessions" in AGENTS.md.
  *
- *   node scripts/scene-drive.mjs open <scene-id|/route> [--size 390x844]
+ *   node scripts/scene-drive.mjs open <scene-id|/route> [--size 926x428]   (phone landscape by default)
  *   node scripts/scene-drive.mjs look                 list the buttons and labels on screen
  *   node scripts/scene-drive.mjs click "<text>"       click a button or label by its text
  *   node scripts/scene-drive.mjs click css=<selector>
@@ -43,7 +43,7 @@ const positional = rest.filter((a, i) => !a.startsWith('--') && !(i > 0 && rest[
 
 // The browser runs in a detached `serve` process so it outlives each command.
 if (command === 'serve') {
-  const [w, h] = (flag('--size') ?? '390x844').split('x').map(Number)
+  const [w, h] = (flag('--size') ?? '926x428').split('x').map(Number)
   const context = await chromium.launchPersistentContext(profileDir, {
     viewport: { width: w, height: h },
     args: [`--remote-debugging-port=${PORT}`],
@@ -57,7 +57,7 @@ async function connect() {
     return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`)
   } catch {
     mkdirSync(shotsDir, { recursive: true })
-    spawn(process.execPath, [fileURLToPath(import.meta.url), 'serve', '--size', flag('--size') ?? '390x844'], { detached: true, stdio: 'ignore' }).unref()
+    spawn(process.execPath, [fileURLToPath(import.meta.url), 'serve', '--size', flag('--size') ?? '926x428'], { detached: true, stdio: 'ignore' }).unref()
     for (let i = 0; i < 40; i++) {
       await new Promise(r => setTimeout(r, 250))
       try { return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`) } catch {}
@@ -185,4 +185,11 @@ if (command !== 'look') {
   }
 }
 if (errors.length) console.log(`console errors:\n${errors.slice(0, 5).join('\n')}`)
+if (command !== 'look') {
+  // Fields for the Scene Monitor step row (AGENTS.md, Cloud sessions); add caption and image.
+  const at = new Date().toISOString()
+  const vp = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }))
+  const scene = new URL(page.url()).searchParams.get('preset') ?? new URL(page.url()).pathname
+  console.log('monitor ' + JSON.stringify({ doc_id: at.replace(/[-:.]/g, ''), at, scene, action: [command, ...rest].join(' '), viewport: vp ? `${vp.width}x${vp.height}` : '', errors: errors.slice(0, 5) }))
+}
 await browser.close() // disconnects; the served browser keeps running
