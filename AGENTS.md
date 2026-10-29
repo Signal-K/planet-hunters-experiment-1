@@ -22,6 +22,26 @@ Show**. `make ensure` starts the local stack if needed. The dev bridge follows
 `scripts/preview-target.mjs`, so agents can route and exercise the tab through
 `scripts/dev-check.mjs` without controlling the desktop.
 
+## Cloud sessions (Claude Code remote, `CLAUDE_CODE_REMOTE=true`)
+
+Liam follows these sessions from the Claude app, not an editor, so the work has
+to be visible to him as it happens.
+
+- One scene or flow at a time. Name it (its `qa/scenes.json` id) before
+  editing, and finish, show and commit it before starting the next. Do not
+  batch several scenes into one pass.
+- Show the scene before the first edit and after every visible change:
+  `node scripts/cloud-shot.mjs <scene-id>` (`--all` for the three viewports
+  before committing), look at the image, then send it to Liam with
+  SendUserFile (`display: "render"`) and a one-line caption of what changed.
+- Stop at each shown change long enough for feedback when Liam is responding;
+  his feedback on the current scene beats the plan.
+- Work in the account-free stage fixture (`/game/stage?preset=`). Use a local
+  account only to check the signed-in path before a commit that touches it.
+- `cloud-shot.mjs` is the one exception to the no-browser-runner rule below:
+  it uses the container's own Chromium, adds no dependency, and refuses to run
+  outside a cloud session. It is not a test suite.
+
 ## Rules
 
 - Work directly on `cycle/4`; never push to `main`. One coherent ticket outcome
