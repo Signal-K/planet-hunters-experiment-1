@@ -47,7 +47,7 @@
     "exchange-lab": {
       "description": "In-world instruments, trading and processing surfaces.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["academy", "asteroid-discovery", "galaxy", "instrument-hub", "market", "refinery", "saturn-storm-search"]
+      "routes": ["academy", "asteroid-discovery", "galaxy", "instrument-hub", "market", "refinery", "saturn-storm-search", "radio-meteors"]
     },
     "menu": {
       "description": "Reference, selection and record surfaces; cards are allowed here.",

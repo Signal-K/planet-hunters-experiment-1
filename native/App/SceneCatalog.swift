@@ -537,6 +537,8 @@ enum SceneCatalog {
             gs.player.freeOperations = true; gs.player.saturnImagerLaunchedAt = 1
             return SaturnStormSearchScreen(candidate: Saturn.fallback[19]).environment(GameStore(state: gs)).environment(offlineFeed).environment(\.flatLayout, true)
         },
+        // SSL-714: web-only for now; the iOS meteor radio screen is a follow-up ticket. Placeholder keeps the registry honest.
+        scene("radio-meteors", 400) { Text("Meteor radio: iOS port pending (web has it)").padding() },
         scene("asteroid-discovery-phone", 1020) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true

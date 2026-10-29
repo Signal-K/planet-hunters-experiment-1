@@ -117,6 +117,16 @@
    ]
   },
   {
+   "id": "radio-meteors",
+   "name": "Meteor radio",
+   "flow": "events",
+   "web": "ui-radio-meteors",
+   "native": "radio-meteors",
+   "tickets": [
+    "SSL-714"
+   ]
+  },
+  {
    "id": "orionids-shower-mining",
    "name": "Orionids shower run",
    "flow": "core-loop",

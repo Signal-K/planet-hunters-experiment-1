@@ -84,6 +84,7 @@ export type Screen =
   | 'launchpad'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
+  | 'radio-meteors'
   | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
@@ -308,6 +309,8 @@ export interface Player {
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
   saturnClassifications?: Record<string, SaturnClassification>
+  /** SSL-714: Radio Meteor Zoo spectrograms this player boxed, keyed by Panoptes subject id. Kept on Landnam's side only. */
+  radioMeteorClassifications?: Record<string, import('@/lib/radio-meteors').RadioMeteorClassification>
   /** The unanswered Cassini frame must survive a reload until all nine panes
    * are classified; it is intentionally separate from the digest cadence. */
   saturnActiveFrameId?: string | null
@@ -527,6 +530,7 @@ export interface GameActions {
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
+  submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
   onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void

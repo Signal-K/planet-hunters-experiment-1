@@ -20,6 +20,7 @@ import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
+import { queueRadioMeteorClassification, type RadioMeteorClassification } from '@/lib/radio-meteors'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
@@ -1086,6 +1087,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
   }, [setState, stateRef])
 
+  // SSL-714: a boxed Radio Meteor Zoo spectrogram. Saved on the player and in Landnam's
+  // radio_meteor_classifications; never posted to Zooniverse.
+  const submitRadioMeteorClassification = useCallback((classification: RadioMeteorClassification) => {
+    if (stateRef.current.player.radioMeteorClassifications?.[classification.subjectId]) return
+    stampResearch('classification')
+    setState(s => ({
+      ...s,
+      player: {
+        ...s.player,
+        radioMeteorClassifications: { ...(s.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
+      },
+    }))
+    queueRadioMeteorClassification(classification, 'orionids-2026')
+    captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length })
+  }, [setState, stateRef])
+
   // Player picks where the satellite points for the *next* daily downlink
   // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
   // candidate, just what dailyTessCandidates prefers once today's is done.
@@ -1465,6 +1482,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification,
   }
 }

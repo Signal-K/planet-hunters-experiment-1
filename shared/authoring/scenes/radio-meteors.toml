@@ -1,0 +1,41 @@
+#:schema ../schema/scene.schema.json
+# Meteor radio: scene script (SSL-714). Real BRAMS spectrograms from Radio Meteor Zoo (Zooniverse project 2471).
+format = 1
+id = "radio-meteors"
+type = "exchange-lab"
+name = "Meteor radio"
+summary = "Box the meteor echoes in real Belgian radio meteor recordings, served live by the Panoptes API. Kept on Landnam's side."
+tickets = ["SSL-714"]
+qa = ["radio-meteors"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/RadioMeteorScreen.tsx"]
+native = []
+
+[preview]
+route = "radio-meteors"
+state = "ui-radio-meteors"
+
+[[objects]]
+id = "radio-spectrogram"
+kind = "instrument"
+layout = "host"
+mechanics = ["sky-events"]
+note = "A real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
+
+[[objects]]
+id = "echo-boxes"
+kind = "collection"
+parent = "radio-spectrogram"
+layout = "host"
+mechanics = ["sky-events"]
+note = "Drag to box a meteor echo, tap to drop a standard box. Source-pixel rectangles, the Panoptes rectangle-tool shape."
+
+[[objects]]
+id = "verdict-controls"
+kind = "panel"
+parent = "radio-spectrogram"
+layout = "host"
+mechanics = ["sky-events"]
+note = "No meteors / Submit. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."

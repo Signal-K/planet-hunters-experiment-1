@@ -40,6 +40,7 @@ const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScree
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
+const RadioMeteorScreen = dynamic(() => import('@/components/game/screens/RadioMeteorScreen'), { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
@@ -413,6 +414,16 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
+        />
+      )
+
+    case 'radio-meteors':
+      // SSL-714: real Radio Meteor Zoo spectrograms; boxes are kept on Landnam's side.
+      return (
+        <RadioMeteorScreen
+          player={game.player}
+          onBack={() => game.goBack()}
+          onSubmit={game.submitRadioMeteorClassification}
         />
       )
 

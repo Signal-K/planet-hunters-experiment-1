@@ -13,6 +13,7 @@
  *   node scripts/scene-drive.mjs click "<text>"       click a button or label by its text
  *   node scripts/scene-drive.mjs click css=<selector>
  *   node scripts/scene-drive.mjs tap <x> <y>          tap a point (canvas scenes)
+ *   node scripts/scene-drive.mjs drag <x1> <y1> <x2> <y2>  press, move and release (draw a box)
  *   node scripts/scene-drive.mjs key <Key> [--hold <ms>]
  *   node scripts/scene-drive.mjs wait <ms>
  *   node scripts/scene-drive.mjs shot [--all]         screenshot now; --all = three viewports
@@ -146,6 +147,16 @@ switch (command) {
       : page.getByRole('button', { name: target, exact: false }).or(page.getByText(target, { exact: false }))
     await locator.first().click({ timeout: 10_000 })
     label = `click-${target}`
+    break
+  }
+  case 'drag': {
+    // Press, move in steps, release: how a person draws a box or drags a slider.
+    const [x1, y1, x2, y2] = positional.map(Number)
+    await page.mouse.move(x1, y1)
+    await page.mouse.down()
+    await page.mouse.move(x2, y2, { steps: 8 })
+    await page.mouse.up()
+    label = `drag-${x1}-${y1}-${x2}-${y2}`
     break
   }
   case 'tap': {

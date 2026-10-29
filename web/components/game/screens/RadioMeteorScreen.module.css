@@ -1,0 +1,13 @@
+/* SSL-714: a real BRAMS spectrogram, centred in the square well at its own aspect, with the drawing layer on top. */
+.frame {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  aspect-ratio: 949 / 543;
+}
+.image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.draw { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.box { fill: color-mix(in srgb, var(--ln-crimson-bright) 14%, transparent); stroke: var(--ln-crimson-bright); stroke-width: 2.5px; cursor: pointer; }
+.box[data-selected] { stroke: var(--ln-payout); stroke-width: 3.5px; fill: color-mix(in srgb, var(--ln-crimson-bright) 26%, transparent); }
+.draft { fill: none; stroke: var(--ln-payout); stroke-width: 2px; stroke-dasharray: 6 4; }

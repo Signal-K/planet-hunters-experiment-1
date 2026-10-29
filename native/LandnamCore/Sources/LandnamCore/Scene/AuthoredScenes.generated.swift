@@ -2005,6 +2005,50 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "radio-meteors",
+      "type": "exchange-lab",
+      "route": "radio-meteors",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RadioMeteorScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "radio-spectrogram",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "A real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
+        },
+        {
+          "id": "echo-boxes",
+          "kind": "collection",
+          "parent": "radio-spectrogram",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "Drag to box a meteor echo, tap to drop a standard box. Source-pixel rectangles, the Panoptes rectangle-tool shape."
+        },
+        {
+          "id": "verdict-controls",
+          "kind": "panel",
+          "parent": "radio-spectrogram",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "No meteors / Submit. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."
+        }
+      ]
+    },
+    {
       "id": "refinery",
       "type": "exchange-lab",
       "route": "refinery",

@@ -155,6 +155,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
       { key: 'ui-research-calendar-month-half', label: 'Research calendar, half month', hint: 'Control Station with stamps on most days so far this month', stage: 'free-ops' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-radio-meteors', label: 'Meteor radio', hint: 'Real BRAMS radio spectrograms from Radio Meteor Zoo (live Panoptes queue): box the meteor echoes. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -683,6 +684,19 @@ function fixture(name: string): Partial<GameState> | null {
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-radio-meteors':
+      return {
+        screen: 'radio-meteors',
+        player: { ...POST_ONBOARDING_PLAYER },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
       }
