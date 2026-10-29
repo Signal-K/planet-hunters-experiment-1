@@ -11,7 +11,8 @@ import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openSettings } from '@/lib/mining/openChrome'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import { MiningBackButton, MiningCatchButton, MiningDPad, MiningFireButton } from './MiningControls'
+import { MiningActionButton, MiningBackButton, MiningDPad, MiningFireButton } from './MiningControls'
+import { miningSecondaryAction, type MiningSecondaryAction } from '@/lib/mining/secondaryAction'
 import controlStyles from './MiningControls.module.css'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
@@ -64,7 +65,7 @@ function useFreeOpsFirstSuccessAck() {
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
+function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null) {
   const items = [
     { kind: 'scroll', label: 'Steer', desc: 'The pad on the left flies the ship: up and down for height, left and right to move along the ground (arrow keys or W/A/S/D).' },
     { kind: 'fire', label: 'Fire', desc: 'The round button on the right fires the laser straight down. Line a labelled seam up under the ship, then fire (Space or F). Hold it to keep firing.' },
@@ -74,9 +75,7 @@ function miningGuide(hasDelivery: boolean, isOrionids: boolean) {
       ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
-  if (isOrionids) {
-    items.splice(1, 0, { kind: 'event', label: 'Catch', desc: 'Blue fragments fall from the shower. Steer so one drops into the light beam above the ship; CATCH lights up, then press it (C). A fragment that reaches the ground breaks up. Fire is only for ground seams. Catches count toward the run and cannot be dropped.' })
-  }
+  if (action) items.splice(1, 0, { kind: 'event', label: action.label, desc: action.howTo })
   return items
 }
 
@@ -241,7 +240,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setFireReady(!!mineral && inRange)
   }
   const [fireReady, setFireReady] = useState(false)
-  // SSL-711: CATCH takes a fragment out of the collector beam above the ship.
+  // SSL-711: the run's second action button (lib/mining/secondaryAction.ts). Catch takes a fragment out of the collector beam above the ship.
+  const secondaryAction = miningSecondaryAction(mission.id)
   const catchRef = useRef<(() => boolean) | null>(null)
   const catchCueRef = useRef<((ready: boolean) => void) | null>(null)
   const [catchReady, setCatchReady] = useState(false)
@@ -423,7 +423,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       if (e.code === 'Space' || e.code === 'KeyF') {
         e.preventDefault()
         fireLaser()
-      } else if (e.code === 'KeyC' && nightRun) {
+      } else if (secondaryAction && e.code === secondaryAction.key) {
         e.preventDefault()
         catchFragmentRef.current()
       } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
@@ -727,7 +727,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         <button type="button" className="mining-start-brief" data-testid="mining-start-brief" onClick={() => setStartBrief(false)}>
           <span className="mining-start-brief__eyebrow">{nightRun ? 'Orionids shower' : mission.title}</span>
           <strong>{briefGoal}</strong>
-          <span>{nightRun ? 'Steer a fragment into the beam above the ship, then press Catch.' : 'Steer over a labelled seam, then press Fire.'}</span>
+          <span>{secondaryAction ? secondaryAction.brief : 'Steer over a labelled seam, then press Fire.'}</span>
         </button>
       )}
 
@@ -783,7 +783,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
           trainingMiningTry={trainingMiningTry}
-          showerRun={nightRun}
+          catchRain={secondaryAction?.kind === 'catch'}
           catchRef={catchRef}
           onCatchCueRef={catchCueRef}
           debrisPreset={debrisPreset}
@@ -855,7 +855,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 </div>
               )}
               <span className="mining-menu-eyebrow">How to play</span>
-              {miningGuide(!!deliveryTargetName, nightRun).map(item => (
+              {miningGuide(!!deliveryTargetName, secondaryAction).map(item => (
                 <article key={item.label} className="mining-guide-card">
                   <GuideMark kind={item.kind} />
                   <div>
@@ -921,8 +921,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onRelease={() => { setFiringHeld(false); endFireHold() }}
           onKeyFire={() => fireLaser()}
         />
-        {nightRun ? (
-          <MiningCatchButton
+        {secondaryAction ? (
+          <MiningActionButton
+            action={secondaryAction.kind}
+            label={secondaryAction.label}
+            keyLabel={secondaryAction.keyLabel}
             ready={catchReady}
             pressed={catchPressed}
             disabled={gateOpen || sceneStatus !== 'ready'}

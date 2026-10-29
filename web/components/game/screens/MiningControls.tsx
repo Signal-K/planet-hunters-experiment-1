@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import styles from './MiningControls.module.css'
 
 type Dir = 'up' | 'down' | 'left' | 'right'
@@ -104,8 +105,26 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
   )
 }
 
-/** SSL-711: Orionids shower only. Catches the fragment inside the collector beam above the ship. */
-export function MiningCatchButton({ ready, pressed, disabled, onPress }: {
+/** Icon per second-action kind (lib/mining/secondaryAction.ts). */
+const ACTION_ICONS: Record<string, ReactNode> = {
+  catch: (
+    <>
+      <path d="M5 4 L9 15 H15 L19 4" />
+      <path d="M9 19 H15" />
+    </>
+  ),
+}
+
+/**
+ * SSL-711: the mining run's second action button, up and to the left of FIRE,
+ * like a second face button. Any run that declares a second action in
+ * lib/mining/secondaryAction.ts gets it; `ready` lights it when pressing now
+ * would work.
+ */
+export function MiningActionButton({ action, label, keyLabel, ready, pressed, disabled, onPress }: {
+  action: string
+  label: string
+  keyLabel?: string
   ready: boolean
   pressed: boolean
   disabled?: boolean
@@ -114,20 +133,21 @@ export function MiningCatchButton({ ready, pressed, disabled, onPress }: {
   return (
     <button
       type="button"
-      className={styles.catch}
-      data-testid="catch-fragment-btn"
+      className={styles.action}
+      data-testid="mining-action-btn"
+      data-action={action}
       data-ready={ready || undefined}
       data-pressed={pressed || undefined}
       disabled={disabled}
-      aria-label={ready ? 'Catch, a fragment is in the beam' : 'Catch'}
+      aria-label={ready ? `${label}, ready` : label}
+      aria-keyshortcuts={keyLabel}
       onPointerDown={e => { if (e.button !== 0) return; onPress() }}
       onClick={e => { if (e.detail === 0) onPress() }}
     >
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M5 4 L9 15 H15 L19 4" />
-        <path d="M9 19 H15" />
+        {ACTION_ICONS[action] ?? <circle cx="12" cy="12" r="6" />}
       </svg>
-      <span>Catch</span>
+      <span>{label}</span>
     </button>
   )
 }

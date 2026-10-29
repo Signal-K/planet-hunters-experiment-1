@@ -236,8 +236,17 @@ const MAX_RAIN = 3
 /** SSL-711: the collector beam above the ship. A fragment inside it is caught by a CATCH press. */
 const CATCH_HALF_W = 46
 const CATCH_BEAM_H = 150
-/** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave. */
-const RAIN_SPREAD = 300
+/**
+ * A catchable fragment is on screen at least this long before it reaches the ship, so a touch
+ * player can see it, steer under it and press. On a short landscape phone the ship sits near the
+ * top, so fragments fall slower there instead of arriving with no warning.
+ */
+const CATCH_MIN_SECONDS_TO_SHIP = 3.2
+/** A press this early still catches a fragment that enters the beam (input buffering, like FIRE). */
+const CATCH_BUFFER_SECONDS = 0.25
+/** Rain spreads this far either side of where the ship is, so staying put catches a minority and the player has to weave.
+ * Kept within what the ship can steer (100 px/s) in the 3.2 s a fragment takes to reach it. */
+const RAIN_SPREAD = 240
 const MAX_STREAKS = 1
 /** Decorative only: a sparse reminder of the shower, never visual noise. */
 const STREAKS_PER_SECOND = 0.08
@@ -325,6 +334,7 @@ export class MiningController extends ScriptBehaviour {
   /** SSL-711: upward collector beam drawn while catchable fragments fall. */
   private catchBeam: Graphics | null = null
   private catchBeamFlash = 0
+  private catchBuffered = 0
   private catchCueState = false
   /** SSL-710: dashed line from the ship to the soil showing where a shot lands. */
   private aimLine: Graphics | null = null
@@ -636,6 +646,11 @@ export class MiningController extends ScriptBehaviour {
       this.catchBeam = new Graphics()
       this.opts.container.addChild(this.catchBeam)
     }
+    this.catchBuffered = Math.max(0, this.catchBuffered - dt)
+    if (this.catchBuffered > 0) {
+      const ore = this.fragmentInBeam()
+      if (ore) { this.catchBuffered = 0; this.catchBeamFlash = 0.3; this.collectOre(ore) }
+    }
     const inBeam = !!this.fragmentInBeam()
     if (inBeam !== this.catchCueState) { this.catchCueState = inBeam; this.opts.onCatchCue?.(inBeam) }
     this.catchBeamFlash = Math.max(0, this.catchBeamFlash - dt)
@@ -662,7 +677,8 @@ export class MiningController extends ScriptBehaviour {
   catchFragment(): boolean {
     this.catchBeamFlash = 0.14
     const ore = this.fragmentInBeam()
-    if (!ore) return false
+    if (!ore) { this.catchBuffered = CATCH_BUFFER_SECONDS; return false }
+    this.catchBuffered = 0
     this.catchBeamFlash = 0.3
     this.collectOre(ore)
     return true
@@ -732,7 +748,13 @@ export class MiningController extends ScriptBehaviour {
   private spawnDebris(mineral: string, speedFactor: number, hero = false, catchable = false): void {
     // Aim where the ship is now, shifted by how far the ground scrolls while the fragment falls.
     const groundY = (this.opts.surfaceY ?? SURFACE_Y) - 4
-    const fallTime = (groundY + 40) / (DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor))
+    const y = hero ? -36 : -20 - Math.random() * 40
+    const baseSpeed = DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor)
+    // SSL-711: a catchable fragment never reaches the ship sooner than CATCH_MIN_SECONDS_TO_SHIP, and is aimed at where the ship can meet it.
+    const fallSpeed = catchable
+      ? Math.min(baseSpeed, Math.max(20, this.currentShipY() - y) / CATCH_MIN_SECONDS_TO_SHIP)
+      : baseSpeed * (hero ? 1.35 : 1)
+    const fallTime = catchable ? Math.max(0, this.currentShipY() - y) / fallSpeed : (groundY + 40) / baseSpeed
     const rainX = this.currentShipX() + SCROLL_SPEED * fallTime + (Math.random() * 2 - 1) * RAIN_SPREAD
     const x = hero
       ? this.currentShipX()
@@ -740,7 +762,6 @@ export class MiningController extends ScriptBehaviour {
         // Not clamped to the right edge: on a narrow phone the aim point sits past the screen and the fragment drifts in. Clamping it made every fragment land out of reach.
         ? Math.max(40, rainX)
         : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
-    const y = hero ? -36 : -20 - Math.random() * 40
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
     const art = this.opts.debrisArt
@@ -780,7 +801,7 @@ export class MiningController extends ScriptBehaviour {
     this.ores.push({
       go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,
       hp: 1, maxHp: 1, radius: hero ? 56 : (art ? DEBRIS_RADIUS : 11), flashTimer: 0, mineralColor,
-      fallSpeed: DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor) * (hero ? 1.35 : 1),
+      fallSpeed,
       phase: 'fall', animTime: 0, variant, hero, catchable,
     })
   }
@@ -1173,7 +1194,7 @@ export class MiningController extends ScriptBehaviour {
     if (!ore.phase || !this.opts.debrisArt) this.spawnParticleBurst(ore.go.transform.position.x, popY, ore.mineralColor, ore.radius)
     this.spawnPickup(ore.go.transform.position.x, popY, ore.mineralColor)
     // SSL-711: a catch says so plainly, larger than an ore pickup.
-    if (ore.catchable) this.spawnPopup(ore.go.transform.position.x, popY - 22, 'Caught +1', 24)
+    if (ore.catchable) this.spawnPopup(this.currentShipX(), Math.max(24, Math.min(popY - 22, this.currentShipY() - 44)), 'Caught +1', 24)
     else this.spawnPopup(ore.go.transform.position.x, popY - 18, `+1 ${this.opts.mineralSyms?.[ore.mineral] ?? ore.mineral}`)
     this.opts.onCollect(ore.mineral)
   }

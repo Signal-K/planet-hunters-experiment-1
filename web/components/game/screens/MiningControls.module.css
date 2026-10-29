@@ -141,8 +141,8 @@
 @media (prefers-reduced-motion: reduce) { .fire[data-ready] { animation: none; } }
 .fire:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
 
-/* SSL-711: CATCH sits up and to the left of FIRE, like a second face button. */
-.catch {
+/* SSL-711: the second action button (Catch today) sits up and to the left of FIRE, like a second face button. */
+.action {
   position: absolute;
   right: calc(max(20px, env(safe-area-inset-right)) + 108px);
   bottom: calc(64px + env(safe-area-inset-bottom));
@@ -163,11 +163,11 @@
   -webkit-tap-highlight-color: transparent;
   transition: transform 80ms ease-out, background 120ms ease-out;
 }
-.catch[data-pressed], .catch:active { transform: scale(0.93); }
-.catch[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); animation: fireReady 0.7s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .catch[data-ready] { animation: none; } }
-.catch:disabled { cursor: default; opacity: 0.55; }
-.catch:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
+.action[data-pressed], .action:active { transform: scale(0.93); }
+.action[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); animation: fireReady 0.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .action[data-ready] { animation: none; } }
+.action:disabled { cursor: default; opacity: 0.55; }
+.action:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
 
 .progress {
   position: absolute;
@@ -196,12 +196,12 @@
 @media (max-width: 600px) {
   .fire { width: 88px; height: 88px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); }
   .dpad { bottom: calc(24px + env(safe-area-inset-bottom)); left: 12px; }
-  .catch { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
+  .action { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
   .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
 }
 @media (max-height: 520px) {
   .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
-  .catch { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
+  .action { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
   .progress { bottom: calc(12px + env(safe-area-inset-bottom)); }
 }
 

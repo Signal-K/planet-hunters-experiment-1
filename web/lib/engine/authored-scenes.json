@@ -1799,6 +1799,16 @@
           "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped."
         },
         {
+          "id": "action-button",
+          "kind": "ui",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (today: Catch, for the Orionids shower). It lights up when pressing now would work; an early press is buffered."
+        },
+        {
           "id": "return-action",
           "kind": "button",
           "parent": "mining-field",
