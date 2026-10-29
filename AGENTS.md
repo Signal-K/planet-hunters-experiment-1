@@ -5,8 +5,10 @@ canonical; area files point here. Keep work small, scene-first, and fast.
 
 ## Fast loop
 
-1. Confirm `cycle/4`, inspect `git status --short`, and read the active Linear
-   `SSL-*` issue plus its latest comment.
+1. Confirm you are on the current cycle branch: `cycle/<N>` for the active
+   Linear cycle, the highest `cycle/*` on origin. Never assume a number.
+   Inspect `git status --short`, and read the active Linear `SSL-*` issue plus
+   its latest comment.
 2. Find the authored scene or mission in `shared/authoring/`, then its web and
    iOS implementation from the map below.
 3. Implement web, then the matching iOS behavior before starting another slice.
@@ -64,7 +66,8 @@ to be visible to him as it happens.
 
 ## Rules
 
-- Work directly on `cycle/4`; never push to `main`. One coherent ticket outcome
+- Work directly on the current cycle branch (`cycle/<N>`, matching the active
+  Linear cycle); never push to `main`. One coherent ticket outcome
   is one commit. Use Linear for the task record and handoff.
 - Web and iOS are the only supported targets. Do not add macOS, iPadOS,
   Android, desktop, Electron, Godot, or e2e test suites (Playwright/Cypress
@@ -102,7 +105,7 @@ without bypassing hooks. Subject format:
 `🚀🐺 ↝ [SSL-123]: Concise outcome`
 
 Use two distinct non-face emoji and every worked SSL key. Rebase and push to
-`cycle/4`, then add the proof and remaining caveats to Linear.
+the current `cycle/<N>` branch, then add the proof and remaining caveats to Linear.
 
 ## Map
 
