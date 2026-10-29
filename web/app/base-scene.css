@@ -224,3 +224,29 @@
     text-align: center;
   }
 }
+
+/* SSL-365: on phones the Base dock takes as little of the scene as it can.
+   Sideways on a short screen it is one row; upright it is the location row
+   plus one row of actions with the icon over the label. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .scene-location-dock { display: flex; align-items: center; width: auto; max-width: calc(100vw - 24px); padding: 4px; gap: 4px; border-radius: 14px; }
+  .scene-location-selector { flex: 0 0 auto; }
+  .scene-location-actions,
+  .scene-location-actions[data-action-count] { display: flex; width: auto; max-width: none; }
+  .scene-location-actions .scene-dock-word { flex: 0 0 auto; width: auto; min-width: 0; padding-inline: 12px; font-size: 14px; }
+  .scene-location-actions .scene-dock-word span { white-space: nowrap; }
+  .scene-location-label { min-width: 72px; }
+  /* globals.css caps the hub dock at 440px; one row needs its own width. */
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"].scene-location-dock { width: auto; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .scene-location-dock { display: flex; flex-direction: column; align-items: stretch; padding: 4px; gap: 4px; border-radius: 16px; }
+  .scene-location-selector { align-self: center; }
+  .scene-location-actions,
+  .scene-location-actions[data-action-count="3"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word { flex-direction: column; justify-content: center; gap: 3px; min-height: 52px; padding: 4px 2px; font-size: 14px; font-style: normal; letter-spacing: 0; }
+  .scene-location-actions .scene-dock-word svg { display: block; }
+  .scene-location-actions .scene-dock-word span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+}
