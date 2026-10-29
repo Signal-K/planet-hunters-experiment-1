@@ -1,8 +1,12 @@
 # Scene verification
 
-The workspace-owned **Landnam Preview** extension is a thin web interaction surface. It opens a populated disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, and shows its follower heartbeat. It never manages the local stack: run `make ensure` separately when needed. Its bridge turns ordinary game-screen targets and authoring-file changes into playable stage fixtures. Scene updates do not require reloading Cursor. Install `tools/landnam-preview/landnam-preview-0.1.5.vsix` locally during development. There is no
-Playwright, Cypress, Chromium, Chrome, headless runner, screenshot matrix, or
-test stack.
+The workspace-owned **Landnam Preview** extension is a thin web interaction surface. It opens a populated disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, and shows its follower heartbeat. It never manages the local stack: run `make ensure` separately when needed. Its bridge turns ordinary game-screen targets and authoring-file changes into playable stage fixtures. Scene updates do not require reloading Cursor. Install `tools/landnam-preview/landnam-preview-0.1.5.vsix` locally during development.
+
+Confirm a change by using the scene, never by writing an e2e test or scripted
+flow. Locally the Landnam Preview panel is the surface; in a cloud session
+`node scripts/scene-drive.mjs` (open, look, click, tap, key, shot) plays the
+scene in one persistent browser and saves a screenshot per action (see "Cloud
+sessions" in AGENTS.md). There is no e2e suite or separate test stack.
 
 1. Run **Landnam Preview: Open** from the Command Palette. Its status bar item
    must read `Landnam Preview`, not its warning state.
