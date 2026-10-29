@@ -1,0 +1,21 @@
+/* Two tones like the newer missions: why to turn (blue) and how to install (red). Only ever shown sideways on a short screen. */
+.guide { position: fixed; inset: 0; z-index: 10000; display: grid; grid-template-columns: 1fr 1fr; color: #f4efe4; background: rgba(15, 20, 38, .35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.turn, .install { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: max(12px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); }
+.turn { align-items: center; text-align: center; background: rgba(26, 66, 168, .82); }
+.install { align-items: stretch; background: rgba(168, 34, 52, .8); }
+.guide h2 { margin: 0; font: 800 22px/1.1 var(--ln-font-display); }
+.guide p { margin: 0; font: 600 15px/1.35 var(--ln-font-body); }
+.eyebrow { color: #ffc9bd; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
+.phone { width: 96px; height: 96px; overflow: visible; }
+.handset { fill: none; stroke: #f4efe4; stroke-width: 3; stroke-linecap: round; transform-origin: 60px 60px; animation: turn-upright 2.4s ease-in-out infinite; }
+.handset circle { fill: #f4efe4; stroke: none; }
+.arc { fill: none; stroke: #f2c24c; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+@keyframes turn-upright { 0%, 20% { transform: rotate(-90deg); } 55%, 100% { transform: rotate(0deg); } }
+@media (prefers-reduced-motion: reduce) { .handset { animation: none; } }
+.steps { display: grid; gap: 6px; margin: 2px 0; padding: 0; list-style: none; }
+.steps li { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border-radius: 12px; background: rgba(8, 16, 34, .3); font: 600 15px/1.2 var(--ln-font-body); }
+.steps svg { width: 22px; height: 22px; flex: 0 0 auto; fill: none; stroke: #f2c24c; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hint { color: #e6e1d6; }
+.primary, .secondary { min-height: 44px; padding: 0 14px; border-radius: 4px; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.primary { border: 0; background: #f4efe4; color: #142840; }
+.secondary { border: 2px solid rgba(244, 239, 228, .7); background: rgba(8, 16, 34, .25); color: #f4efe4; }
