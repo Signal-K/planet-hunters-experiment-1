@@ -78,3 +78,19 @@
   .primary { min-width: min(280px, 48vw); }
   button.slot:not(:disabled)::after { content: '\203A'; margin-left: auto; font-weight: 800; }
 }
+
+/* SSL-718: the destination is picked on the Solar System map, in the two-tone mission style (dark rounded panel,
+   cream text, cyan accent). Lit bodies are the ones that suit the mission; the list under the map repeats them. */
+.mapSheet { position: fixed; z-index: 60; left: 8px; right: 8px; bottom: 8px; max-height: calc(100dvh - 16px); display: flex; flex-direction: column; gap: 8px; padding: 16px; overflow: auto; color: var(--ln-world-hull-lit); background: color-mix(in srgb, var(--ln-world-night-top) 97%, transparent); border: 1px solid color-mix(in srgb, var(--ln-world-glass) 45%, transparent); border-radius: 20px; pointer-events: auto; }
+.mapSheet p { margin: 0; font-size: 14px; line-height: 1.35; }
+.mapHead { display: flex; justify-content: space-between; align-items: center; font: 800 16px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.mapHead button { min-height: 44px; padding: 0 16px; color: var(--ln-world-hull-lit); font: 800 14px var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; background: none; border: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 45%, transparent); border-radius: 999px; }
+.mapField { position: relative; flex: 0 0 auto; height: min(46dvh, 420px); min-height: 240px; overflow: hidden; border-radius: 14px; background: var(--ln-world-night-top); }
+.mapList { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mapList button { display: grid; gap: 2px; width: 100%; min-height: 56px; padding: 8px 16px; color: var(--ln-world-hull-lit); font: inherit; font-size: 14px; text-align: left; background: color-mix(in srgb, var(--ln-world-night-mid) 70%, transparent); border: 1px solid transparent; border-radius: 14px; }
+.mapList button[data-current] { border-color: var(--ln-world-glass); }
+.mapList strong { font: 800 16px var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.mapList span { color: color-mix(in srgb, var(--ln-world-hull-lit) 78%, transparent); text-transform: capitalize; }
+@media (orientation: landscape) and (max-height: 520px) { .mapSheet { top: 8px; left: 64px; right: 64px; flex-direction: row; flex-wrap: wrap; align-items: flex-start; } .mapHead, .mapSheet > p { flex: 0 0 100%; } .mapField { flex: 1 1 55%; height: calc(100dvh - 140px); min-height: 180px; } .mapList { flex: 1 1 35%; } }
+@media (min-width: 900px) and (min-height: 600px) { .mapSheet { left: 50%; right: auto; bottom: 16px; width: min(880px, calc(100vw - 32px)); transform: translateX(-50%); } }
+.host:has(.mapSheet) .slots, .host:has(.mapSheet) .rail { visibility: hidden; }

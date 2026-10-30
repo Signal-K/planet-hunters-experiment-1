@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
@@ -10,6 +11,9 @@ import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
 import styles from './MissionPlanStrip.module.css'
+
+// The Solar System map the target picker used; Pixi needs the browser, so it loads client-side only.
+const PixiGalaxyMap = dynamic(() => import('@/components/TargetPicker/PixiGalaxyMap'), { ssr: false })
 
 type Game = ReturnType<typeof useGame>
 type Sheet = 'destination' | 'vehicle' | null
@@ -94,20 +98,42 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
       )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
 
-      {sheet && (
-        <div className={styles.sheet} role="group" aria-label={sheet === 'destination' ? 'Choose destination' : 'Choose vehicle'} data-testid={`plan-sheet-${sheet}`}>
-          <div className={styles.sheetHead}>
-            <strong>{sheet === 'destination' ? 'Destination' : 'Vehicle'}</strong>
+      {sheet === 'destination' && (
+        <div className={styles.mapSheet} role="group" aria-label="Choose destination" data-testid="plan-sheet-destination">
+          <div className={styles.mapHead}>
+            <strong>Destination</strong>
             <button type="button" onClick={() => setSheet(null)}>Close</button>
           </div>
-          {sheet === 'destination' && <p>Only targets with the required minerals, range, cargo and drill are shown.</p>}
-          <ul>
-            {sheet === 'destination' && targets.map(t => (
+          <p>Lit bodies suit this mission: the minerals it needs, in range, room in the hold.</p>
+          <div className={styles.mapField} data-testid="plan-destination-map">
+            <PixiGalaxyMap
+              mission={mission}
+              targets={game.catalog.targets}
+              compatibleIds={new Set(targets.map(t => t.id))}
+              pickedId={target.id}
+              onPick={id => { game.onPickTarget(id); setSheet(null) }}
+            />
+          </div>
+          <ul className={styles.mapList}>
+            {targets.map(t => (
               <li key={t.id}><button type="button" data-current={t.id === target.id || undefined} onClick={() => { game.onPickTarget(t.id); setSheet(null) }}>
-                <strong>{t.name}</strong><span>{t.type} · orbit {t.orbit}</span>
+                <strong>{t.name}</strong>
+                <span>{t.type} · orbit {t.orbit} · {t.minerals.map(id => game.catalog.minerals[id]?.name ?? id).join(', ')}</span>
               </button></li>
             ))}
-            {sheet === 'vehicle' && rockets.map(model => {
+            {!targets.length && <li><p>Nothing in range has what this mission needs.</p></li>}
+          </ul>
+        </div>
+      )}
+
+      {sheet === 'vehicle' && (
+        <div className={styles.sheet} role="group" aria-label="Choose vehicle" data-testid="plan-sheet-vehicle">
+          <div className={styles.sheetHead}>
+            <strong>Vehicle</strong>
+            <button type="button" onClick={() => setSheet(null)}>Close</button>
+          </div>
+          <ul>
+            {rockets.map(model => {
               const cost = model.costFrancs === 0 ? 'Free' : formatCurrency(model.costFrancs, { compact: true })
               return (
                 <li key={model.id}><button type="button" data-current={model.id === selectedRocket?.id || undefined} onClick={() => {
@@ -122,7 +148,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
                 </button></li>
               )
             })}
-            {((sheet === 'destination' && !targets.length) || (sheet === 'vehicle' && !rockets.length)) && <li><p>Nothing else fits this contract.</p></li>}
+            {!rockets.length && <li><p>Nothing else fits this contract.</p></li>}
           </ul>
         </div>
       )}
