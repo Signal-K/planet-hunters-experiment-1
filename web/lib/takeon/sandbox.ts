@@ -11,6 +11,7 @@
 
 import type { BodyDef, BodyKind, Material, MaterialDef, StructureDef, StructureType } from '@takeon/engine'
 import type { Biome } from '@takeon/engine'
+import { NATURAL_BIOME_COLOUR, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import {
   BIOME_META,
   biomeIdsForTarget,
@@ -103,7 +104,7 @@ export function materialDefForBiome(biome: BiomeId, base: number): MaterialDef {
     name: meta.label,
     hardness: meta.lifeCapacity >= 2 ? 1 : 2,
     yields: yields ? { resource: yields.resource, amount: yields.amount } : null,
-    colors: [meta.color, meta.shade, darken(meta.shade, 0.8)],
+    colors: [NATURAL_BIOME_COLOUR[biome][0], NATURAL_BIOME_COLOUR[biome][1], darken(NATURAL_BIOME_COLOUR[biome][1], 0.8)],
     jitter: meta.lifeCapacity >= 2 ? 0.16 : 0.1,
   }
 }
@@ -111,7 +112,7 @@ export function materialDefForBiome(biome: BiomeId, base: number): MaterialDef {
 export function biomeDefForBiome(biome: BiomeId, base: number): Biome {
   const meta = BIOME_META[biome]
   const surface = materialIdForBiome(biome, base)
-  const [r, g, b] = hexToRgb(meta.color)
+  const [r, g, b] = hexToRgb(NATURAL_BIOME_COLOUR[biome][0])
   const subsurface = meta.subsurface
     ? [TAKEON_MATERIAL.rock, TAKEON_MATERIAL.basalt]
     : meta.lifeCapacity >= 1
@@ -132,41 +133,6 @@ export function biomeDefForBiome(biome: BiomeId, base: number): Biome {
   }
 }
 
-/** Ore and crystal read as distinct teal/cyan/ice parts (top, side, shade); no orange or purple (SSL-501). */
-const BLUEPRINT_ORE: Record<string, [string, string, string]> = {
-  'Iron ore': ['#2f9e92', '#217a70', '#16564f'],
-  'Copper ore': ['#2bb5c9', '#1f8a9b', '#16626f'],
-  'Titanium ore': ['#d4e6f5', '#9fbfd9', '#6b8fb0'],
-  'Crystal': ['#7fdcf0', '#42a6df', '#2a73a6'],
-  'Sulfur deposit': ['#bdeede', '#8ccfb9', '#5fa38c'],
-}
-
-function mixHex(a: string, b: string, t: number): string {
-  const [ar, ag, ab] = hexToRgb(a)
-  const [br, bg, bb] = hexToRgb(b)
-  const c = (x: number, y: number) => Math.round(x + (y - x) * t).toString(16).padStart(2, '0')
-  return `#${c(ar, br)}${c(ag, bg)}${c(ab, bb)}`
-}
-
-/**
- * Recolour takeon's stock terrain (ochre soil, purple basalt) onto the light blueprint ramp:
- * keep each face's luminance so the isometric shading still reads, swap the hue to ice/cyan.
- */
-export function reskinBlueprintMaterials(engine: SandboxEngine): void {
-  const materials = engine.MATERIALS
-  if (!materials) return
-  for (const m of Object.values(materials)) {
-    if (m.name === 'Air') continue
-    const ore = BLUEPRINT_ORE[m.name]
-    if (ore) { m.colors = [...ore]; continue }
-    m.colors = m.colors.map(hex => {
-      const [r, g, b] = hexToRgb(hex)
-      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-      return mixHex('#5b9bc9', '#eef5fa', Math.min(1, Math.max(0, lum * 1.15)))
-    })
-  }
-}
-
 let registered: WeakSet<SandboxEngine> = new WeakSet()
 
 /**
@@ -176,7 +142,6 @@ let registered: WeakSet<SandboxEngine> = new WeakSet()
 export function registerLandnamSandbox(engine: SandboxEngine): void {
   if (registered.has(engine)) return
   registered.add(engine)
-  reskinBlueprintMaterials(engine)
   for (const biome of LANDNAM_BIOME_IDS) {
     engine.registerMaterial(materialDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
     engine.registerBiome(biomeDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
@@ -222,8 +187,9 @@ export function buildLandnamBody(
   body.id = `${baseBodyId}--${target.id}`
   body.kind = kindId
   body.terrain = { ...body.terrain, biomes: true }
-  // Light blueprint look (SSL-501): ice sky, ink night, neutral tint so terrain is not recoloured warm or purple.
-  body.palette = { sky: '#9fd0ee', skyNight: '#0f2436', tint: [1, 1, 1] }
+  // Sky and condition tint come from the body's composition and probable conditions (terrainColour.ts).
+  const look = terrainLookForTarget(target)
+  body.palette = { sky: look.sky, skyNight: look.skyNight, tint: look.tint }
   body.climate = { temperature: profile.temperature, tempVariance: profile.tempVariance }
   return body
 }

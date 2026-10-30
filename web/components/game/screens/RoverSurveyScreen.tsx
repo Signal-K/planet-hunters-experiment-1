@@ -57,6 +57,9 @@ const ORIONIDS_ROVER_FORMATION_GOAL = 3
 
 // A refused drive used to be silent, so the arrow keys looked broken. Say why the rover did not move.
 // "busy" is left out: a held arrow key repeats faster than one step takes, and every early repeat is refused as busy.
+/** How many loose layers one MINE press digs through looking for rock. */
+const ROVER_DIG_LAYERS = 6
+
 const BLOCKED_NOTE: Partial<Record<TakeOnBlockedReason, string>> = {
   cliff: 'Too steep to drive there. Try another way.',
   edge: 'That is the edge of the survey area.',
@@ -80,6 +83,8 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const [mineNote, setMineNote] = useState<string | null>(null)
   const haulUnits = Object.values(haul).reduce((sum, n) => sum + n, 0)
   const haulUnitsRef = useRef(0)
+  /** Regolith layers a single MINE press may still dig through before it gives up. */
+  const digLayersRef = useRef(0)
   haulUnitsRef.current = haulUnits
   loggedRef.current = logged
   // The Orionids survey asks for three different formations, so the rover has to drive between them (about a minute).
@@ -92,7 +97,18 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
       // Landnam counts the haul; Takeon's own small hold would otherwise fill with regolith and refuse to drill.
       takeonHandle.current?.emptyCargo()
       const mineral = event.payload.resource ? TAKEON_TO_LANDNAM_MINERAL[event.payload.resource] : undefined
-      if (!mineral || event.payload.amount <= 0) { setMineNote('Loose regolith. Keep drilling to reach the rock below.'); return }
+      if (!mineral || event.payload.amount <= 0) {
+        // One MINE press digs down through the loose layers on its own until it reaches rock.
+        if (digLayersRef.current > 0) {
+          digLayersRef.current -= 1
+          setMineNote('Digging through loose regolith…')
+          window.setTimeout(() => {
+            if (!takeonHandle.current?.mine()) { digLayersRef.current = 0; setMineNote('Only loose regolith here. Try another spot.') }
+          }, 160)
+        } else setMineNote('Only loose regolith here. Try another spot.')
+        return
+      }
+      digLayersRef.current = 0
       const room = holdCapacity === undefined ? event.payload.amount : Math.max(0, holdCapacity - haulUnitsRef.current)
       const amount = Math.min(event.payload.amount, room)
       if (amount <= 0) { setMineNote('Hold full. Load it aboard and return.'); return }
@@ -131,7 +147,8 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
 
   const mine = useCallback(() => {
     if (!ready) return
-    if (!takeonHandle.current?.mine()) setMineNote('Nothing to drill ahead. Face a rock and try again.')
+    digLayersRef.current = ROVER_DIG_LAYERS
+    if (!takeonHandle.current?.mine()) { digLayersRef.current = 0; setMineNote('Nothing to drill here. Drive onto open ground and try again.') }
   }, [ready])
 
   const latest = logged[logged.length - 1]
@@ -162,6 +179,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
           startView="iso"
           onEvent={handleTakeonEvent}
           onReady={() => setReady(true)}
+          onMineKey={mine}
           className={styles.takeon}
         />
       </div>

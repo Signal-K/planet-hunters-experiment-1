@@ -19,7 +19,7 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
-import { createBlueprintHueFilter } from '@/lib/takeon/blueprintFilter'
+import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
@@ -137,6 +137,8 @@ export interface TakeOnMountProps {
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
   onReady?: (mission: MissionState) => void
+  /** E / Space on the keyboard. When set, the host drills (so it can dig down); otherwise the mount drills. */
+  onMineKey?: () => void
   onError?: (error: Error) => void
 }
 
@@ -151,6 +153,46 @@ export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth'
     width: Math.max(1, canvas.clientWidth || 800),
     height: Math.max(1, canvas.clientHeight || 600),
   }
+}
+
+/** The parts of a mounted Takeon game this file reaches past the public API for. */
+interface DrillableGame {
+  mine: () => boolean
+  sim: { rover: { facing: 0 | 1 | 2 | 3 } }
+}
+
+/**
+ * Drill the column ahead, or failing that whichever neighbour can be drilled, so the
+ * player does not have to line the rover up first (Liam, 2026-10-30: easier Takeon).
+ */
+export function drillAnySide(game: DrillableGame): boolean {
+  const rover = game.sim.rover
+  const start = rover.facing
+  for (let turn = 0; turn < 4; turn++) {
+    rover.facing = ((start + turn) % 4) as 0 | 1 | 2 | 3
+    if (game.mine()) return true
+  }
+  rover.facing = start
+  return false
+}
+
+/** Camera zoom the field opens at: Takeon's 3.2 shows only a few tiles, so open wider. */
+export function fieldZoom(viewport: { width: number; height: number }): number {
+  return Math.min(viewport.width, viewport.height) < 500 ? 1.7 : 2
+}
+
+/**
+ * Open the field at a readable distance and keep life where life is: the vendored
+ * renderer scatters wandering critters, flora and a flyer on every body, which on an
+ * airless asteroid reads as wrong. They stay only once a world is blooming or thriving.
+ */
+function settleFieldView(game: unknown, viewport: { width: number; height: number }, lifeStage: LifeStage | undefined): void {
+  const renderer = (game as { renderer?: { camera?: { setZoom?: (z: number) => void }; critters?: unknown[]; flora?: unknown[]; flyers?: unknown[] } }).renderer
+  renderer?.camera?.setZoom?.(fieldZoom(viewport))
+  if (lifeStage === 'blooming' || lifeStage === 'thriving') return
+  if (renderer?.critters) renderer.critters.length = 0
+  if (renderer?.flora) renderer.flora.length = 0
+  if (renderer?.flyers) renderer.flyers.length = 0
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
@@ -176,6 +218,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   onEvent,
   onRouteChange,
   onReady,
+  onMineKey,
   onError,
 }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -202,8 +245,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargoRef.current = seedCargo
   const seedCacheRef = useRef(seedCache)
   seedCacheRef.current = seedCache
-  const callbacksRef = useRef({ onError, onEvent, onRouteChange, onReady })
-  callbacksRef.current = { onError, onEvent, onRouteChange, onReady }
+  const callbacksRef = useRef({ onError, onEvent, onRouteChange, onReady, onMineKey })
+  callbacksRef.current = { onError, onEvent, onRouteChange, onReady, onMineKey }
 
   // Only the target identity matters for the mount; a fresh object with the
   // same id must not remount the field.
@@ -236,7 +279,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         return
       }
       if (event.repeat) return
-      if (key === 'e' || key === ' ') { event.preventDefault(); game.mine() }
+      if (key === 'e' || key === ' ') {
+        event.preventDefault()
+        const onMineKey = callbacksRef.current.onMineKey
+        if (onMineKey) onMineKey()
+        else drillAnySide(game)
+      }
       else if (key === 'x') game.scan()
     }
     const onKeyUp = (event: KeyboardEvent) => { held.delete(event.key.toLowerCase()) }
@@ -278,7 +326,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     cancelOrder: () => gameRef.current?.cancelOrder(),
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
     orderMine: (x, y) => gameRef.current?.orderMine(x, y),
-    mine: () => gameRef.current?.mine() ?? false,
+    mine: () => (gameRef.current ? drillAnySide(gameRef.current) : false),
     emptyCargo: () => {
       const rover = gameRef.current?.sim.rover
       if (!rover) return
@@ -368,8 +416,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
-        // Light blueprint look (SSL-501): ice sky, ice night (no near-black), neutral tint on every body.
-        body.palette = { sky: '#9fd0ee', skyNight: '#bcd7ea', tint: [1, 1, 1] }
+        // Terrain colour from what the body is made of and its likely conditions (terrainColour.ts).
+        const look = currentTarget ? terrainLookForTarget(currentTarget) : DEFAULT_TERRAIN_LOOK
+        applyTerrainLook(engine as unknown as Parameters<typeof applyTerrainLook>[0], look)
+        body.palette = { sky: look.sky, skyNight: look.skyNight, tint: look.tint }
 
         // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
         // Landnam owns the persisted delivery state, not Takeon — so they
@@ -380,26 +430,20 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const viewport = takeOnViewportSize(canvasElement)
-        const sky = getComputedStyle(canvasElement).getPropertyValue('--ln-bp-bg').trim()
+        const sky = look.skyNight
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
           width: viewport.width,
           height: viewport.height,
-          ...(sky ? { background: sky, backgroundAlpha: 1 } : { backgroundAlpha: 0 }),
+          background: sky,
+          backgroundAlpha: 1,
           antialias: true,
         })
         if (disposed) {
           app.destroy()
           app = null
           return
-        }
-
-        // Hue guard: engine props with fixed warm or green colours land in the cyan/teal band.
-        try {
-          app.stage.filters = [createBlueprintHueFilter(PIXI) as import('pixi.js').Filter]
-        } catch (filterError) {
-          console.warn('[Takeon] blueprint hue filter unavailable', filterError)
         }
 
         mounted = mountRoverGame({
@@ -453,12 +497,15 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         resizeObserver = new ResizeObserver(entries => {
           const entry = entries[0]
           if (!entry || !mounted) return
+          // The Pixi backing canvas must follow too, or a rotated phone shows the field squeezed into a strip.
+          app?.renderer.resize(entry.contentRect.width, entry.contentRect.height)
           mounted.resize(entry.contentRect.width, entry.contentRect.height)
         })
         resizeObserver.observe(canvasElement)
 
         mounted.start()
         gameRef.current = mounted.game
+        settleFieldView(mounted.game, viewport, lifeStage)
         document.addEventListener('visibilitychange', syncVisibility)
         // Don't call syncVisibility() here: document.hidden can read true on
         // a fully visible tab right at mount (occluded-but-onscreen windows,
