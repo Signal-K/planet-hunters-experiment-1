@@ -1,49 +1,27 @@
+/* Control Station: the two-tone board (ControlStationBoard.module.css) over the ambient galaxy, as Community research. */
 .screen.screen {
-  background: var(--ln-world-night-mid);
-  color: var(--ln-world-outline);
-  overflow: hidden;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%, rgba(244, 239, 228, .7), transparent),
+    radial-gradient(1px 1px at 34% 62%, rgba(244, 239, 228, .6), transparent),
+    radial-gradient(1.5px 1.5px at 58% 28%, rgba(244, 239, 228, .6), transparent),
+    radial-gradient(1px 1px at 76% 74%, rgba(244, 239, 228, .5), transparent),
+    radial-gradient(1.5px 1.5px at 90% 12%, rgba(244, 239, 228, .6), transparent),
+    linear-gradient(#141c38, #0f1426);
 }
 
-.grid {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(var(--ln-world-night-top), var(--ln-world-night-mid));
+/* Survey scan, charts and badges sit in the teal half: dark rounded panels and cream text instead of the old white plates. */
+.extras {
+  --ln-panel: rgba(8, 16, 34, .3);
+  --ln-surface-2: rgba(8, 16, 34, .45);
+  --ln-text: #f4efe4;
+  --ln-text-dim: #c9d0c2;
+  --ln-hairline-strong: transparent;
+  --ln-ok: #6fe39a;
+  --ln-ok-soft: rgba(111, 227, 154, .14);
+  display: grid;
+  gap: 14px;
 }
-
-.screen .frame.frame {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  gap: 12px;
-  padding: 72px 16px 16px;
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .screen .frame.frame { padding: 48px 12px 8px; }
-}
-
-/* Desktop: the survey console and badges sit beside the board instead of below it, so the whole screen fits the
-   viewport and no text is cut at the fold. */
-@media (min-width: 1280px) and (min-height: 700px) {
-  .screen .frame.frame {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    grid-auto-rows: min-content;
-    align-content: start;
-    align-items: start;
-  }
-
-  /* The Daily research plate comes first in the column (SSL-673), so the board is the second child and the plate
-     tops the side column. */
-  .screen .frame.frame > :nth-child(2) {
-    grid-column: 1;
-    grid-row: 1 / span 6;
-  }
-
-  .screen .frame.frame > :not(:nth-child(2)) { grid-column: 2; }
-}
+.extras:empty { display: none; }
+.extras > section { border-radius: 22px !important; padding: 14px 16px !important; }
+.extras :global(.ln-section-label) { color: #9de7ef; }
+.extras button { border-radius: 16px !important; }

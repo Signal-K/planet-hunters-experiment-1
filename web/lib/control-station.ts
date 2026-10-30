@@ -159,7 +159,7 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
     observingLabel: 'Observing',
     readyLabel: 'Frame ready',
     standbyLabel: 'Standing by',
-    map: { x: 608, y: 248 },
+    map: { x: 540, y: 96 },
   },
 ]
 

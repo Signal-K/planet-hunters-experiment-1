@@ -7,7 +7,8 @@ import {
   type ControlStationModel,
   type StationBody,
 } from '@/lib/control-station'
-import { WorldSpaceWeekBanner, WorldSpaceWeekChips } from '@/components/game/WorldSpaceWeek'
+import type { ReactNode } from 'react'
+import { WorldSpaceWeekBanner } from '@/components/game/WorldSpaceWeek'
 import type { WswBanner } from '@/lib/wsw'
 import styles from './ControlStationBoard.module.css'
 
@@ -18,6 +19,10 @@ interface ControlStationBoardProps {
   /** Opens the Build screen from a row that asks the player to build equipment. */
   onBuild: () => void
   banner: WswBanner
+  /** Extra panels under the map (daily research). */
+  left?: ReactNode
+  /** Extra panels under the instrument list (survey scan, charts, badges). */
+  right?: ReactNode
 }
 
 const STARS: readonly { x: number; y: number; r: number }[] = [
@@ -95,137 +100,144 @@ function EquipmentPreview({ kind }: { kind: InstrumentSignalKind }) {
   )
 }
 
-export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: ControlStationBoardProps) {
+/**
+ * Control Station in the two-tone style (SSL-691): where your instruments are on the left, what they have for you
+ * on the right. Tapping a body on the map filters the list, the same as the location tabs under it.
+ */
+export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner, left, right }: ControlStationBoardProps) {
   return (
     <div className={styles.workspace} data-testid="control-station">
-      <div className={styles.ticker}>
-        <WorldSpaceWeekBanner banner={banner} />
-        <WorldSpaceWeekChips chips={model.skyBadges} />
-      </div>
-      <div className={styles.map} data-testid="control-station-map" aria-hidden="true">
-        <div className={styles.stage}>
-          <svg className={styles.diagram} viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} aria-hidden="true">
-            {STARS.map(star => <circle key={`${star.x}-${star.y}`} className={styles.star} cx={star.x} cy={star.y} r={star.r} />)}
-            {model.bodies.map(body => <Planet key={body.id} body={body} />)}
-          </svg>
-          {model.bodies.map(body => (
-            <span
-              key={body.id}
-              className={styles.bodyLabel}
-              style={{ left: percentX(body.x), top: percentY(body.y + body.r + 16) }}
-            >
-              {body.name}
-            </span>
-          ))}
-          {model.markers.map(marker => (
-            marker.readyCount > 0 ? (
-              <span
-                key={marker.equipmentId}
-                className={styles.mapBadge}
-                style={{ left: percentX(marker.x), top: percentY(marker.y) }}
-                data-testid="control-station-marker"
-                data-equipment-id={marker.equipmentId}
+      <section className={styles.left} aria-label="Your instruments">
+        <span className={styles.eyebrow}>Your instruments</span>
+        <div className={styles.map} data-testid="control-station-map">
+          <div className={styles.stage}>
+            <svg className={styles.diagram} viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} aria-hidden="true">
+              {STARS.map(star => <circle key={`${star.x}-${star.y}`} className={styles.star} cx={star.x} cy={star.y} r={star.r} />)}
+              {model.bodies.map(body => <Planet key={body.id} body={body} />)}
+            </svg>
+            {model.bodies.map(body => (
+              <button
+                key={body.id}
+                type="button"
+                className={styles.bodyHit}
+                data-active={model.activeBodyId === body.id}
+                style={{ left: percentX(body.x), top: percentY(body.y), width: `max(44px, ${(body.r * 2 + 16) / MAP_WIDTH * 100}%)` }}
+                aria-label={`Show ${body.name}`}
+                onClick={() => onBody(model.activeBodyId === body.id ? 'all' : body.id)}
               >
-                {marker.readyCount}
-              </span>
-            ) : (
-              <span
-                key={marker.equipmentId}
-                className={styles.mapDot}
-                style={{ left: percentX(marker.x), top: percentY(marker.y) }}
-                data-testid="control-station-marker"
-                data-equipment-id={marker.equipmentId}
-              />
-            )
-          ))}
+                <span className={styles.bodyLabel}>{body.name}</span>
+              </button>
+            ))}
+            {model.markers.map(marker => (
+              marker.readyCount > 0 ? (
+                <span
+                  key={marker.equipmentId}
+                  className={styles.mapBadge}
+                  style={{ left: percentX(marker.x), top: percentY(marker.y) }}
+                  data-testid="control-station-marker"
+                  data-equipment-id={marker.equipmentId}
+                >
+                  {marker.readyCount}
+                </span>
+              ) : (
+                <span
+                  key={marker.equipmentId}
+                  className={styles.mapDot}
+                  style={{ left: percentX(marker.x), top: percentY(marker.y) }}
+                  data-testid="control-station-marker"
+                  data-equipment-id={marker.equipmentId}
+                />
+              )
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div className={styles.filters} role="radiogroup" aria-label="Location">
-        {model.filters.map(filter => {
-          const selected = filter.id === model.activeBodyId
-          return (
+        <div className={styles.filters} role="radiogroup" aria-label="Location">
+          {model.filters.map(filter => (
             <button
               key={filter.id}
               type="button"
               role="radio"
-              aria-checked={selected}
-              className={selected ? styles.filterOn : styles.filter}
+              aria-checked={filter.id === model.activeBodyId}
+              className={styles.filter}
               data-testid="control-station-filter"
               onClick={() => onBody(filter.id)}
             >
               {filter.label}
             </button>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+        {left}
+      </section>
 
-      <div className={styles.list} data-testid="control-station-list">
-        {model.emptyLabel && <p className={styles.empty}>{model.emptyLabel}</p>}
-        {model.groups.map(group => (
-          <section key={group.locationId} className={styles.group}>
-            <h2 className={styles.groupLabel}>{group.label}</h2>
-            <ul className={styles.rows}>
-              {group.rows.map(row => (
-                <li
-                  key={row.equipmentId}
-                  className={styles.row}
-                  data-testid="control-station-row"
-                  data-equipment-id={row.equipmentId}
-                >
-                  <div className={row.openSignal ? styles.monitor : styles.monitorOff} aria-hidden="true">
-                    {row.openSignal && row.previewKind ? <EquipmentPreview kind={row.previewKind} /> : (
-                      <span className={styles.offLabel}>{row.buildPrompt ? 'No signal' : row.live ? 'Listening' : 'Standby'}</span>
-                    )}
-                    {row.openSignal && <span className={styles.count}>{row.readyCount}</span>}
-                  </div>
-                  <div className={styles.copy}>
-                    <span className={styles.name} data-testid="instrument-signal">{row.name}</span>
-                    <span className={styles.status}>
-                      <i className={row.live ? styles.pipOn : styles.pip} aria-hidden="true" />
-                      {row.status}
-                    </span>
-                    <WorldSpaceWeekChips chips={row.wsw} />
-                    {row.projects.length > 0 && (
-                      <span className={styles.tags}>
-                        {row.projects.map(project => (
-                          <span key={project.id} className={styles.tag}>{project.label}</span>
-                        ))}
+      <section className={styles.right} aria-label="Instruments">
+        <WorldSpaceWeekBanner banner={banner} className={styles.wsw} />
+        <div className={styles.list} data-testid="control-station-list">
+          {model.emptyLabel && <p className={styles.empty}>{model.emptyLabel}</p>}
+          {model.groups.map(group => (
+            <section key={group.locationId} className={styles.group}>
+              <h2 className={styles.groupLabel}>{group.label}</h2>
+              <ul className={styles.rows}>
+                {group.rows.map(row => (
+                  <li
+                    key={row.equipmentId}
+                    className={styles.row}
+                    data-testid="control-station-row"
+                    data-equipment-id={row.equipmentId}
+                    data-ready={row.readyCount > 0}
+                  >
+                    <div className={styles.monitor} data-off={!row.openSignal} data-state={row.buildPrompt ? 'none' : row.live ? 'listening' : 'standby'} aria-hidden="true">
+                      {/* No data yet: a glyph, since the status line under the name already says it in words. */}
+                      {row.openSignal && row.previewKind ? <EquipmentPreview kind={row.previewKind} /> : row.buildPrompt ? (
+                        <svg className={styles.offGlyph} viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" /></svg>
+                      ) : (
+                        <svg className={styles.offGlyph} viewBox="0 0 30 30"><circle cx="15" cy="20" r="2" fill="currentColor" /><path d="M9 14a8 8 0 0 1 12 0M5 10a14 14 0 0 1 20 0" /></svg>
+                      )}
+                      {row.openSignal && <span className={styles.count}>{row.readyCount}</span>}
+                    </div>
+                    <div className={styles.copy}>
+                      <span className={styles.name} data-testid="instrument-signal">{row.name}</span>
+                      <span className={styles.status}>
+                        <i className={styles.pip} data-on={row.live} aria-hidden="true" />
+                        {row.status}
                       </span>
-                    )}
-                  </div>
-                  {row.buildPrompt && (
-                    <div className={styles.actions}>
+                      {row.projects.length > 0 && (
+                        <span className={styles.tags}>
+                          {row.projects.map(project => (
+                            <span key={project.id} className={styles.tag}>{project.label}</span>
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                    {row.buildPrompt && (
                       <button
                         type="button"
-                        className={styles.open}
+                        className={styles.action}
                         data-testid="control-station-build"
                         aria-label={`Build ${row.name}`}
                         onClick={onBuild}
                       >
                         Build
                       </button>
-                    </div>
-                  )}
-                  {row.openSignal && row.previewKind && (
-                    <div className={styles.actions}>
+                    )}
+                    {row.openSignal && row.previewKind && (
                       <button
                         type="button"
-                        className={styles.open}
+                        className={styles.action}
                         data-testid="instrument-signal-inspect"
                         aria-label={`Open ${row.name}`}
                         onClick={() => row.openSignal && onOpen(row.openSignal)}
                       >
                         Open
                       </button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+        {right}
+      </section>
     </div>
   )
 }

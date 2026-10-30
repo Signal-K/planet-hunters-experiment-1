@@ -1,9 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import ScenePanel from '@/components/game/ScenePanel'
+import board from '@/components/game/MissionBoard.module.css'
 import { ControlStationBoard } from '@/components/game/control-station/ControlStationBoard'
-import TopBar from '@/components/ui/TopBar'
 import { useHelp } from '@/components/ui/useHelp'
 import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
@@ -57,39 +56,49 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
     [player, signals, bodyId, awaitingFeed, now],
   )
 
+  const extras = (
+    <div className={styles.extras}>
+      {onStartScan && onResolveScan && player.freeOperations && (
+        <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
+      )}
+      {player.moonSurveyCharts?.enceladus && (
+        <section data-testid="control-station-survey-charts" aria-label="Survey charts" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
+          <div className="ln-section-label">Survey charts</div>
+          <EnceladusSurveyChart
+            chart={player.moonSurveyCharts.enceladus}
+            classification={player.moonSurveyCharts.enceladus.frameId ? player.saturnClassifications?.[player.moonSurveyCharts.enceladus.frameId] : undefined}
+          />
+        </section>
+      )}
+      <SkyBadgeRow badges={player.badges} />
+    </div>
+  )
+
   return (
-    <ScenePanel
-      ambient="survey"
-      className={`game-screen theme-blueprint ${styles.screen}`}
-      data-testid="instrument-hub-screen"
-      scene={<div className={`ln-con-grid ${styles.grid}`} />}
-    >
-      <TopBar
-        eyebrow="ORBITAL OBSERVATORY / DATA LINK"
-        title="Control Station"
-        onBack={onBack}
-        right={help.button}
-        solid
-      />
+    <div className={`${board.scene} ${styles.screen}`} data-testid="instrument-hub-screen" data-screen="instrument-hub">
+      <section className={board.dispatch} aria-label="Control Station" data-ui-zone={UI_ZONES.screenContent}>
+        <nav className={board.rail} aria-label="Control Station">
+          <button type="button" className={`${board.round} ${board.railClose}`} data-testid="top-bar-back" aria-label="Back" onClick={onBack}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
+          </button>
+          <button type="button" className={board.tab} data-active="true" data-tab="control-station" aria-label="Control Station">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18a8 8 0 0 1 16 0" /><path d="M12 18 16 9" /><circle cx="12" cy="18" r="1.5" /></svg>
+            <span className={board.tabLabel}>Control Station</span>
+          </button>
+        </nav>
+        {help.button && <div className={board.railHelp}>{help.button}</div>}
+        <ControlStationBoard
+          model={model}
+          onBody={setBodyId}
+          onOpen={onInspect}
+          onBuild={onBuild}
+          banner={wswBanner(player.badges, now)}
+          left={<ResearchCalendar stamps={player.researchStamps} now={now} community={communityResearch} hasDiscovery={Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0} />}
+          right={extras}
+        />
+      </section>
       {help.layer}
-      <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
-        <ResearchCalendar stamps={player.researchStamps} now={now} community={communityResearch} hasDiscovery={Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0} />
-        <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} onBuild={onBuild} banner={wswBanner(player.badges, now)} />
-        {onStartScan && onResolveScan && player.freeOperations && (
-          <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
-        )}
-        {player.moonSurveyCharts?.enceladus && (
-          <section data-testid="control-station-survey-charts" aria-label="Survey charts" style={{ display: 'grid', gap: 8, padding: 12, border: '1px solid var(--ln-hairline-strong)', borderRadius: 8, background: 'var(--ln-panel)' }}>
-            <div className="ln-section-label">Survey charts</div>
-            <EnceladusSurveyChart
-              chart={player.moonSurveyCharts.enceladus}
-              classification={player.moonSurveyCharts.enceladus.frameId ? player.saturnClassifications?.[player.moonSurveyCharts.enceladus.frameId] : undefined}
-            />
-          </section>
-        )}
-        <SkyBadgeRow badges={player.badges} />
-      </div>
-    </ScenePanel>
+    </div>
   )
 }
 

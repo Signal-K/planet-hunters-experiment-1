@@ -70,7 +70,7 @@ describe('ControlStationBoard', () => {
     expect(markup).not.toContain('data-testid="control-station-marker"')
   })
 
-  it('flags World Space Week with a banner and one chip per sky-event badge', () => {
+  it('flags World Space Week with one banner line, not a chip per badge', () => {
     const model = buildControlStation({ player: { freeOperations: true }, signals: [], bodyId: 'all', now: NOW })
     const markup = renderToStaticMarkup(
       <ControlStationBoard model={model} onBody={() => undefined} onOpen={() => undefined} onBuild={() => undefined} banner={wswBanner(undefined, NOW)} />,
@@ -78,6 +78,6 @@ describe('ControlStationBoard', () => {
 
     expect(markup).toContain('data-testid="wsw-banner"')
     expect(markup).toContain('World Space Week 4-10 OCT')
-    expect(markup.match(/data-testid="wsw-chip"/g)).toHaveLength(4)
+    expect(markup).not.toContain('data-testid="wsw-chip"')
   })
 })
