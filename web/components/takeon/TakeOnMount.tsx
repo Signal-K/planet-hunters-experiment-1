@@ -67,6 +67,11 @@ export interface TakeOnMountHandle {
   orderMine: (x: number, y: number) => void
   /** Start a manual drill on the column directly ahead of the rover. */
   mine: () => boolean
+  /**
+   * Empty the rover's own Takeon hold. For hosts that count the haul themselves (the rover survey): otherwise
+   * loose regolith fills Takeon's hold and every later drill is silently refused as full.
+   */
+  emptyCargo: () => void
   /** Scanner sweep. Takeon's own control is the X key on the field canvas. */
   scan: () => void
   /**
@@ -274,6 +279,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
     orderMine: (x, y) => gameRef.current?.orderMine(x, y),
     mine: () => gameRef.current?.mine() ?? false,
+    emptyCargo: () => {
+      const rover = gameRef.current?.sim.rover
+      if (!rover) return
+      rover.cargo = {}
+      rover.cargoUsed = 0
+    },
     scan: () => { gameRef.current?.scan() },
     move: dir => gameRef.current?.move(dir) ?? false,
     rover: () => {

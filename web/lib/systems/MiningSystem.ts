@@ -3,7 +3,8 @@
 import type { GameState } from '@/lib/game-types'
 
 export function applyMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
-  if (s.screen !== 'mining' || !s.missionId || !s.targetId) return s
+  // SSL-718: a rover haul is loaded aboard from the rover field and starts the same return leg.
+  if ((s.screen !== 'mining' && s.screen !== 'rover-survey') || !s.missionId || !s.targetId) return s
   return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
 }
 

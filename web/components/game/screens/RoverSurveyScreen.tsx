@@ -47,6 +47,10 @@ interface RoverSurveyScreenProps {
   onBack: () => void
   rocketImageSrc?: string
   player?: Player
+  /** Units the rocket's hold takes. The rover stops adding to its haul once it is full. */
+  holdCapacity?: number
+  /** Load the rover's haul aboard and fly it home (or on to the mission's delivery stop). */
+  onLoadAndReturn?: (haul: Record<string, number>) => void
 }
 
 const ORIONIDS_ROVER_FORMATION_GOAL = 3
@@ -60,7 +64,7 @@ const BLOCKED_NOTE: Partial<Record<TakeOnBlockedReason, string>> = {
 }
 
 /** Takeon's own field, full screen. The rover surveys, and (SSL-718) drills the rock ahead into its hold. */
-export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player }: RoverSurveyScreenProps) {
+export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player, holdCapacity, onLoadAndReturn }: RoverSurveyScreenProps) {
   const rover = useMemo(() => surveyRoverSpec(), [])
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
   const missionId = useMemo(() => `landnam-rover-survey-${mission.id}-${target.id}`, [mission.id, target.id])
@@ -75,6 +79,8 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const [haul, setHaul] = useState<Record<string, number>>({})
   const [mineNote, setMineNote] = useState<string | null>(null)
   const haulUnits = Object.values(haul).reduce((sum, n) => sum + n, 0)
+  const haulUnitsRef = useRef(0)
+  haulUnitsRef.current = haulUnits
   loggedRef.current = logged
   // The Orionids survey asks for three different formations, so the rover has to drive between them (about a minute).
   const orionidsSurvey = mission.id === 'self-directed-orionids-surface-research'
@@ -83,11 +89,16 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
 
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
     if (event.type === 'mined') {
+      // Landnam counts the haul; Takeon's own small hold would otherwise fill with regolith and refuse to drill.
+      takeonHandle.current?.emptyCargo()
       const mineral = event.payload.resource ? TAKEON_TO_LANDNAM_MINERAL[event.payload.resource] : undefined
-      if (!mineral || event.payload.amount <= 0) { setMineNote('Only loose regolith here. Drill a different rock.'); return }
-      setHaul(current => ({ ...current, [mineral]: (current[mineral] ?? 0) + event.payload.amount }))
-      setMineNote(`Mined +${event.payload.amount} ${mineral[0].toUpperCase()}${mineral.slice(1)}`)
-      captureGameEvent('rover_mined', { target_id: target.id, mineral, amount: event.payload.amount, mission_id: mission.id })
+      if (!mineral || event.payload.amount <= 0) { setMineNote('Loose regolith. Keep drilling to reach the rock below.'); return }
+      const room = holdCapacity === undefined ? event.payload.amount : Math.max(0, holdCapacity - haulUnitsRef.current)
+      const amount = Math.min(event.payload.amount, room)
+      if (amount <= 0) { setMineNote('Hold full. Load it aboard and return.'); return }
+      setHaul(current => ({ ...current, [mineral]: (current[mineral] ?? 0) + amount }))
+      setMineNote(`Mined +${amount} ${mineral[0].toUpperCase()}${mineral.slice(1)}${amount < event.payload.amount ? '. Hold full.' : ''}`)
+      captureGameEvent('rover_mined', { target_id: target.id, mineral, amount, mission_id: mission.id })
       return
     }
     if (event.type !== 'scan' || loggedRef.current.length >= goal) return
@@ -104,7 +115,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
     setLogged(list => [...list, observation])
     setClearSweep(null)
     captureGameEvent('rover_outcrop_observed', { target_id: target.id, outcrop_id: found.id, mineral: found.type, mission_id: mission.id })
-  }, [mission.id, target.id, goal])
+  }, [mission.id, target.id, goal, holdCapacity])
 
   const scan = useCallback(() => {
     if (!ready || loggedRef.current.length >= goal) return
@@ -114,6 +125,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
 
   useEffect(() => {
     if (!ready) return
+    takeonHandle.current?.emptyCargo()
     return takeonHandle.current?.onBlocked(reason => { const note = BLOCKED_NOTE[reason]; if (note) setMineNote(note) })
   }, [ready])
 
@@ -187,7 +199,9 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="hub-btn" onClick={onBack}>Hub</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
-            <DockWordButton data-testid="rover-continue-to-laser" disabled={!done} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>{mission.id === 'self-directed-orionids-surface-research' ? 'Log' : 'Laser'}</DockWordButton>
+            {onLoadAndReturn && haulUnits > 0 && !orionidsSurvey
+              ? <DockWordButton data-testid="rover-load-return" onClick={() => { captureGameEvent('rover_haul_loaded', { target_id: target.id, units: haulUnits }); onLoadAndReturn(haul) }}>Return</DockWordButton>
+              : <DockWordButton data-testid="rover-continue-to-laser" disabled={!done} onClick={() => { captureGameEvent('rover_survey_complete', { target_id: target.id }); onComplete() }}>{orionidsSurvey ? 'Log' : 'Laser'}</DockWordButton>}
           </nav>
         </div>
       </div>

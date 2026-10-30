@@ -1,5 +1,6 @@
 'use client'
 
+import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
@@ -304,6 +305,8 @@ export default function MissionOperationRoutes({
           target={roverTarget}
           rocketImageSrc={rocketDisplay.img}
           player={game.player}
+          holdCapacity={(game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)?.cargo ?? 0) + (loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity ?? 0)}
+          onLoadAndReturn={haul => game.onMiningDone(haul)}
           onComplete={() => {
             if (game.mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) {
               game.setLastCargo({})
