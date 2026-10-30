@@ -37,12 +37,14 @@ bottom are still Liam's to decide.
 - Mining settlements (semi-autonomous pits mined level by level) are cycle 9 and not built
   before then.
 
-## Open questions (not decided)
+## Answered by Liam (2026-10-30)
 
-- Storing a haul in on-planet silos and leaving a rover behind conflict with the 2026-10-24
-  removal of the remote silo and off-world construction. Until decided, the haul comes home in
-  the hold and the rover comes back aboard.
-- The board delivers contract cargo to Earth; Belt Courier Run delivers to Vesta.
+- A haul can be stored in silos on the planet it was mined on, and a rover can be left on site
+  for the next trip. This brings back the remote silo removed on 2026-10-24.
+- Contract cargo is delivered to Earth unless the contract says otherwise (Belt Courier Run
+  says Vesta, so it keeps Vesta).
+- Rover surface mining uses signal-k/takeon (the Takeon rover game Landnam already mounts).
+- The mission guide ("Where to get it") waits; no mission consumes held resources yet.
 
 ## Reference
 
