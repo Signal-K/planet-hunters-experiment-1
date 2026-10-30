@@ -102,3 +102,6 @@ __pycache__/
 /web/cypress/screenshots/
 /web/cypress/videos/
 web/.dev-follower.json
+
+# Scene Studio local focus state
+web/.studio/
