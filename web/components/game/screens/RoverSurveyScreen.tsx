@@ -10,6 +10,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
 import type { TakeonHostEvent } from '@/lib/takeon/events'
+import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { DockWordButton } from '@/components/game/hub/BaseDock'
@@ -50,7 +51,7 @@ interface RoverSurveyScreenProps {
 
 const ORIONIDS_ROVER_FORMATION_GOAL = 3
 
-/** Takeon's own field, full screen. The rover surveys; it does not extract contract cargo. */
+/** Takeon's own field, full screen. The rover surveys, and (SSL-718) drills the rock ahead into its hold. */
 export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player }: RoverSurveyScreenProps) {
   const rover = useMemo(() => surveyRoverSpec(), [])
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
@@ -62,6 +63,10 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const [ready, setReady] = useState(false)
   const [logged, setLogged] = useState<LoggedObservation[]>([])
   const [clearSweep, setClearSweep] = useState<'range' | 'seen' | null>(null)
+  // SSL-718: rover mining uses Takeon's drill. The haul is counted in Landnam mineral ids.
+  const [haul, setHaul] = useState<Record<string, number>>({})
+  const [mineNote, setMineNote] = useState<string | null>(null)
+  const haulUnits = Object.values(haul).reduce((sum, n) => sum + n, 0)
   loggedRef.current = logged
   // The Orionids survey asks for three different formations, so the rover has to drive between them (about a minute).
   const orionidsSurvey = mission.id === 'self-directed-orionids-surface-research'
@@ -69,6 +74,14 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
   const done = logged.length >= goal
 
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
+    if (event.type === 'mined') {
+      const mineral = event.payload.resource ? TAKEON_TO_LANDNAM_MINERAL[event.payload.resource] : undefined
+      if (!mineral || event.payload.amount <= 0) { setMineNote('Only loose regolith here. Drill a different rock.'); return }
+      setHaul(current => ({ ...current, [mineral]: (current[mineral] ?? 0) + event.payload.amount }))
+      setMineNote(`Mined +${event.payload.amount} ${mineral[0].toUpperCase()}${mineral.slice(1)}`)
+      captureGameEvent('rover_mined', { target_id: target.id, mineral, amount: event.payload.amount, mission_id: mission.id })
+      return
+    }
     if (event.type !== 'scan' || loggedRef.current.length >= goal) return
     if (event.payload.found.length === 0) {
       setClearSweep('range')
@@ -87,11 +100,19 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
 
   const scan = useCallback(() => {
     if (!ready || loggedRef.current.length >= goal) return
+    setMineNote(null)
     takeonHandle.current?.scan()
   }, [ready, goal])
 
+  const mine = useCallback(() => {
+    if (!ready) return
+    if (!takeonHandle.current?.mine()) setMineNote('Nothing to drill ahead. Face a rock and try again.')
+  }, [ready])
+
   const latest = logged[logged.length - 1]
-  const status = done
+  const status = mineNote
+    ? mineNote
+    : done
     ? `OBSERVATION LOGGED · ${latest.name}`
     : clearSweep === 'seen'
       ? 'Already logged. Drive to a different formation and scan.'
@@ -136,17 +157,20 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
         <div className={styles.clock}><HubClockWidget /></div>
         <div className={styles.chips}>
           <span className="scene-chip" data-testid="rover-francs-chip">{formatCurrency(player?.francs ?? 0, { compact: true })}</span>
-          <span className="scene-chip" aria-label="Cargo" data-testid="rover-cargo-chip">
+          <span className="scene-chip" aria-label={`Cargo: ${haulUnits} units`} data-testid="rover-cargo-chip">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
               <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" strokeWidth="2" />
             </svg>
+            {haulUnits > 0 && <b data-testid="rover-cargo-count">{haulUnits}</b>}
           </span>
         </div>
         <div className={styles.hud}>
           <p className={styles.readout} data-testid="rover-survey-readout">{status}</p>
           <nav className={`scene-dock ${styles.dock}`} aria-label="Scene dock" data-testid="base-dock">
             <DockWordButton data-testid="rover-scan" disabled={!ready || done} onClick={scan}>Scan</DockWordButton>
+            <span className="scene-dock-rule" aria-hidden="true" />
+            <DockWordButton data-testid="rover-mine" disabled={!ready} onClick={mine}>Mine</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
             <DockWordButton data-testid="hub-btn" onClick={onBack}>Hub</DockWordButton>
             <span className="scene-dock-rule" aria-hidden="true" />
