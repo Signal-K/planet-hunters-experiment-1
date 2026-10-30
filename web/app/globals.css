@@ -552,6 +552,19 @@ body {
   text-rendering: optimizeLegibility;
 }
 button { cursor: pointer; }
+/* Installed app: iOS keeps its status bar, so a solid strip sits behind it.
+   Full-bleed scene layers stop at the strip instead of fading under the clock. */
+body[data-pwa="standalone"]::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  z-index: 2147483647;
+  pointer-events: none;
+  background: var(--ln-void);
+}
 
 :root {
   /* SSL-66: app height. svh is stable in plain browser tabs; installed or

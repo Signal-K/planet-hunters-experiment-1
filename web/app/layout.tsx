@@ -29,7 +29,10 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   // SSL-322: iOS only honours installed-app chrome via these apple- tags.
-  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black' },
+  // iOS cannot hide the status bar for a Home Screen web app. black-translucent
+  // makes it report env(safe-area-inset-top), so the body padding keeps every
+  // screen below the clock and the strip in globals.css sits behind it.
+  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black-translucent' },
   formatDetection: { telephone: false },
 }
 
@@ -58,7 +61,7 @@ export default function RootLayout({
         <Script id="pwa-standalone" strategy="afterInteractive">{`
           // body[data-pwa="standalone"] drives the installed-app layout rules.
           // iOS reports installs via navigator.standalone, others via display-mode.
-          if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+          if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches) {
             document.body.setAttribute('data-pwa', 'standalone')
           }
         `}</Script>
