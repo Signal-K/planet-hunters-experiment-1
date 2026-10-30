@@ -228,7 +228,7 @@
 /* SSL-365: on phones the Base dock takes as little of the scene as it can.
    Sideways on a short screen it is one row; upright it is the location row
    plus one row of actions with the icon over the label. */
-@media (orientation: landscape) and (max-height: 520px) {
+@media (orientation: landscape) and (max-height: 520px), (orientation: landscape) and (max-width: 1100px) {
   .scene-location-dock { display: flex; align-items: center; width: auto; max-width: calc(100vw - 24px); padding: 4px; gap: 4px; border-radius: 14px; }
   .scene-location-selector { flex: 0 0 auto; }
   .scene-location-actions,
@@ -236,8 +236,13 @@
   .scene-location-actions .scene-dock-word { flex: 0 0 auto; width: auto; min-width: 0; padding-inline: 12px; font-size: 14px; }
   .scene-location-actions .scene-dock-word span { white-space: nowrap; }
   .scene-location-label { min-width: 72px; }
-  /* globals.css caps the hub dock at 440px; one row needs its own width. */
-  .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"].scene-location-dock { width: auto; }
+}
+/* globals.css caps the hub dock at 440px, which fits the old icon dock but
+   clipped the location dock on wide screens (iPad landscape cut "Menu" to
+   "Me"). The location dock sizes to its own controls instead. */
+@media (orientation: landscape) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner:has(.scene-location-dock) { width: auto !important; max-width: calc(100vw - 24px) !important; }
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"].scene-location-dock { width: auto; max-width: calc(100vw - 24px); }
 }
 @media (orientation: portrait) and (max-width: 700px) {
   .scene-location-dock { display: flex; flex-direction: column; align-items: stretch; padding: 4px; gap: 4px; border-radius: 16px; }

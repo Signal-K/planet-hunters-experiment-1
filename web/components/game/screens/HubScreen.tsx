@@ -150,10 +150,18 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // Pre-placementPlots saves always went through the guided tutorial, which
   // coaches the player to the first build pad (data-coach-id="build-plot-0"
   // in BuildPlaceScreen) — plot 0, not 1.
-  const effectivePlots: Record<string, number> = {
-    ...placementPlots,
-    ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
-  }
+  // A kind with a home site always stands on that site's plot, whatever slot
+  // an older save recorded: skipping the tutorial stored the Launchpad on
+  // plot 1, the Exchange's site, which hid the Exchange's place marker.
+  const effectivePlots: Record<string, number> = Object.fromEntries(
+    Object.entries({
+      ...placementPlots,
+      ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
+    })
+      .map(([kind, plot]): [string, number] => [kind, homeSite(kind)?.plot ?? plot])
+      // Kinds on their own site come first, so they win a plot an older off-site kind still claims.
+      .sort(([a], [b]) => Number(homeSite(b)?.plot != null) - Number(homeSite(a)?.plot != null)),
+  )
   useEffect(() => {
     Scene.load('/game/scenes/hub.scene.json')
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
@@ -397,7 +405,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
   const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
   const pickedOption = buildOptions.find(o => o.id === pickedBuild)
-  const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !Object.values(effectivePlots).includes(pickedSite.plot)
+  const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !placed.some(kind => homeSite(kind)?.id === pickedSite.id)
   const placeOnPlot = (plot: number) => {
     const option = buildOptions.find(o => o.id === pickedBuild)
     if (!option || !onPlaceStructure) return

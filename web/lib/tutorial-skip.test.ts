@@ -48,7 +48,7 @@ describe('applyTutorialSkip', () => {
     expect(next.menuOpen).toBe(false)
     expect(next.screen).toBe('hub')
     expect(next.player.placed).toContain('launchpad')
-    expect(next.player.placementPlots.launchpad).toBe(1)
+    expect(next.player.placementPlots.launchpad).toBe(0)
     expect(next.doneSteps).toMatchObject({ 0: true, 1: true, 2: true })
   })
 
