@@ -406,6 +406,10 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
   const pickedOption = buildOptions.find(o => o.id === pickedBuild)
   const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !placed.some(kind => homeSite(kind)?.id === pickedSite.id)
+  // Build mode brings the free site into view: on an upright phone the Exchange's site starts off-screen.
+  const focusSiteX = editMode && pickedSiteFree && !underground && pickedSite ? pickedSite.x * px : null
+  const { focusX } = camera
+  useEffect(() => { if (focusSiteX != null) focusX(focusSiteX) }, [focusSiteX, focusX])
   const placeOnPlot = (plot: number) => {
     const option = buildOptions.find(o => o.id === pickedBuild)
     if (!option || !onPlaceStructure) return
