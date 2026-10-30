@@ -260,6 +260,8 @@ struct CommunityResearchScreen: View {
     @State private var selectedPath: ResearchPathID = .explorer
     @State private var selectedStep = 0
     @State private var showingRewards = false
+    /// The path is locked for the week, so starting one asks first (web `ActionConfirmBar`).
+    @State private var confirmingPath = false
 
     private var lockedPath: ResearchPathID? { ResearchPathRules.pathThisWeek(store.player.researchPath, now: store.now) }
     private var activePath: ResearchPathID { lockedPath ?? selectedPath }
@@ -295,7 +297,13 @@ struct CommunityResearchScreen: View {
                 Text("2  Finish its five steps in any order.")
                 Text("3  Every stamp fills the shared community bar.")
             }
-            PrimaryButton(title: "START \(selectedPath.rawValue.uppercased())") { store.chooseResearchPath(selectedPath) }
+            PrimaryButton(title: "START \(selectedPath.rawValue.uppercased())") { confirmingPath = true }
+                .confirmationDialog("Start \(selectedPath.rawValue.capitalized)?", isPresented: $confirmingPath, titleVisibility: .visible) {
+                    Button("Start \(selectedPath.rawValue.capitalized)") { store.chooseResearchPath(selectedPath) }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("Your path is locked until Monday, when it resets and you can pick again.")
+                }
                 .accessibilityIdentifier("community-research-choose")
         }
     }

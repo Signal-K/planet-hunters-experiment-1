@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { liveEventWeek } from '@/lib/research/event-week'
 import { communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
@@ -81,6 +82,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
+  // The path is locked for the week, so starting one asks first.
+  const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
   const eventStep = event?.id === 'orionids' ? orionidsResearchStep(player.orionidsEventStage) : undefined
   const steps = (path ?? selectedPath) === 'trader'
@@ -145,9 +148,19 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <ol className={styles.how} data-testid="community-research-how">
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
-                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => onChoosePath(selectedPath)}>START {selectedPath.toUpperCase()}</button>
+                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
                 <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
+              {confirmingPath && (
+                <ActionConfirmBar
+                  eyebrow="This week's path"
+                  title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
+                  description="Your path is locked until Monday, when it resets and you can pick again."
+                  confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
+                  onDismiss={() => setConfirmingPath(false)}
+                />
+              )}
             </>
           ) : (
             <>
