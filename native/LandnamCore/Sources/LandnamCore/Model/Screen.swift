@@ -8,23 +8,21 @@ public enum Screen: String, CaseIterable, Sendable {
     case missions, galaxy, targets, fab, transit, landing, mining, delivery, debrief
     case market, hangar
     case rocketBuy = "rocket-buy"
-    case skills
     case roverSurvey = "rover-survey"
     case launchpad
-    case surfaceOps = "surface-ops"
-    case academy
     case asteroidDiscovery = "asteroid-discovery"
     case saturnStormSearch = "saturn-storm-search"
     case instrumentHub = "instrument-hub"
     case missionHistory = "mission-history"
     case narrativeLedger = "narrative-ledger"
+    case communityResearch = "community-research"
 
     /// Locations get the full edge-to-edge viewport on macOS; the rest are menus
     /// that keep the boxed card treatment (mirrors `LOCATION_SCREENS` on web).
     public var isLocation: Bool {
         switch self {
         case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverSurvey,
-             .delivery, .academy, .hangar, .surfaceOps, .galaxy, .market,
+             .delivery, .hangar, .galaxy, .market,
              .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true
         default:

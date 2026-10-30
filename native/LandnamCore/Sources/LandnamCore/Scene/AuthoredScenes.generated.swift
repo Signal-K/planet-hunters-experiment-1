@@ -253,13 +253,11 @@ enum AuthoredSceneDeclarations {
     },
     {
       "id": "progression",
-      "name": "Skills, licences and XP",
+      "name": "Research XP and blueprints",
       "web": [
-        "web/lib/systems/ProgressionSystem.ts",
-        "web/lib/systems/XPSystem.ts"
+        "web/lib/systems/ProgressionSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
       "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
@@ -277,82 +275,6 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
       ],
       "note": "Training does not gate Free Ops. Replay rewards use the same completion transitions.",
-      "components": []
-    },
-    {
-      "id": "academy",
-      "name": "Academy, staff and crew",
-      "web": [
-        "web/lib/systems/AcademySystem.ts",
-        "web/lib/systems/CrewSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
-      ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
-      "components": []
-    },
-    {
-      "id": "surface-logistics",
-      "name": "Off-world sites, construction and ferries",
-      "web": [
-        "web/lib/systems/SurfaceOpsSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
-      ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
-      "components": []
-    },
-    {
-      "id": "field-refining",
-      "name": "Field refinery pipeline",
-      "web": [
-        "web/lib/systems/OffworldRefinerySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
-      "components": []
-    },
-    {
-      "id": "ownership",
-      "name": "Ownership transfers",
-      "web": [
-        "web/lib/systems/OwnershipSystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native transfer domain identified.",
-      "components": []
-    },
-    {
-      "id": "site-rights",
-      "name": "Site purchases and leases",
-      "web": [
-        "web/lib/systems/SiteRightsSystem.ts"
-      ],
-      "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model.",
-      "components": []
-    },
-    {
-      "id": "treasury",
-      "name": "Treasury ledger, science rewards and loans",
-      "web": [
-        "web/lib/systems/TreasurySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified.",
-      "components": []
-    },
-    {
-      "id": "sandbox",
-      "name": "Field sandbox rules",
-      "web": [
-        "web/lib/systems/SandboxSystem.ts"
-      ],
-      "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
       "components": []
     },
     {
@@ -411,12 +333,10 @@ enum AuthoredSceneDeclarations {
       "id": "records",
       "name": "Mission history and narrative ledger",
       "web": [
-        "web/lib/mission-log.ts",
-        "web/lib/data/narrative-ledger.ts"
+        "web/lib/mission-log.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
@@ -435,23 +355,6 @@ enum AuthoredSceneDeclarations {
         "native/LandnamCore/Sources/LandnamCore/Sync/CloudSync.swift"
       ],
       "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
-      "components": []
-    },
-    {
-      "id": "field-engine",
-      "name": "TakeOn rover and field runtime",
-      "web": [
-        "web/lib/takeon/goRuntime.ts",
-        "web/lib/takeon/events.ts",
-        "web/lib/takeon/LandnamSync.ts",
-        "web/lib/takeon/field-operation.ts"
-      ],
-      "native": [
-        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
-        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
-        "native/App/TakeonPersistence.swift"
-      ],
-      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
       "components": []
     },
     {
@@ -481,86 +384,6 @@ enum AuthoredSceneDeclarations {
     }
   ],
   "scenes": [
-    {
-      "id": "academy",
-      "type": "exchange-lab",
-      "route": "academy",
-      "surface": "canvas",
-      "runtime": {
-        "surface": "canvas",
-        "web": [
-          "web/components/game/screens/AcademyScreen.tsx",
-          "web/components/game/screens/AcademyCanvas.tsx"
-        ],
-        "native": [
-          "native/App/Screens/AcademyScreen.swift"
-        ],
-        "engine": [
-          "web/public/game/scenes/academy.scene.json"
-        ]
-      },
-      "objects": [
-        {
-          "id": "academy",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Academy scene and research station."
-        },
-        {
-          "id": "crew-roster",
-          "kind": "collection",
-          "parent": "academy",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Each crew member has identity, XP and condition."
-        },
-        {
-          "id": "candidate-list",
-          "kind": "collection",
-          "parent": "academy",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Recruitable candidates."
-        },
-        {
-          "id": "training-controls",
-          "kind": "panel",
-          "parent": "academy",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Train or rehire through Academy and Crew systems."
-        },
-        {
-          "id": "funding-controls",
-          "kind": "panel",
-          "parent": "academy",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Enable or disable research funding."
-        },
-        {
-          "id": "research-action",
-          "kind": "button",
-          "parent": "academy",
-          "layout": "host",
-          "mechanics": [
-            "academy"
-          ],
-          "note": "Apply research through the canonical state transition."
-        }
-      ]
-    },
     {
       "id": "asteroid-discovery",
       "type": "exchange-lab",
@@ -704,6 +527,48 @@ enum AuthoredSceneDeclarations {
             "construction"
           ],
           "note": "Leave placement without purchasing."
+        }
+      ]
+    },
+    {
+      "id": "community-research",
+      "type": "menu",
+      "route": "community-research",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/CommunityResearchScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "event-week",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "The live meteor shower week with the player's event stamps and a join button."
+        },
+        {
+          "id": "research-calendar",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Daily stamps, the streak and the shared community bar."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
         }
       ]
     },
@@ -1687,6 +1552,28 @@ enum AuthoredSceneDeclarations {
           "note": "Assembly animation uses the rocket frame for its welding path."
         },
         {
+          "id": "service-motion",
+          "kind": "structure",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "parent": "launchpad-complex",
+          "layout": "shared",
+          "space": "parent",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1,
+            "h": 1
+          },
+          "asset": "web/public/game/assets/base/v7/launchpad/pad-activity.png",
+          "nativeAsset": "base/v7/launchpad/pad-activity.png",
+          "components": [
+            "LaunchTowerAnimation"
+          ],
+          "note": "Blender-authored moving service trolley, cable, arm and beacon layered over the permanent launch complex."
+        },
+        {
           "id": "back-control",
           "kind": "button",
           "mechanics": [
@@ -1823,16 +1710,6 @@ enum AuthoredSceneDeclarations {
             "economy"
           ],
           "note": "Wallet and inventory changes."
-        },
-        {
-          "id": "treasury-service",
-          "kind": "group",
-          "parent": "exchange",
-          "layout": "host",
-          "mechanics": [
-            "treasury"
-          ],
-          "note": "Domain ownership only; no native treasury equivalent identified."
         }
       ]
     },
@@ -1897,24 +1774,44 @@ enum AuthoredSceneDeclarations {
           "note": "Pointer-driven beam and extraction."
         },
         {
-          "id": "cargo-readout",
-          "kind": "panel",
+          "id": "menu-button",
+          "kind": "button",
           "parent": "mining-field",
           "layout": "host",
           "mechanics": [
-            "laser-mining"
+            "mission-planning"
           ],
-          "note": "Capacity and mined cargo from canonical state."
+          "note": "SSL-708: the only control at the top of the scene. Opens the mission menu: mission and objective, progress, hold, how to play, recharge, switch mission, return to hub, settings, scrub."
         },
         {
-          "id": "mining-controls",
-          "kind": "panel",
+          "id": "steer-pad",
+          "kind": "ui",
           "parent": "mining-field",
           "layout": "host",
           "mechanics": [
             "laser-mining"
           ],
-          "note": "Charges, tools and extraction controls."
+          "note": "SSL-708: d-pad bottom-left. Up/down altitude, left/right along the ground."
+        },
+        {
+          "id": "fire-button",
+          "kind": "ui",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped."
+        },
+        {
+          "id": "action-button",
+          "kind": "ui",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (today: Catch, for the Orionids shower). It lights up when pressing now would work; an early press is buffered."
         },
         {
           "id": "return-action",
@@ -1924,7 +1821,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "delivery"
           ],
-          "note": "Finish mining and start the delivery or home leg."
+          "note": "Progress pill between the pad and FIRE (above FIRE on phone portrait). Turns solid when the order is filled; tap to finish mining and start the delivery or home leg."
         },
         {
           "id": "training-guide",
@@ -2108,6 +2005,59 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "radio-meteors",
+      "type": "exchange-lab",
+      "route": "radio-meteors",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RadioMeteorScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "radio-spectrogram",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "The console window of the shower's community instrument (ORI-1 for the Orionids; SkyEvent.communityInstrument), launched by everyone for the event. Its screen shows a real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
+        },
+        {
+          "id": "echo-boxes",
+          "kind": "collection",
+          "parent": "radio-spectrogram",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "Drag to box a meteor echo, tap to drop a standard box. Source-pixel rectangles, the Panoptes rectangle-tool shape."
+        },
+        {
+          "id": "receiver-dials",
+          "kind": "instrument",
+          "parent": "radio-spectrogram",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "GAIN (contrast), ZOOM (both axes about the beacon line) and SWEEP (along the five minutes). Drag, scroll or arrow keys turn them; the time bar shows what is on screen."
+        },
+        {
+          "id": "radio-desk",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "Two-tone right half. The radio desk briefs first-timers in three lines, then reacts to each box, delete and send. UNDO/DELETE BOX, NO METEORS, SEND ECHOES. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."
+        }
+      ]
+    },
+    {
       "id": "refinery",
       "type": "exchange-lab",
       "route": "refinery",
@@ -2258,8 +2208,6 @@ enum AuthoredSceneDeclarations {
           "kind": "world",
           "layout": "host",
           "mechanics": [
-            "field-engine",
-            "sandbox",
             "instruments"
           ],
           "note": "Rover field or TakeOn adapter selected by the feature flag."
@@ -2270,7 +2218,7 @@ enum AuthoredSceneDeclarations {
           "parent": "survey-field",
           "layout": "host",
           "mechanics": [
-            "field-engine"
+            "instruments"
           ],
           "note": "Surface survey vehicle, separate from laser extraction."
         },
@@ -2290,7 +2238,7 @@ enum AuthoredSceneDeclarations {
           "parent": "survey-field",
           "layout": "host",
           "mechanics": [
-            "field-engine"
+            "instruments"
           ],
           "note": "Movement and interaction commands."
         },
@@ -2379,182 +2327,6 @@ enum AuthoredSceneDeclarations {
             "saturn-review"
           ],
           "note": "Next candidate or return to the station."
-        }
-      ]
-    },
-    {
-      "id": "skills",
-      "type": "menu",
-      "route": "skills",
-      "surface": "dom",
-      "runtime": {
-        "surface": "dom",
-        "web": [
-          "web/components/game/screens/SkillTreeScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/SkillTreeScreen.swift"
-        ]
-      },
-      "objects": [
-        {
-          "id": "skill-tree",
-          "kind": "collection",
-          "layout": "host",
-          "mechanics": [
-            "progression"
-          ],
-          "note": "Skill nodes and their prerequisite edges."
-        },
-        {
-          "id": "licence",
-          "kind": "panel",
-          "parent": "skill-tree",
-          "layout": "host",
-          "mechanics": [
-            "progression"
-          ],
-          "note": "Current licence grade and next requirements."
-        },
-        {
-          "id": "skill-detail",
-          "kind": "panel",
-          "parent": "skill-tree",
-          "layout": "host",
-          "mechanics": [
-            "progression"
-          ],
-          "note": "Selected node costs and effects."
-        },
-        {
-          "id": "unlock-action",
-          "kind": "button",
-          "parent": "skill-tree",
-          "layout": "host",
-          "mechanics": [
-            "progression"
-          ],
-          "note": "Spend skill points through Progression."
-        },
-        {
-          "id": "upgrade-action",
-          "kind": "button",
-          "parent": "skill-tree",
-          "layout": "host",
-          "mechanics": [
-            "progression"
-          ],
-          "note": "Upgrade the licence when eligible."
-        }
-      ]
-    },
-    {
-      "id": "surface-ops",
-      "type": "field",
-      "route": "surface-ops",
-      "surface": "canvas",
-      "runtime": {
-        "surface": "canvas",
-        "web": [
-          "web/components/game/screens/SurfaceOpsScreen.tsx",
-          "web/components/game/screens/ConstructionTargetCanvas.tsx"
-        ],
-        "native": [
-          "native/App/Screens/SurfaceOpsScreen.swift"
-        ],
-        "engine": [
-          "web/public/game/scenes/construction-target.scene.json"
-        ]
-      },
-      "objects": [
-        {
-          "id": "surface-world",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Selected off-world site."
-        },
-        {
-          "id": "settlement-pads",
-          "kind": "collection",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Physical launchpad construction sites."
-        },
-        {
-          "id": "settlement-structures",
-          "kind": "collection",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Constructed structures and build progress."
-        },
-        {
-          "id": "ferry",
-          "kind": "vehicle",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Cargo transport state, retry and reconciliation."
-        },
-        {
-          "id": "logistics-controls",
-          "kind": "panel",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "surface-logistics"
-          ],
-          "note": "Site access, storage, build, dispatch and acknowledge."
-        },
-        {
-          "id": "field-world",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "field-engine",
-            "sandbox"
-          ],
-          "note": "Embedded TakeOn field, not a replacement for ship laser mining."
-        },
-        {
-          "id": "field-factory",
-          "kind": "collection",
-          "parent": "field-world",
-          "layout": "host",
-          "mechanics": [
-            "field-refining"
-          ],
-          "note": "Field-built structures and refinery pipeline; native field adapter pending."
-        },
-        {
-          "id": "site-deeds",
-          "kind": "group",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "site-rights"
-          ],
-          "note": "Domain ownership for site purchases and leases. Not a separately rendered panel or just settlement access."
-        },
-        {
-          "id": "ownership-service",
-          "kind": "group",
-          "parent": "surface-world",
-          "layout": "host",
-          "mechanics": [
-            "ownership"
-          ],
-          "note": "Transfers of owned entities; no native equivalent identified."
         }
       ]
     },

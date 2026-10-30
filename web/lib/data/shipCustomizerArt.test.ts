@@ -7,8 +7,6 @@ const V2_PART_IDS = [
   'ablative-shield-t1',
   'ceramic-shield-t1',
   'cockpit-command-t1',
-  'crew-transport-t2',
-  'crew-transport-t5',
   'guidance-cockpit-t1',
   'heavy-fairing-t1',
   'kerosene-stage-t1',

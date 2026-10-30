@@ -59,10 +59,3 @@ layout = "host"
 mechanics = ["economy"]
 note = "Wallet and inventory changes."
 
-[[objects]]
-id = "treasury-service"
-kind = "group"
-parent = "exchange"
-layout = "host"
-mechanics = ["treasury"]
-note = "Domain ownership only; no native treasury equivalent identified."

@@ -24,20 +24,14 @@ export interface TrainingTryStep {
 /** The durable three-try plan. Steps are screen-local instructions; only the
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
-  { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
-  { id: 'mine-elsewhere', try: 'mining', screen: '*', objective: 'Go back to the base and tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it. The launchpad comes next.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
   { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
-  { id: 'mine-hub', try: 'mining', screen: 'hub', objective: 'Tap the tower', radio: 'Client contracts open from the tower.', beacon: 'building-launchpad', doneOn: 'mining-debriefed' },
+  // Wildcard: the hub, the launchpad and any unlisted screen all point at the tower.
+  { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
-  { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
-  { id: 'mine-survey', try: 'mining', screen: 'rover-survey', objective: 'Scout one outcrop, then continue to the ship laser', radio: 'The rover logs the surface. The ship laser extracts the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
-  { id: 'mine-return', try: 'mining', screen: 'transit', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
-  { id: 'mine-return-landing', try: 'mining', screen: 'landing', objective: 'Fly the cargo home', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
-  { id: 'mine-return-delivery', try: 'mining', screen: 'delivery', objective: 'Deliver the cargo', radio: 'The order is only paid once the cargo reaches the debrief.', doneOn: 'mining-debriefed' },
   { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Galaxy map', radio: 'Transit candidates are classified from the Galaxy map.', doneOn: 'tess-classified' },
   { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
   { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'The Hangar is where ship modules are fitted.', doneOn: 'part-tweaked' },
@@ -48,33 +42,30 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
 const LOOP_SCREENS = new Set([
-  'fab', 'rover-survey', 'targets', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+  'fab', 'rover-survey', 'targets', 'rocket-buy', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
+
+/** Launch-prep screens share the launch step; the rover survey is an extension
+ * (SSL-675), not a first-run stop. */
+const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy', 'rover-survey'])
+/** Flight and landing are one zero-tap sequence with no coach step (SSL-675). */
+const FLIGHT_SCREENS = new Set(['transit', 'landing', 'delivery'])
 
 export function trainingTryStep(
   tryId: TrainingTryId,
   screen: string,
-  options?: { returning?: boolean },
 ): TrainingTryStep | undefined {
-  const exact = TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
+  if (FLIGHT_SCREENS.has(screen)) return undefined
+  const lookup = LAUNCH_SCREENS.has(screen) ? 'fab' : screen
+  const exact = TRAINING_TRIES.find(step => step.try === tryId && step.screen === lookup)
   const step = exact
     ?? (LOOP_SCREENS.has(screen)
-      ? TRAINING_TRIES.find(item => item.try === 'mining' && item.screen === screen)
+      ? TRAINING_TRIES.find(item => item.try === 'mining' && item.screen === lookup)
       : undefined)
-    // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
-    // The mining try has no wildcard, so an unlisted screen falls back to its first step.
-    ?? TRAINING_TRIES.find(item => item.try === tryId && item.screen === '*')
+  if (step || LOOP_SCREENS.has(screen)) return step
+  // Hub, Launchpad, Hangar and Galaxy keep the try's own "open it" line.
+  return TRAINING_TRIES.find(item => item.try === tryId && item.screen === '*')
     ?? TRAINING_TRIES.find(item => item.try === tryId)
-  // Outbound and return share the transit screen. "Fly the cargo home" on the
-  // way out tells a new player the run is already finished.
-  if (step?.screen === 'transit' && options?.returning === false) {
-    return {
-      ...step,
-      objective: 'Boost toward the target',
-      radio: 'The ship is outbound. The laser run starts after arrival.',
-    }
-  }
-  return step
 }
 
 /**
@@ -85,24 +76,21 @@ export function trainingTryStep(
  */
 export function trainingStepOnPath(step: TrainingTryStep, screen: string): boolean {
   if (step.screen === screen) return true
-  return step.screen === '*' && screen === 'hub'
+  return step.screen === '*' && (screen === 'hub' || screen === 'launchpad')
 }
 
-/** Six real milestones within the mining try. The first milestone covers
- * establishing the pad and taking a client order; the last covers bringing
- * the recovered cargo home and settling the order. This puts the laser at
- * 5/6, matching the playable sequence rather than the stale 2/6 concept. */
+/** Five stops on the first-run spine: place the pad, take a contract, launch,
+ * mine, debrief. Flight and landing carry no coach step. */
 const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
-  intro: 1, build: 1, hub: 1, launchpad: 1, missions: 1,
-  'rocket-buy': 2, fab: 2,
-  targets: 3,
-  'rover-survey': 4,
-  mining: 5,
-  debrief: 6, transit: 6, landing: 6, delivery: 6,
+  intro: 1, build: 1,
+  hub: 2, launchpad: 2, missions: 2,
+  'rocket-buy': 3, fab: 3, targets: 3, 'rover-survey': 3,
+  mining: 4,
+  debrief: 5,
 }
 
 export function trainingTryPosition(step: TrainingTryStep): { index: number; total: number } {
-  if (step.try === 'mining') return { index: MINING_OPS_STEP_BY_SCREEN[step.screen] ?? 1, total: 6 }
+  if (step.try === 'mining') return { index: MINING_OPS_STEP_BY_SCREEN[step.screen] ?? 2, total: 5 }
   return { index: step.try === 'scan' ? 2 : 3, total: 3 }
 }
 
@@ -115,7 +103,7 @@ export function trainingPatchProgress(
   completed: boolean,
   active: boolean,
 ): { stitched: number; total: number } {
-  const total = tryId === 'mining' ? 6 : 2
+  const total = tryId === 'mining' ? 5 : 2
   if (completed) return { stitched: total, total }
   if (!active) return { stitched: 0, total }
   if (tryId === 'mining') {

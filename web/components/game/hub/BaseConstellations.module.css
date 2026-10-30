@@ -1,0 +1,28 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.constellation { position: absolute; inset: 0; pointer-events: none; }
+.lines { position: absolute; inset: 0; width: 100%; height: 52%; overflow: visible; opacity: .18; }
+.lines polyline { fill: none; stroke: var(--ln-cyan-bright); stroke-width: .55; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.star { position: absolute; width: 44px; height: 44px; transform: translate(-50%, -50%); padding: 0; border: 0; border-radius: 50%; background: transparent; pointer-events: auto; cursor: pointer; }
+.star::after { content: ''; position: absolute; inset: 17px; border: 1px solid color-mix(in srgb, var(--ln-cyan-bright) 88%, white); border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan-bright) 48%, transparent); }
+.star:hover::after, .star:focus-visible::after { inset: 13px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ln-cyan-bright) 22%, transparent), 0 0 12px color-mix(in srgb, var(--ln-cyan-bright) 68%, transparent); }
+.archive { position: absolute; top: clamp(96px, 24%, 170px); left: max(16px, env(safe-area-inset-left)); width: min(240px, calc(100% - 32px)); padding: 12px; border: 1px solid color-mix(in srgb, var(--ln-cyan-bright) 52%, var(--ln-world-outline)); border-radius: 14px; background: color-mix(in srgb, var(--ln-void) 94%, transparent); color: var(--ln-world-hull-lit); box-shadow: 0 10px 24px rgb(0 0 0 / 28%); pointer-events: auto; }
+.archiveHeader { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.archiveKicker { color: var(--ln-cyan-bright); font: 700 14px/1 var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.archiveClose { width: 32px; min-height: 32px; padding: 0; border: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 40%, transparent); border-radius: 50%; background: transparent; color: var(--ln-world-hull-lit); font-size: 22px; line-height: 1; cursor: pointer; }
+.archiveEyebrow { display: block; margin-top: 12px; color: color-mix(in srgb, var(--ln-world-hull-lit) 66%, transparent); font: 700 10px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.archiveTitle { display: block; margin-top: 5px; color: var(--ln-world-hull-lit); font: 700 16px/1.1 var(--ln-font-display); letter-spacing: .07em; text-transform: uppercase; }
+.archiveSource { display: block; margin-top: 3px; color: var(--ln-cyan-bright); font: 14px/1.2 var(--ln-font-body); }
+.explanation { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent); }
+.explanationLabel { color: var(--ln-cyan-bright); font: 700 10px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.explanation p { margin: 0; color: color-mix(in srgb, var(--ln-world-hull-lit) 86%, transparent); font: 14px/1.3 var(--ln-font-body); }
+.explanation small { color: color-mix(in srgb, var(--ln-cyan-bright) 86%, white); font: 12px/1.2 var(--ln-font-body); }
+
+@media (max-width: 640px) {
+  .archive { top: 104px; width: min(240px, calc(100% - 32px)); padding: 12px; }
+}

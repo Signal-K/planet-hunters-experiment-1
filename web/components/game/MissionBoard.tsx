@@ -6,7 +6,7 @@ import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
-import { clientAffinityLevel } from '@/lib/systems/AcademySystem'
+import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -26,7 +26,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
@@ -44,7 +44,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
-  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors') => void
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
@@ -80,12 +80,10 @@ function LockIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
 }
 
-const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', academy: 'Crew', build: 'Build', mining: 'Mining', focus: 'Focus' }
+const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', mining: 'Mining', focus: 'Focus' }
 const STEP_STATE_LABEL: Record<ProgramStep['state'], string> = { done: 'Done', current: 'Next up', available: 'Open', locked: 'Locked' }
 
 function StepGlyph({ kind }: { kind: ProgramStep['kind'] }) {
-  if (kind === 'academy') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19" /><path d="M4 11h16" /></svg>
-  if (kind === 'build') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20V9l6-5 6 5v11" /><path d="M10 20v-5h4v5" /></svg>
   if (kind === 'mining' || kind === 'focus') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M8 18l2-8h4l2 8M10 10V7h4v3" /></svg>
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16c3-1 5-5 8-12 3 7 5 11 8 12" /><circle cx="12" cy="16" r="2" /><path d="M8 20h8" /></svg>
 }
@@ -176,7 +174,7 @@ interface GalaxyMapProps {
 }
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
-function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
+export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')
@@ -317,6 +315,7 @@ export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
+  const [requestedEventId] = useState(() => pendingMissionBoardEvent())
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
@@ -403,6 +402,11 @@ export default function MissionBoard({
       if (event.status === 'upcoming') return
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
+      // SSL-714: mission 3 (and listening on afterwards) happens on the community receiver, ORI-1.
+      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 2) {
+        onOpenEvent('radio-meteors')
+        return
+      }
       if (event.id === 'orionids-2026' && player.orionidsEventStage === 1 && catalog.missions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {
         onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
         return
@@ -432,9 +436,11 @@ export default function MissionBoard({
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => setTab(next)
   const tabButtons = <>
-    <button type="button" className={styles.tab} aria-label="Contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    <div className={styles.workTabs} aria-label="Work board">
+      <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabCopy}><span className={styles.tabLabel}>Contracts</span><small>Client work</small></span></button>
+      <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabCopy}><span className={styles.tabLabel}>Program</span><small>Build your agency</small></span></button>
+    </div>
     {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
-    <button type="button" className={styles.tab} aria-label="Program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
     <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
@@ -508,7 +514,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Next mission ready · surface observation' : 'Launch catches fragments · no cargo used'}</span>
+          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
@@ -534,7 +540,7 @@ export default function MissionBoard({
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
                 <h2>Your space program</h2>
-                <p>{steps.filter(step => step.state === 'done').length} of {steps.length} steps complete</p>
+                <p>Build your agency through self-directed work · {steps.filter(step => step.state === 'done').length} of {steps.length} steps complete</p>
               </div>
               <div className={styles.meter} role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={steps.filter(step => step.state === 'done').length} aria-label="Program progress">
                 <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
@@ -571,13 +577,13 @@ export default function MissionBoard({
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
             {events.groups.map(group => <section key={group.status} className={styles.eventGroup} aria-label={group.title} data-testid={`events-group-${group.status}`}>
               <div className={styles.eventGrid}>
-                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
+                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-event-focused={requestedEventId === event.id || undefined} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
                   <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
-                    <button type="button" className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
+                    <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>
                 </article>)}
               </div>

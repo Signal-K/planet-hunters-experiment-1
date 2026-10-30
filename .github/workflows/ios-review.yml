@@ -1,0 +1,105 @@
+name: iOS review
+
+on:
+  pull_request:
+    branches: [cycle/7, main]
+    paths:
+      - "native/**"
+      - "shared/**"
+      - ".github/workflows/ios-review.yml"
+  push:
+    branches: [cycle/7]
+    paths:
+      - "native/**"
+      - "shared/**"
+      - ".github/workflows/ios-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-review-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Build and test iOS Simulator
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec native/project.yml
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # Commit or PR titles may opt into a focused review with one of:
+      # [ios:events], [ios:sync], [ios:ui], or [ios:all].
+      - name: Select review suite
+        id: review
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title || '' }}
+        run: |
+          message="$(printf '%s' "$COMMIT_MESSAGE" | tr '[:upper:]' '[:lower:]')"
+          if [[ "$message" == *"[ios:all]"* ]]; then
+            suite="all"
+            filter="OrionidsRunTests|OrionidsPeakTests|ResearchStampsTests|SkyEventWindowTests|CloudSyncTests|CloudPullTests|OutboxTests"
+          elif [[ "$message" == *"[ios:events]"* || "$message" == *"meteor"* || "$message" == *"orionid"* || "$message" == *"research"* ]]; then
+            suite="events"
+            filter="OrionidsRunTests|OrionidsPeakTests|ResearchStampsTests|SkyEventWindowTests"
+          elif [[ "$message" == *"[ios:sync]"* || "$message" == *"sync"* || "$message" == *"outbox"* ]]; then
+            suite="sync"
+            filter="CloudSyncTests|CloudPullTests|ResearchStampsTests|OutboxTests"
+          elif [[ "$message" == *"[ios:ui]"* || "$message" == *"swiftui"* || "$message" == *"screen"* ]]; then
+            suite="ui"
+            filter=""
+          else
+            suite="smoke"
+            filter="OrionidsPeakTests|ResearchStampsTests|SkyEventWindowTests"
+          fi
+
+          echo "suite=$suite" >> "$GITHUB_OUTPUT"
+          echo "filter=$filter" >> "$GITHUB_OUTPUT"
+          echo "Selected iOS review suite: $suite"
+
+      - name: Build iOS app
+        run: >-
+          xcodebuild
+          -project native/Landnam.xcodeproj
+          -scheme Landnam
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath "$RUNNER_TEMP/landnam-ios"
+          build
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+
+      - name: Run iOS app tests
+        run: >-
+          xcodebuild
+          -project native/Landnam.xcodeproj
+          -scheme Landnam
+          -destination 'platform=iOS Simulator,name=iPhone 16'
+          -derivedDataPath "$RUNNER_TEMP/landnam-ios"
+          -only-testing:LandnamTests
+          test
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+
+      - name: Run selected core tests
+        if: steps.review.outputs.filter != ''
+        working-directory: native/LandnamCore
+        env:
+          TEST_FILTER: ${{ steps.review.outputs.filter }}
+        run: >-
+          swift test
+          --filter "$TEST_FILTER"

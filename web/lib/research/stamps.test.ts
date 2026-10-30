@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addStamp, type ResearchStamps, communityBar, mergeStamps, monthGrid, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth, noteResearchBonus, researchBonusActive } from './stamps'
+import { addStamp, type ResearchStamps, communityBar, historicalContributionMonths, mergeStamps, monthGrid, researchMonthHistory, sanitizeStamps, stampDayKey, stampStreak, stampsInMonth } from './stamps'
 
 const D = 86_400_000
 const t = Date.UTC(2026, 9, 22, 12)
@@ -41,13 +41,15 @@ describe('research stamps', () => {
     expect(communityBar(10, { ...server, others: 995, reachedAt: t, bonusUntil: t + 7 * D }).reached).toBe(true)
     expect(communityBar(4, null)).toMatchObject({ total: 4, goal: 1000, reached: false })
   })
-  it('keeps the latest bonus window and opens it only inside the week', () => {
-    const p = noteResearchBonus({ researchBonusUntil: undefined }, t + 7 * D)
-    expect(p.researchBonusUntil).toBe(t + 7 * D)
-    expect(noteResearchBonus(p, t)).toBe(p)
-    expect(noteResearchBonus(p, null)).toBe(p)
-    expect(researchBonusActive(p, t)).toBe(true)
-    expect(researchBonusActive(p, t + 7 * D)).toBe(false)
-    expect(researchBonusActive(undefined, t)).toBe(false)
+  it('returns recent personal months newest first', () => {
+    expect(researchMonthHistory({ '2026-10-22': ['survey'], '2026-09-03': ['event', 'survey'] }, Date.UTC(2026, 9, 26), 2)).toEqual([
+      { key: '2026-10', label: 'October 2026', stamps: 1 },
+      { key: '2026-09', label: 'September 2026', stamps: 2 },
+    ])
+  })
+  it('adds citizen science records from September and earlier without making retroactive rewards', () => {
+    const history = historicalContributionMonths({}, [Date.UTC(2026, 8, 3), Date.UTC(2026, 8, 18), Date.UTC(2026, 9, 1)], Date.UTC(2026, 9, 26))
+    expect(history).toEqual({ '2026-09': 2 })
+    expect(researchMonthHistory({}, Date.UTC(2026, 9, 26), 2, history)[1]).toMatchObject({ key: '2026-09', stamps: 2 })
   })
 })

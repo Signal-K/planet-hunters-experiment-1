@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BASE_CAMERA_HOME,
-  MIN_ZOOM,
+  fitZoom,
   clampCamera,
   inertiaStep,
+  panLimits,
   softClampCamera,
   zoomAt,
   type BaseCameraState,
@@ -44,7 +45,7 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
   useEffect(() => {
     if (homeX == null || !ref.current) return
     const v = view()
-    commit(clampCamera({ zoom: MIN_ZOOM, x: v.w / 2 - homeX, y: 0 }, v))
+    commit(clampCamera({ zoom: 1, x: v.w / 2 - homeX, y: 0 }, v))
   }, [commit, homeX, view, worldWidth])
 
   const stop = useCallback(() => { cancelAnimationFrame(raf.current) }, [])
@@ -131,6 +132,17 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
     if (suppressClick.current) { e.stopPropagation(); e.preventDefault() }
   }
 
+  const overview = useCallback(() => {
+    const v = view()
+    commit({ zoom: fitZoom(v), x: 0, y: 0 })
+  }, [commit, view])
+
+  const setPosition = useCallback((position: number) => {
+    const v = view()
+    const l = panLimits(camRef.current.zoom, v)
+    commit({ ...camRef.current, x: l.maxX + (l.minX - l.maxX) * Math.max(0, Math.min(1, position)), y: 0 })
+  }, [commit, view])
+
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -145,11 +157,15 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commit, stop, view])
 
-  const transform = `translate(${cam.x}px, ${cam.y}px) scale(${cam.zoom})`
+  const transform = cam.zoom < 1
+    ? `translate(${cam.x}px, ${cam.y}px) scaleX(${cam.zoom})`
+    : `translate(${cam.x}px, ${cam.y}px) scale(${cam.zoom})`
   return {
     ref,
     cam,
     transform,
+    overview,
+    setPosition,
     handlers: { onPointerDown, onPointerMove, onPointerUp: end, onPointerCancel: end, onClickCapture },
   }
 }

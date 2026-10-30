@@ -39,10 +39,3 @@ public extension SharedFeed {
         return try LastConfirmed.parse(data)
     }
 }
-
-/// Treasury site-deed call (mirrors web POST /api/treasury/site-deed with `{ siteId }`).
-/// The server derives price and idempotency; the client only names the site, so a replay is safe.
-public enum SiteDeed {
-    public static let path = "api/treasury/site-deed"
-    public static func op(siteId: String) -> OutboxOp { .http(path: path, body: ["siteId": .string(siteId)]) }
-}

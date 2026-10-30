@@ -47,8 +47,7 @@ public enum Loop {
         let target = catalog.target(targetId)
         let delivery = mission.deliveryTargetId.flatMap(catalog.target)
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, deliveryTarget: delivery,
-                                                   missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"),
-                                                   skills: s.player.unlockedSkillNodes)
+                                                   missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"))
         base.missionId = id
         base.targetId = targetId
         base.deliveryTargetId = mission.deliveryTargetId
@@ -73,10 +72,10 @@ public enum Loop {
     static func pickTargetState(_ s: GameState, id: String, catalog: Catalog) -> GameState {
         guard let mission = catalog.mission(s.missionId), let target = catalog.target(id) else { return s }
         let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: s.player.missionsDone,
-                                        launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
+                                        launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"))
         guard feasible.contains(where: { $0.id == id }) else { return s }
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, missionsDone: s.player.missionsDone,
-                                                   launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"), skills: s.player.unlockedSkillNodes)
+                                                   launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"))
         // Switching target releases a free vehicle built for the old one.
         let freeIds = Set(Rockets.models.filter { $0.costFrancs == 0 }.map(\.id))
         var n = s
@@ -98,14 +97,14 @@ public enum Loop {
         var n = s
         if n.screen == .targets, let mission = catalog.mission(n.missionId) {
             let feasible = Targets.feasible(for: mission, targets: catalog.targets, parts: catalog.parts, missionsDone: n.player.missionsDone,
-                                            launchpadUpgraded: n.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(n.player, "launchpad"), skills: n.player.unlockedSkillNodes)
+                                            launchpadUpgraded: n.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(n.player, "launchpad"))
             guard let pick = feasible.first(where: { $0.recommended == true }) ?? feasible.first else { return n }
             n = pickTargetState(n, id: pick.id, catalog: catalog)
         }
         guard n.screen == .rocketBuy, let mission = catalog.mission(n.missionId), let target = catalog.target(n.targetId) else { return n }
         let required = Rockets.models.filter { !$0.locked && $0.missionsRequired <= n.player.missionsDone }.max { $0.tier < $1.tier } ?? Rockets.models[0]
         let options = Rockets.models.filter { !$0.locked && $0.missionsRequired <= n.player.missionsDone }.filter {
-            catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0), skills: n.player.unlockedSkillNodes).ok
+            catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0)).ok
         }
         guard let rocket = options.first(where: { $0.id == required.id }) ?? options.first,
               rocket.costFrancs == 0, Rockets.compatible(rocket, with: mission),
@@ -156,7 +155,7 @@ public enum Loop {
 
     public static func travelArrival(target: Target?, player: Player, now: Double) -> Double? {
         guard player.freeOperations, let target else { return nil }
-        return now + Skills.travelDurationMs(orbit: target.orbit, skills: player.unlockedSkillNodes, msPerOrbit: Economy.orbitMsPerUnit)
+        return now + Flight.travelDurationMs(orbit: target.orbit, msPerOrbit: Economy.orbitMsPerUnit)
     }
 
     public static func launch(_ s: GameState, catalog: Catalog, now: Double) -> GameState {
@@ -177,6 +176,7 @@ public enum Loop {
         n.player.selectedStagedRocketId = next?.id
         n.player.arrivalAt = travelArrival(target: target, player: s.player, now: now)
         n.player.transitStartedAt = now
+        n.player.missionStartedAt = now
         n.player.missionPhase = .transit
         n.player.activeMission = ActiveMission(id: mission.id, label: "\(mission.title) → \(target.name)")
         // The ascent flies through the shower: fragments are home at once (web applyLaunchCatch, SSL-578).
@@ -292,9 +292,18 @@ public enum Loop {
         let cargo = showerFilled ? OrionidsRun.withoutFragments(haulCargo) : haulCargo
         if showerFilled { OrionidsRun.settle(&n.player, missionsDone: s.player.missionsDone) }
         if missionId == OrionidsRun.missionId { n.player.orionidsEventStage = max(n.player.orionidsEventStage, 1) }
-        if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = 2 }
+        if missionId == OrionidsRun.surfaceResearchMissionId { n.player.orionidsEventStage = max(n.player.orionidsEventStage, 2) }
         if missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId { ResearchStampRules.add(&n.player, .event, at: now) }
         let isOrionidsEvent = missionId == OrionidsRun.missionId || missionId == OrionidsRun.surfaceResearchMissionId
+        if isOrionidsEvent {
+            ResearchFragments.record(
+                &n.player,
+                id: "orionids-2026",
+                title: "Orionids shower",
+                fragments: showerFilled ? OrionidsRun.fragmentGoal : 1,
+                badgeId: n.player.badges["orionids-2026"]?.eventId,
+            )
+        }
         let isFreeHaul = !isOrionidsEvent && (mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil } ?? false)
             && haulCargo.values.contains { $0 > 0 }
         if isFreeHaul && !s.player.cargoSettledOffworld {
@@ -307,6 +316,8 @@ public enum Loop {
         let missionsDone = n.player.missionsDone + 1
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil
         let program = mission?.isOwnProgram ?? false
+        let isDiscoverySurvey = missionId.hasPrefix("exo-survey-")
+        if mission?.client != nil && !isStory && !isDiscoverySurvey { ResearchStampRules.add(&n.player, .contractRun, at: now) }
         if let client = mission?.client, !isStory { n.player.clientMissions[client, default: 0] += max(1, affinity) }
         if mission?.deliveryTargetId == nil {
             for (id, amount) in consume {
@@ -340,15 +351,14 @@ public enum Loop {
         n.player.missionsDone = missionsDone
         n.player.freeOperations = Transitions.freeOperationsUnlocked(n.player)
         let justFinishedOnboarding = !wasFreeOps && n.player.freeOperations
-        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now)
-        let showLoan = !program && !n.player.loanOffered && n.player.francs < Economy.bankruptcyThreshold && n.player.loanDebt == 0
-        n.popup = justFinishedOnboarding ? "tutorial-complete" : (showLoan ? "loan" : s.popup)
-        n.player.loanOffered = n.player.loanOffered || showLoan
+        WswBadges.grant(&n.player.badges, WswBadges.type(for: mission, freeOperations: wasFreeOps), at: now, startedAt: s.player.missionStartedAt)
+        n.popup = justFinishedOnboarding ? "tutorial-complete" : s.popup
         n.player.missionCount = catalog.missions.filter { $0.sequence == missionsDone + 1 }.count
         if let client = mission?.client, !isStory, !program { n.player.lastClient = client }
         // Single-use vehicle is spent; clear the run.
         n.player.activeMission = nil
         n.player.missionRunId = nil
+        n.player.missionStartedAt = nil
         n.player.missionPhase = nil
         n.player.debriefPending = false
         n.player.homeDeliveryPending = false
@@ -387,6 +397,7 @@ public enum Loop {
         var n = s
         n.player.activeMission = nil
         n.player.missionRunId = nil
+        n.player.missionStartedAt = nil
         n.player.missionPhase = nil
         n.player.arrivalAt = nil
         n.player.transitStartedAt = nil

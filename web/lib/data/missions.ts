@@ -46,6 +46,7 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 export const ORIONIDS_SURFACE_RESEARCH_MISSION_ID = 'self-directed-orionids-surface-research'
+export const ORIONIDS_SHOWER_TARGET_ID = 'orionids-shower-field'
 
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
@@ -56,17 +57,16 @@ export function orionidsNightRun(): Mission {
   return {
     id: ORIONIDS_NIGHT_RUN_ID,
     title: 'Orionids shower run',
-    brief: `No client. Launch through the shower and catch ${amount} Orionid fragments. Event evidence is protected and is the only collection objective. Peak night pays double. One fireball fragment falls at 02:00 on 22 Oct.`,
+    brief: `No client. Fly into the Orionids shower field and catch ${amount} fragments. The meteor points follow Orion's pattern, not a catalogue of named rocks. Mine any minerals you want while you are there. Peak night pays double.`,
     tag: 'FREE OPS',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
-    // The shower is collected during ascent; Eros supplies the ordinary
-    // starter-compatible mining leg so the run can use the normal loop.
-    targetId: 'eros',
-    // Event evidence is not an ordinary cargo haul. Do not ask the player to choose hydrogen or reserve hold space.
-    requires: { minerals: { orionid_debris: amount }, cargo_min: 0, drill_tier: 1, max_orbit: 5 },
+    targetId: ORIONIDS_SHOWER_TARGET_ID,
+    // Event evidence is the only required objective. Ordinary minerals are
+    // optional discoveries in the shower field, never a named-rock order.
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 2 },
     payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
   }
 }
@@ -77,12 +77,12 @@ export function orionidsSurfaceResearchMission(): Mission {
   return {
     id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
     title: 'Orionids surface observation',
-    brief: 'Drive the rover to the marked Orionids outcrop and log the blue fracture pattern for the community research record.',
+    brief: 'Your fragment sample points back to a fresh impact on Eros. Drive the rover to it, scan the rock formation, and take a bearing for the community research record.',
     tag: 'EVENT RESEARCH',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Complete the Orionids debris capture',
+    unlockAt: 'Bring back a fragment sample from the Orionids shower run',
     targetId: 'eros',
     payload: { type: 'rover', name: 'Orionids field rover', cargoCost: 0 },
     survey: {
@@ -157,65 +157,9 @@ export function authoredMission(id: string): Mission {
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
-export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 
-const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
-
-function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
-  return {
-    minerals: { ...materials },
-    // The kit must fit the biggest vehicle the player can launch: a 36U kit against an 18U Surveyor made these steps unflyable.
-    cargo_min: Math.min(
-      Object.values(materials).reduce((total, amount) => total + amount, 0),
-      Math.max(...ROCKET_MODELS.filter(rocket => !rocket.locked).map(rocket => rocket.stats.cargo)),
-    ),
-  }
-}
-
-/** Player-program construction is owned work, so it awards infrastructure
- * rather than a client fee. Keep its costs aligned with the blueprints. */
-export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
-  {
-    id: 'program-build-mars-mining-settlement', title: 'Establish Mars Mining Settlement',
-    brief: 'Carry a starter settlement kit to the program’s assigned Mars area. The permanent site anchors later extraction and support structures.',
-    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations · Mars allocation ready', targetId: 'mars',
-    construction: { structureKind: 'mining-settlement', requiredMaterials: { aluminium: 12, iron: 16, silicon: 8 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
-    programReward: { researchXP: 0, outcome: 'Mars mining settlement established · permanent program site online' },
-    requires: { ...materialRequirement({ aluminium: 12, iron: 16, silicon: 8 }), drill_tier: 1, max_orbit: 4 }, payout: { francs: 0, affinity: 0 },
-  },
-  {
-    id: 'program-build-remote-silo',
-    title: 'Build a Remote Mineral Silo',
-    brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',
-    tag: 'PROGRAM', difficulty: 'L2', locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach Free Operations',
-    construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
-    programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
-    requires: { ...materialRequirement(remoteSiloBlueprint.requiredMaterials), drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 0, affinity: 0 },
-  },
-]
 
 export const AUTHORED_MISSIONS: Mission[] = [
-  ...OWN_PROGRAM_BUILD_MISSIONS,
-  {
-    id: ACADEMY_INTRO_MISSION_ID,
-    title: 'Train the First Astronaut',
-    brief: 'Establish the Astronaut Academy at Base, fund its first day-long session, and graduate a named astronaut into your roster.',
-    tag: 'STORY',
-    difficulty: 'L1',
-    locked: true,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Reach client level 2 with two clients',
-    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
-    programReward: {
-      researchXP: 0,
-      outcome: 'Astronaut Academy online · crew training unlocked',
-    },
-    payout: { francs: 0, affinity: 0 },
-  },
   authoredMission('lnm_m3_relay_bennu_vesta'),
   {
     id: 'lnm_m3_relay_itokawa_eros',
@@ -269,26 +213,6 @@ export const AUTHORED_MISSIONS: Mission[] = [
   },
   // Free Ops self-directed mining: shared/authoring/missions/free-mining.toml
   authoredMission(SELF_DIRECTED_MINING_MISSION_ID),
-  {
-    id: 'freeops-crewed-prospecting',
-    title: 'Crewed Prospecting Flight',
-    brief: 'Ferrum wants a trained mining specialist aboard to assess a surface before automated construction begins. The first qualified astronaut to reach Eros earns a frontier bonus.',
-    client: 'ferrum-orbital-construction',
-    tag: 'CREW',
-    difficulty: 'L2',
-    locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Build the Astronaut Academy and fit Crew Quarters',
-    targetId: 'eros',
-    requires: {
-      minerals: { nickel: 2 },
-      cargo_min: 2,
-      drill_tier: 1,
-      max_orbit: 2,
-      crew: { branch: 'mining', minTier: 1, minLevel: 1 },
-    },
-    payout: { francs: missionPayoutFloor(4), affinity: 4 },
-  },
 ]
 
 export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions(), ...generateSelfDirectedMiningPool()]

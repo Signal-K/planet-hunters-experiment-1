@@ -9,7 +9,6 @@ import {
 } from './runtimeCatalog'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from './data'
 import { DEFAULT_STATE } from './game-state'
-import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
   it('keeps an active Orionids run resolvable when a remote catalog omits the event row', () => {
@@ -20,7 +19,8 @@ describe('buildRuntimeCatalog', () => {
       missionsDone: 0,
     })
 
-    expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('eros')
+    expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
+    expect(catalog.targets.find(target => target.id === 'orionids-shower-field')?.type).toBe('event-field')
   })
   it('offers the next Orionids tier only after debris capture', () => {
     const next = buildRuntimeCatalog({
@@ -40,6 +40,17 @@ describe('buildRuntimeCatalog', () => {
       player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 2 },
     })
     expect(complete.missions.some(mission => mission.id === 'self-directed-orionids-surface-research')).toBe(false)
+  })
+
+  it('offers the Orionids shower mission after the field guide is complete', () => {
+    const ready = buildRuntimeCatalog({
+      catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
+      freeOperations: true,
+      missionsDone: 3,
+      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 0, fireballSpotter: { readAt: 1, passedAt: 1 } },
+    })
+    expect(ready.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
+    expect(ready.targets.find(target => target.id === 'orionids-shower-field')?.name).toBe('Orionids shower field')
   })
   it('adds a stored-haul mission for missing construction focus materials', () => {
     const catalog = buildRuntimeCatalog({
@@ -199,37 +210,4 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.missions.some(mission => mission.id === 'freeops-self-directed-mining')).toBe(true)
   })
 
-  it('does not add diplomacy premiums or affinity-gated joint missions', () => {
-    const clientMission = STATIC_CATALOG.missions.find(mission =>
-      !!mission.client
-      && !!mission.targetId
-      && STATIC_CATALOG.clients[mission.client]?.suppliesCrew,
-    )!
-    const clientId = clientMission.client!
-    const diplomat = createCrewMember({
-      id: 'crew-diplomat',
-      crewClass: 'astronaut',
-      selfTrained: true,
-      now: Date.now(),
-    })
-    const player = {
-      ...DEFAULT_STATE.player,
-      freeOperations: true,
-      crew: [diplomat],
-      structureCrewAssignments: { diplomacy: diplomat.id },
-      clientMissions: { [clientId]: 5 },
-      sharedChartsByClient: { [clientId]: 1 },
-    }
-    const catalog = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 4,
-      player,
-    })
-
-    const improved = catalog.missions.find(mission => mission.id === clientMission.id)!
-    expect(improved.payout.francs).toBe(clientMission.payout.francs)
-    const joint = catalog.missions.find(mission => mission.id === `joint-${clientId}-${clientMission.id}`)
-    expect(joint).toBeUndefined()
-  })
 })

@@ -23,7 +23,7 @@ struct BaseMenu: View {
     private var primary: [Item] {
         let hasMarket = store.player.placed.contains("market")
         return [
-            Item(id: "build", label: "Build", detail: "New structures, a control station, satellites", symbol: "building.2", primary: true, run: onBuild),
+            Item(id: "build", label: "Build", detail: "New structures and launch support", symbol: "building.2", primary: true, run: onBuild),
             Item(id: "contracts", label: "New mission", detail: "Client contracts and free runs", symbol: "paperplane", primary: true, run: { store.go(.missions) }),
             Item(id: "market", label: "Marketplace", detail: marketDetail(hasMarket), symbol: "cart", primary: true,
                  run: { store.go(.market) }),
@@ -37,13 +37,15 @@ struct BaseMenu: View {
             || store.player.deepSpaceTelescopeLaunchedAt != nil
             || store.player.saturnImagerLaunchedAt != nil
         let hasControlStation = store.player.placed.contains("control-station")
-        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "control-station", label: hasControlStation ? "Control station" : "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
+        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "instruments", label: "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
-        if store.player.freeOperations { rows.append(Item(id: "sites", label: "Sites", detail: "Places to survey and settle", symbol: "globe", run: { store.go(.surfaceOps) })) }
+        rows.append(Item(id: "narrative-ledger", label: "Narrative ledger", detail: "What is live, adapting and planned", symbol: "map", run: { store.go(.narrativeLedger) }))
+        rows.append(Item(id: "community-research", label: "Community research", detail: "Choose a weekly path and earn permanent rewards", symbol: "telescope", run: { store.go(.communityResearch) }))
         return rows
     }
 
     var body: some View {
+        GeometryReader { geo in
         ZStack {
             Color.black.opacity(0.45).ignoresSafeArea().onTapGesture(perform: onClose)
             ScrollView {
@@ -58,14 +60,18 @@ struct BaseMenu: View {
                         }.buttonStyle(.plain)
                     }
                     grid(primary, single: true)
+                    Text("AGENCY AND RESEARCH").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .leading)
                     grid(rest)
                 }
                 .padding(16)
             }
-            .frame(maxWidth: 640, maxHeight: 520)
+            // Bounded by the real window: a landscape phone is under 400pt tall, so a fixed 520 ran off both edges.
+            .frame(maxWidth: 640, maxHeight: min(520, max(200, geo.size.height - 24)))
             .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.ink, lineWidth: 2))
             .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
         }
         .accessibilityIdentifier("base-menu")
     }

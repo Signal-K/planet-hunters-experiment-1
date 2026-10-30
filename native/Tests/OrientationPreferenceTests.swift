@@ -25,10 +25,7 @@ struct OrientationPreferenceTests {
     @Test func masksMatchChoice() {
         #expect(OrientationPreference.portrait.mask(idiom: .phone) == .portrait)
         #expect(OrientationPreference.landscape.mask(idiom: .phone) == .landscape)
-        #expect(OrientationPreference.landscape.mask(idiom: .pad) == .landscape)
         #expect(OrientationPreference.auto.mask(idiom: .phone) == .allButUpsideDown)
-        #expect(OrientationPreference.auto.mask(idiom: .pad) == .all)
-        #expect(OrientationPreference.portrait.mask(idiom: .pad).contains(.portraitUpsideDown))
     }
     #endif
 }

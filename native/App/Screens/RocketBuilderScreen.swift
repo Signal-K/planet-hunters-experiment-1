@@ -47,7 +47,8 @@ struct RocketBuilderScreen: View {
         GeometryReader { geo in
             let wide = geo.size.width > geo.size.height
             // Short landscape has no room under the plan strip: the pad stands behind it, like web where the strip sits over the sky.
-            let shortWide = wide && geo.size.height < 520 && !(customizing || guided)
+            // Customization is now an overlay, so it must not change this camera.
+            let shortWide = wide && geo.size.height < 520 && !guided
             let shortIdle = shortWide && phase == .idle
             let shortMission = shortWide && phase != .idle
             ZStack(alignment: .top) {
@@ -65,7 +66,7 @@ struct RocketBuilderScreen: View {
                             .background(Theme.blue, in: RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
                     }
-                    if !(customizing || guided) {
+                    if !guided {
                         if shortIdle {
                             Spacer(minLength: 0)
                         } else if shortMission {
@@ -91,6 +92,22 @@ struct RocketBuilderScreen: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
                 .padding(.bottom, 72)
+                if phase != .idle {
+                    launchDock
+                        .padding(.bottom, 84)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                        .zIndex(1)
+                }
+                if customizing && !guided {
+                    choices(active: active, guidedSlot: nil, loadout: loadout, compact: geo.size.height < 520)
+                        .frame(width: wide ? max(280, geo.size.width * 0.38) : nil)
+                        .frame(maxHeight: wide ? geo.size.height - 40 : max(220, geo.size.height * 0.54))
+                        .background(Theme.paper, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ink, lineWidth: 2))
+                        .padding(12)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: wide ? .topTrailing : .bottom)
+                        .zIndex(2)
+                }
                 if let sheet = planSheet {
                     MissionPlanSheet(sheet: sheet) { planSheet = nil }.frame(maxHeight: .infinity, alignment: .bottom).zIndex(2)
                 }
@@ -146,17 +163,6 @@ struct RocketBuilderScreen: View {
                     .padding(.horizontal, 16).frame(minHeight: 44)
                     .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
             }.buttonStyle(.plain).accessibilityLabel("Back")
-            if phase != .idle {
-                let enabled = launchEnabled && phase != .building
-                Button(action: onLaunch) {
-                    Text(primaryLabel).font(AppFont.display(14, "Bold")).tracking(1.4)
-                        .frame(minWidth: 110, minHeight: 44).padding(.horizontal, 12)
-                        .foregroundStyle(enabled ? Theme.paper : Theme.ink)
-                        .background(enabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-                }
-                .buttonStyle(.plain).disabled(!enabled).accessibilityIdentifier(phase == .design ? "prepare-launch-btn" : "launch-btn")
-            }
             Spacer(minLength: 4)
             if !guided && phase != .idle {
                 Button { customizing.toggle() } label: {
@@ -183,6 +189,19 @@ struct RocketBuilderScreen: View {
                 }.buttonStyle(.plain).accessibilityIdentifier("builder-dismantle")
             }
         }
+    }
+
+    private var launchDock: some View {
+        let enabled = launchEnabled && phase != .building
+        return Button(action: onLaunch) {
+            Text(primaryLabel).font(AppFont.display(16, "Bold")).tracking(1.5)
+                .frame(minWidth: 280, minHeight: 56).padding(.horizontal, 20)
+                .foregroundStyle(enabled ? Theme.paper : Theme.ink)
+                .background(enabled ? Theme.blue : Theme.paper2, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
+                .hardShadow(Theme.ink.opacity(0.35), x: 4, y: 4)
+        }
+        .buttonStyle(.plain).disabled(!enabled).accessibilityIdentifier(phase == .design ? "prepare-launch-btn" : "launch-btn")
     }
 
     private var backdrop: (skyTop: Color, skyHorizon: Color, ground: Color, tint: Color, pieces: [Landscape.Piece], period: Double) {
@@ -230,13 +249,11 @@ struct RocketBuilderScreen: View {
             let w = min(g.size.width, g.size.height * 1.276)
             let h = w / 1.276
             let progress: Double = phase == .building ? (previewProgress ?? buildProgress) : (phase == .ready ? 1 : 0)
+            let biome = EarthBiome(rawValue: store.player.earthBiome) ?? .mountains
+            let px = max(1.5, min(2, g.size.width / 460))
             ZStack(alignment: .topLeading) {
-                Theme.ink.opacity(0.82)
-                    .frame(width: g.size.width + 600, height: 1400)
-                    .position(x: g.size.width / 2, y: g.size.height - 28 + 700)
-                Theme.paper.opacity(0.24)
-                    .frame(width: g.size.width + 600, height: 4)
-                    .position(x: g.size.width / 2, y: g.size.height - 28 + 2)
+                BaseWorldCanvas(px: px, camX: 0, biome: biome.rawValue, grade: WorldAssets.grade())
+                    .frame(width: g.size.width, height: g.size.height)
                 complex(w: w, h: h, phase: phase, progress: progress)
                     .frame(width: w, height: h)
                     .position(x: g.size.width / 2, y: g.size.height - 4 - h / 2)
@@ -311,12 +328,13 @@ struct RocketBuilderScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading).padding(9)
         .background(LinearGradient(colors: [Theme.paper, Theme.paper2], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink.opacity(0.7), lineWidth: 2))
-        .shadow(color: Theme.ink.opacity(0.45), radius: 0, x: 3, y: 3)
+        .hardShadow(Theme.ink.opacity(0.45), x: 3, y: 3)
     }
 
     @ViewBuilder private func statMark(_ label: String) -> some View {
         if label == "CAPACITY" {
             RoundedRectangle(cornerRadius: 3).stroke(Theme.blue, lineWidth: 2).overlay(HStack(spacing: 2) { Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue); Rectangle().fill(Theme.blue) }.padding(3))
+                .frame(width: 18, height: 18)
         } else if label == "RANGE" {
             Image(systemName: "location.north.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(Theme.blue)
         } else {

@@ -1,63 +1,130 @@
-# AGENTS (canonical, Landnam)
+# Landnam agent guide
 
-Single source of agent instructions. `CLAUDE.md` imports this file; `web/`, `native/`, `pocketbase/`, `shared/` AGENTS files are thin pointers. Detail lives in `docs/agents/` (read the one your task needs):
+Landnam ships only a Next.js web build and an iOS SwiftUI build. `AGENTS.md` is
+canonical; area files point here. Keep work small, scene-first, and fast.
 
-| File | Read when |
-|---|---|
-| `docs/agents/workflow.md` | Starting a task: fast start, platform parity steps, command table, Linear/Craft/ZenNotes |
-| `docs/agents/testing.md` | Before claiming Done: completion contract, viewports, scene visual check |
-| `docs/agents/product.md` | Product scope, base scene, dock, mining, narrative and tech/layout rules |
-| `docs/agents/studio.md` | Scene work: Scene Studio scripts and feedback, live preview |
+## Fast loop
 
-## Token budget (mandatory)
-- Read only what the task needs, starting from the map and the area AGENTS file. Search with `rg -n PATTERN path/`, then read a window.
-- Never cat or open: `web/app/globals.css` (rg only), `web/package-lock.json`, `*-sheet.json`, whole `web/lib/contexts/useGameLoop.ts` / `pocketbase/main.go`, anything in `.ignore` / `.cursorignore`.
-- View `docs/art-reference-sm.jpg`, never `docs/art-reference.png`. One screenshot at a time.
-- Run the single test file you touched; the full suite once, at the end.
-- Noise paths: `.cursorignore`, `.ignore`, `.claude/settings.json`. Keep the three in sync.
+1. Confirm you are on the current cycle branch: `cycle/<N>` for the active
+   Linear cycle, the highest `cycle/*` on origin. Never assume a number.
+   Inspect `git status --short`, and read the active Linear `SSL-*` issue plus
+   its latest comment.
+2. Find the authored scene or mission in `shared/authoring/`, then its web and
+   iOS implementation from the map below.
+3. Implement web, then the matching iOS behavior before starting another slice.
+4. Run the smallest relevant type/build or colocated test. Do not run broad
+   suites by default.
+5. Open the affected scene in the VS Code/Cursor Simple Browser and inspect it.
+   `node scripts/scene.mjs <scene> --check` navigates the open follower tab,
+   waits for the scene to mount, and reports its real viewport. No Playwright,
+   Cypress spec, e2e suite, or second test stack exists in this repository;
+   confirm by using the scene (cloud: `scene-drive.mjs`), not by writing a test.
+
+Open `http://localhost:4320/game/hub?follow=1` once using **Simple Browser:
+Show**. `make ensure` starts the local stack if needed. The dev bridge follows
+`scripts/preview-target.mjs`, so agents can route and exercise the tab through
+`scripts/dev-check.mjs` without controlling the desktop.
+
+## Cloud sessions (Claude Code remote, `CLAUDE_CODE_REMOTE=true`)
+
+Liam follows these sessions from the Claude app, not an editor, so the work has
+to be visible to him as it happens.
+
+- One scene or flow at a time. Name it (its `qa/scenes.json` id) before
+  editing, and finish, show and commit it before starting the next. Do not
+  batch several scenes into one pass.
+- Confirm a change by playing the scene, the way a person would:
+  `node scripts/scene-drive.mjs open <scene-id>`, then `look` (what is on
+  screen and where), `click "<text>"`, `tap x y`, `key ArrowDown --hold 800`,
+  `wait`, `shot --all`. One browser stays open between commands, so state
+  carries over. Each action saves a screenshot; look at it.
+- Show Liam the scene before the first edit and after every visible change on
+  the Landnam Scene Monitor, https://claude.ai/artifact/3ZGpA51ywSzD3mXd9Dy1Hu
+  (he keeps it open in the Claude app; every session posts to this one URL).
+  Once per session: `Artifact` `action: "read"` on that URL (uploads to an
+  artifact the session has not read are refused) and ArtifactData `get`
+  `status/now` for its `version`. Per step: `scene-drive.mjs` prints a
+  `monitor {...}` line; upload the screenshot (Artifact, `url` = monitor,
+  `asset: true`, `file_paths`), then one ArtifactData `batch`: `set`
+  `steps/<doc_id>` with that line's fields plus `caption` and `image: <asset
+  url>`, and `update` `status/now` (`if_version`) with `{scene, sceneName,
+  missionName, objective}` from the same line plus `{ticket, ticketTitle,
+  ticketUrl}` from the Linear issue, `doing`, `waiting` (true when you need
+  his answer) and `updatedAt`.
+  The caption says what you did and what happened. The page source is
+  `docs/scene-monitor/index.html`; republish it with `url` set to the
+  monitor, never as a new artifact. SendUserFile (`display: "render"`) is
+  the fallback. Send the three viewports
+  (`shot --all`) before committing.
+- Stop at each shown change long enough for feedback when Liam is responding;
+  his feedback on the current scene beats the plan.
+- Feedback that applies beyond the current scene is a rule: write it as a
+  note in `notes/decisions/` and a line in `docs/agents/product.md` in the same
+  commit, and mirror the note into Craft (folder Landnam decisions).
+- Work in the account-free stage fixture (`/game/stage?preset=`). Use a local
+  account only to check the signed-in path before a commit that touches it.
+- Never write an e2e test or scripted flow to prove a change works. Driving
+  the real scene with `scene-drive.mjs` is using the site; a spec file, test
+  runner or long automated playthrough is not.
+
+## Rules
+
+- Work directly on the current cycle branch (`cycle/<N>`, matching the active
+  Linear cycle); never push to `main`. One coherent ticket outcome
+  is one commit. Use Linear for the task record and handoff.
+- Web and iOS are the only supported targets. Do not add macOS, iPadOS,
+  Android, desktop, Electron, Godot, or e2e test suites (Playwright/Cypress
+  specs, scripted playthroughs). `scripts/scene-drive.mjs` drives the real
+  scene by hand and is allowed.
+  Two Cypress specs exist at Liam's request and are the only exceptions:
+  `web/cypress/e2e/ssl-695-marketplace.cy.ts` and the Orionids badge chain,
+  `web/cypress/e2e/orionids-chain.cy.ts` (`npm run test:cypress:orionids`,
+  local stack only). Do not add others.
+- Every gameplay surface is an in-world scene, not a card grid. Every scene and
+  mission must have an authored fixture and a deep link. Register it in
+  `qa/scenes.json` and `scripts/preview-target.mjs` so it can be launched alone.
+- Scene and mission data lives in `shared/authoring/`; run
+  `node scripts/authoring.mjs check` after changing it. Never hand-edit its
+  generated runtime outputs.
+- Use shared tokens only. Text is at least 14px and taps are at least 44px.
+  Keep the shared HUD (except inside mining scenes, which show only the Menu
+  button; see docs/agents/product.md), offline outbox, sign-in requirement, and real-scene
+  interaction model intact.
+- Do not use a user’s device or desktop. The editor Simple Browser and iOS
+  Simulator are the supported interactive surfaces.
+- Keep discovery bounded: `rg -n`, then read a small window. Do not open
+  `web/package-lock.json`, generated theme files, assets, or build output.
+
+## Verification
+
+Web: `cd web && npm run typecheck`, then a focused `npm run test:file -- <path>`
+when logic changed, and a checked Simple Browser scene. iOS: build the simulator
+target and launch the matching `SceneCatalog` id when native code changed. State
+exactly what ran and what was skipped; source checks never substitute for a
+rendered scene.
+
+## Commit
+
+After a verified ticket outcome: inspect `git status --short`, stage the task
+from the repository root with `git add .`, review the staged diff, then commit
+without bypassing hooks. Subject format:
+
+`🚀🐺 ↝ [SSL-123]: Concise outcome`
+
+Use two distinct non-face emoji and every worked SSL key. Rebase and push to
+the current `cycle/<N>` branch, then add the proof and remaining caveats to Linear.
 
 ## Map
 
-| Feature | Web (`web/`) | Native (`native/`) |
-|---|---|---|
-| Shell / routing | `components/game/GameApp.tsx`, `GameScreenRouter.tsx`, `lib/game-screens.ts` | `App/RootView.swift`, `LandnamCore/.../Model/Screen.swift` |
-| Base (hub) | `components/game/screens/HubScreen.tsx`, `components/game/hub/*` | `App/Screens/HubScreen.swift`, `BaseWorldScene.swift`, `BaseDock.swift`, `BaseCamera.swift` |
-| Mining (laser) | `screens/MiningScreen.tsx`, `MiningCanvas.tsx`, `lib/mining/*`, `lib/engine/scripts/MiningController.ts`, `lib/systems/MiningSystem.ts` | `App/Scenes/MiningScene.swift`, `App/Mining/*`, `LandnamCore/.../Mining/*` |
-| Mission flow | `MissionSetupRoutes.tsx`, `MissionOperationRoutes.tsx`, `lib/mission-flow.ts`, `lib/data/mission-generator.ts`, `lib/systems/MissionRunLifecycle.ts` | `App/Screens/CoreLoop.swift`, `FlightScreens.swift`, `LandnamCore/.../Systems/Loop.swift`, `MissionBoard.swift` |
-| Hangar | `screens/HangarScreen.tsx`, `lib/data/shipCustomizer.ts`, `lib/rockets.ts` | `App/Screens/HangarScreen.swift`, `LandnamCore/.../Data/Rockets.swift` |
-| Exchange (Market) | `screens/MarketScreen.tsx`, `lib/systems/EconomySystem.ts` | `LandnamCore/.../Systems/Market.swift`, `Data/Economy.swift` |
-| Settings | `components/game/SettingsSheet.tsx` | `App/Screens/HubScreen.swift`, `App/OrientationPreference.swift` |
-| Sync / state | `game-context.tsx`, `lib/game-state*.ts`, `lib/sync/*`, `lib/offline/*` | `LandnamCore/.../Sync/*`, `Store/GameStore.swift` |
-| Backend | `lib/pb*.ts` | `pocketbase/` (Go hooks, `pb_migrations/`) |
-| Design tokens | `app/globals.css` (rg only), `shared/tokens/tokens.json` -> `npm run sync:shared` | `App/Theme.swift` (`Theme.generated.swift` is generated) |
-| Scene scripts, Studio | `shared/authoring/`, `app/game/studio/`, `lib/authoring/` | `AuthoredMissions.swift` + generated `AuthoredMissions.generated.swift` |
+| Area | Web | iOS |
+| --- | --- | --- |
+| Routing | `web/components/game/GameScreenRouter.tsx` | `native/App/RootView.swift` |
+| Independent scene | `web/app/game/stage/` + `web/lib/devPresets.ts` | `native/App/SceneCatalog.swift` |
+| Missions | `web/components/game/Mission*`, `web/lib/mission-flow.ts` | `native/App/Screens/FlightScreens.swift`, `native/LandnamCore/.../Mission*` |
+| Mining | `web/components/game/screens/MiningScreen.tsx` | `native/App/Scenes/MiningScene.swift` |
+| Scene contracts | `shared/authoring/` + `web/lib/engine/` | `shared/authoring/` + `LandnamCore/Scene/` |
+| State and sync | `web/lib/game-state*.ts`, `web/lib/offline/` | `native/LandnamCore/Sync/`, `native/App/Store/` |
 
-## Priority order (highest wins)
-1. The user's latest instruction and latest approved specs.
-2. The Linear `SSL-*` ticket: its scope and "Done when" list.
-3. Design decisions in ZenNotes (`~/Navigation/workspace`, `projects/landnam/decisions/`, `decisions/`; search it first).
-4. This file, then `docs/agents/`, then older `docs/` and `specs/`. Older docs are evidence, not instructions; report stale ones in the ticket.
-
-## Standing rules (Liam, mandatory)
-- Work on `cycle/4`, no feature branches, never push to `main`. No waiting on CI; report CI and deploys as unverified unless checked.
-- Native must match web in behavior and look. Each slice: web, then native iOS/iPadOS and macOS, before the next feature. Record each destination checked or blocked.
-- No scene titles ("Base", "Earth HQ", "Earth Base") anywhere in UI.
-- One shared HUD on every screen (web `components/game/hub/` + `SyncStatus`, native `App/Screens/SharedHud.swift`).
-- Every gameplay screen is a real scene with the action on an object in it; never a card grid or text-and-buttons page.
-- No orange or green UI. Colours only from CSS variables / `shared/tokens`; never hand-edit generated files.
-- Text at least 14px, tap targets at least 44px, 8pt rhythm. No emoji in UI. UPPERCASE tracked labels and CTAs. No em dashes in copy.
-- Phone portrait, phone landscape and desktop must all work.
-- When a redesign removes UI, build new theme-matching elements; never restore old ones.
-- PocketBase is the only state store, through the outbox; no direct client writes. Offline-first; check phone sizes and Safari.
-- No account-free play (no guest mode, demo routes). "Client", never "contractor".
-- No TestFlight uploads; do not recreate that workflow without asking.
-- Do not drive the user's device or desktop; test headless or in the iOS Simulator.
-- Every screen and Hub state is reachable by URL (`/game/<screen>`, Hub query params) and listed in `scripts/preview-target.mjs`.
-
-## Done means proof
-Done needs the real code path, typecheck and relevant tests, and screenshots you looked at in phone portrait (390x844), phone landscape (926x428) and desktop (1440x900). Unit tests alone never prove it works. Never claim a check you did not run; name what was skipped. Full contract: `docs/agents/testing.md`.
-
-## Commit and Linear
-- After a finished, verified unit only: `git status --short`, `git add .` (all changes, including other agents'; disclose any exclusion), review `git diff --cached`, commit, `git pull --rebase`, push to `cycle/4`. No WIP, checkpoint or one-line commits. Never `--no-verify`.
-- Subject: `🚀🐺 ↝ [SSL-123 SSL-456]: Concise outcome`. Two different emoji (no flags, no faces), the exact `↝`, every ticket key in one bracket pair.
-- Linear is the only tracker. Read the ticket and its latest comments first. Post the handoff (what changed, what was verified, what is left) with `save_comment` and set Done with `save_issue` when your checks pass; do not park it In Review.
+Read `notes/decisions/` (Liam's decisions, a ZenNotes vault; newest wins) and
+`docs/agents/product.md` for product rules, `docs/agents/studio.md` for
+scene authoring, and `docs/agents/testing.md` before calling a ticket complete.

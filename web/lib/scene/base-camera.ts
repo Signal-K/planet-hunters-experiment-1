@@ -3,7 +3,7 @@
  * zooming in magnifies it and the camera pans over the larger world. Offsets are screen pixels applied
  * as `translate(x, y) scale(zoom)` with origin top-left, so the world is never smaller than the view.
  */
-export const MIN_ZOOM = 1
+export const MIN_ZOOM = 0.1
 export const MAX_ZOOM = 2.6
 /** How far past the hard edge a drag may stretch before it springs back, as a fraction of the viewport. */
 export const SOFT_EDGE = 0.08
@@ -21,7 +21,13 @@ export interface Viewport {
   worldW?: number
 }
 
-export const BASE_CAMERA_HOME: BaseCameraState = { x: 0, y: 0, zoom: MIN_ZOOM }
+export const BASE_CAMERA_HOME: BaseCameraState = { x: 0, y: 0, zoom: 1 }
+
+/** Smallest useful scale for the authored strip on this viewport. */
+export function fitZoom(view: Viewport): number {
+  const worldW = Math.max(view.worldW ?? view.w, view.w)
+  return clampZoom(Math.min(1, view.w / worldW))
+}
 
 export function clampZoom(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
@@ -30,7 +36,7 @@ export function clampZoom(zoom: number): number {
 /** Hard pan limits for a zoom: the offset range that keeps the world covering the viewport. */
 export function panLimits(zoom: number, view: Viewport): { minX: number; maxX: number; minY: number; maxY: number } {
   const worldW = Math.max(view.worldW ?? view.w, view.w)
-  return { minX: view.w - worldW * zoom, maxX: 0, minY: view.h * (1 - zoom), maxY: 0 }
+  return { minX: Math.min(0, view.w - worldW * zoom), maxX: 0, minY: Math.min(0, view.h * (1 - zoom)), maxY: 0 }
 }
 
 function clampAxis(v: number, min: number, max: number): number {

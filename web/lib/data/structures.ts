@@ -63,16 +63,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'onboarding-missions',
     description: 'Runs your satellites and telescopes. Build it before you launch one.',
   },
-  {
-    id: 'astronaut-academy',
-    name: 'Astronaut Academy',
-    kind: 'astronaut-academy',
-    cost: STRUCTURE_PRICES.academy,
-    costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Reach client level 2 with two clients, then research it',
-    unlockTrigger: 'academy-research',
-    description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
-  },
 ]
 
 /** One-off cost to permanently upgrade the launchpad. Previously duplicated as
@@ -84,14 +74,13 @@ export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
  *  a fifth of the starting francs. (Free Ops itself opens with the launchpad.) */
 export const FIRST_STORAGE_MISSIONS_DONE = 1
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
   // SSL-332's storage silo is the only pre-Free-Ops construction step: it
   // becomes available after Extraction and Transport, and placement opens
   // Free Ops. Existing players retain access through their saved unlock.
   if (structure.id === 'surface-silo') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'market') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('market')
   if (structure.id === 'control-station') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('control-station')
-  if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   return false
 }

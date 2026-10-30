@@ -12,7 +12,7 @@ import Foundation
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/building-levels.json")
         return try JSONDecoder().decode(Fixture.self, from: Data(contentsOf: url))
     }
-    private func state(_ placed: [String] = ["launchpad", "surface-silo", "astronaut-academy"], francs: Int = 1_000_000_000) -> GameState {
+    private func state(_ placed: [String] = ["launchpad", "surface-silo"], francs: Int = 1_000_000_000) -> GameState {
         var s = GameState(); s.player.placed = placed; s.player.francs = francs; return s
     }
 
@@ -47,19 +47,19 @@ import Foundation
     @Test func upgradeStepsChargesAndStopsAtLevelThree() {
         var s = state()
         let before = s.player.francs
-        s = BuildingLevels.applyUpgrade(s, id: "astronaut-academy")
-        #expect(s.player.buildingLevels["astronaut-academy"] == 2 && s.player.francs == before - Economy.academyPrice)
-        s = BuildingLevels.applyUpgrade(s, id: "astronaut-academy")
-        #expect(s.player.buildingLevels["astronaut-academy"] == 3)
-        #expect(BuildingLevels.applyUpgrade(s, id: "astronaut-academy") == s)
-        #expect(s.player.placed == ["launchpad", "surface-silo", "astronaut-academy"])
+        s = BuildingLevels.applyUpgrade(s, id: "surface-silo")
+        #expect(s.player.buildingLevels["surface-silo"] == 2 && s.player.francs == before - Economy.surfaceSiloPrice * 2)
+        s = BuildingLevels.applyUpgrade(s, id: "surface-silo")
+        #expect(s.player.buildingLevels["surface-silo"] == 3)
+        #expect(BuildingLevels.applyUpgrade(s, id: "surface-silo") == s)
+        #expect(s.player.placed == ["launchpad", "surface-silo"])
     }
 
     @Test func refusesUnaffordableUnplacedAndUnknown() {
         let poor = state(francs: 1)
-        #expect(BuildingLevels.applyUpgrade(poor, id: "astronaut-academy") == poor)
+        #expect(BuildingLevels.applyUpgrade(poor, id: "surface-silo") == poor)
         let bare = state(["launchpad"])
-        #expect(BuildingLevels.applyUpgrade(bare, id: "astronaut-academy") == bare)
+        #expect(BuildingLevels.applyUpgrade(bare, id: "surface-silo") == bare)
         #expect(BuildingLevels.applyUpgrade(bare, id: "garage") == bare)
     }
 
@@ -68,7 +68,7 @@ import Foundation
         #expect(s.player.buildingLevels["launchpad"] == 2 && s.player.launchpadUpgraded)
     }
 
-    @Test func siloRefineryAndAcademyEffectsScale() {
+    @Test func siloAndRefineryEffectsScale() {
         var s = state()
         #expect(Market.storageCapacity(s.player) == Economy.surfaceSiloCapacity)
         s = BuildingLevels.applyUpgrade(BuildingLevels.applyUpgrade(s, id: "surface-silo"), id: "surface-silo")

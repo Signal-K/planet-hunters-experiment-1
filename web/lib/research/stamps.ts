@@ -1,7 +1,7 @@
 import type { Player } from '@/lib/game-types'
 
 /** What earned a stamp. Citizen science is an instrument feed, so every kind is an instrument or survey result, never a mission type. */
-export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event'] as const
+export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event', 'exchange-sale', 'contract-run', 'price-alert'] as const
 export type StampKind = typeof STAMP_KINDS[number]
 export type ResearchStamps = Record<string, StampKind[]>
 
@@ -86,10 +86,55 @@ export function stampsInMonth(stamps: ResearchStamps | undefined, year: number, 
   return Object.entries(stamps ?? {}).reduce((n, [day, kinds]) => n + (day.startsWith(prefix) ? kinds.length : 0), 0)
 }
 
+export interface ResearchMonthSummary {
+  key: string
+  label: string
+  stamps: number
+}
+
+/**
+ * Counts older citizen-science records in the month they were actually made.
+ * Community Research began in October 2026, so older records are history only:
+ * they never create retroactive weekly stamps or rewards.
+ */
+export function historicalContributionMonths(stamps: ResearchStamps | undefined, contributionTimes: readonly number[], now: number): Record<string, number> {
+  const launch = Date.UTC(2026, 9, 1)
+  const counts: Record<string, number> = {}
+  for (const submittedAt of contributionTimes) {
+    if (!Number.isFinite(submittedAt) || submittedAt >= launch || submittedAt > now) continue
+    const key = new Date(submittedAt).toISOString().slice(0, 7)
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  // Before Community Research existed, a classification stamp could only have
+  // been imported by an earlier client. Keep it as a floor, never a duplicate.
+  for (const [day, kinds] of Object.entries(stamps ?? {})) {
+    if (day >= '2026-10-01' || !kinds.includes('classification')) continue
+    const key = day.slice(0, 7)
+    counts[key] = Math.max(counts[key] ?? 0, kinds.length)
+  }
+  return counts
+}
+
+/** Recent personal contribution totals, newest month first. */
+export function researchMonthHistory(stamps: ResearchStamps | undefined, now: number, count = 6, historicalContributions: Record<string, number> = {}): ResearchMonthSummary[] {
+  const date = new Date(now)
+  const result: ResearchMonthSummary[] = []
+  for (let offset = 0; offset < count; offset += 1) {
+    const monthDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - offset, 1))
+    const year = monthDate.getUTCFullYear()
+    const month = monthDate.getUTCMonth()
+    const key = `${year}-${String(month + 1).padStart(2, '0')}`
+    result.push({
+      key,
+      label: monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
+      stamps: stampsInMonth(stamps, year, month) + (historicalContributions[key] ?? 0),
+    })
+  }
+  return result
+}
+
 /** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
 export const COMMUNITY_GOAL = 1000
-export const COMMUNITY_WEEKLY_REVENUE_PCT = 3
-export const COMMUNITY_BONUS_DAYS = 7
 
 /** `GET /api/community/research`. `others` leaves out the caller, so local stamps not yet synced are counted once. */
 export interface CommunityResearch {
@@ -109,27 +154,9 @@ export function communityBar(ownThisMonth: number, server?: CommunityResearch | 
     goal,
     fill: Math.min(1, total / goal),
     reached: server?.reachedAt != null,
-    bonusPct: server?.bonusPct ?? COMMUNITY_WEEKLY_REVENUE_PCT,
+    bonusPct: server?.bonusPct ?? 0,
     bonusUntil: server?.bonusUntil ?? null,
   }
-}
-
-type BonusPlayer = Pick<Player, 'researchBonusUntil'>
-
-/** The community bonus is open while `now` is inside the week after the bar filled. */
-export function researchBonusActive(player: BonusPlayer | undefined, now: number): boolean {
-  const until = player?.researchBonusUntil
-  return typeof until === 'number' && now < until
-}
-
-/** Exchange sales (ore and finished goods) pay this much more while the bonus is open. */
-export const RESEARCH_BONUS_RATE = COMMUNITY_WEEKLY_REVENUE_PCT / 100
-
-/** Keep the latest bonus window the server reported. Returns the same player when nothing changes. */
-export function noteResearchBonus<T extends BonusPlayer>(player: T, bonusUntil: number | null | undefined): T {
-  if (typeof bonusUntil !== 'number' || !Number.isFinite(bonusUntil)) return player
-  if ((player.researchBonusUntil ?? 0) >= bonusUntil) return player
-  return { ...player, researchBonusUntil: bonusUntil }
 }
 
 /** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
@@ -152,4 +179,4 @@ export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind
 }
 
 export const RESEARCH_TITLE = 'Daily research'
-export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar, and a full bar pays everyone +3% on Exchange sales for a week. Miss a day and nothing is lost.'
+export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar and helps unlock permanent research rewards. Miss a day and nothing is lost.'

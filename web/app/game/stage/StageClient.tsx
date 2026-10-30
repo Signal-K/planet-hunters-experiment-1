@@ -12,8 +12,11 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SettingsSheet from '@/components/game/SettingsSheet'
-import { OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
+import FriendsSheet from '@/components/game/FriendsSheet'
+import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
+import { HUB_PROMPT_TRANSIT_TELESCOPE } from '@/lib/hub-prompts'
+import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 
 // In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
 // `?hud=1` brings them back for a look at how the chrome sits over the scene.
@@ -58,7 +61,32 @@ function Stage() {
   useEffect(() => {
     if (!game.hydrated || patched.current) return
     patched.current = true
-    const raw = new URLSearchParams(window.location.search).get('patch')
+    const params = new URLSearchParams(window.location.search)
+    const flowCheck = params.get('t') === 'orionids-flow-check' || params.get('preset') === 'ui-orionids-ready'
+    const raw = params.get('patch')
+    // Hub follow-up prompts ("Build a control station", "Launch a space telescope") are campaign nudges, not part of
+    // the scene being built. Every stage preset keeps them dismissed unless `&prompts=1` asks to see them.
+    if (params.get('prompts') !== '1') {
+      game.setPlayer(player => ({
+        ...player,
+        dismissedHubPrompts: { ...player.dismissedHubPrompts, [HUB_PROMPT_TRANSIT_TELESCOPE]: 1_000_000_000 },
+      }))
+    }
+    if (flowCheck) {
+      // The followable Orionids check starts after the field guide. It remains
+      // a preview-only patch, so a clean campaign or saved account is untouched.
+      game.setPlayer(player => ({
+        ...player,
+        missionsDone: Math.max(player.missionsDone, 3),
+        freeOperations: true,
+        fireballSpotter: { readAt: 1, passedAt: 1 },
+        orionidsEventStage: 0,
+      }))
+      requestMissionBoardEvent('orionids-2026')
+      game.setMissionId(null)
+      game.setTargetId(null)
+      game.setScreenFromUrl('missions')
+    }
     if (!raw) return
     try {
       const patch = JSON.parse(raw)
@@ -104,9 +132,15 @@ function Stage() {
     window.addEventListener(OPEN_SETTINGS_EVENT, open)
     return () => window.removeEventListener(OPEN_SETTINGS_EVENT, open)
   }, [])
+  const [friendsOpen, setFriendsOpen] = useState(false)
+  useEffect(() => {
+    const open = () => setFriendsOpen(true)
+    window.addEventListener(OPEN_FRIENDS_EVENT, open)
+    return () => window.removeEventListener(OPEN_FRIENDS_EVENT, open)
+  }, [])
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const planStep = plan && activeTry
-    ? trainingTryStep(activeTry, game.screen, { returning: !!game.player.returningToEarth })
+    ? trainingTryStep(activeTry, game.screen)
     : undefined
   const immersive = LOCATION_SCREENS.has(game.screen as Screen)
 
@@ -136,6 +170,7 @@ function Stage() {
         </div>
       </div>
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
     </main>
   )
 }

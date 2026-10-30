@@ -33,6 +33,15 @@ import Foundation
         #expect(Marketplace.applyBuy(poor, mineralId: "iron", amount: 1, now: now) == poor)
     }
 
+    @Test func openMarketSellingIsDiscountedUntilTheExchangeIsBuilt() {
+        let open = state(placed: ["launchpad"])
+        let exchange = state(placed: ["launchpad", "market"])
+        let openQuote = Marketplace.spot("iron", player: open.player, now: now)
+        let exchangeQuote = Marketplace.spot("iron", player: exchange.player, now: now)
+        #expect(openQuote < exchangeQuote)
+        #expect(openQuote == Int((Double(exchangeQuote) * Economy.openMarketSellRate).rounded()))
+    }
+
     @Test func alertsNeedTheExchangeAndFireOnceAtTheTarget() {
         let s = state()
         let spot = Marketplace.spot("iron", player: s.player, now: now)

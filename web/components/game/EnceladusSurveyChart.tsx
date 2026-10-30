@@ -24,7 +24,7 @@ export default function EnceladusSurveyChart({ chart, classification, testId = '
   const cells = classification?.cells ?? {}
   const stormCount = Object.values(cells).filter(cell => cell.storm).length
   const status = chart.tier === 'gold'
-    ? chart.territoryPlotClaimedAt ? 'PLOT CLAIMED' : 'PLOT READY TO CLAIM'
+    ? 'GOLD ATLAS RECORDED'
     : 'ATLAS RECORDED'
   return (
     <figure style={{ margin: 0, display: 'grid', gap: 8, justifyItems: 'center' }} data-testid={testId}>

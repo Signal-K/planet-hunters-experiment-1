@@ -53,6 +53,9 @@ GodotTest/
 node_modules/
 web/.next/
 pocketbase/pb_data/
+pocketbase/pb_data_shared/
+pocketbase/.bin/
+.scene-shots/
 pocketbase/landnam-backend
 
 # Large binaries
@@ -98,3 +101,4 @@ __pycache__/
 # Retired runner output retained locally, never committed
 /web/cypress/screenshots/
 /web/cypress/videos/
+web/.dev-follower.json

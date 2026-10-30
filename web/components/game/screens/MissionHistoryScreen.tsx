@@ -80,10 +80,12 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
         </div>
         {ordered.length === 0 ? (
           <div className={styles.empty}>
-            <div className={styles.emptySlots} aria-hidden="true"><span /><span /><span /></div>
-            {legacyCompleted > 0
-              ? `${legacyCompleted} completed ${legacyCompleted === 1 ? 'mission predates' : 'missions predate'} detailed mission records. New missions will appear here with their full debrief.`
-              : 'No completed missions yet. Choose a contract from the Mission Board to start your log.'}
+            <div className={styles.emptyKicker}>Archive status</div>
+            <p className={styles.emptyMessage}>
+              {legacyCompleted > 0
+                ? `${legacyCompleted} completed ${legacyCompleted === 1 ? 'mission predates' : 'missions predate'} detailed mission records. New missions will appear here with their full debrief.`
+                : 'No completed missions yet. Choose a contract from the Mission Board to start your log.'}
+            </p>
           </div>
         ) : (
           <div className={styles.list}>

@@ -13,7 +13,6 @@ public struct FlightPlanProgress: Codable, Equatable, Sendable {
 }
 
 public enum HaulDisposition: String, Codable, Sendable { case store, sell }
-public enum LicenseGrade: String, Codable, Sendable { case one = "Grade I", two = "Grade II", three = "Grade III" }
 
 /// Player progress. Field names match the web save JSON (`game_states.state`) so a
 /// save can move between clients. Fields not yet ported live in `extras` and are
@@ -22,6 +21,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var francs: Int = Economy.startingFrancs
     public var activeMission: ActiveMission?
     public var missionRunId: String?
+    /// Launch time of the active run; event badges are graded at launch as well as completion.
+    public var missionStartedAt: Double?
     public var missionPhase: MissionPhase?
     public var miningCargoInProgress: Cargo?
     public var deliveryUnloadStartedAt: Double?
@@ -41,8 +42,6 @@ public struct Player: Codable, Equatable, Sendable {
     public var placementPlots: [String: Int] = [:]
     public var controlBuilt: Bool = false
     public var missionsDone: Int = 0
-    public var skillPoints: Int = 0
-    public var unlockedSkillNodes: [String] = []
     public var freeOperations: Bool = false
     /// Earth base landscape chosen in onboarding or by the one-time move action.
     public var earthBiome: String = "mountains"
@@ -76,20 +75,6 @@ public struct Player: Codable, Equatable, Sendable {
     public var refineryBuilt: Bool = false
     public var refineryUnlocked: Bool = false
     public var refinedGoods: Cargo = [:]
-    public var crew: [CrewMember] = []
-    public var formerCrew: [CrewRehireOffer] = []
-    public var crewTraining: [CrewTrainingSession] = []
-    public var academyResearched: Bool = false
-    public var academyFunded: Bool = false
-    public var academyXP: Int = 0
-    public var crewHiresLifetime: Int = 0
-    public var crewHiresThisWeek: Int = 0
-    public var crewHireWeek: String?
-    public var trainingDate: String?
-    public var trainingSessionsUsedToday: Int = 0
-    public var crewUpkeepSettledDate: String?
-    public var crewModuleResearched: Bool = false
-    public var sharedChartsByClient: [String: Int] = [:]
     public var underConstruction: [String: Double] = [:]
     public var discoveredExoplanetTargets: [String: Target] = [:]
     public var satelliteTargetId: String?
@@ -98,16 +83,12 @@ public struct Player: Codable, Equatable, Sendable {
     public var lastSeenConfirmedAt: String?
     public var transitSatelliteLevel: Int?
     public var deepSpaceTelescopeLaunchedAt: Double?
-    public var surfaceOps: SurfaceOpsState = SurfaceOpsState()
     public var refineryQueue: [RefineryJob] = []
     public var refineryLastStartedAt: Double?
-    public var structureCrewAssignments: [String: String] = [:]
     public var launchpadUpgraded: Bool = false
     /// Levels 2-3 of upgradable buildings (`BuildingLevels`); absent means level 1. Same JSON key as web.
     public var buildingLevels: [String: Int] = [:]
     public var lastClient: String?
-    public var loanDebt: Int = 0
-    public var loanOffered: Bool = false
     public var arrivalAt: Double?
     public var transitStartedAt: Double?
     public var seenPlanets: [String] = []
@@ -115,7 +96,6 @@ public struct Player: Codable, Equatable, Sendable {
     public var subsurfaceExcavated: Bool = false
     public var subsurfaceBuilt: [String] = []
     public var landingResearched: Bool = false
-    public var licenseGrade: LicenseGrade = .one
     /// Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief.
     public var laserCapacitorLevel: Int = 0
     public var flightPlan: FlightPlanProgress = FlightPlanProgress()
@@ -131,6 +111,13 @@ public struct Player: Codable, Equatable, Sendable {
     public var orionidsRunBaseline: Int?
     /// UTC day to research tasks done that day (web `researchStamps`, SSL-663).
     public var researchStamps: ResearchStamps = ResearchStamps()
+    /// Weekly community research path and permanent regular fragments (SSL-694).
+    public var researchPath: ResearchPathChoice?
+    public var researchFragments: Int = 0
+    /// General Research Ink. It is earned by converting regular fragments and will fund future fragment-store cosmetics.
+    public var researchUniversalFragments: Int = 0
+    /// Immutable source records keep completed research weeks visible after their fragments become Research Ink.
+    public var researchFragmentHistory: [ResearchFragmentHistoryEntry] = []
     /// Unported save fields, preserved verbatim.
     public var extras: [String: JSONValue] = [:]
 
@@ -150,7 +137,7 @@ public struct Player: Codable, Equatable, Sendable {
             consumed.insert(key)
             if let value = try? c.decodeIfPresent(T.self, forKey: AnyKey(key)) { keep = value }
         }
-        get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId)
+        get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId); getOpt("missionStartedAt", &missionStartedAt)
         getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress)
         getOpt("deliveryUnloadStartedAt", &deliveryUnloadStartedAt); getOpt("landingStartedAt", &landingStartedAt)
         getOpt("landingReturnStartedAt", &landingReturnStartedAt); getOpt("hasLanded", &hasLanded)
@@ -159,7 +146,7 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("pendingRocketLocation", &pendingRocketLocation); getOpt("pendingRocketSource", &pendingRocketSource)
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
-        get("missionsDone", &missionsDone); get("skillPoints", &skillPoints); get("unlockedSkillNodes", &unlockedSkillNodes)
+        get("missionsDone", &missionsDone)
         get("freeOperations", &freeOperations); get("earthBiome", &earthBiome); get("earthBiomeMoveUsed", &earthBiomeMoveUsed); getOpt("skyEventLocation", &skyEventLocation); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
@@ -171,20 +158,17 @@ public struct Player: Codable, Equatable, Sendable {
         get("completedMissions", &completedMissions); get("clientStreaks", &clientStreaks)
         get("clientCooldowns", &clientCooldowns); get("researchAnnotations", &researchAnnotations); get("saturnClassifications", &saturnClassifications); get("tessClassifications", &tessClassifications); get("badges", &badges); get("asteroidClassifications", &asteroidClassifications)
         get("refineryBuilt", &refineryBuilt); get("refineryUnlocked", &refineryUnlocked); get("refinedGoods", &refinedGoods)
-        get("crew", &crew); get("formerCrew", &formerCrew); get("crewTraining", &crewTraining)
-        get("academyResearched", &academyResearched); get("academyFunded", &academyFunded); get("academyXP", &academyXP)
-        get("crewHiresLifetime", &crewHiresLifetime); get("crewHiresThisWeek", &crewHiresThisWeek); getOpt("crewHireWeek", &crewHireWeek)
-        getOpt("trainingDate", &trainingDate); get("trainingSessionsUsedToday", &trainingSessionsUsedToday)
-        getOpt("crewUpkeepSettledDate", &crewUpkeepSettledDate); get("crewModuleResearched", &crewModuleResearched)
-        get("sharedChartsByClient", &sharedChartsByClient)
+        
+        
+        
         get("underConstruction", &underConstruction); get("discoveredExoplanetTargets", &discoveredExoplanetTargets)
-        getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("lastSeenConfirmedAt", &lastSeenConfirmedAt); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); get("surfaceOps", &surfaceOps)
-        get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); get("structureCrewAssignments", &structureCrewAssignments)
-        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient); get("loanDebt", &loanDebt)
-        get("loanOffered", &loanOffered); getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
+        getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("lastSeenConfirmedAt", &lastSeenConfirmedAt); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); 
+        get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); 
+        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient); 
+        getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
-        get("licenseGrade", &licenseGrade); get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("orionidsEventStage", &orionidsEventStage); get("researchStamps", &researchStamps); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
+        get("flightPlan", &flightPlan); get("priceAlerts", &priceAlerts); get("shipCustomizerParts", &shipCustomizerParts); get("orionidsFragments", &orionidsFragments); get("orionidsEventStage", &orionidsEventStage); get("researchStamps", &researchStamps); getOpt("researchPath", &researchPath); get("researchFragments", &researchFragments); get("researchUniversalFragments", &researchUniversalFragments); get("researchFragmentHistory", &researchFragmentHistory); getOpt("orionidsRunBaseline", &orionidsRunBaseline); get("laserCapacitorLevel", &laserCapacitorLevel)
         buildingLevels = BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)
         launchpadUpgraded = launchpadUpgraded || (buildingLevels["launchpad"] ?? 1) >= 2
         Self.mergeTelescope(&self)
@@ -215,7 +199,7 @@ public struct Player: Codable, Equatable, Sendable {
         for (key, value) in extras { try c.encode(value, forKey: AnyKey(key)) }
         func put<T: Encodable>(_ key: String, _ value: T) throws { try c.encode(value, forKey: AnyKey(Player.renamed[key] ?? key)) }
         func putOpt<T: Encodable>(_ key: String, _ value: T?) throws { if let value { try c.encode(value, forKey: AnyKey(key)) } }
-        try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId)
+        try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId); try putOpt("missionStartedAt", missionStartedAt)
         try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress)
         try putOpt("deliveryUnloadStartedAt", deliveryUnloadStartedAt); try putOpt("landingStartedAt", landingStartedAt)
         try putOpt("landingReturnStartedAt", landingReturnStartedAt); try putOpt("hasLanded", hasLanded)
@@ -224,7 +208,7 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("pendingRocketLocation", pendingRocketLocation); try putOpt("pendingRocketSource", pendingRocketSource)
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
-        try put("missionsDone", missionsDone); try put("skillPoints", skillPoints); try put("unlockedSkillNodes", unlockedSkillNodes)
+        try put("missionsDone", missionsDone); 
         try put("freeOperations", freeOperations); try put("earthBiome", earthBiome); try put("earthBiomeMoveUsed", earthBiomeMoveUsed); try putOpt("skyEventLocation", skyEventLocation); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
@@ -236,20 +220,17 @@ public struct Player: Codable, Equatable, Sendable {
         try put("completedMissions", completedMissions); try put("clientStreaks", clientStreaks)
         try put("clientCooldowns", clientCooldowns); try put("researchAnnotations", researchAnnotations); try put("saturnClassifications", saturnClassifications); try put("tessClassifications", tessClassifications); try put("badges", badges); try put("asteroidClassifications", asteroidClassifications)
         try put("refineryBuilt", refineryBuilt); try put("refineryUnlocked", refineryUnlocked); try put("refinedGoods", refinedGoods)
-        try put("crew", crew); try put("formerCrew", formerCrew); try put("crewTraining", crewTraining)
-        try put("academyResearched", academyResearched); try put("academyFunded", academyFunded); try put("academyXP", academyXP)
-        try put("crewHiresLifetime", crewHiresLifetime); try put("crewHiresThisWeek", crewHiresThisWeek); try putOpt("crewHireWeek", crewHireWeek)
-        try putOpt("trainingDate", trainingDate); try put("trainingSessionsUsedToday", trainingSessionsUsedToday)
-        try putOpt("crewUpkeepSettledDate", crewUpkeepSettledDate); try put("crewModuleResearched", crewModuleResearched)
-        try put("sharedChartsByClient", sharedChartsByClient)
+        
+        
+        
         try put("underConstruction", underConstruction); try put("discoveredExoplanetTargets", discoveredExoplanetTargets)
-        try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("lastSeenConfirmedAt", lastSeenConfirmedAt); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); try put("surfaceOps", surfaceOps)
-        try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); try put("structureCrewAssignments", structureCrewAssignments)
-        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient); try put("loanDebt", loanDebt)
-        try put("loanOffered", loanOffered); try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
+        try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("lastSeenConfirmedAt", lastSeenConfirmedAt); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); 
+        try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); 
+        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient); 
+        try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)
-        try put("licenseGrade", licenseGrade); try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("orionidsEventStage", orionidsEventStage); try put("researchStamps", researchStamps); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
+        try put("flightPlan", flightPlan); try put("priceAlerts", priceAlerts); try put("shipCustomizerParts", shipCustomizerParts); try put("orionidsFragments", orionidsFragments); try put("orionidsEventStage", orionidsEventStage); try put("researchStamps", researchStamps); try putOpt("researchPath", researchPath); try put("researchFragments", researchFragments); try put("researchUniversalFragments", researchUniversalFragments); try put("researchFragmentHistory", researchFragmentHistory); try putOpt("orionidsRunBaseline", orionidsRunBaseline); try put("laserCapacitorLevel", laserCapacitorLevel)
     }
 }
 

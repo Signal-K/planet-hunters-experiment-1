@@ -23,16 +23,15 @@ const SCREEN_LIST = {
   market: true,
   hangar: true,
   'rocket-buy': true,
-  skills: true,
   'rover-survey': true,
   launchpad: true,
-  'surface-ops': true,
-  academy: true,
   'asteroid-discovery': true,
   'saturn-storm-search': true,
+  'radio-meteors': true,
   'instrument-hub': true,
   'mission-history': true,
   'narrative-ledger': true,
+  'community-research': true,
 } as const satisfies Record<Screen, true>
 
 export const GAME_SCREENS: readonly Screen[] = Object.keys(SCREEN_LIST) as Screen[]

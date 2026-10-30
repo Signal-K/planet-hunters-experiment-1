@@ -26,13 +26,12 @@ export interface HubBuildingDef {
  *  The surface silo has no above-ground body; the lift shaft is the silo door. */
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
   // Launchpad width is the low platform only. The rocket is a separate sprite on top of it.
-  launchpad: { width: 120, height: 108 },
-  'surface-silo': { width: 48, height: 96 },
-  hangar: { width: 72, height: 44 },
-  'deep-space-telescope': { width: 74, height: 96 },
-  'transit-telescope': { width: 64, height: 88 },
-  'astronaut-academy': { width: 178, height: 86 },
-  market: { width: 160, height: 64 },
+  launchpad: { width: 96, height: 108 },
+  'surface-silo': { width: 40, height: 96 },
+  hangar: { width: 60, height: 44 },
+  'deep-space-telescope': { width: 62, height: 96 },
+  'transit-telescope': { width: 54, height: 88 },
+  market: { width: 128, height: 64 },
 }
 
 export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {

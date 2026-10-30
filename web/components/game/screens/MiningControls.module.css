@@ -75,3 +75,162 @@
   .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 12px; }
   .pad { min-width: 44px; min-height: 44px; }
 }
+
+/* SSL-708: controller layout. Back button top-left is the only top control; FIRE is a round
+   action button bottom-right opposite the d-pad; progress sits bottom-centre between them. */
+.back {
+  position: absolute;
+  left: max(12px, env(safe-area-inset-left));
+  top: calc(12px + env(safe-area-inset-top));
+  z-index: 8;
+  min-height: 44px;
+  padding: 0 14px 0 8px;
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1.5px solid var(--ln-bp-paper);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ln-bp-ink) 88%, transparent);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+}
+.back:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
+
+.fire {
+  position: absolute;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  z-index: 6;
+  width: 96px; height: 96px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.fireRing {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--ln-cyan) var(--charge), color-mix(in srgb, var(--ln-bp-paper) 22%, transparent) 0);
+}
+.fireFace {
+  position: absolute; inset: 7px;
+  border-radius: 50%;
+  display: grid; place-content: center; gap: 2px;
+  background: var(--ln-bp-ink);
+  border: 2px solid var(--ln-cyan);
+  color: var(--ln-bp-paper);
+  transition: transform 80ms ease-out, background 120ms ease-out;
+}
+.fireLabel { font: 800 18px/1 var(--ln-font-display, system-ui); letter-spacing: 0.12em; text-transform: uppercase; }
+.fireCount { font: 700 14px/1 var(--ln-font-display, system-ui); color: color-mix(in srgb, var(--ln-bp-paper) 72%, transparent); font-variant-numeric: tabular-nums; text-align: center; }
+.fire[data-firing] .fireFace, .fire:active .fireFace { transform: scale(0.93); background: var(--ln-cyan-soft); }
+.fire[data-charging] .fireFace { border-color: color-mix(in srgb, var(--ln-cyan) 45%, transparent); }
+.fire[data-state='low'] .fireRing { background: conic-gradient(var(--ln-crit) var(--charge), color-mix(in srgb, var(--ln-bp-paper) 22%, transparent) 0); }
+.fire[data-state='empty'] .fireFace { border-color: var(--ln-crit); color: var(--ln-crit); }
+.fire:disabled { cursor: default; opacity: 0.55; }
+/* SSL-710: a seam is under the aim line, so the button says "now". */
+.fire[data-ready] .fireFace { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); }
+.fire[data-ready] .fireCount { color: var(--ln-bp-ink); }
+.fire[data-ready] { animation: fireReady 0.7s ease-in-out infinite; }
+@keyframes fireReady { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .fire[data-ready] { animation: none; } }
+.fire:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
+
+/* SSL-711: the second action button (Catch today) sits up and to the left of FIRE, like a second face button. */
+.action {
+  position: absolute;
+  right: calc(max(20px, env(safe-area-inset-right)) + 108px);
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  z-index: 6;
+  width: 76px; height: 76px;
+  padding: 0;
+  border: 2px solid var(--ln-cyan);
+  border-radius: 50%;
+  display: grid; place-content: center; justify-items: center; gap: 2px;
+  background: var(--ln-bp-ink);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, background 120ms ease-out;
+}
+.action[data-pressed], .action:active { transform: scale(0.93); }
+.action[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); animation: fireReady 0.7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .action[data-ready] { animation: none; } }
+.action:disabled { cursor: default; opacity: 0.55; }
+.action:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
+
+.progress {
+  position: absolute;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 6;
+  max-width: calc(100% - 2 * 190px);
+  min-height: 44px;
+  padding: 6px 14px;
+  display: grid; justify-items: center; gap: 2px;
+  border: 1.5px solid var(--ln-bp-paper);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ln-bp-ink) 88%, transparent);
+  color: var(--ln-bp-paper);
+  font: 800 14px/1.15 var(--ln-font-display, system-ui);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer;
+}
+.progress[data-ready] { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-bp-ink); }
+.progressCue { font-size: 14px; color: var(--ln-cyan); }
+.progress[data-ready] .progressCue { color: var(--ln-bp-ink); }
+.progress:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
+
+/* Phones: d-pad and FIRE sit in the bottom corners; progress stacks just above FIRE when there is no room between. */
+@media (max-width: 600px) {
+  .fire { width: 88px; height: 88px; right: 16px; bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .dpad { bottom: calc(24px + env(safe-area-inset-bottom)); left: 12px; }
+  .action { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
+  .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
+}
+@media (max-height: 520px) {
+  .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .action { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
+  .progress { bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* SSL-708: run-start objective card (centre of the scene, fades after 4 s) and the mission menu header. */
+:global(.mining-start-brief) {
+  position: absolute;
+  left: 50%; top: 38%;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+  max-width: min(420px, calc(100% - 32px));
+  padding: 14px 20px;
+  display: grid; gap: 4px; justify-items: center; text-align: center;
+  border: 1.5px solid var(--ln-bp-paper);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ln-bp-ink) 88%, transparent);
+  color: var(--ln-bp-paper);
+  font: 400 14px/1.4 var(--ln-font-body, system-ui);
+  cursor: pointer;
+  animation: briefIn 260ms ease-out both;
+}
+:global(.mining-start-brief) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+:global(.mining-start-brief__eyebrow), :global(.mining-menu-eyebrow) { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ln-cyan); }
+/* The menu sits on the light blueprint sheet: ink colours, not the in-scene cyan. */
+:global(.mining-guide-dock) :global(.mining-menu-eyebrow) { color: var(--ln-bp-blue); }
+:global(.mining-menu-head) { display: grid; gap: 4px; min-width: 0; flex: 1 1 auto; }
+:global(.mining-menu-head) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+:global(.mining-menu-head) span:last-child { font: 400 14px/1.4 var(--ln-font-body, system-ui); color: var(--ln-bp-ink-dim); }
+:global(.mining-menu-row) { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@keyframes briefIn { from { opacity: 0; transform: translate(-50%, -44%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@media (prefers-reduced-motion: reduce) { :global(.mining-start-brief) { animation: none; } }
+/* The menu covers the scene completely, sky effects included. */
+:global(.mining-guide-dock) { z-index: 80; }

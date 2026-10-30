@@ -23,7 +23,6 @@ interface ShipInteriorPreviewProps {
   installedParts?: InstalledCustomizerPartsByKind
   onConfirm?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onClose?: () => void
-  crewModuleResearched?: boolean
   landingResearched?: boolean
 }
 
@@ -36,7 +35,6 @@ const STAGE_LABEL: Record<ShipRoomKind, string> = {
   fairing: 'Fairing',
   'docking-port': 'Docking',
   'heat-shield': 'Shield',
-  'crew-module': 'Crew',
   lander: 'Lander',
 }
 
@@ -47,7 +45,6 @@ export default function ShipInteriorPreview({
   installedParts,
   onConfirm,
   onClose,
-  crewModuleResearched = false,
   landingResearched = false,
 }: ShipInteriorPreviewProps) {
   const layout = getShipInteriorLayout(rocketId)
@@ -60,7 +57,7 @@ export default function ShipInteriorPreview({
   const suppressClick = useRef(false)
   if (!layout) return null
 
-  const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)
+  const sequence = getBuildSequence(missionsDone, landingResearched)
   const stepKind = sequence[stepIndex]
   const readyToConfirm = canConfirmCustomizerBuild(buildState.installed, sequence)
   const currentInstalled = buildState.installed[stepKind]

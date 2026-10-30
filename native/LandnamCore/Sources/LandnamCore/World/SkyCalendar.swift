@@ -183,7 +183,9 @@ public enum WorldSkyClock {
         var weather = pickWeather(data, now, grade: grade, biome: biome, cal)
         for f in force {
             switch f {
-            case "meteors": events.append(WorldSkyEvent(id: "forced-meteors", kind: .meteors, name: "Meteor shower", perMinute: 30))
+            // Keep preview showers legible. Live events use their authored
+            // calendar rates, while the forced scene only needs a clear cue.
+            case "meteors": events.append(WorldSkyEvent(id: "forced-meteors", kind: .meteors, name: "Meteor shower", perMinute: 8))
             case "launch": events.append(WorldSkyEvent(id: "forced-launch", kind: .launch, name: data.launches.name, elapsed: 0))
             case "balloon": events.append(WorldSkyEvent(id: "forced-balloon", kind: .balloon, name: data.balloons.name, elapsed: 0))
             case "satellite": events.append(WorldSkyEvent(id: "forced-satellite", kind: .satellite, name: "Satellite pass", elapsed: 0))

@@ -15,7 +15,7 @@ import ScenePanel from '@/components/game/ScenePanel'
 import { captureGameEvent } from '@/lib/posthog'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean; researchBonusUntil?: number }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; researchPermanentBonuses?: Record<string, number> }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void
@@ -51,7 +51,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', marginTop: 4 }}>
-            Level 1 capacity: one shipment per day. Refine raw minerals into higher-value goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
+            Level 1 capacity: one shipment per day. Refine raw minerals into higher-value goods.
           </div>
         </Panel>
 
@@ -118,7 +118,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                   </div>
                   <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                     <StatusPill kind="info" dim>{formatCurrency(recipe.cost)}</StatusPill>
-                    <StatusPill kind="amber" dim>{Math.round(recipe.time * (player.staffed ? 0.75 : 1))}s</StatusPill>
+                    <StatusPill kind="amber" dim>{Math.round(recipe.time)}s</StatusPill>
                     <span style={{ flex: 1 }} />
                     <StatusPill kind={!hasInput ? 'crit' : startedToday ? 'amber' : 'ok'} dim>{!hasInput ? 'Missing Input' : startedToday ? 'Daily Limit' : 'Ready'}</StatusPill>
                   </div>

@@ -119,14 +119,9 @@ struct ResearchCalendarPanel: View {
 }
 
 extension ResearchCalendarPanel {
-    /// Same three states and copy as web `research-community-state`.
+    /// Community progress is a record of shared research, never a time-limited payout.
     func stateLine(_ bar: ResearchStampRules.CommunityBar) -> String {
-        if let until = bar.bonusUntil, now < until {
-            var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "UTC")!
-            let d = c.dateComponents([.day, .month], from: Date(timeIntervalSince1970: until / 1000))
-            return "Goal reached. Exchange sales pay +\(bar.bonusPct)% until \(d.day!) \(Self.months[d.month! - 1])."
-        }
-        if bar.reached { return "Goal reached this month. The +\(bar.bonusPct)% week has ended." }
-        return "Fill the bar together and everyone's Exchange sales pay +\(bar.bonusPct)% for a week."
+        if bar.reached { return "Goal reached this month. Your stamps remain in the shared research record." }
+        return "Fill the bar together to keep the shared research record growing."
     }
 }

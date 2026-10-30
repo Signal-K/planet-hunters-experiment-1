@@ -125,6 +125,8 @@ struct TakeonSceneScreen: View {
     @Environment(GameStore.self) private var store
     @State private var model: TakeonSceneModel
     var onExit: (() -> Void)?
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    private var compactHeight: Bool { verticalSizeClass == .compact }
 
     init(model: TakeonSceneModel = TakeonSceneModel(), onExit: (() -> Void)? = nil) {
         _model = State(initialValue: model)
@@ -153,7 +155,8 @@ struct TakeonSceneScreen: View {
                 .accessibilityLabel("Takeon rover surface scene")
 
                 if let f = model.failure { Text(f).font(AppFont.body(14)).padding(12).background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 12)) }
-                overlay(geo)
+                // The canvas ignores the safe area and grows this stack past it: pin the HUD back to the safe frame.
+                overlay(geo).frame(width: geo.size.width, height: geo.size.height)
             }
         }
         .background(Color.black.ignoresSafeArea())
@@ -205,8 +208,10 @@ struct TakeonSceneScreen: View {
                 }.buttonStyle(.plain).accessibilityLabel("Exit field")
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(.leading, 12).padding(.top, 8)
             }
-            gaugeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading).padding(.leading, 12).padding(.bottom, 12)
-            dock.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom).padding(.bottom, 12)
+            if !compactHeight {
+                gaugeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading).padding(.leading, 12).padding(.bottom, 12)
+            }
+            dock.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom).padding(.bottom, compactHeight ? 6 : 12)
         }
     }
 
@@ -229,9 +234,12 @@ struct TakeonSceneScreen: View {
 
     private var rightColumn: some View {
         VStack(spacing: 6) {
-            railIcon("battery.100", "BATTERY", model.battery)
-            railIcon("wrench.and.screwdriver.fill", "DRILL", model.drill)
-            railIcon("shippingbox.fill", "CARGO", model.cargo)
+            // The bottom-left gauge card already shows these; a landscape phone has no room for both.
+            if !compactHeight {
+                railIcon("battery.100", "BATTERY", model.battery)
+                railIcon("wrench.and.screwdriver.fill", "DRILL", model.drill)
+                railIcon("shippingbox.fill", "CARGO", model.cargo)
+            }
             railIcon(model.state?.weather == nil ? "sun.max.fill" : "cloud.fill", "WEATHER", nil)
             panel(12) {
                 HStack(spacing: 4) {

@@ -1,0 +1,79 @@
+# Named setups for fab. Keep scene structure in scenes/fab.toml.
+
+[[things]]
+id = "telescope-mission"
+label = "Launch the telescope"
+group = "Mission"
+exclusive = "mission"
+default = true
+state = { missionId = "story-transit-telescope-launch", targetId = "earth-orbit-transit-telescope" }
+
+[[things]]
+id = "courier-mission"
+label = "Belt Courier Run"
+group = "Mission"
+exclusive = "mission"
+state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", deliveryTargetId = "vesta" }
+
+[[things]]
+id = "mining-mission"
+label = "Mine on your own"
+group = "Mission"
+exclusive = "mission"
+state = { missionId = "freeops-self-directed-mining", targetId = "eros" }
+
+[[things]]
+id = "explorer"
+label = "Explorer"
+group = "Vehicle"
+exclusive = "vehicle"
+state = { rocket = { chassis = "hull-mk1", propulsion = "ion-a1", drill = "hand-drill" } }
+
+[[things]]
+id = "prospector"
+label = "Prospector"
+group = "Vehicle"
+exclusive = "vehicle"
+default = true
+state = { rocket = { chassis = "hull-mk2", propulsion = "fusion-b2", drill = "laser-t2" } }
+
+[[things]]
+id = "surveyor"
+label = "Surveyor"
+group = "Vehicle"
+exclusive = "vehicle"
+state = { rocket = { chassis = "hull-mk3", propulsion = "ion-a3", drill = "plasma-t3" } }
+
+[[things]]
+id = "silo-built"
+label = "Silo built"
+group = "Base"
+note = "Without a silo the plan says ore is sold on landing."
+state = { player = { placed = ["surface-silo"], placementPlots = { surface-silo = 2 } } }
+
+[[things]]
+id = "launch-sequence"
+label = "Launch sequence running"
+group = "Launch"
+query = { launchscene = "1" }
+
+[[presets]]
+id = "telescope-plan"
+name = "Telescope plan"
+things = ["telescope-mission", "prospector"]
+instructions = """
+The plan before the first satellite launch: destination Earth orbit, the vehicle, and cargo. The three steps (contract,
+plan, launch) read as progress through the launch, not as form fields. One clear Launch action.
+"""
+
+[[presets]]
+id = "telescope-launch"
+name = "Telescope lift-off"
+things = ["telescope-mission", "prospector", "launch-sequence"]
+instructions = """
+The launch itself. The background is the base kit: flat steppe, paved apron. No mountains, no forest, no snow. Skip is in
+reach and the flight starts when it ends.
+"""
+
+
+# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.

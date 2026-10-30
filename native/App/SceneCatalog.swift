@@ -46,14 +46,30 @@ enum SceneCatalog {
         return gs
     }
 
+    /// Base with the Exchange and a new daily board since the last visit (web `ui-economy-arrival`).
+    static func economyArrivalState() -> GameState {
+        var gs = webHubState()
+        gs.player.placed = ["launchpad", "market", "hangar", "control-station"]
+        gs.player.placementPlots = ["launchpad": 0, "market": 1, "hangar": 2, "control-station": 3]
+        gs.player.extras["economyArrival"] = .object([
+            "fromDate": .string("2026-10-24"), "toDate": .string("2026-10-27"),
+            "moves": .array([
+                .object(["materialId": .string("nickel"), "materialName": .string("Nickel"), "changePct": .number(11)]),
+                .object(["materialId": .string("copper"), "materialName": .string("Copper"), "changePct": .number(-6)]),
+            ]),
+            "levelUps": .array([.object(["clientId": .string("atlas-aggregate"), "clientName": .string("Atlas Aggregate"), "levelAfter": .number(3)])]),
+        ])
+        return gs
+    }
+
     static func basePlayer() -> GameState {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
-        gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
-        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
+        gs.player.placed = ["launchpad", "surface-silo"]
+        gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
         gs.player.stash = ["copper": 6, "gold": 3, "aluminium": 30, "silicon": 12]
         gs.player.clientMissions = ["vulcan": 6, "helios": 11]
-        gs.player.academyResearched = true; gs.player.academyFunded = true; gs.player.researchXP = 180; gs.player.skillPoints = 2
+        gs.player.researchXP = 180
         return gs
     }
 
@@ -139,8 +155,6 @@ enum SceneCatalog {
     /// Base player who owns one settlement, so the « » dock tile shows enabled.
     static func landscapeBase() -> GameState {
         var gs = basePlayer()
-        var site = SurfaceSiteProgress(); site.siteAccessPurchasedAt = t0
-        gs.player.surfaceOps.sites["moon-south-pole"] = site
         return gs
     }
 
@@ -182,8 +196,8 @@ enum SceneCatalog {
             gs.rocket = RocketConfig(chassis: "hull-cargo", propulsion: "fusion-b2", drill: "laser-t2")
         default:
             gs = basePlayer(); gs.player.missionsDone = 20; gs.player.francs = 600_000_000
-            gs.player.placed = ["launchpad", "deep-space-telescope", "surface-silo", "astronaut-academy", "market"]
-            gs.player.placementPlots = ["launchpad": 0, "deep-space-telescope": 2, "surface-silo": 3, "astronaut-academy": 4, "market": 5]
+            gs.player.placed = ["launchpad", "deep-space-telescope", "surface-silo", "market"]
+            gs.player.placementPlots = ["launchpad": 0, "deep-space-telescope": 2, "surface-silo": 3, "market": 5]
             gs.player.deepSpaceTelescopeBuilt = true
             gs.player.refineryBuilt = true; gs.player.refineryUnlocked = true; gs.player.launchpadUpgraded = true
             gs.player.stash = ["iron": 120, "nickel": 60, "silicon": 40, "copper": 30, "gold": 6]
@@ -272,6 +286,17 @@ enum SceneCatalog {
         return gs
     }
 
+    /// The Orionids shower run at 0 of 20: fragments fall and bank when the ship is under them (web ui/orionids-shower-mining-fresh).
+    static func showerRunMiningState() -> GameState {
+        var gs = miningState(rover: false, target: "eros")
+        gs.player.freeOperations = true; gs.player.missionsDone = 5
+        gs.player.orionidsFragments = OrionidsFragments(caught: 5, redeemed: 0)
+        gs.player.orionidsRunBaseline = 5
+        gs.missionId = OrionidsRun.missionId
+        gs.player.activeMission = ActiveMission(id: OrionidsRun.missionId, label: "Orionids shower run")
+        return gs
+    }
+
     static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
         var gs = miningState(rover: false)
         gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
@@ -286,12 +311,21 @@ enum SceneCatalog {
         scene("intro-biome-landscape", 402, w: 874) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-desktop", 900, w: 1440) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("takeon-live", 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
+        scene("takeon-live-landscape", 402, w: 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
+        scene("friends-landscape", 428, w: 926) { FriendsSheet(onClose: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
+        scene("economy-arrival-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: economyArrivalState())) },
         scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
-        scene("upgrade-academy-short-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "astronaut-academy").environment(GameStore(state: { var gs = basePlayer(); gs.player.francs = 1_000_000; return gs }())) },
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
         scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("hub-phone-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: landscapeBase())) },
+        scene("hub-constellations-landscape", 402, w: 874) {
+            var gs = landscapeBase()
+            gs.player.completedMissions = [
+                CompletedMissionRecord(id: "m1", title: "First mission", targetId: "eros", clientName: "Vulcan", targetName: "Eros", completedAt: 1, runId: "constellation-fixture", kind: .client)
+            ]
+            return HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62)).environment(GameStore(state: gs))
+        },
         scene("hub-desktop", 680, w: 1000) { HubScreen().environment(GameStore()) },
         scene("hub-biome-mountains-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .mountains).environment(GameStore()) },
         scene("hub-biome-desert-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), biome: .desert).environment(GameStore()) },
@@ -304,8 +338,8 @@ enum SceneCatalog {
         scene("hub-live", 874) { HubScreen().environment(GameStore()) },
         scene("hub-live-built", 874) {
             var gs = GameState()
-            gs.player.placed = ["launchpad", "hangar", "surface-silo", "astronaut-academy"]
-            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1, "astronaut-academy": 2]
+            gs.player.placed = ["launchpad", "hangar", "surface-silo"]
+            gs.player.placementPlots = ["launchpad": 0, "surface-silo": 1]
             return HubScreen().environment(GameStore(state: gs))
         },
         scene("hub-pan-right-phone", 874) {
@@ -342,8 +376,8 @@ enum SceneCatalog {
         scene("hub-biome-coast-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), biome: .coast).environment(GameStore(state: landscapeBase())) },
         scene("hub-structures-phone", 874) {
             var gs = GameState()
-            gs.player.placed = ["launchpad", "surface-silo", "astronaut-academy"]
-            gs.player.placementPlots = ["surface-silo": 0, "astronaut-academy": 2]
+            gs.player.placed = ["launchpad", "surface-silo"]
+            gs.player.placementPlots = ["surface-silo": 0]
             return HubScreen().environment(GameStore(state: gs))
         },
         scene("hub-skycraft-phone", 874) {
@@ -433,6 +467,23 @@ enum SceneCatalog {
             p.researchStamps.days[todayKey, default: []].append(.discoveryMission)
             return ResearchCalendarPanel(stamps: p.researchStamps, now: wswNoon, community: community, hasDiscovery: true).padding(12).background(Theme.hex(0x1A2744))
         },
+        scene("community-research-phone", 874) {
+            var gs = GameState()
+            gs.player.freeOperations = true
+            gs.player.placed = ["launchpad", "market"]
+            gs.player.researchFragments = 25
+            gs.player.researchUniversalFragments = 3
+            gs.player.researchPath = ResearchPathChoice(week: ResearchPathRules.weekKey(wswNoon), path: .explorer, claimedSteps: [2, 4])
+            let monday = ResearchPathRules.weekKey(wswNoon)
+            gs.player.researchStamps.days[monday] = [.classification]
+            gs.player.researchFragmentHistory = [
+                .init(id: "community-research-2026-10-19", title: "Explorer week of 2026-10-19", fragmentsEarned: 25, badgeId: "community-research-2026-10-19")
+            ]
+            gs.player.badges["community-research-2026-10-19"] = PlayerBadge(eventId: "community-research-2026-10-19", tier: .gold, earnedAt: wswNoon)
+            gs.player.orionidsFragments = OrionidsFragments(caught: 20, redeemed: 0)
+            gs.screen = .communityResearch
+            return CommunityResearchScreen().environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
         scene("mission-board-wsw-phone", 874) {
             MissionsScreen().environment(GameStore(state: basePlayer(), clock: { wswNoon })).environment(\.flatLayout, true)
         },
@@ -486,6 +537,8 @@ enum SceneCatalog {
             gs.player.freeOperations = true; gs.player.saturnImagerLaunchedAt = 1
             return SaturnStormSearchScreen(candidate: Saturn.fallback[19]).environment(GameStore(state: gs)).environment(offlineFeed).environment(\.flatLayout, true)
         },
+        // SSL-714: web-only for now; the iOS meteor radio screen is a follow-up ticket. Placeholder keeps the registry honest.
+        scene("radio-meteors", 400) { Text("Meteor radio: iOS port pending (web has it)").padding() },
         scene("asteroid-discovery-phone", 1020) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true
@@ -639,6 +692,8 @@ enum SceneCatalog {
         scene("mining-laser-live", 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
+        scene("mining-shower-live", 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
+        scene("mining-shower-live-landscape", 402, w: 874) { MiningScreen().environment(GameStore(state: showerRunMiningState())) },
         scene("mining-laser-live-landscape", 402, w: 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))
         },
@@ -663,12 +718,6 @@ enum SceneCatalog {
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
-        // SSL-673: inside the community research bonus week, ore quotes pay +3% and the note says so.
-        scene("exchange-research-bonus-phone", 874) {
-            var gs = exchangeState()
-            ResearchStampRules.noteBonus(&gs.player, until: Date().timeIntervalSince1970 * 1000 + 86_400_000)
-            return MarketScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
-        },
         scene("exchange-buy-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-alerts-phone", 844, w: 390) { MarketScreen(tab: .alerts).environment(GameStore(state: exchangeAlertState())).environment(\.flatLayout, true) },
         scene("exchange-locked-phone", 844, w: 390) { MarketScreen(tab: .buy).environment(GameStore(state: exchangeLockedState())).environment(\.flatLayout, true) },
@@ -704,21 +753,6 @@ enum SceneCatalog {
         scene("rover-touchdown-phone", 874) {
             RoverFieldScreen(initial: Prospecting()).environment(GameStore(state: GameState()))
         },
-        scene("skill-tree-phone", 1300) {
-            var gs = basePlayer(); gs.player.unlockedSkillNodes = ["laser-charge-1"]
-            gs.player.tessClassifications = ["t": TessClassification(subjectId: "t", verdict: .planet, ranges: [], submittedAt: 1)]
-            return SkillTreeScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
-        },
-        scene("academy-phone", 1000) {
-            let gs = Academy.migrate(basePlayer(), now: t0)
-            let st = GameStore(state: Academy.applyHire(gs, sourceId: "nasa", now: t0), clock: { 1_760_000_000_000 })
-            return AcademyScreen(at: t0).environment(st).environment(\.flatLayout, true)
-        },
-        scene("academy-landing-phone", 1000) {
-            var gs = Academy.migrate(basePlayer(), now: t0)
-            gs.player.missionsDone = 4; gs.player.researchXP = 150
-            return AcademyScreen(at: t0, startTab: .partners).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
-        },
         scene("launchpad-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.missionsDone = 3
             return RocketBuilderScreen(launchEnabled: false, onLaunch: {}, onChooseMission: {}).environment(GameStore(state: gs)).environment(\.flatLayout, true)
@@ -730,13 +764,6 @@ enum SceneCatalog {
         scene("build-phone", 874) {
             var gs = basePlayer(); gs.player.placed = ["launchpad"]; gs.player.placementPlots = ["launchpad": 0]
             return BuildScreen().environment(GameStore(state: gs))
-        },
-        scene("surface-ops-phone", 1400) {
-            var gs = basePlayer(); gs.player.stash = ["aluminium": 4, "silicon": 6]
-            gs = SurfaceOps.applyPurchaseAccess(gs, "moon-south-pole", now: t0 - 3_000_000)
-            gs = SurfaceOps.applyBuildPad(gs, "moon-south-pole", pad: 1, now: t0 - 2_000_000)
-            gs = SurfaceOps.applyMined(gs, "moon-south-pole", mineral: "iron", amount: 12)
-            return SurfaceOpsScreen(at: t0).environment(GameStore(state: gs, clock: { 1_760_000_000_000 })).environment(\.flatLayout, true)
         },
         scene("mission-log-phone", 1400) {
             var gs = basePlayer()
@@ -763,6 +790,19 @@ enum SceneCatalog {
             return MissionHistoryScreen().environment(GameStore(state: gs)).environment(\.flatLayout, true)
         },
         scene("base-menu-phone", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        scene("base-menu-live", 874) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
+        // Active contract plus the folded coach "?" chip in a landscape phone: the chip must not sit on the contract card.
+        scene("hub-contract-chip-live", 874) {
+            var gs = landscapeBase()
+            gs.player.activeMission = ActiveMission(id: "m", label: "Belt Courier Run")
+            gs.player.missionPhase = .mining
+            gs.player.flightPlan.hidden = true
+            let st = GameStore(state: gs)
+            return ZStack {
+                HubScreen()
+                if let coach = FlightPlan.coach(st.player, screen: .hub, includeHidden: true) { CoachPlacement(coach: coach, screen: .hub) }
+            }.environment(st)
+        },
         scene("base-menu-desktop", 900, w: 1440) { BaseMenu(onClose: {}, onBuild: {}).environment(GameStore(state: siloState(ore: 24))) },
         scene("hub-silo-surface-phone", 874) {
             let world = BaseWorld(w: phone, h: 874)
@@ -775,32 +815,47 @@ enum SceneCatalog {
 }
 
 /// Shown instead of RootView when the app is launched with `-scene <id>`.
-/// `-scene list` prints the index on screen. DEBUG builds only.
+/// `-scene list` prints the index on screen. The older `-landnam.scene <id>`
+/// spelling remains accepted so review actions cannot accidentally fall through
+/// to the authenticated app shell. This lookup is intentionally available to
+/// Release/test builds too: the review harness must not require a session.
+/// `-landnam.fullscreen YES` lays any fixture out full-screen with the real safe areas, to check it at the device's own size.
 struct SceneHost: View {
     let id: String
     var body: some View {
-        if let s = SceneCatalog.find(id), id.contains("-live") || id.hasPrefix("coach-") || id.hasPrefix("try-") {
-            // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
-            s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg)
-                #if os(iOS)
-                .onAppear { OrientationPreference.current.apply() }
-                #endif
-        } else if let s = SceneCatalog.find(id) {
-            ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
-        } else {
-            ScrollView { VStack(alignment: .leading, spacing: 8) {
-                Text(id == "list" ? "Scenes" : "No scene \"\(id)\"").font(.headline)
-                ForEach(SceneCatalog.all) { Text($0.id).font(.system(size: 15, design: .monospaced)) }
-            }.padding(16) }
+        GeometryReader { proxy in
+            let landscapeHubReview = id == "hub-phone" && proxy.size.width > proxy.size.height
+            let resolvedID = landscapeHubReview ? "hub-phone-landscape" : id
+            let landscapeFixture = landscapeHubReview || resolvedID.hasSuffix("-landscape")
+            if let s = SceneCatalog.find(resolvedID), resolvedID.contains("-live") || resolvedID.hasPrefix("coach-") || resolvedID.hasPrefix("try-") || landscapeFixture || UserDefaults.standard.bool(forKey: "landnam.fullscreen") {
+                // Full-screen, real safe areas: what a player sees, without the fixed fixture frame.
+                s.make().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.bg).ignoresSafeArea()
+                    #if os(iOS)
+                    .onAppear { (landscapeFixture ? .landscape : OrientationPreference.current).apply() }
+                    #endif
+            } else if let s = SceneCatalog.find(resolvedID) {
+                ScrollView { s.make().frame(width: s.size.width, height: s.size.height) }.background(Theme.bg)
+                    #if os(iOS)
+                    .onAppear { if landscapeFixture { OrientationPreference.landscape.apply() } }
+                    #endif
+            } else {
+                ScrollView { VStack(alignment: .leading, spacing: 8) {
+                    Text(id == "list" ? "Scenes" : "No scene \"\(id)\"").font(.headline)
+                    ForEach(SceneCatalog.all) { Text($0.id).font(.system(size: 15, design: .monospaced)) }
+                }.padding(16) }
+            }
         }
     }
 
-    /// The `-scene` launch argument, if present.
+    /// The scene launch argument, if present. Scene fixtures are intentionally
+    /// auth-free: this is the review harness, not a player session.
     static var requested: String? {
-        #if DEBUG
         let a = ProcessInfo.processInfo.arguments
-        if let i = a.firstIndex(of: "-scene"), a.indices.contains(i + 1) { return a[i + 1] }
-        #endif
+        for flag in ["-scene", "-landnam.scene"] {
+            if let i = a.firstIndex(of: flag), a.indices.contains(i + 1) {
+                return a[i + 1]
+            }
+        }
         return nil
     }
 }

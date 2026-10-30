@@ -23,31 +23,6 @@ state = "ui-tess-discovery"
 # preset. First-visit help sheets are off in the sandbox.
 # ---------------------------------------------------------------------------------------------------------------
 
-[[things]]
-id = "telescope-online"
-label = "Telescope online"
-group = "Instruments"
-default = true
-state = { visualFixture = "tess", player = { transitSatelliteLaunchedAt = "@now-1d", transitSatelliteLevel = 1 } }
-
-[[things]]
-id = "some-annotations"
-label = "Some observations done"
-group = "Progress"
-state = { player = { researchAnnotations = 3, researchXP = 180 } }
-
-[[presets]]
-id = "first-light-curve"
-name = "First light curve"
-things = ["telescope-online"]
-instructions = """
-The first transit candidate from the telescope the player launched. The light curve fills the screen and the verdict dock
-sits within thumb reach. Every control is at least 44px. Nothing explains itself in a wall of text.
-"""
-
-
-# Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
-
 [[objects]]
 id = "light-curve"
 kind = "instrument"
@@ -86,3 +61,5 @@ parent = "light-curve"
 layout = "host"
 mechanics = ["tess"]
 note = "Continue through the real instrument feed."
+
+# ---- fixtures: shared/authoring/fixtures/galaxy.toml (edit them here, they save to that file) ----

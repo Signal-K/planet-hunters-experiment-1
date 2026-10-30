@@ -35,7 +35,7 @@ export function sandboxify(base: Partial<GameState>): Partial<GameState> {
         ...player,
         freeOperations: true,
         francs: Math.max(player.francs ?? 0, SANDBOX_FRANCS),
-        dismissedHubPrompts: { ...player.dismissedHubPrompts, skills: NEVER, 'transit-telescope': NEVER },
+        dismissedHubPrompts: { ...player.dismissedHubPrompts, 'transit-telescope': NEVER },
       },
     } : {}),
   }

@@ -3,6 +3,56 @@
   font-weight: 800;
 }
 
+.runObjective {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 12;
+  display: grid;
+  gap: 7px;
+  width: min(300px, calc(100% - 32px));
+  padding: 12px;
+  background: rgba(10, 16, 28, 0.84);
+  border: 1.5px solid rgba(159, 214, 228, 0.92);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 0 12px rgba(159, 214, 228, 0.28);
+  color: #eef2f6;
+}
+
+.runEyebrow {
+  color: #9fd6e4;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.runCount {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font: 800 16px/1.2 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.runCount strong { color: #9fd6e4; font-variant-numeric: tabular-nums; }
+
+.runProgress {
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.runProgress span { display: block; height: 100%; background: #9fd6e4; transition: width 160ms linear; }
+
+.runObjective small { color: #d8e2e9; font: 600 14px/1.25 var(--ln-font-body); }
+
+@media (max-width: 560px) {
+  .runObjective { top: 12px; left: 12px; width: min(280px, calc(100% - 24px)); }
+}
+
 .fireballBanner {
   position: absolute;
   top: 16px;

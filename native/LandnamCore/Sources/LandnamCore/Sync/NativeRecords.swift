@@ -87,12 +87,4 @@ public enum NativeRecords {
             "endpoint": .string(endpoint), "keys": .object(["platform": .string("ios")]), "scheduled_for": .number(at.rounded()),
             "title": .string(title), "body": .string(body), "sent": .bool(true)])
     }
-
-    /// Notifications a transition should schedule (web useSurfaceOpsActions): a newly dispatched ferry.
-    public static func notifications(old: GameState, new: GameState) -> [(title: String, body: String, at: Double)] {
-        new.player.surfaceOps.sites.compactMap { id, site in
-            guard let f = site.ferry, f.status == .inFlight, old.player.surfaceOps.sites[id]?.ferry?.id != f.id else { return nil }
-            return ("SURFACE CARGO DELIVERED", "\(SurfaceOps.site(id)?.name ?? "Surface site") manifest is ready at Base.", f.arrivesAt)
-        }
-    }
 }

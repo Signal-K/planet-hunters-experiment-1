@@ -134,18 +134,22 @@ public enum MissionGenerator {
             for (i, key) in keys.enumerated() { minerals[key] = amount(t, sequence: band.sequence, bias: band.amountBias, mineralIndex: i) }
             let cargoMin = minerals.values.reduce(0, +)
             let primary = keys.map(label).joined(separator: " + ")
-            let raw = minerals.reduce(0.0) { $0 + Double(Minerals.byId[$1.key]?.price ?? 0) * Double($1.value) * Economy.cargoBonusRate * t.payoutMultiplier * (1 + client.payoutPremium) }
+            let mineralValue = minerals.reduce(0.0) { subtotal, entry in
+                subtotal + Double(Minerals.byId[entry.key]?.price ?? 0) * Double(entry.value)
+            }
+            let raw = mineralValue * Economy.cargoBonusRate * t.payoutMultiplier * (1 + client.payoutPremium)
             let title = band.sequence == 1 ? "Baseline Extraction" : "\(primary) \(t.tag.lowercased()) order"
-            return Mission(
-                id: "generated-s\(band.sequence)-\(t.id)-\(index + 1)",
-                title: title,
-                brief: "\(client.name) needs \(primary.lowercased()) for \(client.projectType.lowercased()). Preferred cargo earns a client premium; affinity improves future payouts.",
-                client: client.id, tag: t.tag, difficulty: t.difficulty, locked: false, sequence: band.sequence,
-                unlockAt: band.sequence > 1 ? "Complete \(band.sequence - 1) contract\(band.sequence > 2 ? "s" : "")" : nil,
-                requires: MissionRequirements(minerals: minerals, cargoMin: cargoMin,
-                                              drillTier: requiredDrillTier(keys, floor: t.drillTierMin), maxOrbit: t.orbitMax),
-                payout: MissionPayout(francs: normalizePayout(raw: raw, sequence: band.sequence),
-                                      affinity: max(4, Int((6.0 + Double(band.sequence) * 2 + Double(cargoMin) / 3).rounded()))))
+            let requirements = MissionRequirements(minerals: minerals, cargoMin: cargoMin,
+                                                   drillTier: requiredDrillTier(keys, floor: t.drillTierMin), maxOrbit: t.orbitMax)
+            let affinityBase = 6.0 + Double(band.sequence) * 2 + Double(cargoMin) / 3
+            let payout = MissionPayout(francs: normalizePayout(raw: raw, sequence: band.sequence),
+                                       affinity: max(4, Int(affinityBase.rounded())))
+            let missionId = "generated-s\(band.sequence)-\(t.id)-\(index + 1)"
+            let brief = "\(client.name) needs \(primary.lowercased()) for \(client.projectType.lowercased()). Preferred cargo earns a client premium; affinity improves future payouts."
+            return Mission(id: missionId, title: title, brief: brief,
+                           client: client.id, tag: t.tag, difficulty: t.difficulty, locked: false, sequence: band.sequence,
+                           unlockAt: band.sequence > 1 ? "Complete \(band.sequence - 1) contract\(band.sequence > 2 ? "s" : "")" : nil,
+                           requires: requirements, payout: payout)
         }
     }
 

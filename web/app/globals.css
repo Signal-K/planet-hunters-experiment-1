@@ -3075,9 +3075,21 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 @media (max-width: 599px) {
   .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 124px) !important; right: 8px !important; }
 }
+/* The rocket stat cards sit under the strip on the launch review: the bell drops below them instead of covering LASER. */
+@media (max-width: 599px) {
+  body:has([data-testid='rocket-builder-stats']) .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 196px) !important; }
+}
 /* Landscape: the sky-event chip takes the bell's y64 slot, so the bell moves to the end of the top row. */
 @media (min-width: 600px) and (max-height: 640px) {
   .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; right: 12px !important; }
+}
+/* Desktop launch review: the bell sat on the CAPACITY card, so it drops under the three stat cards. */
+@media (min-width: 600px) and (min-height: 641px) {
+  body:has([data-testid='rocket-builder-stats']) .notification-bell { top: calc(env(safe-area-inset-top, 0px) + 276px) !important; }
+}
+/* Landscape: the transient sync chip rides under the bell instead of hiding behind it. */
+@media (min-width: 600px) and (max-height: 640px) {
+  .sync-chip--floating { top: calc(env(safe-area-inset-top, 0px) + 60px); }
 }
 /* Wide enough to share the top row: sit between the gear/clock/help cluster and the francs chips, so the strip never covers Back, target or stat cards below. */
 @media (min-width: 600px) {
@@ -4077,6 +4089,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 }
 .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); transform-origin: center bottom; }
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(.82); transform-origin: center bottom; }
 .portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite,
 .debrief-arrival-canvas canvas { image-rendering: auto; }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock-inner {
@@ -4158,6 +4171,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   /* A sparse base (one or two modules) can grow so a level-1 pad stays readable.
      A full plot row stays at authored size so the gaps survive. */
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%) scale(var(--hub-fit, 1)); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(calc(var(--hub-fit, 1) * .82)); }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%) scale(var(--hub-fit, 1)); transform-origin: center bottom; }
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button,
   .portrait-canvas:has([data-screen="hub"]) .hub-community-button {
@@ -4184,6 +4198,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
 @media (orientation: landscape) and (max-height: 500px) {
   .portrait-canvas:has([data-screen="hub"]) [data-screen="hub"] { --hub-ground: 20%; --hub-structure-max: 9999px; }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure { transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(.82); }
   .hub-callout--clear { top: 56px; bottom: auto; left: 24%; right: auto; width: min(250px, 34vw); }
 }
 .debrief-game { background: var(--hub-void, #10182c); }
@@ -4450,6 +4465,10 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   max-width: min(320px, calc(100vw - 16px));
   white-space: normal;
 }
+/* Centred order line must clear the laser gauge on the right (about 190px wide with its margin). */
+@media (min-width: 561px) {
+  .mining-screen .laser-order.scene-dock-word { max-width: min(320px, calc(100vw - 400px)); }
+}
 .portrait-canvas--mining .sync-status { display: none; }
 .mining-seam-brackets {
   position: absolute; z-index: 11; pointer-events: none; left: 60px; top: calc(62% - 14px); width: 40px; height: 28px;
@@ -4569,8 +4588,8 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   cursor: pointer;
 }
 .mining-screen .sky-event-wrap[data-testid="sky-event-mining"] {
-  top: 52px;
-  left: 160px;
+  top: 72px;
+  left: 12px;
 }
 .mining-screen .mining-charge-warning {
   top: 52px;
@@ -5043,7 +5062,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .mining-bump-note {
   position: absolute;
   left: 50%;
-  top: 30%;
+  top: 112px;
   transform: translateX(-50%);
   z-index: 7;
   padding: 8px 14px;

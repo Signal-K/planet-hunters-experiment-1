@@ -37,7 +37,9 @@ public struct MiningField: Equatable, Sendable {
     /// How far (normalised x) the rover's laser reaches either side of it; driving closer is the point.
     public static let reach = 0.34
 
-    public var cargoUnits: Int { cargo.values.reduce(0, +) }
+    /// Sky-fed fragments take no hold space (web `cargoUnits: 0`), so catching them never blocks mining ore.
+    public private(set) var skyFed: String?
+    public var cargoUnits: Int { cargo.filter { $0.key != skyFed }.values.reduce(0, +) }
     public var isFull: Bool { cargoUnits >= cargoCapacity }
     public var isComplete: Bool { required.allSatisfy { cargo[$0.key, default: 0] >= $0.value } }
 
@@ -49,13 +51,15 @@ public struct MiningField: Equatable, Sendable {
 
     /// Builds a field of ore nodes weighted toward the mission's required minerals so a
     /// contract is always completable, then sprinkled with the target's other minerals.
+    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is caught on landing (Orionids fragments).
     /// `debris` adds drifting shower particles of that resource on top of the normal field (SSL-475).
     public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64,
-                debris: (resourceId: String, count: Int)? = nil) {
+                debris: (resourceId: String, count: Int)? = nil, skyFed: String? = nil) {
         var rng = SeededRandom(seed: seed)
         var nodes: [OreNode] = []
         var nextId = 0
         func place(_ mineral: String) {
+            if mineral == skyFed { return }
             let tier = Minerals.byId[mineral]?.laserAccess ?? 1
             _ = tier
             let maxHp = 1   // SSL-538: one accepted laser hit always mines the deposit
@@ -75,8 +79,14 @@ public struct MiningField: Equatable, Sendable {
         for mineral in extras { for _ in 0..<2 { place(mineral) } }
         if let debris { for _ in 0..<max(0, debris.count) { place(debris.resourceId) } }
         self.nodes = nodes
+        self.skyFed = skyFed
         self.charge = chargeCap; self.chargeCap = chargeCap
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required
+    }
+
+    /// A sky-fed fragment landed: it banks itself, with no charge and no hold limit (like web, fragments never block on a full hold).
+    public mutating func catchFragment(_ mineralId: String) {
+        cargo[mineralId, default: 0] += 1
     }
 
     /// One laser strike on a node. Costs one charge; progress is hp damage equal to laser tier.

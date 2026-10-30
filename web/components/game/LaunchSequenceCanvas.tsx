@@ -1,186 +1,109 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application } from 'pixi.js'
-import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
+import { useEffect, useRef, useState } from 'react'
 import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
+import { PixelStructure } from '@/components/game/hub/PixelStructure'
+import { KitRocket } from '@/components/game/hub/KitRocket'
+import { BASE_CAMERA_HOME } from '@/lib/scene/base-camera'
+import { kitScale } from '@/lib/scene/base-site'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
 interface Props {
+  rocketId?: string
   rocketName: string
   rocketImageSrc?: string
   targetName: string
+  earthBiome?: EarthBiomeId
   onComplete: () => void
 }
 
-// KES-148: on the deployed build (not local dev/Cypress), this scene was
-// observed replaying from the ground indefinitely, stranding the player on
-// the fab screen forever with no way to launch. Root cause wasn't fully
-// pinned down, but the scene's completion effect below only fires once per
-// mount and this component's own useEffect remounts (resetting elapsed to 0)
-// whenever rocketName/rocketImageSrc/targetName change value — plausible if
-// game.rocket transiently resolves to a different value across a slower
-// production catalog/state sync than local dev ever exercises. This watchdog
-// is a mount-once safety net, independent of those props, so no remount loop
-// can strand a player: worst case they wait a fixed ceiling, not forever.
-const LAUNCH_WATCHDOG_MS = 18_000
+// The old Pixi graph composed a second launchpad and a second rocket, then
+// relied on WebGL surviving the hand-off. This reuses the real Base artwork,
+// so the player sees the same physical vehicle leave the same physical site.
+const LIFTOFF_MS = 3_200
+const COMPLETE_MS = 5_200
+const FAILSAFE_MS = 18_000
 
-export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
-  const divRef = useRef<HTMLDivElement>(null)
+export function LaunchSequenceCanvas({ rocketName, targetName, earthBiome, onComplete }: Props) {
+  const [elapsed, setElapsed] = useState(0)
+  const [view, setView] = useState(() => ({ w: typeof window === 'undefined' ? 402 : window.innerWidth, h: typeof window === 'undefined' ? 780 : window.innerHeight }))
   const completeRef = useRef(onComplete)
   const firedRef = useRef(false)
-  completeRef.current = onComplete
-  // The stage resizes when the desktop frame kicks in; rebuild the scene then so it lays out at the real size.
   const isDesktop = useIsDesktop()
   const ascentFragments = fragmentsCaughtOnLaunch(skyEventNow(isDevLauncherEnabled()))
+  completeRef.current = onComplete
 
-  // Single guarded entry point — the watchdog, the scene's natural
-  // completion, and the dev skip button all route through this so a
-  // near-simultaneous fire from two of them can never call onComplete twice.
-  const fireComplete = useRef(() => {
+  const finish = useRef(() => {
     if (firedRef.current) return
     firedRef.current = true
     completeRef.current()
   }).current
 
-  // KES-353: the watchdog above used a single fixed setTimeout, which browsers
-  // keep running (just throttled) while the tab is hidden — but the PixiJS
-  // ticker driving the actual animation is paused solid while hidden (no rAF
-  // in a background tab). Net effect: a player who launches, switches tabs
-  // for >18s, and comes back finds the sequence force-completed by the
-  // watchdog despite the animation having made zero visible progress, which
-  // reads as the launch being cancelled out from under them. Fix: only spend
-  // the watchdog's budget while the tab is actually visible, banking the
-  // remainder across a hide/show cycle instead of letting it run down blind.
   useEffect(() => {
-    let remainingMs = LAUNCH_WATCHDOG_MS
-    let timer: number | null = null
-    let segmentStartedAt = 0
-
-    function startSegment() {
-      segmentStartedAt = Date.now()
-      timer = window.setTimeout(fireComplete, remainingMs)
-    }
-    function stopSegment() {
-      if (timer === null) return
-      window.clearTimeout(timer)
-      timer = null
-      remainingMs = Math.max(0, remainingMs - (Date.now() - segmentStartedAt))
-    }
-    function onVisibilityChange() {
-      if (document.hidden) stopSegment()
-      else startSegment()
-    }
-
-    if (!document.hidden) startSegment()
-    document.addEventListener('visibilitychange', onVisibilityChange)
-
-    return () => {
-      stopSegment()
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
-  }, [fireComplete])
+    const onResize = () => setView({ w: window.innerWidth, h: window.innerHeight })
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
-    const div = divRef.current
-    if (!div) return
-
-    const canvas = document.createElement('canvas')
-    // The Pixi scene is the visible launch sequence. It used to be hidden
-    // underneath PadLaunchSequence, which completed after 3.4 seconds and
-    // made the real 15-second timeline unreachable to the player.
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;opacity:1;pointer-events:none;'
-    div.appendChild(canvas)
-
-    const app = new Application()
-    let initialized = false
-    let destroyed = false
-    let elapsed = 0
-
-    ;(async () => {
-      const cw = div.offsetWidth  || LAUNCH_W
-      const ch = div.offsetHeight || LAUNCH_H
-      await app.init({
-        canvas,
-        width: cw,
-        height: ch,
-        background: 0x000000,
-        antialias: false,
-        autoDensity: true,
-        resolution: capDpr(),
-      })
-      initialized = true
-      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
-
-      const scene = buildLaunchScene(app, {
-        rocketName,
-        rocketImageSrc,
-        targetName,
-        onComplete: fireComplete,
-      })
-
-      app.ticker.add(t => {
-        const dt = launchFrameDt(t.deltaMS)
-        if (dt === 0) return
-        elapsed += dt
-        // SSL-281: one throwing frame must not stall the ticker forever —
-        // end the sequence instead of freezing the rocket mid-flight.
-        try {
-          scene.update(elapsed, dt)
-        } catch (err) {
-          console.error('[LaunchSequenceCanvas] scene.update failed, ending sequence', err)
-          fireComplete()
-        }
-      })
-    })()
-
-    return () => {
-      destroyed = true
-      if (initialized) {
-        try { app.destroy() } catch { /* pixi v8 cleanup */ }
-        canvas.remove()
-      }
+    const started = performance.now()
+    let frame = 0
+    const tick = (now: number) => {
+      const next = Math.min(COMPLETE_MS, now - started)
+      setElapsed(next)
+      if (next >= COMPLETE_MS) finish()
+      else frame = requestAnimationFrame(tick)
     }
-  }, [rocketImageSrc, rocketName, targetName, isDesktop])
+    frame = requestAnimationFrame(tick)
+    const failsafe = window.setTimeout(finish, FAILSAFE_MS)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(failsafe)
+    }
+  }, [finish])
+
+  const px = kitScale(view)
+  const airborne = elapsed >= LIFTOFF_MS
+  const flight = Math.max(0, Math.min(1, (elapsed - LIFTOFF_MS) / (COMPLETE_MS - LIFTOFF_MS)))
+  const phase = elapsed < 900 ? 'COUNTDOWN · GUIDANCE LOCKED' : elapsed < LIFTOFF_MS ? 'IGNITION · BOOSTERS NOMINAL' : 'ASCENT · ORIONIDS SHOWER FIELD'
 
   return (
     <SequenceDesktopFrame
-      background="#d5ecf7"
-      stageAspect={isDesktop ? '16 / 9' : `${LAUNCH_W} / ${LAUNCH_H}`}
+      background="#10182c"
+      stageAspect={isDesktop ? '16 / 9' : '402 / 780'}
       leftTitle="MISSION"
-      leftRows={[
-        { label: 'VEHICLE', value: rocketName },
-        { label: 'DESTINATION', value: targetName },
-      ]}
+      leftRows={[{ label: 'VEHICLE', value: rocketName }, { label: 'DESTINATION', value: targetName }]}
       rightTitle="LAUNCH TELEMETRY"
-      rightRows={[
-        { label: 'SEQUENCE', value: 'AUTOMATED' },
-        { label: 'STATUS', value: 'NOMINAL' },
-      ]}
+      rightRows={[{ label: 'SEQUENCE', value: 'AUTOMATED' }, { label: 'STATUS', value: 'NOMINAL' }]}
       showClock
       renderStage={style => (
-        <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#d5ecf7', ...style }} data-fragments={ascentFragments || undefined} />
+        <div data-testid="launch-sequence-stage" data-fragments={ascentFragments || undefined} style={{ position: 'relative', isolation: 'isolate', overflow: 'hidden', background: '#10182c', ...style }}>
+          {!airborne && <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            <BaseWorldCanvas px={px} camera={BASE_CAMERA_HOME} time="dusk" biome={earthBiome ?? 'mountains'} />
+          </div>}
+          <div style={{ position: 'absolute', top: 28, left: 16, right: 16, zIndex: 5, color: '#f6f2ea', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.1em', textAlign: 'center', textTransform: 'uppercase', textShadow: '2px 2px 0 #16293b' }}>
+            <div>{rocketName}</div><div style={{ marginTop: 8 }}>{phase}</div>
+          </div>
+          {!airborne && (
+            <div style={{ position: 'absolute', left: '50%', bottom: '18%', zIndex: 3, transform: 'translateX(-50%)', ['--px' as string]: `${px}px` }}>
+              <PixelStructure kind="launchpad" phase="launch" />
+            </div>
+          )}
+          {airborne && (
+            <div style={{ position: 'absolute', left: `${24 + flight * 50}%`, top: `${58 - flight * 38}%`, zIndex: 3, width: `${44 * px}px`, height: `${72 * px}px`, transform: `rotate(${flight * 18}deg)`, filter: 'drop-shadow(3px 4px 0 #16293b)' }}>
+              <KitRocket className="launch-sequence-rocket" />
+            </div>
+          )}
+          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 24, zIndex: 5, color: '#f6f2ea', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.08em', textAlign: 'center', textTransform: 'uppercase', textShadow: '2px 2px 0 #16293b' }}>Transit → {targetName}</div>
+        </div>
       )}
     >
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          data-testid="launch-sequence-skip-btn"
-          onClick={fireComplete}
-          style={{
-            position: 'absolute', bottom: 24, right: 24, zIndex: 101,
-            minHeight: 44, padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-            background: '#ffffff', border: '2px solid #0f2436', boxShadow: '3px 3px 0 #42a6df',
-            color: '#0f2436', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-          }}
-        >
-          Skip ▸
-        </button>
-      )}
+      {process.env.NODE_ENV === 'development' && <button data-testid="launch-sequence-skip-btn" onClick={finish} style={{ position: 'absolute', bottom: 24, right: 24, zIndex: 101, minHeight: 44, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', background: '#f6f2ea', border: '2px solid #16293b', boxShadow: '3px 3px 0 #42a6df', color: '#16293b', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Skip ▸</button>}
     </SequenceDesktopFrame>
   )
 }

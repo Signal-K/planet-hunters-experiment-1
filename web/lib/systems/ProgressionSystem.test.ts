@@ -4,14 +4,8 @@ import { MISSIONS } from '@/lib/data'
 import {
   applyGainResearchXP,
   applyAbandonMission,
-  applyAcceptLoan,
-  LICENSE_GRADE_XP_GATES,
   applyUnlockBlueprint,
-  applyUpgradeLicenseGrade,
-  TREASURY_PLAYER_ID,
 } from './ProgressionSystem'
-import { LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from '@/lib/data'
-import { createTreasuryState, loanOutstanding } from './TreasurySystem'
 
 type GameStateOverrides = Omit<Partial<GameState>, 'player'> & {
   player?: Partial<GameState['player']>
@@ -29,8 +23,6 @@ function makeState(overrides: GameStateOverrides = {}): GameState {
       placementPlots: {},
       controlBuilt: false,
       missionsDone: 0,
-      skillPoints: 0,
-      unlockedSkillNodes: [],
       freeOperations: false,
       clientMissions: {},
       clientStreaks: {},
@@ -47,7 +39,6 @@ function makeState(overrides: GameStateOverrides = {}): GameState {
       seen_planets: [],
       roverDeployments: [],
       clientTerritories: {},
-      licenseGrade: 'Grade I',
       researchXP: 0,
       unlockedBlueprints: [],
     },
@@ -78,32 +69,6 @@ describe('research progression', () => {
 
     const unchanged = applyGainResearchXP(gained, -4)
     expect(unchanged).toBe(gained)
-  })
-
-  it('gates license grade upgrades by Research XP and prevents downgrades', () => {
-    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 149 } }), 'Grade II')
-    expect(blocked.player.licenseGrade).toBe('Grade I')
-
-    const gradeTwo = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 150 } }), 'Grade II')
-    expect(gradeTwo.player.licenseGrade).toBe('Grade II')
-
-    const alreadyGradeTwo = { ...gradeTwo, player: { ...gradeTwo.player, researchXP: 500 } }
-    const noDowngrade = applyUpgradeLicenseGrade(alreadyGradeTwo, 'Grade II')
-    expect(noDowngrade).toBe(alreadyGradeTwo)
-  })
-
-  it('uses the retuned STS-492 License Grade gates through Grade III', () => {
-    expect(LICENSE_GRADE_XP_GATES).toMatchObject({
-      'Grade I': 0,
-      'Grade II': 150,
-      'Grade III': 500,
-    })
-
-    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 499, licenseGrade: 'Grade II' } }), 'Grade III')
-    expect(blocked.player.licenseGrade).toBe('Grade II')
-
-    const upgraded = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 500, licenseGrade: 'Grade II' } }), 'Grade III')
-    expect(upgraded.player.licenseGrade).toBe('Grade III')
   })
 
   it('unlocks a blueprint by spending Francs, Research XP, and materials once', () => {
@@ -161,38 +126,5 @@ describe('research progression', () => {
     expect(next.player.debriefPending).toBe(false)
     expect(next.player.returningToEarth).toBe(false)
     expect(next.deliveredCargo).toBeNull()
-  })
-})
-
-describe('applyAcceptLoan', () => {
-  it('credits exactly the no-interest principal from the treasury and mirrors the debt', () => {
-    const state = makeState({ player: { francs: 100_000 } })
-    const next = applyAcceptLoan(state, 1_000)
-
-    expect(next.player.francs).toBe(100_000 + LOAN_PRINCIPAL)
-    expect(next.player.loanDebt).toBe(LOAN_PRINCIPAL)
-    expect(next.player.loanOffered).toBe(true)
-    expect(next.popup).toBeNull()
-    expect(loanOutstanding(next.player.treasury!, TREASURY_PLAYER_ID)).toBe(LOAN_PRINCIPAL)
-    expect(next.player.treasury!.balanceFrancs).toBe(TREASURY_STARTING_BALANCE - LOAN_PRINCIPAL)
-  })
-
-  it('refuses a second concurrent loan while one is outstanding', () => {
-    const state = makeState({ player: { francs: 100_000 } })
-    const first = applyAcceptLoan(state, 1_000)
-    const second = applyAcceptLoan(first, 2_000)
-
-    expect(second.player.francs).toBe(first.player.francs)
-    expect(second.player.loanDebt).toBe(first.player.loanDebt)
-  })
-
-  it('refuses to lend more than the treasury holds', () => {
-    const state = makeState({
-      player: { francs: 100_000, treasury: createTreasuryState(LOAN_PRINCIPAL - 1) },
-    })
-    const next = applyAcceptLoan(state, 1_000)
-
-    expect(next.player.francs).toBe(100_000)
-    expect(next.player.treasury?.loans ?? {}).toEqual({})
   })
 })

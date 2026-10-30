@@ -1,0 +1,8 @@
+{
+  "primaryNotesLocation": "root",
+  "dailyNotes": { "enabled": false, "directory": "Daily Notes", "titlePattern": "yyyy-MM-dd", "locale": "system", "legacyPatterns": [], "tasksDueOnNoteDate": true, "rolloverUnfinishedTasks": false },
+  "weeklyNotes": { "enabled": false, "directory": "Weekly Notes", "titlePattern": "yyyy-'W'ww", "locale": "system", "legacyPatterns": [] },
+  "folderIcons": {},
+  "folderColors": {},
+  "favorites": ["README.md", "cycles/Cycle 7 goals.md"]
+}

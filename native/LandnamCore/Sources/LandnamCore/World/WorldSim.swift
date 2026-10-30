@@ -105,7 +105,7 @@ public struct World: Sendable {
             }
             if let ground = b.ground, ground != "none", e.y <= e.floor {
                 if ground == "splash" {
-                    if let s = scene.prefabs["splash"] { born.append(make(s, Over(x: e.x, y: e.floor, event: e.event))) }
+                    if let s = scene.prefabs[b.impact ?? "splash"] { born.append(make(s, Over(x: e.x, y: e.floor, event: e.event))) }
                     continue
                 }
                 if ground == "stop" { e.y = e.floor; e.vx = 0; e.vy = 0 }
@@ -155,10 +155,11 @@ public struct World: Sendable {
             }
             if ev.kind == .meteors, let perMinute = ev.perMinute {
                 emitAtRate("m:\(ev.id)", perSecond: perMinute / 60, dt: dt) { w in
-                    let angle = (w.rng.next() < 0.5 ? -1.0 : 1.0) * w.rng.range(0.35, 0.75)
-                    let speed = w.rng.range(100, 130)
-                    let x = w.rng.range(0, view.w), y = w.rng.range(view.h * 0.78, view.h * 0.98)
-                    w.spawn("meteor", Over(x: x, y: y, vx: sin(angle) * speed, vy: -cos(angle) * speed, event: ev.id))
+                    let angle = (w.rng.next() < 0.5 ? -1.0 : 1.0) * w.rng.range(0.12, 0.45)
+                    let speed = w.rng.range(30, 42)
+                    let x = w.rng.range(0, view.w), y = w.rng.range(view.h * 0.9, view.h)
+                    let floor = w.rng.range(-30, 0)
+                    w.spawn("meteor", Over(x: x, y: y, vx: sin(angle) * speed, vy: -cos(angle) * speed, floor: floor, event: ev.id))
                 }
             }
         }
@@ -169,7 +170,7 @@ public struct World: Sendable {
             emitAtRate("rain", perSecond: weather.rainPerSecond * (snow ? 0.6 : 1), dt: dt) { w in
                 let x = view.stripX(w.rng.range(-0.05, 1.05), depth: 0.9)
                 let floor = w.rng.range(-36, 4)
-                w.spawn(snow ? "snowflake" : "raindrop", Over(x: x, y: view.h, vy: snow ? -14 : -150, floor: floor))
+                w.spawn(snow ? "snowflake" : "raindrop", Over(x: x, y: view.h, vy: snow ? -14 : -30, floor: floor))
             }
         }
         if weather.dust {

@@ -43,7 +43,7 @@ struct NotificationTray: View {
     }
 
     private func respond(_ friendshipId: String, accept: Bool) async {
-        guard let api = services?.friendsAPI() else { status = "Friends are unavailable right now."; return }
+        guard let api = services?.friendsAPI() else { status = "Friends are unavailable right now. Sign in again if this keeps happening."; return }
         do { try await api.respond(to: friendshipId, accept: accept); await reload() } catch { status = error.localizedDescription }
     }
 }

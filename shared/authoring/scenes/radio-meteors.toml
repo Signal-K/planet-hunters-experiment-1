@@ -1,0 +1,48 @@
+#:schema ../schema/scene.schema.json
+# Meteor radio: scene script (SSL-714). Real BRAMS spectrograms from Radio Meteor Zoo (Zooniverse project 2471).
+format = 1
+id = "radio-meteors"
+type = "exchange-lab"
+name = "Meteor radio"
+summary = "Box the meteor echoes in real Belgian radio meteor recordings, served live by the Panoptes API. Kept on Landnam's side."
+tickets = ["SSL-714"]
+qa = ["radio-meteors"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/RadioMeteorScreen.tsx"]
+native = []
+
+[preview]
+route = "radio-meteors"
+state = "ui-radio-meteors"
+
+[[objects]]
+id = "radio-spectrogram"
+kind = "instrument"
+layout = "host"
+mechanics = ["sky-events"]
+note = "The console window of the shower's community instrument (ORI-1 for the Orionids; SkyEvent.communityInstrument), launched by everyone for the event. Its screen shows a real 5-minute BRAMS recording from the live Radio Meteor Zoo workflow (Panoptes /subjects/queued)."
+
+[[objects]]
+id = "echo-boxes"
+kind = "collection"
+parent = "radio-spectrogram"
+layout = "host"
+mechanics = ["sky-events"]
+note = "Drag to box a meteor echo, tap to drop a standard box. Source-pixel rectangles, the Panoptes rectangle-tool shape."
+
+[[objects]]
+id = "receiver-dials"
+kind = "instrument"
+parent = "radio-spectrogram"
+layout = "host"
+mechanics = ["sky-events"]
+note = "GAIN (contrast), ZOOM (both axes about the beacon line) and SWEEP (along the five minutes). Drag, scroll or arrow keys turn them; the time bar shows what is on screen."
+
+[[objects]]
+id = "radio-desk"
+kind = "panel"
+layout = "host"
+mechanics = ["sky-events"]
+note = "Two-tone right half. The radio desk briefs first-timers in three lines, then reacts to each box, delete and send. UNDO/DELETE BOX, NO METEORS, SEND ECHOES. Saved to radio_meteor_classifications on Landnam's PocketBase; not sent to Zooniverse."

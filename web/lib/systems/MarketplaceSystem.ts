@@ -5,6 +5,7 @@ import type { GameState } from '@/lib/game-types'
 import { MINERAL_META, isArtifactMineralId } from '@/lib/data'
 import { GEMINIDS_DEBRIS_PRESET, LEONIDS_DEBRIS_PRESET, debrisWindowStartMs } from '@/lib/data/sky-events'
 import { sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
+import { addStamp } from '@/lib/research/stamps'
 
 /** The Exchange charges a dealer margin over the spot (sell) price, so buying and re-selling never profits. */
 export const BUY_MARKUP = 1.25
@@ -29,7 +30,7 @@ export interface SpotQuote {
   held: number
 }
 
-type PricePlayer = Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>
+type PricePlayer = Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>
 
 export function exchangeBuilt(player: Pick<GameState['player'], 'placed'>): boolean {
   return (player.placed ?? []).includes('market')
@@ -37,7 +38,7 @@ export function exchangeBuilt(player: Pick<GameState['player'], 'placed'>): bool
 
 export function buyUnitPrice(mineralId: string, player: PricePlayer, clientId?: string, now: number = Date.now()): number {
   // The ask is set from the quote without the community research bonus (SSL-673).
-  const spot = sellUnitPrice(mineralId, { ...player, researchBonusUntil: undefined }, clientId, now).price
+  const spot = sellUnitPrice(mineralId, player, clientId, now).price
   if (spot <= 0) return 0
   return Math.max(spot + 1, Math.round(spot * BUY_MARKUP))
 }
@@ -88,7 +89,7 @@ export function applySetPriceAlert(s: GameState, mineralId: string, target: numb
   // One alert per mineral: setting again moves the target and re-arms it.
   const others = alerts.filter(a => a.mineralId !== mineralId)
   if (others.length >= MAX_PRICE_ALERTS) return s
-  return { ...s, player: { ...s.player, priceAlerts: [...others, { id: `alert-${mineralId}`, mineralId, target: price }] } }
+  return { ...s, player: addStamp({ ...s.player, priceAlerts: [...others, { id: `alert-${mineralId}`, mineralId, target: price }] }, 'price-alert', Date.now()) }
 }
 
 export function applyRemovePriceAlert(s: GameState, alertId: string): GameState {

@@ -1,0 +1,116 @@
+{
+  "constellations": [
+    {
+      "id": "first-light",
+      "name": "First Light",
+      "description": "Your first completed mission puts a new pattern in the Base sky.",
+      "source_kind": "mission",
+      "source": "any-mission",
+      "points": [
+        [
+          0.08,
+          0.2
+        ],
+        [
+          0.18,
+          0.13
+        ],
+        [
+          0.29,
+          0.21
+        ],
+        [
+          0.42,
+          0.1
+        ],
+        [
+          0.53,
+          0.18
+        ]
+      ]
+    },
+    {
+      "id": "signal-weaver",
+      "name": "Signal Weaver",
+      "description": "A classification or survey contribution becomes part of the sky.",
+      "source_kind": "contribution",
+      "source": "classification",
+      "points": [
+        [
+          0.58,
+          0.24
+        ],
+        [
+          0.67,
+          0.13
+        ],
+        [
+          0.76,
+          0.21
+        ],
+        [
+          0.84,
+          0.11
+        ],
+        [
+          0.92,
+          0.19
+        ]
+      ]
+    },
+    {
+      "id": "research-arc",
+      "name": "Research Arc",
+      "description": "A sustained research contribution lights a second pattern.",
+      "source_kind": "contribution",
+      "source": "research",
+      "points": [
+        [
+          0.16,
+          0.38
+        ],
+        [
+          0.26,
+          0.31
+        ],
+        [
+          0.37,
+          0.39
+        ],
+        [
+          0.47,
+          0.3
+        ],
+        [
+          0.59,
+          0.37
+        ]
+      ]
+    },
+    {
+      "id": "orion-trail",
+      "name": "Orion Trail",
+      "description": "The Orionids leave a permanent trace after you complete the shower event.",
+      "source_kind": "event",
+      "source": "orionids-2026",
+      "points": [
+        [
+          0.66,
+          0.43
+        ],
+        [
+          0.74,
+          0.34
+        ],
+        [
+          0.82,
+          0.44
+        ],
+        [
+          0.91,
+          0.35
+        ]
+      ]
+    }
+  ]
+}

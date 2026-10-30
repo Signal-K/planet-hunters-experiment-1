@@ -15,6 +15,14 @@
 .slot strong { font-size: 14px; }
 .slot em { font-size: 14px; font-style: normal; letter-spacing: .12em; text-transform: uppercase; }
 .slot:disabled { opacity: .6; }
+.primary { position: relative; z-index: 30; display: none; min-height: 48px; padding: 0 28px; color: var(--ln-blueprint-paper); font: 800 16px/1 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; background: var(--ln-blueprint-blue); border: 2px solid var(--ln-blueprint-ink); border-radius: 10px; box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent); cursor: pointer; }
+.primary:disabled { color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper-2); cursor: default; }
+.showerField { display: flex; align-items: center; gap: 12px; width: min(620px, 100%); padding: 8px 14px; color: var(--ln-world-outline); background: color-mix(in srgb, var(--ln-world-night-mid) 82%, var(--ln-world-hull-lit)); border: 1px solid var(--ln-world-accent); }
+.showerField svg { flex: 0 0 180px; width: 180px; height: 48px; fill: none; stroke: var(--ln-world-accent); stroke-width: 1.5; }
+.showerField circle { fill: var(--ln-world-accent); stroke: var(--ln-world-hull-lit); stroke-width: 2; }
+.showerField span { display: grid; gap: 2px; min-width: 0; }
+.showerField b { font: 800 14px var(--ln-font-display); letter-spacing: .1em; }
+.showerField small { font-size: 14px; line-height: 1.2; }
 .hold { margin: 0; padding: 4px 16px; font-size: 14px; background: var(--ln-world-hull-lit); border: 1px solid var(--ln-world-outline); }
 .link { min-height: 44px; padding: 0 8px; color: inherit; font: inherit; font-weight: 800; text-decoration: underline; background: none; border: 0; cursor: pointer; }
 .sheet { position: fixed; z-index: 60; box-sizing: border-box; left: 0; right: 0; bottom: 0; max-height: 60vh; overflow: auto; padding: 16px; background: var(--ln-world-hull-lit); border-top: 2px solid var(--ln-world-outline); pointer-events: auto; }
@@ -31,9 +39,10 @@
 .sheetHead button { min-height: 44px; padding: 0 16px; color: var(--ln-world-outline); font: inherit; font-size: 14px; background: none; border: 1px solid var(--ln-world-outline); }
 @media (orientation: landscape) and (max-height: 520px) { .host { top: 4px; left: 64px; right: 64px; } .rail { display: none; } .sheet { left: 25%; right: 25%; max-height: 80vh; } }
 @media (max-width: 720px) { .sheet li button { gap: 8px; padding: 8px; } .vehicleOptionArt { flex-basis: 72px; width: 72px; height: 42px; } .vehicleOptionStats { display: none; } .vehicleOptionAction { min-width: 86px; font-size: 11px; } }
+@media (max-width: 520px) { .showerField { align-items: flex-start; } .showerField svg { flex-basis: 112px; width: 112px; } }
 
 /* Phone portrait: the top rows belong to the HUD and builder, so the plan rides just above the dock. */
-@media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 76px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } }
+@media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 12px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; min-width: 0; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } .hold { flex: 0 0 auto; width: 100%; max-width: 100%; text-align: center; } .primary { display: block; min-width: min(280px, 70vw); } }
 
 /* Desktop: ride the empty band between Launch and Target, above the part tabs. */
 @media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
@@ -41,8 +50,12 @@
 @media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; flex-wrap: wrap; } .hold { flex: 0 0 100%; width: max-content; max-width: 100%; text-align: center; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
 @media (max-width: 899px) and (min-height: 521px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }
 
-/* Medium browser shells can report a compact CSS width while still showing the desktop scene. Make the lower asphalt an intentional launch deck. */
-@media (min-width: 600px) and (min-height: 521px) {
+/* Medium browser shells can report a compact CSS width while still showing the
+   desktop scene. Keep the plan as a deliberate deck: all three choices share
+   one row, and the storage warning gets a second full-width row. The previous
+   version put the warning beside the choices at 34% width, which made it wrap
+   one word per line and pushed destination/vehicle off the viewport. */
+@media (min-width: 600px) and (max-width: 899px) and (min-height: 521px) {
   .host {
     top: auto;
     bottom: 0;
@@ -53,14 +66,15 @@
     align-items: center;
     gap: 8px;
     padding: 12px 8px 16px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ln-world-asphalt) 88%, var(--ln-world-night-mid)), var(--ln-world-asphalt) 30%);
-    border-top: 3px solid color-mix(in srgb, var(--ln-world-hull-lit) 40%, var(--ln-world-asphalt));
-    box-shadow: 0 -10px 24px color-mix(in srgb, var(--ln-world-night-top) 26%, transparent);
   }
-  .slots { flex-wrap: nowrap; width: min(100%, 1360px); }
+  /* The choices stay together; the warning gets its own readable row. */
+  .host { flex-direction: column; flex-wrap: nowrap; align-items: center; padding: 8px; }
+  .rail { display: none; }
+  .slots { flex: 0 0 auto; flex-wrap: nowrap; width: 100%; min-width: 0; max-width: 1000px; }
   .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; flex: 1 1 0; padding: 0 12px; }
   .slot em { display: none; }
   .slot strong { white-space: nowrap; }
-  .hold { width: min(100%, 1056px); max-width: 100%; text-align: center; }
+  .hold { flex: 0 0 auto; width: 100%; max-width: 100%; text-align: center; }
+  .primary { min-width: min(280px, 48vw); }
   button.slot:not(:disabled)::after { content: '\203A'; margin-left: auto; font-weight: 800; }
 }

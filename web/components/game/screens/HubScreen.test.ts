@@ -15,9 +15,9 @@ describe('Earth Base module composition', () => {
     // These are the authored CSS footprints for the current flat sprite
     // renders. Keep the test tied to the rendered assets rather than the
     // retired modular-kit dimensions.
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad).toEqual({ width: 120, height: 108 })
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar).toEqual({ width: 72, height: 44 })
-    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 48, height: 96 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad).toEqual({ width: 96, height: 108 })
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar).toEqual({ width: 60, height: 44 })
+    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 40, height: 96 })
   })
 
   it('draws tiered pixel modules and keeps the silo off the surface', () => {

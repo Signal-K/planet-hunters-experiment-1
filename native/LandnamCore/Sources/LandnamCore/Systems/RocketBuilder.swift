@@ -148,16 +148,15 @@ public enum RocketBuilder {
 
     public static func stats(_ s: GameState, catalog: Catalog) -> (capacity: Int, range: Int, laser: Int) {
         let parts = catalog.parts
-        let skills = s.player.unlockedSkillNodes
         let chassis = parts.chassis.first { $0.id == s.rocket.chassis } ?? parts.chassis[0]
         let propulsion = parts.propulsion.first { $0.id == s.rocket.propulsion } ?? parts.propulsion[0]
         let drill = parts.drill.first { $0.id == s.rocket.drill } ?? parts.drill[0]
         let loadout = s.player.shipCustomizerParts
         let laserPart = partId(loadout, slot: "mining-laser").flatMap { id in self.parts.first { $0.id == id } }
         let fitted = loadoutBonus(loadout)
-        let capacity = parts.effectiveCargo(chassis, skills: skills) + fitted.capacity
-        let range = parts.effectiveMaxOrbit(propulsion, skills: skills) + fitted.range
-        let laser = Skills.laserChargeCap(skills) + (laserPart?.power ?? drill.rate ?? 1)
+        let capacity = parts.effectiveCargo(chassis) + fitted.capacity
+        let range = parts.effectiveMaxOrbit(propulsion) + fitted.range
+        let laser = Flight.baseLaserCharges + (laserPart?.power ?? drill.rate ?? 1)
         return (capacity, range, laser)
     }
 

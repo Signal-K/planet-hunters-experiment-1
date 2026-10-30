@@ -46,7 +46,7 @@ struct FlightPlanTests {
 
     @Test func guideStaysOfferedInFreeOpsUntilTheTriesAreDone() {
         var p = Player(); p.placed = ["launchpad"]; p.freeOperations = true
-        #expect(FlightPlan.coach(p, screen: .hub)?.kicker == "MINING OPS · STEP 1/6")
+        #expect(FlightPlan.coach(p, screen: .hub)?.kicker == "MINING OPS · STEP 2/5")
         for id in FlightPlanProgress.tryIds { p.flightPlan.complete(id) }
         #expect(FlightPlan.coach(p, screen: .hub, includeHidden: true) == nil)
     }
@@ -54,10 +54,11 @@ struct FlightPlanTests {
     @Test func coachNamesLaunchpadPlacementFirst() {
         let p = Player()
         let c = FlightPlan.coach(p, screen: .hub)
-        #expect(c?.kicker == "MINING OPS · STEP 1/6" && c?.objective == "Place the launchpad" && c?.go?.screen == .build)
+        #expect(c?.kicker == "MINING OPS · STEP 1/5" && c?.objective == "Place the launchpad" && c?.go?.screen == .build)
         let intro = FlightPlan.coach(p, screen: .intro)
         #expect(intro?.objective == "Choose where to build" && intro?.go == nil)
         var placed = p; placed.placed = ["launchpad"]
+        let padded = placed
         #expect(FlightPlan.coach(placed, screen: .launchpad)?.objective == "Open client contracts")
         placed.flightPlan.complete("mining")
         #expect(FlightPlan.coach(placed, screen: .hub)?.kicker == "SCAN OPS · STEP 2/3")
@@ -66,13 +67,16 @@ struct FlightPlanTests {
         #expect(FlightPlan.coach(placed, screen: .hub, includeHidden: true)?.kicker == "SCAN OPS · STEP 2/3")
         placed.flightPlan.hidden = false
         #expect(FlightPlan.coach(placed, screen: .mining)?.objective == "Fire the laser on a seam")
-        #expect(FlightPlan.coach(p, screen: .mining)?.kicker == "MINING OPS · STEP 5/6")
+        #expect(FlightPlan.coach(padded, screen: .mining)?.kicker == "MINING OPS · STEP 4/5")
+        #expect(FlightPlan.coach(padded, screen: .targets)?.objective == "Prepare the vehicle and launch")
+        #expect(FlightPlan.coach(padded, screen: .roverSurvey)?.objective == "Prepare the vehicle and launch")
+        for screen in [Screen.transit, .landing, .delivery] { #expect(FlightPlan.coach(padded, screen: screen) == nil) }
     }
 
     @Test func patchShelfTracksPlayableMilestones() {
-        let p = Player()
-        #expect(FlightPlan.patchProgress(p, screen: .mining, tryId: "mining") == .init(stitched: 4, total: 6))
-        #expect(FlightPlan.patchProgress(p, screen: .delivery, tryId: "mining") == .init(stitched: 5, total: 6))
+        var p = Player(); p.placed = ["launchpad"]
+        #expect(FlightPlan.patchProgress(p, screen: .mining, tryId: "mining") == .init(stitched: 3, total: 5))
+        #expect(FlightPlan.patchProgress(p, screen: .debrief, tryId: "mining") == .init(stitched: 4, total: 5))
         #expect(FlightPlan.patchProgress(p, screen: .hub, tryId: "scan") == .init(stitched: 0, total: 2))
         var scanned = p; scanned.flightPlan.complete("mining")
         #expect(FlightPlan.patchProgress(scanned, screen: .galaxy, tryId: "scan") == .init(stitched: 1, total: 2))

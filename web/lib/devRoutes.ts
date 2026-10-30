@@ -42,8 +42,6 @@ export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
 export const UI_ROUTE_PRESETS: Record<string, string> = {
   'mission-board': 'ui-mission-board',
   'target-picker': 'ui-target-picker',
-  'skill-tree': 'ui-skill-tree',
-  skills: 'ui-skill-tree',
   'tess-discovery': 'ui-tess-discovery',
   'instrument-hub': 'ui-instrument-hub',
   'saturn-storm-search': 'ui-saturn-storm-search',
@@ -53,6 +51,10 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   hangar: 'ui-hangar-assembly',
   'hangar-assembly': 'ui-hangar-assembly',
   'orionids-shower-mining': 'ui-orionids-shower-mining',
+  'orionids-rover': 'ui-orionids-rover',
+  'orionids-events-stage1': 'ui-orionids-events-stage1',
+  'orionids-ready': 'ui-orionids-ready',
+  'orionids-shower-mining-fresh': 'ui-orionids-shower-mining-fresh',
   'orionids-shower-debrief': 'ui-orionids-shower-debrief',
 }
 

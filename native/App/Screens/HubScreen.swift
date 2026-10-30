@@ -19,7 +19,7 @@ struct HubScreen: View {
     @State private var placing: Bool
     @State private var picked: String?
     @State private var placeNote: String?
-    /// Build mode: tapping a placed Launchpad, Silo or Academy opens its upgrade bar (web `ActionConfirmBar`).
+    /// Build mode: tapping a placed Launchpad or Silo opens its upgrade bar (web `ActionConfirmBar`).
     @State private var upgrading: String?
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
     @State private var dockHeight: CGFloat = 112
@@ -79,11 +79,16 @@ struct HubScreen: View {
                 padCore: homecoming,
                 padLift: padLift,
                 padDismantle: padDismantle,
+                player: store.player,
                 insets: insets,
                 camera: camera,
+                subsurfaceActive: store.screen == .hubSubsurface,
                 onStructure: { openStructure($0) },
                 onShaft: { if !offerUpgrade("surface-silo") { store.go(.hubSubsurface) } },
                 onBuildSilo: { buildSilo() },
+                onBuildSubsurfaceSilo: { _ = store.buildSubsurfaceSilo() },
+                onBuildDeepSubsurfaceSilo: { _ = store.buildSubsurfaceSilo(deep: true) },
+                onExcavate: { _ = store.excavateSubsurface() },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
@@ -98,9 +103,12 @@ struct HubScreen: View {
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
                      onMenu: { menuOpen = true },
+                     onSubsurface: { store.go(store.screen == .hubSubsurface ? .hub : .hubSubsurface) },
+                     subsurface: store.screen == .hubSubsurface,
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
-                     locationNavigationDisabled: true)
+                     locationNavigationDisabled: false,
+                     compact: false)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -110,7 +118,7 @@ struct HubScreen: View {
 
     /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.
     private var oreFraction: Double {
-        let capacity = 40 * BuildingLevels.siloCapacityMultiplier(store.player.buildingLevels["surface-silo"] ?? 1)
+        let capacity = Market.storageCapacity(store.player)
         let held = store.player.stash.values.reduce(0, +)
         return min(1, Double(held) / Double(max(capacity, 1)))
     }
@@ -231,8 +239,9 @@ struct HubScreen: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
         .padding(.horizontal, 16)
-        .padding(.bottom, aboveDock(insets))
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .padding(.top, insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
+        .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
     }
 
@@ -242,7 +251,6 @@ struct HubScreen: View {
         case "launchpad": store.go(.launchpad)
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
-        case "astronaut-academy": store.go(.academy)
         case "market": store.go(.market)
         case "control-station": store.go(.instrumentHub)
         default: break
@@ -255,17 +263,23 @@ struct HubScreen: View {
             HudGearClock(onSettings: { showSettings = true }, onFriends: { showFriends = true }, onNotifications: { showNotifications = true }, notificationCount: notificationCount)
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
+            } else if !placing, let summary = EconomyArrival.summary(store.player) {
+                ArrivalNote(width: z.contractCard.width, summary: summary)
             }
-            SkyEventChip(allDay: true)
         }
-        .padding(.leading, insets.leading + z.inset).padding(.top, insets.top + z.inset)
+        .padding(.leading, max(insets.leading + z.inset, 12))
+        .padding(.top, max(insets.top + z.inset, 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func topRightHud(insets: EdgeInsets) -> some View {
         let z = zones.topRight
-        return HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
-        .padding(.trailing, insets.trailing + z.inset).padding(.top, insets.top + z.inset)
+        return VStack(alignment: .trailing, spacing: 8) {
+            if !(placing && upgrading != nil) { SkyEventChip(allDay: true) }
+            HudChips(francs: store.player.francs, stash: store.player.stash, onSell: { store.go(.market) })
+        }
+        .padding(.trailing, max(insets.trailing + z.inset, 12))
+        .padding(.top, max(insets.top + z.inset, 12))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }
 
@@ -298,7 +312,6 @@ struct HubScreen: View {
         guard let api = services?.notificationsAPI() else { notificationCount = 0; return }
         notificationCount = (try? await api.list().count) ?? 0
     }
-
 }
 
 /// Contract card: active mission title plus progress. In portrait it collapses to a chip that expands on tap.
@@ -370,6 +383,47 @@ private struct ContractCard: View {
     }
 }
 
+/// Welcome back: what moved on the shared daily market board while the player was away (SSL-701).
+private struct ArrivalNote: View {
+    @Environment(GameStore.self) private var store
+    let width: CGFloat
+    let summary: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                Text("WELCOME BACK").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudMint)
+                    .padding(.horizontal, 12).frame(height: 24)
+                    .background(Theme.hudInk, in: UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
+                Spacer(minLength: 0)
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 4) {
+                    Text(summary).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button { store.dismissEconomyArrival() } label: {
+                        Image(systemName: "xmark").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
+                            .frame(width: 44, height: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel("Dismiss")
+                    .padding(.top, -10).padding(.trailing, -8)
+                }
+                Button { store.dismissEconomyArrival(); store.go(.market) } label: {
+                    Text("OPEN MARKET").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
+                }.buttonStyle(.plain)
+            }
+            .padding(10)
+            .background(Theme.hudPanel, in: UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12))
+            .overlay(UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12).stroke(Theme.hudInk, lineWidth: 1.5))
+        }
+        .frame(width: width)
+    }
+}
+
 private struct HudBar: View {
     let value: Double
     var body: some View {
@@ -383,6 +437,12 @@ private struct HudBar: View {
 }
 
 extension View {
+    /// Hard offset drop shadow drawn behind the shape. `.shadow` on the finished view also shadows its text, which ghosts
+    /// through any translucent fill; this only ever shadows the silhouette.
+    func hardShadow(_ color: Color, x: CGFloat = 0, y: CGFloat = 0, radius: CGFloat = 10) -> some View {
+        background { RoundedRectangle(cornerRadius: radius).fill(color).offset(x: x, y: y) }
+    }
+
     /// White rounded panel with a thin black outline (base HUD surface).
     func hudPanel(radius: CGFloat = 12) -> some View {
         background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: radius))

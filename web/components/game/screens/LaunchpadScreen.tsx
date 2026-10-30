@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { RocketConfig, Target } from '@/lib/data'
+import type { EarthBiomeId } from '@/lib/scene/base-world'
 import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import RocketBuilderScene, { type AssemblyPhase } from '@/components/game/screens/RocketBuilderScene'
@@ -46,6 +47,7 @@ interface LaunchpadScreenProps {
   launchDisabled?: boolean
   /** Design, being built on the pad, or ready to launch. Defaults to ready. */
   assembly?: AssemblyPhase
+  earthBiome?: EarthBiomeId
 }
 
 function MissionGlyph() {
@@ -57,7 +59,7 @@ const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1'
 export default function LaunchpadScreen({
   onBack, onViewContracts, onLaunchpadAction, onResumeMission, missionRuns = [], onResumeMissionRun, player, rocketImageSrc = '', selectedRocketName = 'Explorer', hydrated = false, onAbandonMission,
   mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, launchTestId = 'launch-btn', launchDisabled = false,
-  missionsDone, guided = false, assembly, hasStagedRocket = false, onDismantle,
+  missionsDone, guided = false, assembly, earthBiome, hasStagedRocket = false, onDismantle,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
@@ -91,7 +93,6 @@ export default function LaunchpadScreen({
         rocket={rocket}
         installed={player.shipCustomizerParts}
         missionsDone={missionsDone}
-        skills={player.unlockedSkillNodes}
         towerLabel={towerLabel}
         launchTestId={launchTestId}
         launchDisabled={launchDisabled}
@@ -106,6 +107,7 @@ export default function LaunchpadScreen({
         onLaunchComplete={onLaunchComplete}
         guided={guided}
         assembly={assembly}
+        earthBiome={earthBiome}
       />
 
       {player.activeMission && onResumeMission && !activeMissionCalloutDismissed && !missionRunsOpen && (

@@ -112,11 +112,6 @@ final class Services {
             let log = session.sharedUserId.flatMap { MissionRuns.logOp(old: old, new: new, sharedUserId: $0, payout: payout, now: now) }
             if !ops.isEmpty { Task { for op in ops { await sync.enqueue(op) } } }
             if let log { Task { await shared.enqueue(log); await shared.flush() } }
-            for n in NativeRecords.notifications(old: old, new: new) {
-                LocalNotifications.schedule(title: n.title, body: n.body, at: n.at)
-                let op = NativeRecords.scheduledNotification(endpoint: LocalNotifications.endpoint, title: n.title, body: n.body, at: n.at)
-                Task { await sync.enqueue(op) }
-            }
         }
         Task { @MainActor [weak self] in
             var lastRetry = Date.distantPast
@@ -140,7 +135,6 @@ final class Services {
         }
         LocalNotifications.requestProvisional()
         scheduleOrionidsPeakReminder()
-        store.onSiteDeed = { siteId in Task { await sync.enqueue(SiteDeed.op(siteId: siteId)) } }
         store.onClassified = { verdict in
             // Local save already happened. Without a shared login (Apple sign-in) the verdict stays local.
             guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }
@@ -173,23 +167,25 @@ final class Services {
     /// therefore never enter the offline outbox.
     func friendsAPI() -> FriendsAPI? {
         guard let session else { return nil }
-        return FriendsAPI(baseURL: api.baseURL, token: session.token)
+        let bad = unauthorized
+        return FriendsAPI(baseURL: api.baseURL, token: session.token, onUnauthorized: { bad.fire() })
     }
 
     func notificationsAPI() -> NotificationsAPI? {
         guard let session else { return nil }
-        return NotificationsAPI(baseURL: api.baseURL, token: session.token)
+        let bad = unauthorized
+        return NotificationsAPI(baseURL: api.baseURL, token: session.token, onUnauthorized: { bad.fire() })
+    }
+
+    func refreshFriendPresence() {
+        guard let api = friendsAPI() else { return }
+        Task { try? await api.heartbeat() }
     }
 
     /// SSL-673: the shared monthly research total. Read-only, so it is fetched live and never queued.
     func communityResearchAPI() -> CommunityResearchAPI? {
         guard let session else { return nil }
         return CommunityResearchAPI(baseURL: api.baseURL, token: session.token)
-    }
-
-    func refreshFriendPresence() {
-        guard let api = friendsAPI() else { return }
-        Task { try? await api.heartbeat() }
     }
 
     /// One local save per account. A different player signing in on this device starts clean (and the previous
@@ -214,9 +210,10 @@ final class Services {
     func pullIfNeeded() {
         guard let session, let store, !pulling else { return }
         let id = session.userId
-        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await sync.setUser(id) } }
+        let capturedSync = sync
+        if UserDefaults.standard.bool(forKey: pulledKey(id)) { Task { await capturedSync.setUser(id) } }
         pulling = true
-        let base = api.baseURL, tok = session.token, sync = sync
+        let base = api.baseURL, tok = session.token
         Task { @MainActor in
             defer { pulling = false }
             let result = await CloudPull.fetch(baseURL: base, token: tok, userId: id)
@@ -226,17 +223,17 @@ final class Services {
             case .none: break
             case .unavailable: return
             }
-            await sync.enqueue(NativeRecords.pushSubscription(userId: id, endpoint: LocalNotifications.endpoint))
+            await capturedSync.enqueue(NativeRecords.pushSubscription(userId: id, endpoint: LocalNotifications.endpoint))
             if TakeonPersistence.load("moon") == nil,
                let (_, snap) = await NativeRecords.fetchWorld(baseURL: base, token: tok, userId: id, targetId: "moon"), let snap {
                 TakeonPersistence.storeLocal("moon", snap)
             }
             if let runs = await MissionRuns.fetchOpen(baseURL: base, token: tok, userId: id), self.session?.userId == id {
-                for op in store.repairRuns(runs) { await sync.enqueue(op) }
+                for op in store.repairRuns(runs) { await capturedSync.enqueue(op) }
             }
             UserDefaults.standard.set(true, forKey: pulledKey(id))
-            await sync.setUser(id)
-            await sync.save(store.state)
+            await capturedSync.setUser(id)
+            await capturedSync.save(store.state)
         }
     }
 

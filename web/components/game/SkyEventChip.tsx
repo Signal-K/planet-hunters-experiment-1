@@ -23,6 +23,7 @@ export default function SkyEventChip({
   fragmentGoal,
   badgeTier = null,
   onParticipate,
+  orionidsRead = false,
   playerLocation,
 }: {
   surface: 'base' | 'mining'
@@ -31,6 +32,7 @@ export default function SkyEventChip({
   fragmentGoal?: number
   badgeTier?: BadgeTier | null
   onParticipate?: () => void
+  orionidsRead?: boolean
   playerLocation?: PlayerLocation | null
 }) {
   const activePreset = useDebrisEvent()
@@ -69,7 +71,10 @@ export default function SkyEventChip({
     captureGameEvent('sky_event_seen', { event_id: preset.eventId, surface })
   }, [preset, surface])
 
-  if (!preset) return null
+  // The badge is the player's completed-event receipt. Keeping a live-event
+  // launcher visible after that point turns a finished loop into permanent HUD
+  // clutter; the badge remains available in the event history instead.
+  if (!preset || (surface === 'base' && orionids && badgeTier)) return null
   return (
     <>
       {orionids && (
@@ -82,7 +87,7 @@ export default function SkyEventChip({
         />
       )}
       <div className={[styles.hud, 'sky-event-wrap', className].filter(Boolean).join(' ')} data-testid={`sky-event-${surface}`}>
-        {(!open || !orionids) && (orionids && surface === 'base' ? (
+        {(!open || !orionids) && !(orionids && surface === 'mining') && (orionids && surface === 'base' ? (
           <button
             type="button"
             className={styles.eventButton}
@@ -136,8 +141,8 @@ export default function SkyEventChip({
               </p>
             )}
             <div className={styles.actions}>
-              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
               {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={() => openOrionidsReading(onParticipate)}>READ THE SKY</button>}
+              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate} disabled={orionids && !orionidsRead} aria-disabled={orionids && !orionidsRead}>{orionids && !orionidsRead ? 'READ THE SKY FIRST' : 'VIEW EVENT'}</button>}
             </div>
             {badgeTier && (
               <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>
@@ -159,7 +164,7 @@ export default function SkyEventChip({
             )}
           </div>
         )}
-        {orionids && fragmentGoal != null && (
+        {orionids && fragmentGoal != null && surface !== 'mining' && (
           <div className={styles.tally} data-testid="orionids-fragment-counter">
             <img src={variant.iconResource} alt="" />
             <strong>Catch {fragmentGoal} Orionid fragments</strong>
@@ -169,14 +174,14 @@ export default function SkyEventChip({
         {orionids && peak && surface === 'mining' && (
           <div className={styles.peakTag} data-testid="orionids-peak-tag">PEAK x2</div>
         )}
-        {orionids && debrisCount > 0 && fragmentGoal == null && (
+        {orionids && debrisCount > 0 && fragmentGoal == null && surface !== 'mining' && (
           <div className={styles.tally} data-testid="orionid-debris-count">
             <img src={variant.iconResource} alt="" />
             <strong>Orionid debris {debrisCount}</strong>
           </div>
         )}
         {orionids && badgeTier && (
-          <div className={styles.badge} data-testid="orionids-badge" data-tier={badgeTier} role="status">
+          <div className={styles.badge} data-testid="orionids-badge" data-tier={badgeTier} role="status" aria-label={`Orionids ${badgeTier} badge`}>
             <img src={variant.badgeSmall} alt="" data-tier={badgeTier} />
             <strong>Orionids {badgeTier}</strong>
           </div>

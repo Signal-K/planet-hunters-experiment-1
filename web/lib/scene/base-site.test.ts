@@ -36,7 +36,7 @@ describe('base site map', () => {
     }
   })
 
-  it('fits the hangar and pad across a portrait phone, 2 pt per unit on landscape phones and 3 on large screens', () => {
+  it('fits the active Base footprint across landscape while preserving the portrait fit', () => {
     expect(kitScale({ w: 390, h: 844 })).toBe(1.56)
     expect(kitScale({ w: 926, h: 428 })).toBe(2)
     expect(kitScale({ w: 1440, h: 900 })).toBe(3)

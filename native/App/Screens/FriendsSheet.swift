@@ -23,33 +23,39 @@ struct FriendsSheet: View {
         ZStack {
             Theme.bg.opacity(0.72).ignoresSafeArea()
             GeometryReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        header
-                        if loading { ProgressView().frame(maxWidth: .infinity, minHeight: 160) }
-                        else { content }
+                let compact = proxy.size.height < 520 && proxy.size.width > proxy.size.height
+                VStack(alignment: .leading, spacing: 0) {
+                    header(compact: compact).padding(.horizontal, 20).padding(.top, compact ? 12 : 20).padding(.bottom, compact ? 8 : 14)
+                    Divider().overlay(Theme.hudInk.opacity(0.22))
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 18) {
+                            if loading { ProgressView().frame(maxWidth: .infinity, minHeight: 160) }
+                            else { content }
+                        }
+                        .padding(20)
                     }
-                    .padding(20)
-                    .frame(maxWidth: min(proxy.size.width - 24, 620), alignment: .leading)
-                    .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hudInk, lineWidth: 2))
-                    .padding(12)
-                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxHeight: .infinity, alignment: .center)
+                .frame(maxWidth: min(proxy.size.width - 24, 620), maxHeight: compact ? proxy.size.height - 24 : min(proxy.size.height - 24, 760), alignment: .top)
+                .background(Theme.hudPanel, in: RoundedRectangle(cornerRadius: 16))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hudInk, lineWidth: 2))
+                .padding(12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
         .task { await reload() }
         .accessibilityIdentifier("friends-sheet")
     }
 
-    private var header: some View {
+    private func header(compact: Bool) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("COMMS NETWORK").font(AppFont.display(14)).tracking(1.3).foregroundStyle(Theme.textMuted)
                 Text("Friends").font(AppFont.display(24)).foregroundStyle(Theme.hudInk)
-                Text("Connect by callsign and send one field gift to each friend every day.")
-                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+                if !compact {
+                    Text("Connect by callsign and send one field gift to each friend every day.")
+                        .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+                }
             }
             Spacer()
             Button("CLOSE", action: onClose).friendButton().accessibilityIdentifier("friends-close")

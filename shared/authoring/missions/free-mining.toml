@@ -29,3 +29,10 @@ affinity = 0
 [preview]
 route = "missions"
 state = "cp-mid"
+
+[harness]
+scene = "self-directed-mining"
+web = "cp-mid"
+native = "cp-mid"
+objective = "Pick a reachable target, mine, then sell or store the haul."
+complete = "The return allocation is settled without a client contract."

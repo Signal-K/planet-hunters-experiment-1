@@ -7,12 +7,12 @@ import Foundation
     private let starter = ["engine": "ion-thruster-t1", "booster": "strap-booster-t1", "cockpit": "cockpit-command-t1", "payload": "cargo-payload-t1"]
 
     @Test func theHullGrowsRoomsWithMissionsAndResearch() {
-        #expect(ShipCustomizer.sequence(missionsDone: 0, crewModuleResearched: true, landingResearched: true).count == 4)
-        #expect(ShipCustomizer.sequence(missionsDone: 2, crewModuleResearched: false, landingResearched: true).count == 6)
-        #expect(!ShipCustomizer.sequence(missionsDone: 3, crewModuleResearched: false, landingResearched: true).contains("lander"))
-        let four = ShipCustomizer.sequence(missionsDone: 4, crewModuleResearched: false, landingResearched: true)
+        #expect(ShipCustomizer.sequence(missionsDone: 0, landingResearched: true).count == 4)
+        #expect(ShipCustomizer.sequence(missionsDone: 2, landingResearched: true).count == 6)
+        #expect(!ShipCustomizer.sequence(missionsDone: 3, landingResearched: true).contains("lander"))
+        let four = ShipCustomizer.sequence(missionsDone: 4, landingResearched: true)
         #expect(four.count == 8 && four.last == "lander")
-        #expect(ShipCustomizer.sequence(missionsDone: 6, crewModuleResearched: true, landingResearched: true).suffix(3) == ["heat-shield", "crew-module", "lander"])
+        #expect(ShipCustomizer.sequence(missionsDone: 6, landingResearched: true).suffix(3) == ["docking-port", "heat-shield", "lander"])
     }
 
     @Test func partTiersUnlockByMissionsDone() {
@@ -21,7 +21,7 @@ import Foundation
         #expect(ShipCustomizer.parts(for: "lander", missionsDone: 3).isEmpty)
         #expect(ShipCustomizer.parts(for: "lander", missionsDone: 4).map(\.price) == [5_500_000])
         // Every room a hull can have has at least one part once it appears.
-        for kind in ShipCustomizer.sequence(missionsDone: 6, crewModuleResearched: true, landingResearched: true) {
+        for kind in ShipCustomizer.sequence(missionsDone: 6, landingResearched: true) {
             #expect(!ShipCustomizer.parts(for: kind, missionsDone: 6).isEmpty, "\(kind) has no parts at 6 missions")
         }
     }

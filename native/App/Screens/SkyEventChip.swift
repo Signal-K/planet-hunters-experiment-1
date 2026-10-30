@@ -5,10 +5,14 @@ import LandnamCore
 /// On Base (`allDay`) it stays up for the whole shower window. Mining still waits for local night.
 struct SkyEventChip: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var open = false
     var allDay = false
 
     var body: some View {
+        // A completed event belongs in the player's badge history, not in the
+        // persistent Base HUD.
+        if store.player.badges["orionids-2026"] == nil {
         TimelineView(.periodic(from: .now, by: 60)) { _ in
             let preset = SkyEvents.activePreset(at: store.now)
             let daytime = allDay && preset == nil && SkyEvents.isOrionidsWindow(store.now)
@@ -18,15 +22,21 @@ struct SkyEventChip: View {
                 chip(label: "ORIONIDS TONIGHT", orionids: true, note: SkyEvents.orionidsPanelPeak)
             }
         }
+        }
     }
 
     private func chip(label: String, orionids: Bool, note: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if !open {
                 Button { open = true } label: {
-                    Text(label).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 16).frame(minHeight: 44, alignment: .center)
-                        .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.border, lineWidth: 2))
+                    HStack(spacing: 7) {
+                        Circle().fill(Glass.cyan).frame(width: 7, height: 7)
+                        Text(label).font(AppFont.display(12)).tracking(1.1).foregroundStyle(Glass.ink)
+                    }
+                    .padding(.horizontal, 14).frame(minHeight: 40, alignment: .center)
+                    .background(Capsule().fill(Theme.hex(0x07111D, 0.88)))
+                    .overlay(Capsule().stroke(Glass.cyan.opacity(0.85), lineWidth: 1.25))
+                    .shadow(color: .black.opacity(0.2), radius: 7, y: 3)
                 }.buttonStyle(.plain).accessibilityIdentifier("sky-event-chip")
             } else {
                 VStack(alignment: .leading, spacing: 8) {
@@ -40,6 +50,8 @@ struct SkyEventChip: View {
                                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
                         }.buttonStyle(.plain)
                     }
+                    ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
                     if orionids {
                         Text(SkyEvents.orionidsPanelPeak).font(AppFont.body(14)).foregroundStyle(Theme.textDim).frame(maxWidth: 280, alignment: .leading)
                         ForEach(SkyEvents.orionidsPanelSteps, id: \.self) { step in
@@ -61,7 +73,13 @@ struct SkyEventChip: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("sky-event-participate")
+                    }
+                    }
+                    // A landscape phone is ~390pt tall with the contract card above: the body scrolls, the header and CLOSE stay put.
+                    .frame(maxHeight: verticalSizeClass == .compact ? 150 : .infinity)
+                    .fixedSize(horizontal: false, vertical: verticalSizeClass != .compact)
                 }
+                .frame(maxWidth: 300, alignment: .leading)
                 .padding(10).background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.border, lineWidth: 1.5))
                 .accessibilityIdentifier(orionids ? "orionids-panel" : "sky-event-note")

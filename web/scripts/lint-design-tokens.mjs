@@ -33,7 +33,6 @@ const INCLUDE_PATTERNS = [
 const EXCLUDE_PATTERNS = [
   /node_modules/,
   /\.next/,
-  /cypress/,
   /dist/,
   /.clause/,
   /eslint-rules/,

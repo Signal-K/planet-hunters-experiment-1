@@ -6,11 +6,14 @@ import SwiftUI
 struct BaseUnderground: View {
     let world: BaseWorld
     let built: Bool
+    let excavated: Bool
     var siloPlaced: Bool = false
     var secondTank: Bool = false
     /// 0...1 of the silo's capacity currently holding ore.
     let oreFraction: Double
     var onBuild: () -> Void
+    var onBuildDeep: () -> Void = {}
+    var onExcavate: () -> Void
     var onOpen: () -> Void
     /// False while the camera is at the surface and the cutaway is off-screen: its animations pause.
     var active: Bool = true
@@ -27,7 +30,7 @@ struct BaseUnderground: View {
         ZStack(alignment: .topLeading) {
             tiled("ug-soil", 64, width: world.worldW, height: world.worldH - world.ground - d).offset(y: d)
             tiled("ug-flecks", 64, width: world.worldW, height: world.worldH - world.ground - d).offset(y: d)
-            if built { chamber } else { dig }
+            if built { chamber } else if excavated { construction } else { dig }
         }
         .frame(width: world.worldW, height: world.worldH - world.ground, alignment: .topLeading)
     }
@@ -56,6 +59,13 @@ struct BaseUnderground: View {
                 if i < filled { ore(slot: i).offset(x: x0 + px * u, y: top + 63 * u) }
             }
             console.offset(x: x0 + 158 * u, y: top + 48 * u)
+            Text("CRAFTING BAY\nNEXT CYCLE")
+                .font(AppFont.mono(8))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(Theme.blue.opacity(0.9))
+                .padding(4)
+                .background(Theme.hudPanel.opacity(0.9), in: RoundedRectangle(cornerRadius: 4))
+                .offset(x: x0 + 166 * u, y: top + 22 * u)
             ForEach(Array([22, 84, 172, 214, 262].enumerated()), id: \.offset) { i, px in
                 lamp(i).offset(x: x0 + CGFloat(px) * u, y: top + 6 * u)
             }
@@ -96,18 +106,31 @@ struct BaseUnderground: View {
 
     // MARK: Empty dig site
 
+    private var construction: some View {
+        let x0 = world.shaftX - 72 * u
+        let top = d + 16 * u
+        return ZStack(alignment: .topLeading) {
+            tiled("ug-soil", 64, width: 144 * u, height: 76 * u).offset(x: x0, y: top)
+            sprite("ug-console-0", 36, 28).offset(x: world.shaftX - 18 * u, y: top + 18 * u)
+            DockButton(title: "Build mineral silo", symbol: "shippingbox.fill", action: onBuild)
+                .position(x: world.shaftX, y: top + 78 * u + 28)
+            if !secondTank {
+                DockButton(title: "Build deep silo", symbol: "shippingbox.fill", action: onBuildDeep)
+                    .position(x: world.shaftX, y: top + 78 * u + 78)
+            }
+        }
+    }
+
     private var dig: some View {
         let x0 = world.shaftX - 48 * u
         let top = d + 16 * u
         return ZStack(alignment: .topLeading) {
-            tiled("ug-cavity", 16, width: 96 * u, height: 56 * u).offset(x: x0, y: top + 4 * u)
-            tiled("ug-rim", 16, width: 96 * u, height: 4 * u).offset(x: x0, y: top)
-            tiled("ug-rim", 16, width: 96 * u, height: 4 * u).scaleEffect(y: -1).offset(x: x0, y: top + 60 * u)
-            sprite("ug-prop", 8, 56).offset(x: x0, y: top + 4 * u)
-            sprite("ug-prop", 8, 56).offset(x: x0 + 88 * u, y: top + 4 * u)
+            // Before excavation this is uninterrupted soil and bedrock, not a
+            // pre-built concrete chamber. The drill is the sole affordance.
+            tiled("ug-soil", 64, width: 96 * u, height: 70 * u).offset(x: x0, y: top)
             drill.offset(x: world.shaftX - 13 * u, y: top + 34 * u)
-            DockButton(title: siloPlaced ? "Excavate" : "Build silo", symbol: "hammer.fill", action: siloPlaced ? onOpen : onBuild)
-                .position(x: world.shaftX, y: top + 60 * u + 34)
+            DockButton(title: siloPlaced ? "Excavate bedrock" : "Build silo", symbol: "hammer.fill", action: siloPlaced ? onExcavate : onBuild)
+                .position(x: world.shaftX, y: top + 70 * u + 30)
         }
     }
 

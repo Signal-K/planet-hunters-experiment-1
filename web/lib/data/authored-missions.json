@@ -13,6 +13,13 @@
       "unlock_at": "Complete 1 contract",
       "target": "bennu",
       "delivery_target": "vesta",
+      "harness": {
+        "scene": "belt-courier-run",
+        "web": "transport-hub",
+        "native": "transport-hub-live",
+        "objective": "Mine the requested Bennu cargo and unload it at Vesta.",
+        "complete": "Cargo is delivered and the return debrief settles."
+      },
       "requires": {
         "minerals": {
           "iron": 3,
@@ -36,6 +43,13 @@
       "locked": false,
       "sequence": "free-ops",
       "unlock_at": "Reach Free Operations",
+      "harness": {
+        "scene": "self-directed-mining",
+        "web": "cp-mid",
+        "native": "cp-mid",
+        "objective": "Pick a reachable target, mine, then sell or store the haul.",
+        "complete": "The return allocation is settled without a client contract."
+      },
       "requires": {
         "minerals": {
           "nickel": 1

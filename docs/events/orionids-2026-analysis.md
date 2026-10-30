@@ -1,5 +1,7 @@
 # Orionids 2026: what the player actually does
 
+> Stale in places: the shower run now catches fragments at launch (SSL-578, SSL-651) and the order reads caught over goal. See the ZenNotes audit "Orionids 2026 event audit and learnings for future events".
+
 Written 19 Oct 2026, then revised the same day for the web event pass. This is a description of the live web loop, not a pitch. Native is unchanged.
 
 > **Update, 22 Oct 2026 (SSL-630, SSL-646).** The catch described below, debris mined with the laser after 22:00 and held in cargo, is no longer how fragments are caught. The rocket now catches them on the way up, at any hour of the window: 2 per launch, 4 on peak night (21 Oct 18:00 to 22 Oct 06:00), none outside the window, at negligible cargo cost. The launch shows a sticky "N Orionid fragments caught on the way up" toast. The passages below on night-only debris, the 22:00 start and the cargo limit are superseded. The chip, panel, banner, voucher and 02:00 fireball passages were not re-checked against the current build. Source: `web/lib/orionids/launch-catch.ts`. Rendered proof at 390x844, 926x428 and 1440x900: `web/tests/scenes/flow-orionids-launch.spec.ts`.

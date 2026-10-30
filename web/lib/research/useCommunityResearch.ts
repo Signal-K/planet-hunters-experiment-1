@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { fetchCommunityResearch } from '@/lib/community/client'
-import { noteResearchBonus, type CommunityResearch } from '@/lib/research/stamps'
-import type { Player } from '@/lib/game-types'
+import type { CommunityResearch } from '@/lib/research/stamps'
 
 /**
- * SSL-673: fetch the shared monthly research total while `active`, and keep the
- * bonus window it reports on the player so Exchange sells pay it offline too.
- * Offline or signed out, the bar falls back to the player's own stamps.
+ * Fetch the shared monthly research total while `active`. Permanent marketplace
+ * effects live on the player, so the old server bonus window is display-only.
  */
-export function useCommunityResearch(active: boolean, setPlayer: (update: (p: Player) => Player) => void): CommunityResearch | null {
+export function useCommunityResearch(active: boolean): CommunityResearch | null {
   const [data, setData] = useState<CommunityResearch | null>(null)
   useEffect(() => {
     if (!active) return
@@ -19,10 +17,9 @@ export function useCommunityResearch(active: boolean, setPlayer: (update: (p: Pl
       .then(res => {
         if (!live) return
         setData(res)
-        setPlayer(p => noteResearchBonus(p, res.bonusUntil))
       })
       .catch(() => {})
     return () => { live = false }
-  }, [active, setPlayer])
+  }, [active])
   return data
 }

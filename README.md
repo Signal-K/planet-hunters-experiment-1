@@ -1,41 +1,35 @@
 # Landnám
 
-A space-program game with independent Free Ops (mine, survey, build and trade) and optional client contracts. Ships as a Next.js web/PWA app and a SwiftUI app for iOS, iPadOS and macOS.
+Landnám is a scene-first space-program game for the web and iPhone. Scenes and
+missions are authored once, launch independently, and are implemented on web
+and iOS.
 
-Read [AGENTS.md](AGENTS.md) before changing the game. Linear is the tracker; ZenNotes in the parent Navigation workspace holds durable decisions. Every gameplay change proceeds through web and native consecutively.
-
-## Start
-
-Node.js 24+ for web; Xcode and Swift for native. Install dependencies explicitly, then start locally:
+## Start and inspect a scene
 
 ```sh
-node scripts/agent-check.mjs
-cd web
-npm ci
-npm run dev
+make ensure
+node scripts/scene.mjs list
+node scripts/scene.mjs orionids-shower-mining --check
 ```
 
-`make up` starts the Docker frontend and parent-owned local backends. It performs no dependency download at startup. Inspect existing services before starting another server. See [native/README.md](native/README.md) for native builds.
+Open `http://localhost:4320/game/hub?follow=1` in VS Code/Cursor **Simple
+Browser: Show** once. The scene command routes that tab to an isolated fixture
+and the check command reports whether it mounted. For a one-off interaction,
+use `node scripts/dev-check.mjs --route <route> --see <text> --click <text>`.
 
-## Verify
+No Chromium, Chrome, Playwright, Cypress, browser test stack, or screenshot
+matrix is required or installed.
 
-From `web/`:
+## Build
 
 ```sh
-npm run typecheck
-npm run test:unit -- lib/path/to/changed.test.ts
-npm run test:scenes -- screens.spec.ts --grep 'transport-delivery'
-npm run sync:shared -- --check
+cd web && npm run typecheck && npm run build
+xcodebuild -project native/Landnam.xcodeproj -scheme Landnam \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath /tmp/landnam-ios build CODE_SIGNING_ALLOWED=NO
 ```
 
-Use actual affected test paths. Omit filters for a full batch after implementation; do not run the entire suite after every edit. Playwright covers scenes and real flows. Cypress is retired. Native domain tests run with `swift test --package-path native/LandnamCore` from the root. Rendered evidence and platform coverage requirements live in AGENTS.md.
-
-## Sources and deployment
-
-- `web/`: game routes, React UI, PixiJS scenes and tests.
-- `native/`: SwiftUI/SpriteKit app, LandnamCore model and TakeonKit.
-- `shared/`: generated palette inputs and shared layout data; see [shared/README.md](shared/README.md).
-- `pocketbase/`: game backend; ecosystem identity is owned by the parent workspace backend.
-- [Game theme](docs/design/game-theme-spec.md): deep dusk worlds with blueprint UI chrome.
-
-Work directly on `cycle/4`. Pushing `cycle/**` triggers staging deployment; `main` deploys production. Do not push to main. CI and deployment run separately; local tests do not prove deployment. Do not use `deploy:cf` as a staging shortcut: it targets production by default.
+Run a focused colocated test only when it covers changed logic. See
+[AGENTS.md](AGENTS.md) for the short workflow and
+[shared/authoring/README.md](shared/authoring/README.md) for the scene/mission
+source model.

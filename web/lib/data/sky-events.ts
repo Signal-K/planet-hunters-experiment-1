@@ -30,14 +30,26 @@ export type SkyActivityKind =
   | 'asteroid-classification'
   | 'debris-mining'
 
+/** SSL-714: the instrument the whole community launches together for a shower, the way a player launches their own telescope for long projects. */
+export interface CommunityInstrument {
+  /** Short callsign shown on the console, e.g. ORI-1. */
+  callsign: string
+  name: string
+}
+
 export interface SkyEvent {
   id: string
   name: string
+  communityInstrument?: CommunityInstrument
+  /** SSL-714: the badge comes at the end of the event's mission chain, not from the first debris mined. */
+  badgeAfterMissions?: boolean
   /** Inclusive start instant (UTC). */
   startUtc: string
   /** Exclusive end instant (UTC): first moment after the event period. */
   endUtc: string
   activities: ReadonlyArray<SkyActivityKind>
+  /** When set, the gold window opens at the local midnight represented by `startUtc`. */
+  startAtLocalMidnight?: boolean
   /** Recurring monthly event: later occurrences do not re-open the gold window. */
   recurring?: 'new-moon'
 }
@@ -71,6 +83,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     name: 'Draconids Dragon Dust',
     startUtc: '2026-10-06T00:00:00Z',
     endUtc: '2026-10-11T00:00:00Z',
+    communityInstrument: { callsign: 'DRA-1', name: 'Draconids receiver' },
     activities: ['debris-mining'],
   },
   {
@@ -80,13 +93,17 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     // badgeTierFor reads orionidsLocalStartMs() for this id.
     startUtc: '2026-10-19T00:00:00Z',
     endUtc: '2026-11-08T00:00:00Z',
+    communityInstrument: { callsign: 'ORI-1', name: 'Orionids receiver' },
+    badgeAfterMissions: true,
     activities: ['debris-mining'],
+    startAtLocalMidnight: true,
   },
   {
     id: 'leonids-2026',
     name: 'Leonids',
     startUtc: '2026-11-17T00:00:00Z',
     endUtc: '2026-11-18T00:00:00Z',
+    communityInstrument: { callsign: 'LEO-1', name: 'Leonids receiver' },
     activities: ['debris-mining'],
   },
   {
@@ -94,6 +111,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     name: 'Geminids',
     startUtc: '2026-12-13T00:00:00Z',
     endUtc: '2026-12-15T00:00:00Z',
+    communityInstrument: { callsign: 'GEM-1', name: 'Geminids receiver' },
     activities: ['debris-mining'],
   },
   {
@@ -135,7 +153,10 @@ export function badgeTierFor(eventId: string, at: Date | number): BadgeTier | nu
   if (!event) return null
   const t = toMs(at)
   if (!Number.isFinite(t)) return null
-  const open = event.id === 'orionids-2026' ? orionidsLocalStartMs() : Date.parse(event.startUtc)
+  const start = new Date(event.startUtc)
+  const open = event.startAtLocalMidnight
+    ? localMidnightMs(start.getUTCFullYear(), start.getUTCMonth() + 1, start.getUTCDate())
+    : Date.parse(event.startUtc)
   if (t < open) return null
   return t < Date.parse(event.endUtc) ? 'gold' : 'silver'
 }
@@ -224,6 +245,8 @@ export interface DebrisEventPreset {
   chipLabel: string
   /** When set, debris falls for the whole window, not only at night. */
   allHours?: boolean
+  /** When set, the event opens at the local midnight represented by `startUtc`. */
+  startAtLocalMidnight?: boolean
 }
 
 /** Local night: 22:00 until dawn (06:00). */
@@ -257,6 +280,7 @@ export const ORIONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   resourceId: 'orionid_debris',
   chipLabel: 'Orionids active',
   allHours: true,
+  startAtLocalMidnight: true,
 }
 
 export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
@@ -320,19 +344,21 @@ export function isLocalNight(at: Date | number): boolean {
   return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
 }
 
-/** Inclusive window open. Orionids uses local midnight on 19 Oct; other presets use UTC. */
+/** Inclusive window open. A preset may opt into a local-midnight opening. */
 export function debrisWindowStartMs(preset: DebrisEventPreset): number {
-  if (preset.eventId === 'orionids-2026') return orionidsLocalStartMs()
+  if (preset.startAtLocalMidnight) {
+    const start = new Date(preset.startUtc)
+    return localMidnightMs(start.getUTCFullYear(), start.getUTCMonth() + 1, start.getUTCDate())
+  }
   return Date.parse(preset.startUtc)
 }
 
-/** Window (start inclusive / end exclusive). All-hour showers skip the night gate. Draconids stays night-only, with the Orionids peak night as its own extra. Pure. */
+/** Window (start inclusive / end exclusive). All-hour showers skip the night gate. Pure. */
 export function isDebrisEventActive(preset: DebrisEventPreset, now: Date | number): boolean {
   const t = toMs(now)
   if (!Number.isFinite(t)) return false
   if (t < debrisWindowStartMs(preset) || t >= Date.parse(preset.endUtc)) return false
   if (preset.allHours) return true
-  if (preset.eventId === 'orionids-2026' && isOrionidsPeakNight(t)) return true
   return isLocalNight(t)
 }
 
@@ -353,6 +379,13 @@ export function debrisRatePerMinute(preset: DebrisEventPreset, now: Date | numbe
   const rate = preset.baseRatePerMinute + (preset.peakRatePerMinute - preset.baseRatePerMinute) * closeness
   return preset.eventId === 'orionids-2026' && isInLocalEventBonusWindow(t, location) ? rate * ORIONIDS_PEAK_MULTIPLIER : rate
 }
+
+/**
+ * Shower-run fragments per minute, caught with CATCH (SSL-711). Above the 20 goal so a player who
+ * weaves and catches most of them fills it in about a minute; one who parks catches a minority,
+ * and the rest break up on the ground. Peak night doubles it, like the launch catch.
+ */
+export const ORIONIDS_RUN_FRAGMENTS_PER_MINUTE = 28
 
 /** SSL-578: peak-night debris boost (21-22 Oct, local night). */
 export const ORIONIDS_PEAK_MULTIPLIER = 2
@@ -454,6 +487,7 @@ export function applyDebrisMined<T extends BadgePlayer>(
   preset: DebrisEventPreset,
   at: Date | number,
 ): { player: T; badge: PlayerBadge | null } {
+  if (getSkyEvent(preset.eventId)?.badgeAfterMissions) return { player, badge: null }
   let next = player
   let badge: PlayerBadge | null = null
   const startedAt = (player as { missionStartedAt?: number | null }).missionStartedAt

@@ -1,0 +1,123 @@
+/* SSL-714: two tones like Community research, in radio blue and meteor red. The receiver (spectrogram and its dials) on the left, the radio desk (dialogue and verdict) on the right. */
+.workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .55); }
+.receiver { background: rgba(26, 66, 168, .58); display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 12px clamp(16px, 3vw, 40px) 16px; min-width: 0; min-height: 0; }
+.desk { background: rgba(168, 34, 52, .56); display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 72px clamp(16px, 3vw, 40px) 20px; min-width: 0; }
+.desk > * { width: 100%; max-width: 480px; align-self: center; }
+
+/* Clears the back button in the top-left corner. */
+.readout { min-height: 44px; margin-left: 60px; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
+.readout h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 clamp(18px, 2.4vw, 26px)/1.1 var(--ln-font-display); }
+.eyebrow { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
+.led { width: 10px; height: 10px; border-radius: 50%; background: #f2c24c; box-shadow: 0 0 8px #f2c24c; }
+.led[data-state='live'] { background: #6fe39a; box-shadow: 0 0 8px #6fe39a; animation: led 1.6s ease-in-out infinite; }
+.led[data-state='off'] { background: #e23d3d; box-shadow: none; }
+@keyframes led { 50% { opacity: .45; } }
+
+/* The screen, its time bar and dials sit together in the middle; the screen keeps the recording's aspect in the space the controls leave. */
+.console { --controls: 178px; --pad: 14px; container-type: size; min-height: 0; display: grid; place-items: center; }
+/* The instrument's console window: a title bar, the screen, then the dials on the panel face. */
+.panel { position: relative; box-sizing: border-box; width: min(100cqw, (100cqh - var(--controls)) * 949 / 543 + 2 * var(--pad)); display: grid; gap: 10px; padding: 0 var(--pad) var(--pad); border: 2px solid #0a1022; border-radius: 16px; background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e); box-shadow: 0 0 0 1px rgba(244, 239, 228, .18), 6px 8px 0 rgba(8, 16, 34, .45), inset 0 1px 0 rgba(255, 255, 255, .14); }
+.titlebar { box-sizing: border-box; display: flex; align-items: center; gap: 10px; min-width: 0; height: 36px; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); border-bottom: 2px solid #0a1022; border-radius: 14px 14px 0 0; background: linear-gradient(180deg, #353f60, #262e48); color: #c9d0c2; font: 800 12px/1 var(--ln-font-display); letter-spacing: .12em; }
+.titlebar b { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 13px/1 var(--ln-font-mono); letter-spacing: 0; }
+.screw { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a93a8, #3a4258); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .4); pointer-events: none; }
+.screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 3.5px; height: 1px; background: rgba(0, 0, 0, .55); transform: rotate(35deg); }
+.screw:nth-of-type(1) { left: 6px; bottom: 6px; }
+.screw:nth-of-type(2) { right: 6px; bottom: 6px; }
+.screw:nth-of-type(3) { left: 6px; top: 50%; }
+.screw:nth-of-type(4) { right: 6px; top: 50%; }
+.well { display: grid; place-items: center; }
+.screen { position: relative; width: 100%; aspect-ratio: 949 / 543; overflow: hidden; border: 3px solid #070b18; border-radius: 8px; background: #0a1640; box-shadow: 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 24px rgba(0, 0, 0, .5); }
+.screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(160deg, rgba(255, 255, 255, .1), transparent 30%), repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .08) 3px 4px); }
+.strip { position: absolute; }
+.image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; transition: filter .12s ease; }
+.draw { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.box { fill: rgba(244, 239, 228, .12); stroke: #f4efe4; stroke-width: 2.5px; cursor: pointer; }
+.box[data-selected] { stroke: #f2c24c; stroke-width: 3.5px; fill: rgba(242, 194, 76, .22); }
+.draft { fill: none; stroke: #f2c24c; stroke-width: 2px; stroke-dasharray: 6 4; }
+.beacon { position: absolute; z-index: 1; left: 0; top: 50%; transform: translateY(-50%); padding: 2px 6px 2px 4px; border-radius: 0 4px 4px 0; background: rgba(16, 24, 44, .78); color: #9de7ef; font: 700 11px/1.2 var(--ln-font-mono); pointer-events: none; }
+.beacon[data-highlight] { color: #142840; background: #f2c24c; animation: led 1.2s ease-in-out infinite; }
+.standby { margin: 0; position: absolute; inset: 0; display: grid; place-items: center; color: #9de7ef; font: 800 18px/1 var(--ln-font-display); letter-spacing: .14em; animation: led 1.6s ease-in-out infinite; }
+
+/* Which part of the five minutes is on the screen. */
+.timeline { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); }
+.timeline::before { content: ''; grid-column: 2; grid-row: 1; height: 6px; border-radius: 3px; background: rgba(8, 16, 34, .45); }
+.timeline i { grid-column: 2; grid-row: 1; height: 6px; border-radius: 3px; background: #9de7ef; transition: margin .12s ease, width .12s ease; }
+.timeline span:last-child { grid-column: 3; }
+
+/* Physical controls. */
+.deck { display: flex; justify-content: space-evenly; gap: 8px; min-width: 0; }
+.dial { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; }
+.dial[data-disabled] { opacity: .5; }
+.knob { grid-row: 1 / 3; position: relative; width: 60px; height: 60px; border-radius: 50%; touch-action: none; cursor: grab; outline: none; }
+.knob:active { cursor: grabbing; }
+.knob:focus-visible { box-shadow: 0 0 0 3px #9de7ef; }
+.dial[data-disabled] .knob { cursor: not-allowed; }
+.knob svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: rgba(244, 239, 228, .5); stroke-width: 2; stroke-linecap: round; }
+.cap { position: absolute; inset: 9px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4b5675, #1a2238 62%, #10182c); box-shadow: 0 3px 0 rgba(8, 16, 34, .6), inset 0 1px 0 rgba(255, 255, 255, .22); transition: transform .08s ease-out; }
+.cap i { position: absolute; left: 50%; top: 4px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: #f2c24c; }
+.dialLabel { color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; }
+.dialValue { color: #9de7ef; font: 700 14px/1 var(--ln-font-mono); }
+
+/* Radio desk. */
+.comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.comms p { margin: 0; min-height: calc(3 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }
+.next, .brief { justify-self: start; min-height: 44px; padding: 0 16px; border: 2px solid #f4efe4; border-radius: 999px; background: transparent; color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.next { background: #f4efe4; color: #142840; }
+.tally { display: flex; align-items: center; gap: 20px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); text-transform: uppercase; letter-spacing: .08em; }
+.tally span { display: flex; align-items: baseline; gap: 6px; }
+.tally b { color: #f4efe4; font: 800 26px/1 var(--ln-font-display); letter-spacing: 0; }
+.tally .brief { margin-left: auto; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions > :last-child { grid-column: 1 / -1; width: 100%; }
+.secondary { min-height: 48px; padding: 0 10px; border: 2px solid rgba(244, 239, 228, .7); border-radius: 4px; background: rgba(8, 16, 34, .25); color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.secondary:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Phone landscape: everything tighter so the screen keeps its height. */
+@media (max-height: 520px) {
+  .receiver { gap: 6px; padding: 10px 16px 10px; }
+  .console { --controls: 140px; --pad: 10px; }
+  .panel { gap: 6px; }
+  .dial { column-gap: 6px; }
+  .titlebar { height: 28px; }
+  .desk { gap: 10px; padding: 12px 16px; }
+  .knob { width: 48px; height: 48px; }
+  .cap { inset: 7px; }
+  .cap i { height: 11px; top: 3px; }
+  .comms { padding: 10px 12px; gap: 8px; }
+  .comms p { font-size: 15px; }
+  .tally b { font-size: 20px; }
+  .actions { gap: 8px; }
+  .secondary { min-height: 44px; }
+}
+
+/* Phone portrait: receiver on top, desk under it. */
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); overflow-y: auto; }
+  .console { container-type: inline-size; }
+  .panel { width: 100%; }
+  .desk { justify-content: flex-start; padding-top: 16px; }
+  .deck { gap: 12px; justify-content: space-between; }
+  .knob { width: 48px; height: 48px; }
+  .cap { inset: 7px; }
+  .cap i { height: 11px; top: 3px; }
+  .dial { column-gap: 6px; }
+  .eyebrow { white-space: normal; }
+  .comms p { font-size: 16px; }
+}
+
+/* SSL-714: Orionids mission 3 — the three story items and how many recordings are confirmed. */
+.mission { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 10px 14px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.mission > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.mission > b { grid-column: 2; grid-row: 1; color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; }
+.mission[data-complete] > b { color: #f2c24c; }
+.mission ol { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mission li { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid rgba(244, 239, 228, .35); border-radius: 999px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); }
+.mission li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 2px solid currentColor; }
+.mission li[data-held] { border-color: #f4efe4; color: #f4efe4; }
+.mission li[data-held]::before { background: #6fe39a; border-color: #6fe39a; }
+@media (max-height: 520px) {
+  .mission { padding: 6px 10px; gap: 4px 10px; }
+  .mission li { min-height: 24px; }
+}

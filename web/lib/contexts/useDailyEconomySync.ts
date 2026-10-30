@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { GameState } from '@/lib/game-types'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
+import { economyArrival as arrivalSince } from '@/lib/systems/EconomyArrival'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 interface DailyEconomyRecord {
@@ -36,9 +37,13 @@ export function useDailyEconomySync(
       .then(result => {
         const snapshot = result.items[0]?.snapshot
         if (!active || !isDailyEconomySnapshot(snapshot)) return
-        setState(current => current.player.dailyEconomySnapshot?.idempotencyKey === snapshot.idempotencyKey
-          ? current
-          : { ...current, player: { ...current.player, dailyEconomySnapshot: snapshot } })
+        setState(current => {
+          const previous = current.player.dailyEconomySnapshot
+          if (previous?.idempotencyKey === snapshot.idempotencyKey) return current
+          // A quiet new board leaves any unread arrival in place.
+          const economyArrival = arrivalSince(previous, snapshot) ?? current.player.economyArrival
+          return { ...current, player: { ...current.player, dailyEconomySnapshot: snapshot, economyArrival } }
+        })
       })
       .catch(() => {})
     return () => { active = false }

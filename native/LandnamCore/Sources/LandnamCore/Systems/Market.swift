@@ -26,8 +26,7 @@ public enum Market {
     }
 
     /// One unit of a mineral right now. Client premium applies only to preferred minerals.
-    /// `bonus: false` reads the quote without the community research bonus (the Exchange ask, SSL-673).
-    public static func unitPrice(_ id: String, player: Player, clientId: String?, now: Double, bonus: Bool = true) -> Quote {
+    public static func unitPrice(_ id: String, player: Player, clientId: String?, now: Double) -> Quote {
         guard let meta = Minerals.byId[id], !Minerals.isArtifact(id) else { return Quote(price: 0, base: 0, premiumApplied: false) }
         let sold = decayedUnitsSold(player.marketSupply[id] ?? 0, lastSoldAt: player.marketSupplyUpdatedAt[id], now: now)
         // Match web `sellUnitPrice`: a published shared daily quote is authoritative;
@@ -39,12 +38,15 @@ public enum Market {
                   case let .number(price)? = quote["price"] else { return nil }
             return Int(price)
         }()
-        let base = snapshotPrice ?? openMarketSellPrice(base: meta.price, unitsSold: sold)
+        // Selling remains possible without a structure, but that is an
+        // open-market broker sale at the discounted rate. The constructed
+        // Exchange pays the full quote, with the same supply pressure.
+        let exchangeBuilt = player.placed.contains("market")
+        let base = snapshotPrice ?? Int((Double(meta.price) * (exchangeBuilt ? 1 : Economy.openMarketSellRate) * supplyDipMultiplier(unitsSold: sold)).rounded())
         let client = clientId.flatMap { Clients.byId[$0] }
         let premium = client.map { $0.mineralPreferences.contains(id) && $0.payoutPremium > 0 } ?? false
         let quoted = premium ? Int((Double(base) * (1 + client!.payoutPremium)).rounded()) : base
-        let boosted = bonus && ResearchStampRules.bonusActive(player, now: now)
-        return Quote(price: boosted ? Int((Double(quoted) * (1 + ResearchStampRules.bonusRate)).rounded()) : quoted, base: base, premiumApplied: premium, bonusApplied: boosted)
+        return Quote(price: quoted, base: base, premiumApplied: premium)
     }
 
     public static func quote(_ stash: Cargo, player: Player, clientId: String?, now: Double) -> Int {
@@ -65,6 +67,7 @@ public enum Market {
         n.player.stash[mineralId] = held - qty
         if n.player.stash[mineralId]! <= 0 { n.player.stash[mineralId] = nil }
         n.player.francs += revenue
+        ResearchStampRules.add(&n.player, .exchangeSale, at: now)
         return n
     }
 

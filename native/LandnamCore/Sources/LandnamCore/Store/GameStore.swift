@@ -14,8 +14,6 @@ public final class GameStore {
     /// Called after every persisted change; the app wires cloud sync and Game Center here.
     public var onChange: ((GameState) -> Void)?
     /// Fires once per new citizen-science verdict, after the local save, so the app can queue the shared upload.
-    /// Fires after a site deed is bought locally, so the app can queue the treasury call (offline safe).
-    public var onSiteDeed: ((String) -> Void)?
     public var onClassified: ((SharedClassification) -> Void)?
     /// Every persisted transition (old, new, settled payout) so the app can write `mission_runs` receipts.
     public var onTransition: ((GameState, GameState, Int?) -> Void)?
@@ -143,6 +141,31 @@ public final class GameStore {
 
     public func go(_ screen: Screen) { var n = state; n.screen = screen; apply(n) }
 
+    public func chooseResearchPath(_ path: ResearchPathID) {
+        guard ResearchPathRules.pathThisWeek(state.player.researchPath, now: now) == nil else { return }
+        var n = state
+        n.player.researchPath = ResearchPathChoice(week: ResearchPathRules.weekKey(now), path: path)
+        apply(n)
+    }
+
+    public func claimResearchRewards() {
+        guard let path = ResearchPathRules.pathThisWeek(state.player.researchPath, now: now) else { return }
+        let week = ResearchPathRules.weekKey(now)
+        var n = state
+        var changed = false
+        for step in ResearchPathRules.steps(path) {
+            let progress = ResearchPathRules.progress(step, stamps: n.player.researchStamps, week: week, now: now)
+            changed = ResearchPathRules.claim(&n.player, step: step, progress: progress, now: now) || changed
+        }
+        if changed { apply(n) }
+    }
+
+    public func convertResearchFragments() {
+        var n = state
+        guard ResearchFragments.convertAvailable(&n.player) > 0 else { return }
+        apply(n)
+    }
+
     public func openMissionBoard(tab: Int) {
         requestedMissionBoardTab = tab
         go(.missions)
@@ -171,6 +194,7 @@ public final class GameStore {
         n.player.flightPlan.hidden = hidden
         apply(n)
     }
+
 
     /// Settles a server-authorised friend gift through the normal persisted
     /// state path. The server marks the gift claimed before this is called, so
@@ -285,13 +309,9 @@ public final class GameStore {
     public func debrisMined(_ resourceId: String) {
         guard let preset = SkyEvents.presets.first(where: { $0.resourceId == resourceId }) else { return }
         var n = state
-        SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: now, only: preset.eventId)
-        apply(n)
-    }
-    /// SSL-673: keep the community research bonus window the server reported, so Exchange sells pay it offline too.
-    public func noteResearchBonus(until: Double?) {
-        var n = state
-        guard ResearchStampRules.noteBonus(&n.player, until: until) else { return }
+        for t in SkyEvents.gradingTimes(startedAt: n.player.missionStartedAt, now: now) {
+            SkyEvents.grant(&n.player.badges, activity: .debrisMining, at: t, only: preset.eventId)
+        }
         apply(n)
     }
     /// Fragments mined with the laser count toward the ledger (web `addCaughtFragments(mined, 1, 'count')`).
@@ -325,31 +345,47 @@ public final class GameStore {
     public func buyLaserCapacitor(expectedLevel: Int, reservedUnits: Int = 0) { apply(LaserCapacitor.applyBuy(state, expectedLevel: expectedLevel, reservedUnits: reservedUnits)) }
     public func abandonMission() { apply(state.player.activeMission == nil ? Loop.cancelSetup(state) : Loop.abandonMission(state)) }
     public func dismantleStagedRocket() { apply(Loop.dismantleStagedRocket(state)) }
-    public func openAcademy() { apply(Academy.settleEconomy(Academy.migrate(state, now: now), now: now)) }
-    public func researchAcademy() { apply(Academy.applyResearchAcademy(state)) }
-    public func setAcademyFunding(_ funded: Bool) { apply(Academy.applySetFunding(state, funded: funded)) }
-    public func hireCrew(_ sourceId: String) { apply(Academy.applyHire(state, sourceId: sourceId, now: now)) }
-    public func rehireCrew(_ id: String) { apply(Academy.applyRehire(state, crewId: id, now: now)) }
-    public func trainCrew(_ id: String, branch: String) { apply(Academy.applyStartTraining(state, crewId: id, branch: branch, now: now)) }
-    public func trainCandidate(branch: String) { apply(Academy.applyStartCandidate(state, branch: branch, now: now)) }
-    public func collectTraining(_ id: String) { apply(Academy.applyCollectTraining(state, sessionId: id, now: now)) }
-    public func researchCrewModule() { apply(Academy.applyResearchCrewModule(state)) }
     public func researchLanding() { apply(Transitions.applyResearchLanding(state)) }
-    public func assignCrew(_ structureId: String, crewId: String?) { apply(Academy.applyAssign(state, structureId: structureId, crewId: crewId)) }
     @discardableResult public func place(_ kind: String, plot: Int) -> Bool {
         let next = Construction.applyPlace(state, kind: kind, plot: plot, now: now)
         guard next != state else { return false }
         apply(next); return true
     }
+    /// Clears the unbuilt bedrock below a placed surface silo. Kept in the
+    /// store so native applies the same one-time cost as the web Hub.
+    @discardableResult public func excavateSubsurface() -> Bool {
+        let cost = 2_000_000
+        let aluminium = 10
+        guard state.player.placed.contains("surface-silo"), !state.player.subsurfaceExcavated,
+              state.player.francs >= cost, state.player.stash["aluminium", default: 0] >= aluminium else { return false }
+        var next = state
+        next.player.francs -= cost
+        next.player.stash["aluminium", default: 0] -= aluminium
+        next.player.subsurfaceExcavated = true
+        apply(next)
+        return true
+    }
+    /// Builds an underground silo after excavation. The surface silo remains
+    /// the lift connection; these rooms add capacity below the same base.
+    @discardableResult public func buildSubsurfaceSilo(deep: Bool = false) -> Bool {
+        guard state.player.subsurfaceExcavated else { return false }
+        let id = deep ? "deep-mineral-vault" : "mineral-vault"
+        guard !state.player.subsurfaceBuilt.contains(id) else { return false }
+        let cost = deep ? 8_000_000 : 3_000_000
+        let materials = deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8]
+        guard state.player.francs >= cost,
+              materials.allSatisfy({ state.player.stash[$0.key, default: 0] >= $0.value }) else { return false }
+        var next = state
+        next.player.francs -= cost
+        for (mineral, amount) in materials { next.player.stash[mineral, default: 0] -= amount }
+        next.player.subsurfaceBuilt.append(id)
+        apply(next)
+        return true
+    }
     @discardableResult public func upgradeBuilding(_ id: String) -> Bool {
         let next = BuildingLevels.applyUpgrade(state, id: id)
         guard next != state else { return false }
         apply(next); return true
-    }
-    public func purchaseSiteAccess(_ id: String) {
-        let next = SurfaceOps.applyPurchaseAccess(state, id, now: now)
-        guard next != state else { return }
-        apply(next); onSiteDeed?(id)
     }
     /// Applies a polled global confirmation; returns true when it is new news worth a notice.
     @discardableResult
@@ -358,22 +394,16 @@ public final class GameStore {
         if next != state { apply(next) }
         return announce
     }
-    public func buildSettlementPad(_ id: String, pad: Int) { apply(SurfaceOps.applyBuildPad(state, id, pad: pad, now: now)) }
-    public func dispatchFerry(_ id: String) { apply(SurfaceOps.applyDispatch(state, id, now: now)) }
-    public func retryFerry(_ id: String) { apply(SurfaceOps.applyRetry(state, id, now: now)) }
-    public func reconcileFerry(_ id: String) { apply(SurfaceOps.applyReconcile(state, id, now: now)) }
-    public func acknowledgeFerry(_ id: String) { apply(SurfaceOps.applyAcknowledge(state, id)) }
     public func chooseSatelliteTarget(_ subjectId: String) {
         var n = state; n.player.satelliteTargetId = subjectId; n.player.pendingRepick = false; apply(n)
     }
-    public func unlockSkill(_ id: String) { apply(Progression.applyUnlock(state, nodeId: id)) }
-    public func upgradeLicense(to grade: LicenseGrade) { apply(Progression.applyUpgrade(state, to: grade)) }
     public func startRefine(_ recipeId: String) { apply(Refinery.applyStart(state, recipeId: recipeId, now: now)) }
     public func collectRefined(_ recipeId: String) { apply(Refinery.applyCollect(state, recipeId: recipeId, now: now)) }
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
     public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
-    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target)) }
+    public func dismissEconomyArrival() { apply(EconomyArrival.applyDismiss(state)) }
+    public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target, now: now)) }
     public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
     /// Returns the alerts that fired this call so the caller can notify the player.
     @discardableResult public func checkPriceAlerts() -> [PriceAlert] {

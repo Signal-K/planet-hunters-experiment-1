@@ -21,6 +21,10 @@ final class LaunchScene: SKScene {
     private var puffs: [SKSpriteNode] = []
     private var flash = SKSpriteNode()
     private var mountains = SKNode(), ground = SKNode()
+    private var authoredPad: SKSpriteNode?
+    private var authoredRocket: SKSpriteNode?
+    private var authoredRocketBase = CGPoint.zero
+    private var usesAuthoredLaunchpad = false
     private var atlas: LaunchAtlas?
     private var fxAtlas: LaunchAtlas?
     private var layout = LaunchPadLayout(width: 402, height: 780)
@@ -34,12 +38,13 @@ final class LaunchScene: SKScene {
         self.variant = variant
         super.init(size: size)
         scaleMode = .resizeFill
-        backgroundColor = Theme.hex(0x6FA3D6).sk
+        backgroundColor = Theme.hex(0x10182C).sk
     }
     required init?(coder: NSCoder) { fatalError() }
 
     override func didMove(to view: SKView) {
         removeAllChildren(); world.removeAllChildren(); rowSprites = [:]; stars = []; puffs = []
+        authoredPad = nil; authoredRocket = nil; usesAuthoredLaunchpad = false
         layout = LaunchPadLayout(width: size.width, height: size.height)
         atlas = atlas ?? LaunchAtlas(sheet: "\(variant)-launch-sheet", png: "\(variant)-launch-sheet")
         fxAtlas = fxAtlas ?? LaunchAtlas(sheet: "fx-sheet", png: "fx-sheet")
@@ -54,7 +59,7 @@ final class LaunchScene: SKScene {
 
     // MARK: build
     private func buildSky() {
-        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.hex(0x6FA3D6), bottom: Theme.hex(0xC9DAEA)))
+        let sky = SKSpriteNode(texture: SK.gradient(top: Theme.hex(0x10182C), bottom: Theme.hex(0xC45B6A)))
         sky.size = size; sky.position = CGPoint(x: size.width / 2, y: size.height / 2); sky.zPosition = -30
         addChild(sky)
         spaceOverlay.color = Theme.hex(0x0F2436).sk; spaceOverlay.size = size
@@ -71,6 +76,36 @@ final class LaunchScene: SKScene {
 
     /// Layered outlined parts (blueprint style): ice hills, paper ground, ink outlines, offset shade.
     private func buildGround() {
+        if let padImage = Art.image("base/v7/structures/launchpad.png"),
+           let rocketImage = Art.image("base/kit/pad-rocket.png") {
+            usesAuthoredLaunchpad = true
+            let padTexture = SKTexture(image: padImage)
+            let pad = SKSpriteNode(texture: padTexture)
+            let scale = min(size.width * 0.72 / max(padTexture.size().width, 1), size.height * 0.62 / max(padTexture.size().height, 1))
+            pad.anchorPoint = CGPoint(x: 0.5, y: 0)
+            pad.size = CGSize(width: padTexture.size().width * scale, height: padTexture.size().height * scale)
+            pad.position = CGPoint(x: size.width / 2, y: padY)
+            pad.zPosition = -3
+            world.addChild(pad)
+            authoredPad = pad
+
+            let rocketTexture = SKTexture(image: rocketImage)
+            let rocket = SKSpriteNode(texture: rocketTexture)
+            // Mirrors PixelStructure's shared mount: 44 kit pixels on a
+            // 112-unit launchpad, with its engine 17 units above the footing.
+            let rocketScale = (44.0 / 112.0) * pad.size.width / max(rocketTexture.size().width, 1)
+            rocket.anchorPoint = CGPoint(x: 0.5, y: 0)
+            rocket.size = CGSize(width: rocketTexture.size().width * rocketScale, height: rocketTexture.size().height * rocketScale)
+            rocket.position = CGPoint(
+                x: pad.position.x - pad.size.width / 2 + (60.0 / 112.0) * pad.size.width,
+                y: pad.position.y + (17.0 / 136.48) * pad.size.height
+            )
+            rocket.zPosition = 4
+            world.addChild(rocket)
+            authoredRocket = rocket
+            authoredRocketBase = rocket.position
+            return
+        }
         mountains = SKNode(); ground = SKNode()
         world.addChild(mountains); world.addChild(ground)
         let gh = CGFloat(layout.groundHeight)
@@ -85,9 +120,9 @@ final class LaunchScene: SKScene {
             n.fillColor = fill.sk; n.strokeColor = Theme.ink.sk; n.lineWidth = line; n.lineJoin = .round
             n.zPosition = z; mountains.addChild(n)
         }
-        ridge([0.09, 0.19, 0.07, 0.22, 0.12, 0.17, 0.08, 0.14, 0.1], fill: Theme.hex(0xA8987F), z: -9, line: 2)
-        ridge([0.05, 0.11, 0.04, 0.13, 0.07, 0.1, 0.05], fill: Theme.hex(0xC2B392), z: -8, line: 2.5)
-        let g = SKSpriteNode(color: Theme.hex(0xB4AE9E).sk, size: CGSize(width: size.width, height: gh))
+        ridge([0.04, 0.07, 0.035, 0.08, 0.05, 0.07, 0.04, 0.06, 0.045], fill: Theme.hex(0x51576A), z: -9, line: 2)
+        ridge([0.025, 0.045, 0.02, 0.055, 0.03, 0.045, 0.025], fill: Theme.hex(0x373D4D), z: -8, line: 2.5)
+        let g = SKSpriteNode(color: Theme.hex(0x4B4F57).sk, size: CGSize(width: size.width, height: gh))
         g.anchorPoint = .zero; g.zPosition = -5; ground.addChild(g)
         let lip = SKSpriteNode(color: Theme.ink.sk, size: CGSize(width: size.width, height: 3))
         lip.anchorPoint = .zero; lip.position = CGPoint(x: 0, y: gh - 1); lip.zPosition = -4; ground.addChild(lip)
@@ -111,6 +146,7 @@ final class LaunchScene: SKScene {
     }
 
     private func buildRocket() {
+        guard !usesAuthoredLaunchpad else { return }
         for row in rows {
             let sp = SKSpriteNode()
             sp.zPosition = ["upper-stage": 1, "lower-stage": 2, "booster-l": 3, "booster-r": 3][row] ?? 1
@@ -135,8 +171,6 @@ final class LaunchScene: SKScene {
     func seek(to t: Double) { elapsed = max(0, t); apply() }
 
     private func apply() {
-        guard let atlas, !rowSprites.isEmpty else { return }
-        let s = CGFloat(layout.rocketScale), au = atlas.scale
         let alt = LaunchFlight.altitude(at: elapsed)
         // Web follow curve, plus a lock so the stack never rises out of frame.
         let camY = max(CGFloat(LaunchFlight.cameraY(altitude: alt, followStart: layout.followStart)), CGFloat(alt) - size.height * 0.4)
@@ -152,6 +186,21 @@ final class LaunchScene: SKScene {
         spaceOverlay.alpha = CGFloat(sky) * 0.92
         for st in stars { st.alpha = CGFloat(sky * sky) }
         mountains.position.y = 0
+
+        if usesAuthoredLaunchpad, let rocket = authoredRocket, let pad = authoredPad {
+            let lift = max(0, min(1, CGFloat((elapsed - LaunchTimeline.liftoff) / 1.1)))
+            pad.alpha = elapsed >= LaunchTimeline.orbit ? 0 : 1
+            rocket.position = CGPoint(
+                x: authoredRocketBase.x + (size.width / 2 - authoredRocketBase.x) * lift,
+                y: authoredRocketBase.y + CGFloat(alt)
+            )
+            rocket.alpha = 1
+            emitTelemetry()
+            return
+        }
+
+        guard let atlas, !rowSprites.isEmpty else { return }
+        let s = CGFloat(layout.rocketScale), au = atlas.scale
 
         for row in rows {
             guard let sp = rowSprites[row] else { continue }

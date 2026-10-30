@@ -259,7 +259,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
   [data-testid="orionids-teaser"] { top: 52px !important; bottom: auto !important; left: 8px !important; right: auto !important; }
   .hub-callout--clear { top: 72px !important; }
   .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--market { transform: translateX(-50%); }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(.82); transform-origin: center bottom; }
   .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
 }
 
@@ -276,7 +276,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
 
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px !important; flex-direction: row !important; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none !important; }
-  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%); transform-origin: center bottom; }
+  .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad { transform: translateX(-50%) scale(.82); transform-origin: center bottom; }
   .portrait-canvas:has([data-screen="hub"]) .hub-plot-anchor { bottom: var(--hub-ground) !important; }
   [data-testid="orionids-teaser"] {
     top: 52px !important;

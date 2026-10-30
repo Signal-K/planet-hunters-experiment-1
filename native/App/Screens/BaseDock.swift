@@ -16,6 +16,9 @@ struct BaseDock: View {
     var onBuild: (() -> Void)?
     /// When set, the second base button is Menu (opens the base menu) instead of Hub.
     var onMenu: (() -> Void)?
+    /// Explicitly switches between the surface and subsurface base scenes.
+    var onSubsurface: (() -> Void)?
+    var subsurface = false
     /// When set, the first middle button is press-and-hold (true on press, false on release) instead of a tap. Mining Fire uses this.
     var holdFirst: ((Bool) -> Void)?
     /// Minimal glass dock (mining): no arrows, glowing outline.
@@ -27,7 +30,7 @@ struct BaseDock: View {
     /// locations are persisted in the shared model.
     var locationLabel: String?
     var locationNavigationDisabled = false
-
+    var compact = false
     private var middle: [(title: String, symbol: String, action: () -> Void)] {
         items ?? [("Build", "hammer.fill", { if let onBuild { onBuild() } else { store.go(.build) } })] + (onMission.map { m in [("Mission", "paperplane", { m() })] } ?? []) + [onMenu.map { menu in ("Menu", "list.bullet", { menu() }) } ?? ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) })]
     }
@@ -69,9 +72,8 @@ struct BaseDock: View {
         // Side by side when the width allows it; on narrow phones in portrait the actions drop below the location
         // picker. A single HStack here overflowed 393pt and dragged the whole base scene off centre (SSL-626).
         ViewThatFits(in: .horizontal) {
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 0) {
                 locationPicker(label)
-                Spacer(minLength: 0)
                 locationActions
             }
             VStack(alignment: .leading, spacing: 8) {
@@ -79,50 +81,56 @@ struct BaseDock: View {
                 locationActions.frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(4)
+        .padding(.horizontal, 20)
+        .fixedSize(horizontal: true, vertical: false)
+        .background(Theme.hex(0x07111D, 0.92), in: RoundedRectangle(cornerRadius: 7))
+        .overlay(RoundedRectangle(cornerRadius: 7).stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Location and scene actions")
     }
 
     private func locationPicker(_ label: String) -> some View {
         HStack(spacing: 0) {
-            locationArrow("chevron.left", label: "Previous location") { onPrev?() }
+            locationArrow("chevron.left", label: locationNavigationDisabled ? "Previous location" : "Scroll left") { onPrev?() }
             Label(label, systemImage: "globe")
                 .font(AppFont.display(14)).tracking(0.6)
                 .lineLimit(1)
-                .foregroundStyle(Theme.hudPanel)
+                .foregroundStyle(Color.white)
                 .frame(minWidth: 88, minHeight: 44)
                 .padding(.horizontal, 10)
                 // A ShapeStyle background ignores safe areas by default; in landscape that stretched the fill through the
                 // leading inset to the screen edge and over the previous arrow.
                 .background(Theme.blue, ignoresSafeAreaEdges: [])
                 .accessibilityLabel("Selected location \(label)")
-            locationArrow("chevron.right", label: "Next location") { onNext?() }
+            locationArrow("chevron.right", label: locationNavigationDisabled ? "Next location" : "Scroll right") { onNext?() }
         }
-        .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
     }
 
     private var locationActions: some View {
         HStack(spacing: 0) {
-            DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } })
-            if let onMission {
+                DockButton(title: "Build", symbol: "hammer.fill", action: { if let onBuild { onBuild() } else { store.go(.build) } }, iconColor: Theme.teal)
+                if let onMission {
                 Divider().overlay(Theme.hudInk)
-                DockButton(title: "Find mission", symbol: "paperplane", action: onMission)
+                DockButton(title: "Missions", symbol: "paperplane", action: onMission, iconColor: Glass.cyan)
             }
             Divider().overlay(Theme.hudInk)
-            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } })
+            if let onSubsurface {
+                DockButton(title: subsurface ? "Surface" : "Subsurface", symbol: "arrow.down.to.line.compact", action: onSubsurface, iconColor: Theme.textMuted)
+                Divider().overlay(Theme.hudInk)
+            }
+            DockButton(title: "Menu", symbol: "line.3.horizontal", action: { if let onMenu { onMenu() } else { store.go(.instrumentHub) } }, iconColor: Theme.blueBright)
         }
         // Divider is vertically greedy: without this the group fills the screen height and its panel covers the scene.
         .fixedSize(horizontal: false, vertical: true)
         .padding(4)
-        .background(Theme.hudPanel, ignoresSafeAreaEdges: [])
-        .overlay(Rectangle().stroke(Theme.hudInk, lineWidth: 2))
+        .background(Color.clear, ignoresSafeAreaEdges: [])
     }
 
     private func locationArrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.hudInk)
+                .foregroundStyle(Glass.ink)
                 .frame(width: 44, height: 44)
         }
         .buttonStyle(.plain)
@@ -132,10 +140,10 @@ struct BaseDock: View {
 
     private func arrow(_ symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.hudInk)
+            Image(systemName: symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(Glass.ink)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(Theme.hudPanel))
-                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 1))
+                .background(Circle().fill(Theme.hex(0x07111D, 0.88)))
+                .overlay(Circle().stroke(Glass.ink.opacity(0.8), lineWidth: 1.25))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -172,11 +180,11 @@ struct HoldDockButton: View {
             Image(systemName: symbol).font(.system(size: 14, weight: .bold))
             Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2)
         }
-        .foregroundStyle(glass ? (down ? Glass.cyan : Color.white) : Theme.hudInk)
+        .foregroundStyle(glass ? (down ? Glass.cyan : Color.white) : Glass.ink)
         .padding(.horizontal, 12)
         .frame(minWidth: 88, minHeight: 44)
-        .background(Capsule().fill(glass ? (down ? Glass.cyan.opacity(0.25) : Color.clear) : (down ? Theme.hex(0xD7E6F7) : Theme.hudPanel)))
-        .overlay(Capsule().stroke(glass ? Color.white.opacity(0.6) : Theme.hudInk, lineWidth: 1))
+        .background(Capsule().fill(glass ? (down ? Glass.cyan.opacity(0.25) : Color.clear) : (down ? Theme.hex(0x16324A, 0.95) : Theme.hex(0x07111D, 0.88))))
+        .overlay(Capsule().stroke(glass ? Color.white.opacity(0.6) : Glass.ink.opacity(0.75), lineWidth: 1))
         .contentShape(Capsule())
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged { _ in if !down { down = true; hold(true) } }
@@ -192,19 +200,21 @@ struct DockButton: View {
     let symbol: String
     let action: () -> Void
     var coachTarget: String? = nil
+    var compact = false
+    var iconColor: Color? = nil
     @Environment(\.glassHud) private var glass
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 14, weight: .bold))
-                Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).lineLimit(1).fixedSize()
+            HStack(spacing: compact ? 0 : 6) {
+                Image(systemName: symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(iconColor ?? (glass ? Color.white : Glass.ink))
+                if !compact { Text(title.uppercased()).font(AppFont.display(14)).tracking(1.2).lineLimit(1).fixedSize() }
             }
-            .foregroundStyle(glass ? Color.white : Theme.hudInk)
-            .padding(.horizontal, 8)
-            .frame(minWidth: 88, minHeight: 44)
-            .background(Capsule().fill(glass ? Color.clear : Theme.hudPanel))
-            .overlay(Capsule().stroke(glass ? Color.white.opacity(0.6) : Theme.hudInk, lineWidth: 1))
+            .foregroundStyle(glass ? Color.white : Glass.ink)
+            .padding(.horizontal, compact ? 6 : 8)
+            .frame(minWidth: compact ? 44 : 88, minHeight: 44)
+            .background(Capsule().fill(glass ? Color.clear : Theme.hex(0x07111D, 0.88)))
+            .overlay(Capsule().stroke(glass ? Color.white.opacity(0.6) : Glass.ink.opacity(0.75), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
@@ -216,6 +226,6 @@ private struct DockBackdrop: ViewModifier {
     let glass: Bool
     func body(content: Content) -> some View {
         if glass { content.glowPanel(Capsule()) }
-        else { content.background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 1)) }
+        else { content.background(Capsule().fill(Theme.hex(0x07111D, 0.9))).overlay(Capsule().stroke(Glass.ink.opacity(0.8), lineWidth: 1.25)) }
     }
 }

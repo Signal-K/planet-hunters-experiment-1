@@ -120,14 +120,10 @@ public enum CloudMerge {
             let l = local.player, r = remote.player
             n.player.francs = max(l.francs, r.francs)
             n.player.researchXP = max(l.researchXP, r.researchXP)
-            n.player.skillPoints = max(l.skillPoints, r.skillPoints)
             n.player.researchAnnotations = max(l.researchAnnotations, r.researchAnnotations)
-            n.player.academyXP = max(l.academyXP, r.academyXP)
-            n.player.crewHiresLifetime = max(l.crewHiresLifetime, r.crewHiresLifetime)
             n.player.stash = maxRec(l.stash, r.stash)
             n.player.refinedGoods = maxRec(l.refinedGoods, r.refinedGoods)
             n.player.clientMissions = maxRec(l.clientMissions, r.clientMissions)
-            n.player.sharedChartsByClient = maxRec(l.sharedChartsByClient, r.sharedChartsByClient)
             n.tutorial = local.tutorial; n.doneSteps = local.doneSteps
         }
         let l = local.player, r = remote.player
@@ -138,15 +134,16 @@ public enum CloudMerge {
         n.player.discoveredExoplanetTargets = r.discoveredExoplanetTargets.merging(l.discoveredExoplanetTargets) { _, mine in mine }
         n.player.tessClassifications = r.tessClassifications.merging(l.tessClassifications) { _, mine in mine }
         n.player.asteroidClassifications = r.asteroidClassifications.merging(l.asteroidClassifications) { _, mine in mine }
-        // SSL-674: research stamps are a log, so two devices keep both (web `mergeStamps`); the bonus window never shrinks.
+        // Research stamps are a log, so two devices keep both.
         n.player.researchStamps = ResearchStampRules.merge(l.researchStamps, r.researchStamps)
-        ResearchStampRules.noteBonus(&n.player, until: ResearchStampRules.bonusUntil(l))
-        ResearchStampRules.noteBonus(&n.player, until: ResearchStampRules.bonusUntil(r))
+        n.player.researchUniversalFragments = max(l.researchUniversalFragments, r.researchUniversalFragments)
+        n.player.researchFragments = max(l.researchFragments, r.researchFragments)
+        n.player.researchFragmentHistory = ResearchFragments.mergeHistory(l.researchFragmentHistory, r.researchFragmentHistory)
         n.player.saturnClassifications = r.saturnClassifications.merging(l.saturnClassifications) { _, mine in mine }
         // Run resumability: keep a local in-flight run unless the remote stage moved past it; adopt a remote run when local has none.
         if l.activeMission != nil, both || r.missionsDone <= l.missionsDone {
             n.player.activeMission = l.activeMission; n.player.missionPhase = l.missionPhase
-            n.player.transitStartedAt = l.transitStartedAt; n.player.arrivalAt = l.arrivalAt
+            n.player.transitStartedAt = l.transitStartedAt; n.player.arrivalAt = l.arrivalAt; n.player.missionStartedAt = l.missionStartedAt
             n.player.returningToEarth = l.returningToEarth; n.player.debriefPending = l.debriefPending
             n.player.homeDeliveryPending = l.homeDeliveryPending
             MissionRuns.setRunId(&n.player, MissionRuns.runId(l))
@@ -154,7 +151,7 @@ public enum CloudMerge {
             n.deliveryTargetId = local.deliveryTargetId
         } else if l.activeMission == nil, r.activeMission != nil, r.missionsDone >= l.missionsDone {
             n.player.activeMission = r.activeMission; n.player.missionPhase = r.missionPhase
-            n.player.transitStartedAt = r.transitStartedAt; n.player.arrivalAt = r.arrivalAt
+            n.player.transitStartedAt = r.transitStartedAt; n.player.arrivalAt = r.arrivalAt; n.player.missionStartedAt = r.missionStartedAt
             n.player.returningToEarth = r.returningToEarth; n.player.debriefPending = r.debriefPending
             MissionRuns.setRunId(&n.player, MissionRuns.runId(r))
             n.missionId = remote.missionId; n.targetId = remote.targetId; n.lastCargo = remote.lastCargo; n.deliveredCargo = remote.deliveredCargo

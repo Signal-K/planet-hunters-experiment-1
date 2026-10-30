@@ -1,4 +1,4 @@
-/** Mining chrome opens the shared settings and friends sheets. The sheets live on the game shell, not on this screen. */
+/** Chrome opens the shared settings and friends sheets. The sheets live on the game shell, not on the screen. */
 export const OPEN_SETTINGS_EVENT = 'landnam-open-settings'
 export const OPEN_FRIENDS_EVENT = 'landnam-open-friends'
 

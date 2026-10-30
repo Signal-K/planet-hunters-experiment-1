@@ -11,6 +11,8 @@ type BaseDockProps = {
   onNext: () => void
   onBuild: (event?: MouseEvent<HTMLButtonElement>) => void
   onHub: () => void
+  onSubsurface?: () => void
+  subsurface?: boolean
   /** Flight reuses this dock with Boost in the Build slot. Mining uses Fire. */
   buildLabel?: string
   buildTestId?: string
@@ -156,12 +158,23 @@ function MenuIcon() {
   )
 }
 
+function SubsurfaceIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M7 7v13h10V7M9 11h6M9 15h6" />
+      <path d="M12 3v4" />
+    </svg>
+  )
+}
+
 /** Floating dock: previous at the far left, Build and Hub in the middle, next at the far right. */
 export function BaseDock({
   onPrev,
   onNext,
   onBuild,
   onHub,
+  onSubsurface,
+  subsurface = false,
   buildLabel = 'Build',
   buildTestId = 'hub-build-btn',
   buildIcon,
@@ -183,20 +196,24 @@ export function BaseDock({
 }: BaseDockProps) {
   const flight = variant === 'flight'
   const label = buildLabel
+  const locationActionCount = Number(showLocationBuild) + Number(Boolean(onMission)) + Number(Boolean(onSubsurface)) + 1
   if (locationLabel) {
     return (
       <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
         <div className="scene-location-selector" aria-label={`Selected location ${locationLabel}`}>
-          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label="Previous location" disabled={locationNavigationDisabled} />
+          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label={locationNavigationDisabled ? 'Previous location' : 'Scroll left'} disabled={locationNavigationDisabled} />
           <span className="scene-location-label"><LocationIcon /><span>{locationLabel}</span></span>
-          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next location" disabled={locationNavigationDisabled} />
+          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
         </div>
-        <div className="scene-location-actions">
-          {showLocationBuild && <DockWordButton data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
+        <div className="scene-location-actions" data-action-count={locationActionCount}>
+          {showLocationBuild && <DockWordButton className="scene-location-action--build" data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
-            <MissionIcon /><span>Find mission</span>
+            <MissionIcon /><span>Missions</span>
+          </DockWordButton>}
+          {onSubsurface && <DockWordButton className="scene-location-action--subsurface" data-testid="hub-subsurface-btn" onClick={onSubsurface}>
+            <SubsurfaceIcon /><span>{subsurface ? 'Surface' : 'Subsurface'}</span>
           </DockWordButton>}
           <DockWordButton className="scene-location-action--menu" data-testid={hubTestId} onClick={onHub}>
             {hubIcon ?? <MenuIcon />}<span>{hubLabel === 'Hub' ? 'Menu' : hubLabel}</span>

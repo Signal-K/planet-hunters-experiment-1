@@ -45,7 +45,12 @@ public enum WswBadges {
     }
 
     /// Idempotent grant; never downgrades gold, upgrades silver when gold is earned later.
-    public static func grant(_ badges: inout [String: PlayerBadge], _ type: WswMissionType, at ms: Double) {
-        SkyEvents.grant(&badges, eventId: eventId, as: badge(for: type).badgeId, at: ms)
+    /// A run begun inside WSW keeps gold when `startedAt` is within the grace window (web grantWswBadge).
+    public static func grant(_ badges: inout [String: PlayerBadge], _ type: WswMissionType, at ms: Double, startedAt: Double? = nil) {
+        let tiers = SkyEvents.gradingTimes(startedAt: startedAt, now: ms).compactMap { SkyEvents.badgeTier(eventId, at: $0) }
+        guard let tier = tiers.contains(.gold) ? BadgeTier.gold : tiers.isEmpty ? nil : BadgeTier.silver else { return }
+        let key = badge(for: type).badgeId
+        if let existing = badges[key], existing.tier == .gold || tier == .silver { return }
+        badges[key] = PlayerBadge(eventId: key, tier: tier, earnedAt: ms)
     }
 }

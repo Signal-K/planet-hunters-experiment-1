@@ -60,12 +60,6 @@ export const COMPONENT_REGISTRY: readonly ComponentDescriptor[] = [
     fields: [],
   },
   {
-    type: 'ConstructionController',
-    category: 'controller',
-    description: 'Drives on-target construction: pads, placement validity, build progress.',
-    fields: ['pads'],
-  },
-  {
     type: 'DeliveryController',
     category: 'controller',
     description: 'Drives the delivery-target cargo transfer scene from persisted wall-clock progress.',
@@ -76,18 +70,6 @@ export const COMPONENT_REGISTRY: readonly ComponentDescriptor[] = [
     category: 'marker',
     description: 'The receiving depot berth for a two-leg mission cargo hand-off.',
     fields: ['role'],
-  },
-  {
-    type: 'AcademyController',
-    category: 'controller',
-    description: 'Animates the Astronaut Academy yard, centrifuge, pool, and active trainees.',
-    fields: [],
-  },
-  {
-    type: 'TrainingFacility',
-    category: 'marker',
-    description: 'Identifies the Earth-side Academy scene and its activity zones.',
-    fields: ['facility'],
   },
   {
     type: 'BuildPlot',

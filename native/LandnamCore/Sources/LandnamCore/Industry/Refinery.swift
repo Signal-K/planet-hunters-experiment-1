@@ -40,8 +40,6 @@ public enum Refinery {
     ]
     public static let byId: [String: RefineryRecipe] = Dictionary(uniqueKeysWithValues: recipes.map { ($0.id, $0) })
 
-    public static func isStaffed(_ p: Player) -> Bool { p.structureCrewAssignments["refinery"] != nil }
-
     static func day(_ ms: Double) -> String {
         let f = ISO8601DateFormatter(); f.formatOptions = [.withFullDate]
         return f.string(from: Date(timeIntervalSince1970: ms / 1000))
@@ -68,7 +66,7 @@ public enum Refinery {
         var n = s
         n.player.stash[r.inputMineral, default: 0] -= r.inputAmount
         n.player.francs -= r.cost
-        n.player.refineryQueue.append(RefineryJob(recipeId: r.id, startedAt: now, durationMs: Double(r.seconds) * 1000 * (isStaffed(s.player) ? 0.75 : 1) * BuildingLevels.timeMultiplier(BuildingLevels.level(s.player, "refinery"))))
+        n.player.refineryQueue.append(RefineryJob(recipeId: r.id, startedAt: now, durationMs: Double(r.seconds) * 1000 * BuildingLevels.timeMultiplier(BuildingLevels.level(s.player, "refinery"))))
         n.player.refineryLastStartedAt = now
         return n
     }
@@ -82,9 +80,9 @@ public enum Refinery {
         return n
     }
 
-    /// One finished good now: its recipe value, +3% inside the community research week (web `refinedUnitPrice`, SSL-673).
+    /// One finished good now: its recipe value.
     public static func unitPrice(_ r: RefineryRecipe, player: Player, now: Double) -> Int {
-        ResearchStampRules.bonusActive(player, now: now) ? Int((Double(r.price) * (1 + ResearchStampRules.bonusRate)).rounded()) : r.price
+        r.price
     }
 
     /// Sell finished goods at their recipe output value.

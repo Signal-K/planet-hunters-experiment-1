@@ -4,7 +4,7 @@ import { GAME_SCREENS } from '../game-screens'
 
 describe('shared authored scene graph', () => {
   it('contains every authored scene and makes engine migration gaps explicit', () => {
-    expect(authoredSceneFile.scenes).toHaveLength(27)
+    expect(authoredSceneFile.scenes).toHaveLength(26)
     expect(authoredSceneFile.scenes.map(scene => scene.route).sort()).toEqual([...GAME_SCREENS].sort())
     for (const scene of authoredSceneFile.scenes) {
       expect(scene.objects.length, scene.id).toBeGreaterThan(0)
@@ -13,7 +13,7 @@ describe('shared authored scene graph', () => {
         for (const id of object.mechanics ?? []) expect(authoredSceneFile.mechanics.some(mechanic => mechanic.id === id)).toBe(true)
       }
     }
-    expect(authoredSceneFile.scenes.flatMap(scene => scene.objects).filter(object => object.layout === 'shared')).toHaveLength(4)
+    expect(authoredSceneFile.scenes.flatMap(scene => scene.objects).filter(object => object.layout === 'shared')).toHaveLength(5)
   })
 
   it.each([

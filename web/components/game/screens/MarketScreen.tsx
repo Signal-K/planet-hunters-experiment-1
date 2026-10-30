@@ -4,8 +4,8 @@ import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { openMarketSellPrice, refinedUnitPrice } from '@/lib/systems/EconomySystem'
-import { COMMUNITY_WEEKLY_REVENUE_PCT, researchBonusActive } from '@/lib/research/stamps'
 import { spotBoard, type PriceAlert, type SpotQuote } from '@/lib/systems/MarketplaceSystem'
+import { RESEARCH_FRAGMENT_CONVERSION_RATE, RESEARCH_MARKETPLACE_ITEMS, researchItemCost, researchItemPurchaseCount } from '@/lib/research/marketplace'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { formatCurrency } from '@/lib/format'
 import { captureGameEvent } from '@/lib/posthog'
@@ -14,7 +14,7 @@ import styles from './MarketScreen.module.css'
 
 const ART = '/art/scenes/exchange'
 
-type Tab = 'sell' | 'buy' | 'alerts'
+type Tab = 'sell' | 'buy' | 'alerts' | 'research'
 type Trend = 'up' | 'down' | 'flat'
 
 function priceTrend(spot: number, mineralId: string): Trend {
@@ -29,10 +29,12 @@ interface MarketScreenProps {
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
   dailyEconomySnapshot?: DailyEconomySnapshot
-  /** SSL-673: end of the community research bonus week. Exchange sales pay +3% before it. */
-  researchBonusUntil?: number
+  researchFragments: number
+  researchUniversalFragments: number
+  researchPurchases?: Record<string, number>
+  researchPermanentBonuses?: Record<string, number>
   francs: number
-  /** The Exchange building. Buying and price alerts need it. */
+  /** The Exchange building. Buying, research and price alerts need it. */
   exchangeBuilt: boolean
   priceAlerts?: PriceAlert[]
   /** Why a purchase is refused, or null. */
@@ -47,22 +49,25 @@ interface MarketScreenProps {
   onBuild: () => void
   onHub: () => void
   onNext: () => void
+  onConvertResearchFragments: () => void
+  onBuyResearchItem: (itemId: string) => void
   clientId?: string
 }
 
 export default function MarketScreen({
-  stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchBonusUntil, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
+  stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
   onSell, onBuy, onSetAlert, onRemoveAlert, refinedGoods, onSellRefined, onBack, onBuild, clientId,
+  researchFragments, researchUniversalFragments, researchPurchases, researchPermanentBonuses, onConvertResearchFragments, onBuyResearchItem,
 }: MarketScreenProps) {
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
   const [targets, setTargets] = useState<Record<string, number>>({})
-  const prices: SpotQuote[] = spotBoard({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchBonusUntil }, clientId)
+  const prices: SpotQuote[] = spotBoard({ stash, placed: exchangeBuilt ? ['market'] : [], marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchPermanentBonuses }, clientId)
   // Selling leads with what you hold; the other tabs list the whole board by price.
   const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
   const alertFor = (id: string) => priceAlerts.find(a => a.mineralId === id)
-  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + refinedUnitPrice(r.recipe, { researchBonusUntil }) * r.qty, 0)
+  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + refinedUnitPrice(r.recipe, { researchPermanentBonuses }) * r.qty, 0)
   const hasCargo = prices.some(q => q.held > 0) || refined.length > 0
 
   useEffect(() => {
@@ -95,12 +100,8 @@ export default function MarketScreen({
           <span className={styles.balance} data-testid="market-balance" aria-label={`Balance ${formatCurrency(francs)}`}>{formatCurrency(francs, { compact: true })}</span>
         </div>
 
-        {tab === 'sell' && researchBonusActive({ researchBonusUntil }, Date.now()) && (
-          <p className={styles.note} data-testid="market-research-bonus">Community research bonus: sales pay +{COMMUNITY_WEEKLY_REVENUE_PCT}% this week.</p>
-        )}
-
         <div className={styles.tabs} role="tablist" aria-label="Marketplace">
-          {(['sell', 'buy', 'alerts'] as const).map(id => (
+          {(['sell', 'buy', 'alerts', 'research'] as const).map(id => (
             <button key={id} type="button" role="tab" className={styles.tab} aria-selected={tab === id} data-testid={`market-tab-${id}`} onClick={() => setTab(id)}>
               {id}
             </button>
@@ -109,8 +110,47 @@ export default function MarketScreen({
 
         {tab !== 'sell' && !exchangeBuilt ? (
           <div className={styles.lock} data-testid="market-locked">
-            <p className={styles.note}>{tab === 'buy' ? 'Build the Exchange to buy ore.' : 'Build the Exchange to set sell alerts.'}</p>
+            <p className={styles.note}>{tab === 'buy'
+              ? 'Build the Exchange to buy ore.'
+              : tab === 'research'
+                ? 'Build the Exchange to research new technology.'
+                : 'Build the Exchange to set sell alerts.'}</p>
             <button type="button" className={styles.btn} data-testid="market-build-exchange" onClick={onBuild}>Build the Exchange</button>
+          </div>
+        ) : tab === 'research' ? (
+          <div className={styles.research} data-testid="research-marketplace">
+            <div className={styles.researchLedger}>
+              <span>Regular fragments</span><b>{researchFragments}</b>
+              <span>Universal fragments</span><b>{researchUniversalFragments}</b>
+            </div>
+            <p className={styles.note}>{RESEARCH_FRAGMENT_CONVERSION_RATE} regular = 1 universal. Badges stay.</p>
+            <button type="button" className={styles.btn} data-testid="research-convert" disabled={researchFragments < RESEARCH_FRAGMENT_CONVERSION_RATE} onClick={onConvertResearchFragments}>
+              {researchFragments < RESEARCH_FRAGMENT_CONVERSION_RATE
+                ? `Need ${RESEARCH_FRAGMENT_CONVERSION_RATE} fragments`
+                : `Convert ${Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE)} bundle${Math.floor(researchFragments / RESEARCH_FRAGMENT_CONVERSION_RATE) === 1 ? '' : 's'}`}
+            </button>
+            <p className={styles.note}>Permanent. No expiry. Bonus costs rise.</p>
+            <ul className={styles.rows} data-testid="research-marketplace-items">
+              {RESEARCH_MARKETPLACE_ITEMS.map(item => {
+                const count = researchItemPurchaseCount({ researchPurchases }, item.id)
+                const cost = researchItemCost({ researchPurchases }, item)
+                const cosmeticOwned = item.kind === 'cosmetic' && count > 0
+                return (
+                  <li className={styles.row} key={item.id} data-testid={`research-item-${item.id}`}>
+                    <div className={styles.who}>
+                      <span className={styles.name}>{item.name}</span>
+                      <span className={styles.held}>{item.scope} · {item.description}</span>
+                    </div>
+                    <span className={styles.price}>{cosmeticOwned ? 'Owned' : `${cost} UF`}</span>
+                    <div className={styles.actions}>
+                      <button type="button" className={styles.btn} data-testid={`research-buy-${item.id}`} disabled={cosmeticOwned || researchUniversalFragments < cost} onClick={() => onBuyResearchItem(item.id)}>
+                        {cosmeticOwned ? 'Owned' : 'Buy'}
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
         ) : (
           <ul className={styles.rows} data-testid="exchange-prices">
@@ -170,7 +210,7 @@ export default function MarketScreen({
                   <span className={styles.name}>{recipe.output.name}</span>
                   <span className={styles.held}>{qty} held</span>
                 </div>
-                <span className={styles.price}>{formatCurrency(refinedUnitPrice(recipe, { researchBonusUntil }), { compact: true })}</span>
+                <span className={styles.price}>{formatCurrency(refinedUnitPrice(recipe, { researchPermanentBonuses }), { compact: true })}</span>
                 <div className={styles.actions}>
                   <button type="button" className={styles.btn} data-testid={`exchange-crate-${recipe.id}`} onClick={() => onSellRefined(recipe.id, 1)}>Sell 1</button>
                   <button type="button" className={styles.btn} onClick={() => onSellRefined(recipe.id, qty)}>All</button>

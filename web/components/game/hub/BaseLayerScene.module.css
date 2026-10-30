@@ -6,141 +6,11 @@
   background: var(--sky-top);
 }
 
-.sky {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 52%, var(--sky-horizon) calc(100% - var(--hub-ground) - 4%), var(--sky-horizon) 100%);
-  transition: background 1.2s ease;
-}
-
-.skyFixed {
-  position: absolute;
-  inset: 0 0 var(--hub-ground) 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
 /* The wrapper carries the grade's star opacity; the inner layer only twinkles. */
-.starsWrap {
-  position: absolute;
-  inset: 0 0 35% 0;
-  pointer-events: none;
-  transition: opacity 1.2s ease;
-}
-
-.stars {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(1.5px 1.5px at 8% 22%, var(--ln-world-hull-lit), transparent),
-    radial-gradient(1.5px 1.5px at 22% 10%, var(--ln-world-hull-lit), transparent),
-    radial-gradient(1px 1px at 41% 28%, var(--ln-world-hull-lit), transparent),
-    radial-gradient(1.5px 1.5px at 63% 14%, var(--ln-world-hull-lit), transparent),
-    radial-gradient(1px 1px at 78% 32%, var(--ln-world-hull-lit), transparent),
-    radial-gradient(1.5px 1.5px at 91% 18%, var(--ln-world-hull-lit), transparent);
-  background-size: 280px 160px;
-  animation: twinkle 3.2s ease-in-out infinite;
-}
-
-.luminary {
-  position: absolute;
-  width: calc(14 * var(--px, 3px));
-  height: calc(14 * var(--px, 3px));
-  margin-left: calc(-7 * var(--px, 3px));
-  border-radius: 50%;
-  background: var(--ln-world-hull-lit);
-  box-shadow: 0 0 0 calc(4 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 22%, transparent), 0 0 calc(18 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 40%, transparent);
-  pointer-events: none;
-}
 
 /* The moon: a lit disc with a sky-coloured bite, so it reads as a crescent. */
-.luminary[data-luminary='moon'] {
-  width: calc(10 * var(--px, 3px));
-  height: calc(10 * var(--px, 3px));
-  background: radial-gradient(circle at 70% 35%, var(--sky-top) 0 46%, var(--ln-world-hull-lit) 47%);
-  box-shadow: 0 0 calc(12 * var(--px, 3px)) color-mix(in srgb, var(--ln-world-hull-lit) 30%, transparent);
-}
-
-.clouds {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  transition: opacity 1.2s ease;
-}
-
-.cloud {
-  position: absolute;
-  height: auto;
-  pointer-events: none;
-  animation: cloudDrift linear infinite;
-}
-
-.horizon {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  overflow: hidden;
-  pointer-events: none;
-}
 
 /* Far ground: one wide image, wider than the strip so the parallax shift never shows an edge. */
-.band {
-  position: absolute;
-  max-width: none;
-  pointer-events: none;
-}
-
-.timeShade {
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  transition: opacity 1.2s ease, background 1.2s ease;
-}
-
-.ground {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  pointer-events: none;
-}
-
-.groundArt {
-  position: absolute;
-  max-width: none;
-}
-
-.groundDeep {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.lane {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 3px;
-  transform: translateY(-50%);
-  background: repeating-linear-gradient(90deg, var(--ln-world-hull-lit) 0 18px, transparent 18px 36px);
-  animation: lane 18s linear infinite;
-}
-
-.path {
-  position: absolute;
-  top: 8px;
-  width: 14px;
-  height: 18px;
-  margin-left: -7px;
-  background: var(--ln-world-concrete);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
-}
 
 .shaftWrap {
   position: absolute;
@@ -159,64 +29,6 @@
   object-fit: contain;
   object-position: center bottom;
   image-rendering: pixelated;
-}
-
-.shaft {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 28px;
-  transform: translateX(-50%);
-  background: var(--ln-world-hull-shade);
-  border-left: 3px solid var(--ln-world-outline);
-  border-right: 3px solid var(--ln-world-outline);
-}
-
-.lift {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  height: 22px;
-  bottom: 28%;
-  background: var(--ln-world-trim-blue);
-  border: 2px solid var(--ln-world-outline);
-  animation: liftBob 3.4s ease-in-out infinite;
-}
-
-.bay {
-  position: absolute;
-  top: 18px;
-  bottom: 10px;
-  width: 28%;
-  background: color-mix(in srgb, var(--ln-world-hull) 16%, var(--ln-world-underground));
-  border: 2px solid var(--ln-world-outline);
-}
-
-.bayLeft { left: 8px; }
-.bayRight { right: 8px; }
-
-.tank {
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 16%;
-  bottom: 18%;
-  background: var(--ln-world-hull);
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 8px;
-}
-
-.lamp {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  margin-left: -4px;
-  border-radius: 50%;
-  background: var(--ln-world-trim-teal);
-  animation: beacon 2.4s steps(2, end) infinite;
 }
 
 .shaftButton {
@@ -238,6 +50,23 @@
   cursor: pointer;
 }
 
+.operationsApron {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.apronProp {
+  position: absolute;
+  display: block;
+  height: auto;
+  bottom: calc(var(--hub-ground) + 1 * var(--px, 3px));
+  transform: translateX(-50%);
+  transform-origin: center bottom;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 1px rgb(14 28 42 / 28%));
+}
 @keyframes shaftPulse {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
@@ -247,26 +76,12 @@
   .shaftButton { animation: none; }
 }
 
-.spriteWrap {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.sprite {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  image-rendering: pixelated;
-}
-
 .padStack {
   position: relative;
   display: block;
   overflow: visible;
+  transform: scale(.82);
+  transform-origin: center bottom;
 }
 
 .padArt,
@@ -332,7 +147,6 @@
   z-index: 6;
 }
 
-
 .padSmoke {
   left: calc(50% - 21 * var(--px, 3px));
   bottom: calc(2 * var(--px, 3px));
@@ -345,65 +159,10 @@
   animation: padLiftoff 3.2s linear forwards;
 }
 
-.padLaunch {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  overflow: hidden;
-  pointer-events: none;
-  --px: 3px;
-  --hub-ground: 20%;
-}
-
-.padLaunchStack {
-  position: absolute;
-  left: 50%;
-  bottom: var(--hub-ground);
-  z-index: 2;
-  transform: translateX(-50%);
-}
-
-.padFragments {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-}
-
-.padFragment {
-  position: absolute;
-  bottom: 28%;
-  width: calc(4 * var(--px, 3px));
-  height: calc(4 * var(--px, 3px));
-  background: var(--ln-world-glass);
-  box-shadow: 0 0 0 2px var(--ln-world-outline);
-  animation: padFragmentRise 2.4s linear infinite;
-}
-
-.padFragmentCount {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 5;
-  margin: 0;
-  min-height: 44px;
-  padding: 10px 12px;
-  background: var(--dusk-panel);
-  color: var(--dusk-ink);
-  border: 2px solid var(--ln-world-outline);
-  font: 800 14px/1.2 var(--ln-font-display);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 @keyframes padFragmentRise {
   from { transform: translateY(24px) rotate(45deg); opacity: 0; }
   20% { opacity: 1; }
   to { transform: translateY(-240px) rotate(45deg); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .padFragment { animation: none; transform: rotate(45deg); opacity: 1; }
 }
 
 .padCloudDrift {
@@ -414,7 +173,6 @@
   height: 0;
   animation: padCloudDrift 18s ease-in-out infinite alternate;
 }
-
 
 /* Hangar door to pad. Wheels sit on --hub-ground until --lift raises the nozzles onto the slab. */
 .rollout {
@@ -447,38 +205,11 @@
     --hangar-scale: 0.75;
   }
 }
-.beaconDot {
-  position: absolute;
-  left: 31%;
-  top: 3%;
-  width: 8px;
-  height: 8px;
-  background: var(--ln-world-trim-teal);
-  animation: beacon 2.4s steps(2, end) infinite;
-  pointer-events: none;
-}
 
-.pixel {
-  display: block;
-  width: 100%;
-  height: 100%;
-  shape-rendering: crispEdges;
-}
-
-.beacon { animation: beacon 2.4s steps(2, end) infinite; }
-.steam {
-  transform-origin: center bottom;
-  animation: steam 4.5s ease-out infinite;
-}
-.windowGlow {
-  fill: var(--base-window, var(--ln-world-glass));
-  opacity: var(--base-window-on, 0.35);
-}
 :global([data-screen='hub'][data-time='dusk']) .windowGlow,
 :global([data-screen='hub'][data-time='night']) .windowGlow {
   animation: windowGlow 7s ease-in-out infinite;
 }
-.dish { transform-box: fill-box; transform-origin: center; animation: dish 14s linear infinite; }
 
 @keyframes parallax {
   from { transform: translateX(0); }

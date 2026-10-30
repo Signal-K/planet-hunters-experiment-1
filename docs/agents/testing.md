@@ -1,24 +1,30 @@
-# Testing and completion
+# Scene verification
 
-Part of the Landnam agent instructions; `AGENTS.md` (repo root) is the entry point and wins on conflict. Read before claiming Done.
+The workspace-owned **Landnam Preview** extension is a thin web interaction surface. It opens a populated disposable sandbox fixture (not an account or saved player state), embeds one persistent preview panel, and shows its follower heartbeat. It never manages the local stack: run `make ensure` separately when needed. Its bridge turns ordinary game-screen targets and authoring-file changes into playable stage fixtures. Scene updates do not require reloading Cursor. Install `tools/landnam-preview/landnam-preview-0.1.5.vsix` locally during development.
 
-## Testing and completion contract
+Confirm a change by using the scene, never by writing an e2e test or scripted
+flow. Locally the Landnam Preview panel is the surface; in a cloud session
+`node scripts/scene-drive.mjs` (open, look, click, tap, key, shot) plays the
+scene in one persistent browser and saves a screenshot per action (see "Cloud
+sessions" in AGENTS.md). There is no e2e suite or separate test stack.
 
-Test runner: Playwright scene tests. Cypress has been removed; do not add or run Cypress.
+1. Run **Landnam Preview: Open** from the Command Palette. Its status bar item
+   must read `Landnam Preview`, not its warning state.
+2. Run a single authored scene: `node scripts/scene.mjs mining --check`.
+   This sends the independent stage fixture to the registered follower, checks
+   that it mounted, and reports the actual viewport in the terminal and tab banner.
+3. For a one-off interaction use
+   `node scripts/dev-check.mjs --route /game/stage?preset=ui-mining --see "FIRE" --click "FIRE"`.
+4. Inspect the real scene for readable text, usable controls, clipping, and
+   whether the gameplay object is the thing being acted on.
+5. When iOS changes, build the iOS Simulator target and launch its matching
+   `SceneCatalog` id with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
 
-```bash
-cd web
-npm run test:scenes        # Playwright scene tests (all viewports)
-npm run test:scenes:phone  # phone subset
-npm run test:unit          # verify:scene-surfaces + vitest
-```
+`make test` runs everything source-level in about 10 seconds: the authoring
+check plus the colocated Vitest suite. Run it before a commit; for one file use
+`cd web && npm run test:file -- <path>`.
 
-"Done" requires all of the following, and the handoff must say exactly what ran and what did not:
-
-1. The change is implemented in the real code path, not only behind a dev preset (presets miss real state-transition bugs).
-2. Type-check and relevant tests pass (targeted `test:scenes` for visual or flow-related changes; `test:unit` and native domain tests for logic). Documentation/tooling-only changes need executable checks, not invented gameplay screenshots. Run changed native destinations; keep compile, domain, snapshot and interaction evidence distinct.
-3. Rendered-play proof: screenshots of the affected screen(s) at **390x844** (phone portrait), **926x428** (phone landscape) and **1440x900** (desktop). Verify the real viewport (`innerWidth`/`matchMedia`), since a window resize can silently no-op. Look at the screenshots for overlap, clipping, text under 14px, targets under 44px, and wrong colors.
-4. Unit tests alone never justify Done or "works". A green suite says nothing about whether the game plays.
-5. Never claim a check passed that you did not run. State what ran, what was skipped, and why. Heavy pipelines (20+ minute e2e) are not run per iteration: iterate with targeted local checks and push batched.
-6. Do not drive the user's own device or desktop (no osascript clicks, desktop captures, or launching windows). Test headless or in the iOS Simulator.
-7. Scene visual check, on every scene task: objects rest on their surfaces with no gaps, and anything that should animate does. Send a short clip or frame strip with the stills.
+Use a small source check only when it protects changed logic. The acceptance
+check is the independent mission or scene fixture, not a repository-wide test
+suite. Record the scene, viewport, and commands actually used in the Linear
+handoff.

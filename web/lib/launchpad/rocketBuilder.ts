@@ -6,7 +6,7 @@ import {
   type CustomizerPart,
   type InstalledCustomizerPartsByKind,
 } from '@/lib/data/shipCustomizer'
-import { effectiveCargoCapacity, effectiveMaxOrbit, getLaserChargeCap } from '@/lib/data/skills'
+import { BASE_LASER_CHARGES } from '@/lib/data/flight'
 import type { RocketConfig, Target } from '@/lib/data/types'
 import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { layoutForPalette, type PlacedPiece } from '@/lib/mining/landscape'
@@ -152,7 +152,6 @@ function bonus(id: string | undefined, pick: (part: CustomizerPart) => number): 
 export function rocketBuilderStats(
   rocket: RocketConfig,
   installed: BuilderLoadout,
-  skills: string[] | undefined,
   parts: typeof PARTS = PARTS,
 ): RocketBuilderStats {
   const chassis = parts.chassis.find(part => part.id === rocket.chassis) ?? parts.chassis[0]
@@ -162,9 +161,9 @@ export function rocketBuilderStats(
   const laser = partIdForSlot(installed, BUILDER_SLOTS[3])
   const laserPart = laser ? customizerPartById(laser) : undefined
   return {
-    capacity: effectiveCargoCapacity(chassis, skills) + fitted.capacity,
-    range: effectiveMaxOrbit(propulsion, skills) + fitted.range,
-    laser: getLaserChargeCap(skills) + (laserPart ? laserPart.power : (drill.rate ?? 1)),
+    capacity: (chassis.cargo ?? 0) + fitted.capacity,
+    range: (propulsion.max_orbit ?? 0) + fitted.range,
+    laser: BASE_LASER_CHARGES + (laserPart ? laserPart.power : (drill.rate ?? 1)),
   }
 }
 

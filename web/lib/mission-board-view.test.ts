@@ -47,7 +47,7 @@ describe('mission board view', () => {
     const board = eventsBoard(NOW, {}, NOW)
     expect(board.orionids.status).toBe('upcoming')
     expect(board.orionids.countdownLabel).toMatch(/to start/)
-    expect(board.orionids.blurb).toBe('Launch through the shower and catch fragments on the way up. They fall any time in the window.')
+    expect(board.orionids.blurb).toBe("Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.")
     expect(board.groups.find(group => group.status === 'upcoming')?.cards.map(card => card.id)).toEqual([
       'orionids-2026',
       'leonids-2026',
@@ -79,7 +79,17 @@ describe('mission board view', () => {
   it('changes the Orionids action to the next research tier', () => {
     const board = eventsBoard(Date.parse('2026-10-24T12:00:00Z'), {}, Date.parse('2026-10-24T12:00:00Z'), {}, 0, 1)
     expect(board.orionids.actionLabel).toBe('Continue research')
-    expect(board.orionids.rewardLabel).toContain('Tier 2')
+    expect(board.orionids.rewardLabel).toBe('Mission 2 of 3 · surface observation ready')
+  })
+
+  it('points the Orionids card at ORI-1 for mission 3, then keeps listening once the badge is earned', () => {
+    const at = Date.parse('2026-10-24T12:00:00Z')
+    const radio = eventsBoard(at, {}, at, {}, 0, 2)
+    expect(radio.orionids.actionLabel).toBe('Listen on ORI-1')
+    expect(radio.orionids.rewardLabel).toBe('Mission 3 of 3 · confirm echoes on ORI-1')
+    const done = eventsBoard(at, { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: at } }, at, {}, 0, 3)
+    expect(done.orionids.actionLabel).toBe('Keep listening')
+    expect(done.orionids.earnedTier).toBe('gold')
   })
 
   it('shows a WSW earned/total mark only when the mission can earn a chip', () => {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
-import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { openSettings } from '@/lib/mining/openChrome'
@@ -18,8 +18,9 @@ import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
+import { chainInstrument, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -35,8 +36,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   rocketSource?: 'company' | 'fabricated'
   deliveryTargetName?: string
   originTargetName?: string
-  loanDebt?: number
-  firstCrewArrival?: boolean
   hasEarthStorage?: boolean
   storageCapacity?: number
   storageUsed?: number
@@ -55,7 +54,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   if (showerRun) shownRunRef.current = showerRun
   const shownRun = shownRunRef.current
   const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID || mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
-  const continuesOrionidsResearch = mission.id === ORIONIDS_NIGHT_RUN_ID
+  // SSL-714: each Orionids mission hands over the story item that lets the next one start.
+  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID ? 1 : mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID ? 2 : 0
+  const storyItem = storyStep ? ORIONIDS_CHAIN.items[storyStep - 1] : null
+  const instrument = chainInstrument()
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
@@ -80,13 +82,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const contractPayout = delivered ? mission.payout.francs : 0
   const rawTotal = contractPayout
   const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
-  const crewArrivalBonus = delivered && firstCrewArrival ? FIRST_CREW_ARRIVAL_BONUS : 0
-  const total = calibratedTotal + crewArrivalBonus
+  const total = calibratedTotal
   const isTwoLegJob = !!mission.deliveryTargetId
   const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
-  const loanRepayment = isProgramOperation ? 0 : loanInstalmentFor(loanDebt)
-  const netTotal = total - vehicleCost - loanRepayment
+  const netTotal = total - vehicleCost
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
   const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
@@ -96,7 +96,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
   const status = shipDestroyed
     ? 'Hull lost · cargo recovered'
-    : isProgramOperation
+    : isOrbitalInstrumentDeployment
       ? 'Commissioned · instrument online'
       : 'Docked · mission complete'
 
@@ -121,7 +121,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       </div>
       {help.layer}
 
-      <div className={styles.column} data-ui-zone={UI_ZONES.screenContent}>
+      {/* Two tones like Community research: what the flight did on the left, settling up on the right. */}
+      <article className={styles.workspace} data-ui-zone={UI_ZONES.screenContent}>
+        <section className={styles.story} aria-label="Flight">
         <SkyBadgeRow badges={badges} />
         {isOrbitalInstrumentDeployment ? (
           <section className={`debrief-result-panel ${styles.card}`} aria-label="Mission result" data-testid="debrief-result-panel" data-surface="cream">
@@ -141,6 +143,37 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
 
+        {storyItem && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-story-item" data-item={storyItem.id}>
+            <p className={styles.kicker}>Orionids · mission {storyStep} of 3 · unlocked</p>
+            <div className={styles.storyItem}>
+              <span className={styles.storyIcon} aria-hidden="true">{storyStep === 1
+                ? <svg viewBox="0 0 24 24"><path d="M12 3 5 9l2 9h10l2-9Z" /><path d="m9 11 3-2 3 2-1 4h-4Z" /></svg>
+                : <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 4v3M12 17v3M4 12h3M17 12h3" /><path d="m12 12 4-5" /></svg>}</span>
+              <div><strong>{storyItem.name}</strong><p className={styles.note}>{storyItem.detail}</p></div>
+            </div>
+          </section>
+        )}
+        {storyStep === 2 && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-community-launch">
+            <p className={styles.kicker}>Community launch</p>
+            <div className={styles.launch}>
+              <svg viewBox="0 0 120 80" aria-hidden="true" className={styles.launchArt}>
+                <path className={styles.launchTrail} d="M60 78 C60 60 60 44 60 30" />
+                <g className={styles.launchCraft}>
+                  <rect x="52" y="14" width="16" height="18" rx="3" />
+                  <path d="M60 14V4M54 6a8 8 0 0 1 12 0M50 2a14 14 0 0 1 20 0" />
+                  <path d="M52 22H38M68 22h14" />
+                  <rect x="26" y="18" width="12" height="8" /><rect x="82" y="18" width="12" height="8" />
+                </g>
+              </svg>
+              <div>
+                <strong>{instrument.callsign} is up</strong>
+                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz along your bearing.</p>
+              </div>
+            </div>
+          </section>
+        )}
         {shownRun && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-shower-run">
             <p className={styles.kicker}>Orionids shower run</p>
@@ -155,16 +188,21 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {isOrionidsRun && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-orionids-knowledge">
             <p className={styles.kicker}>Orionids knowledge log</p>
-            <p className={styles.note}>This run is saved to your Data Pad as a meteor-shower observation. Add your own Orionids photos in the Atlas app to keep building the event record.</p>
+            <p className={styles.note}>Saved to your Data Pad. Add your own Orionids photos in Atlas.</p>
             <a href="https://playlandnam.space" target="_blank" rel="noreferrer" className={styles.link}>Open Atlas photos</a>
           </section>
         )}
 
-        <p className={styles.note} data-testid="mission-next-handoff">
-          {continuesOrionidsResearch
-            ? 'Mission complete. The next Orionids research tier is ready on the Events board: a surface observation with the field rover.'
-            : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
-        </p>
+        </section>
+
+        <section className={styles.settle} aria-label="Settle up">
+        <section className={styles.card} data-surface="cream">
+          <p className={styles.note} data-testid="mission-next-handoff">
+            {storyItem
+              ? storyItem.unlocks
+              : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
+          </p>
+        </section>
 
         {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
@@ -182,7 +220,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <p className={styles.note}>{mission.programReward.outcome}</p>
             <p className={styles.place}>+{mission.programReward.researchXP} XP</p>
           </section>
-        ) : delivered ? (
+        ) : delivered && !(storyStep && mission.payout.francs === 0) ? (
           <section className={styles.card} data-surface="cream">
             <p className={styles.kicker}>Ledger</p>
             {isTwoLegJob ? (
@@ -197,18 +235,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />
             )}
             {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
-            {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
             {vehicleCost !== 0 && (
               <PayRow
                 label={`Vehicle · ${starterRocket.name}`}
                 value={-vehicleCost}
-                signed
-              />
-            )}
-            {loanRepayment > 0 && (
-              <PayRow
-                label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
-                value={-loanRepayment}
                 signed
               />
             )}
@@ -233,9 +263,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <p className={styles.note}>Order incomplete. The fee is paid on a full delivery.</p>
           </section>
         )}
-      </div>
-
-      <div className={styles.dock} data-ui-zone={UI_ZONES.bottomActions}>
+        </section>
+        <div className={styles.dock} data-ui-zone={UI_ZONES.bottomActions}>
         {!isOrbitalInstrumentDeployment && (
           <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
             Teardown
@@ -257,7 +286,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             }
           }}
         >
-          {continuesOrionidsResearch
+          {storyStep
             ? 'Complete mission · continue research'
             : isFreeHaul
             ? willStore
@@ -269,7 +298,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 : `Complete mission · return to Base · ${formatCurrency(total)}`
               : shownRun ? `Complete mission · return to Base · ${formatCurrency(shownRun.francs)}` : 'Complete mission · return to Base'}
         </PrimaryBtn>
-      </div>
+        </div>
+      </article>
 
       {scrapping && (
         <ScrapSequenceCanvas

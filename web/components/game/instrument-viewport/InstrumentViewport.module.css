@@ -518,17 +518,6 @@
   text-transform: uppercase;
 }
 
-.chartAction {
-  min-height: 44px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-}
-
 .saturnGrid {
   position: absolute;
   inset: 0;
@@ -578,15 +567,6 @@
 }
 
 .sky svg { flex: 1 1 auto; width: 100%; min-height: 0; }
-
-.skyCaption {
-  margin: 0;
-  padding: var(--ln-s-2);
-  background: var(--iv-paper);
-  color: var(--iv-ink);
-  font: 800 14px/1.2 var(--ln-font-mono);
-  letter-spacing: 0.03em;
-}
 
 .frameImage {
   position: absolute;

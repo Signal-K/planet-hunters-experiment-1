@@ -90,11 +90,17 @@
 /* SSL-628: scene-first Base controls. Small instrument plates hug the lower
    edges, leaving the landscape between them instead of forming a website nav. */
 .scene-location-dock {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  width: calc(100vw - 24px);
+  gap: 8px;
+  width: min(900px, calc(100vw - 32px));
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--ln-cyan) 52%, var(--ln-world-outline));
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ln-world-outline) 96%, var(--ln-world-trim-blue)), color-mix(in srgb, var(--ln-void) 88%, var(--ln-world-outline)));
+  box-shadow: 0 12px 30px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 12%);
   pointer-events: none;
 }
 .scene-location-selector,
@@ -103,12 +109,15 @@
   align-items: center;
   gap: 0;
   padding: 0;
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 3px;
-  background: var(--ln-world-hull-lit);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 20%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ln-void) 38%, transparent);
+  overflow: hidden;
+  box-shadow: none;
   pointer-events: auto;
 }
+.scene-location-selector { flex: 0 0 auto; }
+.scene-location-actions { min-width: 0; width: 100%; flex: 1 1 auto; }
 .scene-location-label {
   display: flex;
   place-items: center;
@@ -118,9 +127,9 @@
   min-width: 88px;
   min-height: 44px;
   padding: 0 10px;
-  border-inline: 2px solid var(--ln-world-outline);
-  border-bottom: 4px solid var(--ln-world-glass);
-  background: color-mix(in srgb, var(--ln-world-outline) 90%, var(--ln-world-trim-blue));
+  border-inline: 0;
+  border-bottom: 3px solid var(--ln-cyan);
+  background: color-mix(in srgb, var(--ln-void) 42%, transparent);
   color: var(--ln-world-hull-lit);
   font: 800 14px/1 var(--ln-font-display);
   letter-spacing: 0.04em;
@@ -130,29 +139,35 @@
   min-height: 44px;
   border: 0 !important;
   border-radius: 0;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-world-outline) !important;
+  background: transparent !important;
+  color: var(--ln-world-hull-lit) !important;
 }
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-arrow,
 .portrait-canvas:has([data-screen="hub"]) .hub-bottom-dock .scene-location-dock .scene-dock-word {
   border: 0 !important;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-world-outline) !important;
+  background: transparent !important;
+  color: var(--ln-world-hull-lit) !important;
 }
 .scene-location-dock .scene-dock-arrow:disabled { opacity: 0.38; cursor: default; }
 .scene-location-actions .scene-dock-word {
+  flex: 1 1 0;
+  min-width: 88px;
   gap: 8px;
-  min-width: 118px;
-  padding: 0 12px 0 8px;
-  border-right: 4px solid var(--ln-world-glass) !important;
-  font-size: 14px;
+  padding-inline: 12px;
+  border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important;
+  font-size: 13px;
   font-style: italic;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: none;
 }
-.scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 2px solid var(--ln-world-outline) !important; }
-.scene-location-actions .scene-dock-word svg { width: 25px; height: 25px; padding-right: 7px; border-right: 1px solid color-mix(in srgb, var(--ln-world-outline) 52%, transparent); }
+.scene-location-actions .scene-dock-word + .scene-dock-word { border-left: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 18%, transparent) !important; }
+.scene-location-actions .scene-dock-word svg { flex: 0 0 19px; width: 19px; height: 19px; }
+.scene-location-actions .scene-dock-word span { overflow: visible; text-overflow: clip; white-space: nowrap; text-align: center; }
+.scene-location-action--build svg { color: var(--ln-world-trim-teal); }
+.scene-location-action--mission svg { color: var(--ln-cyan); }
+.scene-location-action--subsurface svg { color: var(--ln-world-hull-shade); }
+.scene-location-action--menu svg { color: var(--ln-world-glass); }
 .scene-location-action--mission {
   border-right-color: var(--ln-world-trim-blue) !important;
 }
@@ -160,17 +175,78 @@
   border-right: 4px solid var(--ln-world-trim-blue) !important;
 }
 @media (max-width: 700px) {
-  .scene-location-dock { gap: 6px; width: calc(100vw - 12px); }
+  .scene-location-dock { gap: 6px; width: calc(100vw - 24px); }
   .scene-location-label { min-width: 62px; padding-inline: 6px; }
   .scene-location-label svg { display: none; }
   .scene-location-actions .scene-dock-word { min-width: 84px; padding-inline: 7px; }
 }
 
-/* Narrow phones (390px): the arrows, label and three action words need ~410px, so the dock lost "Menu" off the right edge.
-   Drop the action icons and the extra padding, and wrap the selector above the actions if it still does not fit. */
+@media (max-width: 1100px) {
+  .scene-location-dock { grid-template-columns: 1fr; }
+  .scene-location-selector { justify-self: center; }
+  .scene-location-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+  .scene-location-actions[data-action-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word {
+    min-width: 0;
+    width: 100%;
+    padding-inline: 6px;
+    gap: 6px;
+  }
+  .scene-location-actions .scene-dock-word span {
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
+
+/* Narrow phones keep the same named controls, but use a deliberate two-column
+   command grid so every icon and label remains visible and tappable. */
 @media (max-width: 479px) {
-  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; }
-  .scene-location-actions { margin-left: auto; max-width: 100%; }
-  .scene-location-actions .scene-dock-word { min-width: 0; padding-inline: 10px; gap: 0; }
-  .scene-location-actions .scene-dock-word svg { display: none; }
+  .scene-location-dock { flex-wrap: wrap; row-gap: 6px; width: calc(100vw - 16px); }
+  .scene-location-actions { width: 100%; margin-left: 0; max-width: none; }
+  .scene-location-actions .scene-dock-word {
+    grid-column: span 1;
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 12px;
+    font-style: normal;
+    letter-spacing: 0;
+  }
+  .scene-location-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word svg { display: block; }
+  .scene-location-actions .scene-dock-word span {
+    overflow-wrap: anywhere;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+/* SSL-365: on phones the Base dock takes as little of the scene as it can.
+   Sideways on a short screen it is one row; upright it is the location row
+   plus one row of actions with the icon over the label. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .scene-location-dock { display: flex; align-items: center; width: auto; max-width: calc(100vw - 24px); padding: 4px; gap: 4px; border-radius: 14px; }
+  .scene-location-selector { flex: 0 0 auto; }
+  .scene-location-actions,
+  .scene-location-actions[data-action-count] { display: flex; width: auto; max-width: none; }
+  .scene-location-actions .scene-dock-word { flex: 0 0 auto; width: auto; min-width: 0; padding-inline: 12px; font-size: 14px; }
+  .scene-location-actions .scene-dock-word span { white-space: nowrap; }
+  .scene-location-label { min-width: 72px; }
+  /* globals.css caps the hub dock at 440px; one row needs its own width. */
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="base-dock"].scene-location-dock { width: auto; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .scene-location-dock { display: flex; flex-direction: column; align-items: stretch; padding: 4px; gap: 4px; border-radius: 16px; }
+  .scene-location-selector { align-self: center; }
+  .scene-location-actions,
+  .scene-location-actions[data-action-count="3"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .scene-location-actions[data-action-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene-location-actions .scene-dock-word { flex-direction: column; justify-content: center; gap: 3px; min-height: 52px; padding: 4px 2px; font-size: 14px; font-style: normal; letter-spacing: 0; }
+  .scene-location-actions .scene-dock-word svg { display: block; }
+  .scene-location-actions .scene-dock-word span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 }

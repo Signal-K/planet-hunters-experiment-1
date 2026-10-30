@@ -9,7 +9,7 @@ public struct ArchiveRequirement: Identifiable, Equatable, Sendable {
 
 public struct ArchiveEntry: Identifiable, Equatable, Sendable {
     public enum Category: String, CaseIterable, Sendable {
-        case guided = "Guided path", contracts = "Client contracts", transport = "Transport", crew = "Crew"
+        case guided = "Guided path", contracts = "Client contracts", transport = "Transport"
         case program = "Your programme", instruments = "Instruments", spacecraft = "Spacecraft", structures = "Structures", spaceWeek = "Space Week"
     }
     public enum Status: String, Sendable { case done = "Done", available = "Available", locked = "Locked", live = "Live now", upcoming = "Upcoming", ended = "Ended" }
@@ -59,8 +59,6 @@ public enum Archive {
             PathNode(title: "Free Operations", detail: "Finish the guided path to fly your own programme with no client.", entryId: "mission:freeops-self-directed-mining", done: p.freeOperations),
             PathNode(title: "Prospector rocket", detail: "A bigger hull and a tier 2 laser for deeper contracts.", entryId: "rocket:prospector", done: (p.rocketPurchaseCounts["prospector"] ?? 0) > 0 || p.stagedRockets.contains { $0.rocketId == "prospector" }),
             PathNode(title: "Your own instrument", detail: "Launch a telescope or imager and classify real data.", entryId: "instrument:transit", done: done("instrument:transit") || done("instrument:deep-space") || done("instrument:saturn")),
-            PathNode(title: "Astronaut Academy", detail: "Research and build the Academy, then train a crew.", entryId: "structure:astronaut-academy", done: p.placed.contains("astronaut-academy")),
-            PathNode(title: "Crewed prospecting", detail: "Fly a trained specialist to Eros for a frontier bonus.", entryId: "mission:freeops-crewed-prospecting", done: p.completedMissions.contains { $0.id == "freeops-crewed-prospecting" }),
             PathNode(title: "Off-world builds", detail: "Settlement, remote silo, then a refinery near the ore.", entryId: "mission:program-build-mars-mining-settlement",
                      done: Set(ConstructionMissions.records(p).map(\.structureKind)).isSuperset(of: ["mining-settlement", "mineral-silo"])),
         ]
@@ -71,7 +69,6 @@ public enum Archive {
     static func category(_ m: Mission) -> ArchiveEntry.Category {
         if m.id.hasPrefix("story-") && m.payload != nil { return .instruments }
         if m.tag == "TRANSPORT" { return .transport }
-        if m.tag == "CREW" { return .crew }
         if m.isOwnProgram { return .program }
         if m.sequence <= MissionGenerator.onboardingSequenceCount { return .guided }
         return .contracts
@@ -91,9 +88,6 @@ public enum Archive {
     static func missionSteps(_ m: Mission, _ catalog: Catalog) -> [String] {
         var s: [String] = []
         let launchpad = m.isOwnProgram ? "Launchpad" : "Launchpad → Mission board"
-        if m.id == AuthoredMissions.academyStoryId {
-            return ["Build the Astronaut Academy at Base once it is researched.", "Fund its first day-long session in the Academy.", "Collect the finished session to graduate your first named astronaut."]
-        }
         s.append("Open \(launchpad) and take “\(m.title)”.")
         if let plan = m.construction {
             s.append("Keep \(list(plan.requiredMaterials)) in storage (mine or buy it; the kit leaves your stash on delivery).")
@@ -109,7 +103,6 @@ public enum Archive {
         let target = m.targetId.flatMap(catalog.target)?.name
         s.append(target.map { "Pick \($0) in launch review." } ?? "Pick a reachable target in launch review (orbit \(m.requires.maxOrbit) or closer).")
         s.append("Buy or roll out a rocket that carries \(m.requires.cargoMin) cargo, then launch.")
-        if let c = m.requires.crew { s.append("Have a fit \(c.branch) specialist (tier \(c.minTier), level \(c.minLevel)) on your roster.") }
         if !m.requires.minerals.isEmpty { s.append("Mine \(list(m.requires.minerals)) with the rover laser.") }
         if let d = m.deliveryTargetId.flatMap(catalog.target)?.name { s.append("Fly the cargo on to \(d) and unload it, then fly home.") }
         else { s.append("Fly home, unload at Base and collect your payout at debrief.") }
@@ -128,8 +121,7 @@ public enum Archive {
                 return m.unlockAt ?? gate ?? "Keep playing"
             }()
             reqs.append(req("Unlock", gate == nil || completed ? "Open to you now" : (gate ?? unlockText), gate == nil || completed))
-            if let c = m.requires.crew { let st = MissionBoard.crewStatus(c, crew: p.crew); reqs.append(req("Crew", st.reason, st.met)) }
-            if let plan = m.construction {
+                if let plan = m.construction {
                 for (id, n) in plan.requiredMaterials.sorted(by: { $0.key < $1.key }) {
                     reqs.append(req(name(id), "\(p.stash[id] ?? 0) of \(n) in storage", (p.stash[id] ?? 0) >= n))
                 }

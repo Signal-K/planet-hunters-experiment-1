@@ -58,4 +58,16 @@ describe('BaseDock', () => {
     expect(markup).toContain('data-testid="hub-btn"')
     expect(markup).toContain('>Menu<')
   })
+
+  it('sizes the compact location action grid to the controls that are actually rendered', () => {
+    const threeActions = renderToStaticMarkup(
+      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} onSubsurface={vi.fn()} locationLabel="Earth" />,
+    )
+    const fourActions = renderToStaticMarkup(
+      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} onSubsurface={vi.fn()} onMission={vi.fn()} locationLabel="Earth" />,
+    )
+
+    expect(threeActions).toContain('data-action-count="3"')
+    expect(fourActions).toContain('data-action-count="4"')
+  })
 })

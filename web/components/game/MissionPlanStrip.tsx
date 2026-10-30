@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
-import { activeDebrisPreset } from '@/lib/data/sky-events'
-import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import styles from './MissionPlanStrip.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -18,25 +17,46 @@ type Sheet = 'destination' | 'vehicle' | null
 const STEPS = ['Contract', 'Plan', 'Launch'] as const
 
 /** Contract, Plan, Launch. The plan strip makes the auto-picked destination and vehicle visible and changeable in place. */
-export default function MissionPlanStrip({ game, blockedReason, launched }: { game: Game; blockedReason: string | null; launched: boolean }) {
+export default function MissionPlanStrip({ game, blockedReason, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
+  game: Game
+  blockedReason: string | null
+  launched: boolean
+  primaryAction?: () => void
+  primaryLabel?: string
+  primaryDisabled?: boolean
+}) {
   const [sheet, setSheet] = useState<Sheet>(null)
   const { mission, target, player } = game
+  const autoStaged = useRef(false)
+  // A new player has one free vehicle and no staged rocket: stage it, so the pad shows a rocket and Launch is ready.
+  const freeStart = !!mission && !!target && !player.stagedRockets?.length && !isOrionidsEventMission(mission)
+  useEffect(() => {
+    if (!freeStart || autoStaged.current || !mission || !target) return
+    const free = ROCKET_MODELS.filter(model => !model.locked && model.costFrancs === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
+    if (free.length !== 1) return
+    autoStaged.current = true
+    game.onPurchaseRocket(free[0].id)
+  }, [freeStart, mission, target, player.missionsDone, game])
   if (!mission || !target) return null
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
   const selectedRocket = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId) : null
   const minerals = Object.keys(mission.requires.minerals).map(id => game.catalog.minerals[id]?.name ?? id)
   const step = launched ? 2 : 1
-  const activeEvent = activeDebrisPreset(debrisNow())
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
-  const noSilo = isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
+  // Orionids fragments are event evidence rather than player cargo, and the
+  // event supplies its own storage. Do not add a contradictory silo prompt.
+  // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
+  const showerRun = mission?.id === ORIONIDS_NIGHT_RUN_ID
+  const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
-    ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, player.unlockedSkillNodes ?? [], buildingLevel(player, 'launchpad'))
+    ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
     : []
   const rockets = sheet === 'vehicle'
     ? ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, unlockedSkillNodes: player.unlockedSkillNodes ?? [] }).ok)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
     : []
 
   return (
@@ -46,18 +66,30 @@ export default function MissionPlanStrip({ game, blockedReason, launched }: { ga
       </ol>
       <div className={styles.slots}>
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
-          <span>Destination</span><strong>{target.name}</strong><em>Change</em>
+          <span>Destination</span><strong>{showerRun ? 'Orionids field' : target.name}</strong><em>Change</em>
         </button>
         <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
-        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{minerals.join(', ') || 'None'}</strong></div>
+        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{showerRun ? 'Fragments + minerals' : mission.payload?.type === 'rover' ? mission.payload.name : (minerals.join(', ') || 'None')}</strong></div>
       </div>
+      {primaryAction && primaryLabel && (
+        <button type="button" className={styles.primary} data-testid="plan-launch-btn" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
+      )}
+      {showerRun && (
+        <div className={styles.showerField} data-testid="orionids-shower-field" aria-label="Anonymous meteor points arranged in Orion's pattern">
+          <svg viewBox="0 0 280 72" role="img" aria-label="Orionids shower points arranged like Orion">
+            <path d="M42 19 86 34 126 18 166 35 211 20M86 34 92 58 126 18 149 57 166 35 196 59" />
+            {[[42, 19], [86, 34], [126, 18], [166, 35], [211, 20], [92, 58], [149, 57], [196, 59]].map(([cx, cy], index) => <circle key={index} cx={cx} cy={cy} r="5" />)}
+          </svg>
+          <span><b>ORIONIDS SHOWER</b><small>Catch fragments. Mine other minerals.</small></span>
+        </div>
+      )}
       {noSilo && !launched && (
         <p className={styles.hold} data-testid="plan-no-silo" role="status">
-          {activeEvent ? `${activeEvent.label.replace(' debris', '')} storage is free during the event. ` : 'No storage silo: ore you mine is sold when you land. '}
+          No silo: ore is sold on landing.
           <button type="button" className={styles.link} onClick={() => game.go('build')}>Build a silo</button>{' '}
-          {activeEvent ? 'to keep what you mine.' : 'to keep it.'}
+          to keep it.
         </p>
       )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}

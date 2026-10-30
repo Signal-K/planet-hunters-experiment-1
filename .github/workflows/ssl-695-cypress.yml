@@ -1,0 +1,44 @@
+name: SSL-695 desktop screenshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'cycle/**'
+
+jobs:
+  marketplace-screenshot:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Start local Next.js app
+        run: |
+          npm run dev > /tmp/landnam-next.log 2>&1 &
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:3001/game/stage?preview=market > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/landnam-next.log
+          exit 1
+      - name: Run SSL-695 Cypress screenshot
+        run: npm run test:cypress:ssl-695
+        env:
+          CYPRESS_BASE_URL: http://127.0.0.1:3001
+      - name: Upload SSL-695 screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssl-695-marketplace-desktop
+          path: web/cypress/screenshots/**
+          if-no-files-found: error

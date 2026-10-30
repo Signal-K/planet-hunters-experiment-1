@@ -1,0 +1,287 @@
+<title>Landnam Scene Monitor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: landscape-first monitor. The game frame owns the screen; a slim status bar above, a narrow notes column at its side, a filmstrip of steps below. Portrait stacks the same parts. Single dark look, matched to the game's night sky.
+   Source of truth: docs/scene-monitor/index.html in the Landnam repo; republish to the same artifact URL. */
+:root {
+  --void: #05080f;
+  --panel: #0d1422;
+  --panel-2: #152038;
+  --line: #22304b;
+  --ink: #e6ecf7;
+  --ink-dim: #8e9bb5;
+  --signal: #5cc8ff;
+  --wait: #c9a7ff;
+  --fault: #ff6b81;
+  --font-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; background: var(--void); color: var(--ink); }
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-block: 8px;
+  box-sizing: border-box;
+}
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+/* Status bar */
+.bar { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 36px; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.18em; font-size: 12px; color: var(--ink-dim); flex: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-dim); }
+.live[data-state="live"] { color: var(--signal); }
+.live[data-state="live"] .dot { background: var(--signal); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(92,200,255,.55); } 70% { box-shadow: 0 0 0 8px rgba(92,200,255,0); } 100% { box-shadow: 0 0 0 0 rgba(92,200,255,0); } }
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none !important; } }
+.context { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: 6px 16px; overflow: hidden; }
+.ctx { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; flex: 0 1 auto; white-space: nowrap; }
+.ctx[hidden] { display: none; }
+.ctx .label { font-size: 11px; }
+.ctx-value { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
+.ctx-id { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); }
+.ticket {
+  display: grid; gap: 2px;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2);
+  color: var(--ink); text-decoration: none;
+}
+.ticket[hidden] { display: none; }
+.ticket[href]:hover { border-color: var(--signal); }
+.ticket-key { font-family: var(--font-mono); font-size: 13px; color: var(--signal); }
+.ticket-title { font-size: 14px; line-height: 1.35; }
+.now { font-size: 14px; color: var(--ink); }
+.objective { font-size: 14px; color: var(--ink-dim); border-left: 2px solid var(--line); padding-left: 8px; }
+.objective[hidden], .now[hidden] { display: none; }
+.divider { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
+.waiting {
+  display: none; flex: none; align-items: center;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--wait); color: var(--wait);
+  font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.waiting[data-on="true"] { display: inline-flex; }
+
+/* Stage: game frame + notes */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) clamp(200px, 22vw, 300px); gap: 8px; min-height: 0; }
+.screen {
+  position: relative;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 0;
+  display: grid; place-items: center;
+}
+.screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.screen .tag {
+  position: absolute; left: 8px; top: 8px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(5,8,15,.72); color: var(--signal);
+  font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.empty { color: var(--ink-dim); text-align: center; padding: 24px; max-width: 44ch; }
+.empty strong { color: var(--ink); font-family: var(--font-display); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+.notes {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  min-height: 0; overflow-y: auto;
+}
+.label { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); }
+.when { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.action { font-family: var(--font-mono); font-size: 13px; color: var(--signal); overflow-wrap: anywhere; }
+.caption { font-size: 16px; line-height: 1.45; margin: 0; text-wrap: pretty; }
+.errors { display: none; border-left: 3px solid var(--fault); padding: 6px 10px; background: rgba(255,107,129,.08); border-radius: 4px; }
+.errors[data-on="true"] { display: block; }
+.errors .label { color: var(--fault); }
+.errors pre { margin: 4px 0 0; font-family: var(--font-mono); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.back-live {
+  margin-top: auto; align-self: flex-start;
+  display: none; min-height: 44px; padding: 0 14px;
+  background: transparent; color: var(--signal);
+  border: 1px solid var(--signal); border-radius: 8px;
+  font-family: var(--font-display); font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; font-size: 12px;
+  cursor: pointer;
+}
+.back-live[data-on="true"] { display: inline-block; }
+
+/* Filmstrip */
+.film { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; min-height: 0; scrollbar-width: thin; }
+.film:empty { display: none; }
+.step {
+  flex: none; position: relative;
+  width: 104px; height: 64px; padding: 0;
+  border: 1px solid var(--line); border-radius: 6px;
+  background: #000 center / cover no-repeat; cursor: pointer;
+}
+.step span {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 1px 4px; background: rgba(5,8,15,.78);
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.step[aria-current="true"] { border: 2px solid var(--signal); }
+.step:focus-visible, .back-live:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* Portrait: stack frame, notes, filmstrip */
+@media (orientation: portrait), (max-width: 699px) {
+  .app { grid-template-rows: auto auto auto auto; height: auto; min-height: 100%; }
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .screen { height: 62vh; }
+  .screen img { position: absolute; }
+  .notes { overflow: visible; }
+  .bar { flex-wrap: wrap; }
+  .context { flex-wrap: wrap; flex-basis: 100%; order: 3; }
+}
+</style>
+
+<div class="app">
+  <header class="bar" aria-live="polite">
+    <span class="live" id="live" data-state="idle"><span class="dot"></span><span id="liveText">CONNECTING</span></span>
+    <span class="context">
+      <span class="ctx" id="sceneCtx"><span class="label">Scene</span><span class="ctx-value" id="scene">None yet</span></span>
+      <span class="ctx" id="missionCtx" hidden><span class="label">Mission</span><span class="ctx-value" id="mission"></span></span>
+    </span>
+    <span class="waiting" id="waiting" data-on="false">Waiting on you</span>
+  </header>
+
+  <section class="stage">
+    <div class="screen" id="screen">
+      <div class="empty" id="empty">
+        <strong>Nothing played yet</strong>
+        Each time Claude opens, clicks, taps or presses a key in a Landnam scene, the screenshot lands here with what it did and what happened.
+      </div>
+      <img id="shot" alt="" hidden>
+      <span class="tag" id="tag" hidden></span>
+    </div>
+    <aside class="notes">
+      <a class="ticket" id="ticket" hidden target="_blank" rel="noopener"><span class="ticket-key" id="ticketKey"></span><span class="ticket-title" id="ticketTitle"></span></a>
+      <span class="label">Now</span>
+      <span class="now" id="doing">Waiting for the first step from a Claude Code session.</span>
+      <span class="objective" id="objective" hidden></span>
+      <hr class="divider">
+      <span class="when" id="when"></span>
+      <span class="action" id="action"></span>
+      <p class="caption" id="caption"></p>
+      <div class="errors" id="errors" data-on="false"><span class="label">Console errors</span><pre id="errorText"></pre></div>
+      <button class="back-live" id="backLive" type="button" data-on="false">Back to latest</button>
+    </aside>
+  </section>
+
+  <nav class="film" id="film" aria-label="Steps, newest first"></nav>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let steps = [];
+  let pinned = null; // step the viewer chose; null follows the latest
+
+  function ago(iso) {
+    const t = Date.parse(iso);
+    if (!t) return '';
+    const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+    if (s < 60) return s + 's ago';
+    if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) return Math.round(s / 3600) + ' h ago';
+    return new Date(t).toLocaleString();
+  }
+  function clock(iso) {
+    const t = Date.parse(iso);
+    return t ? new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+
+  function show(step) {
+    $('empty').hidden = Boolean(step);
+    $('shot').hidden = !step;
+    $('tag').hidden = !step;
+    if (!step) { $('when').textContent = ''; $('action').textContent = ''; $('caption').textContent = ''; return; }
+    $('shot').src = step.image || '';
+    $('shot').alt = step.caption ? 'Screenshot: ' + step.caption : 'Scene screenshot';
+    $('tag').textContent = [step.missionName, step.sceneName || step.scene, step.viewport].filter(Boolean).join('  ·  ');
+    $('when').textContent = clock(step.at) + '  ·  ' + ago(step.at);
+    $('action').textContent = step.action ? '> ' + step.action : '';
+    $('caption').textContent = step.caption || '';
+    const errs = Array.isArray(step.errors) ? step.errors.filter(Boolean) : [];
+    $('errors').dataset.on = String(errs.length > 0);
+    $('errorText').textContent = errs.join('\n');
+    $('backLive').dataset.on = String(pinned !== null);
+  }
+
+  function renderFilm() {
+    const film = $('film');
+    film.textContent = '';
+    const current = pinned ?? steps[0]?.id;
+    for (const s of steps) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'step';
+      b.title = s.caption || s.action || '';
+      b.setAttribute('aria-label', (s.caption || s.action || 'Step') + ', ' + clock(s.at));
+      if (s.id === current) b.setAttribute('aria-current', 'true');
+      if (s.image) b.style.backgroundImage = 'url("' + String(s.image).replace(/"/g, '%22') + '")';
+      const t = document.createElement('span');
+      t.textContent = clock(s.at) + ' ' + (s.missionName || s.sceneName || s.scene || s.action || '');
+      b.append(t);
+      b.addEventListener('click', () => { pinned = s.id === steps[0]?.id ? null : s.id; render(); });
+      film.append(b);
+    }
+  }
+
+  function render() {
+    let step = pinned ? steps.find(s => s.id === pinned) : steps[0];
+    if (pinned && !step) { pinned = null; step = steps[0]; }
+    show(step);
+    renderFilm();
+  }
+
+  $('backLive').addEventListener('click', () => { pinned = null; render(); });
+  setInterval(() => { const cur = pinned ? steps.find(s => s.id === pinned) : steps[0]; if (cur) $('when').textContent = clock(cur.at) + '  ·  ' + ago(cur.at); }, 15000);
+
+  function setStatus(st) {
+    const fresh = st && Date.now() - Date.parse(st.updatedAt || 0) < 30 * 60 * 1000;
+    $('live').dataset.state = fresh ? 'live' : 'idle';
+    $('liveText').textContent = fresh ? 'LIVE' : 'IDLE';
+    if (!st) return;
+    $('scene').textContent = st.sceneName || st.scene || 'None yet';
+    $('scene').title = st.scene || '';
+    $('missionCtx').hidden = !st.missionName;
+    $('mission').textContent = st.missionName || '';
+    $('objective').hidden = !st.objective;
+    $('objective').textContent = st.objective ? 'Objective: ' + st.objective : '';
+    $('ticket').hidden = !st.ticket;
+    $('ticketKey').textContent = st.ticket || '';
+    $('ticketTitle').textContent = st.ticketTitle || '';
+    if (st.ticketUrl && /^https:\/\/linear\.app\//.test(st.ticketUrl)) $('ticket').href = st.ticketUrl; else $('ticket').removeAttribute('href');
+    $('doing').textContent = st.doing || '';
+    $('waiting').dataset.on = String(Boolean(st.waiting));
+  }
+
+  (async () => {
+    const db = await window.claude?.use?.('db');
+    if (!db) {
+      $('liveText').textContent = 'OFFLINE';
+      $('doing').textContent = 'This view cannot reach the step log. Open the page signed in to Claude.';
+      return;
+    }
+    $('liveText').textContent = 'IDLE';
+    db.doc('status/now').onSnapshot(snap => setStatus(snap.exists ? snap.data() : null), () => {});
+    // Steps from every session share one log, ordered by time (ISO `at` sorts as text).
+    db.collection('steps').orderBy('at', 'desc').limit(80).onSnapshot(snap => {
+      steps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, () => { $('doing').textContent = 'The step log could not load. Reload the page.'; });
+  })();
+})();
+</script>

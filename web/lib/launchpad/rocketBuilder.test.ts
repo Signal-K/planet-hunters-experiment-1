@@ -36,7 +36,7 @@ describe('rocket builder loadout', () => {
   })
 
   it('raises capacity, range and laser charge from the fitted parts', () => {
-    const bare = rocketBuilderStats(rocket, {}, [])
+    const bare = rocketBuilderStats(rocket, {})
     expect(bare).toEqual({ capacity: 6, range: 5, laser: 6 })
     const fitted = rocketBuilderStats(rocket, {
       engine: 'ion-thruster-t1',
@@ -44,7 +44,7 @@ describe('rocket builder loadout', () => {
       payload: 'cargo-payload-t1',
       booster: 'vulcan-booster-t1',
       'mining-laser': 'focused-laser-t2',
-    }, ['cargo-slot-1', 'near-range-1', 'laser-charge-1'])
+    })
     expect(fitted.capacity).toBeGreaterThan(bare.capacity)
     expect(fitted.range).toBeGreaterThan(bare.range)
     expect(fitted.laser).toBeGreaterThan(bare.laser)
@@ -96,9 +96,9 @@ describe('launch review counts what the builder chips show (SSL-647)', () => {
     const best = allPartsForSlot(cargo).at(-1)!
     const loadout = installSlot({}, cargo, best.id)
     const bonus = loadoutBonuses(loadout)
-    expect(bonus.capacity).toBe(rocketBuilderStats(rocket, loadout, []).capacity - rocketBuilderStats(rocket, {}, []).capacity)
+    expect(bonus.capacity).toBe(rocketBuilderStats(rocket, loadout).capacity - rocketBuilderStats(rocket, {}).capacity)
     expect(bonus.capacity).toBeGreaterThan(0)
-    const mission = { ...MISSIONS[0], requires: { ...MISSIONS[0].requires, cargo_min: rocketBuilderStats(rocket, loadout, []).capacity } }
+    const mission = { ...MISSIONS[0], requires: { ...MISSIONS[0].requires, cargo_min: rocketBuilderStats(rocket, loadout).capacity } }
     const target = TARGETS.find(t => t.id === 'mars')!
     const without = validateBuild({ mission, target, rocket })
     const withHold = validateBuild({ mission, target, rocket, loadoutBonus: bonus })

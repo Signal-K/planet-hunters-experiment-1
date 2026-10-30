@@ -22,109 +22,6 @@ state = "ui-launchpad"
 # preset.
 # ---------------------------------------------------------------------------------------------------------------
 
-[[things]]
-id = "no-mission"
-label = "Nothing chosen"
-group = "Mission"
-exclusive = "mission"
-default = true
-note = "The pad as a new program finds it."
-
-[[things]]
-id = "telescope-mission"
-label = "Launch the telescope"
-group = "Mission"
-exclusive = "mission"
-state = { missionId = "story-transit-telescope-launch", targetId = "earth-orbit-transit-telescope" }
-
-[[things]]
-id = "courier-mission"
-label = "Belt Courier Run"
-group = "Mission"
-exclusive = "mission"
-state = { missionId = "lnm_m3_relay_bennu_vesta", targetId = "bennu", deliveryTargetId = "vesta" }
-
-[[things]]
-id = "mining-mission"
-label = "Mine on your own"
-group = "Mission"
-exclusive = "mission"
-state = { missionId = "freeops-self-directed-mining", targetId = "eros" }
-
-[[things]]
-id = "rocket-on-pad"
-label = "Rocket on the pad"
-group = "On the pad"
-state = { player = { selectedStagedRocketId = "sandbox-rocket", stagedRockets = [{ id = "sandbox-rocket", rocketId = "prospector", rocket = { chassis = "hull-mk2", propulsion = "fusion-b2", drill = "laser-t2" }, location = "launchpad", source = "company", missionId = "story-transit-telescope-launch", targetId = "earth-orbit-transit-telescope" }] } }
-
-[[things]]
-id = "launch-sequence"
-label = "Launch sequence running"
-group = "On the pad"
-note = "The countdown and lift-off, as it plays when the player presses Launch."
-query = { launchscene = "1" }
-
-[[things]]
-id = "mission-in-progress"
-label = "Mission in progress"
-group = "On the pad"
-note = "Shows the resume and scrub callout."
-state = { player = { activeMission = { id = "lnm_m3_relay_bennu_vesta", label = "Belt Courier Run" }, missionPhase = "transit", transitStartedAt = "@now-5m", arrivalAt = "@now+1h" } }
-
-[[things]]
-id = "starter-ship"
-label = "Starter ship"
-group = "Ship"
-exclusive = "ship"
-default = true
-note = "Explorer: no parts fitted."
-
-[[things]]
-id = "tier-2-ship"
-label = "Tier 2 ship"
-group = "Ship"
-exclusive = "ship"
-state = { rocket = { chassis = "hull-mk2", propulsion = "fusion-b2", drill = "laser-t2" }, player = { shipCustomizerParts = { engine = "fusion-thruster-t2", booster = "strap-booster-t1", cockpit = "cockpit-command-t1", payload = "cargo-payload-t1", fuel-stage = "kerosene-stage-t1", fairing = "standard-fairing-t1" } } }
-
-[[things]]
-id = "tier-4-ship"
-label = "Tier 4 ship"
-group = "Ship"
-exclusive = "ship"
-state = { rocket = { chassis = "hull-mk3", propulsion = "ion-a3", drill = "plasma-t3" }, player = { shipCustomizerParts = { engine = "array-thruster-t4", booster = "vulcan-booster-t1", cockpit = "guidance-cockpit-t1", payload = "storage-silo-t4", fuel-stage = "lox-lh2-stage-t1", fairing = "heavy-fairing-t1", docking-port = "magnetic-port-t1", heat-shield = "ceramic-shield-t1" } } }
-
-[[presets]]
-id = "empty-pad"
-name = "Empty pad"
-things = ["no-mission", "starter-ship"]
-instructions = """
-Nothing on the pad and nothing chosen. The one action is to choose a mission, and it must be obvious which. The tower and
-hangar stand on the apron with no gap under them.
-"""
-
-[[presets]]
-id = "telescope-on-the-pad"
-name = "Telescope ready to launch"
-things = ["telescope-mission", "rocket-on-pad", "tier-2-ship"]
-instructions = """
-The first satellite launch, on the pad. The rocket stands in the gantry and the launch control reads as the one thing to
-press. The mission is the telescope: its name must not look like a client contract.
-"""
-
-[[presets]]
-id = "liftoff"
-name = "Lift-off"
-things = ["telescope-mission", "rocket-on-pad", "tier-2-ship", "launch-sequence"]
-instructions = """
-Lift-off. Flames, gantry, and the sky must all match the base (flat steppe, no mountains, no forest). Skip is always in
-reach. After the sequence the flight begins.
-"""
-
-# ---------------------------------------------------------------------------------------------------------------
-# Composition. Every visible or interactive part is either a game object or a UI element. The launchpad complex is a
-# reusable prefab instance; its parts remain explicit children so the Studio can reveal and inspect the assembly.
-# ---------------------------------------------------------------------------------------------------------------
-
 [[objects]]
 id = "world"
 kind = "world"
@@ -211,6 +108,19 @@ nativeAsset = "base/v7/launchpad/pad-scaffold.png"
 note = "Assembly animation uses the rocket frame for its welding path."
 
 [[objects]]
+id = "service-motion"
+kind = "structure"
+mechanics = ["rocket-assembly"]
+parent = "launchpad-complex"
+layout = "shared"
+space = "parent"
+rect = { x = 0, y = 0, w = 1, h = 1 }
+asset = "web/public/game/assets/base/v7/launchpad/pad-activity.png"
+nativeAsset = "base/v7/launchpad/pad-activity.png"
+components = ["LaunchTowerAnimation"]
+note = "Blender-authored moving service trolley, cable, arm and beacon layered over the permanent launch complex."
+
+[[objects]]
 id = "back-control"
 kind = "button"
 mechanics = ["mission-planning"]
@@ -242,3 +152,5 @@ slot = "primaryAction"
 label = "Launch"
 components = ["Clickable", "MissionLaunchAction"]
 bindings = { enabled = "missionId,player.selectedStagedRocketId" }
+
+# ---- fixtures: shared/authoring/fixtures/launchpad.toml (edit them here, they save to that file) ----

@@ -3,16 +3,16 @@ import type { BuildingLevels } from '@/lib/data/building-levels'
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
+import { addStamp } from '@/lib/research/stamps'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
-import { structureIsStaffed } from './AcademySystem'
 import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
-import { RESEARCH_BONUS_RATE, researchBonusActive } from '@/lib/research/stamps'
+import { permanentResearchSaleRate } from '@/lib/research/marketplace'
 import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 
@@ -62,7 +62,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -73,15 +73,18 @@ export function sellUnitPrice(
   // A published daily snapshot is authoritative. The old per-player supply
   // dip remains only as a compatibility fallback for saves created before the
   // shared daily economy exists.
-  const base = snapshotQuote?.price ?? openMarketSellPrice(meta.price, unitsSold)
+  // A player can always make an open-market sale, but the physical Exchange
+  // is what gives access to the full quoted price. Without it, the broker
+  // takes the open-market discount; both paths still respond to supply.
+  const exchangeBuilt = player.placed?.includes('market') ?? false
+  const base = snapshotQuote?.price ?? Math.round(meta.price * (exchangeBuilt ? 1 : OPEN_MARKET_SELL_RATE) * supplyDipMultiplier(unitsSold))
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
-  // SSL-673: the community research week pays a little more on every ore sale. Buy prices read the same
-  // quote without it (MarketplaceSystem.buyUnitPrice), so the bonus is never a buy-and-resell loop.
-  const bonusApplied = researchBonusActive(player, now)
+  const permanentRate = permanentResearchSaleRate(player)
+  const bonusApplied = permanentRate > 0
   return {
-    price: bonusApplied ? Math.round(quoted * (1 + RESEARCH_BONUS_RATE)) : quoted,
+    price: bonusApplied ? Math.round(quoted * (1 + permanentRate)) : quoted,
     base,
     premiumApplied,
     bonusApplied,
@@ -91,7 +94,7 @@ export function sellUnitPrice(
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchBonusUntil'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {
@@ -129,7 +132,7 @@ export function applySellMinerals(
   marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount
   if (stash[mineralId] <= 0) delete stash[mineralId]
-  return { ...s, player: { ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt } }
+  return { ...s, player: addStamp({ ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt }, 'exchange-sale', now) }
 }
 
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
@@ -222,52 +225,13 @@ export function applyFreeHaulDisposition(
   return applySellHaul(s, pickOverflowFromHaul(haul, overflow), now)
 }
 
-export function hasOperationalRemoteSilo(player: Pick<GameState['player'], 'clientStructures'>, targetId: string): boolean {
-  return !!targetId && (player.clientStructures ?? []).some(record =>
-    record.targetId === targetId && record.structureKind === 'mineral-silo' && record.state === 'operational'
-  )
-}
-
-/** Settle a self-directed haul at its mining destination before the return leg. */
-export function applyRemoteHaulDisposition(
-  s: GameState,
-  targetId: string,
-  haul: Record<string, number>,
-  disposition: 'store' | 'sell',
-  now: number = Date.now(),
-): GameState {
-  if (!hasOperationalRemoteSilo(s.player, targetId) || !Object.values(haul).some(amount => amount > 0)) {
-    return s
-  }
-  if (disposition === 'sell') {
-    const stash = { ...(s.player.stash ?? {}) }
-    for (const [id, amount] of Object.entries(haul)) stash[id] = (stash[id] ?? 0) + amount
-    const sold = applySellHaul({ ...s, player: { ...s.player, stash } }, haul, now)
-    return { ...sold, player: { ...sold.player, cargoSettledOffworld: true } }
-  }
-  const prior = s.player.remoteStorage?.[targetId] ?? {}
-  const used = storedUnits(prior)
-  const room = Math.max(0, REMOTE_MINERAL_SILO_CAPACITY - used)
-  const stored: Record<string, number> = { ...prior }
-  const overflow: Record<string, number> = {}
-  let remaining = room
-  for (const [id, amount] of Object.entries(haul)) {
-    const keep = Math.min(Math.max(0, amount), remaining)
-    if (keep > 0) stored[id] = (stored[id] ?? 0) + keep
-    if (amount > keep) overflow[id] = amount - keep
-    remaining -= keep
-  }
-  const overflowStash = { ...(s.player.stash ?? {}) }
-  for (const [id, amount] of Object.entries(overflow)) overflowStash[id] = (overflowStash[id] ?? 0) + amount
-  const sold = Object.keys(overflow).length > 0 ? applySellHaul({ ...s, player: { ...s.player, stash: overflowStash } }, overflow, now) : s
-  return { ...sold, player: { ...sold.player, cargoSettledOffworld: true, remoteStorage: { ...(sold.player.remoteStorage ?? {}), [targetId]: stored } } }
-}
 
 /** Sell collected refined goods at their recipe output value. */
 /** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
-export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchBonusUntil'>, now: number = Date.now()): number {
+export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchPermanentBonuses'>, now: number = Date.now()): number {
   const price = recipe.output.price
-  return researchBonusActive(player, now) ? Math.round(price * (1 + RESEARCH_BONUS_RATE)) : price
+  const rate = permanentResearchSaleRate(player)
+  return rate > 0 ? Math.round(price * (1 + rate)) : price
 }
 
 export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number, now: number = Date.now()): GameState {
@@ -276,11 +240,11 @@ export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amou
   if (quantity <= 0) return s
   return {
     ...s,
-    player: {
+    player: addStamp({
       ...s.player,
       francs: s.player.francs + refinedUnitPrice(recipe, s.player, now) * quantity,
       refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
-    },
+    }, 'exchange-sale', now),
   }
 }
 
@@ -302,7 +266,7 @@ export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameStat
       refineryQueue: [...s.player.refineryQueue, {
         recipeId: recipe.id,
         startedAt: Date.now(),
-        durationMs: recipe.time * 1000 * (structureIsStaffed(s.player, 'refinery') ? 0.75 : 1) * buildingTimeMultiplier(buildingLevel(s.player, 'refinery')),
+        durationMs: recipe.time * 1000 * buildingTimeMultiplier(buildingLevel(s.player, 'refinery')),
       }],
       refineryLastStartedAt: Date.now(),
     },
@@ -472,11 +436,10 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
 export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
-  if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
   const eventSiloFree = kind === 'surface-silo'
     && s.missionId === ORIONIDS_NIGHT_RUN_ID
     && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
-  if (!eventSiloFree && !structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone, academyResearched: s.player.academyResearched })) return s
+  if (!eventSiloFree && !structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone })) return s
   if (!eventSiloFree && s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
@@ -502,10 +465,6 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
       underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
-      academyFunded: kind === 'astronaut-academy' ? true : s.player.academyFunded,
-      crewUpkeepSettledDate: kind === 'astronaut-academy'
-        ? new Date().toISOString().slice(0, 10)
-        : s.player.crewUpkeepSettledDate,
     },
   }
 }

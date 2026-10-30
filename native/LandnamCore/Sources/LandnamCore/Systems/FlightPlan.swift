@@ -20,12 +20,12 @@ public enum FlightPlan {
     /// A patch advances with the real screen flow and becomes complete only
     /// when its corresponding game event records the try.
     public static func patchProgress(_ player: Player, screen: Screen, tryId: String) -> PatchProgress {
-        let total = tryId == "mining" ? 6 : 2
+        let total = tryId == "mining" ? 5 : 2
         if player.flightPlan.completed[tryId] == true { return PatchProgress(stitched: total, total: total) }
         guard player.flightPlan.currentTry == tryId else { return PatchProgress(stitched: 0, total: total) }
         let stitched: Int
         switch tryId {
-        case "mining": stitched = max(0, miningPosition(screen).0 - 1)
+        case "mining": stitched = max(0, miningPosition(player, screen).0 - 1)
         case "scan": stitched = screen == .galaxy ? 1 : 0
         case "part": stitched = screen == .hangar ? 1 : 0
         default: stitched = 0
@@ -33,7 +33,7 @@ public enum FlightPlan {
         return PatchProgress(stitched: min(stitched, total), total: total)
     }
 
-    /// What the coach strip shows: kicker ("MINING OPS · STEP 1/6"), the objective and the radio line, plus an
+    /// What the coach strip shows: kicker ("MINING OPS · STEP 1/5"), the objective and the radio line, plus an
     /// optional button that takes the player to the screen the step needs.
     public struct Coach: Equatable, Sendable {
         public let kicker: String
@@ -67,7 +67,7 @@ public enum FlightPlan {
     public static func coach(_ p: Player, screen: Screen, includeHidden: Bool = false) -> Coach? {
         guard (includeHidden || !p.flightPlan.hidden), let current = p.flightPlan.currentTry,
               let index = FlightPlanProgress.tryIds.firstIndex(of: current) else { return nil }
-        let position = current == "mining" ? miningPosition(screen) : (index + 1, FlightPlanProgress.tryIds.count)
+        let position = current == "mining" ? miningPosition(p, screen) : (index + 1, FlightPlanProgress.tryIds.count)
         let kicker = "\((tryLabels[current] ?? current).uppercased()) OPS · STEP \(position.0)/\(position.1)"
         func c(_ objective: String, _ radio: String, go: Coach.Go? = nil) -> Coach { Coach(kicker: kicker, objective: objective, radio: radio, go: go) }
         switch current {
@@ -81,15 +81,14 @@ public enum FlightPlan {
             }
             switch screen {
             case .missions: return c("Accept a mining contract", "A client order funds this first field run.")
-            case .fab, .rocketBuy: return c("Prepare the vehicle and launch", "Check the target, cargo and vehicle, then launch.")
-            case .targets: return c("Choose the highlighted target", "The target carries the mineral named by the order.")
-            case .roverSurvey: return c("Scout one outcrop, then continue to the ship laser", "The rover logs the surface. The ship laser extracts the order.")
+            // Target choice and the rover survey are not first-run stops (SSL-675).
+            case .fab, .rocketBuy, .targets, .roverSurvey: return c("Prepare the vehicle and launch", "Check the target, cargo and vehicle, then launch.")
             case .mining: return c("Fire the laser on a seam", "Wait for a coloured seam to pass beneath the fixed laser line.")
             case .debrief: return c("Close the mission debrief", "The first try is recorded when the order is settled.")
-            case .transit, .landing: return c("Fly the cargo home", "The order is only paid once the cargo reaches the debrief.")
-            case .delivery: return c("Deliver the cargo", "The order is only paid once the cargo reaches the debrief.")
+            // Flight and landing are one zero-tap sequence with no coach step (SSL-675).
+            case .transit, .landing, .delivery: return nil
             case .launchpad: return c("Open client contracts", "The first try is a complete mine-and-return run.", go: .init(label: "CONTRACTS", screen: .missions))
-            default: return c("Go back to the base and tap the tower", "Client contracts open from the tower.", go: .init(label: "BASE", screen: .hub))
+            default: return c("Tap the tower to open client contracts", "Client contracts open from the tower.", go: .init(label: "BASE", screen: .hub))
             }
         case "scan":
             if loopScreens.contains(screen) { return coachForLoop(p, screen, kicker) }
@@ -104,18 +103,16 @@ public enum FlightPlan {
         }
     }
 
-    /// Six milestones in the real mining loop: take a client order, prepare,
-    /// choose a target, scout, fire the laser, then settle the cargo at home.
-    /// The laser is therefore 5/6, not the superseded 2/6 concept placement.
-    private static func miningPosition(_ screen: Screen) -> (Int, Int) {
+    /// Five stops on the first-run spine: place the pad, take a contract, launch,
+    /// mine, debrief. Flight and landing carry no coach step.
+    private static func miningPosition(_ p: Player, _ screen: Screen) -> (Int, Int) {
+        if !p.placed.contains("launchpad") { return (1, 5) }
         switch screen {
-        case .intro, .build, .hub, .launchpad, .missions: return (1, 6)
-        case .rocketBuy, .fab: return (2, 6)
-        case .targets: return (3, 6)
-        case .roverSurvey: return (4, 6)
-        case .mining: return (5, 6)
-        case .debrief, .transit, .landing, .delivery: return (6, 6)
-        default: return (1, 6)
+        case .intro, .build: return (1, 5)
+        case .rocketBuy, .fab, .targets, .roverSurvey: return (3, 5)
+        case .mining: return (4, 5)
+        case .debrief: return (5, 5)
+        default: return (2, 5)
         }
     }
 

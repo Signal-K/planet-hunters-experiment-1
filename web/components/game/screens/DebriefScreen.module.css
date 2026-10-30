@@ -1,21 +1,24 @@
+/* Debrief in the two-tone mission style (Community research, the ORI-1 receiver): the destination
+   landscape behind, what the flight did on the left (indigo), settling up on the right (teal). */
 :global(.debrief-game).screen {
-  background: var(--ln-blueprint-bg) !important;
+  background: #0f1426 !important;
 }
 
 .screen {
-  --ln-text: var(--ln-blueprint-ink);
-  --ln-text-dim: var(--ln-blueprint-ink);
-  --ln-text-muted: var(--ln-blueprint-blue);
-  --ln-panel: var(--ln-world-hull-lit);
-  --ln-panel-2: var(--ln-world-hull-lit);
-  --ln-cyan: var(--ln-blueprint-blue);
-  --ln-bp-ink: var(--ln-blueprint-ink);
-  --ln-bp-paper: var(--ln-world-hull-lit);
+  --db-paper: #f4efe4;
+  --db-muted: #c9d0c2;
+  --db-accent: #9de7ef;
+  --db-gold: #f2c24c;
+  --db-ink: #142840;
+  --db-well: rgba(8, 16, 34, .3);
+  --ln-text: var(--db-paper);
+  --ln-text-dim: var(--db-muted);
+  --ln-text-muted: var(--db-muted);
   position: absolute;
   inset: 0;
   overflow: hidden;
-  color: var(--ln-blueprint-ink);
-  background: var(--ln-blueprint-bg);
+  color: var(--db-paper);
+  background: #0f1426;
 }
 
 .vista {
@@ -43,113 +46,100 @@
   pointer-events: auto;
 }
 
-.cluster button {
-  min-width: 44px;
-  min-height: 44px;
-  display: grid;
-  place-items: center;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-blueprint-ink);
-  border: 2px solid var(--ln-blueprint-ink);
-}
-
+.cluster button,
 .cluster :global(.scene-chip) {
   min-width: 44px;
   min-height: 44px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-blueprint-ink);
-  border: 2px solid var(--ln-blueprint-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 2px solid #34363c;
+  border-radius: 999px;
+  background: rgba(22, 23, 26, .78);
+  color: #ecebe8;
 }
 
-.column {
+.workspace {
   position: absolute;
   z-index: 8;
-  top: 88px;
-  right: 24px;
-  bottom: 108px;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: rgba(16, 24, 44, .3);
+}
+
+.story,
+.settle {
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  width: min(440px, calc(100% - 48px));
+  gap: 14px;
   overflow-y: auto;
-  padding-bottom: 8px;
+  padding: 84px clamp(16px, 4vw, 48px) 24px;
 }
+
+.story { grid-row: 1 / -1; justify-content: center; background: rgba(60, 44, 118, .62); }
+.settle { justify-content: flex-start; padding-bottom: 12px; background: rgba(22, 104, 148, .58); }
+/* Settling up sits just above the buttons; an auto margin (not flex-end) keeps an overflowing half scrollable to its top. */
+.settle > :first-child { margin-top: auto; }
+.story > *,
+.settle > * { flex: 0 0 auto; width: 100%; max-width: 480px; align-self: center; }
 
 .card,
 .screen :global(.debrief-result-panel) {
   box-sizing: border-box;
   margin: 0;
-  padding: 28px;
-  border: 3px solid var(--ln-blueprint-ink) !important;
-  border-radius: 0 !important;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-blueprint-ink) !important;
-  box-shadow: inset 0 6px 0 var(--ln-blueprint-blue) !important;
+  padding: 16px 18px;
+  border: 1px solid rgba(244, 239, 228, .3) !important;
+  border-radius: 18px !important;
+  background: var(--db-well) !important;
+  color: var(--db-paper) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1) !important;
 }
 
 .link {
-  display: inline-block;
-  margin-top: 8px;
-  color: var(--ln-blue);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+  color: var(--db-accent);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.screen :global(.debrief-result-panel) {
-  width: 100%;
-  pointer-events: auto;
-}
-
+.screen :global(.debrief-result-panel) { width: 100%; pointer-events: auto; }
 .screen :global(.debrief-result-panel__title),
 .screen :global(.debrief-result-panel__outcome),
 .screen :global(.debrief-result-panel__note),
 .screen :global(.debrief-result-panel__kicker),
-.screen :global(.debrief-result-panel) {
-  color: var(--ln-blueprint-ink) !important;
-}
-
-.screen :global(.debrief-result-panel__status) {
-  color: var(--ln-blueprint-blue);
-}
-
-.screen :global(.debrief-result-panel__status span) {
-  border-radius: 0;
-  background: var(--ln-blueprint-blue);
-}
+.screen :global(.debrief-result-panel) { color: var(--db-paper) !important; }
+.screen :global(.debrief-result-panel__status) { color: var(--db-accent); }
+.screen :global(.debrief-result-panel__status span) { border-radius: 50%; background: #6fe39a; }
 
 .status {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 20px;
-  color: var(--ln-blueprint-blue);
-  font-family: var(--ln-font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin: 0 0 12px;
+  color: var(--db-accent);
+  font: 800 14px/1.2 var(--ln-font-body);
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 
-.status i {
-  width: 8px;
-  height: 8px;
-  flex: 0 0 auto;
-  background: var(--ln-blueprint-blue);
-}
-
-.statusCrit {
-  color: var(--ln-crimson);
-}
-
-.statusCrit i {
-  background: var(--ln-crimson);
-}
+.status i { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: #6fe39a; box-shadow: 0 0 8px #6fe39a; }
+.statusCrit { color: #ffb3a7; }
+.statusCrit i { background: #e23d3d; box-shadow: none; }
 
 .route {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+  gap: 20px;
 }
 
 .kicker,
@@ -157,11 +147,9 @@
 .netLabel {
   display: block;
   margin: 0;
-  color: var(--ln-blueprint-blue);
-  font-family: var(--ln-font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  color: var(--db-muted);
+  font: 800 14px/1.2 var(--ln-font-body);
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 
@@ -169,173 +157,143 @@
 .route strong,
 .place {
   display: block;
-  margin: 8px 0 0;
-  color: var(--ln-blueprint-ink);
-  font-family: var(--ln-font-display);
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1.25;
-  text-transform: uppercase;
+  margin: 6px 0 0;
+  color: var(--db-paper);
+  font: 800 22px/1.15 var(--ln-font-display);
 }
 
-.place {
-  margin-top: 16px;
-  font-size: 18px;
-}
+.place { margin-top: 12px; font-size: 18px; }
 
 .row {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid color-mix(in srgb, var(--ln-blueprint-ink) 18%, transparent);
-  color: var(--ln-blueprint-ink);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(244, 239, 228, .2);
+  color: var(--db-paper);
   font-size: 14px;
 }
 
-.row span:first-child {
-  font-family: var(--ln-font-display);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.row span:last-child {
-  font-family: var(--ln-font-mono);
-  font-weight: 700;
-  text-align: right;
-}
+.row span:first-child { font: 700 14px/1.2 var(--ln-font-body); color: var(--db-muted); }
+.row span:last-child { font: 700 14px/1.2 var(--ln-font-mono); text-align: right; }
 
 .netLine {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(244, 239, 228, .2);
 }
 
-.net {
-  color: var(--ln-blueprint-blue);
-  font-family: var(--ln-font-display);
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1;
-}
+.net { color: var(--db-gold); font: 800 30px/1 var(--ln-font-display); }
 
 .note {
-  margin: 16px 0 0;
-  color: var(--ln-blueprint-ink);
-  font-family: var(--ln-font-body);
-  font-size: 14px;
-  line-height: 1.45;
+  margin: 10px 0 0;
+  color: var(--db-paper);
+  font: 600 15px/1.4 var(--ln-font-body);
 }
 
-.action {
-  margin-top: 20px;
-}
+.action { margin-top: 14px; }
 
 .card :global(button),
 .action :global(button) {
   width: 100%;
   min-height: 48px;
-  border: 2px solid var(--ln-blueprint-ink) !important;
-  border-radius: 0 !important;
-  background: var(--ln-blueprint-blue) !important;
-  color: var(--ln-world-hull-lit) !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+  background: var(--db-paper) !important;
+  color: var(--db-ink) !important;
+  font: 800 14px/1 var(--ln-font-display) !important;
+  letter-spacing: .08em;
   box-shadow: none !important;
 }
 
 .card :global(button:disabled),
-.action :global(button:disabled) {
-  background: var(--ln-blueprint-paper-2) !important;
-  color: var(--ln-blueprint-ink) !important;
-}
+.action :global(button:disabled) { opacity: .5; }
 
 .bar {
   display: flex;
   height: 12px;
-  margin-top: 12px;
+  margin-top: 10px;
   overflow: hidden;
-  border: 1px solid var(--ln-blueprint-ink);
-  background: var(--ln-blueprint-paper-2);
+  border-radius: 6px;
+  background: rgba(8, 16, 34, .45);
 }
 
-.bar span {
-  display: block;
-  height: 100%;
-  background: var(--ln-blueprint-blue);
-}
+.bar span { display: block; height: 100%; background: var(--db-accent); }
+.bar span:first-child { opacity: .5; }
 
-.bar span:first-child {
-  opacity: 0.45;
-}
-
+/* The two ways out sit at the foot of the settle-up half: a quiet outline and the cream call to action. */
 .dock {
-  position: absolute;
-  z-index: 12;
-  bottom: 16px;
-  left: 50%;
-  display: flex;
-  gap: 8px;
-  width: max-content;
-  max-width: calc(100% - 24px);
-  padding: 8px;
-  transform: translateX(-50%);
-  border: 3px solid var(--ln-blueprint-ink);
-  background: var(--ln-world-hull-lit);
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 10px;
+  padding: 0 max(clamp(16px, 4vw, 48px), calc((100% - 480px) / 2)) 20px;
+  background: rgba(22, 104, 148, .58);
 }
 
 .dock :global(button) {
-  min-width: 148px;
-  min-height: 48px;
-  border: 2px solid var(--ln-blueprint-ink) !important;
-  border-radius: 0 !important;
-  background: var(--ln-world-hull-lit) !important;
-  color: var(--ln-blueprint-ink) !important;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 12px;
+  border: 2px solid rgba(244, 239, 228, .7) !important;
+  border-radius: 4px !important;
+  background: rgba(8, 16, 34, .25) !important;
+  color: var(--db-paper) !important;
+  font: 800 14px/1.15 var(--ln-font-display) !important;
+  letter-spacing: .08em;
   box-shadow: none !important;
 }
 
 .dock :global([data-testid="collect-reward-btn"]) {
-  background: var(--ln-blueprint-blue) !important;
-  color: var(--ln-world-hull-lit) !important;
+  border-color: var(--db-paper) !important;
+  background: var(--db-paper) !important;
+  color: var(--db-ink) !important;
 }
 
-@media (max-width: 800px) and (orientation: portrait) {
-  .column {
-    top: 40%;
-    right: 16px;
-    bottom: 96px;
-    left: 16px;
-    gap: 20px;
-    width: auto;
-  }
+.dock :global([data-testid="collect-reward-btn"]):only-child { grid-column: 1 / -1; }
 
-  .card,
-  .screen :global(.debrief-result-panel) {
-    padding: 24px;
-  }
-}
+/* SSL-714: the Orionids story item each mission hands over, and ORI-1 going up after the rover mission. */
+.storyItem,
+.launch { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 10px; }
+.storyItem strong,
+.launch strong { color: var(--db-paper); font: 800 20px/1.15 var(--ln-font-display); }
+.storyItem .note,
+.launch .note { margin-top: 4px; }
+.storyIcon { display: grid; place-items: center; width: 60px; height: 60px; border: 2px solid var(--db-gold); border-radius: 18px; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .12), transparent 45%), #10182c; color: var(--db-gold); }
+.storyIcon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.launchArt { width: 96px; height: 64px; overflow: visible; }
+.launchTrail { fill: none; stroke: var(--db-gold); stroke-width: 3; stroke-dasharray: 4 5; animation: launch-trail 1.4s linear infinite; }
+.launchCraft { fill: none; stroke: var(--db-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; animation: launch-rise 2.4s ease-in-out infinite alternate; }
+@keyframes launch-trail { to { stroke-dashoffset: -18; } }
+@keyframes launch-rise { from { transform: translateY(6px); } to { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .launchTrail, .launchCraft { animation: none; } }
 
+/* Phone landscape: tighter so both halves fit without much scrolling. */
 @media (orientation: landscape) and (max-height: 520px) {
   .hud { inset: 8px 12px auto; }
-  .column {
-    top: 64px;
-    right: 12px;
-    bottom: 84px;
-    gap: 16px;
-    width: min(380px, 48vw);
-  }
+  .story, .settle { gap: 10px; padding: 64px 16px 12px; }
+  .story { justify-content: flex-start; }
+  .card, .screen :global(.debrief-result-panel) { padding: 12px 14px; }
+  .title, .route strong { font-size: 18px; }
+  .net { font-size: 24px; }
+  .route { gap: 12px; }
+  .note { font-size: 14px; }
+  .storyIcon { width: 48px; height: 48px; }
+  .launchArt { width: 72px; height: 48px; }
+  .dock { padding: 0 16px 10px; }
+  .dock :global(button) { min-height: 48px; }
+}
 
-  .card,
-  .screen :global(.debrief-result-panel) {
-    padding: 20px;
-  }
-
-  .title,
-  .route strong { font-size: 18px; }
-  .net { font-size: 26px; }
-  .route { gap: 16px; }
+/* Phone portrait: the story on top, settling up below, one scrolling column. */
+@media (max-width: 800px) and (orientation: portrait) {
+  .workspace { display: block; overflow-y: auto; }
+  .story, .settle { min-height: auto; overflow: visible; justify-content: flex-start; padding: 16px; }
+  .story { padding-top: 76px; }
+  /* The way out stays in reach while the cards scroll under it. */
+  .dock { position: sticky; z-index: 2; bottom: 0; padding: 10px 16px 14px; background: rgba(22, 82, 118, .96); box-shadow: 0 -6px 18px rgba(8, 16, 34, .35); }
 }

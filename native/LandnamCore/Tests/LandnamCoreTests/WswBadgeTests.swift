@@ -25,6 +25,23 @@ import Foundation
         #expect(b["wsw-2026-citizen-science"]?.tier == .silver)
     }
 
+    @Test func runStartedInsideEventKeepsGoldWithinGrace() {
+        let started = ms("2026-10-10T22:00:00Z"), finished = ms("2026-10-11T03:00:00Z")
+        var b: [String: PlayerBadge] = [:]
+        WswBadges.grant(&b, .roverSurfaceOps, at: finished)
+        #expect(b["wsw-2026-rover-surface-ops"]?.tier == .silver)
+        b = [:]
+        WswBadges.grant(&b, .roverSurfaceOps, at: finished, startedAt: started)
+        #expect(b["wsw-2026-rover-surface-ops"]?.tier == .gold)
+        #expect(b["wsw-2026-rover-surface-ops"]?.earnedAt == finished)
+        b = [:]
+        WswBadges.grant(&b, .roverSurfaceOps, at: ms("2026-10-14T03:00:00Z"), startedAt: started)
+        #expect(b["wsw-2026-rover-surface-ops"]?.tier == .silver)
+        b = [:]
+        WswBadges.grant(&b, .roverSurfaceOps, at: ms("2026-10-04T02:00:00Z"), startedAt: ms("2026-10-03T22:00:00Z"))
+        #expect(b["wsw-2026-rover-surface-ops"]?.tier == .gold)
+    }
+
     @Test func classifiesMissions() {
         #expect(WswBadges.type(for: nil, freeOperations: false) == .onboardingRelay)
         #expect(WswBadges.type(for: nil, freeOperations: true) == .miningFreeOps)

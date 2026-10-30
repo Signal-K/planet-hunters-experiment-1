@@ -25,6 +25,14 @@ public struct BaseSiteMap: Decodable, Sendable {
             return left + width / 2 - body / 2
         }
     }
+    public struct ApronProp: Decodable, Sendable {
+        public let id: String, src: String
+        public let x: Double, width: Double, height: Double, lift: Double
+    }
+    public struct OperationsApron: Decodable, Sendable {
+        public let after: String
+        public let props: [ApronProp]
+    }
     public struct Site: Decodable, Sendable, Identifiable {
         public let id: String
         public let x: Double, half: Double
@@ -43,6 +51,7 @@ public struct BaseSiteMap: Decodable, Sendable {
     public let kitScale: KitScale
     public let ground: Ground
     public let structures: [String: Structure]
+    public let operationsApron: OperationsApron?
     public let sites: [Site]
     public let sky: Sky
 
@@ -51,7 +60,8 @@ public struct BaseSiteMap: Decodable, Sendable {
     /// Points per kit unit: portrait fits the hangar and pad across the width (1.5 to 2); landscape 2 under 600 pt tall, else 3.
     public func scale(w: Double, h: Double) -> Double {
         if h > w * 1.15 { return (min(kitScale.phone, max(kitScale.portraitMin, w / kitScale.portraitFit)) * 100).rounded() / 100 }
-        return h < kitScale.largeMinHeight ? kitScale.phone : kitScale.large
+        let preferred = h < kitScale.largeMinHeight ? kitScale.phone : kitScale.large
+        return (min(preferred, w / 460) * 100).rounded() / 100
     }
 
     public func structure(_ kind: String) -> Structure? { structures[kind == "garage" ? "hangar" : kind] }

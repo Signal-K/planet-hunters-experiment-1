@@ -1,0 +1,20 @@
+/* KES-283 storage gate, in the two-tone mission style (Community research, the ORI-1 receiver):
+   a dark rounded panel with two choice tiles, before a free run starts. */
+.overlay { position: absolute; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4, 10, 20, .62); }
+.gate { width: min(100%, 420px); display: grid; gap: 8px; padding: 18px 20px 20px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 22px; background: linear-gradient(160deg, rgba(60, 44, 118, .94), rgba(22, 104, 148, .94)); color: #f4efe4; text-align: center; box-shadow: 0 12px 32px rgba(4, 10, 20, .5), inset 0 1px 0 rgba(255, 255, 255, .12); }
+.eyebrow { color: #9de7ef; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
+.gate h2 { margin: 0; font: 800 24px/1.1 var(--ln-font-display); }
+.gate p { margin: 0 0 6px; color: #e6e1d6; font: 600 15px/1.35 var(--ln-font-body); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice { min-height: 112px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; border: 2px solid rgba(244, 239, 228, .35); border-radius: 16px; background: rgba(8, 16, 34, .3); color: #f4efe4; cursor: pointer; transition: background .12s ease, border-color .12s ease, transform .08s ease; }
+.choice:hover:not(:disabled), .choice:focus-visible { border-color: #58d0ea; background: rgba(88, 208, 234, .18); outline: none; }
+.choice:active:not(:disabled) { transform: translateY(1px); }
+.choice:disabled { opacity: .5; cursor: not-allowed; }
+.choice svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.choice b { font: 800 15px/1.1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.choice small { color: #c9d0c2; font: 700 14px/1.1 var(--ln-font-body); }
+@media (max-height: 520px) {
+  .gate { padding: 14px 16px 16px; gap: 6px; }
+  .gate h2 { font-size: 20px; }
+  .choice { min-height: 92px; }
+}

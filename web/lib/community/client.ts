@@ -1,36 +1,15 @@
-// SSL-320 community client: hub feed, shares, reactions, comments and the
-// read-only world visit. Every call goes through the Landnam PocketBase
-// `/api/community` routes (pocketbase/community.go), which apply the
-// friend/public visibility filter server-side.
+// Community reads from the Landnam PocketBase `/api/community` routes: the
+// read-only friend world visit and this month's community research total.
 
 import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
-import { getOutbox } from '@/lib/offline/pbOutbox'
-import { newRecordId } from '@/lib/offline/outbox'
-import type { HubChannel, ReportReason, ShareComment, SharePost, ShareVisibility, ShareKind } from '@/lib/data/community'
-import type { FieldStructureRecord } from '@/lib/game-types'
-import type { BiosphereSeed, TerritoryClaim } from '@/lib/data'
 import type { CommunityResearch } from '@/lib/research/stamps'
 
 export interface FriendWorldSnapshot {
   username: string
   readOnly: true
-  fieldStructures?: Record<string, FieldStructureRecord[]>
-  territoryClaims?: TerritoryClaim[]
-  biosphereSeeds?: Record<string, BiosphereSeed>
   /** Keyed by target id; the host's saved Target records (only id/name are read by visitors). */
   discoveredExoplanetTargets?: Record<string, { id: string; name: string }>
-}
-
-export interface ShareInput {
-  kind: ShareKind
-  programmeId: string
-  title: string
-  summary?: string
-  visibility?: ShareVisibility
-  targetId?: string
-  divisionId?: string
-  snapshot?: Record<string, unknown>
 }
 
 class CommunityApiError extends Error {
@@ -39,71 +18,16 @@ class CommunityApiError extends Error {
   }
 }
 
-function baseUrl(): string {
-  return landnamPbUrl().replace(/\/$/, '')
-}
-
-async function communityFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function communityFetch<T>(path: string): Promise<T> {
   const token = pbLandnam.authStore.token
-  const res = await fetch(`${baseUrl()}/api/community${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
+  const res = await fetch(`${landnamPbUrl().replace(/\/$/, '')}/api/community${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
   })
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
     throw new CommunityApiError(body?.message || body?.error || `community request failed: ${res.status}`, res.status)
   }
   return body as T
-}
-
-export function fetchHubFeed(channel?: HubChannel): Promise<{ posts: SharePost[] }> {
-  return communityFetch(`/feed${channel ? `?channel=${encodeURIComponent(channel)}` : ''}`)
-}
-
-/**
- * SSL-321: writes that fail because the device is offline are queued in the
- * outbox (with a client id the server dedupes on) and surface as a status-0
- * error the UI can present as "will post when you are back online".
- */
-async function communityWrite<T>(path: string, body: Record<string, unknown>): Promise<T> {
-  const id = newRecordId()
-  try {
-    return await communityFetch<T>(path, { method: 'POST', body: JSON.stringify({ ...body, id }) })
-  } catch (error) {
-    if (error instanceof CommunityApiError) throw error
-    void getOutbox().enqueue({ type: 'http', path: `/api/community${path}`, method: 'POST', body: { ...body, id } })
-    throw new CommunityApiError('You are offline. This will be sent when you reconnect.', 0)
-  }
-}
-
-export function publishShare(input: ShareInput): Promise<{ post: SharePost }> {
-  return communityWrite('/share', { ...input })
-}
-
-export function reactToShare(postId: string, reaction: 'signal' | 'build'): Promise<{ post: SharePost }> {
-  return communityFetch('/react', { method: 'POST', body: JSON.stringify({ postId, reaction }) })
-}
-
-export function fetchShareComments(postId: string): Promise<{ comments: ShareComment[] }> {
-  return communityFetch(`/comments/${encodeURIComponent(postId)}`)
-}
-
-export function postShareComment(postId: string, body: string): Promise<{ comment: ShareComment }> {
-  return communityWrite('/comment', { postId, body })
-}
-
-/** Report a comment once with a fixed reason. The server hides it at the threshold. */
-export function reportShareComment(commentId: string, reason: ReportReason): Promise<{ reportCount: number; hidden: boolean }> {
-  return communityWrite('/report', { commentId, reason })
-}
-
-/** Remove a comment you wrote, or any comment on a post you own. */
-export function removeShareComment(commentId: string): Promise<{ removed: true }> {
-  return communityFetch(`/comment/${encodeURIComponent(commentId)}/remove`, { method: 'POST' })
 }
 
 /** Read-only visit to a friend's world. The server refuses non-friends and never exposes a write path. */

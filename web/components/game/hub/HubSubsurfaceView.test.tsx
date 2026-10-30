@@ -20,12 +20,31 @@ describe('HubSubsurfaceView', () => {
 
     expect(markup).toContain('data-testid="hub-subsurface-view"')
     expect(markup).toContain('data-testid="subsurface-surface-continuation"')
-    expect(markup).toContain('Unexcavated')
+    expect(markup).toContain('Bedrock')
     expect(markup).toContain('data-testid="subsurface-excavate-prompt"')
     expect(markup).toContain('data-testid="subsurface-excavate-cta"')
-    expect(markup).toContain('surface plot')
+    expect(markup).toContain('EXCAVATE')
     expect(markup).not.toContain('data-testid="subsurface-facility-cutaway"')
     expect(markup).not.toContain('Commodity Exchange')
+  })
+
+  it('shows the combined Earth allowance and crafting stub in a dug-out vault', () => {
+    const container = document.createElement('div')
+    const root = createRoot(container)
+    act(() => root.render(<HubSubsurfaceView
+      placed={['surface-silo']}
+      buildingLevels={{ 'surface-silo': 1 }}
+      subsurfaceExcavated
+      subsurfaceBuilt={['mineral-vault']}
+      francs={500_000_000}
+      stash={{ iron: 20 }}
+    />))
+    act(() => (container.querySelector('[data-testid="subsurface-room-mineral-vault"]') as HTMLElement).click())
+    const markup = container.innerHTML
+    expect(markup).toContain('data-testid="subsurface-storage-allowance"')
+    expect(markup).toContain('SILOS ONLINE')
+    expect(markup).toContain('data-testid="subsurface-crafting-stub"')
+    act(() => root.unmount())
   })
 
   it('renders the facility cutaway once excavated, with unbuilt rooms locked behind a build cost', () => {
@@ -42,13 +61,11 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
-    expect(markup).toContain('Build storage below the fixed surface base')
+    expect(markup).toContain('Subsurface storage cutaway')
+    expect(markup).toContain('/game/assets/base/subsurface_shaft.png')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
     expect(markup).toContain('data-testid="subsurface-room-parts-locker"')
-    expect(markup).toContain('data-testid="subsurface-room-habitat-training"')
-    expect(markup).toContain('Unbuilt')
-    expect(markup).toContain('Coming soon')
-    expect(markup).toContain('LOCKED')
+    expect(markup).toContain('UNBUILT')
     expect(markup).not.toContain('Commodity Exchange')
   })
 
@@ -61,8 +78,9 @@ describe('HubSubsurfaceView', () => {
         subsurfaceBuilt={['mineral-vault']}
       />,
     )
-    expect(markup).toContain('12 mineral units')
-    expect(markup).toContain('Online')
+    expect(markup).toContain('12 U')
+    expect(markup).toContain('ONLINE')
+    expect(markup).toContain('/game/assets/base/subsurface_vault.png')
   })
 
   it('sorts positive mineral inventory by stored amount', () => {
