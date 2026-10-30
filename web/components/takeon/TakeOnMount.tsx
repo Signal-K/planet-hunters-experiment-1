@@ -36,6 +36,10 @@ export interface TakeOnFieldOrder {
   pos: { x: number; y: number }
 }
 
+const TAKEON_KEY_DIR: Record<string, 0 | 1 | 2 | 3> = {
+  arrowright: 0, d: 0, arrowdown: 1, s: 1, arrowleft: 2, a: 2, arrowup: 3, w: 3,
+}
+
 export type TakeOnBlockedReason = 'cliff' | 'battery' | 'edge' | 'busy'
 
 export interface TakeOnRoverPose {
@@ -201,6 +205,53 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   const targetId = target?.id
   const targetRef = useRef(target)
   targetRef.current = target
+
+  // Takeon's own canvas Controls never receive keys inside Landnam (the E drill key did nothing either), so
+  // the arrow keys looked broken. Landnam drives the rover from the keyboard itself, with Takeon's key map:
+  // arrows/WASD drive (a held key keeps driving), E or Space drills, X scans. A duplicate press from Takeon's
+  // Controls, if they ever do fire, is refused as "busy" by the simulation, so it cannot double-move.
+  useEffect(() => {
+    if (readOnly) return
+    const held = new Set<string>()
+    const ignore = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return true
+      const tag = (event.target as HTMLElement | null)?.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (ignore(event)) return
+      const game = gameRef.current
+      if (!game) return
+      const key = event.key.toLowerCase()
+      const dir = TAKEON_KEY_DIR[key]
+      if (dir !== undefined) {
+        event.preventDefault()
+        if (!held.has(key)) game.move(dir)
+        held.add(key)
+        return
+      }
+      if (event.repeat) return
+      if (key === 'e' || key === ' ') { event.preventDefault(); game.mine() }
+      else if (key === 'x') game.scan()
+    }
+    const onKeyUp = (event: KeyboardEvent) => { held.delete(event.key.toLowerCase()) }
+    const onBlur = () => held.clear()
+    // A held key keeps driving, one step attempt every 90 ms (Takeon's own repeat rate).
+    const repeat = window.setInterval(() => {
+      const game = gameRef.current
+      if (!game) return
+      for (const key of held) game.move(TAKEON_KEY_DIR[key])
+    }, 90)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.clearInterval(repeat)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [readOnly])
 
   useImperativeHandle(ref, () => ({
     deposit: () => gameRef.current?.deposit() ?? 0,

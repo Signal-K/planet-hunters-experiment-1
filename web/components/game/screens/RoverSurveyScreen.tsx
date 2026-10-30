@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defaultSpec } from '@takeon/engine'
 import type { Mission, SurfaceTarget, Target } from '@/lib/data'
 import { lifeStageForTarget } from '@/lib/data'
@@ -11,7 +11,7 @@ import { openSettings } from '@/lib/mining/openChrome'
 import { captureGameEvent } from '@/lib/posthog'
 import type { TakeonHostEvent } from '@/lib/takeon/events'
 import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
-import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
+import TakeOnMount, { type TakeOnBlockedReason, type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { DockWordButton } from '@/components/game/hub/BaseDock'
 import styles from './RoverSurveyScreen.module.css'
@@ -50,6 +50,14 @@ interface RoverSurveyScreenProps {
 }
 
 const ORIONIDS_ROVER_FORMATION_GOAL = 3
+
+// A refused drive used to be silent, so the arrow keys looked broken. Say why the rover did not move.
+// "busy" is left out: a held arrow key repeats faster than one step takes, and every early repeat is refused as busy.
+const BLOCKED_NOTE: Partial<Record<TakeOnBlockedReason, string>> = {
+  cliff: 'Too steep to drive there. Try another way.',
+  edge: 'That is the edge of the survey area.',
+  battery: 'Battery flat. The rover cannot drive or drill.',
+}
 
 /** Takeon's own field, full screen. The rover surveys, and (SSL-718) drills the rock ahead into its hold. */
 export default function RoverSurveyScreen({ mission, target, onComplete, onBack, player }: RoverSurveyScreenProps) {
@@ -103,6 +111,11 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
     setMineNote(null)
     takeonHandle.current?.scan()
   }, [ready, goal])
+
+  useEffect(() => {
+    if (!ready) return
+    return takeonHandle.current?.onBlocked(reason => { const note = BLOCKED_NOTE[reason]; if (note) setMineNote(note) })
+  }, [ready])
 
   const mine = useCallback(() => {
     if (!ready) return
