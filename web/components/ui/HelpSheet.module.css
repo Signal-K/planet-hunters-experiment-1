@@ -5,6 +5,8 @@
   /* Doubled class: `.ln-scene-panel > :not(...)` sets position: relative on a scene's direct children and would pin the sheet in flow behind the screen. */
   position: fixed;
   inset: 0;
+  /* Installed app: the desktop side panel starts below the iOS status bar. */
+  padding-top: env(safe-area-inset-top, 0px);
   z-index: 70;
   background: rgba(15, 36, 54, 0.32);
   display: flex;

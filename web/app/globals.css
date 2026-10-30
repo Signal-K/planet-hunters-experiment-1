@@ -571,6 +571,8 @@ body[data-pwa="standalone"]::before {
      fullscreen display modes and short landscape phones use dvh so the
      playfield takes every pixel the browser chrome gives back. */
   --app-h: 100svh;
+  /* Status bar plus home indicator: what the body pads off the app height. */
+  --safe-y: calc(env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
   --tutorial-content-top: 238px;
   --tutorial-manual-content-top: 248px;
 }
@@ -600,7 +602,7 @@ body[data-pwa="standalone"]::before {
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
-  min-height: var(--app-h);
+  min-height: calc(var(--app-h) - var(--safe-y));
   display: grid;
   place-items: center;
   padding: var(--ln-s-4);
@@ -2965,7 +2967,7 @@ body[data-pwa="standalone"]::before {
   .portrait-canvas.portrait-canvas--full-page {
     width: 100%;
     max-width: none;
-    height: 100dvh;
+    height: calc(100dvh - var(--safe-y));
     max-height: none;
     border: 0;
     border-radius: 0;
