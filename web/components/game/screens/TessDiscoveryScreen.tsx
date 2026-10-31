@@ -35,13 +35,13 @@ interface TessDiscoveryScreenProps {
 
 const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body: string }> = {
   planet: {
-    status: 'TRANSIT CONFIRMED',
-    title: 'Transit confirmed',
+    status: 'SUBMITTED · TRANSIT',
+    title: 'Classification submitted: transit',
     body: 'You marked a repeating dip in a star\'s light: the shadow of a planet crossing it. Once your Space Telescope is in orbit, real candidates arrive here every day and your verdicts go to Exoplanet Hunters.',
   },
   not_planet: {
-    status: 'MARKED NOISE',
-    title: 'Marked as noise',
+    status: 'SUBMITTED · NOISE',
+    title: 'Classification submitted: noise',
     body: 'You ruled out a dip that is not a transit. Ruling out noise is half the job: real candidates arrive here every day once your Space Telescope is in orbit.',
   },
   unsure: {
@@ -52,8 +52,8 @@ const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body
 }
 
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
-  { id: 'planet', label: 'Confirm Transit', requiresMark: true },
-  { id: 'not_planet', label: 'Mark Noise', requiresMark: true },
+  { id: 'planet', label: 'Submit · Transit', requiresMark: true },
+  { id: 'not_planet', label: 'Submit · Noise', requiresMark: true },
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
@@ -261,7 +261,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       onBack={onBack}
       help={help.button}
       helpLayer={help.layer}
-      status={classification ? 'ANNOTATION SAVED' : 'REVIEW'}
+      status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       onCommand={onCommand}
       devBar={devBar}
       caption={(
@@ -320,7 +320,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         </div>
       )}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Annotation saved</div>
+        <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (
         <InstrumentAnswerRow
           coachTarget="tess-verdicts"

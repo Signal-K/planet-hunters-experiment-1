@@ -163,7 +163,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK"
       title={candidate.tempDesig}
       onBack={onBack}
-      status={classification ? 'ANNOTATION SAVED' : 'REVIEW'}
+      status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       devBar={devBar}
       caption={(
         <p className={viewportStyles.caption} data-testid="neocp-data-provenance">
@@ -181,7 +181,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         />
       )}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Annotation saved</div>
+        <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (
         <InstrumentAnswerRow
           actions={VERDICT_ACTIONS.map(action => ({

@@ -18,8 +18,8 @@ describe('shared instrument viewport', () => {
         {...shell}
         viewport={<div data-testid="light-curve">curve</div>}
         answers={<InstrumentAnswerRow coachTarget="tess-verdicts" actions={[
-          { id: 'planet', label: 'Confirm Transit', testId: 'tess-verdict-planet', onClick: () => {} },
-          { id: 'not_planet', label: 'Mark Noise', testId: 'tess-verdict-not_planet', onClick: () => {} },
+          { id: 'planet', label: 'Submit · Transit', testId: 'tess-verdict-planet', onClick: () => {} },
+          { id: 'not_planet', label: 'Submit · Noise', testId: 'tess-verdict-not_planet', onClick: () => {} },
           { id: 'unsure', label: 'Skip', testId: 'tess-verdict-unsure', onClick: () => {} },
         ]} />}
         tool={<InstrumentToolButton testId="tess-drag-dip" label="Drag dip" onClick={() => {}} />}
@@ -61,7 +61,7 @@ describe('shared instrument viewport', () => {
       expect(markup).toContain('ZOOM')
       expect(markup).toContain('EXPOSURE')
     }
-    expect(tess).toContain('Confirm Transit')
+    expect(tess).toContain('Submit · Transit')
     expect(tess).toContain('Drag dip')
     expect(tess).not.toContain('No tool')
     expect(asteroids).toContain('Flag Likely Real')

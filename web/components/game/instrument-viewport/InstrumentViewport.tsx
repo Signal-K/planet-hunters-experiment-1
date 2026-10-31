@@ -21,7 +21,7 @@ export interface InstrumentAnswer {
   disabled?: boolean
   /** Looks unready but stays tappable, so the tap can explain what is missing. */
   dim?: boolean
-  /** The one answer the player is expected to give now: drawn as the bright save button. */
+  /** The one answer the player is expected to give now: drawn as the bright submit button. */
   primary?: boolean
   onClick: () => void
 }
@@ -359,11 +359,11 @@ export default function InstrumentViewport({
               </div>
             </div>
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
-            {/* Liam, 31.10: say which step saves. With a tool: 1 mark, 2 choose (the choice saves and moves on). */}
+            {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
             {tool ? <>
               <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> Mark it</p>
               {tool}
-              <p className={styles.step} data-testid="instrument-step-save"><b>2</b> Answer to save</p>
+              <p className={styles.step} data-testid="instrument-step-save"><b>2</b> Submit your classification</p>
               {answers}
             </> : <>
               {answers}

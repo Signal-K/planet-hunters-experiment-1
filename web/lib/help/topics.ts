@@ -81,12 +81,12 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         body: 'A planet passing in front of its star makes the light dip for a short while, then recover. Drag across the dip on the chart to mark it.',
       },
       {
-        title: 'Confirm Transit',
-        body: 'Use Confirm Transit when the marked dip looks like a real, repeating drop with a clean shape.',
+        title: 'Submit · Transit',
+        body: 'Submit · Transit sends your classification when the marked dip looks like a real, repeating drop with a clean shape.',
       },
       {
-        title: 'Mark Noise or Skip',
-        body: 'Use Mark Noise when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark.',
+        title: 'Submit · Noise or Skip',
+        body: 'Submit · Noise sends your classification when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark.',
       },
     ],
     coach: [
@@ -101,7 +101,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         id: 'verdict',
         targets: ['tess-verdicts'],
         anchor: 'tess-verdicts',
-        hint: 'Confirm Transit if it is a real dip, Mark Noise if it is not, Skip if unsure.',
+        hint: 'Submit your classification: Transit if it is a real dip, Noise if it is not, Skip if unsure.',
       },
     ],
   },

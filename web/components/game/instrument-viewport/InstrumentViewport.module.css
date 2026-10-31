@@ -751,3 +751,8 @@
 /* The review column keeps every control full size: the terminal never shrinks, the column scrolls if it must. */
 .command { overflow-y: auto; overscroll-behavior: contain; }
 .command > .terminal { flex-shrink: 0; }
+
+/* A single answer (Continue on the result card) spans the row instead of sitting in a third of it. */
+.answers:has(> .answer:only-child) { grid-template-columns: minmax(0, 1fr); }
+/* No reticle over a standby message: it sat on top of the result text. */
+.well:has(.standby) .reticle { display: none; }

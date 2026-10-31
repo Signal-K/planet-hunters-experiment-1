@@ -139,7 +139,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Confirm Transit to see the result card', stage: 'free-ops' },
+      { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Submit · Transit to see the result card', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
