@@ -454,16 +454,13 @@ export default function MissionBoard({
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => setTab(next)
   const tabButtons = <>
-    <div className={styles.workTabs} aria-label="Work board">
-      <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabCopy}><span className={styles.tabLabel}>Contracts</span><small>Client work</small></span></button>
-      <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabCopy}><span className={styles.tabLabel}>Program</span><small>Build your agency</small></span></button>
-    </div>
+    <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
+    <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
     {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
     <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
     </button>
-    <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
   </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
@@ -473,6 +470,7 @@ export default function MissionBoard({
         {tabButtons}
       </nav>
       <div className={styles.railHelp}>
+        <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
         <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
           <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>
           <i>{Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} U</i>
@@ -530,20 +528,21 @@ export default function MissionBoard({
           <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
           <div className={styles.dockDeal}><button type="button" className={styles.clearFilter} data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL CONTRACTS</button></div>
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
-      </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
+      </article>) : tab === 'free' ? <article className={`${styles.dock} ${styles.freeDock}`} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
           <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
         </div>}
-        {sourceMineralName && <div className={styles.eventRun} data-testid="mineral-sources">
-          <b>{sourceMineralName} sources</b>
-          <span>{mineralSources.length > 0
-            ? `Mine it on ${mineralSources.slice(0, 3).map(t => shortName(t.name)).join(', ')}. Tap a site on the map.`
-            : `${sourceMineralName} cannot be mined yet. Look for it in the Exchange.`}</span>
-          <button type="button" className={styles.clearFilter} data-testid="mineral-sources-clear" onClick={() => setSourceMineral(null)}>SHOW ALL SITES</button>
+        {sourceMineralName && <div className={styles.sourceSites} data-testid="mineral-sources" role="group" aria-label={`Where to mine ${sourceMineralName}`}>
+          <b>{sourceMineralName}</b>
+          {mineralSources.length > 0
+            ? mineralSources.slice(0, 4).map(site => <button key={site.id} type="button" data-on={site.id === pickedId || undefined} data-testid={`mineral-source-${site.id}`}
+                onClick={() => { setPickedId(site.id); setRunId(null); setView(site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer') }}>{shortName(site.name)}</button>)
+            : <span>Not mineable yet. Try the Exchange.</span>}
+          <button type="button" className={styles.sourceAll} data-testid="mineral-sources-clear" onClick={() => setSourceMineral(null)}>All sites</button>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
-            <span>Free run</span>
+            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : 'Free run'}</span>
             <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
           </div>
         </header>
