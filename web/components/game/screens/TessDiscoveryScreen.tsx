@@ -151,7 +151,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         status={result.status}
         messageTitle={`${result.title} · +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`}
         messageBody={result.body}
-        answers={<PrimaryBtn testId="tess-training-continue" onClick={() => onTrainingContinue?.()}>CONTINUE · NEXT: TUNE A ROCKET PART</PrimaryBtn>}
+        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Next: tune a rocket part', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
       />
     )
   }
@@ -329,6 +329,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             label: action.label,
             testId: `tess-verdict-${action.id}`,
             dim: action.requiresMark && markCount === 0,
+            primary: action.id === 'planet' && markCount > 0,
             onClick: () => castVerdict(action.id),
           }))}
         />
