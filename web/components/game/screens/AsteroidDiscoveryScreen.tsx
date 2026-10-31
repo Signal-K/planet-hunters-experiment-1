@@ -9,7 +9,7 @@ import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from 
 import type { Player } from '@/lib/game-types'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
-import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { asteroidFeedOnline, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
@@ -42,7 +42,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       setLoading(false)
       return
     }
-    if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
+    if (!asteroidFeedOnline(player)) {
       setLoading(false)
       return
     }
@@ -73,7 +73,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     // Classifications stay out of the dependency list so a fresh submission
     // does not clear the candidate before the saved state can render (KES-116).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.placed, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
 
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="neocp" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
@@ -94,7 +94,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     )
   }
 
-  if (!player.deepSpaceTelescopeBuilt) {
+  if (!asteroidFeedOnline(player)) {
     return (
       <InstrumentStandbyViewport
         testId="asteroid-discovery-standby"

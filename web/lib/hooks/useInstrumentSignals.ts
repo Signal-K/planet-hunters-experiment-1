@@ -6,6 +6,7 @@ import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import {
+  asteroidFeedOnline,
   collectInstrumentSignals,
   instrumentDigestDateKey,
   type InstrumentSignal,
@@ -20,7 +21,7 @@ export function useInstrumentSignals(player: Player): {
 
   useEffect(() => {
     const transitOnline = !!player.freeOperations && !!player.transitSatelliteLaunchedAt
-    const deepSpaceOnline = !!player.freeOperations && !!player.deepSpaceTelescopeBuilt
+    const deepSpaceOnline = asteroidFeedOnline(player)
     const saturnOnline = !!player.freeOperations && !!player.saturnImagerLaunchedAt
     if (!transitOnline && !deepSpaceOnline && !saturnOnline) {
       setSignals([])
@@ -56,6 +57,7 @@ export function useInstrumentSignals(player: Player): {
     player.freeOperations,
     player.transitSatelliteLaunchedAt,
     player.deepSpaceTelescopeBuilt,
+    player.placed,
     player.tessClassifications,
     player.asteroidClassifications,
     player.saturnImagerLaunchedAt,

@@ -211,3 +211,11 @@ describe('InstrumentFeedSystem', () => {
     expect(pickInstrumentInspectCandidate([], 'missing')).toBeNull()
   })
 })
+
+describe('ground telescope (Liam, 31.10)', () => {
+  const asteroids = Array.from({ length: 6 }, (_, i) => ({ id: `neo-${i}`, tempDesig: `NEO${i}`, vMag: 20, score: 90 })) as unknown as Parameters<typeof deepSpaceInstrumentDigest>[0]
+  it('adds one candidate a day, alone or on top of the Space Telescope', () => {
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: false, placed: ['ground-telescope'] }, '2026-07-30')).toHaveLength(1)
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: true, placed: ['ground-telescope'] }, '2026-07-30')).toHaveLength(2)
+  })
+})

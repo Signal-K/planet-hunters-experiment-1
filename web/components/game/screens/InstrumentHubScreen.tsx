@@ -9,7 +9,9 @@ import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
-import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import { GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES, type InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import { STRUCTURE_PRICES } from '@/lib/data/economy'
+import { formatCurrency } from '@/lib/format'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
 import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
 import type { Target } from '@/lib/data'
@@ -25,7 +27,8 @@ interface InstrumentHubScreenProps {
   player: Player
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
-  onBuild: () => void
+  /** Builds the ground telescope in place; false when it could not. */
+  onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
   /** Claim the Enceladus plot from the stored survey chart. */
   /** Survey scan (SSL-512): bodies a telescope can chart, and the actions that run it. */
@@ -40,10 +43,13 @@ interface InstrumentHubScreenProps {
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
   const help = useHelp('instrument-hub', { firstVisit: true })
+  const [justBuilt, setJustBuilt] = useState(false)
+  const groundCost = STRUCTURE_PRICES.groundTelescope
+  const buildShortfall = player.francs < groundCost ? `${formatCurrency(groundCost - player.francs, { compact: true })} more` : null
   const awaitingFeed = loading && signals.length === 0
   const now = useMemo(() => skyEventNow(isDevLauncherEnabled()), [])
   const model = useMemo(
@@ -74,7 +80,20 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
       {help.layer}
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
         <ResearchCalendar stamps={player.researchStamps} now={now} community={communityResearch} hasDiscovery={Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0} />
-        <ControlStationBoard model={model} onBody={setBodyId} onOpen={onInspect} onBuild={onBuild} banner={wswBanner(player.badges, now)} />
+        {justBuilt && (
+          <p className="ln-section-label" role="status" data-testid="ground-telescope-built">
+            Ground telescope built. It adds {GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate to your feed every day.
+          </p>
+        )}
+        <ControlStationBoard
+          model={model}
+          onBody={setBodyId}
+          onOpen={onInspect}
+          onBuild={() => { if (onBuildGroundTelescope()) setJustBuilt(true) }}
+          buildCost={formatCurrency(groundCost, { compact: true })}
+          buildShortfall={buildShortfall}
+          banner={wswBanner(player.badges, now)}
+        />
         {onStartScan && onResolveScan && player.freeOperations && (
           <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
         )}

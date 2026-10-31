@@ -4,6 +4,8 @@ import type { BuildingLevels } from '@/lib/data/building-levels'
 
 import type { GameState } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
+import { STRUCTURE_PRICES } from '@/lib/data/economy'
+import { GROUND_TELESCOPE_STRUCTURE_ID } from './InstrumentFeedSystem'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
@@ -480,6 +482,21 @@ export function applyBuyLaserCapacitor(s: GameState, expectedLevel: number, rese
   const stash = spendOreUnits(s.player.stash, tier.costUnits)
   if (!stash) return s
   return { ...s, player: { ...s.player, stash, laserCapacitorLevel: tier.level } }
+}
+
+/** Builds the ground telescope from the control station (Liam, 31.10: the station's Build button must build it). */
+export function applyBuildGroundTelescope(s: GameState): GameState {
+  if (s.player.placed.includes(GROUND_TELESCOPE_STRUCTURE_ID)) return s
+  if (!s.player.freeOperations) return s
+  if (s.player.francs < STRUCTURE_PRICES.groundTelescope) return s
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs - STRUCTURE_PRICES.groundTelescope,
+      placed: [...s.player.placed, GROUND_TELESCOPE_STRUCTURE_ID],
+    },
+  }
 }
 
 export function applyExcavateSubsurface(s: GameState): GameState {

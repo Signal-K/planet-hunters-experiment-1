@@ -355,7 +355,7 @@ function ScreenBody({
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
-          onBuild={() => game.go('build')}
+          onBuildGroundTelescope={() => game.buildGroundTelescope()}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)

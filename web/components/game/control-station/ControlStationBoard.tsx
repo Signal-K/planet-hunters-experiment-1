@@ -15,8 +15,12 @@ interface ControlStationBoardProps {
   model: ControlStationModel
   onBody: (bodyId: string) => void
   onOpen: (signal: InstrumentSignal) => void
-  /** Opens the Build screen from a row that asks the player to build equipment. */
+  /** Builds the equipment a build-prompt row asks for (the ground telescope), in place. */
   onBuild: () => void
+  /** Price shown on the Build button, e.g. "₣2M". */
+  buildCost?: string
+  /** Why Build cannot run now (e.g. "₣400K more"); null when it can. */
+  buildShortfall?: string | null
   banner: WswBanner
 }
 
@@ -95,7 +99,7 @@ function EquipmentPreview({ kind }: { kind: InstrumentSignalKind }) {
   )
 }
 
-export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: ControlStationBoardProps) {
+export function ControlStationBoard({ model, onBody, onOpen, onBuild, buildCost, buildShortfall = null, banner }: ControlStationBoardProps) {
   return (
     <div className={styles.workspace} data-testid="control-station">
       <div className={styles.ticker}>
@@ -200,11 +204,13 @@ export function ControlStationBoard({ model, onBody, onOpen, onBuild, banner }: 
                         type="button"
                         className={styles.open}
                         data-testid="control-station-build"
-                        aria-label={`Build ${row.name}`}
+                        aria-label={buildShortfall ? `Build ${row.name}: needs ${buildShortfall}` : `Build ${row.name}${buildCost ? ` for ${buildCost}` : ''}`}
+                        disabled={!!buildShortfall}
                         onClick={onBuild}
                       >
-                        Build
+                        {buildCost ? `Build · ${buildCost}` : 'Build'}
                       </button>
+                      {buildShortfall && <span className={styles.offLabel} data-testid="control-station-build-shortfall">Needs {buildShortfall}</span>}
                     </div>
                   )}
                   {row.openSignal && row.previewKind && (
