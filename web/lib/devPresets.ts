@@ -139,6 +139,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Confirm Transit to see the result card', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -596,6 +597,22 @@ function fixture(name: string): Partial<GameState> | null {
         missionId: TRANSPORT_MISSION.id,
         targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
         deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-tess-training':
+      return {
+        screen: 'galaxy',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          flightPlan: { completed: { mining: true }, hidden: false },
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,

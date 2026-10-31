@@ -205,6 +205,16 @@
    ]
   },
   {
+   "id": "tess-training",
+   "name": "Telescope training",
+   "flow": "instruments",
+   "web": "ui-tess-training",
+   "native": "tess-discovery-phone",
+   "tickets": [
+    "SSL-721"
+   ]
+  },
+  {
    "id": "tess",
    "name": "TESS classify",
    "flow": "instruments",

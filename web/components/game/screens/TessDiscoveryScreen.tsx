@@ -15,7 +15,7 @@ import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
-import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface TessDiscoveryScreenProps {
   player: Player
@@ -29,6 +29,26 @@ interface TessDiscoveryScreenProps {
   onChooseTarget: (subjectId: string) => void
   /** Set while a training try is active, so the help sheet can point at Menu > Training. */
   onReplayTraining?: () => void
+  /** After the training verdict's result card: move on to the next try. */
+  onTrainingContinue?: () => void
+}
+
+const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body: string }> = {
+  planet: {
+    status: 'TRANSIT CONFIRMED',
+    title: 'Transit confirmed',
+    body: 'You marked a repeating dip in a star\'s light: the shadow of a planet crossing it. Once your Space Telescope is in orbit, real candidates arrive here every day and your verdicts go to Exoplanet Hunters.',
+  },
+  not_planet: {
+    status: 'MARKED NOISE',
+    title: 'Marked as noise',
+    body: 'You ruled out a dip that is not a transit. Ruling out noise is half the job: real candidates arrive here every day once your Space Telescope is in orbit.',
+  },
+  unsure: {
+    status: 'SKIPPED',
+    title: 'Skipped',
+    body: 'Skipping is fine when a curve is unclear. Real candidates arrive here every day once your Space Telescope is in orbit.',
+  },
 }
 
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
@@ -37,7 +57,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
   const help = useHelp('galaxy', { onReplayTraining, firstVisit: true })
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
@@ -53,6 +73,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [retryToken, setRetryToken] = useState(0)
   const [dragArmed, setDragArmed] = useState(true)
   const [needsMark, setNeedsMark] = useState(false)
+  // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
+  const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -116,6 +138,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
   ) : undefined
+
+  if (trainingVerdict) {
+    const result = TRAINING_RESULT[trainingVerdict]
+    return (
+      <InstrumentStandbyViewport
+        testId="tess-training-result"
+        sceneClassName="ln-scene-tess-discovery"
+        eyebrow="TRAINING · SCAN"
+        title="Space Telescope"
+        onBack={onBack}
+        status={result.status}
+        messageTitle={`${result.title} · +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`}
+        messageBody={result.body}
+        answers={<PrimaryBtn testId="tess-training-continue" onClick={() => onTrainingContinue?.()}>CONTINUE · NEXT: TUNE A ROCKET PART</PrimaryBtn>}
+      />
+    )
+  }
 
   if (!visualCandidate && !player.freeOperations) {
     return (
@@ -192,6 +231,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     // A verdict that needs a marked dip explains itself instead of sitting disabled and looking dead.
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
     const measuredPeriod = periodFromRanges(ranges)
+    if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 

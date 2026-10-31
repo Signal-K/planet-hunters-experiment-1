@@ -393,6 +393,7 @@ function ScreenBody({
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
+          onTrainingContinue={() => game.go('hangar')}
         />
       )
 
