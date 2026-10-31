@@ -47,7 +47,7 @@ const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: Screen
 const CommunityResearchScreen = dynamic(() => import('@/components/game/screens/CommunityResearchScreen'), { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -320,8 +320,10 @@ function ScreenBody({
           }}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
-            game.addToast(`${label} added to focus`, 'info')
-            requestMissionBoardTab('program')
+            // Open the map on the places that hold the first missing mineral, not the whole board (Liam, 31.10).
+            const short = Object.entries(minerals).find(([id, amount]) => (game.player.stash?.[id] ?? 0) < amount)?.[0]
+            if (short && game.player.freeOperations) requestMissionBoardMineral(short)
+            else requestMissionBoardTab('program')
             game.goToMissions()
           }}
           subsurface={game.subsurfaceView}

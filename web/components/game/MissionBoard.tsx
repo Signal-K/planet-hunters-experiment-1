@@ -26,7 +26,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
@@ -316,6 +316,8 @@ export default function MissionBoard({
   onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
+  // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
+  const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
@@ -344,12 +346,17 @@ export default function MissionBoard({
       })
     : []
   const [view, setView] = useState<MapView>('system')
-  const [pickedId, setPickedId] = useState<string | null>(null)
+  const mineralSources = useMemo(() => sourceMineral
+    ? catalog.targets.filter(t => t.type !== 'exoplanet' && t.minerals.includes(sourceMineral)).sort((a, b) => a.orbit - b.orbit)
+    : [], [catalog.targets, sourceMineral])
+  const [pickedId, setPickedId] = useState<string | null>(() => mineralSources[0]?.id ?? null)
   const [runId, setRunId] = useState<string | null>(null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
   const pickedRuns = picked ? freeRuns.filter(run =>
-    Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m))
+    (sourceMineral
+      ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
+      : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
     || (run.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID && player.orionidsEventStage === 1 && run.targetId === picked.id)
   ) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
@@ -361,12 +368,23 @@ export default function MissionBoard({
   const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
   const mapTargets = tab === 'contracts'
     ? catalog.targets.filter(target => cards.some(item => item.targetIds.includes(target.id)))
-    : catalog.targets
+    : tab === 'free' && mineralSources.length > 0
+      ? mineralSources
+      : catalog.targets
+  const sourceMineralName = sourceMineral ? catalog.minerals[sourceMineral]?.name ?? sourceMineral : null
   const selectedProgramStep = steps.find(step => step.id === programStepId)
     ?? steps.find(step => step.state === 'current')
     ?? steps[0]
 
   useEffect(() => clearMissionBoardTab(), [])
+
+  useEffect(() => {
+    const first = mineralSources[0]
+    if (!first) return
+    setView(first.type === 'asteroid' ? 'belt' : first.orbit <= 4 ? 'inner' : 'outer')
+    // Only on open: the player may pan the map afterwards.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (tab !== 'contracts' || !card) return
@@ -515,6 +533,13 @@ export default function MissionBoard({
       </article>) : tab === 'free' ? <article className={styles.dock} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
           <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
+        </div>}
+        {sourceMineralName && <div className={styles.eventRun} data-testid="mineral-sources">
+          <b>{sourceMineralName} sources</b>
+          <span>{mineralSources.length > 0
+            ? `Mine it on ${mineralSources.slice(0, 3).map(t => shortName(t.name)).join(', ')}. Tap a site on the map.`
+            : `${sourceMineralName} cannot be mined yet. Look for it in the Exchange.`}</span>
+          <button type="button" className={styles.clearFilter} data-testid="mineral-sources-clear" onClick={() => setSourceMineral(null)}>SHOW ALL SITES</button>
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
