@@ -102,6 +102,12 @@ export const ROCKET_PRICES = {
   surveyor: 40_000_000,
 } as const
 
+/** Research XP to unlock a rocket before its mission count (Liam, 01.11: "an option to research or buy"). */
+export const ROCKET_RESEARCH_XP: Record<string, number> = {
+  prospector: 60,
+  surveyor: 150,
+}
+
 export const STRUCTURE_PRICES = {
   refinery: 8_000_000,
   garage: 6_000_000,
