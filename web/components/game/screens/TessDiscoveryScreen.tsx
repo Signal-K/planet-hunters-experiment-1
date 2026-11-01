@@ -130,6 +130,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const sectors = useMemo(() => candidate ? sectorWindows(points, candidate.sector) : [], [candidate, points])
   const activeSector = sectors[Math.min(sectorIndex, Math.max(0, sectors.length - 1))]
   const sectorPoints = activeSector?.points ?? points
+  // SSL-744: the training hint sits on the deepest dip in this sector, as a share of the plot width.
+  const dipShare = useMemo(() => {
+    if (!sectorPoints.length) return 0.5
+    const xs = sectorPoints.map(point => point.x)
+    const xMin = Math.min(...xs), xMax = Math.max(...xs)
+    if (xMax <= xMin) return 0.5
+    // The transit nearest mid-sector, from the ephemeris; noise makes the single lowest point unreliable.
+    const period = candidate?.periodDays ?? 0
+    const epoch = candidate?.transitEpoch
+    if (period > 0 && epoch != null) {
+      const mid = (xMin + xMax) / 2
+      const transit = epoch + Math.round((mid - epoch) / period) * period
+      if (transit >= xMin && transit <= xMax) return (transit - xMin) / (xMax - xMin)
+    }
+    const deepest = sectorPoints.reduce((low, point) => point.y < low.y ? point : low, sectorPoints[0])
+    return (deepest.x - xMin) / (xMax - xMin)
+  }, [sectorPoints, candidate])
   const yDomain = useMemo<[number, number] | undefined>(() => {
     if (!points.length) return undefined
     const ys = points.map(point => point.y)
@@ -309,7 +326,15 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           </div>
         )
       ) : (
-        <div className={visualCandidate ? 'tess-training-dip-band' : undefined} data-coach-target="tess-chart" style={{ position: 'absolute', inset: 0 }}>
+        <div data-coach-target="tess-chart" style={{ position: 'absolute', inset: 0 }}>
+          {visualCandidate && (
+            /* Dip hint on the deepest transit; ObservatoryChart's plot runs from 66px to 100% - 14px. */
+            <span
+              aria-hidden="true"
+              data-testid="tess-dip-hint"
+              style={{ position: 'absolute', pointerEvents: 'none', zIndex: 2, left: `calc(66px + ${dipShare} * (100% - 80px) - 22px)`, width: 44, top: 22, bottom: 58, background: 'rgba(255, 115, 210, 0.12)', borderInline: '1px solid rgba(255, 115, 210, 0.55)', boxShadow: '0 0 18px rgba(255, 115, 210, 0.18)' }}
+            />
+          )}
           <ObservatoryChart
             points={sectorPoints}
             ranges={activeRanges}

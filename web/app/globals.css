@@ -3199,8 +3199,6 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 
 /* SSL-407: scene-local cues, not positioned coach overlays. */
 .mining-training-seam { position: absolute; z-index: 11; pointer-events: none; left: 18%; right: 18%; top: 52%; height: 10px; border-radius: 999px; background: rgba(112,217,234,0.22); }
-.tess-training-dip-band { position: relative; }
-.tess-training-dip-band::after { content: ''; position: absolute; pointer-events: none; z-index: 2; left: 42%; width: 14%; top: 16%; bottom: 16%; background: rgba(112,217,234,0.12); border-inline: 1px solid var(--ln-cyan-border); }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
    Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
