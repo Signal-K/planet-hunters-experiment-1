@@ -7,3 +7,74 @@
   height: 100%;
   pointer-events: none;
 }
+
+/* Launches from other pads carry a tag: tap the rocket and a ribbon unfurls with whose it is. */
+.tags {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+}
+
+.tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.tag:focus-visible {
+  outline: 2px solid var(--hub-chalk);
+  outline-offset: 2px;
+}
+
+.ribbon {
+  position: absolute;
+  left: 34px;
+  top: 50%;
+  display: grid;
+  gap: 2px;
+  min-width: 168px;
+  padding: 6px 18px 6px 10px;
+  border: 1px solid var(--ln-hairline);
+  border-left: 3px solid var(--hub-chalk);
+  background: color-mix(in srgb, var(--hub-panel-deep) 88%, transparent);
+  color: var(--hub-chalk);
+  text-align: left;
+  white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%);
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(0);
+  opacity: 0;
+  transition: transform 220ms ease-out, opacity 160ms ease-out;
+  pointer-events: none;
+}
+
+.tag[aria-expanded='true'] .ribbon {
+  transform: translateY(-50%) scaleX(1);
+  opacity: 1;
+}
+
+.ribbonPilot {
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ribbonMeta {
+  font: 600 14px var(--ln-font-body);
+  color: color-mix(in srgb, var(--hub-chalk) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ribbon { transition: none; }
+}

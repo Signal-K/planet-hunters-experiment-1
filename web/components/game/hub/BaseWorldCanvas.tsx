@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ASSET_ROOT, GROUND, skyGrade } from '@/lib/scene/base-site'
 import { lockedSky, type EarthBiomeId, type WorldTimeGrade } from '@/lib/scene/base-world'
-import { skyAt, type SkyState } from '@/lib/world/sky-calendar'
+import { skyAt, type LaunchCrew, type SkyState } from '@/lib/world/sky-calendar'
 import { WORLD_SCENE, advance, applySky, createWorld, type Entity, type World } from '@/lib/world/world-sim'
 import type { BaseCameraState } from '@/lib/scene/base-camera'
 import styles from './BaseWorldCanvas.module.css'
@@ -14,6 +14,13 @@ interface Props {
   camera: BaseCameraState
   time: WorldTimeGrade
   biome: EarthBiomeId
+  /** Launches from other pads can be tapped to show whose rocket it is (the Base). */
+  launchTags?: boolean
+}
+
+interface LaunchTag {
+  id: string
+  crew: LaunchCrew
 }
 
 const images = new Map<string, HTMLImageElement>()
@@ -81,8 +88,13 @@ const reducedMotion = () => typeof window !== 'undefined' && typeof window.match
  * own objects (meteors, rain, lightning, a launch on the range, a weather balloon, satellites, aurora, comets).
  * Structures and controls stay in the DOM on top. Native draws the same world with SwiftUI Canvas.
  */
-export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
+export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [tags, setTags] = useState<LaunchTag[]>([])
+  const [openTag, setOpenTag] = useState<string | null>(null)
+  const tagEls = useRef(new Map<string, HTMLButtonElement>())
+  const tagsOn = useRef(launchTags)
+  tagsOn.current = launchTags
   const worldRef = useRef<World | null>(null)
   const propsRef = useRef({ px, camera, time, biome })
   propsRef.current = { px, camera, time, biome }
@@ -102,6 +114,7 @@ export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
     let skyAge = Infinity
     const still = reducedMotion()
     let revealStart = -1
+    let tagKey = ''
     let loaded = false
     let cancelled = false
     void preloadAll().then(() => { if (!cancelled) loaded = true })
@@ -124,11 +137,17 @@ export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
         skyAge = 0
       }
       applySky(world, sky, view, still ? 0 : dt)
+      if (tagsOn.current) {
+        const live = sky.events.filter(ev => ev.kind === 'launch' && ev.crew).map(ev => ({ id: ev.id, crew: ev.crew! }))
+        const key = live.map(t => t.id).join('|')
+        if (key !== tagKey) { tagKey = key; setTags(live) }
+      }
       if (!still) carry = advance(world, dt, carry)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       if (loaded && revealStart < 0) revealStart = now
       const reveal = !loaded ? 0 : still ? 1 : Math.min(1, (now - revealStart) / 1000 / REVEAL_SECONDS)
       draw(ctx, world, sky, p, w, h, now / 1000, reveal)
+      if (tagsOn.current) placeTags(world, p, h, reveal, tagEls.current)
       raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
@@ -136,7 +155,60 @@ export function BaseWorldCanvas({ px, camera, time, biome }: Props) {
     // A new landscape is a new world: its own horizon, plants and drifts.
   }, [biome])
 
-  return <canvas ref={canvasRef} className={styles.canvas} data-testid="base-world-canvas" data-time={time} data-biome={biome} aria-hidden="true" />
+  // A tag whose launch has left the sky closes with it.
+  useEffect(() => { if (openTag && !tags.some(t => t.id === openTag)) setOpenTag(null) }, [openTag, tags])
+
+  const canvas = <canvas ref={canvasRef} className={styles.canvas} data-testid="base-world-canvas" data-time={time} data-biome={biome} aria-hidden="true" />
+  if (!launchTags) return canvas
+  return (
+    <>
+      {canvas}
+      <div className={styles.tags}>
+        {tags.map(tag => (
+          <button
+            key={tag.id}
+            ref={el => { if (el) tagEls.current.set(tag.id, el); else tagEls.current.delete(tag.id) }}
+            type="button"
+            className={styles.tag}
+            style={{ visibility: 'hidden' }}
+            data-testid="sky-launch-tag"
+            data-launch={tag.id}
+            aria-expanded={openTag === tag.id}
+            aria-label={`${tag.crew.pilot}'s ${tag.crew.rocket}`}
+            onClick={() => setOpenTag(open => (open === tag.id ? null : tag.id))}
+          >
+            <span className={styles.ribbon} aria-hidden={openTag !== tag.id}>
+              <span className={styles.ribbonPilot}>{tag.crew.pilot}</span>
+              <span className={styles.ribbonMeta}>{tag.crew.rocket} · {tag.crew.mission}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+/** Keeps each launch's tap target on its rocket (the middle of the sprite, along its heading). */
+function placeTags(world: World, p: Props, h: number, reveal: number, els: Map<string, HTMLButtonElement>) {
+  if (els.size === 0) return
+  const groundY = h * (1 - GROUND.lineFromBottom)
+  const { x: camX, y: camY, zoom } = p.camera
+  const seen = new Set<string>()
+  for (const e of world.entities) {
+    if (e.def.sprite !== 'far-rocket' || !e.event) continue
+    const el = els.get(e.event)
+    if (!el) continue
+    const depth = e.def.depth ?? 1
+    const k = p.px * zoom * e.scale
+    const s = WORLD_SCENE.sprites['far-rocket' as keyof typeof WORLD_SCENE.sprites]
+    const half = s ? (s.v0 + s.h / 2) * k : 0
+    const x = camX * depth + e.x * p.px * zoom + Math.sin(e.heading) * half
+    const y = camY * depth + (groundY - e.y * p.px) * zoom - Math.cos(e.heading) * half
+    seen.add(e.event)
+    el.style.transform = `translate(${x}px, ${y}px)`
+    el.style.visibility = reveal > 0 && y > -22 ? 'visible' : 'hidden'
+  }
+  for (const [id, el] of els) if (!seen.has(id)) el.style.visibility = 'hidden'
 }
 
 function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Props, w: number, h: number, t: number, reveal: number) {

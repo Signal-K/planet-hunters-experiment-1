@@ -155,7 +155,41 @@
     "fromHour": 7,
     "toHour": 21,
     "seconds": 75,
-    "name": "Launch on the range"
+    "name": "Launch on the range",
+    "everySeconds": 180,
+    "chancePerSlot": 0.55,
+    "crews": [
+      {
+        "pilot": "Ingrid Vale",
+        "rocket": "Kestrel II",
+        "mission": "Relay drop to lunar orbit"
+      },
+      {
+        "pilot": "Tomas Arnar",
+        "rocket": "Skua",
+        "mission": "Ice survey of the Belt"
+      },
+      {
+        "pilot": "Mira Okafor",
+        "rocket": "Heron 4",
+        "mission": "Transit telescope resupply"
+      },
+      {
+        "pilot": "Bjorn Haldis",
+        "rocket": "Fulmar",
+        "mission": "Ore run to Phobos"
+      },
+      {
+        "pilot": "Sana Reyes",
+        "rocket": "Tern VI",
+        "mission": "Comet sampler"
+      },
+      {
+        "pilot": "Eirik Lund",
+        "rocket": "Gannet",
+        "mission": "Deep-space beacon"
+      }
+    ]
   },
   "balloons": {
     "hours": [

@@ -433,23 +433,6 @@
         560
       ],
       "sky": true
-    },
-    {
-      "id": "range-rocket",
-      "sprite": "far-rocket",
-      "x": 430,
-      "y": 112,
-      "depth": 0.06,
-      "layer": 4,
-      "body": {
-        "wind": 1,
-        "vx": 0.18
-      },
-      "wrap": [
-        -30,
-        550
-      ],
-      "sky": true
     }
   ],
   "prefabs": {
@@ -509,7 +492,7 @@
       "colour": "#f3f1ea",
       "radius": 1.4,
       "alpha": 0.8,
-      "layer": 12,
+      "layer": 8,
       "depth": 0.15,
       "body": {
         "gravity": 0,
@@ -522,14 +505,15 @@
     },
     "far-rocket": {
       "sprite": "far-rocket",
-      "layer": 13,
+      "layer": 9,
       "depth": 0.15,
       "scale": 0.7,
       "body": {
         "gravity": 0,
-        "ay": 1.6,
-        "pitch": 0.012,
-        "life": 70
+        "vy": 3,
+        "ay": 0.3,
+        "pitch": 0.03,
+        "life": 90
       },
       "emit": {
         "prefab": "plume",

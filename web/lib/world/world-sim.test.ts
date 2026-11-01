@@ -102,7 +102,7 @@ describe('base world', () => {
     const world = createWorld()
     world.entities = []
     const rocket = spawn(world, 'far-rocket', { x: 470, y: 56 })!
-    for (let i = 0; i < 600; i += 1) stepBodies(world, 1 / 60)
+    for (let i = 0; i < 1200; i += 1) stepBodies(world, 1 / 60)
     expect(rocket.y).toBeGreaterThan(56 + 50)
     expect(rocket.x).toBeGreaterThan(470)
     expect(world.entities.filter(e => e.def.shape === 'puff').length).toBeGreaterThan(40)

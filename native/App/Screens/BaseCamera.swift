@@ -44,7 +44,8 @@ final class BaseCamera {
     /// Set once the camera has been framed on what is built, so it does not jump back when the player pans.
     var homed = false
     static let maxZoom: CGFloat = 2.6
-    static let minZoom: CGFloat = 0.1
+    /// Pinch never zooms out past the whole-base view (the overview sets its own fit zoom).
+    static let minZoom: CGFloat = 1
     private var returnX: CGFloat = 0
     private(set) var diving: Bool
 
