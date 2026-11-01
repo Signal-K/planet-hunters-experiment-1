@@ -33,9 +33,10 @@ struct FlightWorldScene: View {
         let k = pixelScale(min(w * 0.32, h * 0.34) * (0.6 + 0.4 * p), native: 48)
         let side = 48 * k
         let x = w * (1.15 - 0.33 * p)
-        return Art.view("base/kit/asteroid-pixel.png")
+        // Liam, 01.11: the trip home flies toward Earth, not the asteroid it just left (web FlightBody).
+        return Art.view(returning ? "base/kit/earth-pixel.png" : "base/kit/asteroid-pixel.png")
             .resizable().interpolation(.none)
-            .frame(width: side, height: 40 * k)
+            .frame(width: side, height: (returning ? 48 : 40) * k)
             // SSL-534: the whole body stays on screen (a clamp at 0.45 of its width cut it off); on a tall screen it sits low so the space is used.
             .position(x: min(x, w - side * 0.5 - w * 0.06), y: h * (h > w ? 0.64 : 0.50) + (sin(t * 0.6) * 2).rounded() * k)
     }

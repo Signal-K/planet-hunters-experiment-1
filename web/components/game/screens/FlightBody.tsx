@@ -3,12 +3,12 @@
 import { flightBodySpec, type FlightBodyInput } from '@/lib/flight-body'
 import styles from './FlightScene.module.css'
 
-/** Native asteroid sprite. Kind stays on the element for the flight-body spec. */
+/** Kit sprite for the body ahead: Earth on the trip home (Liam, 01.11), otherwise the asteroid. Kind stays on the element. */
 export function FlightBody({ target, returning }: { target: FlightBodyInput; returning: boolean }) {
   const spec = flightBodySpec(target, returning)
   return (
     <img
-      src="/game/assets/base/kit/asteroid-pixel.png"
+      src={spec.kind === 'earth' ? '/game/assets/base/kit/earth-pixel.png' : '/game/assets/base/kit/asteroid-pixel.png'}
       alt=""
       draggable={false}
       className={styles.bodySprite}
