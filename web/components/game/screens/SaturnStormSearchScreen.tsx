@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import {
@@ -209,6 +209,26 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     return null
   }
 
+  // SSL-747: the frame as the player has read it, square by square, plus the imaging they used.
+  const cellAt = (index: number): CellState => {
+    const saved = savedCells[index]
+    return saved ? { answer: saved.verdict, storm: saved.storm } : (cells[index] ?? { answer: null, storm: false })
+  }
+  const allCells = Array.from({ length: 9 }, (_, index) => cellAt(index))
+  const mark = (cell: CellState) => cell.answer ? `${cell.answer === 'yes' ? 'Y' : cell.answer === 'no' ? 'N' : 'M'}${cell.storm ? '★' : ''}` : '—'
+  const tally = (answer: SaturnVerdict) => allCells.filter(cell => cell.answer === answer).length
+  const storms = allCells.flatMap((cell, index) => cell.storm ? [`SQ ${index + 1}`] : [])
+  const readoutRows: InstrumentReadoutRow[] = [
+    ...[0, 1, 2].map(row => ({
+      label: `Row ${row + 1}`,
+      value: [0, 1, 2].map(col => mark(allCells[row * 3 + col])).join('  ·  '),
+      testId: `saturn-readout-row-${row + 1}`,
+    })),
+    { label: 'Storms', value: storms.length ? storms.join(' · ') : 'NONE MARKED', testId: 'saturn-readout-storms' },
+    { label: 'Tally', value: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE · ${allCells.filter(cell => !cell.answer).length} LEFT`, testId: 'saturn-readout-tally' },
+    { label: 'Imaging', value: `${SATURN_PALETTES[palette].name} · ${contrast.toFixed(1)}× · ${sharpen ? 'SHARP' : 'SOFT'}${loupe ? ' · LOUPE' : ''}` },
+  ]
+
   const markStorm = () => {
     if (savedCells[selected] || complete) return
     const storm = !cells[selected]?.storm
@@ -243,6 +263,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           <InstrumentSwitch label="LOUPE" testId="saturn-loupe" pressed={loupe} onToggle={() => setLoupe(on => !on)} />
         </>,
       }}
+      readout={{ name: 'READOUT · YOUR FRAME', testId: 'saturn-readout', rows: readoutRows }}
       viewportChrome={loupe && !complete ? (
         <span className={viewportStyles.loupeTag} data-testid="saturn-loupe-tag">SQ {selected + 1} · 3×</span>
       ) : undefined}

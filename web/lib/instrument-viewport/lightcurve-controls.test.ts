@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_LIGHTCURVE_CONTROLS, applyLightcurveCommand, binPoints, foldPoints, lightcurveDisplay, nextBin, timeWindow } from './lightcurve-controls'
+import { DEFAULT_LIGHTCURVE_CONTROLS, applyLightcurveCommand, binPoints, foldPoints, lightcurveDisplay, measureDips, nextBin, timeWindow } from './lightcurve-controls'
 
 const line = (n: number, dx = 0.1) => Array.from({ length: n }, (_, i) => ({ x: i * dx, y: 1 }))
 
@@ -25,10 +25,19 @@ describe('lightcurve controls', () => {
   })
 
   it('parses console verbs and falls through on others', () => {
-    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'fold 2.5', null)?.controls).toMatchObject({ fold: true, period: 2.5 })
-    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'SNAP', null)?.lines[0]).toContain('MARK TWO DIPS')
-    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'SNAP', 4.2)?.controls.period).toBe(4.2)
-    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'BIN 3', null)?.controls.bin).toBe(2)
-    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'ZOOM 2', null)).toBeNull()
+    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'fold 2.5')?.controls).toMatchObject({ fold: true, period: 2.5 })
+    // No control folds on the player's behalf (SSL-747).
+    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'SNAP')).toBeNull()
+    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'BIN 3')?.controls.bin).toBe(2)
+    expect(applyLightcurveCommand(DEFAULT_LIGHTCURVE_CONTROLS, 'ZOOM 2')).toBeNull()
+  })
+
+  it('measures marked dips against the unmarked baseline and reports raw gaps', () => {
+    const pts = line(101).map(p => ({ x: p.x, y: (p.x > 1.95 && p.x < 2.05) || (p.x > 6.35 && p.x < 6.45) ? 0.99 : 1 }))
+    const { dips, gaps } = measureDips(pts, [{ x1: 6.3, x2: 6.5 }, { x1: 1.9, x2: 2.1 }])
+    expect(dips.map(d => d.centre)).toEqual([2, 6.4])
+    expect(dips[0].hours).toBeCloseTo(4.8)
+    expect(dips[0].depthPpt).toBeGreaterThan(3)
+    expect(gaps[0]).toBeCloseTo(4.4)
   })
 })

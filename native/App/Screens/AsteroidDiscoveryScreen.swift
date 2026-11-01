@@ -13,6 +13,14 @@ struct AsteroidDiscoveryScreen: View {
     @State private var field = 1.0
     @State private var showGrid = true
     @State private var showEcliptic = true
+    /// SSL-747: the player reads the object's offset from the ecliptic off the chart and dials it in.
+    /// Nothing computes it for them before they submit; the readout shows the true value afterwards.
+    @State private var offsetRead: Double? = nil
+    static let offsetMax = 60.0
+    private static func verdictLabel(_ v: AsteroidVerdict) -> String {
+        switch v { case .likelyReal: return "LIKELY REAL"; case .likelyArtifact: return "ARTIFACT"; case .unsure: return "SKIPPED" }
+    }
+    private static func signed(_ n: Double, _ digits: Int = 0) -> String { String(format: "%+.\(digits)f°", n) }
 
     private var today: AsteroidCandidate? {
         candidate ?? Asteroid.today(candidates: feed.asteroids, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
@@ -46,6 +54,14 @@ struct AsteroidDiscoveryScreen: View {
         let saved = store.player.asteroidClassifications[c.id]
         let beta = SkyPlot.eclipticLatitude(ra: c.ra, dec: c.decl)
         let fieldDeg = 180 / field
+        var rows: [(label: String, value: String)] = [
+            ("Target", c.tempDesig),
+            ("Position", String(format: "%.2fh %+.2f°", c.ra, c.decl)),
+            ("Your ecl offset", offsetRead.map { Self.signed($0) } ?? "NOT READ"),
+            ("Field used", String(format: "×%.1f · ", field) + (fieldDeg < 20 ? String(format: "%.1f°", fieldDeg) : String(format: "%.0f°", fieldDeg))),
+            ("Verdict", saved.map { Self.verdictLabel($0.verdict) } ?? "PENDING"),
+        ]
+        if saved != nil { rows.append(("True ecl offset", Self.signed(beta, 1))) }
         return InstrumentViewport(
             eyebrow: "Instrument data feed · Daily downlink", title: c.tempDesig,
             status: saved == nil ? "Review" : "Saved",
@@ -60,7 +76,14 @@ struct AsteroidDiscoveryScreen: View {
                 case "GRID":
                     showGrid.toggle(); return Instrument.CommandResult(view: view, lines: ["> GRID  \(showGrid ? "ON" : "OFF")"])
                 case "ECLIPTIC":
-                    showEcliptic.toggle(); return Instrument.CommandResult(view: view, lines: [String(format: "> ECLIPTIC  %@ · LAT %+.1f°", showEcliptic ? "ON" : "OFF", beta)])
+                    showEcliptic.toggle(); return Instrument.CommandResult(view: view, lines: ["> ECLIPTIC  \(showEcliptic ? "ON" : "OFF")"])
+                case "OFFSET":
+                    guard let n = words.dropFirst().first.flatMap(Double.init) else {
+                        return Instrument.CommandResult(view: view, lines: ["> OFFSET  " + (offsetRead.map { Self.signed($0) } ?? "NOT READ")])
+                    }
+                    guard saved == nil else { return Instrument.CommandResult(view: view, lines: ["> OFFSET  LOCKED"]) }
+                    let v = min(Self.offsetMax, max(-Self.offsetMax, n.rounded())); offsetRead = v
+                    return Instrument.CommandResult(view: view, lines: ["> OFFSET  \(Self.signed(v)) LOGGED"])
                 default: return nil
                 }
             },
@@ -80,18 +103,21 @@ struct AsteroidDiscoveryScreen: View {
             tool: { EmptyView() },
             // iOS has no deep-space telescope level yet; web reads deepSpaceTelescopeLevel.
             instrumentId: "deep-space-telescope", level: 1,
-            module: InstrumentModule(name: "ASTROMETRY · AS-03", lights: [("NEAR ECL", abs(beta) < 10, true)], content: AnyView(
+            module: InstrumentModule(name: "ASTROMETRY · AS-03", lights: [("READ", offsetRead != nil, true)], content: AnyView(
                 HStack(alignment: .top, spacing: 8) {
                     Knob(label: "FIELD", readout: fieldDeg < 20 ? String(format: "%.1f°", fieldDeg) : String(format: "%.0f°", fieldDeg),
                          value: field, range: 1...SkyPlot.fieldMax) { field = $0 }
-                    ModuleKey(label: "ECL LAT", readout: String(format: "%+.1f°", beta), pressed: field > 1) { field = field > 1 ? 1 : 6 }
+                    Knob(label: "OFFSET", readout: offsetRead.map { Self.signed($0) } ?? "READ", value: offsetRead ?? 0, range: -Self.offsetMax...Self.offsetMax) { v in
+                        if saved == nil { offsetRead = v.rounded() }
+                    }
                     VStack(spacing: 4) {
                         LeverSwitch(label: "GRID", on: showGrid) { showGrid.toggle() }
                         LeverSwitch(label: "ECLIPTIC", on: showEcliptic) { showEcliptic.toggle() }
                     }
-                })))
+                })),
+            readout: InstrumentReadout(name: "READOUT · YOUR RESULT", rows: rows))
         .id(c.id)
-        .onChange(of: c.id) { field = 1 }
+        .onChange(of: c.id) { field = 1; offsetRead = nil }
     }
 }
 

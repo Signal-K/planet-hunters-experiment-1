@@ -1558,6 +1558,23 @@
 .moduleKeyLabel { font: 700 14px/1.1 var(--ln-font-display, var(--ln-font-mono)); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
 .moduleKeyReadout { font: 600 14px/1.1 var(--ln-font-mono); color: var(--hw-phosphor); text-shadow: 0 0 6px rgba(var(--hw-b-rgb), .8); white-space: nowrap; }
 
+/* Result readout (SSL-747): the player's own measurements, settings and verdict, line by line. */
+.resultPlate { display: grid; gap: 6px; flex: none; }
+.result {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(var(--hw-b-rgb), .3);
+  border-radius: 10px;
+  background: rgba(var(--hw-glass-bottom-rgb), .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 0 18px rgba(0, 0, 0, .35);
+}
+.result div { display: contents; }
+.result dt { font: 700 14px/1.5 var(--ln-font-display, var(--ln-font-mono)); letter-spacing: .06em; text-transform: uppercase; color: #a9b6cc; white-space: nowrap; }
+.result dd { margin: 0; text-align: right; font: 600 14px/1.5 var(--ln-font-mono); color: var(--hw-phosphor); text-shadow: 0 0 6px rgba(var(--hw-b-rgb), .6); overflow-wrap: normal; }
+
 /* Saturn loupe (SSL-745): the selected square fills the well at 3×. */
 .loupe { position: absolute; inset: 0; overflow: hidden; background: #000; }
 .loupe img { position: absolute; width: 300%; height: 300%; max-width: none; max-height: none; object-fit: cover; }

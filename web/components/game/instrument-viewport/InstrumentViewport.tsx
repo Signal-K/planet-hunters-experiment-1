@@ -66,6 +66,19 @@ interface InstrumentViewportProps {
    * transit telescope's TIME / BIN / FOLD. Drawn as a second plate under the optics.
    */
   module?: InstrumentModule
+  /**
+   * The player's own result, line by line (SSL-747): what they measured, the settings they
+   * used and their verdict. A record of their work, never a grade or a hint.
+   */
+  readout?: InstrumentReadout
+}
+
+export interface InstrumentReadoutRow { label: string; value: string; testId?: string }
+export interface InstrumentReadout {
+  /** Engraved plate name, e.g. "READOUT · YOUR RESULT". */
+  name: string
+  testId: string
+  rows: InstrumentReadoutRow[]
 }
 
 export interface InstrumentModule {
@@ -299,6 +312,7 @@ export default function InstrumentViewport({
   instrumentId = 'instrument',
   level = 1,
   module,
+  readout,
 }: InstrumentViewportProps) {
   // Device-local choice, read after mount so the server render (AUTO) hydrates cleanly.
   const [finishChoice, setFinishChoice] = useState<string>(AUTO_FINISH)
@@ -525,6 +539,18 @@ export default function InstrumentViewport({
                 </button>
               )}
             </div>
+            )}
+            {readout && (
+              <section className={styles.resultPlate} data-testid={readout.testId} aria-label={readout.name}>
+                <div className={styles.plate}>
+                  <span className={styles.plateName}>{readout.name}</span>
+                </div>
+                <dl className={styles.result}>
+                  {readout.rows.map(row => (
+                    <div key={row.label} data-testid={row.testId}><dt>{row.label}</dt><dd>{row.value}</dd></div>
+                  ))}
+                </dl>
+              </section>
             )}
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}

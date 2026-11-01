@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import AsteroidSkyPlot, { SKY_FIELD_LIMITS, eclipticLatitude } from '@/components/game/AsteroidSkyPlot'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentStandbyViewport, InstrumentSwitch, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
@@ -22,6 +22,10 @@ interface AsteroidDiscoveryScreenProps {
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
 }
 
+/** Widest ecliptic offset the OFFSET knob can log, in degrees. */
+const OFFSET_MAX = 60
+const signed = (n: number, digits = 0) => `${n >= 0 ? '+' : ''}${n.toFixed(digits)}°`
+
 const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string }> = [
   { id: 'likely_real', label: 'Flag Likely Real' },
   { id: 'likely_artifact', label: 'Mark Artifact' },
@@ -37,9 +41,12 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   const [retryToken, setRetryToken] = useState(0)
   // SSL-745: astrometry module — FIELD narrows the sky chart around the object; GRID and ECLIPTIC switch overlays.
   const [field, setField] = useState(1)
+  // SSL-747: the player reads the object's offset from the ecliptic off the chart and dials it in.
+  // Nothing computes it for them before they submit; the readout shows the true value afterwards.
+  const [offsetRead, setOffsetRead] = useState<number | null>(null)
   const [showGrid, setShowGrid] = useState(true)
   const [showEcliptic, setShowEcliptic] = useState(true)
-  useEffect(() => { setField(1) }, [candidate?.id])
+  useEffect(() => { setField(1); setOffsetRead(null) }, [candidate?.id])
 
   useEffect(() => {
     if (visualCandidate) {
@@ -169,9 +176,26 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       return { view, lines: [`> FIELD  ×${next.toFixed(1)} · ${(180 / next).toFixed(0)}°`] }
     }
     if (verb === 'GRID') { setShowGrid(on => !on); return { view, lines: [`> GRID  ${showGrid ? 'OFF' : 'ON'}`] } }
-    if (verb === 'ECLIPTIC') { setShowEcliptic(on => !on); return { view, lines: [`> ECLIPTIC  ${showEcliptic ? 'OFF' : 'ON'} · LAT ${beta >= 0 ? '+' : ''}${beta.toFixed(1)}°`] } }
+    if (verb === 'ECLIPTIC') { setShowEcliptic(on => !on); return { view, lines: [`> ECLIPTIC  ${showEcliptic ? 'OFF' : 'ON'}`] } }
+    if (verb === 'OFFSET') {
+      const n = Number(arg)
+      if (!arg || !Number.isFinite(n)) return { view, lines: [`> OFFSET  ${offsetRead == null ? 'NOT READ' : signed(offsetRead)}`] }
+      const next = Math.max(-OFFSET_MAX, Math.min(OFFSET_MAX, Math.round(n)))
+      setOffsetRead(next)
+      return { view, lines: [`> OFFSET  ${signed(next)} LOGGED`] }
+    }
     return null
   }
+
+  const verdictLabel: Record<AsteroidVerdict, string> = { likely_real: 'LIKELY REAL', likely_artifact: 'ARTIFACT', unsure: 'SKIPPED' }
+  const readoutRows: InstrumentReadoutRow[] = [
+    { label: 'Target', value: candidate.tempDesig },
+    { label: 'Position', value: `${candidate.ra.toFixed(2)}h ${candidate.decl >= 0 ? '+' : ''}${candidate.decl.toFixed(2)}°` },
+    { label: 'Your ecl offset', value: offsetRead == null ? 'NOT READ' : signed(offsetRead), testId: 'neocp-readout-offset' },
+    { label: 'Field used', value: `×${field.toFixed(1)} · ${fieldDeg < 20 ? fieldDeg.toFixed(1) : fieldDeg.toFixed(0)}°` },
+    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : 'PENDING', testId: 'neocp-readout-verdict' },
+    ...(classification ? [{ label: 'True ecl offset', value: `${signed(beta, 1)}`, testId: 'neocp-readout-beta' }] : []),
+  ]
 
   const castVerdict = (id: AsteroidVerdict) => {
     if (classification) return
@@ -193,14 +217,15 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       module={{
         name: 'ASTROMETRY · AS-03',
         testId: 'neocp-astrometry',
-        lights: <InstrumentLamp label="NEAR ECL" on={Math.abs(beta) < 10} tone="amber" />,
+        lights: <InstrumentLamp label="READ" on={offsetRead != null} tone="amber" />,
         content: <>
           <InstrumentKnob label="FIELD" testId="neocp-field" min={SKY_FIELD_LIMITS.min} max={SKY_FIELD_LIMITS.max} step={0.5} value={field} readout={`${fieldDeg < 20 ? fieldDeg.toFixed(1) : fieldDeg.toFixed(0)}°`} onChange={setField} />
-          <InstrumentModuleKey testId="neocp-beta" label="ECL LAT" readout={`${beta >= 0 ? '+' : ''}${beta.toFixed(1)}°`} pressed={field > 1} onClick={() => setField(f => f > 1 ? 1 : 6)} />
+          <InstrumentKnob label="OFFSET" testId="neocp-offset" min={-OFFSET_MAX} max={OFFSET_MAX} step={1} value={offsetRead ?? 0} readout={offsetRead == null ? 'READ' : signed(offsetRead)} onChange={value => !classification && setOffsetRead(Math.round(value))} />
           <InstrumentSwitch label="GRID" testId="neocp-grid" pressed={showGrid} onToggle={() => setShowGrid(on => !on)} />
           <InstrumentSwitch label="ECLIPTIC" testId="neocp-ecliptic" pressed={showEcliptic} onToggle={() => setShowEcliptic(on => !on)} />
         </>,
       }}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'neocp-result', rows: readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="neocp-data-provenance">
           RA {candidate.ra.toFixed(4)}h · DEC {candidate.decl.toFixed(4)}°
