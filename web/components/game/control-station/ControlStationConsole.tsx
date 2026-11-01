@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
   SKY_VIEWS,
@@ -16,6 +16,8 @@ import styles from './ControlStationConsole.module.css'
  * right. Upright, the map and horizon come first and the telescopes sit under them. Each telescope is a switch: on,
  * it filters the map to what it finds. The View switch picks explored, unexplored or everything in the catalogue.
  * Tapping an unexplored anomaly opens its classify tool.
+ * SSL-741: dressed as Liam's v0 telescope console (navy, teal and cyan; a round scope with a reticle, corner
+ * readouts, twinkling field and glowing blips; a gradient desk header with status tiles). Every number is real.
  */
 interface ControlStationConsoleProps {
   telescopes: StationTelescope[]
@@ -73,6 +75,20 @@ function TelescopeIcon({ place }: { place: StationTelescope['place'] }) {
     return <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="9" width="8" height="14" rx="2" /><path d="M12 14H4v5h8M20 14h8v5h-8M16 9V5" /></svg>
   }
   return <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6" /><ellipse cx="16" cy="16" rx="13" ry="4" transform="rotate(-18 16 16)" /></svg>
+}
+
+/** A fixed star field for the scope (seeded, so it never jumps between renders). */
+function starField(count: number) {
+  let seed = 7
+  const next = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
+  return Array.from({ length: count }, () => ({
+    x: next() * 100,
+    y: next() * 100,
+    size: 1 + Math.round(next() * 2),
+    delay: next() * 4,
+    speed: 2 + next() * 3,
+    warm: next() > 0.8,
+  }))
 }
 
 /** Where each place sits on the horizon strip, in percent of the strip. */
@@ -141,6 +157,9 @@ export function ControlStationConsole({
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
+  const stars = useMemo(() => starField(70), [])
+  const online = telescopes.filter(item => item.live).length
+  const status = acquiring ? 'Acquiring' : waiting > 0 ? 'Scanning' : 'Standby'
 
   return (
     <article className={styles.workspace} data-testid="control-station">
@@ -154,6 +173,35 @@ export function ControlStationConsole({
             <span>{acquiring ? 'Acquiring' : `${waiting} to classify`}</span>
           </div>
           <div className={styles.field}>
+            <div className={styles.stars} aria-hidden="true">
+              {stars.map((star, i) => (
+                <i
+                  key={i}
+                  data-warm={star.warm}
+                  style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: `${star.delay}s`, animationDuration: `${star.speed}s` }}
+                />
+              ))}
+            </div>
+            <div className={styles.reticle} aria-hidden="true">
+              <span className={styles.ring} />
+              <span className={styles.crossH} />
+              <span className={styles.crossV} />
+              <span className={styles.corner} data-at="tl" />
+              <span className={styles.corner} data-at="tr" />
+              <span className={styles.corner} data-at="bl" />
+              <span className={styles.corner} data-at="br" />
+              <span className={styles.bead} />
+              <span className={styles.scan} />
+              <span className={styles.scan} data-late="true" />
+            </div>
+            <div className={styles.marks} aria-hidden="true">
+              <span>Field: {view}</span>
+              <span>Targets: {anomalies.length}</span>
+            </div>
+            <div className={styles.marks} data-at="bottom" aria-hidden="true">
+              <span>Online: {online}/{telescopes.length}</span>
+              <span>Status: {status}</span>
+            </div>
             {anomalies.map(anomaly => (
               <button
                 key={anomaly.id}
@@ -211,7 +259,21 @@ export function ControlStationConsole({
       </section>
 
       <section className={styles.desk} aria-label="Telescopes">
-        <h1 className={styles.title}>Control station</h1>
+        <header className={styles.deskHead}>
+          <span className={styles.deskIcon} aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>
+          </span>
+          <span>
+            <h1 className={styles.title}>Control station</h1>
+            <small className={styles.subtitle}>Observatory layout</small>
+          </span>
+        </header>
+        <dl className={styles.tiles} data-testid="control-station-tiles">
+          <div><dt>Targets</dt><dd>{anomalies.length}</dd></div>
+          <div data-hot={waiting > 0}><dt>To classify</dt><dd>{waiting}</dd></div>
+          <div><dt>Classified</dt><dd>{history.total}</dd></div>
+          <div><dt>Online</dt><dd>{online}/{telescopes.length}</dd></div>
+        </dl>
         <ul className={styles.keys}>
           {telescopes.map(scope => (
             <li key={scope.id} className={styles.key} data-testid="control-station-telescope" data-telescope={scope.id} data-on={scope.id === telescopeId}>
