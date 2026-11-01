@@ -26,6 +26,14 @@ struct SaturnStormSearchScreen: View {
         }
     }
 
+    /// The Saturn desk briefs the player on their first frame (web `SATURN_BRIEFING`).
+    static let briefing = [
+        "Saturn desk here. This is a real Cassini frame of Saturn's clouds, cut into nine squares. Your satellite sends one a day.",
+        "Tap a square to look at it. The white box shows the square you picked. Aim, zoom and exposure help you see detail.",
+        "A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap MARK STORM, then answer YES.",
+        "Smooth bands with no knot are NO. If you cannot tell, answer MAYBE. Each answer is saved straight away. Answer all nine squares to finish the frame.",
+    ]
+
     private func classify(_ c: SaturnCandidate) -> some View {
         let saved = store.player.saturnClassifications[c.id]
         return InstrumentViewport(
@@ -49,7 +57,8 @@ struct SaturnStormSearchScreen: View {
                 InstrumentAnswerButton(title: storms.contains(selected) ? "Unmark storm" : "Mark storm", enabled: saved == nil) {
                     if storms.contains(selected) { storms.remove(selected) } else { storms.insert(selected) }
                 }
-            })
+            },
+            briefing: InstrumentBriefing(speaker: "Saturn desk", lines: Self.briefing, startOpen: store.player.saturnClassifications.isEmpty))
         .id(c.id)
     }
 

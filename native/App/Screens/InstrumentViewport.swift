@@ -23,6 +23,9 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     @State private var log: [String] = ["> DOWNLINK RECEIVED"]
     @State private var line = ""
     var initialView = InstrumentView()
+    /// The person on the other end of the downlink briefs the player (web `InstrumentBriefing`).
+    var briefing: InstrumentBriefing? = nil
+    @State private var briefStep: Int? = nil
 
     var body: some View {
         scroller {
@@ -30,7 +33,10 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
                 header
                 stage
                 controls
-                command
+                if let b = briefing, let i = briefStep, i < b.lines.count { desk(b, i) } else { command }
+                if let b = briefing, briefStep == nil {
+                    InstrumentAnswerButton(title: "Briefing · \(b.speaker)") { briefStep = 0 }
+                }
                 answers
                 tool
             }
@@ -38,7 +44,10 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         }
         .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
-        .onAppear { view = initialView }
+        .onAppear {
+            view = initialView
+            if briefing?.startOpen == true { briefStep = 0 }
+        }
     }
 
     @ViewBuilder private func scroller<C: View>(@ViewBuilder _ c: () -> C) -> some View {
@@ -149,6 +158,21 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.ink, lineWidth: 2))
     }
 
+    private func desk(_ b: InstrumentBriefing, _ i: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(b.speaker.uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.blueBright)
+            Text(b.lines[i]).font(AppFont.body(16)).fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.updatesFrequently)
+            InstrumentAnswerButton(title: i + 1 < b.lines.count ? "Next · \(i + 1)/\(b.lines.count)" : "Start", primary: true) {
+                briefStep = i + 1 < b.lines.count ? i + 1 : nil
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.paper2, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.blueBright, lineWidth: 2))
+    }
+
     private func run() {
         let text = line; line = ""
         guard let r = onCommand?(text, view) ?? Instrument.apply(view, text) else {
@@ -157,6 +181,14 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         view = r.view; log.append(contentsOf: r.lines)
         log = Array(log.suffix(8))
     }
+}
+
+/// Lines from the person on the other end of an instrument's downlink (web `InstrumentBriefing`).
+struct InstrumentBriefing {
+    let speaker: String
+    let lines: [String]
+    /// Open on arrival: the player's first time on this instrument.
+    let startOpen: Bool
 }
 
 private struct InvertIf: ViewModifier {

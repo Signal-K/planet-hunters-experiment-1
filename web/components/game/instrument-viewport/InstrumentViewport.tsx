@@ -54,6 +54,18 @@ interface InstrumentViewportProps {
    * (POINT, ZOOM, FOCUS, EXPOSE, STRETCH, INVERT, DOWNLINK, HELP).
    */
   onCommand?: (line: string, view: InstrumentView) => InstrumentCommandResult | null
+  /** The person on the other end of the downlink. Their lines brief the player in the console. */
+  briefing?: InstrumentBriefing
+}
+
+export interface InstrumentBriefing {
+  /** Who is talking, e.g. "Saturn desk". */
+  speaker: string
+  lines: readonly string[]
+  /** Open on arrival: the player's first time on this instrument. Otherwise it waits behind BRIEFING. */
+  startOpen: boolean
+  /** Called when the player reaches the end of the briefing. */
+  onDone?: () => void
 }
 
 const LOG_LIMIT = 8
@@ -230,7 +242,15 @@ export default function InstrumentViewport({
   tool,
   emptyToolLabel,
   onCommand,
+  briefing,
 }: InstrumentViewportProps) {
+  const [briefStep, setBriefStep] = useState<number | null>(briefing?.startOpen ? 0 : null)
+  const briefLine = briefing && briefStep != null ? briefing.lines[briefStep] : null
+  const nextBrief = () => {
+    if (!briefing || briefStep == null) return
+    if (briefStep + 1 < briefing.lines.length) setBriefStep(briefStep + 1)
+    else { setBriefStep(null); briefing.onDone?.() }
+  }
   const [view, setView] = useState<InstrumentView>(DEFAULT_INSTRUMENT_VIEW)
   const [log, setLog] = useState<string[]>(['> DOWNLINK  RECEIVED'])
   const [draft, setDraft] = useState('')
@@ -306,6 +326,12 @@ export default function InstrumentViewport({
 
           <div className={styles.wellSlot}>
           <div className={styles.well} data-testid="instrument-viewport" data-ui-zone={UI_ZONES.screenContent}>
+            <div className={styles.titleBar} data-testid="instrument-title-bar">
+              <span className={styles.titleStation}>{eyebrow}</span>
+              <b className={styles.titleName}>{title}</b>
+              <span className={styles.titleStatus} data-testid="instrument-title-status">{status}</span>
+            </div>
+            <div className={styles.view}>
             <div
               className={styles.optics}
               data-testid="instrument-optics"
@@ -324,10 +350,20 @@ export default function InstrumentViewport({
             <div className={styles.reticle} aria-hidden="true" />
             {viewportChrome}
             {caption}
+            </div>
           </div>
           </div>
 
           <div className={styles.command} data-testid="instrument-command">
+            {briefing && briefLine != null ? (
+              <section className={styles.desk} data-testid="instrument-briefing" aria-label={briefing.speaker}>
+                <span className={styles.speaker}>{briefing.speaker}</span>
+                <p className={styles.deskLine} data-testid="instrument-briefing-line" aria-live="polite">{briefLine}</p>
+                <button type="button" className={styles.deskNext} data-testid="instrument-briefing-next" onClick={nextBrief}>
+                  {briefStep! + 1 < briefing.lines.length ? `NEXT · ${briefStep! + 1}/${briefing.lines.length}` : 'START'}
+                </button>
+              </section>
+            ) : (
             <div className={styles.terminal} data-open={terminalOpen ? 'true' : 'false'} data-testid="instrument-terminal">
               <ol className={styles.log} data-testid="instrument-command-log">
                 {log.map((line, index) => <li key={`${index}-${line}`}>{line}</li>)}
@@ -357,7 +393,13 @@ export default function InstrumentViewport({
                   {lastLine.replace(/^>\s*/, '').replace(/\s{2,}/g, ' · ')} {terminalOpen ? '▾' : '▴'}
                 </button>
               </div>
+              {briefing && (
+                <button type="button" className={styles.briefButton} data-testid="instrument-briefing-open" onClick={() => setBriefStep(0)}>
+                  BRIEFING · {briefing.speaker}
+                </button>
+              )}
             </div>
+            )}
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
             {tool ? <>

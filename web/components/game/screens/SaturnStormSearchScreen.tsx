@@ -29,6 +29,14 @@ const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string; mark: string }>
   { id: 'maybe', label: 'Maybe', mark: 'M' },
 ]
 
+/** The Saturn desk briefs the player on their first frame (notes/decisions "Instruments are controls you look through"). */
+export const SATURN_BRIEFING = [
+  'Saturn desk here. This is a real Cassini frame of Saturn\'s clouds, cut into nine squares. Your satellite sends one a day.',
+  'Tap a square to look at it. The white box shows the square you picked. Aim, zoom and exposure on the left help you see detail.',
+  'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap MARK STORM, then answer YES.',
+  'Smooth bands with no knot are NO. If you cannot tell, answer MAYBE. Each answer is saved straight away. Answer all nine squares to finish the frame.',
+] as const
+
 type CellState = { answer: SaturnVerdict | null; storm: boolean }
 
 function emptyCells(): CellState[] {
@@ -156,10 +164,11 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     <InstrumentViewport
       testId="saturn-storm-search-screen"
       sceneClassName="ln-scene-asteroid-discovery"
-      eyebrow="INSTRUMENT DATA FEED · SATURN DOWNLINK"
+      eyebrow="SATURN DOWNLINK"
       title={candidate.opusId.toUpperCase()}
       onBack={onBack}
       status={complete ? 'FRAME COMPLETE' : `PIECES ${pieces} / 9`}
+      briefing={{ speaker: 'Saturn desk', lines: SATURN_BRIEFING, startOpen: Object.keys(classifications).length === 0 }}
       caption={(
         <p className={viewportStyles.caption} data-testid="saturn-question">{SATURN_QUESTION}</p>
       )}

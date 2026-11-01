@@ -11,9 +11,12 @@
   --iv-blue: #2fb5d4;
   --iv-line: rgba(244, 239, 228, .34);
   color: var(--iv-ink);
-  background:
-    linear-gradient(90deg, rgba(26, 66, 168, .62) 0 62%, rgba(18, 104, 116, .6) 62% 100%),
-    #10182c;
+}
+
+/* Doubled so the global scene classes (theme-blueprint, ln-scene-*) cannot repaint it light paper:
+   that left pale gutters between the panels and a pale strip under them. */
+.screen.screen {
+  background: #10182c !important;
 }
 
 .screen :global(.top-bar) {
@@ -613,7 +616,8 @@
 }
 
 @media (orientation: landscape), (min-width: 960px) {
-  .body { top: 64px; }
+  /* The top bar is 76px tall (18 + 44 + 12 padding, 2px rule); 64 slid every panel under it. */
+  .body { top: 80px; }
 
   .stage {
     grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) minmax(200px, 280px);
@@ -632,12 +636,16 @@
   .controlGrid {
     flex-direction: column;
     align-items: stretch;
-    justify-content: space-between;
-    height: 100%;
+    justify-content: flex-start;
+    gap: var(--ln-s-5);
   }
 
   .knobRow,
-  .switchRow { justify-content: space-between; }
+  .switchRow { justify-content: space-around; }
+  /* EXPOSURE is wider than its dial: let the three dials wrap rather than clip the label. */
+  .knobRow { flex-wrap: wrap; gap: var(--ln-s-2) 12px; }
+  .knob { width: auto; min-width: 56px; }
+  .knobLabel, .switchLabel { letter-spacing: 0.02em; white-space: nowrap; }
 
   .wellSlot { display: block; }
 
@@ -655,7 +663,8 @@
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .body { top: 52px; padding-bottom: var(--ln-s-1); }
+  /* The top bar is 62px here; 52 slid the panels under it. */
+  .body { top: 66px; padding-bottom: var(--ln-s-1); }
   /* Wide enough that no label is cut: EXPOSURE wraps under ZOOM and FOCUS, and the verdicts stack. */
   .stage {
     grid-template-columns: 200px minmax(0, 1fr) 232px;
@@ -756,3 +765,54 @@
 .answers:has(> .answer:only-child) { grid-template-columns: minmax(0, 1fr); }
 /* No reticle over a standby message: it sat on top of the result text. */
 .well:has(.standby) .reticle { display: none; }
+
+/* The instrument window's own title bar: station, frame and progress (the top bar shows only Back). */
+.well { display: flex; flex-direction: column; }
+.titleBar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+  min-height: 36px;
+  padding: 4px var(--ln-s-2);
+  background: var(--iv-paper);
+  border-bottom: 2px solid var(--iv-ink);
+  color: var(--iv-ink);
+  font: 800 14px/1.2 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.titleStation { color: var(--iv-mute); overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+.titleName { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.titleStatus { margin-left: auto; flex: none; color: var(--iv-blue); }
+.view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+
+/* The person on the other end of the downlink briefs the player in the console (first visit, or BRIEFING). */
+.desk {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-2);
+  min-height: 0;
+  padding: var(--ln-s-2);
+  background: var(--iv-paper-2);
+  border: 2px solid var(--iv-blue);
+  border-radius: var(--ln-r-lg);
+  box-shadow: 3px 3px 0 rgba(31, 120, 193, 0.28);
+}
+.speaker { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--iv-blue); }
+.command > .desk { flex-shrink: 0; }
+.deskLine { flex: 1 0 auto; margin: 0; font: 500 16px/1.45 var(--ln-font-body); color: var(--iv-ink); overflow: auto; }
+.deskNext,
+.briefButton {
+  min-height: 44px;
+  border-radius: var(--ln-r-lg);
+  font: 800 14px/1.15 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.deskNext { border: 2px solid #ecebe8; background: #ecebe8; color: #16171a; }
+.briefButton { border: 2px solid var(--iv-line); background: transparent; color: var(--iv-ink); }
+.deskNext:focus-visible, .briefButton:focus-visible { outline: 2px solid var(--iv-blue); outline-offset: 2px; }
