@@ -58,7 +58,9 @@ struct AsteroidDiscoveryScreen: View {
                     }
                 }
             },
-            tool: { EmptyView() })
+            tool: { EmptyView() },
+            // iOS has no deep-space telescope level yet; web reads deepSpaceTelescopeLevel.
+            instrumentId: "deep-space-telescope", level: 1)
         .id(c.id)
     }
 }

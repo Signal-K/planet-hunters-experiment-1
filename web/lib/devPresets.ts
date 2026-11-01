@@ -639,7 +639,8 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...POST_ONBOARDING_PLAYER,
           transitSatelliteLaunchedAt: Date.now() - 86_400_000,
-          transitSatelliteLevel: 1,
+          // Level 3 so the fixture shows three unlocked console finishes (Indigo, Ember, Aurora).
+          transitSatelliteLevel: 3,
           researchAnnotations: 3,
           researchXP: 180,
         },

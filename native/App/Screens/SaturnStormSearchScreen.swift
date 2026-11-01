@@ -58,7 +58,8 @@ struct SaturnStormSearchScreen: View {
                     if storms.contains(selected) { storms.remove(selected) } else { storms.insert(selected) }
                 }
             },
-            briefing: InstrumentBriefing(speaker: "Saturn desk", lines: Self.briefing, startOpen: store.player.saturnClassifications.isEmpty))
+            briefing: InstrumentBriefing(speaker: "Saturn desk", lines: Self.briefing, startOpen: store.player.saturnClassifications.isEmpty),
+            instrumentId: "saturn-imager", level: store.player.transitSatelliteLevel ?? 1)
         .id(c.id)
     }
 

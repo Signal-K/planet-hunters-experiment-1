@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
+import { AUTO_FINISH, INSTRUMENT_FINISHES, finishStyle, nextFinishChoice, readFinishChoice, resolveFinish, unlockedFinishes, writeFinishChoice, type InstrumentFinish } from '@/lib/instrument-finish'
 import TopBar from '@/components/ui/TopBar'
 import { UI_ZONES } from '@/lib/ui-zones'
 import {
@@ -56,7 +57,15 @@ interface InstrumentViewportProps {
   onCommand?: (line: string, view: InstrumentView) => InstrumentCommandResult | null
   /** The person on the other end of the downlink. Their lines brief the player in the console. */
   briefing?: InstrumentBriefing
+  /** Which instrument this is; the player's finish choice is kept per instrument. */
+  instrumentId?: string
+  /** Instrument level: picks the default finish and which finishes are unlocked. */
+  level?: number
 }
+
+const FinishContext = createContext<InstrumentFinish>(INSTRUMENT_FINISHES[0])
+/** The console's current colourway, for renderers inside the viewport (the TESS chart). */
+export function useInstrumentFinish(): InstrumentFinish { return useContext(FinishContext) }
 
 export interface InstrumentBriefing {
   /** Who is talking, e.g. "Saturn desk". */
@@ -256,7 +265,14 @@ export default function InstrumentViewport({
   emptyToolLabel,
   onCommand,
   briefing,
+  instrumentId = 'instrument',
+  level = 1,
 }: InstrumentViewportProps) {
+  // Device-local choice, read after mount so the server render (AUTO) hydrates cleanly.
+  const [finishChoice, setFinishChoice] = useState<string>(AUTO_FINISH)
+  useEffect(() => { setFinishChoice(readFinishChoice(instrumentId)) }, [instrumentId])
+  const finish = resolveFinish(finishChoice, level)
+  const chooseFinish = (choice: string) => { setFinishChoice(choice); writeFinishChoice(instrumentId, choice) }
   const [briefStep, setBriefStep] = useState<number | null>(briefing?.startOpen ? 0 : null)
   const briefLine = briefing && briefStep != null ? briefing.lines[briefStep] : null
   const nextBrief = () => {
@@ -276,6 +292,16 @@ export default function InstrumentViewport({
   }
 
   const runCommand = (raw: string) => {
+    const [verb, arg] = raw.trim().toUpperCase().split(/\s+/)
+    if (verb === 'FINISH') {
+      const unlocked = unlockedFinishes(level)
+      if (!arg) { pushLines([`> FINISH  ${finish.name.toUpperCase()}${finishChoice === AUTO_FINISH ? ' · AUTO' : ''}`, `  UNLOCKED: AUTO ${unlocked.map(f => f.name.toUpperCase()).join(' ')}`]); return }
+      if (arg === 'AUTO') { chooseFinish(AUTO_FINISH); pushLines([`> FINISH  AUTO · ${resolveFinish(AUTO_FINISH, level).name.toUpperCase()}`]); return }
+      const wanted = INSTRUMENT_FINISHES.find(f => f.id.toUpperCase() === arg)
+      if (!wanted) { pushLines([`> FINISH ${arg}  UNKNOWN`]); return }
+      if (wanted.unlockLevel > level) { pushLines([`> FINISH ${arg}  LOCKED · REACH LV ${wanted.unlockLevel}`]); return }
+      chooseFinish(wanted.id); pushLines([`> FINISH  ${arg}`]); return
+    }
     const project = onCommand?.(raw, view)
     const result = project === undefined || project === null ? applyInstrumentCommand(view, raw) : project
     if (!result) {
@@ -303,11 +329,13 @@ export default function InstrumentViewport({
     '--iv-blur': `${optics.blurPx}px`,
     '--iv-invert': String(optics.invert),
   } as CSSProperties
+  const finishVars = finishStyle(finish) as CSSProperties
 
   const lastLine = log[log.length - 1] ?? '> DOWNLINK  RECEIVED'
 
   return (
-    <div className={`game-screen theme-blueprint ${sceneClassName} ${styles.screen}`} data-testid={testId}>
+    <FinishContext.Provider value={finish}>
+    <div className={`game-screen theme-blueprint ${sceneClassName} ${styles.screen}`} data-testid={testId} data-finish={finish.id} style={finishVars}>
       <TopBar eyebrow={eyebrow} title={title} onBack={onBack} right={help} solid />
       {helpLayer}
       <div className={styles.body}>
@@ -322,6 +350,22 @@ export default function InstrumentViewport({
                 <span className={styles.led} data-on={view.zoom > 1 ? 'true' : 'false'} data-tone="amber" />MAG
               </span>
             </div>
+            <button
+              type="button"
+              className={styles.finishKey}
+              data-testid="instrument-finish"
+              aria-label={`Console finish: ${finish.name}${finishChoice === AUTO_FINISH ? ', following level' : ''}. Change finish.`}
+              onClick={() => chooseFinish(nextFinishChoice(finishChoice, level))}
+            >
+              <span className={styles.finishSwatch} aria-hidden="true" />
+              <span className={styles.finishName}>FINISH · {finish.name.toUpperCase()}</span>
+              <span className={styles.finishPips} aria-hidden="true">
+                {INSTRUMENT_FINISHES.map(f => (
+                  <i key={f.id} data-locked={f.unlockLevel > level ? 'true' : 'false'} data-current={f.id === finish.id ? 'true' : 'false'} style={{ background: `linear-gradient(135deg, ${f.a}, ${f.b}, ${f.c})` }} title={f.unlockLevel > level ? `LV ${f.unlockLevel}` : f.name} />
+                ))}
+              </span>
+              <span className={styles.finishMode}>{finishChoice === AUTO_FINISH ? `AUTO · LV ${level}` : 'PINNED'}</span>
+            </button>
             <div className={styles.controlGrid}>
               <div className={styles.dpadBlock}>
                 <div className={styles.dpad} role="group" aria-label="Aim">
@@ -456,6 +500,7 @@ export default function InstrumentViewport({
         </div>
       </div>
     </div>
+    </FinishContext.Provider>
   )
 }
 

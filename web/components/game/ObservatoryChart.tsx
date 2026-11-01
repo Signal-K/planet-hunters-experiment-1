@@ -16,6 +16,8 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { useInstrumentFinish } from './instrument-viewport/InstrumentViewport'
+import { hexNumber, type InstrumentFinish } from '@/lib/instrument-finish'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
@@ -56,9 +58,20 @@ function lerpChannel(a: number, b: number, t: number): number {
   const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255
   return (Math.round(ar + (br - ar) * t) << 16) | (Math.round(ag + (bg - ag) * t) << 8) | Math.round(ab + (bb - ab) * t)
 }
-function dipColor(frac: number): number {
+/** Chart colours from the console finish (lib/instrument-finish.ts); Indigo matches the constants above. */
+interface ChartPalette { skyA: number; skyB: number; skyC: number; skyD: number; mark: number; line: number; lo: number; mid: number; hi: number }
+const DEFAULT_PALETTE: ChartPalette = { skyA: SKY_PURPLE, skyB: SKY_VIOLET, skyC: SKY_RUST, skyD: SKY_AMBER, mark: MARK_COLOR, line: LINE_COLOR, lo: DOT_LO, mid: DOT_MID, hi: DOT_HI }
+function paletteFor(f: InstrumentFinish): ChartPalette {
+  if (f.id === 'indigo') return DEFAULT_PALETTE
+  const a = hexNumber(f.a), b = hexNumber(f.b), c = hexNumber(f.c)
+  return {
+    skyA: lerpChannel(b, 0, 0.6), skyB: lerpChannel(a, 0, 0.7), skyC: lerpChannel(c, 0, 0.5), skyD: lerpChannel(a, 0, 0.55),
+    mark: c, line: lerpChannel(a, 0xffffff, 0.6), lo: lerpChannel(a, 0xffffff, 0.55), mid: b, hi: c,
+  }
+}
+function dipColor(frac: number, pal: ChartPalette): number {
   const c = Math.max(0, Math.min(1, frac))
-  return c < 0.5 ? lerpChannel(DOT_LO, DOT_MID, c / 0.5) : lerpChannel(DOT_MID, DOT_HI, (c - 0.5) / 0.5)
+  return c < 0.5 ? lerpChannel(pal.lo, pal.mid, c / 0.5) : lerpChannel(pal.mid, pal.hi, (c - 0.5) / 0.5)
 }
 function mulberry32(seed: number): () => number {
   let a = seed | 0
@@ -99,6 +112,8 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
   const onRangeRef = useRef(onRange); onRangeRef.current = onRange
   const onRemoveRef = useRef(onRemoveRange); onRemoveRef.current = onRemoveRange
   const lockedRef = useRef(locked); lockedRef.current = locked
+  const finish = useInstrumentFinish()
+  const paletteRef = useRef(DEFAULT_PALETTE); paletteRef.current = paletteFor(finish)
 
   useEffect(() => {
     const host = hostRef.current
@@ -199,6 +214,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       const yRange = yMax - yMin || 1
       const toX = (dx: number) => xForData(dx, xMin, xMax, plotW)
       const toY = (dy: number) => PAD_TOP + (1 - (dy - yMin) / yRange) * plotH
+      const pal = paletteRef.current
 
       // ── Nebula sky (deterministic, no per-frame flicker) ──────────────────
       bgG.clear()
@@ -207,10 +223,10 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         const steps = 6
         for (let i = steps; i >= 1; i--) bgG.circle(cx, cy, (r * i) / steps).fill({ color, alpha: (maxAlpha / steps) * 1.5 })
       }
-      soft(W * 0.24, H * 0.08, W * 0.85, SKY_PURPLE, 0.34)
-      soft(W * 0.88, H * 0.36, W * 0.6, SKY_VIOLET, 0.18)
-      soft(W * 0.1, H * 0.7, W * 0.45, SKY_RUST, 0.2)
-      soft(W * 0.5, H * 1.04, W * 1.05, SKY_AMBER, 0.36)
+      soft(W * 0.24, H * 0.08, W * 0.85, pal.skyA, 0.34)
+      soft(W * 0.88, H * 0.36, W * 0.6, pal.skyB, 0.18)
+      soft(W * 0.1, H * 0.7, W * 0.45, pal.skyC, 0.2)
+      soft(W * 0.5, H * 1.04, W * 1.05, pal.skyD, 0.36)
       // Kept plain white/dim and low-alpha on purpose — these are backdrop
       // decoration and must read as clearly *behind* the flux data, not
       // compete with it (see the alpha fix on dataG below for why this
@@ -239,8 +255,8 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         const elapsed = (performance.now() - scanStart) % 5000
         const t = elapsed / 5000
         const sx = PAD_LEFT + t * plotW
-        scanG.rect(sx - 1, PAD_TOP, 2, plotH).fill({ color: LINE_COLOR, alpha: 0.16 })
-        scanG.moveTo(sx, PAD_TOP).lineTo(sx, PAD_TOP + plotH).stroke({ color: LINE_COLOR, alpha: 0.35, width: 1 })
+        scanG.rect(sx - 1, PAD_TOP, 2, plotH).fill({ color: pal.line, alpha: 0.16 })
+        scanG.moveTo(sx, PAD_TOP).lineTo(sx, PAD_TOP + plotH).stroke({ color: pal.line, alpha: 0.35, width: 1 })
       }
 
       // ── Committed range fills (amber, dashed edges) ────────────────────
@@ -250,15 +266,15 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         const rx1 = toX(Math.min(r.x1, r.x2))
         const rx2 = toX(Math.max(r.x1, r.x2))
         const rw = rx2 - rx1
-        rangeG.rect(rx1, PAD_TOP, rw, plotH).fill({ color: MARK_COLOR, alpha: 0.2 })
+        rangeG.rect(rx1, PAD_TOP, rw, plotH).fill({ color: pal.mark, alpha: 0.2 })
         for (const ex of [rx1, rx2]) {
           for (let y = PAD_TOP; y < PAD_TOP + plotH; y += 6) {
-            rangeG.moveTo(ex, y).lineTo(ex, Math.min(y + 3, PAD_TOP + plotH)).stroke({ color: MARK_COLOR, alpha: 0.85, width: 1.5 })
+            rangeG.moveTo(ex, y).lineTo(ex, Math.min(y + 3, PAD_TOP + plotH)).stroke({ color: pal.mark, alpha: 0.85, width: 1.5 })
           }
         }
         if (rw > 20) {
           const dur = Math.abs(r.x2 - r.x1).toFixed(2)
-          const lbl = new Text({ text: `${dur}d`, style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 14, fill: MARK_COLOR, fontWeight: '700' }) })
+          const lbl = new Text({ text: `${dur}d`, style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 14, fill: pal.mark, fontWeight: '700' }) })
           lbl.anchor.set(0.5, 1); lbl.x = rx1 + rw / 2; lbl.y = PAD_TOP - 2
           labelsC.addChild(lbl)
         }
@@ -270,9 +286,9 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         const sx1 = Math.min(dragAnchorPx, dragCurPx)
         const sx2 = Math.max(dragAnchorPx, dragCurPx)
         if (sx2 - sx1 > 2) {
-          selG.rect(sx1, PAD_TOP, sx2 - sx1, plotH).fill({ color: DOT_MID, alpha: 0.14 })
-          selG.moveTo(sx1, PAD_TOP).lineTo(sx1, PAD_TOP + plotH).stroke({ color: DOT_MID, alpha: 0.7, width: 1 })
-          selG.moveTo(sx2, PAD_TOP).lineTo(sx2, PAD_TOP + plotH).stroke({ color: DOT_MID, alpha: 0.7, width: 1 })
+          selG.rect(sx1, PAD_TOP, sx2 - sx1, plotH).fill({ color: pal.mid, alpha: 0.14 })
+          selG.moveTo(sx1, PAD_TOP).lineTo(sx1, PAD_TOP + plotH).stroke({ color: pal.mid, alpha: 0.7, width: 1 })
+          selG.moveTo(sx2, PAD_TOP).lineTo(sx2, PAD_TOP + plotH).stroke({ color: pal.mid, alpha: 0.7, width: 1 })
         }
       }
 
@@ -288,11 +304,11 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       if (pts.length > 1) {
         dataG.moveTo(toX(pts[0].x), toY(pts[0].y))
         for (let i = 1; i < pts.length; i += 1) dataG.lineTo(toX(pts[i].x), toY(pts[i].y))
-        dataG.stroke({ color: LINE_COLOR, alpha: 0.68, width: 1.4 })
+        dataG.stroke({ color: pal.line, alpha: 0.68, width: 1.4 })
       }
       for (const p of pts) {
         const frac = yRange > 0 ? (yMax - p.y) / yRange : 0
-        dataG.circle(toX(p.x), toY(p.y), frac > 0.35 ? 2.1 : 1.7).fill({ color: dipColor(frac), alpha: 0.8 + 0.2 * frac })
+        dataG.circle(toX(p.x), toY(p.y), frac > 0.35 ? 2.1 : 1.7).fill({ color: dipColor(frac, pal), alpha: 0.8 + 0.2 * frac })
       }
 
       // ── Axis labels ──────────────────────────────────────────────────────

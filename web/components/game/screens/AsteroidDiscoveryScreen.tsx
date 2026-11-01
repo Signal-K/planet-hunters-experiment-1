@@ -158,6 +158,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   return (
     <InstrumentViewport
+      instrumentId="deep-space-telescope"
+      level={player.deepSpaceTelescopeLevel ?? 1}
       testId="asteroid-discovery-screen"
       sceneClassName="ln-scene-asteroid-discovery"
       eyebrow="DEEP SPACE · NEO WATCH"

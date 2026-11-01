@@ -162,6 +162,8 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
 
   return (
     <InstrumentViewport
+      instrumentId="saturn-imager"
+      level={Math.max(player.transitSatelliteLevel ?? 1, player.deepSpaceTelescopeLevel ?? 1)}
       testId="saturn-storm-search-screen"
       sceneClassName="ln-scene-asteroid-discovery"
       eyebrow="SATURN DOWNLINK"
