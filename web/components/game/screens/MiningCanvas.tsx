@@ -16,7 +16,7 @@ import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
 import { miningCanvasIsDark } from '@/lib/orionids/theme'
-import { buildLaserField, depositKindFor, obstacleHeightAt } from '@/lib/mining/laserLayers'
+import { buildLaserField, depositKindFor } from '@/lib/mining/laserLayers'
 import type { LaserPalette } from '@/lib/mining/laserPalette'
 
 // Minimum gap between shots: long enough that a mashed tap reads as
@@ -307,15 +307,10 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         let sceneTime = 0
         const CLIMB_SPEED = 120
         const STEER_SPEED = 100
-        const SHIP_BELLY = 14
-        const SHIP_HALF_W = 30
-        const BUMP_KICK = 18
         let altitude = 0
         let climb = 0
         let shipX = startX
         let steering = 0
-        let bumpCooldown = 0
-        let lastObstacleAhead: boolean | null = null
         const minAlt = Math.min(0, 84 - shipY)
         const maxAlt = Math.max(0, surfaceY - 56 - shipY)
         const beamTop = field.beam.y
@@ -332,39 +327,14 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           const dt = ticker.deltaMS / 1000
           shipX = Math.max(40, Math.min(worldW - 40, shipX + steering * STEER_SPEED * dt))
           field.ship.x = shipX
+          field.thrust = steering
           field.beam.x = shipX
           field.spark.x = shipX
           field.dig.x = shipX
           altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
-          if (bumpCooldown > 0) bumpCooldown -= dt
-          const clear = Math.max(
-            obstacleHeightAt(field, shipX - SHIP_HALF_W),
-            obstacleHeightAt(field, shipX),
-            obstacleHeightAt(field, shipX + SHIP_HALF_W),
-          )
-          const obstacleAhead = Math.max(
-            obstacleHeightAt(field, shipX + 80),
-            obstacleHeightAt(field, shipX + 120),
-            obstacleHeightAt(field, shipX + 160),
-          )
-          // SSL-708: measure the hull from the ship as drawn. The fixed SHIP_BELLY guess sat
-          // ~30px below the sprite, so ridges the ship visibly cleared still "hit" it.
-          const drawnBottom = field.ship.getBounds().maxY - app.stage.y
-          const hullBottom = Number.isFinite(drawnBottom) && drawnBottom > 0 ? drawnBottom - 2 : shipY + altitude + SHIP_BELLY
-          const shouldClimb = obstacleAhead > 18 && hullBottom > surfaceY - obstacleAhead - 8
-          if (shouldClimb !== lastObstacleAhead) {
-            lastObstacleAhead = shouldClimb
-            onObstacleAheadRef?.current?.(shouldClimb)
-          }
-          if (clear > 0 && hullBottom > surfaceY - clear + 4) {
-            altitude = Math.max(minAlt, surfaceY - clear - SHIP_BELLY - shipY - BUMP_KICK)
-            // No damage while the run is starting: the ship is lifted clear instead.
-            if (bumpCooldown <= 0 && sceneTime > 1.5) {
-              bumpCooldown = 1.6
-              shakeState.timer = 0.32
-              onBumpRef.current?.()
-            }
-          }
+          // Liam, 01.11: the hills behind the grey ridge are scenery, not solid. They scroll at a third of
+          // the ground's speed and read as distant, so flying "into" them bumped the hull for no visible
+          // reason. The flight floor (maxAlt) keeps the hull above the grey foreground ridge.
           field.ship.y = shipY + altitude + kick + field.hover
           field.beam.y = beamTop + altitude
           field.beam.scale.y = Math.max(0.05, (beamSpan - altitude) / beamSpan)
