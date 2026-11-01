@@ -5,6 +5,7 @@ import { ROCKET_ASSETS } from './rocket-assets'
 import {
   getRequiredRocketModel,
   rocketCompatibleWithMission,
+  rocketJobRoles,
   rocketMissionFit,
   selectRocketForMission,
 } from './rockets'
@@ -100,5 +101,25 @@ describe('rocket asset family', () => {
     expect(ROCKET_ASSETS.prospector.blueprint).toContain('sr2_cutaway.png')
     expect(new Set(Object.values(ROCKET_ASSETS).map(assets => assets.exterior)).size).toBe(2)
     expect(new Set(Object.values(ROCKET_ASSETS).map(assets => assets.blueprint)).size).toBe(2)
+  })
+})
+
+describe('rocketJobRoles', () => {
+  const unlocked = ROCKET_MODELS.filter(model => !model.locked)
+  const job = (cargo: number, orbit: number): Mission => ({ ...telescopeLaunch, payload: undefined, requires: { ...telescopeLaunch.requires, cargo_min: cargo, max_orbit: orbit, drill_tier: 1 } })
+
+  it('flies the smallest rocket that fits; bigger ones are not needed and say what they are for', () => {
+    const roles = rocketJobRoles(unlocked, job(4, 3), () => true)
+    expect(roles.get(ROCKET_IDS.explorer)).toEqual({ kind: 'use' })
+    expect(roles.get(ROCKET_IDS.prospector)).toEqual({ kind: 'not-needed', note: 'Not needed: for more than 6U or past ORB 5' })
+  })
+
+  it('needs a bigger rocket for more cargo or a farther orbit, and says which limit the small one misses', () => {
+    const cargo = rocketJobRoles(unlocked, job(8, 3), rocket => rocketCompatibleWithMission(rocket, job(8, 3)))
+    expect(cargo.get(ROCKET_IDS.explorer)).toEqual({ kind: 'too-small', note: 'Too small: this job carries 8U' })
+    expect(cargo.get(ROCKET_IDS.prospector)).toEqual({ kind: 'use' })
+    const far = rocketJobRoles(unlocked, job(4, 7), rocket => rocketCompatibleWithMission(rocket, job(4, 7)))
+    expect(far.get(ROCKET_IDS.explorer)).toEqual({ kind: 'too-small', note: 'Cannot reach ORB 7' })
+    expect(far.get(ROCKET_IDS.prospector)).toEqual({ kind: 'use' })
   })
 })

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
 import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
-import { rocketCompatibleWithMission } from '@/lib/rockets'
+import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -534,8 +534,8 @@ function ScreenBody({
           pendingRocketName={rocketDisplay.name}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           missionTitle={game.mission?.title ?? null}
-          compatibleRocketIds={game.mission && game.target
-            ? ROCKET_MODELS.filter(model => rocketCompatibleWithMission(model, game.mission!)).map(model => model.id)
+          rocketRoles={game.mission && game.target
+            ? Object.fromEntries(rocketJobRoles(ROCKET_MODELS.filter(model => !model.locked), game.mission, model => rocketCompatibleWithMission(model, game.mission!)))
             : null}
           stagedTier={(() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId && candidate.location === 'hangar')

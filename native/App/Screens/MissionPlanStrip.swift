@@ -109,9 +109,14 @@ struct MissionPlanSheet: View {
         return Targets.feasible(for: mission, targets: store.catalog.targets, parts: store.catalog.parts, missionsDone: store.player.missionsDone,
                                 launchpadUpgraded: store.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(store.player, "launchpad"))
     }
+    /// Every unlocked rocket; `roles` says which one flies this job (SSL-728).
     private var rockets: [RocketModel] {
-        guard let mission = store.mission, let target = store.target else { return [] }
-        return Rockets.models.filter { !$0.locked && $0.missionsRequired <= store.player.missionsDone && Rockets.compatible($0, with: mission)
+        guard store.mission != nil, store.target != nil else { return [] }
+        return Rockets.models.filter { !$0.locked && $0.missionsRequired <= store.player.missionsDone }
+    }
+    private var roles: [String: Rockets.JobRole] {
+        guard let mission = store.mission, let target = store.target else { return [:] }
+        return Rockets.jobRoles(rockets, mission: mission) { Rockets.compatible($0, with: mission)
             && store.catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0)).ok }
     }
 
@@ -137,14 +142,20 @@ struct MissionPlanSheet: View {
                         }
                         if targets.isEmpty { Text("Nothing else fits this contract.").font(AppFont.body(14, "Regular")) }
                     } else {
+                        Text("The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.").font(AppFont.body(14, "Regular"))
+                        let roles = self.roles
                         ForEach(rockets, id: \.id) { r in
-                            let cost = r.costFrancs == 0 ? "Free" : Economy.format(francs: r.costFrancs)
-                            row(r.name, "Build · \(cost)", current: false) {
-                                if store.player.francs < r.costFrancs { notice = "NOT ENOUGH FRANCS: \(Economy.format(francs: r.costFrancs - store.player.francs)) MORE NEEDED"; return }
-                                store.purchaseRocket(r.id); close()
+                            let cost = r.costFrancs == 0 ? "No cost" : Economy.format(francs: r.costFrancs)
+                            if let note = roles[r.id]?.note {
+                                row("\(r.name) · \(r.cargo)U · ORB \(r.maxOrbit)", note, current: false) {}.disabled(true).opacity(0.6)
+                            } else {
+                                row("\(r.name) · \(r.cargo)U · ORB \(r.maxOrbit)", "Stage · \(cost)", current: true) {
+                                    if store.player.francs < r.costFrancs { notice = "NOT ENOUGH FRANCS: \(Economy.format(francs: r.costFrancs - store.player.francs)) MORE NEEDED"; return }
+                                    store.purchaseRocket(r.id); close()
+                                }
                             }
                         }
-                        if rockets.isEmpty { Text("Nothing else fits this contract.").font(AppFont.body(14, "Regular")) }
+                        if rockets.isEmpty { Text("No rocket is unlocked yet.").font(AppFont.body(14, "Regular")) }
                     }
                 }
             }.frame(maxHeight: 280)

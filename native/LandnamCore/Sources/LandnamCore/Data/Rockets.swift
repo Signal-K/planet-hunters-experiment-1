@@ -49,4 +49,38 @@ public enum Rockets {
             && rocket.cargo >= mission.requires.cargoMin
             && rocket.drillTier >= mission.requires.drillTier
     }
+
+    /// What one rocket is to one job (web `rocketJobRoles`). Bigger rockets never earn more; they are needed for
+    /// more cargo or a farther orbit. The cheapest that fits flies the job, a bigger one is not needed and says what
+    /// it is for, and one that cannot fly it says which limit it misses.
+    public enum JobRole: Equatable, Sendable {
+        case use
+        case notNeeded(String)
+        case tooSmall(String)
+        public var note: String? {
+            switch self { case .use: return nil; case .notNeeded(let n), .tooSmall(let n): return n }
+        }
+    }
+
+    /// `fits` is the caller's full check (mission plus destination); rockets it rejects are told why from the mission's needs.
+    public static func jobRoles(_ rockets: [RocketModel], mission: Mission, fits: (RocketModel) -> Bool) -> [String: JobRole] {
+        let fitting = rockets.filter(fits)
+        let use = fitting.min { ($0.costFrancs, $0.tier) < ($1.costFrancs, $1.tier) }
+        let cargoNeed = mission.requires.cargoMin + (mission.payload?.cargoCost ?? 0)
+        var roles: [String: JobRole] = [:]
+        for rocket in rockets {
+            if !fitting.contains(where: { $0.id == rocket.id }) {
+                if rocket.cargo < cargoNeed { roles[rocket.id] = .tooSmall("Too small: this job carries \(cargoNeed)U") }
+                else if rocket.maxOrbit < mission.requires.maxOrbit { roles[rocket.id] = .tooSmall("Cannot reach ORB \(mission.requires.maxOrbit)") }
+                else if rocket.drillTier < mission.requires.drillTier { roles[rocket.id] = .tooSmall("Laser too weak: needs T\(mission.requires.drillTier)") }
+                else { roles[rocket.id] = .tooSmall("Cannot reach this destination") }
+            } else if rocket.id == use?.id {
+                roles[rocket.id] = .use
+            } else {
+                let base = use ?? rocket
+                roles[rocket.id] = .notNeeded("Not needed: for more than \(base.cargo)U or past ORB \(base.maxOrbit)")
+            }
+        }
+        return roles
+    }
 }
