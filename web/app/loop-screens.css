@@ -241,7 +241,7 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
   .portrait-canvas {
     width: 100%;
     max-width: none;
-    height: 100dvh;
+    height: calc(100dvh - var(--safe-y));
     max-height: none;
     border: 0;
     border-radius: 0;

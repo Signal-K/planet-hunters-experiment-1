@@ -1,69 +1,47 @@
 'use client'
 
-import { dailyTasksFor, RESEARCH_BLURB, RESEARCH_TITLE, communityBar, monthGrid, stampDayKey, stampStreak, stampsInMonth, type CommunityResearch, type ResearchStamps } from '@/lib/research/stamps'
+import { dailyTasksFor, RESEARCH_TITLE, communityBar, stampDayKey, stampStreak, stampsInMonth, type CommunityResearch, type ResearchStamps } from '@/lib/research/stamps'
 import styles from './ResearchCalendar.module.css'
 
-const formatBonusEnd = (at: number) => { const d = new Date(at); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}` }
-
+const DAY_MS = 86_400_000
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-/** SSL-663: stamp calendar for the current UTC month. SSL-673: the community bar adds every other player's stamps from the server. */
+/** SSL-663: this week's research stamps. SSL-673: the community bar adds every other player's stamps from the server.
+ *  The full month lives in Community research; the Control Station shows the week, today's state and the bar. */
 export function ResearchCalendar({ stamps, now, community, hasDiscovery = false }: { stamps?: ResearchStamps; now: number; community?: CommunityResearch | null; hasDiscovery?: boolean }) {
   const d = new Date(now)
-  const year = d.getUTCFullYear()
-  const month = d.getUTCMonth()
-  const weeks = monthGrid(year, month, stamps, now)
   const streak = stampStreak(stamps, now)
-  const own = stampsInMonth(stamps, year, month)
-  const bar = communityBar(own, community)
-  const bonusOpen = bar.bonusUntil != null && now < bar.bonusUntil
+  const bar = communityBar(stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth()), community)
+  const today = stampDayKey(now)
+  const offset = (d.getUTCDay() + 6) % 7
+  const week = DOW.map((letter, i) => {
+    const key = stampDayKey(now - (offset - i) * DAY_MS)
+    return { key, letter, stamped: (stamps?.[key] ?? []).length > 0, today: key === today, future: key > today }
+  })
+  const stampedToday = (stamps?.[today] ?? []).length > 0
+  const tasks = dailyTasksFor(hasDiscovery).map(t => t.label.replace(/^./, c => c.toLowerCase()))
   return (
     <section className={styles.plate} data-testid="research-calendar" aria-label="Research calendar">
       <div className={styles.head}>
         <h2 className={styles.title}>{RESEARCH_TITLE}</h2>
         <span className={styles.streak} data-testid="research-streak">{streak > 0 ? `${streak} day${streak === 1 ? '' : 's'} running` : 'No streak yet'}</span>
       </div>
-      <p className={styles.note} data-testid="research-blurb">{RESEARCH_BLURB}</p>
-      <ul className={styles.tasks} aria-label="Today's research">
-        {dailyTasksFor(hasDiscovery).map(t => {
-          const done = (stamps?.[stampDayKey(now)] ?? []).includes(t.kind)
-          return (
-            <li key={t.kind} className={styles.task} data-testid={`research-task-${t.kind}`} data-done={done}>
-              <span className={styles.taskMark} aria-hidden />
-              <span>{t.label}</span>
-              <span className={styles.taskState}>{done ? 'Stamped' : 'Open'}</span>
-            </li>
-          )
-        })}
-      </ul>
-      <div className={styles.monthLabel}>{MONTHS[month]} {year}</div>
-      <div className={styles.grid} role="grid">
-        {DOW.map((l, i) => <div key={i} className={styles.dow} aria-hidden>{l}</div>)}
-        {weeks.flat().map((c, i) => c
-          ? (
-            <div key={c.key} role="gridcell" className={styles.day} data-testid={`research-day-${c.day}`}
-              data-stamped={c.kinds.length > 0} data-today={c.today} data-future={c.future}
-              aria-label={`${MONTHS[month]} ${c.day}${c.kinds.length ? `, ${c.kinds.length} research task${c.kinds.length === 1 ? '' : 's'} stamped` : ''}`}>
-              {c.day}
-              {c.kinds.length > 1 && <span className={styles.stampMark} aria-hidden />}
-            </div>
-          )
-          : <div key={`gap-${i}`} aria-hidden />)}
-      </div>
+      <ol className={styles.week} aria-label="This week">
+        {week.map(day => (
+          <li key={day.key} className={styles.day} data-testid={`research-day-${Number(day.key.slice(8))}`} data-stamped={day.stamped} data-today={day.today} data-future={day.future}>
+            <i aria-hidden="true" />{day.letter}
+          </li>
+        ))}
+      </ol>
+      <p className={styles.note} data-testid="research-today" data-done={stampedToday}>
+        {stampedToday ? 'Today is stamped.' : `To stamp today: ${tasks.join(', ')}.`}
+      </p>
       <div className={styles.bar} data-testid="research-community-bar">
         <div className={styles.barLabel}>
-          <span>Community stamps this month</span>
+          <span>Community</span>
           <span>{bar.total} / {bar.goal}</span>
         </div>
         <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div>
-        <p className={styles.note} data-testid="research-community-state" data-state={bonusOpen ? 'bonus' : bar.reached ? 'spent' : 'filling'}>
-          {bonusOpen
-            ? `Goal reached. Exchange sales pay +${bar.bonusPct}% until ${formatBonusEnd(bar.bonusUntil!)}.`
-            : bar.reached
-              ? `Goal reached this month. The +${bar.bonusPct}% week has ended.`
-              : `Fill the bar together and everyone's Exchange sales pay +${bar.bonusPct}% for a week.`}
-        </p>
       </div>
     </section>
   )

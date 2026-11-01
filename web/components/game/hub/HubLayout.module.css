@@ -72,6 +72,10 @@
 @media (max-width: 520px) {
   .buildOptions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* Upright phones stack the dock in two rows (base-scene.css), so the picker sits above both. */
+@media (orientation: portrait) and (max-width: 700px) {
+  .buildPicker { bottom: 132px; }
+}
 
 .topHud {
   position: absolute;
@@ -186,6 +190,8 @@
    the matching right-hand buttons). */
 @media (orientation: landscape) and (max-height: 500px) {
   .buildPicker { top: 56px; bottom: auto; }
+  /* Narrow enough to stay clear of the sky event chip on the right. */
+  .buildOptions { width: min(480px, calc(100vw - 400px)); }
   .topHud { flex-direction: row; align-items: center; gap: 12px; padding: 8px 12px 16px; }
   .topRow { width: 100%; }
   .root { --hub-ground: 20%; --px: 2px; }

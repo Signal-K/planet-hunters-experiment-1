@@ -28,7 +28,7 @@ export function applyTutorialSkip(state: GameState, stepIds: number[]): GameStat
       placed: [...state.player.placed, 'launchpad'],
       placementPlots: {
         ...state.player.placementPlots,
-        launchpad: state.player.placementPlots.launchpad ?? 1,
+        launchpad: state.player.placementPlots.launchpad ?? 0,
       },
     },
   }

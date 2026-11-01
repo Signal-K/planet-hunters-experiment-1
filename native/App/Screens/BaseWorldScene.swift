@@ -280,9 +280,10 @@ struct BaseWorldScene: View {
 
     /// The picked structure's one site, marked on the ground at its real footprint while it is free (web `SiteMarker`).
     /// A fresh base shows exactly this, on the pad site: the first build has an obvious place.
+    /// The site is taken only by a kind that stands on it; a skipped tutorial once saved the Launchpad on plot 1, the Exchange's.
     @ViewBuilder private func siteMarker(world: BaseWorld) -> some View {
         if let map = WorldAssets.site, let kind = pickedKind, let site = map.homeSite(kind), let plot = site.plot,
-           !shownKinds.contains(kind), !plots.values.contains(plot) {
+           !shownKinds.contains(kind), !placed.contains(where: { map.homeSite($0)?.id == site.id }) {
             let px = world.px
             let width = max(44, CGFloat(site.half * 2) * px)
             Button { onSlot(plot) } label: {

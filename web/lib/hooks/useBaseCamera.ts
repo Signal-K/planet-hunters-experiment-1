@@ -137,6 +137,12 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
     commit({ zoom: fitZoom(v), x: 0, y: 0 })
   }, [commit, view])
 
+  /** Centre the view on a world x (unzoomed px), e.g. the site Build mode is asking the player to place on. */
+  const focusX = useCallback((x: number) => {
+    const v = view()
+    commit(clampCamera({ zoom: 1, x: v.w / 2 - x, y: 0 }, v))
+  }, [commit, view])
+
   const setPosition = useCallback((position: number) => {
     const v = view()
     const l = panLimits(camRef.current.zoom, v)
@@ -165,6 +171,7 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
     cam,
     transform,
     overview,
+    focusX,
     setPosition,
     handlers: { onPointerDown, onPointerMove, onPointerUp: end, onPointerCancel: end, onClickCapture },
   }
