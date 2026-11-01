@@ -445,14 +445,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   // Deposit contains the target's full mineral pool, not just the mission's objective —
   // otherwise a single-mineral order (e.g. silicon) makes every ore in the field identical.
-  // The required mineral(s) are weighted 2x so onboarding orders still fill at a reasonable pace.
+  // The required mineral(s) lead the field (MiningController seeds and favours them); the rest is the body's mix.
   // Shower fragments fall from the sky and collect themselves, so they are never ground seams.
   const seamRequired = Object.keys(mission.requires.minerals).filter(id => !(nightRun && id === 'orionid_debris'))
   const depositMinerals = (() => {
     const required = seamRequired
     const pool = (target.minerals && target.minerals.length > 0 ? target.minerals : required).filter(m => !(nightRun && m === 'orionid_debris'))
     const others = pool.filter(m => !required.includes(m))
-    const weighted = [...required, ...required, ...others]
+    const weighted = [...required, ...others]
     return weighted.length > 0 ? weighted : ['iron']
   })()
 

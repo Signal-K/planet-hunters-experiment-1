@@ -23,10 +23,12 @@ export const SURFACE_Y = 320
 const HIT_TOLERANCE = 56
 /** Time a player takes to press FIRE after it lights up (SSL-710). */
 const REACTION_SECONDS = 0.2
-// Share of ore nodes that are the requested mineral(s) once the seeded ones are out.
-const REQUIRED_ORE_SHARE = 0.85
-// First nodes are copies of the requested ore, close and shallow, so a few shots hit it.
-const REQUIRED_ORE_COPIES = 6
+// Share of ore nodes that are the requested mineral(s) once the seeded ones are out. Liam, 01.11: at 0.85
+// the field showed only the mission mineral; the rest of the body's minerals are surplus worth mining too.
+const REQUIRED_ORE_SHARE = 0.45
+// First nodes are copies of the requested ore, close and shallow, so a few shots hit it. They alternate with
+// the body's other minerals so the opening screen is a mix, not a row of one ore.
+const REQUIRED_ORE_COPIES = 10
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
@@ -378,9 +380,14 @@ export class MiningController extends ScriptBehaviour {
   start(): void {
     const required = this.opts.requiredMinerals ?? []
     const lead = (this.opts.leadMinerals ?? []).filter(mineral => mineral.length > 0)
+    const tier = this.opts.maxLaserTier ?? 3
+    const others = Array.from(new Set(this.opts.minerals.filter(mineral => !required.includes(mineral) && (this.opts.mineralLaserAccess?.[mineral] ?? 1) <= tier)))
+    let other = 0
     this.requiredMineralQueue = [
       ...lead,
-      ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, () => mineral)),
+      ...required.flatMap(mineral => Array.from({ length: REQUIRED_ORE_COPIES }, (_, i) => (
+        i % 2 === 1 && others.length > 0 ? others[other++ % others.length] : mineral
+      ))),
     ]
     const gap = this.depositGap()
     const screens = Math.max(0, this.opts.scrollScreens ?? 0)

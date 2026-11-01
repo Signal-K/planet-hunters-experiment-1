@@ -68,6 +68,11 @@ export interface LaserField {
   spark: Sprite
   ship: Container
   plume: Sprite
+  /** Retro thrusters at the nose, lit while the ship reverses. */
+  retro: Sprite
+  hull: Sprite
+  /** -1 reversing, 0 holding, 1 forward: drives the thruster animation. */
+  thrust: number
   soilW: number
   ridgeW: number
   pixelScale: number
@@ -387,12 +392,20 @@ export async function buildLaserField(opts: {
   hull.anchor.set(0.5)
   hull.scale.set(px)
   ship.addChild(hull)
+  // Retro burn: the same flame, flipped to fire forward from the nose, under the hull.
+  const retro = new Sprite(flame0)
+  retro.anchor.set(1, 0.5)
+  retro.scale.set(-px * 0.7, px * 0.7)
+  retro.x = 17 * px
+  retro.y = 2 * px
+  retro.alpha = 0
+  ship.addChildAt(retro, 0)
   ship.x = shipX
   ship.y = shipY
 
   const flameFrames = [flame0, flame1]
   const field: LaserField = {
-    backdrop, far, near, mid, surface, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume,
+    backdrop, far, near, mid, surface, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume, retro, hull, thrust: 0,
     soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
@@ -425,8 +438,20 @@ export async function buildLaserField(opts: {
       }
       spark.scale.set(px * (firing ? 1.5 : 0.85 + pulse * 0.2))
       spark.alpha = firing ? 1 : 0.7 + pulse * 0.3
-      plume.alpha = 0.7 + pulse * 0.3
-      if (!reduced) plume.texture = flameFrames[Math.floor(time * 10) % 2]
+      // Thrust animation (Liam, 01.11): forward stretches the main flame; reversing cuts it to a
+      // flicker, lights the retro jets at the nose and lifts the nose as the ship brakes backwards.
+      const thrust = field.thrust
+      const ease = reduced ? 1 : 0.18
+      const mainLen = thrust > 0 ? 1.45 : thrust < 0 ? 0.35 : 1
+      plume.scale.x += (px * mainLen - plume.scale.x) * ease
+      plume.alpha = (thrust < 0 ? 0.35 : 0.7) + pulse * 0.3
+      retro.alpha += ((thrust < 0 ? 0.75 + pulse * 0.25 : 0) - retro.alpha) * ease
+      retro.scale.x = -px * 0.7 * (thrust < 0 ? 0.85 + pulse * 0.3 : 0.6)
+      hull.rotation += ((reduced ? 0 : thrust < 0 ? -0.07 : thrust > 0 ? 0.02 : 0) - hull.rotation) * ease
+      if (!reduced) {
+        plume.texture = flameFrames[Math.floor(time * 10) % 2]
+        retro.texture = flameFrames[(Math.floor(time * 12) + 1) % 2]
+      }
       field.hover = reduced ? 0 : Math.sin(time * 2.2) * 2
     },
   }

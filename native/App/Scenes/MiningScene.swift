@@ -548,6 +548,16 @@ final class MiningScene: SKScene {
         plume.position = CGPoint(x: 0, y: -24)
         plume.zPosition = -1
         hull.addChild(plume)
+        // Retro burn: the same flame flipped to fire forward from the nose, lit while reversing (web laserLayers `retro`).
+        let retro = SKSpriteNode(texture: flameFrames[1])
+        retro.name = "retro"
+        retro.anchorPoint = CGPoint(x: 1, y: 0.5)
+        retro.zRotation = -.pi / 2
+        retro.setScale(px * 0.7)
+        retro.position = CGPoint(x: 0, y: 30)
+        retro.zPosition = -1
+        retro.alpha = 0
+        hull.addChild(retro)
         part(poly([(-9, -8), (-19, -22), (-9, -18)]), blue, z: 0)
         part(poly([(9, -8), (19, -22), (9, -18)]), blue, z: 0)
         part(poly([(-6, -20), (6, -20), (4, -26), (-4, -26)]), LaserPalette.sk(0x4B4F57), z: 0)
@@ -850,11 +860,22 @@ final class MiningScene: SKScene {
             beam.xScale = 1
             spark.setScale(px)
         } else { spark.alpha = 1 }
+        // Thrust animation (Liam, 01.11; web laserLayers `step`): forward stretches the main flame, reversing
+        // cuts it to a flicker, lights the retro jets at the nose and lifts the nose as the ship brakes backwards.
+        let reversing = steerInput < -0.1, forward = steerInput > 0.1
+        let ease: CGFloat = reducedMotion ? 1 : 0.18
         if let plume = ship.childNode(withName: "//plume") {
-            plume.alpha = 0.7 + pulse * 0.3
-            plume.xScale = px * (0.8 + pulse * 0.3)
+            plume.alpha = (reversing ? 0.35 : 0.7) + pulse * 0.3
+            let len: CGFloat = forward ? 1.45 : reversing ? 0.35 : 0.8 + pulse * 0.3
+            plume.xScale += (px * len - plume.xScale) * ease
             if let sprite = plume as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[Int(clock * 10) % 2] }
         }
+        if let retro = ship.childNode(withName: "//retro") {
+            retro.alpha += ((reversing ? 0.75 + pulse * 0.25 : 0) - retro.alpha) * ease
+            if let sprite = retro as? SKSpriteNode, !reducedMotion { sprite.texture = flameFrames[(Int(clock * 12) + 1) % 2] }
+        }
+        let tilt: CGFloat = reducedMotion ? 0 : reversing ? 0.07 : forward ? -0.02 : 0
+        hull.zRotation += (-.pi / 2 + tilt - hull.zRotation) * ease
         // Altitude (SpriteKit is y-up: positive climbs). Clamp between sky ceiling and just above ground.
         altitude += CGFloat(-climbInput) * 110 * CGFloat(dt)
         let ceiling = ceilingCenterY - shipY   // stay under the HUD
@@ -864,31 +885,14 @@ final class MiningScene: SKScene {
         beam.position.x = beamX
         spark.position.x = beamX
         opsBrackets.position.x = shipShift
-        if bumpCooldown > 0 { bumpCooldown -= dt }
         if triggerHeld, clock >= nextShotAt {
             nextShotAt = clock + Self.fireCooldown
             fireLaser()
         }
         let charging = clock < nextShotAt
         if charging != wasCharging { wasCharging = charging; onCharging?(charging) }
-        let clear = [beamX - 30, beamX, beamX + 30].map(obstacleHeight).max() ?? 0
-        let obstacleAhead = [beamX + 80, beamX + 120, beamX + 160].map(obstacleHeight).max() ?? 0
-        let shouldClimb = obstacleAhead > 18 && shipY + altitude - 14 < surfaceY + obstacleAhead + 12
-        if shouldClimb != lastObstacleAhead {
-            lastObstacleAhead = shouldClimb
-            onObstacleAhead?(shouldClimb)
-        }
-        let belly = shipY + altitude - 14
-        if clear > 0, belly < surfaceY + clear {
-            altitude = min(ceiling, surfaceY + clear + 14 + 18 - shipY)
-            if bumpCooldown <= 0 {
-                bumpCooldown = 1.6
-                field.bump()
-                onBump?()
-                onChange?(field)
-                world.run(.sequence([.moveBy(x: 4, y: -3, duration: 0.04), .moveBy(x: -8, y: 4, duration: 0.06), .moveBy(x: 4, y: -1, duration: 0.05)]))
-            }
-        }
+        // Liam, 01.11: the hills behind the grey ridge are scenery, not solid (web MiningCanvas).
+        // The flight floor keeps the hull above the grey foreground ridge.
         ship.position.y = shipY + altitude + (reducedMotion ? 0 : sin(clock * 2.2) * 1.5)
         beam.position.y = ship.position.y - 24
         beam.yScale = max(0.05, (ship.position.y - 24 - surfaceY) / max(24, shipY - 24 - surfaceY))
