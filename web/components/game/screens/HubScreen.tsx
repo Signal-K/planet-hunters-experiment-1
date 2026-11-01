@@ -603,6 +603,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               <StashChip testId="hub-cargo-chip" />
             </div>
           )}
+          {/* The signed-in inbox bell portals here so it shares the row's padding at every breakpoint (SSL-740). */}
+          {!subsurface && <div id="hub-top-right" className={layoutStyles.topRight} />}
         </div>
       </div>
 
