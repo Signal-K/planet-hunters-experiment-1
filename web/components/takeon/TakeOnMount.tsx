@@ -19,7 +19,7 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
-import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, terrainLookForTarget } from '@/lib/takeon/terrainColour'
+import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
@@ -189,10 +189,37 @@ export function fieldZoom(viewport: { width: number; height: number }): number {
 function settleFieldView(game: unknown, viewport: { width: number; height: number }, lifeStage: LifeStage | undefined): void {
   const renderer = (game as { renderer?: { camera?: { setZoom?: (z: number) => void }; critters?: unknown[]; flora?: unknown[]; flyers?: unknown[] } }).renderer
   renderer?.camera?.setZoom?.(fieldZoom(viewport))
+  evenFieldGrid(renderer)
   if (lifeStage === 'blooming' || lifeStage === 'thriving') return
   if (renderer?.critters) renderer.critters.length = 0
   if (renderer?.flora) renderer.flora.length = 0
   if (renderer?.flyers) renderer.flyers.length = 0
+}
+
+/**
+ * The vendored renderer strokes its surface grid in pale cyan, which disappears on light ground and
+ * glares on dark, so the field looked half gridded. Each surface chunk's context swaps that stroke
+ * for one faint dark line, so the grid reads the same everywhere.
+ */
+function evenFieldGrid(renderer: unknown): void {
+  const r = renderer as { rebuildChunk?: (chunk: { canvas: HTMLCanvasElement }) => void } | undefined
+  const rebuild = r?.rebuildChunk
+  if (!r || typeof rebuild !== 'function') return
+  const stroke = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'strokeStyle')
+  if (!stroke?.set || !stroke.get) return
+  const patched = new WeakSet<CanvasRenderingContext2D>()
+  r.rebuildChunk = function (chunk) {
+    const ctx = chunk.canvas.getContext('2d')
+    if (ctx && !patched.has(ctx)) {
+      patched.add(ctx)
+      Object.defineProperty(ctx, 'strokeStyle', {
+        configurable: true,
+        get() { return stroke.get!.call(ctx) },
+        set(value: unknown) { stroke.set!.call(ctx, isBlueprintGridStroke(value) ? FIELD_GRID_LINE : value) },
+      })
+    }
+    return rebuild.call(this, chunk)
+  }
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
@@ -364,6 +391,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let app: import('pixi.js').Application | null = null
     let mounted: import('@takeon/pixi').MountedRoverGame | null = null
     let resizeObserver: ResizeObserver | null = null
+    let fieldUpload: (() => void) | null = null
+    let fieldTexture: import('pixi.js').Texture | null = null
     let saveTimer: ReturnType<typeof setTimeout> | null = null
     let unbindHostEvents: (() => void) | null = null
     let unbindStateChanged: (() => void) | null = null
@@ -498,14 +527,37 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           const entry = entries[0]
           if (!entry || !mounted) return
           // The Pixi backing canvas must follow too, or a rotated phone shows the field squeezed into a strip.
-          app?.renderer.resize(entry.contentRect.width, entry.contentRect.height)
-          mounted.resize(entry.contentRect.width, entry.contentRect.height)
+          const { width, height } = entry.contentRect
+          app?.renderer.resize(width, height)
+          mounted.resize(width, height)
+          // The vendored adapter's texture keeps its first GPU size, so after a phone turns only a corner of the
+          // field showed. Give the sprite a fresh texture on the resized canvas and upload it ourselves (30 fps,
+          // the adapter's rate); the adapter keeps updating its old, now unused texture.
+          const sprite = mounted.sprite as unknown as import('pixi.js').Sprite
+          const fieldCanvas = sprite.texture.source.resource as unknown
+          if (!(fieldCanvas instanceof HTMLCanvasElement) || !app) return
+          const previous = fieldTexture
+          fieldTexture = new PIXI.Texture({ source: new PIXI.CanvasSource({ resource: fieldCanvas }) })
+          sprite.texture = fieldTexture
+          previous?.destroy(true)
+          sprite.width = width
+          sprite.height = height
+          if (!fieldUpload) {
+            let last = 0
+            fieldUpload = () => {
+              const now = performance.now()
+              if (now - last < 33) return
+              last = now
+              sprite.texture.source.update()
+            }
+            app.ticker.add(fieldUpload)
+          }
         })
         resizeObserver.observe(canvasElement)
 
+        settleFieldView(mounted.game, viewport, lifeStage)
         mounted.start()
         gameRef.current = mounted.game
-        settleFieldView(mounted.game, viewport, lifeStage)
         document.addEventListener('visibilitychange', syncVisibility)
         // Don't call syncVisibility() here: document.hidden can read true on
         // a fully visible tab right at mount (occluded-but-onscreen windows,

@@ -11,7 +11,7 @@
 
 import type { BodyDef, BodyKind, Material, MaterialDef, StructureDef, StructureType } from '@takeon/engine'
 import type { Biome } from '@takeon/engine'
-import { NATURAL_BIOME_COLOUR, terrainLookForTarget } from '@/lib/takeon/terrainColour'
+import { NATURAL_BIOME_COLOUR, terrainLookForTarget, terrainRelief } from '@/lib/takeon/terrainColour'
 import {
   BIOME_META,
   biomeIdsForTarget,
@@ -186,9 +186,9 @@ export function buildLandnamBody(
   const body = engine.cloneBody(base)
   body.id = `${baseBodyId}--${target.id}`
   body.kind = kindId
-  body.terrain = { ...body.terrain, biomes: true }
   // Sky and condition tint come from the body's composition and probable conditions (terrainColour.ts).
   const look = terrainLookForTarget(target)
+  body.terrain = { ...body.terrain, biomes: true, ...terrainRelief(look, profile.roughness, body.terrain) }
   body.palette = { sky: look.sky, skyNight: look.skyNight, tint: look.tint }
   body.climate = { temperature: profile.temperature, tempVariance: profile.tempVariance }
   return body

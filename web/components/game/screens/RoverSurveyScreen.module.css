@@ -33,9 +33,9 @@
   box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-blue) 30%, transparent);
 }
 
-/* Phones: the top row holds the cog, chips and the OPS strip, so the brief sits under them. */
+/* Phones: the brief sits under the Menu button. */
 @media (max-width: 599px) {
-  .eventBrief { top: 140px; left: 16px; width: calc(100% - 32px); }
+  .eventBrief { top: 68px; left: 16px; width: calc(100% - 32px); }
 }
 .eventBrief span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); color: var(--ln-blueprint-blue); }
 .eventBrief strong { font: 700 16px/1.2 var(--ln-font-display); }
@@ -123,3 +123,12 @@
 .dock {
   pointer-events: auto;
 }
+
+/* The laser mining controls (MiningControls) position themselves; this layer only lets taps through to the field. */
+.controls {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.controls > * { pointer-events: auto; }

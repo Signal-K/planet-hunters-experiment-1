@@ -140,8 +140,28 @@ export function mixHex(a: string, b: string, t: number): string {
   return `#${c(ar, br)}${c(ag, bg)}${c(ab, bb)}`
 }
 
+/** Top face, lit side, shaded side. Strong side shading so slopes and cliffs read as relief, not a flat map. */
 function ramp(top: string): Ramp {
-  return [top, mixHex(top, '#000000', 0.25), mixHex(top, '#000000', 0.45)]
+  return [top, mixHex(top, '#000000', 0.34), mixHex(top, '#000000', 0.58)]
+}
+
+/** Grid line drawn on every surface chunk: dark and faint, so it reads the same on light and dark ground. */
+export const FIELD_GRID_LINE = 'rgba(8, 6, 16, 0.16)'
+
+/** True for Takeon's pale-cyan blueprint grid stroke (it vanished on light ground and glared on dark). */
+export function isBlueprintGridStroke(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  const m = /^rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\s*\)$/.exec(value)
+  if (!m) return false
+  const [r, g, b, a] = [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4])]
+  return r > 150 && g > 150 && b > 150 && a < 0.5
+}
+
+/** Relief for a Landnam body: rougher than Takeon's stock, and cratered when there is no air to erode them. */
+export function terrainRelief(look: Pick<TerrainLook, 'atmosphere'>, profileRoughness: number, base: { roughness: number; craters: number }): { roughness: number; craters: number } {
+  const roughness = Math.min(0.85, Math.max(base.roughness, 0.45 + profileRoughness * 0.5))
+  const craters = look.atmosphere === 'none' ? Math.max(base.craters, 9) : look.atmosphere === 'thin' ? Math.max(base.craters, 5) : base.craters
+  return { roughness, craters }
 }
 
 /** How much cold volatiles frost the ground: none above -120 °C, up to 30% by -200 °C. */

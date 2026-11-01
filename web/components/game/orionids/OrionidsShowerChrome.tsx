@@ -130,8 +130,9 @@ export default function OrionidsShowerChrome() {
 
   return (
     <>
-      {/* Mining draws its own meteors, and the meteor radio is a real recording; this overlay would cross their controls and data (SSL-711, SSL-714). */}
-      {game.screen !== 'mining' && game.screen !== 'radio-meteors' && (
+      {/* Mining draws its own meteors, and the meteor radio is a real recording; this overlay would cross their controls and data (SSL-711, SSL-714).
+          The rover field is a mining scene with the same controls, seen from above, so it is left clear too. */}
+      {game.screen !== 'mining' && game.screen !== 'radio-meteors' && game.screen !== 'rover-survey' && (
         <div className={styles.haze} aria-hidden="true" data-testid="orionids-haze">
           <img className={styles.sky} src={art.sky} alt="" />
           <img className={styles.streak} src={art.streaks[0].file} alt="" />
