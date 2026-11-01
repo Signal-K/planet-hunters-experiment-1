@@ -1,86 +1,79 @@
 'use client'
 
-import { NARRATIVE_LEDGER, NARRATIVE_LEDGER_STATE_LABEL, type NarrativeLedgerState } from '@/lib/data/narrative-ledger'
+import { useState } from 'react'
+import { NARRATIVE_LEDGER, type NarrativeLedgerState } from '@/lib/data/narrative-ledger'
 import styles from './NarrativeLedgerScreen.module.css'
 
 interface NarrativeLedgerScreenProps {
   onBack: () => void
 }
 
-const STATE_ORDER: NarrativeLedgerState[] = ['live', 'adapt', 'planned']
+// Liam, 31.10: "too complex, no rhyme or reason". One rule organises it: what state is it in?
+// Pick a state on the left, pick an entry, read it on the right. Two-tone template.
+const STATES: Array<{ id: NarrativeLedgerState; label: string; blurb: string }> = [
+  { id: 'live', label: 'Live', blurb: 'In the game now.' },
+  { id: 'adapt', label: 'Adapting', blurb: 'Partly built. Being reshaped.' },
+  { id: 'planned', label: 'Planned', blurb: 'The roadmap. Some were built once and removed.' },
+]
+
+const DAILY_LOOP = ['You build for clients', 'Client XP updates', 'Next-day demand is set', 'Market prices refresh']
+const LOOP_ENTRIES = new Set(['client-growth', 'market'])
 
 export default function NarrativeLedgerScreen({ onBack }: NarrativeLedgerScreenProps) {
-  const stateCounts = STATE_ORDER.map(state => ({
-    state,
-    count: NARRATIVE_LEDGER.filter(entry => entry.state === state).length,
-  }))
+  const [state, setState] = useState<NarrativeLedgerState>('live')
+  const entries = NARRATIVE_LEDGER.filter(entry => entry.state === state)
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const picked = entries.find(entry => entry.id === pickedId) ?? entries[0]
+  const blurb = STATES.find(s => s.id === state)?.blurb
 
   return (
-    <section className="screen-scroll theme-light" data-testid="narrative-ledger-screen">
-      <div className={styles.shell}>
-        <header className={styles.header}>
-          <div>
-            <p>One source of truth for the player promise, the systems behind it, and what is actually built.</p>
-          </div>
-          <button className={styles.backButton} onClick={onBack}>Back</button>
-        </header>
+    <section className={styles.scene} data-testid="narrative-ledger-screen">
+      <button type="button" className={styles.back} data-testid="ledger-back" onClick={onBack}>‹ Back</button>
 
-        <section className={styles.command} aria-labelledby="launch-day-title">
-          <div>
-            <div className={styles.eyebrow}>THE PLAYER-FACING RULE</div>
-            <h2 id="launch-day-title">What do I launch today?</h2>
-            <p>Every meaningful session starts with one decision. The choices stay visible; the systems behind them stay out of the way.</p>
-          </div>
-          <div className={styles.actions} aria-label="Launch day choices">
-            <span>CLIENT WORK</span><span>OWN INFRA</span><span>MINING</span><span>TEST LAUNCH</span>
-          </div>
-        </section>
-
-        <section className={styles.cycle} aria-labelledby="cycle-title">
-          <div className={styles.sectionHeading}>
-            <div><div className={styles.eyebrow}>DAILY ECONOMY LOOP</div><h2 id="cycle-title">A small loop, not a 4X system</h2></div>
-            <span className={styles.cycleTiming}>00:01 AEST · SCHEDULED</span>
-          </div>
-          <ol className={styles.flow}>
-            <li><strong>1</strong><span>PLAYER BUILDS<br />FOR CLIENTS</span></li>
-            <li><strong>2</strong><span>CLIENT XP<br />UPDATES</span></li>
-            <li><strong>3</strong><span>NEXT-DAY DEMAND<br />IS SET</span></li>
-            <li><strong>4</strong><span>MARKET PRICES<br />REFRESH</span></li>
-          </ol>
-        </section>
-
-        <section className={styles.inventory} aria-labelledby="inventory-title">
-          <div className={styles.sectionHeading}>
-            <div><div className={styles.eyebrow}>COMPONENT INVENTORY</div><h2 id="inventory-title">Narrative components</h2></div>
-            <div className={styles.stateSummary} aria-label="Implementation state summary">
-              {stateCounts.map(({ state, count }) => <span className={styles[`state_${state}`]} key={state}>{count} {NARRATIVE_LEDGER_STATE_LABEL[state]}</span>)}
-            </div>
-          </div>
-          <div className={styles.grid}>
-            {NARRATIVE_LEDGER.map(entry => (
-              <article className={styles.card} key={entry.id}>
-                <div className={styles.cardTop}>
-                  <span className={styles.owner}>{entry.owner}</span>
-                  <span className={styles[`state_${entry.state}`]}>{NARRATIVE_LEDGER_STATE_LABEL[entry.state]}</span>
-                </div>
-                <h3>{entry.title}</h3>
-                <p className={styles.verb}>{entry.playerVerb}</p>
-                <p>{entry.purpose}</p>
-                <dl>
-                  <div><dt>CADENCE</dt><dd>{entry.cadence}</dd></div>
-                  <div><dt>DEPENDS ON</dt><dd>{entry.dependencies.join(' · ')}</dd></div>
-                </dl>
-                <p className={styles.implementation}>{entry.implementation}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <footer className={styles.footer}>
-          <span className={styles.footerMark} />
-          <p>Rule for future work: every new mechanic must name its player verb, owner, cadence, dependencies, and whether it is live, adapting, or planned before it enters the game.</p>
-        </footer>
+      <div className={styles.left}>
+        <h2 className={styles.title}>Narrative ledger</h2>
+        <div className={styles.tabs} role="tablist" aria-label="Build state">
+          {STATES.map(s => (
+            <button key={s.id} type="button" role="tab" className={styles.tab} aria-selected={state === s.id} data-state={s.id}
+              data-testid={`ledger-state-${s.id}`} onClick={() => { setState(s.id); setPickedId(null) }}>
+              {s.label} <b>{NARRATIVE_LEDGER.filter(entry => entry.state === s.id).length}</b>
+            </button>
+          ))}
+        </div>
+        <p className={styles.blurb}>{blurb}</p>
+        <ul className={styles.rows}>
+          {entries.map(entry => (
+            <li key={entry.id}>
+              <button type="button" className={styles.row} data-selected={picked?.id === entry.id} data-testid={`ledger-entry-${entry.id}`} onClick={() => setPickedId(entry.id)}>
+                <b>{entry.title}</b>
+                <small>{entry.playerVerb}</small>
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
+
+      <article className={styles.right} data-testid="ledger-detail" data-state={picked?.state}>
+        {picked && <>
+          <span className={styles.eyebrow}>{picked.owner} · {picked.cadence}</span>
+          <h3 className={styles.name}>{picked.title}</h3>
+          <p className={styles.verb}>{picked.playerVerb}</p>
+          <p className={styles.purpose}>{picked.purpose}</p>
+          {LOOP_ENTRIES.has(picked.id) && (
+            <ol className={styles.loop} aria-label="Daily loop, 00:01 AEST">
+              {DAILY_LOOP.map(step => <li key={step}>{step}</li>)}
+            </ol>
+          )}
+          <div className={styles.block}>
+            <span className={styles.label}>Depends on</span>
+            <ul className={styles.chips}>{picked.dependencies.map(dep => <li key={dep}>{dep}</li>)}</ul>
+          </div>
+          <div className={styles.block}>
+            <span className={styles.label}>{picked.state === 'live' ? 'What is built' : picked.state === 'adapt' ? 'What is missing' : 'History and plan'}</span>
+            <p className={styles.impl}>{picked.implementation}</p>
+          </div>
+        </>}
+      </article>
     </section>
   )
 }

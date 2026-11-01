@@ -58,3 +58,6 @@ tests/.report
 cypress/screenshots/
 cypress/videos/
 .dev-result.json
+
+# Scene-drive focus state (local only)
+.studio/
