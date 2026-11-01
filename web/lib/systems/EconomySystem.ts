@@ -1,4 +1,5 @@
 import type { BuildingLevels } from '@/lib/data/building-levels'
+import { rocketPrice } from '@/lib/rockets'
 // Pure state-transition functions for the economy system.
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
@@ -295,7 +296,8 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 /** Buy the rocket a mission will fly. Francs used to be deducted inline in
  *  `useGameLoop`; every purchase in the game now goes through this file. */
 export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameState {
-  if (s.player.francs < rocket.costFrancs) return s
+  const price = rocketPrice(rocket, s.player)
+  if (s.player.francs < price) return s
   const missionId = s.missionId ?? 'unassigned'
   const targetId = s.targetId ?? 'unassigned'
   const stagedRocket = {
@@ -314,7 +316,7 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
     rocket: stagedRocket.rocket,
     player: {
       ...s.player,
-      francs: s.player.francs - rocket.costFrancs,
+      francs: s.player.francs - price,
       pendingLaunch: true,
       // SSL-313: remembered per model so the Blueprint CTA can say "BUILD"
       // the first time and "BUILD ANOTHER" only for a genuine repeat.
@@ -340,8 +342,9 @@ export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string
   // SSL-450: the launch review (screen 'fab') is where a vehicle is prepared.
   if (s.screen !== 'rocket-buy' && s.screen !== 'fab' && s.screen !== 'targets' && s.screen !== 'hangar') return 'Return to the launch review before building.'
   if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
-  if (s.player.francs < rocket.costFrancs) {
-    return `Need ${rocket.costFrancs - s.player.francs} more francs to build this rocket.`
+  const price = rocketPrice(rocket, s.player)
+  if (s.player.francs < price) {
+    return `Need ${price - s.player.francs} more francs to build this rocket.`
   }
   return null
 }

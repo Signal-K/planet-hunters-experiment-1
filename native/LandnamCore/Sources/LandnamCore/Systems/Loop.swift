@@ -76,8 +76,9 @@ public enum Loop {
         guard feasible.contains(where: { $0.id == id }) else { return s }
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, missionsDone: s.player.missionsDone,
                                                    launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"))
-        // Switching target releases a free vehicle built for the old one.
-        let freeIds = Set(Rockets.models.filter { $0.costFrancs == 0 }.map(\.id))
+        // Switching target releases a still-free vehicle built for the old one; once training is over every rocket
+        // was paid for (Liam, 01.11), so it stays in the Hangar instead of being thrown away.
+        let freeIds = Rockets.pastTraining(s.player) ? Set<String>() : Set(Rockets.models.filter { $0.costFrancs == 0 }.map(\.id))
         var n = s
         n.player.stagedRockets.removeAll { $0.missionId == mission.id && $0.targetId != target.id && freeIds.contains($0.rocketId) }
         n.targetId = id
@@ -107,7 +108,7 @@ public enum Loop {
             catalog.parts.validate(mission: mission, target: target, rocket: Rockets.config(for: $0)).ok
         }
         guard let rocket = options.first(where: { $0.id == required.id }) ?? options.first,
-              rocket.costFrancs == 0, Rockets.compatible(rocket, with: mission),
+              Rockets.price(rocket, for: n.player) == 0, Rockets.compatible(rocket, with: mission),
               Market.purchaseRefusal(n, rocket: rocket) == nil else { return n }
         return rollOutToPad(Market.applyPurchaseRocket(n, rocket: rocket)) ?? n
     }

@@ -1,4 +1,21 @@
 import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
+import { ROCKET_PRICES } from '@/lib/data/economy'
+import type { Player } from '@/lib/game-types'
+import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
+
+/** Training is over once the onboarding mission is flown (or, for older saves, any mission is done). */
+export function pastRocketTraining(player: Pick<Player, 'flightPlan' | 'missionsDone'>): boolean {
+  return onboardingMissionDone(player.flightPlan) || (player.missionsDone ?? 0) > 0
+}
+
+/**
+ * What a rocket costs this player now. Liam, 01.11: after the tutorial a rocket ALWAYS costs something, so a
+ * model listed at no cost (the starter Explorer) is charged a set build price once training is over.
+ */
+export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pick<Player, 'flightPlan' | 'missionsDone'>): number {
+  if (rocket.costFrancs > 0) return rocket.costFrancs
+  return pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
+}
 
 export function getRequiredRocketModel(missionsDone: number): RocketModel {
   const eligible = unlockedRocketModels(missionsDone)

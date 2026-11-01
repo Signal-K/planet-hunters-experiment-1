@@ -6,7 +6,8 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import HangarBay from './HangarBay'
 import { formatCurrency } from '@/lib/format'
-import type { RocketJobRole } from '@/lib/rockets'
+import { rocketPrice, type RocketJobRole } from '@/lib/rockets'
+import type { Player } from '@/lib/game-types'
 import { captureGameEvent } from '@/lib/posthog'
 import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
 import styles from './HangarScreen.module.css'
@@ -31,6 +32,8 @@ interface HangarScreenProps {
   onChooseMission?: () => void
   /** Starts building the chosen rocket for the set-up mission. */
   onBuildRocket?: (rocketId: string) => void
+  /** Decides whether the starter rocket still builds free (training) or is charged (rocketPrice). */
+  flightPlan?: Player['flightPlan']
 }
 
 const VEHICLES = [
@@ -51,8 +54,9 @@ function RocketThumbnail({ rocketId, tier }: { rocketId?: string; tier: number }
 export default function HangarScreen({
   francs, missionsDone, shipCustomizerParts, landingResearched,
   onConfirmShipCustomizerBuild, onBack,
-  missionTitle = null, rocketRoles = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket,
+  missionTitle = null, rocketRoles = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket, flightPlan,
 }: HangarScreenProps) {
+  const player = { flightPlan, missionsDone }
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const [previewRocketId, setPreviewRocketId] = useState<string | null>(selectedRocketId)
   const installed = shipCustomizerParts ?? {}
@@ -61,7 +65,7 @@ export default function HangarScreen({
   const build = (rocketId: string) => {
     const rocket = ROCKET_MODELS.find(model => model.id === rocketId)
     if (!rocket || !onBuildRocket || !hasMission) return
-    captureGameEvent('hangar_rocket_selected', { rocket_id: rocketId, cost_francs: rocket.costFrancs })
+    captureGameEvent('hangar_rocket_selected', { rocket_id: rocketId, cost_francs: rocketPrice(rocket, player) })
     onBuildRocket(rocketId)
   }
 
@@ -140,7 +144,7 @@ export default function HangarScreen({
             onClick={() => previewRocket && build(previewRocket.id)}
           >
             {previewRocket ? `Stage ${previewRocket.name}` : 'Select a vehicle'}
-            {previewRocket && <small>{previewRocket.costFrancs === 0 ? 'NO COST' : formatCurrency(previewRocket.costFrancs, { compact: true })}</small>}
+            {previewRocket && <small>{rocketPrice(previewRocket, player) === 0 ? 'NO COST' : formatCurrency(rocketPrice(previewRocket, player), { compact: true })}</small>}
           </button>
         </section>
       )}
@@ -152,7 +156,7 @@ export default function HangarScreen({
           const role = rocket && hasMission ? rocketRoles[rocket.id] : undefined
           const incompatible = !!rocket && hasMission && role?.kind !== 'use'
           const waiting = !hasMission
-          const cost = rocket ? (rocket.costFrancs === 0 ? 'No cost' : formatCurrency(rocket.costFrancs, { compact: true })) : ''
+          const cost = rocket ? (rocketPrice(rocket, player) === 0 ? 'No cost' : formatCurrency(rocketPrice(rocket, player), { compact: true })) : ''
           const note = sealed && rocket
             ? `Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`
             : incompatible ? (role && 'note' in role ? role.note : 'Cannot carry this mission') : waiting ? 'Choose a mission first' : null

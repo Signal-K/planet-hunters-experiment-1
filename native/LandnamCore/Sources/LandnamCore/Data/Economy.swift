@@ -15,6 +15,8 @@ public enum Economy {
     public static let refiningCostRate = 0.07
 
     public static let prospectorPrice = 13_000_000
+    /// Liam, 01.11: after the tutorial a rocket always costs something, even the starter Explorer (web ROCKET_PRICES).
+    public static let explorerAfterTrainingPrice = 4_000_000
     public static let surveyorPrice = 40_000_000
     public static let refineryPrice = 8_000_000
     public static let garagePrice = 6_000_000
