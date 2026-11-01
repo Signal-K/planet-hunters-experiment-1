@@ -232,6 +232,11 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
         'neo-c4tq2a1': { candidateId: 'neo-c4tq2a1', verdict: 'likely_real', submittedAt: Date.now() - 5 * 3_600_000 },
         'neo-p21mxk0': { candidateId: 'neo-p21mxk0', verdict: 'likely_artifact', submittedAt: Date.now() - 50 * 3_600_000 },
       },
+      // SSL-730: the community has launched ORI-1 (Orionids mission 3 open), one recording checked.
+      orionidsEventStage: 2,
+      radioMeteorClassifications: {
+        '101234567': { subjectId: '101234567', workflowId: '29473', imageUrl: '', filename: 'RAD_BEDOUR_20261021_0215_BEECON_SYS001.png', imageWidth: 864, imageHeight: 595, boxes: [{ x: 120, y: 200, width: 30, height: 80 }, { x: 400, y: 180, width: 24, height: 60 }], submittedAt: Date.now() - 2 * 3_600_000 },
+      },
       ...(researchStamps ? { researchStamps } : {}),
     },
     tutorial: false,

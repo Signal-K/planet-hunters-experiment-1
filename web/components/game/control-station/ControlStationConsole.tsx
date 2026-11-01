@@ -25,6 +25,8 @@ interface ControlStationConsoleProps {
   telescopeId: string | null
   onTelescope: (id: string | null) => void
   onOpen: (signal: InstrumentSignal) => void
+  /** Opens a community instrument's screen (ORI-1's meteor radio). */
+  onOpenScreen: (screen: 'radio-meteors') => void
   history: StationHistory
   /** True while the first feed answer is still out. */
   acquiring: boolean
@@ -47,6 +49,10 @@ function AnomalyGlyph({ anomaly }: { anomaly: SkyAnomaly }) {
   if (anomaly.shape === 'asteroid') {
     return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4 13 3 17 8 15 15 8 17 3 11Z" /></svg>
   }
+  if (anomaly.shape === 'echo') {
+    // A radio echo: a short spike over a baseline.
+    return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 13h5l2-8 2 12 2-4h5" /></svg>
+  }
   if (anomaly.shape === 'ringed') {
     return <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5" /><ellipse cx="10" cy="10" rx="9" ry="3" transform="rotate(-18 10 10)" /></svg>
   }
@@ -57,6 +63,10 @@ function TelescopeIcon({ place }: { place: StationTelescope['place'] }) {
   if (place === 'surface') {
     // Dome and slit on a pier.
     return <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 24a10 10 0 0 1 20 0Z" /><path d="M16 14v-4M19 11l3-4" /><path d="M4 24h24M12 24v4h8v-4" /></svg>
+  }
+  if (place === 'relay') {
+    // A receiver mast with its signal arcs.
+    return <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 14v14M11 28h10M16 14l-5 8M16 14l5 8" /><circle cx="16" cy="12" r="2" /><path d="M10 7a8 8 0 0 1 12 0M7 4a12 12 0 0 1 18 0" /></svg>
   }
   if (place === 'orbit') {
     // Tube with solar wings.
@@ -70,6 +80,7 @@ const HORIZON_SPOT: Record<StationTelescope['place'], { left: number; top: numbe
   surface: { left: 30, top: 70 },
   orbit: { left: 58, top: 24 },
   offworld: { left: 88, top: 18 },
+  relay: { left: 10, top: 30 },
 }
 
 function ViewSwitch({ view, onView }: { view: SkyView; onView: (view: SkyView) => void }) {
@@ -116,6 +127,7 @@ export function ControlStationConsole({
   telescopeId,
   onTelescope,
   onOpen,
+  onOpenScreen,
   history,
   acquiring,
   onBuild,
@@ -148,12 +160,14 @@ export function ControlStationConsole({
                 type="button"
                 className={styles.anomaly}
                 data-state={anomaly.state}
+                data-shape={anomaly.shape}
                 data-picked={anomaly.id === pickedId}
                 data-testid="control-station-anomaly"
                 style={{ left: `${anomaly.x * 100}%`, top: `${anomaly.y * 100}%` }}
                 aria-label={`${anomaly.label}, ${anomaly.detail}`}
                 onClick={() => {
                   if (anomaly.signal) onOpen(anomaly.signal)
+                  else if (anomaly.screen) onOpenScreen(anomaly.screen)
                   else setPickedId(anomaly.id === pickedId ? null : anomaly.id)
                 }}
               >
@@ -210,7 +224,7 @@ export function ControlStationConsole({
               >
                 <span className={styles.switch} aria-hidden="true"><span /></span>
                 <span className={styles.keyCopy}>
-                  <b>{scope.name}</b>
+                  <b>{scope.name.replace('-', '\u2011')}{scope.community && <span className={styles.communityTag}>Community</span>}</b>
                   <small>
                     <i className={styles.led} data-on={scope.live} data-ready={scope.readyCount > 0} aria-hidden="true" />
                     {scope.status}

@@ -6,7 +6,7 @@ import ScenePanel from '@/components/game/ScenePanel'
 import { ControlStationConsole } from '@/components/game/control-station/ControlStationConsole'
 import consoleStyles from '@/components/game/control-station/ControlStationConsole.module.css'
 import { WorldSpaceWeekBanner, WorldSpaceWeekChips } from '@/components/game/WorldSpaceWeek'
-import { buildStationSky, stationHistory, stationTelescopes, type SkyView } from '@/lib/control-station-sky'
+import { buildStationSky, communityTelescopes, stationHistory, stationTelescopes, type SkyView } from '@/lib/control-station-sky'
 import { useHelp } from '@/components/ui/useHelp'
 import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
@@ -30,6 +30,8 @@ interface InstrumentHubScreenProps {
   player: Player
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
+  /** Opens a community instrument's screen (ORI-1's meteor radio). */
+  onOpenScreen: (screen: 'radio-meteors') => void
   /** Builds the ground telescope in place; false when it could not. */
   onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
@@ -46,7 +48,7 @@ interface InstrumentHubScreenProps {
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [view, setView] = useState<SkyView>('all')
   const [telescopeId, setTelescopeId] = useState<string | null>(null)
@@ -67,7 +69,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
     }),
     [player, signals, awaitingFeed, now],
   )
-  const telescopes = useMemo(() => stationTelescopes(model), [model])
+  const telescopes = useMemo(() => [...stationTelescopes(model), ...communityTelescopes(player)], [model, player])
   const activeTelescope = telescopes.find(scope => scope.id === telescopeId && scope.built) ?? null
   const anomalies = useMemo(
     () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope }),
@@ -92,6 +94,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onBuild
           telescopeId={activeTelescope?.id ?? null}
           onTelescope={setTelescopeId}
           onOpen={onInspect}
+          onOpenScreen={onOpenScreen}
           history={history}
           acquiring={awaitingFeed}
           onBuild={() => { if (onBuildGroundTelescope()) setJustBuilt(true) }}

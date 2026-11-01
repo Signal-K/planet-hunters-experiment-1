@@ -12,7 +12,7 @@ public enum StationSky {
     }
     public enum AnomalyState: String, Sendable { case unexplored, explored, catalogue }
     public enum Shape: Sendable { case planet, asteroid, ringed, body }
-    public enum Place: String, Sendable { case surface, orbit, offworld }
+    public enum Place: String, Sendable { case surface, orbit, offworld, relay }
 
     struct TelescopeDef: Sendable { let id, name: String; let place: Place; let equipmentIds: [String]; let finds: String }
 
@@ -35,6 +35,8 @@ public enum StationSky {
         public let status: String
         public let readyCount: Int
         public let kinds: [SignalKind]
+        /// Community instruments (ORI-1, later shower receivers) say whose they are.
+        public let community: Bool
     }
 
     public struct Anomaly: Identifiable, Sendable {
@@ -106,8 +108,15 @@ public enum StationSky {
             let status = !built ? "Not built" : ready > 0 ? "\(ready) ready" : live ? "Observing" : first.status
             var kinds: [SignalKind] = []
             for id in def.equipmentIds { for k in equipmentKinds[id] ?? [] where !kinds.contains(k) { kinds.append(k) } }
-            return Telescope(id: def.id, name: def.name, place: def.place, finds: def.finds, built: built, live: live, status: status, readyCount: ready, kinds: kinds)
+            return Telescope(id: def.id, name: def.name, place: def.place, finds: def.finds, built: built, live: live, status: status, readyCount: ready, kinds: kinds, community: false)
         }
+    }
+
+    /// Community instruments that have launched. ORI-1 joins after Orionids mission 2 (web COMMUNITY_INSTRUMENTS).
+    /// iOS has no meteor radio screen yet, so it lists as listening with nothing to open.
+    public static func communityTelescopes(_ p: Player) -> [Telescope] {
+        guard p.orionidsEventStage >= 2 else { return [] }
+        return [Telescope(id: "ori-1", name: "ORI-1", place: .relay, finds: "Meteor echoes", built: true, live: true, status: "Listening", readyCount: 0, kinds: [], community: true)]
     }
 
     public static func sky(player p: Player, signals: [InstrumentSignal], view: SkyView, telescope: Telescope?) -> [Anomaly] {

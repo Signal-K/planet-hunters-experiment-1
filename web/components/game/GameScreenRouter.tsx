@@ -362,6 +362,7 @@ function ScreenBody({
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
           }}
+          onOpenScreen={screen => game.go(screen)}
           onSnoozePing={() => {
             const dateKey = instrumentDigestDateKey()
             game.setPlayer(player => markInstrumentDigestNotified(

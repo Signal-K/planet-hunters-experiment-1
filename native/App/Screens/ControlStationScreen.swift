@@ -32,7 +32,7 @@ struct ControlStationScreen: View {
     private var model: ControlStation.Model { ControlStation.build(player: store.player, signals: signals, bodyId: "all", now: store.now) }
 
     var body: some View {
-        let scopes = StationSky.telescopes(model)
+        let scopes = StationSky.telescopes(model) + StationSky.communityTelescopes(store.player)
         let active = scopes.first { $0.id == telescopeId && $0.built }
         let anomalies = StationSky.sky(player: store.player, signals: signals, view: view, telescope: active)
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }, night: true) {
@@ -184,7 +184,7 @@ struct ControlStationScreen: View {
         .padding(.horizontal, -12)
     }
 
-    static let horizonSpot: [StationSky.Place: (Double, Double)] = [.surface: (0.30, 0.70), .orbit: (0.58, 0.24), .offworld: (0.88, 0.18)]
+    static let horizonSpot: [StationSky.Place: (Double, Double)] = [.surface: (0.30, 0.70), .orbit: (0.58, 0.24), .offworld: (0.88, 0.18), .relay: (0.10, 0.30)]
 
     // MARK: Desk (left tone)
 
@@ -232,7 +232,13 @@ struct ControlStationScreen: View {
                     }
                     .opacity(scope.built ? 1 : 0.45)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                        HStack(spacing: 8) {
+                            Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                            if scope.community {
+                                Text("COMMUNITY").font(AppFont.body(12, "Bold")).tracking(1).foregroundStyle(Tone.gold)
+                                    .padding(.horizontal, 8).padding(.vertical, 2).background(Tone.gold.opacity(0.18), in: Capsule())
+                            }
+                        }
                         HStack(spacing: 6) {
                             Circle().fill(scope.readyCount > 0 ? Tone.gold : scope.live ? Tone.cyan : Theme.hex(0x3A4558)).frame(width: 9, height: 9)
                             Text(scope.status).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.mute)
@@ -350,6 +356,12 @@ private struct TelescopeGlyph: View {
                 path.move(to: p(12, 14)); path.addLines([p(4, 14), p(4, 19), p(12, 19)])
                 path.move(to: p(20, 14)); path.addLines([p(28, 14), p(28, 19), p(20, 19)])
                 path.move(to: p(16, 9)); path.addLine(to: p(16, 5))
+            case .relay:
+                path.move(to: p(16, 14)); path.addLine(to: p(16, 28)); path.move(to: p(11, 28)); path.addLine(to: p(21, 28))
+                path.move(to: p(16, 14)); path.addLine(to: p(11, 22)); path.move(to: p(16, 14)); path.addLine(to: p(21, 22))
+                path.addEllipse(in: CGRect(origin: p(14, 10), size: CGSize(width: 4 * k, height: 4 * k)))
+                path.move(to: p(10, 7)); path.addQuadCurve(to: p(22, 7), control: p(16, 2))
+                path.move(to: p(7, 4)); path.addQuadCurve(to: p(25, 4), control: p(16, -3))
             case .offworld:
                 path.addEllipse(in: CGRect(origin: p(10, 10), size: CGSize(width: 12 * k, height: 12 * k)))
             }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildControlStation } from '@/lib/control-station'
-import { buildStationSky, stationHistory, stationTelescopes } from '@/lib/control-station-sky'
+import { buildStationSky, communityTelescopes, stationHistory, stationTelescopes } from '@/lib/control-station-sky'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
 const NOW = Date.UTC(2026, 10, 1, 12)
@@ -48,5 +48,18 @@ describe('control station sky', () => {
 
   it('keeps a history tally, newest first', () => {
     expect(stationHistory(player)).toMatchObject({ total: 2, recent: [{ label: 'Asteroid 2' }, { label: 'Transit 9' }] })
+  })
+
+  it('adds ORI-1 once the community launches it, and its queue opens the meteor radio', () => {
+    expect(communityTelescopes({ orionidsEventStage: 1 })).toEqual([])
+    const radio = { ...player, orionidsEventStage: 2, radioMeteorClassifications: { s1: { filename: 'RAD_BEDOUR_20261021_0215_BEECON_SYS001.png', boxes: [{}, {}], submittedAt: 20 } } }
+    const [ori] = communityTelescopes(radio)
+    expect(ori).toMatchObject({ id: 'ori-1', name: 'ORI-1', community: true, readyCount: 2, status: '2 to check', kinds: ['radio'] })
+    const only = buildStationSky({ player: radio, signals, view: 'all', telescope: ori })
+    expect(only.map(a => [a.label, a.state, a.screen])).toEqual([
+      ['Echo · Dourbes', 'explored', null],
+      ['ORI-1 recordings', 'unexplored', 'radio-meteors'],
+    ])
+    expect(communityTelescopes({ orionidsEventStage: 3 })[0]).toMatchObject({ readyCount: 0, status: 'Listening' })
   })
 })

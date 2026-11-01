@@ -98,6 +98,7 @@
 .keyCopy { min-width: 0; display: grid; gap: 4px; }
 .keyCopy b { font: 800 16px/1.1 var(--ln-font-display); letter-spacing: 0.04em; text-transform: uppercase; }
 .keyCopy small { display: flex; align-items: center; gap: 6px; color: var(--mute); font: 700 14px/1.2 var(--ln-font-body); }
+.communityTag { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(242, 194, 76, 0.18); color: var(--gold); font: 800 12px/1.3 var(--ln-font-body); letter-spacing: 0.08em; vertical-align: 2px; }
 .keyCopy em { color: var(--cyan-soft); font: 700 14px/1.2 var(--ln-font-body); font-style: normal; }
 .led { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #3a4558; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5); }
 .led[data-on='true'] { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
@@ -271,6 +272,7 @@
 }
 .anomaly svg { width: 18px; height: 18px; fill: currentColor; fill-opacity: 0.35; stroke: currentColor; stroke-width: 1.6; overflow: visible; }
 .anomaly[data-state='catalogue'] { color: var(--cream); }
+.anomaly[data-shape='echo'] svg { fill: none; }
 .anomaly[data-state='catalogue'] svg { fill: none; width: 20px; height: 20px; }
 .anomaly[data-state='unexplored'] { color: var(--gold); }
 .anomaly[data-state='unexplored'] svg { fill-opacity: 0.85; filter: drop-shadow(0 0 4px rgba(242, 194, 76, 0.8)); }
@@ -327,7 +329,7 @@
   cursor: pointer;
 }
 .post svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.post[data-place='orbit'], .post[data-place='offworld'] { transform: translate(-50%, -50%); border-radius: 50%; }
+.post[data-place='orbit'], .post[data-place='offworld'], .post[data-place='relay'] { transform: translate(-50%, -50%); border-radius: 50%; }
 .post[aria-pressed='true'] { border-color: var(--cyan); background: rgba(88, 208, 234, 0.3); box-shadow: 0 0 0 3px rgba(88, 208, 234, 0.3); }
 .post[data-built='false'] { border-style: dashed; opacity: 0.6; cursor: default; }
 .post i {

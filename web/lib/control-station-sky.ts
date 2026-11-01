@@ -1,5 +1,6 @@
 import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/InstrumentFeedSystem'
 import type { ControlStationModel, ControlStationRow } from '@/lib/control-station'
+import { parseRadioFilename } from '@/lib/radio-meteors'
 
 /**
  * Control station sky (SSL-730, Liam's drawing of 2026-11-01).
@@ -12,13 +13,18 @@ import type { ControlStationModel, ControlStationRow } from '@/lib/control-stati
  * set shows; choosing a telescope filters the map to what that telescope finds.
  *
  * Telescopes are one row per place, not per equipment record: the Space
- * Telescope is one telescope with two feeds (SSL-531). A later instrument
- * (ORI-1, a shower receiver) is one more entry in STATION_TELESCOPES.
+ * Telescope is one telescope with two feeds (SSL-531). Community instruments
+ * (ORI-1, later shower receivers) are rows in COMMUNITY_INSTRUMENTS: they
+ * join once the community launches them and open their own screen, since
+ * their recordings come from a live queue, not the daily instrument feed.
  */
+
+/** What an anomaly is: one of the instrument feeds, or a community radio recording. */
+export type SkyKind = InstrumentSignalKind | 'radio'
 
 export type SkyView = 'explored' | 'unexplored' | 'all'
 export type AnomalyState = 'unexplored' | 'explored' | 'catalogue'
-export type AnomalyShape = 'planet' | 'asteroid' | 'ringed' | 'body'
+export type AnomalyShape = 'planet' | 'asteroid' | 'ringed' | 'body' | 'echo'
 
 export const SKY_VIEWS: readonly { id: SkyView; label: string }[] = [
   { id: 'explored', label: 'Explored' },
@@ -30,7 +36,7 @@ export interface StationTelescopeDef {
   id: string
   name: string
   /** Where it sits in the horizon strip under the map. */
-  place: 'surface' | 'orbit' | 'offworld'
+  place: 'surface' | 'orbit' | 'offworld' | 'relay'
   /** Equipment records (control-station.ts) this telescope stands for. */
   equipmentIds: readonly string[]
   /** What it finds, in the player's words. */
@@ -41,6 +47,32 @@ export const STATION_TELESCOPES: readonly StationTelescopeDef[] = [
   { id: 'ground', name: 'Ground telescope', place: 'surface', equipmentIds: ['ground-telescopes'], finds: 'Asteroids' },
   { id: 'space', name: 'Space telescope', place: 'orbit', equipmentIds: ['transit-telescope', 'deep-space-telescope'], finds: 'Planets · asteroids' },
   { id: 'saturn', name: 'Saturn satellite', place: 'offworld', equipmentIds: ['saturn-imager'], finds: 'Storms' },
+]
+
+export interface CommunityInstrumentDef {
+  id: string
+  callsign: string
+  finds: string
+  /** The screen its recordings are checked on. */
+  screen: 'radio-meteors'
+  launched: (player: SkyPlayer) => boolean
+  /** Recordings the player still owes the current mission, 0 when none is open. */
+  owed: (player: SkyPlayer) => number
+}
+
+/** Recordings Orionids mission 3 asks for (web lib/orionids/chain.ts). */
+const ORI1_MISSION_CHECKS = 3
+
+export const COMMUNITY_INSTRUMENTS: readonly CommunityInstrumentDef[] = [
+  {
+    id: 'ori-1',
+    callsign: 'ORI-1',
+    finds: 'Meteor echoes',
+    screen: 'radio-meteors',
+    // The community launches ORI-1 after Orionids mission 2 (the rover debrief).
+    launched: player => (player.orionidsEventStage ?? 0) >= 2,
+    owed: player => (player.orionidsEventStage === 2 ? Math.max(0, ORI1_MISSION_CHECKS - Object.keys(player.radioMeteorClassifications ?? {}).length) : 0),
+  },
 ]
 
 /** Which signal kinds each piece of equipment can see. Asteroids are seen from the ground and from orbit. */
@@ -61,7 +93,9 @@ export interface StationTelescope {
   live: boolean
   status: string
   readyCount: number
-  kinds: InstrumentSignalKind[]
+  kinds: SkyKind[]
+  /** Community instruments say whose they are. */
+  community: boolean
 }
 
 export interface SkyAnomaly {
@@ -70,12 +104,14 @@ export interface SkyAnomaly {
   detail: string
   state: AnomalyState
   shape: AnomalyShape
-  kind: InstrumentSignalKind | null
+  kind: SkyKind | null
   /** 0..1 across and down the map. */
   x: number
   y: number
   /** Set for unexplored anomalies: opening it brings up the classify tool. */
   signal: InstrumentSignal | null
+  /** Set for a community instrument's live queue: opening it goes to that screen. */
+  screen: CommunityInstrumentDef['screen'] | null
 }
 
 export interface SkyPlayer {
@@ -84,6 +120,8 @@ export interface SkyPlayer {
   saturnClassifications?: Record<string, { verdict?: string; submittedAt?: number }>
   discoveredExoplanetTargets?: Record<string, { id: string; name: string }>
   saturnImagerLaunchedAt?: number | null
+  orionidsEventStage?: number
+  radioMeteorClassifications?: Record<string, { filename?: string; boxes?: readonly unknown[]; submittedAt?: number }>
 }
 
 export interface StationHistory {
@@ -151,9 +189,25 @@ function explored(player: SkyPlayer): (SkyAnomaly & { at: number })[] {
         kind,
         ...skySpot(`${kind}:${id}`),
         signal: null,
+        screen: null,
         at: record?.submittedAt ?? 0,
       })
     }
+  }
+  for (const [id, record] of Object.entries(player.radioMeteorClassifications ?? {})) {
+    const echoes = record?.boxes?.length ?? 0
+    out.push({
+      id: `radio:${id}`,
+      label: `Echo · ${parseRadioFilename(record?.filename ?? '').station}`,
+      detail: echoes === 1 ? 'Checked · 1 echo' : `Checked · ${echoes} echoes`,
+      state: 'explored',
+      shape: 'echo',
+      kind: 'radio',
+      ...skySpot(`radio:${id}`),
+      signal: null,
+      screen: null,
+      at: record?.submittedAt ?? 0,
+    })
   }
   return out.sort((a, b) => b.at - a.at)
 }
@@ -161,10 +215,10 @@ function explored(player: SkyPlayer): (SkyAnomaly & { at: number })[] {
 function catalogue(player: SkyPlayer): SkyAnomaly[] {
   const out: SkyAnomaly[] = []
   if (player.saturnImagerLaunchedAt) {
-    out.push({ id: 'body:saturn', label: 'Saturn', detail: 'Watched by your Saturn satellite', state: 'catalogue', shape: 'ringed', kind: 'saturn', x: 0.86, y: 0.24, signal: null })
+    out.push({ id: 'body:saturn', label: 'Saturn', detail: 'Watched by your Saturn satellite', state: 'catalogue', shape: 'ringed', kind: 'saturn', x: 0.86, y: 0.24, signal: null, screen: null })
   }
   for (const target of Object.values(player.discoveredExoplanetTargets ?? {})) {
-    out.push({ id: `exo:${target.id}`, label: target.name, detail: 'Exoplanet you discovered', state: 'catalogue', shape: 'body', kind: 'transit', ...skySpot(`exo:${target.id}`), signal: null })
+    out.push({ id: `exo:${target.id}`, label: target.name, detail: 'Exoplanet you discovered', state: 'catalogue', shape: 'body', kind: 'transit', ...skySpot(`exo:${target.id}`), signal: null, screen: null })
   }
   return out
 }
@@ -179,8 +233,41 @@ export function stationTelescopes(model: ControlStationModel): StationTelescope[
     const readyCount = mine.reduce((sum, row) => sum + row.readyCount, 0)
     const status = !built ? 'Not built' : readyCount > 0 ? `${readyCount} ready` : live ? 'Observing' : mine[0].status
     const kinds = [...new Set(def.equipmentIds.flatMap(id => EQUIPMENT_KINDS[id] ?? []))]
-    return [{ id: def.id, name: def.name, place: def.place, finds: def.finds, built, live, status, readyCount, kinds }]
+    return [{ id: def.id, name: def.name, place: def.place, finds: def.finds, built, live, status, readyCount, kinds, community: false }]
   })
+}
+
+export function communityTelescopes(player: SkyPlayer): StationTelescope[] {
+  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player)).map(def => {
+    const owed = def.owed(player)
+    return {
+      id: def.id,
+      name: def.callsign,
+      place: 'relay' as const,
+      finds: def.finds,
+      built: true,
+      live: true,
+      status: owed > 0 ? `${owed} to check` : 'Listening',
+      readyCount: owed,
+      kinds: ['radio' as const],
+      community: true,
+    }
+  })
+}
+
+/** The live queue of each launched community instrument, as one unexplored anomaly that opens its screen. */
+function communityQueues(player: SkyPlayer): SkyAnomaly[] {
+  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player)).map(def => ({
+    id: `queue:${def.id}`,
+    label: `${def.callsign} recordings`,
+    detail: `${def.finds} · ready to check`,
+    state: 'unexplored' as const,
+    shape: 'echo' as const,
+    kind: 'radio' as const,
+    ...skySpot(`queue:${def.id}`),
+    signal: null,
+    screen: def.screen,
+  }))
 }
 
 export function buildStationSky(input: {
@@ -199,7 +286,9 @@ export function buildStationSky(input: {
     kind: signal.kind,
     ...skySpot(`${signal.kind}:${signal.id}`),
     signal,
+    screen: null,
   }))
+  open.push(...communityQueues(input.player))
   const done = explored(input.player).slice(0, EXPLORED_CAP).map(({ at: _at, ...rest }) => rest)
   const known = catalogue(input.player)
   const shown = input.view === 'unexplored' ? open : input.view === 'explored' ? done : [...known, ...done, ...open]
