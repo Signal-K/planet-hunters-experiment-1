@@ -1,25 +1,26 @@
 import SwiftUI
 import LandnamCore
 
-/// Telescope-console palette from Liam's v0 mockup (SSL-741; web ControlStationConsole.module.css).
+/// Two-tone mission palette (web ControlStationConsole.module.css). SSL-742: the house palette stays; the v0
+/// mockup only lends the instrument dressing and a faint teal accent on the scope bar.
 private enum Tone {
-    static let navy = Theme.hex(0x002439)
-    static let teal = Theme.hex(0x005066)
-    static let slate = Theme.hex(0x4E7988)
-    static let cream = Theme.hex(0xE4EFF0)
-    static let mute = Theme.hex(0xA9C6CF)
-    static let cyan = Theme.hex(0x78CCE2)
-    static let cyanSoft = Theme.hex(0xA8E2F0)
+    static let cream = Theme.hex(0xF4EFE4)
+    static let mute = Theme.hex(0xC9D0C2)
+    static let cyan = Theme.hex(0x58D0EA)
+    static let cyanSoft = Theme.hex(0x9DE7EF)
     static let gold = Theme.hex(0xF2C24C)
-    static let ink = Theme.hex(0x001522)
-    static let line = Theme.hex(0x78CCE2).opacity(0.3)
-    static let desk = LinearGradient(colors: [Theme.hex(0x00304A), Theme.hex(0x002439), Theme.hex(0x001522)], startPoint: .topLeading, endPoint: .bottomTrailing)
-    static let sky = LinearGradient(colors: [.black, Theme.hex(0x002439), Theme.hex(0x001122), Theme.hex(0x002439), .black], startPoint: .topLeading, endPoint: .bottomTrailing)
-    static let header = LinearGradient(colors: [Theme.hex(0x005066), Theme.hex(0x002439)], startPoint: .leading, endPoint: .trailing)
-    static let earth = Theme.hex(0x005066)
+    static let ink = Theme.hex(0x10182C)
+    static let desk = Theme.hex(0x183A5C).opacity(0.85)
+    static let sky = Theme.hex(0x16688F).opacity(0.6)
+    static let night = Theme.hex(0x060B18)
+    static let earth = Theme.hex(0x1D6F8F)
+    static let well = Theme.hex(0x070C18)
+    static let field = Theme.hex(0x050A16)
+    static let teal = Theme.hex(0x005066).opacity(0.55)
 }
 
-/// The scope dressing: a seeded star field, the ring, crosshairs, corner brackets and the centre bead (web .reticle).
+/// The scope dressing (web .stars/.reticle): a seeded twinkling star field, a graduated ring (fine ticks every 5°,
+/// long ones every 30°) with a cyan inner rim, crosshairs, corner brackets and the centre bead, in the house palette.
 private struct ScopeDressing: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let stars: [(x: Double, y: Double, r: Double, warm: Bool, phase: Double)] = {
@@ -32,30 +33,41 @@ private struct ScopeDressing: View {
             Canvas { ctx, size in
                 let t = tl.date.timeIntervalSinceReferenceDate
                 var grid = Path()
-                stride(from: 0.0, through: size.width, by: 50).forEach { x in grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
-                stride(from: 0.0, through: size.height, by: 50).forEach { y in grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-                ctx.stroke(grid, with: .color(Tone.cyan.opacity(0.06)), lineWidth: 1)
+                for i in 1..<8 { let x = size.width * Double(i) / 8; grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
+                for i in 1..<4 { let y = size.height * Double(i) / 4; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
+                ctx.stroke(grid, with: .color(Tone.cyanSoft.opacity(0.06)), lineWidth: 1)
                 for s in Self.stars {
                     let a = reduceMotion ? 0.7 : 0.25 + 0.75 * (0.5 + 0.5 * sin(t * 1.4 + s.phase))
                     ctx.fill(Path(ellipseIn: CGRect(x: s.x * size.width, y: s.y * size.height, width: s.r, height: s.r)), with: .color((s.warm ? Theme.hex(0xFFE9B8) : Tone.cream).opacity(a)))
                 }
-                let d = min(size.width, size.height) * 0.94
-                let ring = CGRect(x: (size.width - d) / 2, y: (size.height - d) / 2, width: d, height: d)
-                ctx.stroke(Path(ellipseIn: ring), with: .color(Tone.teal.opacity(0.85)), lineWidth: 6)
-                ctx.stroke(Path(ellipseIn: ring.insetBy(dx: 11, dy: 11)), with: .color(Tone.cyan.opacity(0.35)), lineWidth: 2)
+                let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                let r = min(size.width, size.height) * 0.46
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: .color(Tone.cream.opacity(0.28)), lineWidth: 2)
+                let band = r - 7.5
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - band, y: c.y - band, width: 2 * band, height: 2 * band)), with: .color(Tone.ink.opacity(0.55)), lineWidth: 13)
+                let inner = r - 14.5
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: 2 * inner, height: 2 * inner)), with: .color(Tone.cyan.opacity(0.45)), lineWidth: 1)
+                var fine = Path(), major = Path()
+                for deg in stride(from: 0, to: 360, by: 5) {
+                    let a = Double(deg) * .pi / 180, long = deg % 30 == 0
+                    let p0 = CGPoint(x: c.x + cos(a) * (r - 1), y: c.y + sin(a) * (r - 1))
+                    let p1 = CGPoint(x: c.x + cos(a) * (r - (long ? 14 : 9)), y: c.y + sin(a) * (r - (long ? 14 : 9)))
+                    if long { major.move(to: p0); major.addLine(to: p1) } else { fine.move(to: p0); fine.addLine(to: p1) }
+                }
+                ctx.stroke(fine, with: .color(Tone.cream.opacity(0.42)), lineWidth: 1)
+                ctx.stroke(major, with: .color(Tone.cyanSoft.opacity(0.8)), lineWidth: 2)
                 var cross = Path()
-                cross.move(to: CGPoint(x: 0, y: size.height / 2)); cross.addLine(to: CGPoint(x: size.width, y: size.height / 2))
-                cross.move(to: CGPoint(x: size.width / 2, y: 0)); cross.addLine(to: CGPoint(x: size.width / 2, y: size.height))
-                ctx.stroke(cross, with: .color(Tone.cyan.opacity(0.22)), lineWidth: 1)
+                cross.move(to: CGPoint(x: 0, y: c.y)); cross.addLine(to: CGPoint(x: size.width, y: c.y))
+                cross.move(to: CGPoint(x: c.x, y: 0)); cross.addLine(to: CGPoint(x: c.x, y: size.height))
+                ctx.stroke(cross, with: .color(Tone.cyanSoft.opacity(0.22)), lineWidth: 1)
                 var corners = Path()
-                let k = 20.0, m = 12.0
+                let k = 20.0, m = 10.0
                 for (cx, cy, sx, sy) in [(m, m, 1.0, 1.0), (size.width - m, m, -1.0, 1.0), (m, size.height - m, 1.0, -1.0), (size.width - m, size.height - m, -1.0, -1.0)] {
                     corners.move(to: CGPoint(x: cx, y: cy + sy * k)); corners.addLine(to: CGPoint(x: cx, y: cy)); corners.addLine(to: CGPoint(x: cx + sx * k, y: cy))
                 }
-                ctx.stroke(corners, with: .color(Tone.cyan.opacity(0.6)), lineWidth: 2)
-                let c = CGPoint(x: size.width / 2, y: size.height / 2)
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 14, y: c.y - 14, width: 28, height: 28)), with: .color(Tone.cyan), lineWidth: 2)
-                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 3, y: c.y - 3, width: 6, height: 6)), with: .color(Tone.cyan))
+                ctx.stroke(corners, with: .color(Tone.cream.opacity(0.6)), lineWidth: 2)
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 13, y: c.y - 13, width: 26, height: 26)), with: .color(Tone.cream.opacity(0.7)), lineWidth: 1.5)
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(Tone.cyan))
             }
         }
         .allowsHitTesting(false)
@@ -123,18 +135,17 @@ struct ControlStationScreen: View {
             ForEach(StationSky.SkyView.allCases) { v in
                 let on = v == view
                 Button { pickedId = nil; withAnimation(.easeOut(duration: 0.2)) { view = v } } label: {
-                    Text(v.label.uppercased()).font(AppFont.mono(14)).tracking(0.8)
-                        .foregroundStyle(on ? Tone.navy : Tone.mute)
+                    Text(v.label.uppercased()).font(AppFont.display(14)).tracking(0.8)
+                        .foregroundStyle(on ? Theme.hex(0x142840) : Tone.mute)
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .background { if on { RoundedRectangle(cornerRadius: 5).fill(Tone.cyan).shadow(color: Tone.cyan.opacity(0.45), radius: 6) } }
+                        .background { if on { Capsule().fill(Tone.cream).shadow(color: .black.opacity(0.45), radius: 3, y: 2) } }
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(on ? .isSelected : [])
             }
         }
         .padding(4)
-        .background(Tone.navy.opacity(0.85), in: RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Tone.line, lineWidth: 2))
+        .background(Tone.ink.opacity(0.7), in: Capsule())
         .accessibilityIdentifier("control-station-view")
         .coachTarget("station-filters")
     }
@@ -144,27 +155,32 @@ struct ControlStationScreen: View {
         let picked = anomalies.first { $0.id == pickedId }
         let scopes = StationSky.telescopes(model) + StationSky.communityTelescopes(store.player)
         let online = scopes.filter(\.live).count
-        return VStack(spacing: 0) {
+        return VStack(spacing: 6) {
             HStack {
-                Text("SKY MAP").font(AppFont.mono(14)).foregroundStyle(Tone.cyan)
+                HStack(spacing: 8) {
+                    Circle().fill(Tone.cyan).frame(width: 8, height: 8).shadow(color: Tone.cyan, radius: 3)
+                    Text("SKY MAP").font(AppFont.mono(14)).foregroundStyle(Tone.mute)
+                }
                 Spacer()
-                Text((active?.name ?? "All telescopes").uppercased()).font(AppFont.mono(14)).tracking(1.2).foregroundStyle(Tone.cream).lineLimit(1)
+                Text((active?.name ?? "All telescopes").uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Tone.cream).lineLimit(1)
                 Spacer()
-                Text("\(waiting) TO CLASSIFY").font(AppFont.mono(14)).foregroundStyle(Tone.gold)
+                Text("\(waiting) TO CLASSIFY").font(AppFont.body(14, "Bold")).foregroundStyle(Tone.gold)
             }
             .padding(.horizontal, 14).padding(.vertical, 9)
-            .background(Tone.header)
-            .overlay(alignment: .bottom) { Rectangle().fill(Tone.line).frame(height: 2) }
+            .background(LinearGradient(colors: [Tone.teal, .clear], startPoint: .leading, endPoint: .trailing))
+            .overlay(alignment: .bottom) { Rectangle().fill(Tone.cyanSoft.opacity(0.16)).frame(height: 1) }
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
                     ScopeDressing()
                     VStack {
                         HStack { Text("FIELD: \(view.label.uppercased())"); Spacer(); Text("TARGETS: \(anomalies.count)") }
+                            .foregroundStyle(Tone.cyanSoft)
                         Spacer()
                         HStack { Text("ONLINE: \(online)/\(scopes.count)"); Spacer(); Text("STATUS: \(waiting > 0 ? "SCANNING" : "STANDBY")") }
+                            .foregroundStyle(Tone.mute)
                     }
-                    .font(AppFont.mono(14)).foregroundStyle(Tone.cyan).shadow(color: .black, radius: 1, y: 1)
-                    .padding(.horizontal, 36).padding(.vertical, 30)
+                    .font(AppFont.mono(14)).shadow(color: .black, radius: 1, y: 1)
+                    .padding(.horizontal, 38).padding(.vertical, 14)
                     .allowsHitTesting(false).accessibilityHidden(true)
                     if anomalies.isEmpty {
                         Text(emptyText).font(AppFont.body(15)).foregroundStyle(Tone.mute).multilineTextAlignment(.center)
@@ -181,8 +197,9 @@ struct ControlStationScreen: View {
                     }
                 }
             }
-            .background(Tone.sky)
-            .clipped()
+            .background(Tone.field)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Tone.cyanSoft.opacity(0.14), lineWidth: 1))
             .overlay(alignment: .bottom) {
                 if let picked {
                     HStack {
@@ -190,15 +207,15 @@ struct ControlStationScreen: View {
                         Spacer()
                         Text(picked.detail).font(AppFont.body(14)).foregroundStyle(Tone.mute)
                     }
-                    .padding(12).background(Tone.navy.opacity(0.92), in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Tone.cyan.opacity(0.4), lineWidth: 2))
+                    .padding(12).background(Tone.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 14))
                     .padding(10)
                 }
             }
+            .padding([.horizontal, .bottom], 10)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Tone.line, lineWidth: 2))
-        .shadow(color: .black.opacity(0.45), radius: 18, y: 10)
+        .background(Tone.night, in: RoundedRectangle(cornerRadius: 22))
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Tone.cream.opacity(0.28), lineWidth: 1))
     }
 
     private var emptyText: String {
@@ -218,23 +235,23 @@ struct ControlStationScreen: View {
                     func limb(_ rx: Double, _ ry: Double) -> Path {
                         Path(ellipseIn: CGRect(x: size.width / 2 - rx / 600 * size.width, y: 300 / 120 * size.height - ry / 120 * size.height, width: 2 * rx / 600 * size.width, height: 2 * ry / 120 * size.height))
                     }
-                    ctx.stroke(limb(470, 270), with: .color(Tone.cyan.opacity(0.4)), style: StrokeStyle(lineWidth: 1.5, dash: [6, 8]))
-                    ctx.fill(limb(424, 234), with: .color(Tone.cyan.opacity(0.3)))
+                    ctx.stroke(limb(470, 270), with: .color(Tone.cream.opacity(0.35)), style: StrokeStyle(lineWidth: 1.5, dash: [6, 8]))
+                    ctx.fill(limb(424, 234), with: .color(Tone.cyanSoft.opacity(0.28)))
                     ctx.fill(limb(420, 230), with: .color(Tone.earth))
                 }
-                Text("EARTH").font(AppFont.mono(14)).tracking(2).foregroundStyle(Tone.cyan)
+                Text("EARTH").font(AppFont.display(14)).tracking(2).foregroundStyle(Tone.cyanSoft)
                     .position(x: w - 40, y: h - 14)
                 ForEach(scopes) { scope in
                     let spot = Self.horizonSpot[scope.place] ?? (0.5, 0.5)
                     let on = scope.id == telescopeId
                     Button { toggle(scope.id) } label: {
-                        TelescopeGlyph(place: scope.place).frame(width: 30, height: 30).foregroundStyle(on ? Tone.navy : Tone.cyan)
+                        TelescopeGlyph(place: scope.place).frame(width: 30, height: 30).foregroundStyle(Tone.cream)
                             .frame(width: 48, height: 48)
-                            .background(on ? Tone.cyan : Tone.navy.opacity(0.9), in: RoundedRectangle(cornerRadius: scope.place == .surface ? 10 : 24))
-                            .overlay(RoundedRectangle(cornerRadius: scope.place == .surface ? 10 : 24).stroke(Tone.cyan.opacity(on ? 1 : 0.6), style: StrokeStyle(lineWidth: 2, dash: scope.built ? [] : [4, 4])))
+                            .background(on ? Tone.cyan.opacity(0.3) : Tone.ink.opacity(0.72), in: RoundedRectangle(cornerRadius: scope.place == .surface ? 14 : 24))
+                            .overlay(RoundedRectangle(cornerRadius: scope.place == .surface ? 14 : 24).stroke(on ? Tone.cyan : Tone.cream.opacity(0.7), style: StrokeStyle(lineWidth: 2, dash: scope.built ? [] : [4, 4])))
                             .overlay(alignment: .topTrailing) {
                                 if scope.readyCount > 0 {
-                                    Text("\(scope.readyCount)").font(AppFont.mono(14)).foregroundStyle(Tone.ink)
+                                    Text("\(scope.readyCount)").font(AppFont.display(14)).foregroundStyle(Tone.ink)
                                         .frame(minWidth: 22, minHeight: 22).background(Tone.gold, in: Capsule()).offset(x: 8, y: -8)
                                 }
                             }
@@ -257,7 +274,7 @@ struct ControlStationScreen: View {
         let history = StationSky.history(store.player)
         let waiting = scopes.reduce(0) { $0 + $1.readyCount }
         return VStack(alignment: .leading, spacing: 12) {
-            deskHeader.padding(.horizontal, -16).padding(.top, -16)
+            deskHeader
             if vertical != .compact {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                     tile("TARGETS", "\(StationSky.sky(player: store.player, signals: signals, view: .all, telescope: nil).count)")
@@ -269,23 +286,23 @@ struct ControlStationScreen: View {
             }
             ForEach(scopes) { scope in key(scope) }
             VStack(alignment: .leading, spacing: 8) {
-                Rectangle().fill(Tone.line).frame(height: 2)
+                Divider().overlay(Tone.cream.opacity(0.22))
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(history.total)").font(AppFont.mono(28)).foregroundStyle(Tone.cyan)
-                    Text("CLASSIFIED").font(AppFont.mono(14)).tracking(1.4).foregroundStyle(Tone.mute)
+                    Text("\(history.total)").font(AppFont.display(28)).foregroundStyle(Tone.cyanSoft)
+                    Text("CLASSIFIED").font(AppFont.body(14, "Bold")).tracking(1.4).foregroundStyle(Tone.mute)
                 }
                 ForEach(history.recent.indices, id: \.self) { i in
                     let item = history.recent[i]
                     HStack {
-                        Text(item.label).font(AppFont.mono(14)).foregroundStyle(Tone.cream).lineLimit(1)
+                        Text(item.label).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.cream).lineLimit(1)
                         Spacer()
-                        Text(item.detail).font(AppFont.mono(14)).foregroundStyle(Tone.mute).lineLimit(1)
+                        Text(item.detail).font(AppFont.body(14)).foregroundStyle(Tone.mute).lineLimit(1)
                     }
                 }
                 Button { logbook = true } label: {
-                    Text("LOGBOOK").font(AppFont.mono(14)).tracking(1.4).foregroundStyle(Tone.cream)
+                    Text("LOGBOOK").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Tone.cream)
                         .padding(.horizontal, 18).frame(minHeight: 44)
-                        .background(Tone.slate, in: RoundedRectangle(cornerRadius: 6)).overlay(RoundedRectangle(cornerRadius: 6).stroke(Tone.cyan.opacity(0.4), lineWidth: 2))
+                        .background(Tone.ink.opacity(0.3), in: Capsule()).overlay(Capsule().stroke(Tone.cream.opacity(0.5), lineWidth: 1))
                 }
                 .buttonStyle(.plain).accessibilityIdentifier("control-station-logbook")
             }
@@ -295,32 +312,34 @@ struct ControlStationScreen: View {
         .background(Tone.desk)
     }
 
-    /// Teal-to-navy header band with the round instrument badge (web .deskHead).
+    /// Desk header (web .deskHead): a round instrument badge, the title, and the station's model plate in mono.
     private var deskHeader: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "magnifyingglass").font(.system(size: 20, weight: .bold)).foregroundStyle(Tone.navy)
-                .frame(width: 46, height: 46)
-                .background(LinearGradient(colors: [Tone.slate, Tone.cyan], startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
-                .shadow(color: Tone.cyan.opacity(0.25), radius: 7, y: 4)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("CONTROL STATION").font(AppFont.display(22)).tracking(1.6).foregroundStyle(Tone.cream)
-                Text("OBSERVATORY LAYOUT").font(AppFont.mono(14)).tracking(1).foregroundStyle(Tone.cyan)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                if vertical != .compact {
+                    Image(systemName: "magnifyingglass").font(.system(size: 18, weight: .bold)).foregroundStyle(Tone.cyanSoft)
+                        .frame(width: 44, height: 44)
+                        .background(RadialGradient(colors: [Tone.cyan.opacity(0.35), Tone.ink.opacity(0.7)], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: 30), in: Circle())
+                        .overlay(Circle().stroke(Tone.cream.opacity(0.55), lineWidth: 2))
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("CONTROL STATION").font(AppFont.display(22)).tracking(1).foregroundStyle(Tone.cream)
+                    Text("OBSERVATORY LAYOUT").font(AppFont.mono(14)).tracking(1).foregroundStyle(Tone.cyanSoft)
+                }
             }
+            Divider().overlay(Tone.cream.opacity(0.22))
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Tone.header)
-        .overlay(alignment: .bottom) { Rectangle().fill(Tone.line).frame(height: 2) }
     }
 
+    /// A recessed readout window, like the telescope counters (web .tiles).
     private func tile(_ label: String, _ value: String, hot: Bool = false) -> some View {
-        VStack(spacing: 6) {
-            Text(label).font(AppFont.mono(14)).foregroundStyle(Tone.cream).lineLimit(1).minimumScaleFactor(1)
-            Text(value).font(AppFont.mono(20)).foregroundStyle(hot ? Tone.gold : Tone.cyan)
+        HStack(alignment: .firstTextBaseline) {
+            Text(label).font(AppFont.body(14, "Bold")).tracking(0.6).foregroundStyle(Tone.mute).lineLimit(1)
+            Spacer(minLength: 6)
+            Text(value).font(AppFont.mono(20)).foregroundStyle(hot ? Tone.gold : Tone.cyanSoft)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 10)
-        .background(Tone.teal, in: RoundedRectangle(cornerRadius: 6))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Tone.line, lineWidth: 1))
+        .padding(.horizontal, 12).padding(.vertical, 9)
+        .background(Tone.well, in: RoundedRectangle(cornerRadius: 8))
     }
 
     /// A telescope key: a toggle switch that filters the map, an LED, and a digit counter.
@@ -330,30 +349,29 @@ struct ControlStationScreen: View {
             Button { toggle(scope.id) } label: {
                 HStack(spacing: 12) {
                     ZStack(alignment: on ? .trailing : .leading) {
-                        Capsule().fill(on ? Tone.cyan.opacity(0.5) : Tone.ink).overlay(Capsule().stroke(Tone.line, lineWidth: 1)).frame(width: 48, height: 28)
-                        Circle().fill(LinearGradient(colors: [Theme.hex(0xF4FBFC), Theme.hex(0x9FBCC6)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 22, height: 22).padding(3).shadow(color: .black.opacity(0.45), radius: 2, y: 2)
+                        Capsule().fill(on ? Tone.cyan.opacity(0.55) : Tone.ink.opacity(0.7)).frame(width: 48, height: 28)
+                        Circle().fill(Tone.cream).frame(width: 22, height: 22).padding(3).shadow(color: .black.opacity(0.45), radius: 2, y: 2)
                     }
                     .opacity(scope.built ? 1 : 0.45)
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 8) {
-                            Text(scope.name.uppercased()).font(AppFont.mono(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                            Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
                             if scope.community {
                                 Text("COMMUNITY").font(AppFont.body(12, "Bold")).tracking(1).foregroundStyle(Tone.gold)
                                     .padding(.horizontal, 8).padding(.vertical, 2).background(Tone.gold.opacity(0.18), in: Capsule())
                             }
                         }
                         HStack(spacing: 6) {
-                            Circle().fill(scope.readyCount > 0 ? Tone.gold : scope.live ? Tone.cyan : Tone.slate).frame(width: 9, height: 9)
-                            Text(scope.status).font(AppFont.mono(14)).foregroundStyle(Tone.mute)
+                            Circle().fill(scope.readyCount > 0 ? Tone.gold : scope.live ? Tone.cyan : Theme.hex(0x3A4558)).frame(width: 9, height: 9)
+                            Text(scope.status).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.mute)
                         }
-                        Text(scope.finds).font(AppFont.mono(14)).foregroundStyle(Tone.cyan)
+                        Text(scope.finds).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.cyanSoft)
                     }
                     Spacer(minLength: 0)
                     if scope.built {
                         Text(String(format: "%02d", scope.readyCount)).font(.system(size: 20, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(scope.readyCount > 0 ? Tone.gold : Tone.slate)
-                            .frame(minWidth: 44, minHeight: 34).background(Tone.ink, in: RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Tone.cyan.opacity(0.25), lineWidth: 1))
+                            .foregroundStyle(scope.readyCount > 0 ? Tone.gold : Theme.hex(0x4D5D72))
+                            .frame(minWidth: 44, minHeight: 34).background(Theme.hex(0x070C18), in: RoundedRectangle(cornerRadius: 8))
                     }
                 }
                 .padding(10).frame(minHeight: 60)
@@ -363,15 +381,15 @@ struct ControlStationScreen: View {
             .accessibilityIdentifier("control-station-telescope-\(scope.id)")
             if !scope.built {
                 Button { store.go(.build) } label: {
-                    Text("BUILD").font(AppFont.mono(15)).tracking(1.2).foregroundStyle(Tone.navy)
-                        .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cyan, in: RoundedRectangle(cornerRadius: 6))
+                    Text("BUILD").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
+                        .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))
                 }
                 .buttonStyle(.plain).padding([.horizontal, .bottom], 8)
                 .accessibilityLabel("Build \(scope.name)").accessibilityIdentifier("control-station-build")
             }
         }
-        .background(on ? AnyShapeStyle(LinearGradient(colors: [Tone.cyan.opacity(0.2), Tone.navy.opacity(0.85)], startPoint: .topLeading, endPoint: .bottomTrailing)) : AnyShapeStyle(Tone.navy.opacity(0.8)), in: RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(on ? Tone.cyan : Tone.line, lineWidth: 2))
+        .background(LinearGradient(colors: [on ? Tone.cyan.opacity(0.2) : .white.opacity(0.08), Tone.ink.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(on ? Tone.cyan : Tone.cream.opacity(0.22), lineWidth: 1))
     }
 
     private var logbookSheet: some View {
@@ -385,7 +403,7 @@ struct ControlStationScreen: View {
             }
             .padding(16)
         }
-        .background(Tone.navy)
+        .background(Theme.hex(0x183A5C))
         .presentationDetents([.medium, .large])
     }
 
