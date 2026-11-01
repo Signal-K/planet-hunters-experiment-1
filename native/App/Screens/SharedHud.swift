@@ -53,10 +53,11 @@ struct HudGearClock: View {
                 Button(action: onNotifications) {
                     ZStack(alignment: .topTrailing) {
                         Image(systemName: "bell.fill").font(.system(size: 15, weight: .bold)).foregroundStyle(Glass.ink)
-                            .frame(width: 40, height: 40).contentShape(Rectangle())
+                            .frame(width: 44, height: 44).contentShape(Rectangle())
                         if notificationCount > 0 {
-                            Text("\(notificationCount)").font(AppFont.mono(10)).foregroundStyle(Glass.ink).frame(minWidth: 16, minHeight: 16)
-                                .background(Glass.cyan, in: Circle()).offset(x: 1, y: -1)
+                            // SSL-740: 14pt like web, capped at 9+ so the badge stays round.
+                            Text(notificationCount > 9 ? "9+" : "\(notificationCount)").font(AppFont.mono(14)).foregroundStyle(Glass.ink).frame(minWidth: 20, minHeight: 20)
+                                .background(Glass.cyan, in: Capsule()).offset(x: 2, y: -2)
                         }
                     }
                 }
