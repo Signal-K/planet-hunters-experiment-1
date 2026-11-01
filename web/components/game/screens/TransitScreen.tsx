@@ -151,6 +151,11 @@ export default function TransitScreen({
   }
 
   const shift = `${transitBodyShiftPercent(progress)}%`
+  const remainingMs = isTimed && arrivalAt ? Math.max(0, arrivalAt - liveNow) : null
+  const remainingLabel = remainingMs == null ? null
+    : remainingMs >= 3_600_000 ? `${Math.floor(remainingMs / 3_600_000)}h ${Math.round((remainingMs % 3_600_000) / 60_000)}m left`
+    : remainingMs >= 60_000 ? `${Math.floor(remainingMs / 60_000)}m ${Math.round((remainingMs % 60_000) / 1000)}s left`
+    : `${Math.ceil(remainingMs / 1000)}s left`
 
   return (
     <div className={styles.screen} data-screen="transit" data-testid="transit-screen" aria-label="Flight">
@@ -167,21 +172,25 @@ export default function TransitScreen({
         </div>
       </div>
 
-      <div
-        className={styles.progress}
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={progress}
-        aria-label="Flight progress"
-        data-testid="transit-progress"
-      >
-        <span style={{ width: `${progress}%` }} />
-      </div>
-
+      {/* SSL-716: one two-tone flight bar. Where you are going and how long is left, Back on the left, Boost (then Arrive) as the one cream button. */}
       <div className={styles.controls}>
-        <button type="button" className={styles.exit} onClick={onBack}>Back</button>
-        <button type="button" className={styles.boost} data-testid="transit-boost-btn" disabled={arrived} onClick={arrived ? onArrive : boost}>
+        <button type="button" className={styles.exit} onClick={onBack}>‹ Back</button>
+        <div className={styles.route}>
+          <span className={styles.routeName} data-testid="transit-destination">{returning ? 'Returning to Earth' : `To ${target.name}`}</span>
+          <div
+            className={styles.progress}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            aria-label="Flight progress"
+            data-testid="transit-progress"
+          >
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <span className={styles.routeEta}>{arrived ? 'Arrived' : remainingLabel ?? `${progress}%`}</span>
+        </div>
+        <button type="button" className={styles.boost} data-testid="transit-boost-btn" data-arrived={arrived || undefined} disabled={arrived} onClick={arrived ? onArrive : boost}>
           {arrived ? 'Arrive' : 'Boost'}
         </button>
       </div>

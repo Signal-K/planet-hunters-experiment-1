@@ -115,16 +115,12 @@
 }
 
 .progress {
-  position: absolute;
-  left: 50%;
-  bottom: 96px;
-  z-index: 4;
-  width: min(520px, calc(100% - 48px));
+  flex: 1 1 auto;
+  min-width: 60px;
   height: 8px;
-  transform: translateX(-50%);
   overflow: hidden;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ln-world-night-top) 72%, var(--ln-world-outline));
+  background: rgba(244, 239, 228, .18);
   pointer-events: none;
 }
 
@@ -132,7 +128,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--ln-blueprint-blue) 0%, var(--ln-world-trim-blue) 72%, transparent 100%);
+  background: #58d0ea;
 }
 
 .cluster :global(.scene-chip) {
@@ -145,31 +141,65 @@
 
 .controls {
   position: absolute;
-  right: 12px;
+  left: 50%;
   bottom: 12px;
-  left: 12px;
   z-index: 6;
+  width: min(720px, calc(100% - 24px));
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  border: 1px solid rgba(244, 239, 228, .4);
+  border-radius: 999px;
+  background: rgba(16, 24, 44, .84);
+  color: #f4efe4;
 }
+
+.route {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.routeName,
+.routeEta {
+  white-space: nowrap;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.routeName { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.routeEta { color: #b8e4ea; font-variant-numeric: tabular-nums; }
 
 .exit,
 .boost {
+  flex: 0 0 auto;
   min-width: 44px;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 4px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
   font: 800 14px var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
-.exit { background: var(--ln-world-hull-lit); color: var(--ln-world-outline); }
-.boost { background: var(--ln-world-trim-blue); color: var(--ln-bp-paper); }
-.boost:disabled { cursor: default; opacity: .8; }
+.exit { border: 2px solid rgba(244, 239, 228, .6); background: transparent; color: #f4efe4; }
+.boost { min-width: 112px; border: 2px solid #f4efe4; background: #f4efe4; color: #142840; }
+.boost:disabled { cursor: default; }
+.boost[data-arrived='true'] { border-color: #f2c24c; background: #f2c24c; }
+
+/* Phones held upright: the route reads on its own row above Back and Boost. */
+@media (orientation: portrait) and (max-width: 560px) {
+  .controls { flex-wrap: wrap; border-radius: 24px; padding: 10px; }
+  .route { order: -1; flex-basis: 100%; padding: 2px 6px 4px; }
+  .exit { flex: 0 0 auto; }
+  .boost { flex: 1 1 auto; }
+}
 
 @keyframes pan {
   from { transform: translateX(0); }
@@ -197,7 +227,6 @@
   /* SSL-534: the ship rides high and the asteroid sits low and larger, so the tall phone screen is used and the body is never cut off at the edge. */
   .ship { left: 42%; top: 30%; }
   .body { right: 8%; top: 64%; width: calc(80 * var(--k)); height: calc(66 * var(--k)); }
-  .progress { bottom: 96px; width: min(320px, calc(100% - 32px)); }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -206,7 +235,6 @@
   .stage { top: 56px; bottom: 96px; }
   .ship { left: 36%; top: 46%; }
   .body { right: 8%; top: 46%; }
-  .progress { bottom: 80px; }
   
 }
 
@@ -214,7 +242,6 @@
   .screen { --k: 3px; }
   .ship { left: 36%; }
   .body { right: 12%; }
-  .progress { width: min(560px, 42vw); bottom: 104px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
