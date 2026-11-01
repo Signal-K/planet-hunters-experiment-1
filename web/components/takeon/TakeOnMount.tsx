@@ -21,6 +21,7 @@ import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
+import { assistedClimb, type DrivableWorld } from '@/lib/takeon/drivable'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
   bindTakeonHostEvents,
@@ -174,6 +175,18 @@ export function drillAnySide(game: DrillableGame): boolean {
   }
   rover.facing = start
   return false
+}
+
+/**
+ * Give the rover enough climb to leave its landing site (see lib/takeon/drivable.ts).
+ * Rough bodies keep their cliffs; the wheels just get one more step where they need it.
+ */
+function openLandingSite(game: unknown): void {
+  const sim = (game as { sim?: { world?: DrivableWorld; rover?: { pos?: { x: number; y: number }; stats?: { maxClimb?: number } } } }).sim
+  const world = sim?.world
+  const rover = sim?.rover
+  if (!world || !rover?.pos || !rover.stats || typeof rover.stats.maxClimb !== 'number') return
+  rover.stats.maxClimb = assistedClimb(world, rover.pos, rover.stats.maxClimb)
 }
 
 /** Camera zoom the field opens at: Takeon's 3.2 shows only a few tiles, so open wider. */
@@ -555,6 +568,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         })
         resizeObserver.observe(canvasElement)
 
+        openLandingSite(mounted.game)
         settleFieldView(mounted.game, viewport, lifeStage)
         mounted.start()
         gameRef.current = mounted.game
