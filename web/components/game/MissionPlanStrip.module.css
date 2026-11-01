@@ -109,3 +109,6 @@
 .slots { flex-wrap: wrap !important; }
 .cargoSlot { flex: 1 1 100% !important; }
 .cargoRows { flex: 1 1 auto; }
+
+/* Nothing in the fleet fits the job: say so and point at research or another destination (Liam, 01.11). */
+.noFit { margin: 0 0 8px; padding: 8px 12px; font-size: 14px; line-height: 1.35; color: var(--ln-world-hull-lit); background: color-mix(in srgb, var(--ln-warn) 22%, transparent); border: 1px solid var(--ln-warn); border-radius: 8px; }

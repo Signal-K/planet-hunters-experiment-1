@@ -6,7 +6,7 @@ import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice } from '@/lib/rockets'
+import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
@@ -73,10 +73,24 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
   const targets = sheet === 'destination'
     ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
     : []
-  // Every unlocked rocket, each with its role in this job: the smallest that fits is the one to fly (SSL-728).
-  const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= player.missionsDone) : []
-  const roles = rocketJobRoles(rockets, mission, model => rocketCompatibleWithMission(model, mission)
-    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
+  // Every announced rocket, each with its role in this job: the smallest that fits is the one to fly (SSL-728).
+  // Liam, 01.11: when nothing the player has can fly it, the sheet offers to research or buy one that can.
+  const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && (rocketUnlocked(model, player) || rocketResearchXp(model) > 0)) : []
+  const fits = (model: (typeof ROCKET_MODELS)[number]) => rocketCompatibleWithMission(model, mission)
+    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok
+  const roles = rocketJobRoles(rockets.filter(model => rocketUnlocked(model, player)), mission, fits)
+  const nothingFits = sheet === 'vehicle' && ![...roles.values()].some(role => role.kind === 'use')
+  const researchable = rockets.filter(model => !rocketUnlocked(model, player) && fits(model))
+  const research = (model: (typeof ROCKET_MODELS)[number]) => {
+    const xp = rocketResearchXp(model)
+    const have = Math.floor(player.researchXP ?? 0)
+    if (have < xp) {
+      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Control Station to earn it.`, 'warn')
+      return
+    }
+    game.unlockBlueprint(rocketResearchId(model.id), 0, xp, {})
+    game.addToast(`${model.name} researched: it can be built now.`, 'ok')
+  }
 
   return (
     <div className={styles.host} data-testid="mission-plan-strip">
@@ -155,9 +169,31 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
             <strong>Vehicle</strong>
             <button type="button" onClick={() => setSheet(null)}>Close</button>
           </div>
-          <p className={styles.sheetLead}>The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.</p>
+          {nothingFits ? (
+            <p className={styles.noFit} data-testid="plan-vehicle-none" role="status">
+              No rocket you have can fly this job.{' '}
+              {researchable.length > 0
+                ? <>Research {researchable.map(model => model.name).join(' or ')} below, or pick another destination.</>
+                : <>Pick another destination, or come back once a bigger rocket is unlocked.</>}
+            </p>
+          ) : (
+            <p className={styles.sheetLead}>The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.</p>
+          )}
           <ul>
             {rockets.map(model => {
+              if (!rocketUnlocked(model, player)) {
+                const xp = rocketResearchXp(model)
+                const canFly = fits(model)
+                return (
+                  <li key={model.id}><button type="button" data-role="research" data-testid={`plan-vehicle-research-${model.id}`} disabled={!canFly} onClick={() => research(model)}>
+                    <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
+                    <strong>{model.name}<small>{model.stats.cargo}U · ORB {model.stats.maxOrbit}</small></strong>
+                    {canFly
+                      ? <span className={styles.vehicleOptionAction}>Research · {xp} XP</span>
+                      : <span className={styles.vehicleOptionNote}>Locked · {model.unlockHint}</span>}
+                  </button></li>
+                )
+              }
               const role = roles.get(model.id) ?? { kind: 'too-small' as const, note: 'Cannot fly this job' }
               const price = rocketPrice(model, player)
               const cost = price === 0 ? 'No cost' : formatCurrency(price, { compact: true })
@@ -171,7 +207,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
                   <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
                   <strong>{model.name}<small>{model.stats.cargo}U · ORB {model.stats.maxOrbit}</small></strong>
                   {usable
-                    ? <span className={styles.vehicleOptionAction}>{model.id === selectedRocket?.id ? 'Staged' : 'Stage'} · {cost}</span>
+                    ? <span className={styles.vehicleOptionAction}>{model.id === selectedRocket?.id ? `Staged · ${cost}` : price > 0 ? `Buy · ${cost}` : `Stage · ${cost}`}</span>
                     : <span className={styles.vehicleOptionNote}>{role.note}</span>}
                 </button></li>
               )

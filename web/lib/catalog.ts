@@ -4,6 +4,12 @@ import { TARGETS, MISSIONS, AUTHORED_MISSIONS, TRANSPORT_SEQUENCE, PARTS, MINERA
 import { normalizeMissionPayout } from './data/payouts'
 import { tagMissionCategories } from './data/mission-generator'
 
+/** Seeded parts plus any static part the table is missing, so every rocket model's config resolves. */
+function withStaticParts(seeded: Part[], fallback: readonly Part[]): Part[] {
+  const have = new Set(seeded.map(part => part.id))
+  return [...seeded, ...fallback.filter(part => !have.has(part.id))]
+}
+
 export interface Catalog {
   targets: Target[]
   missions: Mission[]
@@ -267,10 +273,13 @@ export async function fetchCatalog(): Promise<Catalog> {
   return {
     targets: locations.filter(isSolarTarget).map(toTarget),
     missions: tagMissionCategories(allMissions),
+    // A part a rocket model is built from but the PocketBase table lacks (hull-mk3 and hull-hauler were never
+    // seeded) made validateBuild fall back to the starter hull, so the Surveyor read "Cannot reach" (Liam, 01.11).
+    // The static parts fill any gap; seeded rows still win.
     parts: {
-      chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
-      propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),
-      drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
+      chassis:    withStaticParts(parts.filter(p => p.part_type === 'chassis').map(toPart), PARTS.chassis),
+      propulsion: withStaticParts(parts.filter(p => p.part_type === 'propulsion').map(toPart), PARTS.propulsion),
+      drill:      withStaticParts(parts.filter(p => p.part_type === 'drill').map(toPart), PARTS.drill),
     },
     // The static table owns mineral colours (blueprint palette); the seeded PocketBase rows still carry the old orange.
     // Merge static MINERAL_META first so any key not yet seeded in PocketBase
