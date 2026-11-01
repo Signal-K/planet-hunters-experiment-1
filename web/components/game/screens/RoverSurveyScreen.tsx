@@ -233,9 +233,9 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
       </div>
       {mission.id === 'self-directed-orionids-surface-research' && (
         <div className={styles.eventBrief} data-testid="orionids-rover-brief">
-          <span>ORIONIDS RESEARCH · FIELD ROVER DEPLOYED</span>
+          <span>Orionids research</span>
           <strong>Scan {goal} rock formations on {target.name}</strong>
-          <small>Drive until one is in range, then scan. {logged.length} of {goal} logged. They are added to the community meteor record.</small>
+          <small>Drive close to one, then press SCAN. {logged.length} of {goal} logged for the community record.</small>
         </div>
       )}
       {/* Same controls as laser mining (SSL-708): Menu top-left, d-pad bottom-left, round DRILL bottom-right, SCAN beside it. */}
