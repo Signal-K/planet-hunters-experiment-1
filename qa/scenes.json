@@ -201,7 +201,8 @@
    "web": "ui-instrument-hub",
    "native": "control-station-phone",
    "tickets": [
-    "SSL-496"
+    "SSL-496",
+    "SSL-730"
    ]
   },
   {

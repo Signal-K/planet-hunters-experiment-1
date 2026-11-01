@@ -444,6 +444,9 @@ enum SceneCatalog {
         scene("control-station-phone", 874) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
+            // SSL-730: past classifications so Explored and All have dots on the sky map.
+            gs.player.tessClassifications = ["tic-261136679": TessClassification(subjectId: "tic-261136679", verdict: .planet, ranges: [], submittedAt: wswNoon - 3_600_000)]
+            gs.player.asteroidClassifications = ["neo-c4tq2a1": AsteroidClassification(candidateId: "neo-c4tq2a1", verdict: .likelyReal, submittedAt: wswNoon - 7_200_000)]
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },

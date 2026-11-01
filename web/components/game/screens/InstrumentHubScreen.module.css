@@ -1,49 +1,79 @@
+/* Control station shell (SSL-730): a night sky behind the two-tone console, a toast, and the logbook sheet. */
 .screen.screen {
-  background: var(--ln-world-night-mid);
-  color: var(--ln-world-outline);
+  background: #0b1428;
+  color: #f4efe4;
   overflow: hidden;
 }
 
 .grid {
   width: 100%;
   height: 100%;
-  background: linear-gradient(var(--ln-world-night-top), var(--ln-world-night-mid));
+  background:
+    radial-gradient(1px 1px at 8% 14%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 22% 62%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 46% 30%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 68% 80%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 88% 12%, rgba(255, 255, 255, 0.6), transparent),
+    linear-gradient(#0a1226, #12224a);
 }
 
-.screen .frame.frame {
+.screen .content { position: absolute; inset: 0; z-index: 2; }
+
+.screen .toast {
   position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: min(92%, 460px);
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(8, 16, 34, 0.9);
+  border: 1px solid #58d0ea;
+  color: #f4efe4;
+  font: 600 15px/1.3 var(--ln-font-body);
+  text-align: center;
+}
+
+.screen .sheetBackdrop {
+  position: absolute;
+  z-index: 6;
   inset: 0;
-  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(6, 10, 22, 0.6);
+}
+
+.screen .sheet {
+  width: min(100%, 560px);
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
   gap: 12px;
-  padding: 72px 16px 16px;
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(244, 239, 228, 0.28);
+  background: rgba(24, 58, 92, 0.94);
+  color: #f4efe4;
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
-  .screen .frame.frame { padding: 48px 12px 8px; }
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sheetHead h2 { margin: 0; font: 800 20px/1 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.sheetHead button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(244, 239, 228, 0.45);
+  border-radius: 999px;
+  background: rgba(8, 16, 34, 0.5);
+  color: #f4efe4;
+  cursor: pointer;
 }
+.sheetHead svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 
-/* Desktop: the survey console and badges sit beside the board instead of below it, so the whole screen fits the
-   viewport and no text is cut at the fold. */
-@media (min-width: 1280px) and (min-height: 700px) {
-  .screen .frame.frame {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    grid-auto-rows: min-content;
-    align-content: start;
-    align-items: start;
-  }
-
-  /* The Daily research plate comes first in the column (SSL-673), so the board is the second child and the plate
-     tops the side column. */
-  .screen .frame.frame > :nth-child(2) {
-    grid-column: 1;
-    grid-row: 1 / span 6;
-  }
-
-  .screen .frame.frame > :not(:nth-child(2)) { grid-column: 2; }
-}
+.chart { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: rgba(8, 16, 34, 0.35); }

@@ -61,11 +61,11 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     cards: [
       {
         title: 'Where things are',
-        body: 'The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify.',
+        body: 'The sky map shows what your telescopes find. Gold dots wait for you, cyan ones you have classified. Earth below shows where each telescope sits.',
       },
       {
-        title: 'Open a project',
-        body: 'Filter by place, then open a row that has a count. That opens the review for those items.',
+        title: 'Classify something',
+        body: 'Flip a telescope on to see only what it finds, or use the switch for explored, unexplored or all. Tap a gold dot to classify it.',
       },
       DATA_ANALYSIS_CARD,
     ],

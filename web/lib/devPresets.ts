@@ -223,6 +223,15 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
       transitSatelliteLevel: 1,
       deepSpaceTelescopeBuilt: true,
       saturnImagerLaunchedAt: Date.now() - 86_400_000,
+      // SSL-730: a few past classifications so Explored and All have dots on the sky map.
+      tessClassifications: {
+        'tic-261136679': { subjectId: 'tic-261136679', verdict: 'planet', ranges: [], submittedAt: Date.now() - 3 * 3_600_000 },
+        'tic-150428135': { subjectId: 'tic-150428135', verdict: 'not_planet', ranges: [], submittedAt: Date.now() - 26 * 3_600_000 },
+      },
+      asteroidClassifications: {
+        'neo-c4tq2a1': { candidateId: 'neo-c4tq2a1', verdict: 'likely_real', submittedAt: Date.now() - 5 * 3_600_000 },
+        'neo-p21mxk0': { candidateId: 'neo-p21mxk0', verdict: 'likely_artifact', submittedAt: Date.now() - 50 * 3_600_000 },
+      },
       ...(researchStamps ? { researchStamps } : {}),
     },
     tutorial: false,

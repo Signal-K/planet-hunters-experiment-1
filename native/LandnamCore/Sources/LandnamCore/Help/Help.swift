@@ -74,8 +74,8 @@ public enum Help {
             HelpCard(title: "What the client wants", body: "The order says how much of which ore the client needs. Bring all of it so the full payout lands."),
         ]),
         .instrumentHub: HelpTopic(id: "control-station", title: "Control Station", cards: [
-            HelpCard(title: "Where things are", body: "The map shows each telescope and satellite you operate. A number means that equipment has items ready to classify."),
-            HelpCard(title: "Open a project", body: "Filter by place, then open a row that has a count. That opens the review for those items."),
+            HelpCard(title: "Where things are", body: "The sky map shows what your telescopes find. Gold dots wait for you, cyan ones you have classified. Earth below shows where each telescope sits."),
+            HelpCard(title: "Classify something", body: "Flip a telescope on to see only what it finds, or use the switch for explored, unexplored or all. Tap a gold dot to classify it."),
             Help.dataAnalysisCard,
         ]),
         .galaxy: HelpTopic(id: "tess", title: "Reading the light curve", cards: [
