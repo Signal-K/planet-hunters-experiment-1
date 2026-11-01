@@ -6,7 +6,7 @@ import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
+import { rocketCompatibleWithMission, rocketJobRoles, rocketPrice } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
@@ -36,7 +36,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
   const freeStart = !!mission && !!target && !player.stagedRockets?.length && !isOrionidsEventMission(mission)
   useEffect(() => {
     if (!freeStart || autoStaged.current || !mission || !target) return
-    const free = ROCKET_MODELS.filter(model => !model.locked && model.costFrancs === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
+    const free = ROCKET_MODELS.filter(model => !model.locked && rocketPrice(model, player) === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
       && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
     if (free.length !== 1) return
     autoStaged.current = true
@@ -46,13 +46,21 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
   const selectedRocket = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId) : null
-  const minerals = Object.keys(mission.requires.minerals).map(id => game.catalog.minerals[id]?.name ?? id)
+  // Liam, 01.11: Cargo says what comes back (the haul and the pay) and what the rocket carries out (its payload).
+  const haul = Object.entries(mission.requires.minerals).map(([id, amount]) => `${game.catalog.minerals[id]?.name ?? id} ×${amount}`)
+  const pay = mission.payout?.francs ? formatCurrency(mission.payout.francs, { compact: true }) : null
+  const drill = game.catalog.parts.drill.find(part => part.id === game.rocket?.drill)
+  const payloadName = mission.payload?.name
+    ?? (Object.keys(mission.requires.minerals).length > 0
+      ? (drill && /laser/i.test(drill.name) ? `Mining laser ${drill.name.replace(/^laser\s*/i, '')}`.trim() : drill?.name ?? 'Mining laser')
+      : mission.construction ? 'Construction kit' : null)
   const step = launched ? 2 : 1
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
   // Orionids fragments are event evidence rather than player cargo, and the
   // event supplies its own storage. Do not add a contradictory silo prompt.
   // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
   const showerRun = mission?.id === ORIONIDS_NIGHT_RUN_ID
+  const getting = showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   const targets = sheet === 'destination'
@@ -75,7 +83,13 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
         <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
-        <div className={styles.slot} data-testid="plan-cargo"><span>Cargo</span><strong>{showerRun ? 'Fragments + minerals' : mission.payload?.type === 'rover' ? mission.payload.name : (minerals.join(', ') || 'None')}</strong></div>
+        <div className={`${styles.slot} ${styles.cargoSlot}`} data-testid="plan-cargo">
+          <span>Cargo</span>
+          <span className={styles.cargoRows}>
+            <span className={styles.cargoRow} data-testid="plan-cargo-getting"><b>Getting</b>{getting}</span>
+            {payloadName && <span className={styles.cargoRow} data-testid="plan-cargo-payload"><b>Payload</b>{payloadName}</span>}
+          </span>
+        </div>
       </div>
       {primaryAction && primaryLabel && (
         <button type="button" className={styles.primary} data-testid="plan-launch-btn" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
@@ -136,11 +150,12 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
           <ul>
             {rockets.map(model => {
               const role = roles.get(model.id) ?? { kind: 'too-small' as const, note: 'Cannot fly this job' }
-              const cost = model.costFrancs === 0 ? 'No cost' : formatCurrency(model.costFrancs, { compact: true })
+              const price = rocketPrice(model, player)
+              const cost = price === 0 ? 'No cost' : formatCurrency(price, { compact: true })
               const usable = role.kind === 'use'
               return (
                 <li key={model.id}><button type="button" data-role={role.kind} data-testid={`plan-vehicle-${model.id}`} data-current={model.id === selectedRocket?.id || undefined} disabled={!usable} onClick={() => {
-                  if (player.francs < model.costFrancs) { game.addToast(`Not enough francs: you need ${formatCurrency(model.costFrancs - player.francs, { compact: true })} more`, 'warn'); return }
+                  if (player.francs < price) { game.addToast(`Not enough francs: you need ${formatCurrency(price - player.francs, { compact: true })} more`, 'warn'); return }
                   game.onPurchaseRocket(model.id)
                   setSheet(null)
                 }}>

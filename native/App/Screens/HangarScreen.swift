@@ -168,7 +168,7 @@ struct HangarScreen: View {
                 let note: String? = sealed
                     ? model.map { "Needs \($0.missionsRequired) \($0.missionsRequired == 1 ? "mission" : "missions")" }
                     : hasMission && role != .use ? (role?.note ?? "Cannot carry this mission") : !hasMission ? "Choose a mission first" : nil
-                let cost = model.map { $0.costFrancs == 0 ? "No cost" : Economy.format(francs: $0.costFrancs) } ?? ""
+                let cost = model.map { Rockets.price($0, for: store.player) == 0 ? "No cost" : Economy.format(francs: Rockets.price($0, for: store.player)) } ?? ""
                 Button {
                     if note == nil { previewRocketId = vehicle.id }
                 } label: {
@@ -243,7 +243,7 @@ struct HangarScreen: View {
             } label: {
                 VStack(spacing: 2) {
                     Text(model == nil ? "SELECT" : "STAGE").font(AppFont.display(12, "Bold")).tracking(1)
-                    if let model { Text(model.costFrancs == 0 ? "NO COST" : Economy.format(francs: model.costFrancs)).font(AppFont.body(11, "Bold")) }
+                    if let model { Text(Rockets.price(model, for: store.player) == 0 ? "NO COST" : Economy.format(francs: Rockets.price(model, for: store.player))).font(AppFont.body(11, "Bold")) }
                 }
                 .foregroundStyle(Theme.ink).padding(.horizontal, narrow ? 8 : 14).frame(minHeight: 52)
                 .background(Glass.cyan, in: RoundedRectangle(cornerRadius: 6))

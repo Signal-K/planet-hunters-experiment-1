@@ -1,6 +1,12 @@
 import Foundation
 
 public enum Rockets {
+    /// Training is over once the onboarding mission is flown, or any mission for older saves (web `pastRocketTraining`).
+    public static func pastTraining(_ p: Player) -> Bool { p.flightPlan.onboardingMissionDone || p.missionsDone > 0 }
+    /// What a rocket costs this player now (web `rocketPrice`): a no-cost model is charged once training is over.
+    public static func price(_ m: RocketModel, for p: Player) -> Int {
+        m.costFrancs > 0 ? m.costFrancs : (pastTraining(p) ? Economy.explorerAfterTrainingPrice : 0)
+    }
     public static let explorer = "explorer"
     public static let prospector = "prospector"
 

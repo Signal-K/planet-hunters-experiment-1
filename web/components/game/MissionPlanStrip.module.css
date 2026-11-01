@@ -99,3 +99,13 @@
 @media (min-width: 900px) and (min-height: 600px) { .mapSheet { left: 50%; right: auto; bottom: 16px; width: min(880px, calc(100vw - 32px)); transform: translateX(-50%); } }
 .host:has(.mapSheet) .slots, .host:has(.mapSheet) .rail { visibility: hidden; }
 @media (min-width: 900px) and (min-height: 600px) { .sheet { left: 50%; right: auto; width: min(720px, calc(100% - 16px)); transform: translateX(-50%); } }
+
+/* Cargo: what comes back and what flies out (Liam, 01.11). Two rows inside the slot at every size. */
+.cargoRows { display: grid; gap: 0; min-width: 0; font-size: 14px; letter-spacing: 0; text-transform: none; opacity: 1; }
+.cargoRow { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; letter-spacing: 0 !important; text-transform: none !important; opacity: 1 !important; }
+.cargoRow b { margin-right: 6px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+.cargoSlot { min-width: 180px; }
+/* Destination and Vehicle share the first row; Cargo, now two lines, takes the full row under them so nothing is cut. */
+.slots { flex-wrap: wrap !important; }
+.cargoSlot { flex: 1 1 100% !important; }
+.cargoRows { flex: 1 1 auto; }

@@ -96,6 +96,8 @@ export const REFINING_COST_RATE = 0.07
 
 export const ROCKET_PRICES = {
   explorer: 0,
+  /** Liam, 01.11: after the tutorial a rocket always costs something, even the starter model. */
+  explorerAfterTraining: 4_000_000,
   prospector: 13_000_000,
   surveyor: 40_000_000,
 } as const

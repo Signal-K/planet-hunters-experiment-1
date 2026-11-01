@@ -116,12 +116,14 @@ public enum Market {
     public static func purchaseRefusal(_ s: GameState, rocket: RocketModel) -> String? {
         if s.screen != .rocketBuy && s.screen != .hangar { return "Return to the rocket blueprint before building." }
         if s.missionId == nil || s.targetId == nil { return "Choose a contract destination before building a rocket." }
-        if s.player.francs < rocket.costFrancs { return "Need \(Economy.format(francs: rocket.costFrancs - s.player.francs)) more to build this rocket." }
+        let price = Rockets.price(rocket, for: s.player)
+        if s.player.francs < price { return "Need \(Economy.format(francs: price - s.player.francs)) more to build this rocket." }
         return nil
     }
 
     public static func applyPurchaseRocket(_ s: GameState, rocket: RocketModel) -> GameState {
-        guard s.player.francs >= rocket.costFrancs else { return s }
+        let price = Rockets.price(rocket, for: s.player)
+        guard s.player.francs >= price else { return s }
         let missionId = s.missionId ?? "unassigned", targetId = s.targetId ?? "unassigned"
         let staged = StagedRocket(id: "\(rocket.id)-\(missionId)-\(targetId)-\(s.player.stagedRockets.count + 1)",
                                   rocketId: rocket.id, rocket: Rockets.config(for: rocket), location: .hangar, source: .company,
@@ -129,7 +131,7 @@ public enum Market {
         var n = s
         n.screen = .fab
         n.rocket = staged.rocket
-        n.player.francs -= rocket.costFrancs
+        n.player.francs -= price
         n.player.pendingLaunch = true
         n.player.rocketPurchaseCounts[rocket.id, default: 0] += 1
         n.player.stagedRockets.append(staged)

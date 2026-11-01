@@ -529,6 +529,7 @@ function ScreenBody({
         <HangarScreen
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
+          flightPlan={game.player.flightPlan}
           shipCustomizerParts={game.player.shipCustomizerParts}
           landingResearched={game.player.landingResearched}
           pendingLaunch={game.player.pendingLaunch}

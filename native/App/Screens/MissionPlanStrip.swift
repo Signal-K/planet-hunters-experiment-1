@@ -13,10 +13,17 @@ struct MissionPlanStrip: View {
         let selected = store.player.stagedRockets.first { $0.id == store.player.selectedStagedRocketId }
         return selected.flatMap { Rockets.model(id: Rockets.canonicalId($0.rocketId)) }?.name ?? Rockets.models[0].name
     }
+    /// Liam, 01.11: Cargo says what comes back (haul and pay) and what the rocket carries out (web MissionPlanStrip).
     private var cargo: String {
         guard let mission = store.mission else { return "" }
-        let names = mission.requires.minerals.keys.sorted().map { Minerals.byId[$0]?.name ?? $0 }
-        return names.isEmpty ? "None" : names.joined(separator: ", ")
+        let haul = mission.requires.minerals.sorted { $0.key < $1.key }.map { "\(Minerals.byId[$0.key]?.name ?? $0.key) ×\($0.value)" }
+        let pay = mission.payout.francs > 0 ? Economy.format(francs: mission.payout.francs) : nil
+        let getting = ([haul.joined(separator: ", ")] + [pay].compactMap { $0 }).filter { !$0.isEmpty }.joined(separator: " · ")
+        let drill = store.catalog.parts.drill.first { $0.id == store.state.rocket.drill }
+        let payload: String? = mission.payload?.name
+            ?? (mission.requires.minerals.isEmpty ? (mission.construction != nil ? "Construction kit" : nil)
+                : drill.map { $0.name.lowercased().hasPrefix("laser") ? "Mining laser \($0.name.dropFirst(5).trimmingCharacters(in: .whitespaces))" : $0.name } ?? "Mining laser")
+        return "GETTING \(getting.isEmpty ? "Nothing" : getting)" + (payload.map { " · PAYLOAD \($0)" } ?? "")
     }
     private var hold: String? {
         guard let mission = store.mission, let target = store.target else { return nil }
@@ -145,12 +152,13 @@ struct MissionPlanSheet: View {
                         Text("The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.").font(AppFont.body(14, "Regular"))
                         let roles = self.roles
                         ForEach(rockets, id: \.id) { r in
-                            let cost = r.costFrancs == 0 ? "No cost" : Economy.format(francs: r.costFrancs)
+                            let price = Rockets.price(r, for: store.player)
+                            let cost = price == 0 ? "No cost" : Economy.format(francs: price)
                             if let note = roles[r.id]?.note {
                                 row("\(r.name) · \(r.cargo)U · ORB \(r.maxOrbit)", note, current: false) {}.disabled(true).opacity(0.6)
                             } else {
                                 row("\(r.name) · \(r.cargo)U · ORB \(r.maxOrbit)", "Stage · \(cost)", current: true) {
-                                    if store.player.francs < r.costFrancs { notice = "NOT ENOUGH FRANCS: \(Economy.format(francs: r.costFrancs - store.player.francs)) MORE NEEDED"; return }
+                                    if store.player.francs < price { notice = "NOT ENOUGH FRANCS: \(Economy.format(francs: price - store.player.francs)) MORE NEEDED"; return }
                                     store.purchaseRocket(r.id); close()
                                 }
                             }

@@ -16,7 +16,7 @@ import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyBuyLaserCapacitor, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
-import { rocketCompatibleWithMission } from '@/lib/rockets'
+import { pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
@@ -137,10 +137,15 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   if (!mission || !target) return s
   if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
   const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts })
-  // SSL-450: switching target releases a free (F0) vehicle built for the old one, so Change never strands a rocket.
-  const freeIds = new Set(ROCKET_MODELS.filter(model => model.costFrancs === 0).map(model => model.id))
-  const stagedRockets = (s.player.stagedRockets ?? []).filter(vehicle =>
-    !(vehicle.missionId === mission.id && vehicle.targetId !== target.id && freeIds.has(vehicle.rocketId)))
+  // SSL-450: Change never strands a rocket. A vehicle built for this job's old destination is re-aimed at the new
+  // one when it can fly there. Liam, 01.11: rockets now always cost after the tutorial, so a paid vehicle is moved,
+  // never thrown away; one that cannot reach the new body stays in the Hangar, and a still-free one is released.
+  const stagedRockets = (s.player.stagedRockets ?? []).flatMap(vehicle => {
+    if (vehicle.missionId !== mission.id || vehicle.targetId === target.id) return [vehicle]
+    if (stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return [{ ...vehicle, targetId: target.id }]
+    const model = ROCKET_MODELS.find(candidate => candidate.id === vehicle.rocketId)
+    return model && model.costFrancs === 0 && !pastRocketTraining(s.player) ? [] : [vehicle]
+  })
   const base = { ...s, player: { ...s.player, stagedRockets } }
   const stagedVehicle = stagedRocketForMission(base, mission.id, target.id)
   const setup = {
