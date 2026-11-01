@@ -108,6 +108,10 @@ struct RocketBuilderScreen: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: wide ? .topTrailing : .bottom)
                         .zIndex(2)
                 }
+                // Liam, 01.11: a newly accepted mission opens on the map; the destination is the player's choice.
+                Color.clear.frame(width: 0, height: 0)
+                    .onAppear { if Loop.mustChooseDestination(store.state) { planSheet = .destination } }
+                    .onChange(of: store.state.missionId) { _, _ in if Loop.mustChooseDestination(store.state) { planSheet = .destination } }
                 if let sheet = planSheet {
                     MissionPlanSheet(sheet: sheet) { planSheet = nil }.frame(maxHeight: .infinity, alignment: .bottom).zIndex(2)
                 }

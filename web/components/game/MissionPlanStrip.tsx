@@ -6,7 +6,7 @@ import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { rocketCompatibleWithMission, rocketJobRoles, rocketPrice } from '@/lib/rockets'
+import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
@@ -42,6 +42,12 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
     autoStaged.current = true
     game.onPurchaseRocket(free[0].id)
   }, [freeStart, mission, target, player.missionsDone, game])
+  // Liam, 01.11: accepting a mission sends the player through the map to choose where they are going. The body
+  // auto-picked behind the scenes keeps the state valid; the map stays open until a body is tapped. Training keeps
+  // its guided path, and the shower run has a fixed field.
+  const mustChoose = !launched && game.destinationChosen === false && pastRocketTraining(player)
+    && !!mission && mission.id !== ORIONIDS_NIGHT_RUN_ID
+  useEffect(() => { if (mustChoose) setSheet('destination') }, [mustChoose, mission?.id])
   if (!mission || !target) return null
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
@@ -52,7 +58,8 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
   const drill = game.catalog.parts.drill.find(part => part.id === game.rocket?.drill)
   const payloadName = mission.payload?.name
     ?? (Object.keys(mission.requires.minerals).length > 0
-      ? (drill && /laser/i.test(drill.name) ? `Mining laser ${drill.name.replace(/^laser\s*/i, '')}`.trim() : drill?.name ?? 'Mining laser')
+      // Every drill flies as the mining laser in the laser scene; the tier is the drill's.
+      ? (drill && drill.id !== 'cargo-module-t1' ? `Mining laser T${drill.tier ?? 1}` : drill?.name ?? 'Mining laser')
       : mission.construction ? 'Construction kit' : null)
   const step = launched ? 2 : 1
   // A run on your own account keeps nothing without a silo: say so before launch, not after landing.
@@ -115,10 +122,12 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
       {sheet === 'destination' && (
         <div className={styles.mapSheet} role="group" aria-label="Choose destination" data-testid="plan-sheet-destination">
           <div className={styles.mapHead}>
-            <strong>Destination</strong>
-            <button type="button" onClick={() => setSheet(null)}>Close</button>
+            <strong>{mustChoose ? 'Where are you flying?' : 'Destination'}</strong>
+            {mustChoose
+              ? <button type="button" data-testid="plan-destination-back" onClick={() => game.goBack()}>Back</button>
+              : <button type="button" onClick={() => setSheet(null)}>Close</button>}
           </div>
-          <p>Lit bodies suit this mission: the minerals it needs, in range, room in the hold.</p>
+          <p>{mustChoose ? 'Tap a lit body on the map to set the destination for ' + mission.title + '.' : 'Lit bodies suit this mission: the minerals it needs, in range, room in the hold.'}</p>
           <div className={styles.mapField} data-testid="plan-destination-map">
             <PixiGalaxyMap
               mission={mission}
