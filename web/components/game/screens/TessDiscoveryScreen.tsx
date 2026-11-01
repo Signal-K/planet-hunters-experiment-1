@@ -1,5 +1,6 @@
 'use client'
 
+import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
 import { useEffect, useMemo, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -58,7 +59,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 ]
 
 export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: true })
+  const help = useHelp('galaxy', { onReplayTraining, firstVisit: !onboardingMissionDone(player.flightPlan) })
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])

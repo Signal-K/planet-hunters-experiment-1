@@ -1,5 +1,6 @@
 'use client'
 
+import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
 import { useMemo, useState } from 'react'
 import ScenePanel from '@/components/game/ScenePanel'
 import { ControlStationBoard } from '@/components/game/control-station/ControlStationBoard'
@@ -46,7 +47,7 @@ interface InstrumentHubScreenProps {
 export default function InstrumentHubScreen({ player, onBack, onInspect, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [bodyId, setBodyId] = useState('all')
-  const help = useHelp('instrument-hub', { firstVisit: true })
+  const help = useHelp('instrument-hub', { firstVisit: !onboardingMissionDone(player.flightPlan) })
   const [justBuilt, setJustBuilt] = useState(false)
   const groundCost = STRUCTURE_PRICES.groundTelescope
   const buildShortfall = player.francs < groundCost ? `${formatCurrency(groundCost - player.francs, { compact: true })} more` : null

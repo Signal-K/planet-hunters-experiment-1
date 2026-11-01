@@ -48,7 +48,7 @@ struct ControlStationScreen: View {
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Room.outline, lineWidth: 2))
             SkyBadgeRow(badges: store.player.badges)
         }
-        .helpable(.instrumentHub, firstVisit: true)
+        .helpable(.instrumentHub, firstVisit: !store.player.flightPlan.onboardingMissionDone)
         .task {
             guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
             community = res

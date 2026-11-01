@@ -32,6 +32,11 @@ export function currentTrainingTry(progress?: FlightPlanProgress): TrainingTryId
   return progress?.replayTry ?? TRAINING_TRY_IDS.find(id => !completed[id]) ?? null
 }
 
+/** The onboarding mission is the mining try. After it, coaches and help sheets stay behind their "?" until asked for (Liam, 2026-11-01). */
+export function onboardingMissionDone(progress?: FlightPlanProgress): boolean {
+  return !!progress?.completed?.mining
+}
+
 export function isTrainingComplete(progress?: FlightPlanProgress): boolean {
   return TRAINING_TRY_IDS.every(id => progress?.completed?.[id])
 }
@@ -60,7 +65,10 @@ export function completeFlightPlanEvent(progress: FlightPlanProgress | undefined
     next = { ...next, replayTry: undefined, hintShownFor: undefined }
   }
   if (currentTrainingTry(next) !== tryId) return next
-  return { ...next, completed: { ...next.completed, [tryId]: true }, replayTry: undefined, hidden: false, activeSince: undefined, hintShownFor: undefined }
+  // Once a try is done (the first one is the onboarding mission), the next try's
+  // coach starts folded to its "?" chip: it takes too much of the scene to open
+  // by itself (Liam, 2026-11-01). A Menu replay still opens it.
+  return { ...next, completed: { ...next.completed, [tryId]: true }, replayTry: undefined, hidden: true, activeSince: undefined, hintShownFor: undefined }
 }
 
 export function replayFlightPlanTry(progress: FlightPlanProgress | undefined, tryId: TrainingTryId): FlightPlanProgress {
