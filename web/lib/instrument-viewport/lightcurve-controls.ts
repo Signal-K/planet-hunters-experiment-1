@@ -3,6 +3,9 @@
  * on the graphs, do phase-folding?"). These act on the data, not the picture: TIME narrows the
  * plotted window, SCAN slides it along the sector, BIN averages neighbouring points, and FOLD
  * stacks the whole light curve on a trial PERIOD so repeating dips land on top of each other.
+ * SSL-747: no control finds the answer for the player. There is no auto-fold on a measured
+ * period; the player turns PERIOD until their dips stack, and the readout only reports what
+ * they measured.
  * Mirrored by native `LightcurveControls` (TessDiscoveryScreen.swift).
  */
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
@@ -84,10 +87,10 @@ export function lightcurveDisplay(sectorPoints: LightcurvePoint[], allPoints: Li
 export interface LightcurveCommandResult { controls: LightcurveControls; lines: string[] }
 
 /**
- * Console verbs: FOLD [days|OFF], PERIOD days, SNAP, TIME n, SCAN 0-100, BIN n.
+ * Console verbs: FOLD [days|OFF], PERIOD days, TIME n, SCAN 0-100, BIN n.
  * Returns null for anything else so the shared optics commands still run.
  */
-export function applyLightcurveCommand(c: LightcurveControls, line: string, measuredPeriod: number | null): LightcurveCommandResult | null {
+export function applyLightcurveCommand(c: LightcurveControls, line: string): LightcurveCommandResult | null {
   const [verb, arg] = line.trim().toUpperCase().split(/\s+/)
   const n = Number(arg)
   const hasNumber = arg !== undefined && Number.isFinite(n)
@@ -102,9 +105,6 @@ export function applyLightcurveCommand(c: LightcurveControls, line: string, meas
     case 'PERIOD':
       if (!hasNumber) return { controls: c, lines: [`> PERIOD  ${c.period.toFixed(2)}D`] }
       return { controls: { ...c, period: clamp(n, LIGHTCURVE_LIMITS.periodMin, LIGHTCURVE_LIMITS.periodMax) }, lines: [`> PERIOD  ${clamp(n, LIGHTCURVE_LIMITS.periodMin, LIGHTCURVE_LIMITS.periodMax).toFixed(2)}D`] }
-    case 'SNAP':
-      if (measuredPeriod == null) return { controls: c, lines: ['> SNAP  MARK TWO DIPS FIRST'] }
-      return { controls: { ...c, fold: true, period: clamp(measuredPeriod, LIGHTCURVE_LIMITS.periodMin, LIGHTCURVE_LIMITS.periodMax) }, lines: [`> SNAP  FOLD ON P ${measuredPeriod.toFixed(2)}D`] }
     case 'TIME':
       if (!hasNumber) return { controls: c, lines: [`> TIME  ${c.span.toFixed(1)}×`] }
       return { controls: { ...c, span: clamp(n, LIGHTCURVE_LIMITS.spanMin, LIGHTCURVE_LIMITS.spanMax) }, lines: [`> TIME  ${clamp(n, LIGHTCURVE_LIMITS.spanMin, LIGHTCURVE_LIMITS.spanMax).toFixed(1)}×`] }
@@ -126,4 +126,41 @@ export function nextBin(bin: number): number {
   const bins = LIGHTCURVE_LIMITS.bins
   const i = bins.indexOf(bin as (typeof bins)[number])
   return bins[(i + 1) % bins.length]
+}
+
+export interface DipMeasurement {
+  /** Centre of the marked range, in days. */
+  centre: number
+  /** Width of the marked range, in hours. */
+  hours: number
+  /** How far the marked points sit below the unmarked baseline, in parts per thousand. */
+  depthPpt: number
+}
+
+const median = (values: number[]) => {
+  if (!values.length) return NaN
+  const s = [...values].sort((a, b) => a - b)
+  const m = Math.floor(s.length / 2)
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
+}
+
+/**
+ * The player's own measurements of their marked dips (SSL-747 readout): centre, width and
+ * depth against the median of every unmarked point, plus the gaps between consecutive marks.
+ * Gaps are reported raw; deciding whether a gap is one period or several is the player's job.
+ */
+export function measureDips(points: LightcurvePoint[], ranges: Array<{ x1: number; x2: number }>): { dips: DipMeasurement[]; gaps: number[] } {
+  const spans = ranges.map(r => [Math.min(r.x1, r.x2), Math.max(r.x1, r.x2)] as const)
+  const inside = (x: number, [a, b]: readonly [number, number]) => x >= a && x <= b
+  const baseline = median(points.filter(p => !spans.some(s => inside(p.x, s))).map(p => p.y))
+  const dips = spans
+    .map(span => {
+      const ys = points.filter(p => inside(p.x, span)).map(p => p.y)
+      const mean = ys.length ? ys.reduce((a, b) => a + b, 0) / ys.length : NaN
+      const depthPpt = Number.isFinite(baseline) && Number.isFinite(mean) && baseline !== 0 ? ((baseline - mean) / baseline) * 1000 : 0
+      return { centre: (span[0] + span[1]) / 2, hours: (span[1] - span[0]) * 24, depthPpt }
+    })
+    .sort((a, b) => a.centre - b.centre)
+  const gaps = dips.slice(1).map((d, i) => d.centre - dips[i].centre)
+  return { dips, gaps }
 }

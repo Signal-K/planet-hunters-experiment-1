@@ -65,17 +65,16 @@ struct TessDiscoveryScreen: View {
         let sectors = Tess.sectorWindows(points, sectorText: c.sector)
         let window = sectors[min(sector, sectors.count - 1)]
         let marks = saved?.ranges ?? ranges
-        let period = Tess.periodFromRanges(marks)
         let prompt = saved == nil && marks.isEmpty ? (needsMark ? "DRAG ACROSS THE DIP FIRST" : "DRAG ACROSS THE DIP") : nil
         let epoch = marks.first.map { ($0.x1 + $0.x2) / 2 } ?? (points.first?.x ?? 0)
         let display = LightcurveControls.display(sector: window.points, all: points, lc, epoch: epoch)
-        let caption = display.folded ? String(format: "FOLDED · P %.2fD · FOLD OFF TO MARK", lc.period) : prompt ?? ([window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"] + (period.map { [String(format: "PERIOD %.2fd", $0)] } ?? [])).joined(separator: " · ")
+        let caption = display.folded ? String(format: "FOLDED · P %.2fD · FOLD OFF TO MARK", lc.period) : prompt ?? [window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"].joined(separator: " · ")
         return InstrumentViewport(
             eyebrow: "Instrument data feed · Daily downlink", title: c.toi,
             status: saved == nil ? "Review" : "Saved", caption: caption,
             back: { store.go(.instrumentHub) },
             onCommand: { line, view in
-                if let r = LightcurveControls.apply(lc, line, measured: period) { lc = r.controls; return Instrument.CommandResult(view: view, lines: r.lines) }
+                if let r = LightcurveControls.apply(lc, line) { lc = r.controls; return Instrument.CommandResult(view: view, lines: r.lines) }
                 let parts = line.split(whereSeparator: \.isWhitespace).map(String.init)
                 guard parts.first?.uppercased() == "SECTOR" else { return nil }
                 guard parts.count > 1, let n = Int(parts[1]), n >= 1, n <= sectors.count else {
@@ -104,12 +103,33 @@ struct TessDiscoveryScreen: View {
             },
             tool: { tools(sectors: sectors, saved: saved != nil) },
             instrumentId: "transit-telescope", level: store.player.transitSatelliteLevel ?? 1,
-            module: photometry(display: display, measured: period))
+            module: photometry(display: display),
+            readout: result(c, points: points, marks: marks, display: display, saved: saved))
         .id(c.id)
     }
 
-    /// TIME / SCAN / PERIOD knobs, BIN and SNAP keys, FOLD lever (web PHOTOMETRY · TP-02).
-    private func photometry(display: LightcurveDisplay, measured: Double?) -> InstrumentModule {
+    /// SSL-747: a full readout of the player's result (web READOUT · YOUR RESULT): their marks,
+    /// what they measured from them, the view they used and their verdict. Never a grade; the
+    /// catalogue period only appears once they have submitted.
+    private func result(_ c: TessCandidate, points: [LightcurvePoint], marks: [TransitRange], display: LightcurveDisplay, saved: TessClassification?) -> InstrumentReadout {
+        let m = LightcurveControls.measure(points, marks)
+        let mean = m.dips.isEmpty ? nil : m.dips.map(\.depthPpt).reduce(0, +) / Double(m.dips.count)
+        var rows: [(label: String, value: String)] = [("Marks", marks.isEmpty ? "NONE · DRAG A DIP" : "\(marks.count)")]
+        for (i, d) in m.dips.prefix(4).enumerated() { rows.append(("Dip \(i + 1)", String(format: "%.2fd · %.1fh · %.2fppt", d.centre, d.hours, d.depthPpt))) }
+        if m.dips.count > 4 { rows.append(("More", "+\(m.dips.count - 4) DIPS")) }
+        rows.append(("Gaps", m.gaps.isEmpty ? "—" : m.gaps.map { String(format: "%.2fd", $0) }.joined(separator: " · ")))
+        rows.append(("Depth", mean.map { String(format: "%.2fppt · R/R★ %.3f", $0, (max(0, $0) / 1000).squareRoot()) } ?? "—"))
+        rows.append(("Fold", lc.fold ? String(format: "P %.2fd", lc.period) : "OFF"))
+        rows.append(("View", (display.folded ? "ALL SECTORS" : String(format: "%.1fd", display.xDomain.upperBound - display.xDomain.lowerBound)) + " · BIN ×\(lc.bin)"))
+        func label(_ v: TessVerdict) -> String { switch v { case .planet: return "TRANSIT"; case .notPlanet: return "NOISE"; case .unsure: return "SKIPPED" } }
+        rows.append(("Verdict", saved.map { label($0.verdict) } ?? "PENDING"))
+        if saved != nil { rows.append(("Catalogue P", String(format: "%.2fd", c.periodDays))) }
+        return InstrumentReadout(name: "READOUT · YOUR RESULT", rows: rows)
+    }
+
+    /// TIME / SCAN / PERIOD knobs, BIN key, FOLD lever (web PHOTOMETRY · TP-02). No control
+    /// folds on the player's behalf (SSL-747): they turn PERIOD until their dips stack.
+    private func photometry(display: LightcurveDisplay) -> InstrumentModule {
         let L = LightcurveControls.self
         return InstrumentModule(name: "PHOTOMETRY · TP-02", lights: [("FOLD", lc.fold, false), ("BIN", lc.bin > 1, true)], content: AnyView(
             VStack(spacing: 10) {
@@ -122,9 +142,6 @@ struct TessDiscoveryScreen: View {
                 }
                 HStack(spacing: 10) {
                     ModuleKey(label: "BIN", readout: "×\(lc.bin)", pressed: lc.bin > 1) { lc.bin = L.nextBin(lc.bin) }
-                    ModuleKey(label: "SNAP", readout: measured.map { String(format: "P %.2fd", $0) } ?? "2 MARKS", enabled: measured != nil) {
-                        if let m = measured { lc.fold = true; lc.period = min(L.periodMax, max(L.periodMin, m)) }
-                    }
                     LeverSwitch(label: "FOLD", on: lc.fold) { lc.fold.toggle() }
                 }
             }))
@@ -313,8 +330,8 @@ struct LightcurveControls: Equatable {
         return LightcurveDisplay(points: binned(sector.filter { w.contains($0.x) }, c.bin), xDomain: w, folded: false)
     }
 
-    /// FOLD [days|OFF], PERIOD days, SNAP, TIME n, SCAN 0-100, BIN n. nil falls through to the shared optics verbs.
-    static func apply(_ c: LightcurveControls, _ line: String, measured: Double?) -> (controls: LightcurveControls, lines: [String])? {
+    /// FOLD [days|OFF], PERIOD days, TIME n, SCAN 0-100, BIN n. nil falls through to the shared optics verbs.
+    static func apply(_ c: LightcurveControls, _ line: String) -> (controls: LightcurveControls, lines: [String])? {
         let words = line.uppercased().split(whereSeparator: \.isWhitespace).map(String.init)
         guard let verb = words.first else { return nil }
         let arg = words.dropFirst().first
@@ -329,10 +346,6 @@ struct LightcurveControls: Equatable {
         case "PERIOD":
             if let n { next.period = clampP(n) }
             return (next, [String(format: "> PERIOD  %.2fD", next.period)])
-        case "SNAP":
-            guard let measured else { return (c, ["> SNAP  MARK TWO DIPS FIRST"]) }
-            next.fold = true; next.period = clampP(measured)
-            return (next, [String(format: "> SNAP  FOLD ON P %.2fD", measured)])
         case "TIME":
             if let n { next.span = min(spanMax, max(spanMin, n)) }
             return (next, [String(format: "> TIME  %.1f×", next.span)])
@@ -345,6 +358,26 @@ struct LightcurveControls: Equatable {
         default:
             return nil
         }
+    }
+}
+
+extension LightcurveControls {
+    struct Dip { let centre: Double; let hours: Double; let depthPpt: Double }
+
+    /// The player's own measurements of their marks (web `measureDips`): centre, width and depth
+    /// against the median of every unmarked point, plus the raw gaps between consecutive marks.
+    static func measure(_ pts: [LightcurvePoint], _ ranges: [TransitRange]) -> (dips: [Dip], gaps: [Double]) {
+        let spans = ranges.map { min($0.x1, $0.x2)...max($0.x1, $0.x2) }
+        let outside = pts.filter { p in !spans.contains { $0.contains(p.x) } }.map(\.y).sorted()
+        let baseline: Double? = outside.isEmpty ? nil : outside.count % 2 == 1 ? outside[outside.count / 2] : (outside[outside.count / 2 - 1] + outside[outside.count / 2]) / 2
+        let dips = spans.map { span -> Dip in
+            let ys = pts.filter { span.contains($0.x) }.map(\.y)
+            var depth = 0.0
+            if let b = baseline, b != 0, !ys.isEmpty { depth = (b - ys.reduce(0, +) / Double(ys.count)) / b * 1000 }
+            return Dip(centre: (span.lowerBound + span.upperBound) / 2, hours: (span.upperBound - span.lowerBound) * 24, depthPpt: depth)
+        }.sorted { $0.centre < $1.centre }
+        let gaps = zip(dips.dropFirst(), dips).map { $0.centre - $1.centre }
+        return (dips, gaps)
     }
 }
 

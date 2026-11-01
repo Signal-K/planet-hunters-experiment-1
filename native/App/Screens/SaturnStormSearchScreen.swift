@@ -102,8 +102,27 @@ struct SaturnStormSearchScreen: View {
                         LeverSwitch(label: "SHARPEN", on: sharpen) { sharpen.toggle() }
                         LeverSwitch(label: "LOUPE", on: loupe) { loupe.toggle() }
                     }
-                })))
+                })),
+            readout: frameReadout())
         .id(c.id)
+    }
+
+    /// SSL-747: the frame as the player has read it, square by square, plus the imaging they used
+    /// (web READOUT · YOUR FRAME). Y/N/M per square, ★ where they marked a storm.
+    private func frameReadout() -> InstrumentReadout {
+        func mark(_ i: Int) -> String {
+            guard let a = answers[i] else { return "—" }
+            return String(a.rawValue.prefix(1)).uppercased() + (storms.contains(i) ? "★" : "")
+        }
+        func tally(_ v: SaturnVerdict) -> Int { (0..<Saturn.gridCells).filter { answers[$0] == v }.count }
+        var rows: [(label: String, value: String)] = (0..<3).map { row in
+            ("Row \(row + 1)", (0..<3).map { mark(row * 3 + $0) }.joined(separator: "  ·  "))
+        }
+        let stormList = storms.sorted().map { "SQ \($0 + 1)" }
+        rows.append(("Storms", stormList.isEmpty ? "NONE MARKED" : stormList.joined(separator: " · ")))
+        rows.append(("Tally", "\(tally(.yes)) YES · \(tally(.no)) NO · \(tally(.maybe)) MAYBE · \(Saturn.gridCells - answers.count) LEFT"))
+        rows.append(("Imaging", "\(Self.palettes[palette].name) · " + String(format: "%.1f×", contrast) + " · " + (sharpen ? "SHARP" : "SOFT") + (loupe ? " · LOUPE" : "")))
+        return InstrumentReadout(name: "READOUT · YOUR FRAME", rows: rows)
     }
 
     /// LOUPE: the selected square fills the well at 3× (web `.loupe`).

@@ -32,6 +32,8 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     var level = 1
     /// This project's own instrument (SSL-745, web `InstrumentModule`): knobs and keys that act on its data.
     var module: InstrumentModule? = nil
+    /// The player's own result, line by line (SSL-747, web `InstrumentReadout`). A record, never a grade.
+    var readout: InstrumentReadout? = nil
     @State private var finishChoice = InstrumentFinish.auto
     private var fin: InstrumentFinish { InstrumentFinish.resolve(finishChoice, level: level) }
     private func chooseFinish(_ choice: String) {
@@ -47,6 +49,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
                 controls
                 if let module { modulePlate(module) }
                 if let b = briefing, let i = briefStep, i < b.lines.count { desk(b, i) } else { command }
+                if let readout { resultPlate(readout) }
                 if let b = briefing, briefStep == nil {
                     InstrumentAnswerButton(title: "Briefing · \(b.speaker)") { briefStep = 0 }
                 }
@@ -183,6 +186,26 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         .accessibilityLabel(m.name)
     }
 
+    private func resultPlate(_ r: InstrumentReadout) -> some View {
+        plate(r.name, lights: { EmptyView() }, content: {
+            VStack(spacing: 4) {
+                ForEach(Array(r.rows.enumerated()), id: \.offset) { _, row in
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(row.label.uppercased()).font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hex(0xA9B6CC)).lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(row.value).font(AppFont.mono(14)).foregroundStyle(fin.phosphor).multilineTextAlignment(.trailing)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(Theme.hex(0x06061A, 0.55), in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(fin.blue.opacity(0.3), lineWidth: 1))
+        })
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(r.name)
+    }
+
     /// Steps AUTO → each unlocked finish. Pips show all five; locked ones are dark.
     private var finishKey: some View {
         Button { chooseFinish(InstrumentFinish.next(after: finishChoice, level: level)) } label: {
@@ -307,6 +330,12 @@ struct InstrumentModule {
     let name: String
     var lights: [(label: String, on: Bool, amber: Bool)] = []
     let content: AnyView
+}
+
+/// The player's own result under the downlink (web `InstrumentReadout`, SSL-747).
+struct InstrumentReadout {
+    let name: String
+    let rows: [(label: String, value: String)]
 }
 
 /// A glass keycap for a project module: one tap, one action (SNAP, PALETTE, BIN).

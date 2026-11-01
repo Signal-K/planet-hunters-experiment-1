@@ -7,8 +7,8 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
-import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
+import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, measureDips, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import { periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
@@ -158,10 +158,11 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   }, [points])
 
   const markedRanges = (candidate && !candidate.id.startsWith(TRAINING_ID_PREFIX) ? classifications[candidate.id]?.ranges : undefined) ?? ranges
-  const measuredPeriod = periodFromRanges(markedRanges)
   // Fold around the player's first marked dip, so a correct period stacks their marks on T0.
   const foldEpoch = markedRanges.length ? (markedRanges[0].x1 + markedRanges[0].x2) / 2 : (points[0]?.x ?? 0)
   const display = useMemo(() => lightcurveDisplay(sectorPoints, points, lc, foldEpoch), [sectorPoints, points, lc, foldEpoch])
+  // SSL-747: the player's own measurements of their marks, for the readout. Never a grade.
+  const measured = useMemo(() => measureDips(points, markedRanges), [points, markedRanges])
 
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
@@ -269,8 +270,28 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
   const showMap = classification != null || forceMapView
 
+  // SSL-747: a full readout of the player's result: their marks, what they measured from them,
+  // the view they used and their verdict. The catalogue period only appears once they have submitted.
+  const meanDepth = measured.dips.length ? measured.dips.reduce((sum, dip) => sum + dip.depthPpt, 0) / measured.dips.length : null
+  const verdictLabel: Record<TessVerdict, string> = { planet: 'TRANSIT', not_planet: 'NOISE', unsure: 'SKIPPED' }
+  const readoutRows: InstrumentReadoutRow[] = [
+    { label: 'Marks', value: markCount ? String(markCount) : 'NONE · DRAG A DIP', testId: 'tess-readout-marks' },
+    ...measured.dips.slice(0, 4).map((dip, index) => ({
+      label: `Dip ${index + 1}`,
+      value: `${dip.centre.toFixed(2)}d · ${dip.hours.toFixed(1)}h · ${dip.depthPpt.toFixed(2)}ppt`,
+      testId: `tess-readout-dip-${index + 1}`,
+    })),
+    ...(measured.dips.length > 4 ? [{ label: 'More', value: `+${measured.dips.length - 4} DIPS` }] : []),
+    { label: 'Gaps', value: measured.gaps.length ? measured.gaps.map(gap => `${gap.toFixed(2)}d`).join(' · ') : '—', testId: 'tess-readout-gaps' },
+    { label: 'Depth', value: meanDepth != null ? `${meanDepth.toFixed(2)}ppt · R/R★ ${Math.sqrt(Math.max(0, meanDepth) / 1000).toFixed(3)}` : '—' },
+    { label: 'Fold', value: lc.fold ? `P ${lc.period.toFixed(2)}d` : 'OFF', testId: 'tess-readout-fold' },
+    { label: 'View', value: `${display.folded ? 'ALL SECTORS' : `${(display.xDomain[1] - display.xDomain[0]).toFixed(1)}d`} · BIN ×${lc.bin}` },
+    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : 'PENDING', testId: 'tess-readout-verdict' },
+    ...(classification && candidate.periodDays ? [{ label: 'Catalogue P', value: `${candidate.periodDays.toFixed(2)}d`, testId: 'tess-readout-catalogue' }] : []),
+  ]
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
-    const photometry = applyLightcurveCommand(lc, line, measuredPeriod)
+    const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
     if (head?.toUpperCase() !== 'SECTOR') return null
@@ -308,10 +329,10 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <InstrumentKnob label="SCAN" testId="tess-scan" min={0} max={1} step={0.02} value={lc.scan} readout={display.folded ? '—' : `D${display.xDomain[0].toFixed(1)}`} onChange={scan => setLc(c => ({ ...c, scan, fold: false }))} />
           <InstrumentKnob label="PERIOD" testId="tess-period" min={LIGHTCURVE_LIMITS.periodMin} max={LIGHTCURVE_LIMITS.periodMax} step={0.01} value={lc.period} readout={`${lc.period.toFixed(2)}d`} onChange={period => setLc(c => ({ ...c, period, fold: true }))} />
           <InstrumentModuleKey testId="tess-bin" label="BIN" readout={`×${lc.bin}`} pressed={lc.bin > 1} onClick={() => setLc(c => ({ ...c, bin: nextBin(c.bin) }))} />
-          <InstrumentModuleKey testId="tess-snap" label="SNAP" readout={measuredPeriod != null ? `P ${measuredPeriod.toFixed(2)}d` : '2 MARKS'} disabled={measuredPeriod == null} onClick={() => measuredPeriod != null && setLc(c => ({ ...c, fold: true, period: Math.min(LIGHTCURVE_LIMITS.periodMax, Math.max(LIGHTCURVE_LIMITS.periodMin, measuredPeriod)) }))} />
           <InstrumentSwitch label="FOLD" testId="tess-fold" pressed={lc.fold} onToggle={() => setLc(c => ({ ...c, fold: !c.fold }))} />
         </>,
       }}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
           {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
