@@ -26,6 +26,16 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     /// The person on the other end of the downlink briefs the player (web `InstrumentBriefing`).
     var briefing: InstrumentBriefing? = nil
     @State private var briefStep: Int? = nil
+    /// Which instrument this is; the finish choice is kept per instrument on this device.
+    var instrumentId = "instrument"
+    /// Instrument level: the default finish and which finishes are unlocked.
+    var level = 1
+    @State private var finishChoice = InstrumentFinish.auto
+    private var fin: InstrumentFinish { InstrumentFinish.resolve(finishChoice, level: level) }
+    private func chooseFinish(_ choice: String) {
+        withAnimation(.easeOut(duration: 0.3)) { finishChoice = choice }
+        InstrumentFinish.store(choice, for: instrumentId)
+    }
 
     var body: some View {
         scroller {
@@ -44,7 +54,9 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         }
         .background(Theme.bg.ignoresSafeArea())
         .foregroundStyle(Theme.ink)
+        .environment(\.instrumentFinish, fin)
         .onAppear {
+            finishChoice = InstrumentFinish.storedChoice(instrumentId)
             view = initialView
             if briefing?.startOpen == true { briefStep = 0 }
         }
@@ -75,7 +87,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     private var stage: some View {
         let o = Instrument.optics(view)
         return ZStack {
-            LinearGradient(colors: [ConsoleHW.deep, Theme.hex(0x05061A)], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [fin.deep, Theme.hex(0x05061A)], startPoint: .top, endPoint: .bottom)
             GeometryReader { geo in
                 ZStack {
                     well.frame(width: geo.size.width, height: geo.size.height)
@@ -90,21 +102,21 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
                 .clipped()
             }
             StageGreebles(readout: "\(aimReadout(view)) · \(String(format: "%.1f", view.zoom))×").allowsHitTesting(false)
-            Image(systemName: "scope").font(.system(size: 54, weight: .ultraLight)).foregroundStyle(ConsoleHW.periwinkle.opacity(0.85))
-                .shadow(color: ConsoleHW.violet.opacity(0.7), radius: 6).allowsHitTesting(false)
+            Image(systemName: "scope").font(.system(size: 54, weight: .ultraLight)).foregroundStyle(fin.periwinkle.opacity(0.85))
+                .shadow(color: fin.violet.opacity(0.7), radius: 6).allowsHitTesting(false)
             if let caption {
                 VStack { Spacer(); Text(caption).font(AppFont.body(14, "SemiBold")).foregroundStyle(ConsoleHW.cream)
                     .padding(8).frame(maxWidth: .infinity, alignment: .leading)
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 6))
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(ConsoleHW.violet.opacity(0.4), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(fin.violet.opacity(0.4), lineWidth: 1))
                     .padding(.horizontal, 8).padding(.bottom, 30) }
             }
         }
         .frame(maxWidth: .infinity)
         .aspectRatio(1, contentMode: .fit)
         .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(ConsoleHW.periwinkle.opacity(0.85), lineWidth: 2))
-        .shadow(color: ConsoleHW.violet.opacity(0.35), radius: 14)
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(fin.periwinkle.opacity(0.85), lineWidth: 2))
+        .shadow(color: fin.violet.opacity(0.35), radius: 14)
     }
 
     /// Glass console plate: engraved name strip with lamps, over a smoked-glass panel.
@@ -117,9 +129,9 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
                 lights()
             }
             .padding(.horizontal, 10).frame(minHeight: 30)
-            .background(LinearGradient(colors: [Theme.hex(0x06061A, 0.75), Theme.hex(0x18143C, 0.6)], startPoint: .top, endPoint: .bottom),
+            .background(LinearGradient(colors: [Theme.hex(0x06061A, 0.75), fin.glassTop.opacity(0.6)], startPoint: .top, endPoint: .bottom),
                         in: RoundedRectangle(cornerRadius: 6))
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(ConsoleHW.violet.opacity(0.25), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(fin.violet.opacity(0.25), lineWidth: 1))
             content()
         }
         .padding(12)
@@ -129,12 +141,13 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     private var controls: some View {
         plate("OPTICS · IV-01", lights: {
             HStack(spacing: 8) {
-                Led(label: "PWR", on: true, color: ConsoleHW.violet)
-                Led(label: "TRK", on: true, color: ConsoleHW.magenta, blink: true)
+                Led(label: "PWR", on: true, color: fin.violet)
+                Led(label: "TRK", on: true, color: fin.magenta, blink: true)
                 Led(label: "MAG", on: view.zoom > 1.01, color: ConsoleHW.amber)
             }
         }, content: {
             VStack(spacing: 12) {
+                finishKey
                 HStack(alignment: .top, spacing: 8) {
                     aimPad
                     VStack(spacing: 8) {
@@ -157,13 +170,38 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         })
     }
 
+    /// Steps AUTO → each unlocked finish. Pips show all five; locked ones are dark.
+    private var finishKey: some View {
+        Button { chooseFinish(InstrumentFinish.next(after: finishChoice, level: level)) } label: {
+            HStack(spacing: 8) {
+                Circle().fill(AngularGradient(colors: [fin.blue, fin.violet, fin.magenta, fin.blue], center: .center))
+                    .frame(width: 18, height: 18).shadow(color: fin.violet.opacity(0.7), radius: 4)
+                Text("FINISH · \(fin.name.uppercased())").font(AppFont.mono(14)).foregroundStyle(fin.phosphor).lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 4)
+                HStack(spacing: 4) {
+                    ForEach(InstrumentFinish.all, id: \.id) { f in
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(LinearGradient(colors: [f.blue, f.violet, f.magenta], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 10, height: 10)
+                            .saturation(f.unlockLevel > level ? 0 : 1).brightness(f.unlockLevel > level ? -0.6 : 0)
+                            .overlay(RoundedRectangle(cornerRadius: 3).stroke(f.id == fin.id ? Color.white : .clear, lineWidth: 2))
+                    }
+                }
+                Text(finishChoice == InstrumentFinish.auto ? "AUTO · LV \(level)" : "PINNED").font(AppFont.mono(14)).foregroundStyle(ConsoleHW.amber).lineLimit(1)
+            }
+            .padding(.horizontal, 10).frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(KeycapStyle(fin: fin, radius: 10))
+        .accessibilityLabel("Console finish: \(fin.name)\(finishChoice == InstrumentFinish.auto ? ", following level" : ""). Change finish.")
+    }
+
     private var aimPad: some View {
         VStack(spacing: 4) {
             ZStack {
                 // Graduated ring behind the keys.
-                Circle().fill(RadialGradient(colors: [Theme.hex(0x1A1A48, 0.8), Theme.hex(0x0A0A24, 0.9)], center: .center, startRadius: 0, endRadius: 75))
-                Circle().strokeBorder(ConsoleHW.periwinkle.opacity(0.55), style: StrokeStyle(lineWidth: 6, dash: [1, 7.3]))
-                Circle().strokeBorder(ConsoleHW.violet.opacity(0.35), lineWidth: 1).padding(8)
+                Circle().fill(RadialGradient(colors: [fin.glassTop.opacity(0.8), fin.glassBottom.opacity(0.9)], center: .center, startRadius: 0, endRadius: 75))
+                Circle().strokeBorder(fin.periwinkle.opacity(0.55), style: StrokeStyle(lineWidth: 6, dash: [1, 7.3]))
+                Circle().strokeBorder(fin.violet.opacity(0.35), lineWidth: 1).padding(8)
                 VStack(spacing: 2) {
                     pad("chevron.up", .north)
                     HStack(spacing: 2) { pad("chevron.left", .west); pad("circle.fill", .reset, centre: true); pad("chevron.right", .east) }
@@ -181,7 +219,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
             Image(systemName: symbol).font(.system(size: 14, weight: .bold)).frame(width: 44, height: 44)
                 .foregroundStyle(centre ? Color.white : ConsoleHW.cream)
         }
-        .buttonStyle(KeycapStyle(radius: centre ? 22 : 8, fill: centre ? [Theme.hex(0x8A7CFF), Theme.hex(0x3A2C8C)] : nil))
+        .buttonStyle(KeycapStyle(fin: fin, radius: centre ? 22 : 8, fill: centre ? [fin.violet, fin.violetDark] : nil))
         .accessibilityLabel("Aim \(String(describing: d))")
     }
 
@@ -189,19 +227,19 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         plate("DOWNLINK · CH 02", lights: { SignalBars() }, content: {
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(Array(log.suffix(3).enumerated()), id: \.offset) { _, l in
-                    Text(l).font(AppFont.mono(14)).foregroundStyle(ConsoleHW.phosphor).lineLimit(1)
-                        .shadow(color: ConsoleHW.violet.opacity(0.6), radius: 4)
+                    Text(l).font(AppFont.mono(14)).foregroundStyle(fin.phosphor).lineLimit(1)
+                        .shadow(color: fin.violet.opacity(0.6), radius: 4)
                 }
                 HStack(spacing: 8) {
-                    Text(">").font(AppFont.mono(14)).foregroundStyle(ConsoleHW.magenta).shadow(color: ConsoleHW.magenta.opacity(0.6), radius: 4)
+                    Text(">").font(AppFont.mono(14)).foregroundStyle(fin.magenta).shadow(color: fin.magenta.opacity(0.6), radius: 4)
                     TextField("POINT, ZOOM, EXPOSE, HELP", text: $line)
-                        .font(AppFont.mono(14)).foregroundStyle(ConsoleHW.phosphor).textFieldStyle(.plain).autocorrectionDisabled()
+                        .font(AppFont.mono(14)).foregroundStyle(fin.phosphor).textFieldStyle(.plain).autocorrectionDisabled()
                         #if os(iOS)
                         .textInputAutocapitalization(.characters)
                         #endif
                         .frame(minHeight: 44).onSubmit(run)
                 }
-                .overlay(alignment: .bottom) { Rectangle().fill(ConsoleHW.violet.opacity(0.55)).frame(height: 1) }
+                .overlay(alignment: .bottom) { Rectangle().fill(fin.violet.opacity(0.55)).frame(height: 1) }
             }
             .padding(10)
             .background(CrtGlass())
@@ -224,11 +262,30 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
 
     private func run() {
         let text = line; line = ""
+        let words = text.uppercased().split(separator: " ").map(String.init)
+        if words.first == "FINISH" {
+            log.append(contentsOf: finishCommand(words.dropFirst().first)); log = Array(log.suffix(8)); return
+        }
         guard let r = onCommand?(text, view) ?? Instrument.apply(view, text) else {
             log.append("> \(text.uppercased())  UNKNOWN"); return
         }
         view = r.view; log.append(contentsOf: r.lines)
         log = Array(log.suffix(8))
+    }
+}
+
+extension InstrumentViewport {
+    /// FINISH, FINISH AUTO, FINISH <NAME> (web InstrumentViewport runCommand).
+    fileprivate func finishCommand(_ arg: String?) -> [String] {
+        guard let arg else {
+            return ["> FINISH  \(fin.name.uppercased())\(finishChoice == InstrumentFinish.auto ? " · AUTO" : "")",
+                    "  UNLOCKED: AUTO " + InstrumentFinish.unlocked(level).map { $0.name.uppercased() }.joined(separator: " ")]
+        }
+        if arg == "AUTO" { chooseFinish(InstrumentFinish.auto); return ["> FINISH  AUTO · \(InstrumentFinish.forLevel(level).name.uppercased())"] }
+        guard let wanted = InstrumentFinish.all.first(where: { $0.id.uppercased() == arg }) else { return ["> FINISH \(arg)  UNKNOWN"] }
+        guard wanted.unlockLevel <= level else { return ["> FINISH \(arg)  LOCKED · REACH LV \(wanted.unlockLevel)"] }
+        chooseFinish(wanted.id)
+        return ["> FINISH  \(arg)"]
     }
 }
 
@@ -245,19 +302,70 @@ private struct InvertIf: ViewModifier {
     func body(content: Content) -> some View { if on { content.colorInvert() } else { content } }
 }
 
-/// Console palette (mirrors web `.screen` --hw-* glass tokens, SSL-744): violet, blue, magenta,
-/// amber for warnings, cream for the primary key. No green or teal on the console.
+/// Fixed console colours: amber warnings, cream primary key, label ink. Accents come from the finish.
 enum ConsoleHW {
-    static let violet = Theme.hex(0xB49BFF)
-    static let blue = Theme.hex(0x74A8FF)
-    static let magenta = Theme.hex(0xFF73D2)
     static let amber = Theme.hex(0xF2B33D)
     static let cream = Theme.hex(0xF4EFE4)
-    static let periwinkle = Theme.hex(0xAABEFF)
-    static let phosphor = Theme.hex(0xDDD3FF)
     static let label = Theme.hex(0xD9E3F2)
-    static let deep = Theme.hex(0x0E1030)
-    static let rim = AngularGradient(colors: [blue, violet, magenta, amber, blue], center: .center, angle: .degrees(200))
+}
+
+/// Instrument finishes (web lib/instrument-finish.ts, SSL-744). Each instrument level unlocks one
+/// colourway; AUTO follows the level so every level-up repaints the console, or the player pins any
+/// unlocked finish. Device-local, like the orientation preference.
+struct InstrumentFinish: Equatable {
+    let id: String
+    let name: String
+    let unlockLevel: Int
+    let aHex: UInt32, bHex: UInt32, cHex: UInt32, topHex: UInt32, bottomHex: UInt32
+
+    static let all: [InstrumentFinish] = [
+        .init(id: "indigo", name: "Indigo", unlockLevel: 1, aHex: 0x74A8FF, bHex: 0xB49BFF, cHex: 0xFF73D2, topHex: 0x1E1E48, bottomHex: 0x0E102C),
+        .init(id: "ember", name: "Ember", unlockLevel: 2, aHex: 0xFFB36B, bHex: 0xFF7A59, cHex: 0xFF4F8B, topHex: 0x3A1E2A, bottomHex: 0x1A0E18),
+        .init(id: "glacier", name: "Glacier", unlockLevel: 3, aHex: 0xA8E6FF, bHex: 0x5F8DFF, cHex: 0xE4F4FF, topHex: 0x16284E, bottomHex: 0x08122A),
+        .init(id: "solar", name: "Solar", unlockLevel: 4, aHex: 0xFFE08A, bHex: 0xFFB020, cHex: 0xFF6A3D, topHex: 0x3A2A10, bottomHex: 0x1A1206),
+        .init(id: "void", name: "Void", unlockLevel: 5, aHex: 0x9B6BFF, bHex: 0xD43CFF, cHex: 0xFF5CE1, topHex: 0x1E0C3A, bottomHex: 0x0A0418),
+    ]
+    static let auto = "auto"
+
+    static func forLevel(_ level: Int) -> InstrumentFinish { all[(max(1, level) - 1) % all.count] }
+    static func unlocked(_ level: Int) -> [InstrumentFinish] { all.filter { $0.unlockLevel <= max(1, level) } }
+    static func resolve(_ choice: String, level: Int) -> InstrumentFinish {
+        choice == auto ? forLevel(level) : (unlocked(level).first { $0.id == choice } ?? forLevel(level))
+    }
+    static func next(after choice: String, level: Int) -> String {
+        let order = [auto] + unlocked(level).map(\.id)
+        let i = order.firstIndex(of: choice) ?? 0
+        return order[(i + 1) % order.count]
+    }
+    static func storedChoice(_ instrumentId: String) -> String { UserDefaults.standard.string(forKey: "ln-instrument-finish:\(instrumentId)") ?? auto }
+    static func store(_ choice: String, for instrumentId: String) { UserDefaults.standard.set(choice, forKey: "ln-instrument-finish:\(instrumentId)") }
+
+    private static func mix(_ x: UInt32, _ y: UInt32, _ t: Double) -> UInt32 {
+        func ch(_ v: UInt32, _ s: UInt32) -> Double { Double((v >> s) & 0xFF) }
+        func m(_ s: UInt32) -> UInt32 { UInt32((ch(x, s) + (ch(y, s) - ch(x, s)) * t).rounded()) << s }
+        return m(16) | m(8) | m(0)
+    }
+    /// Cool, mid and hot accents (web --hw-a / --hw-b / --hw-c).
+    var blue: Color { Theme.hex(aHex) }
+    var violet: Color { Theme.hex(bHex) }
+    var magenta: Color { Theme.hex(cHex) }
+    var violetDark: Color { Theme.hex(Self.mix(bHex, 0x000000, 0.6)) }
+    var periwinkle: Color { Theme.hex(Self.mix(aHex, 0xFFFFFF, 0.35)) }
+    var light: Color { Theme.hex(Self.mix(aHex, 0xFFFFFF, 0.7)) }
+    var phosphor: Color { Theme.hex(Self.mix(bHex, 0xFFFFFF, 0.7)) }
+    var engrave: Color { Theme.hex(Self.mix(bHex, 0xC9CEDE, 0.78)) }
+    var glassTop: Color { Theme.hex(topHex) }
+    var glassBottom: Color { Theme.hex(bottomHex) }
+    var deep: Color { Theme.hex(Self.mix(topHex, 0x000000, 0.4)) }
+    var rim: AngularGradient { AngularGradient(colors: [blue, violet, magenta, ConsoleHW.amber, blue], center: .center, angle: .degrees(200)) }
+}
+
+private struct InstrumentFinishKey: EnvironmentKey { static let defaultValue = InstrumentFinish.all[0] }
+extension EnvironmentValues {
+    var instrumentFinish: InstrumentFinish {
+        get { self[InstrumentFinishKey.self] }
+        set { self[InstrumentFinishKey.self] = newValue }
+    }
 }
 
 /// "E04′ N00′": pointing offset in arcminutes (web `aimReadout`).
@@ -271,16 +379,17 @@ func aimReadout(_ v: InstrumentView) -> String {
 
 /// Smoked glass with a specular sheen, colour washes, an iridescent rim and rivets.
 struct GlassPanel: View {
+    @Environment(\.instrumentFinish) private var fin
     var cornerRadius: CGFloat = 14
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
         ZStack {
             shape.fill(.ultraThinMaterial)
-            shape.fill(LinearGradient(colors: [Theme.hex(0x1E1E48, 0.62), Theme.hex(0x0E102C, 0.74)], startPoint: .top, endPoint: .bottom))
-            shape.fill(RadialGradient(colors: [ConsoleHW.blue.opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 260))
-            shape.fill(RadialGradient(colors: [ConsoleHW.magenta.opacity(0.18), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 260))
+            shape.fill(LinearGradient(colors: [fin.glassTop.opacity(0.62), fin.glassBottom.opacity(0.74)], startPoint: .top, endPoint: .bottom))
+            shape.fill(RadialGradient(colors: [fin.blue.opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 260))
+            shape.fill(RadialGradient(colors: [fin.magenta.opacity(0.18), .clear], center: .bottomTrailing, startRadius: 0, endRadius: 260))
             shape.fill(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.03), .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.4)))
-            shape.strokeBorder(ConsoleHW.rim, lineWidth: 1.5)
+            shape.strokeBorder(fin.rim, lineWidth: 1.5)
             GeometryReader { g in
                 ForEach(0..<4, id: \.self) { i in
                     Circle().fill(RadialGradient(colors: [Theme.hex(0xDFE6F3), Theme.hex(0x7D8AA8), Theme.hex(0x2A3350)], center: UnitPoint(x: 0.4, y: 0.35), startRadius: 0, endRadius: 4))
@@ -289,7 +398,7 @@ struct GlassPanel: View {
                 }
             }
         }
-        .shadow(color: ConsoleHW.violet.opacity(0.22), radius: 12)
+        .shadow(color: fin.violet.opacity(0.22), radius: 12)
         .shadow(color: .black.opacity(0.5), radius: 14, y: 10)
         .accessibilityHidden(true)
     }
@@ -297,27 +406,29 @@ struct GlassPanel: View {
 
 /// Indigo CRT with lavender phosphor, scanlines and a vignette.
 private struct CrtGlass: View {
+    @Environment(\.instrumentFinish) private var fin
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 12)
         ZStack {
-            shape.fill(LinearGradient(colors: [Theme.hex(0x120F36), Theme.hex(0x0A0A24)], startPoint: .top, endPoint: .bottom))
-            shape.fill(RadialGradient(colors: [ConsoleHW.blue.opacity(0.22), .clear], center: UnitPoint(x: 0.25, y: 0.15), startRadius: 0, endRadius: 200))
-            shape.fill(RadialGradient(colors: [ConsoleHW.magenta.opacity(0.16), .clear], center: UnitPoint(x: 0.9, y: 1), startRadius: 0, endRadius: 200))
+            shape.fill(LinearGradient(colors: [fin.glassTop, fin.glassBottom], startPoint: .top, endPoint: .bottom))
+            shape.fill(RadialGradient(colors: [fin.blue.opacity(0.22), .clear], center: UnitPoint(x: 0.25, y: 0.15), startRadius: 0, endRadius: 200))
+            shape.fill(RadialGradient(colors: [fin.magenta.opacity(0.16), .clear], center: UnitPoint(x: 0.9, y: 1), startRadius: 0, endRadius: 200))
             Canvas { ctx, size in
                 var y: CGFloat = 3
                 while y < size.height { ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.black.opacity(0.16))); y += 4 }
             }.clipShape(shape)
             shape.fill(LinearGradient(colors: [.white.opacity(0.09), .clear], startPoint: .topLeading, endPoint: UnitPoint(x: 0.4, y: 0.4)))
             shape.strokeBorder(Theme.hex(0x070B18), lineWidth: 3)
-            shape.stroke(Theme.hex(0x9682E6, 0.55), lineWidth: 2).padding(-2)
+            shape.stroke(fin.violet.opacity(0.55), lineWidth: 2).padding(-2)
         }
-        .shadow(color: ConsoleHW.violet.opacity(0.3), radius: 10)
+        .shadow(color: fin.violet.opacity(0.3), radius: 10)
         .accessibilityHidden(true)
     }
 }
 
 /// Glass greebles over the stage: corner brackets, edge scales, a scan line and a pointing readout.
 private struct StageGreebles: View {
+    @Environment(\.instrumentFinish) private var fin
     let readout: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scan = false
@@ -326,7 +437,7 @@ private struct StageGreebles: View {
             let w = g.size.width, h = g.size.height
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let tick = GraphicsContext.Shading.color(ConsoleHW.periwinkle.opacity(0.45))
+                    let tick = GraphicsContext.Shading.color(fin.periwinkle.opacity(0.45))
                     for i in 0...40 {
                         let x = size.width * CGFloat(i) / 40, len: CGFloat = i % 5 == 0 ? 9 : 4
                         ctx.fill(Path(CGRect(x: x, y: 0, width: 1, height: len)), with: tick)
@@ -339,13 +450,13 @@ private struct StageGreebles: View {
                     for (cx, cy, sx, sy) in corners {
                         p.move(to: CGPoint(x: cx, y: cy + b * sy)); p.addLine(to: CGPoint(x: cx, y: cy)); p.addLine(to: CGPoint(x: cx + b * sx, y: cy))
                     }
-                    ctx.stroke(p, with: .color(ConsoleHW.periwinkle.opacity(0.8)), lineWidth: 1.5)
+                    ctx.stroke(p, with: .color(fin.periwinkle.opacity(0.8)), lineWidth: 1.5)
                 }
-                LinearGradient(colors: [.clear, ConsoleHW.violet.opacity(0.18), .clear], startPoint: .top, endPoint: .bottom)
+                LinearGradient(colors: [.clear, fin.violet.opacity(0.18), .clear], startPoint: .top, endPoint: .bottom)
                     .frame(width: w, height: 24)
                     .offset(y: scan ? h - 24 : 0)
-                Text(readout).font(AppFont.mono(14, "Regular")).foregroundStyle(Theme.hex(0xCFE0FF))
-                    .shadow(color: ConsoleHW.blue.opacity(0.8), radius: 4)
+                Text(readout).font(AppFont.mono(14, "Regular")).foregroundStyle(fin.light)
+                    .shadow(color: fin.blue.opacity(0.8), radius: 4)
                     .position(x: w - 80, y: h - 14)
             }
         }
@@ -359,16 +470,17 @@ private struct StageGreebles: View {
 
 /// Status lamp with an engraved label.
 private struct Led: View {
+    @Environment(\.instrumentFinish) private var fin
     let label: String
     let on: Bool
-    var color: Color = ConsoleHW.violet
+    var color: Color? = nil
     var blink = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dim = false
     var body: some View {
         HStack(spacing: 4) {
             LedDot(on: on && !(blink && dim), color: color)
-            Text(label).font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xC4BCE8))
+            Text(label).font(AppFont.mono(14)).foregroundStyle(fin.engrave)
         }
         .onAppear {
             guard blink, !reduceMotion else { return }
@@ -380,27 +492,29 @@ private struct Led: View {
 }
 
 private struct LedDot: View {
+    @Environment(\.instrumentFinish) private var fin
     let on: Bool
-    var color: Color = ConsoleHW.violet
+    var color: Color? = nil
     var body: some View {
         Circle()
-            .fill(on ? RadialGradient(colors: [.white, color, color.opacity(0.6)], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: 6)
+            .fill(on ? RadialGradient(colors: [.white, color ?? fin.violet, (color ?? fin.violet).opacity(0.6)], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: 6)
                      : RadialGradient(colors: [Theme.hex(0x4A5570), Theme.hex(0x1A2034)], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: 6))
             .frame(width: 10, height: 10)
-            .shadow(color: on ? color.opacity(0.8) : .clear, radius: 5)
+            .shadow(color: on ? (color ?? fin.violet).opacity(0.8) : .clear, radius: 5)
             .animation(.easeOut(duration: 0.12), value: on)
     }
 }
 
 private struct SignalBars: View {
+    @Environment(\.instrumentFinish) private var fin
     var body: some View {
         HStack(alignment: .bottom, spacing: 2) {
             ForEach(0..<5, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 1).fill(i < 4 ? ConsoleHW.blue : Theme.hex(0x2C2A55))
+                RoundedRectangle(cornerRadius: 1).fill(i < 4 ? fin.blue : fin.glassTop)
                     .frame(width: 4, height: CGFloat(4 + i * 3))
-                    .shadow(color: i < 4 ? ConsoleHW.blue.opacity(0.7) : .clear, radius: 2)
+                    .shadow(color: i < 4 ? fin.blue.opacity(0.7) : .clear, radius: 2)
             }
-            Text("×5").font(AppFont.mono(14)).foregroundStyle(Theme.hex(0xC4BCE8)).padding(.leading, 4)
+            Text("×5").font(AppFont.mono(14)).foregroundStyle(fin.engrave).padding(.leading, 4)
         }
         .accessibilityElement(children: .ignore).accessibilityLabel("Signal strong")
     }
@@ -408,18 +522,20 @@ private struct SignalBars: View {
 
 /// Lit glass readout strip.
 private struct Lcd: View {
+    @Environment(\.instrumentFinish) private var fin
     let text: String
     var body: some View {
-        Text(text).font(AppFont.mono(14)).foregroundStyle(ConsoleHW.phosphor).lineLimit(1).minimumScaleFactor(0.8)
-            .shadow(color: ConsoleHW.violet.opacity(0.8), radius: 4)
+        Text(text).font(AppFont.mono(14)).foregroundStyle(fin.phosphor).lineLimit(1).minimumScaleFactor(0.8)
+            .shadow(color: fin.violet.opacity(0.8), radius: 4)
             .padding(.horizontal, 6).padding(.vertical, 3).frame(minWidth: 56)
-            .background(LinearGradient(colors: [Theme.hex(0x140E3C, 0.85), Theme.hex(0x281450, 0.7)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 4))
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(ConsoleHW.violet.opacity(0.45), lineWidth: 1))
+            .background(LinearGradient(colors: [fin.glassBottom.opacity(0.88), fin.glassTop.opacity(0.75)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 4))
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(fin.violet.opacity(0.45), lineWidth: 1))
     }
 }
 
 /// Glass keycap that presses in, with a coloured backlight strip.
 private struct KeycapStyle: ButtonStyle {
+    let fin: InstrumentFinish
     var radius: CGFloat = 8
     var fill: [Color]? = nil
     func makeBody(configuration: Configuration) -> some View {
@@ -428,11 +544,11 @@ private struct KeycapStyle: ButtonStyle {
         return configuration.label
             .background(
                 ZStack {
-                    shape.fill(LinearGradient(colors: fill ?? [Theme.hex(0x5A64AA, 0.75), Theme.hex(0x1E2050, 0.85)], startPoint: .top, endPoint: .bottom))
+                    shape.fill(LinearGradient(colors: fill ?? [fin.violet.opacity(0.35), fin.glassTop.opacity(0.85)], startPoint: .top, endPoint: .bottom))
                     shape.fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center))
-                    shape.strokeBorder(ConsoleHW.violet.opacity(pressed ? 0.9 : 0.35), lineWidth: 1)
+                    shape.strokeBorder(fin.violet.opacity(pressed ? 0.9 : 0.35), lineWidth: 1)
                 }
-                .shadow(color: pressed ? ConsoleHW.violet.opacity(0.6) : .black.opacity(0.6), radius: pressed ? 8 : 0, y: pressed ? 0 : 3)
+                .shadow(color: pressed ? fin.violet.opacity(0.6) : .black.opacity(0.6), radius: pressed ? 8 : 0, y: pressed ? 0 : 3)
             )
             .offset(y: pressed ? 2 : 0)
             .animation(.easeOut(duration: 0.08), value: pressed)
@@ -442,6 +558,7 @@ private struct KeycapStyle: ButtonStyle {
 /// Round dial: drag up/down to turn, or use VoiceOver adjust. Graduated bezel, a value arc
 /// sweeping blue → violet → magenta, a knurled cap and an LCD readout. 64pt hit area.
 private struct Knob: View {
+    @Environment(\.instrumentFinish) private var fin
     let label: String
     let readout: String
     let value: Double
@@ -453,22 +570,22 @@ private struct Knob: View {
         let t = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
         VStack(spacing: 4) {
             ZStack {
-                Circle().strokeBorder(ConsoleHW.periwinkle.opacity(0.55), style: StrokeStyle(lineWidth: 5, dash: [1.2, 13.3]))
+                Circle().strokeBorder(fin.periwinkle.opacity(0.55), style: StrokeStyle(lineWidth: 5, dash: [1.2, 13.3]))
                 Circle().trim(from: 0, to: 0.75 * t)
-                    .stroke(AngularGradient(colors: [ConsoleHW.blue, ConsoleHW.violet, ConsoleHW.magenta], center: .center, startAngle: .degrees(0), endAngle: .degrees(270 * max(t, 0.01))),
+                    .stroke(AngularGradient(colors: [fin.blue, fin.violet, fin.magenta], center: .center, startAngle: .degrees(0), endAngle: .degrees(270 * max(t, 0.01))),
                             style: StrokeStyle(lineWidth: 4, lineCap: .round))
                     .rotationEffect(.degrees(135))
                     .padding(2)
-                    .shadow(color: ConsoleHW.violet.opacity(0.6), radius: 4)
+                    .shadow(color: fin.violet.opacity(0.6), radius: 4)
                 ZStack {
                     Circle().fill(RadialGradient(colors: [Theme.hex(0x56658F), Theme.hex(0x27304F), Theme.hex(0x141A30)], center: UnitPoint(x: 0.4, y: 0.32), startRadius: 0, endRadius: 26))
                     Circle().strokeBorder(Theme.hex(0x39456A), style: StrokeStyle(lineWidth: 3, dash: [2, 2]))
                     Capsule().fill(Color.white).frame(width: 3, height: 13).offset(y: -10)
-                        .shadow(color: ConsoleHW.magenta.opacity(0.8), radius: 4)
+                        .shadow(color: fin.magenta.opacity(0.8), radius: 4)
                         .rotationEffect(.degrees(-135 + t * 270))
                 }
                 .frame(width: 44, height: 44)
-                .shadow(color: start != nil ? ConsoleHW.magenta.opacity(0.55) : .black.opacity(0.6), radius: start != nil ? 8 : 3, y: start != nil ? 0 : 3)
+                .shadow(color: start != nil ? fin.magenta.opacity(0.55) : .black.opacity(0.6), radius: start != nil ? 8 : 3, y: start != nil ? 0 : 3)
             }
             .frame(width: 64, height: 64)
             .contentShape(Circle())
@@ -492,6 +609,7 @@ private struct Knob: View {
 
 /// Bat-lever toggle with a status lamp; the channel lights blue → magenta when on.
 private struct LeverSwitch: View {
+    @Environment(\.instrumentFinish) private var fin
     let label: String
     let on: Bool
     let toggle: () -> Void
@@ -501,11 +619,11 @@ private struct LeverSwitch: View {
                 LedDot(on: on)
                 ZStack(alignment: on ? .top : .bottom) {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(on ? AnyShapeStyle(LinearGradient(colors: [ConsoleHW.blue.opacity(0.5), ConsoleHW.magenta.opacity(0.5)], startPoint: .top, endPoint: .bottom))
+                        .fill(on ? AnyShapeStyle(LinearGradient(colors: [fin.blue.opacity(0.5), fin.magenta.opacity(0.5)], startPoint: .top, endPoint: .bottom))
                                  : AnyShapeStyle(LinearGradient(colors: [Theme.hex(0x070B18), Theme.hex(0x141B33)], startPoint: .top, endPoint: .bottom)))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? Theme.hex(0xDCC8FF, 0.7) : Theme.hex(0x0A0F1F), lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(on ? fin.light.opacity(0.7) : Theme.hex(0x0A0F1F), lineWidth: 1))
                         .frame(width: 30, height: 44)
-                        .shadow(color: on ? ConsoleHW.violet.opacity(0.45) : .clear, radius: 6)
+                        .shadow(color: on ? fin.violet.opacity(0.45) : .clear, radius: 6)
                     RoundedRectangle(cornerRadius: 6)
                         .fill(LinearGradient(colors: [ConsoleHW.cream, Theme.hex(0xB9C1D4), Theme.hex(0x7F89A3)], startPoint: .top, endPoint: .bottom))
                         .frame(width: 24, height: 22).padding(3)
@@ -521,6 +639,7 @@ private struct LeverSwitch: View {
 
 /// Answer row button shared by every project: glass keycap; primary is the cream key.
 struct InstrumentAnswerButton: View {
+    @Environment(\.instrumentFinish) private var fin
     let title: String
     var enabled = true
     var primary = false
@@ -535,16 +654,17 @@ struct InstrumentAnswerButton: View {
                 .frame(maxWidth: .infinity, minHeight: 44).padding(.horizontal, 6)
                 .foregroundStyle(!enabled ? Theme.hex(0xB7B2D6) : (primary ? Theme.hex(0x10182C) : ConsoleHW.cream))
                 .overlay(alignment: .top) {
-                    Capsule().fill(!enabled ? AnyShapeStyle(Theme.hex(0x3A4460)) : AnyShapeStyle(LinearGradient(colors: [primary ? ConsoleHW.violet : ConsoleHW.blue, ConsoleHW.magenta], startPoint: .leading, endPoint: .trailing)))
+                    Capsule().fill(!enabled ? AnyShapeStyle(Theme.hex(0x3A4460)) : AnyShapeStyle(LinearGradient(colors: [primary ? fin.violet : fin.blue, fin.magenta], startPoint: .leading, endPoint: .trailing)))
                         .frame(width: 28, height: 3).padding(.top, 5)
                 }
         }
-        .buttonStyle(AnswerKeyStyle(enabled: enabled, primary: primary))
+        .buttonStyle(AnswerKeyStyle(fin: fin, enabled: enabled, primary: primary))
         .accessibilityAddTraits(enabled ? [] : .isStaticText)
     }
 }
 
 private struct AnswerKeyStyle: ButtonStyle {
+    let fin: InstrumentFinish
     let enabled: Bool
     let primary: Bool
     func makeBody(configuration: Configuration) -> some View {
@@ -562,9 +682,9 @@ private struct AnswerKeyStyle: ButtonStyle {
                 } else {
                     ZStack {
                         shape.fill(.ultraThinMaterial)
-                        shape.fill(LinearGradient(colors: [Theme.hex(0x464696, 0.6), Theme.hex(0x1A1A46, 0.75)], startPoint: .top, endPoint: .bottom))
+                        shape.fill(LinearGradient(colors: [fin.violet.opacity(0.28), fin.glassTop.opacity(0.8)], startPoint: .top, endPoint: .bottom))
                         shape.fill(LinearGradient(colors: [.white.opacity(0.14), .clear], startPoint: .top, endPoint: .center))
-                        shape.strokeBorder(ConsoleHW.violet.opacity(0.3), lineWidth: 1)
+                        shape.strokeBorder(fin.violet.opacity(0.3), lineWidth: 1)
                     }
                     .shadow(color: pressed ? .clear : Theme.hex(0x070B18), radius: 0, y: 4)
                 }

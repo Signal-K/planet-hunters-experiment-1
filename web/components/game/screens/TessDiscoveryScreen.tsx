@@ -272,6 +272,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
 
   return (
     <InstrumentViewport
+      instrumentId="transit-telescope"
+      level={player.transitSatelliteLevel ?? 1}
       testId="tess-discovery-screen"
       sceneClassName="ln-scene-tess-discovery"
       eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK"
@@ -332,7 +334,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             <span
               aria-hidden="true"
               data-testid="tess-dip-hint"
-              style={{ position: 'absolute', pointerEvents: 'none', zIndex: 2, left: `calc(66px + ${dipShare} * (100% - 80px) - 22px)`, width: 44, top: 22, bottom: 58, background: 'rgba(255, 115, 210, 0.12)', borderInline: '1px solid rgba(255, 115, 210, 0.55)', boxShadow: '0 0 18px rgba(255, 115, 210, 0.18)' }}
+              style={{ position: 'absolute', pointerEvents: 'none', zIndex: 2, left: `calc(66px + ${dipShare} * (100% - 80px) - 22px)`, width: 44, top: 22, bottom: 58, background: 'rgba(var(--hw-c-rgb), 0.12)', borderInline: '1px solid rgba(var(--hw-c-rgb), 0.55)', boxShadow: '0 0 18px rgba(var(--hw-c-rgb), 0.18)' }}
             />
           )}
           <ObservatoryChart

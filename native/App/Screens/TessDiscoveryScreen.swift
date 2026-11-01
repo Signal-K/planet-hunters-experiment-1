@@ -95,7 +95,8 @@ struct TessDiscoveryScreen: View {
                     }
                 }
             },
-            tool: { tools(sectors: sectors, saved: saved != nil) })
+            tool: { tools(sectors: sectors, saved: saved != nil) },
+            instrumentId: "transit-telescope", level: store.player.transitSatelliteLevel ?? 1)
         .id(c.id)
     }
 
