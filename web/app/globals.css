@@ -1935,125 +1935,144 @@ button { cursor: pointer; }
   min-width: 0;
   min-height: 0;
 }
-/* Full-screen mining guide. It replaces the field, the HUD, and the dock
-   while open. Tokens match docs/settings-style.md. No graph paper. */
+/* Mining menu (laser and rover), two-tone mission style: the field stays visible
+   under two translucent halves. Left/top: where you are and the ways out.
+   Right/bottom: how to play. Cream text, cyan accents, cream Resume as the CTA. */
 .mining-guide-dock {
+  --mg-paper: #f4efe4;
+  --mg-dim: #d9d4c8;
+  --mg-ink: #142840;
+  --mg-cyan: #9de7ef;
   position: absolute;
   z-index: 30;
   inset: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "top scroll" "actions scroll";
   overflow: hidden;
-  background: var(--set-bg);
-  background-image: none;
-  color: var(--set-ink);
-  font-family: system-ui, sans-serif;
+  background: rgba(4, 10, 20, .38);
+  backdrop-filter: blur(3px);
+  color: var(--mg-paper);
+  font-family: var(--ln-font-body), system-ui, sans-serif;
 }
 .mining-screen:has(.mining-guide-dock) .laser-chrome,
 .mining-screen:has(.mining-guide-dock) .laser-hud,
 .mining-screen:has(.mining-guide-dock) .laser-cue,
-.mining-screen:has(.mining-guide-dock) .laser-dev-skip {
+.mining-screen:has(.mining-guide-dock) .laser-dev-skip,
+.mining-screen:has(.mining-guide-dock) [data-testid="mining-back-btn"],
+.mining-screen:has(.mining-guide-dock) [data-testid="rover-controls"],
+.mining-screen:has(.mining-guide-dock) [data-testid="mining-dpad"],
+.mining-screen:has(.mining-guide-dock) [data-testid="fire-laser-btn"],
+.mining-screen:has(.mining-guide-dock) [data-testid="orionids-rover-brief"] {
   display: none;
 }
+.mining-guide-top,
+.mining-guide-actions { background: rgba(60, 44, 118, .62); }
 .mining-guide-top {
-  flex: none;
+  grid-area: top;
   display: flex;
-  justify-content: flex-end;
-  padding: 8px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px max(16px, calc((100% - 480px) / 2 + 16px)) 8px;
 }
 .mining-guide-x {
   display: grid;
   place-items: center;
+  flex: none;
   width: 44px;
   height: 44px;
   min-height: 44px;
   padding: 0;
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-  color: var(--set-ink);
+  border: 2px solid rgba(244, 239, 228, .55);
+  border-radius: 999px;
+  background: rgba(8, 16, 34, .3);
+  color: var(--mg-paper);
   box-shadow: none;
-  font-size: 16px;
   cursor: pointer;
 }
 .mining-guide-scroll {
-  flex: 1 1 auto;
+  grid-area: scroll;
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  background: rgba(22, 104, 148, .58);
 }
 .mining-guide-column {
   box-sizing: border-box;
-  width: min(var(--set-max), 100%);
+  width: min(480px, 100%);
   margin-inline: auto;
   padding-inline: 16px;
 }
 .mining-guide-scroll .mining-guide-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding-top: 8px;
+  gap: 10px;
+  padding-top: 20px;
   padding-bottom: 24px;
 }
 .mining-guide-card {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
   align-items: start;
   margin: 0;
-  padding: 20px;
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-  box-shadow: none;
+  padding: 14px 16px;
+  border: 1px solid rgba(244, 239, 228, .22);
+  border-radius: 18px;
+  background: rgba(8, 16, 34, .36);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 .mining-guide-mark {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   margin-top: 2px;
-  fill: var(--set-ink);
+  fill: var(--mg-cyan);
   shape-rendering: crispEdges;
 }
 .mining-guide-card strong {
   display: block;
-  color: var(--set-ink);
-  font: 700 18px/1.3 var(--ln-font-display), system-ui, sans-serif;
-  letter-spacing: 0;
-  text-transform: none;
+  color: var(--mg-paper);
+  font: 800 16px/1.25 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 .mining-guide-card span {
   display: block;
   margin-top: 4px;
-  color: var(--set-muted);
-  font: 400 16px/1.45 system-ui, sans-serif;
+  color: var(--mg-dim);
+  font: 600 14px/1.4 var(--ln-font-body), system-ui, sans-serif;
 }
 .mining-guide-actions {
-  flex: none;
-  border-top: 2px solid var(--set-ink);
-  background: var(--set-bg);
-  padding: 16px 0;
+  grid-area: actions;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 0 20px;
 }
 .mining-guide-actions .mining-guide-column {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-@media (orientation: landscape) and (max-height: 500px) {
-  .mining-guide-actions { padding-block: 8px; }
-  .mining-guide-actions .mining-guide-column {
-    flex-direction: row;
-    align-items: stretch;
-    gap: 16px;
-  }
-  .theme-blueprint.mining-screen .mining-guide-actions .mining-guide-close {
-    flex: 1 1 0;
-    width: auto;
-  }
+  gap: 10px;
 }
 .mining-guide-dock button {
   position: static;
   min-height: 44px;
+}
+/* Phone portrait: the halves stack, purple over teal. */
+@media (orientation: portrait) {
+  .mining-guide-dock {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: "top" "actions" "scroll";
+  }
+  .mining-guide-actions { overflow: visible; }
+}
+/* Short landscape phone: tighter top so all four exits fit beside the guide. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mining-guide-top { padding-top: 14px; }
+  .mining-guide-actions { padding-block: 8px 12px; }
+  .mining-guide-actions .mining-guide-column { gap: 8px; }
 }
 .mining-viewport {
   position: relative; flex: 1; overflow: hidden; min-height: 0;
@@ -2341,40 +2360,40 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   padding: 10px 16px;
-  border: 2px solid var(--set-ink);
-  border-radius: var(--set-radius);
-  background: var(--set-card);
-  color: var(--set-ink);
+  border: 2px solid rgba(244, 239, 228, .6);
+  border-radius: 14px;
+  background: rgba(8, 16, 34, .28);
+  color: #f4efe4;
   box-shadow: none;
-  font: 800 16px/1.2 var(--ln-font-display), system-ui, sans-serif;
-  letter-spacing: 0.08em;
+  font: 800 15px/1.2 var(--ln-font-display), system-ui, sans-serif;
+  letter-spacing: .08em;
   text-transform: uppercase;
   text-align: center;
   white-space: normal;
   cursor: pointer;
 }
-.theme-blueprint.mining-screen .mining-guide-close::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 6px 0 6px 10px;
-  border-color: transparent transparent transparent currentColor;
+.theme-blueprint.mining-screen .mining-guide-close:hover:not(:disabled),
+.theme-blueprint.mining-screen .mining-guide-close:focus-visible {
+  border-color: #58d0ea;
+  background: rgba(88, 208, 234, .18);
+  outline: none;
+}
+/* Resume is the call to action: the cream contract button. */
+.theme-blueprint.mining-screen .mining-guide-actions .mining-guide-close:first-child {
+  border-color: #f4efe4;
+  background: #f4efe4;
+  color: #142840;
 }
 .theme-blueprint.mining-screen .mining-guide-close:disabled {
-  opacity: 1;
-  color: var(--set-muted);
+  opacity: .5;
   cursor: not-allowed;
 }
 .theme-blueprint.mining-screen .mining-guide-scrub {
-  border-width: 2px;
-  border-color: var(--set-danger);
-  color: var(--set-danger);
+  border-color: rgba(255, 128, 140, .8);
+  color: #ffb3bb;
 }
 .theme-blueprint.mining-screen .mining-success-panel {
   background: var(--ln-mining-control-fill-strong) !important;

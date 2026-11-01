@@ -224,8 +224,9 @@
 }
 :global(.mining-start-brief) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
 :global(.mining-start-brief__eyebrow), :global(.mining-menu-eyebrow) { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ln-cyan); }
-/* The menu sits on the light blueprint sheet: ink colours, not the in-scene cyan. */
-:global(.mining-guide-dock) :global(.mining-menu-eyebrow) { color: var(--ln-bp-blue); }
+/* The menu is two-tone (cream on translucent purple and teal): cyan eyebrow, warm dim line. */
+:global(.mining-guide-dock) :global(.mining-menu-eyebrow) { color: #9de7ef; }
+:global(.mining-guide-dock) :global(.mining-menu-head) span:last-child { color: #d9d4c8; font-weight: 600; }
 :global(.mining-menu-head) { display: grid; gap: 4px; min-width: 0; flex: 1 1 auto; }
 :global(.mining-menu-head) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
 :global(.mining-menu-head) span:last-child { font: 400 14px/1.4 var(--ln-font-body, system-ui); color: var(--ln-bp-ink-dim); }
