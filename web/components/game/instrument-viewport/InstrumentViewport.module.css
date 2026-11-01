@@ -1515,3 +1515,63 @@
 .finishPips i[data-current="true"] { box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(var(--hw-c-rgb), .8); }
 .finishMode { flex: none; color: var(--hw-amber); font-size: 14px; }
 .screen .controls, .screen .command, .lcd, .screen .terminal { transition: background 300ms ease, border-color 300ms ease, box-shadow 300ms ease, color 300ms ease; }
+
+/* Project module (SSL-745): this project's own instrument under the optics, acting on its data. */
+.module {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(var(--hw-b-rgb), .25);
+}
+.moduleBody {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-around;
+  gap: 8px 10px;
+  padding: 0 8px;
+}
+.moduleKey {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 64px;
+  min-height: 52px;
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--hw-b-rgb), .4);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .12), transparent 50%),
+    rgba(var(--hw-glass-bottom-rgb), .6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 3px 0 #070b18, 0 0 10px rgba(var(--hw-b-rgb), .18);
+  color: #e9e6ff;
+  cursor: pointer;
+  transition: transform 80ms ease, box-shadow 80ms ease, border-color 120ms ease;
+}
+.moduleKey:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .55), 0 1px 0 #070b18, 0 0 16px rgba(var(--hw-c-rgb), .45); }
+.moduleKey:focus-visible { outline: 2px solid var(--hw-c); outline-offset: 2px; }
+.moduleKey[aria-pressed="true"] { border-color: var(--hw-c); box-shadow: inset 0 0 12px rgba(var(--hw-c-rgb), .35), 0 3px 0 #070b18, 0 0 14px rgba(var(--hw-c-rgb), .45); }
+.moduleKey:disabled { opacity: .5; cursor: default; }
+.moduleKeyLabel { font: 700 14px/1.1 var(--ln-font-display, var(--ln-font-mono)); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.moduleKeyReadout { font: 600 14px/1.1 var(--ln-font-mono); color: var(--hw-phosphor); text-shadow: 0 0 6px rgba(var(--hw-b-rgb), .8); white-space: nowrap; }
+
+/* Saturn loupe (SSL-745): the selected square fills the well at 3×. */
+.loupe { position: absolute; inset: 0; overflow: hidden; background: #000; }
+.loupe img { position: absolute; width: 300%; height: 300%; max-width: none; max-height: none; object-fit: cover; }
+.loupeTag {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 3;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--hw-c);
+  background: rgba(var(--hw-glass-bottom-rgb), .85);
+  box-shadow: 0 0 12px rgba(var(--hw-c-rgb), .4);
+  color: var(--hw-phosphor);
+  font: 600 14px/1.2 var(--ln-font-mono);
+  pointer-events: none;
+}

@@ -61,6 +61,20 @@ interface InstrumentViewportProps {
   instrumentId?: string
   /** Instrument level: picks the default finish and which finishes are unlocked. */
   level?: number
+  /**
+   * This project's own instrument (SSL-745): knobs and keys that act on its data, e.g. the
+   * transit telescope's TIME / BIN / FOLD. Drawn as a second plate under the optics.
+   */
+  module?: InstrumentModule
+}
+
+export interface InstrumentModule {
+  /** Engraved plate name, e.g. "PHOTOMETRY · TP-02". */
+  name: string
+  testId: string
+  /** Lamps on the plate. */
+  lights?: ReactNode
+  content: ReactNode
 }
 
 const FinishContext = createContext<InstrumentFinish>(INSTRUMENT_FINISHES[0])
@@ -89,6 +103,23 @@ function dialAngle(value: number, min: number, max: number): number {
   const span = max - min
   const t = span === 0 ? 0 : (value - min) / span
   return -135 + Math.min(1, Math.max(0, t)) * 270
+}
+
+export function InstrumentKnob(props: Parameters<typeof Knob>[0]) { return <Knob {...props} /> }
+export function InstrumentSwitch(props: Parameters<typeof Switch>[0]) { return <Switch {...props} /> }
+
+/** A glass keycap for a project module: one tap, one action (SNAP, FILTER, BIN). */
+export function InstrumentModuleKey({ testId, label, readout, pressed, disabled, onClick }: { testId: string; label: string; readout?: string; pressed?: boolean; disabled?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={styles.moduleKey} data-testid={testId} aria-pressed={pressed} disabled={disabled} onClick={onClick}>
+      <span className={styles.moduleKeyLabel}>{label}</span>
+      {readout != null && <span className={styles.moduleKeyReadout}>{readout}</span>}
+    </button>
+  )
+}
+
+export function InstrumentLamp({ label, on, tone }: { label: string; on: boolean; tone?: 'amber' }) {
+  return <><span className={styles.led} data-on={on ? 'true' : 'false'} data-tone={tone} />{label}</>
 }
 
 function Knob({
@@ -267,6 +298,7 @@ export default function InstrumentViewport({
   briefing,
   instrumentId = 'instrument',
   level = 1,
+  module,
 }: InstrumentViewportProps) {
   // Device-local choice, read after mount so the server render (AUTO) hydrates cleanly.
   const [finishChoice, setFinishChoice] = useState<string>(AUTO_FINISH)
@@ -389,6 +421,15 @@ export default function InstrumentViewport({
                 <Switch label="INVERT" testId="instrument-invert" pressed={view.invert} onToggle={() => setView(current => ({ ...current, invert: !current.invert }))} />
               </div>
             </div>
+            {module && (
+              <section className={styles.module} data-testid={module.testId} aria-label={module.name}>
+                <div className={styles.plate}>
+                  <span className={styles.plateName}>{module.name}</span>
+                  {module.lights && <span className={styles.lights}>{module.lights}</span>}
+                </div>
+                <div className={styles.moduleBody}>{module.content}</div>
+              </section>
+            )}
             <span className={styles.vent} aria-hidden="true" />
           </div>
 

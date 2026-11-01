@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
-import AsteroidSkyPlot from '@/components/game/AsteroidSkyPlot'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentStandbyViewport } from '@/components/game/instrument-viewport/InstrumentViewport'
+import AsteroidSkyPlot, { SKY_FIELD_LIMITS, eclipticLatitude } from '@/components/game/AsteroidSkyPlot'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch } from '@/components/game/instrument-viewport/InstrumentViewport'
+import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
@@ -34,6 +35,11 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   const [loadFailed, setLoadFailed] = useState(false)
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
+  // SSL-745: astrometry module — FIELD narrows the sky chart around the object; GRID and ECLIPTIC switch overlays.
+  const [field, setField] = useState(1)
+  const [showGrid, setShowGrid] = useState(true)
+  const [showEcliptic, setShowEcliptic] = useState(true)
+  useEffect(() => { setField(1) }, [candidate?.id])
 
   useEffect(() => {
     if (visualCandidate) {
@@ -151,6 +157,22 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   const classification: AsteroidClassification | undefined = classifications[candidate.id]
 
+  const beta = eclipticLatitude(candidate.ra, candidate.decl)
+  const fieldDeg = 180 / field
+  const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
+    const [verb, arg] = line.trim().toUpperCase().split(/\s+/)
+    if (verb === 'FIELD') {
+      const n = Number(arg)
+      if (!Number.isFinite(n) || !arg) return { view, lines: [`> FIELD  ×${field.toFixed(1)} · ${fieldDeg.toFixed(0)}°`] }
+      const next = Math.min(SKY_FIELD_LIMITS.max, Math.max(SKY_FIELD_LIMITS.min, n))
+      setField(next)
+      return { view, lines: [`> FIELD  ×${next.toFixed(1)} · ${(180 / next).toFixed(0)}°`] }
+    }
+    if (verb === 'GRID') { setShowGrid(on => !on); return { view, lines: [`> GRID  ${showGrid ? 'OFF' : 'ON'}`] } }
+    if (verb === 'ECLIPTIC') { setShowEcliptic(on => !on); return { view, lines: [`> ECLIPTIC  ${showEcliptic ? 'OFF' : 'ON'} · LAT ${beta >= 0 ? '+' : ''}${beta.toFixed(1)}°`] } }
+    return null
+  }
+
   const castVerdict = (id: AsteroidVerdict) => {
     if (classification) return
     onSubmit(candidate.id, id)
@@ -167,6 +189,18 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       onBack={onBack}
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       devBar={devBar}
+      onCommand={onCommand}
+      module={{
+        name: 'ASTROMETRY · AS-03',
+        testId: 'neocp-astrometry',
+        lights: <InstrumentLamp label="NEAR ECL" on={Math.abs(beta) < 10} tone="amber" />,
+        content: <>
+          <InstrumentKnob label="FIELD" testId="neocp-field" min={SKY_FIELD_LIMITS.min} max={SKY_FIELD_LIMITS.max} step={0.5} value={field} readout={`${fieldDeg < 20 ? fieldDeg.toFixed(1) : fieldDeg.toFixed(0)}°`} onChange={setField} />
+          <InstrumentModuleKey testId="neocp-beta" label="ECL LAT" readout={`${beta >= 0 ? '+' : ''}${beta.toFixed(1)}°`} pressed={field > 1} onClick={() => setField(f => f > 1 ? 1 : 6)} />
+          <InstrumentSwitch label="GRID" testId="neocp-grid" pressed={showGrid} onToggle={() => setShowGrid(on => !on)} />
+          <InstrumentSwitch label="ECLIPTIC" testId="neocp-ecliptic" pressed={showEcliptic} onToggle={() => setShowEcliptic(on => !on)} />
+        </>,
+      }}
       caption={(
         <p className={viewportStyles.caption} data-testid="neocp-data-provenance">
           RA {candidate.ra.toFixed(4)}h · DEC {candidate.decl.toFixed(4)}°
@@ -190,6 +224,9 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
           vMag={candidate.vMag}
           arcDays={candidate.arcDays}
           lastSeenDays={candidate.lastSeenDays}
+          field={field}
+          showGrid={showGrid}
+          showEcliptic={showEcliptic}
         />
       )}
       answers={classification ? (
