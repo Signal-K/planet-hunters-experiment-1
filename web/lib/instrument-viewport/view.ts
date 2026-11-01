@@ -37,6 +37,8 @@ export const INSTRUMENT_LIMITS = {
   exposureMin: 0.6,
   exposureMax: 1.8,
   stretchScale: 1.7,
+  /** Aiming at 1x has nothing to pan into, so the first aim press zooms to this (Liam, 31.10). */
+  aimZoom: 1.5,
 } as const
 
 export interface InstrumentOptics {
@@ -91,6 +93,8 @@ export function nudgeAim(view: InstrumentView, direction: 'n' | 's' | 'e' | 'w' 
   if (direction === 'reset') return { ...view, panX: 0, panY: 0 }
   const step = INSTRUMENT_LIMITS.panStep
   const limit = INSTRUMENT_LIMITS.pan
+  // Pan only reaches into the zoomed-in overflow (see .optics), so at 1x zoom in first.
+  if (view.zoom < INSTRUMENT_LIMITS.aimZoom) view = { ...view, zoom: INSTRUMENT_LIMITS.aimZoom }
   if (direction === 'n') return { ...view, panY: clamp(round2(view.panY - step), -limit, limit) }
   if (direction === 's') return { ...view, panY: clamp(round2(view.panY + step), -limit, limit) }
   if (direction === 'e') return { ...view, panX: clamp(round2(view.panX + step), -limit, limit) }

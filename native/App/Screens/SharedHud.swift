@@ -93,14 +93,20 @@ struct HudChips: View {
     var onSell: (() -> Void)? = nil
     var compact = false
     @State private var stashOpen = false
+    @State private var syncTrayOpen = false
     @Environment(Services.self) private var services: Services?
     @Environment(\.helpButtonReserve) private var helpReserve
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     var body: some View {
         HStack(spacing: 4) {
-            if let label = SyncChip.label(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0) {
+            // SSL-729: always shown, so "synced" is visible too; a tap opens the sync tray.
+            let label = SyncChip.label(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0) ?? "SYNCED"
+            Button { syncTrayOpen.toggle() } label: {
                 SyncChip(label: label, warn: !(services?.online ?? true) || (services?.failedWrites ?? 0) > 0, compact: horizontalSizeClass == .compact)
             }
+            .buttonStyle(.plain)
+            .accessibilityHint("Shows what is saved on this device and what has reached your account")
+            .popover(isPresented: $syncTrayOpen) { SyncTrayView().presentationCompactAdaptation(.popover) }
             // One line always: with the sync chip and the help button the row is tight, and "₣9.0 / M" wrapped.
             Text(Economy.format(francs: francs)).font(AppFont.mono(13)).foregroundStyle(Glass.cyan)
                 .lineLimit(1).fixedSize(horizontal: true, vertical: false)
@@ -169,6 +175,7 @@ struct SyncChip: View {
     private var compactIcon: String {
         if label.hasPrefix("OFFLINE") { return "wifi.slash" }
         if label.hasPrefix("NOT") { return "exclamationmark.triangle" }
+        if label == "SYNCED" { return "checkmark.icloud" }
         return "arrow.triangle.2.circlepath"
     }
     var body: some View {
@@ -187,5 +194,52 @@ struct SyncChip: View {
         .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
         .accessibilityElement(children: .combine).accessibilityLabel("Sync status \(label)")
+    }
+}
+
+/// SSL-729 sync tray (web `SyncTray`): where progress is, each waiting change, and Upload now. Two-tone style.
+struct SyncTrayView: View {
+    @Environment(Services.self) private var services: Services?
+    @State private var items: [String] = []
+    @State private var trying = false
+    @State private var unreachable = false
+    private var state: SyncTray.State {
+        SyncTray.state(online: services?.online ?? true, pending: services?.pendingWrites ?? 0, failed: services?.failedWrites ?? 0)
+    }
+    var body: some View {
+        let copy = SyncTray.copy(state, waiting: services?.pendingWrites ?? 0)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Circle().fill(state == .synced ? Glass.cyan : state == .waiting ? Color(red: 0.5, green: 0.69, blue: 1) : Color(red: 0.89, green: 0.53, blue: 0.49)).frame(width: 12, height: 12)
+                Text(copy.title.uppercased()).font(AppFont.display(16, "Bold")).tracking(1.2)
+            }
+            Text(copy.body).font(AppFont.body(15, "Regular")).fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(items.prefix(6).enumerated()), id: \.offset) { _, name in
+                Text(name).font(AppFont.body(14, "Regular")).frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12).padding(.vertical, 10)
+                    .background(Color(red: 0.24, green: 0.17, blue: 0.46).opacity(0.45), in: RoundedRectangle(cornerRadius: 12))
+            }
+            if items.count > 6 { Text("\(items.count - 6) more").font(AppFont.body(14, "Regular")) }
+            if unreachable && (services?.pendingWrites ?? 0) > 0 {
+                Text("Could not reach the server. Your changes stay on this device and upload by themselves when you reconnect.")
+                    .font(AppFont.body(14, "Regular")).foregroundStyle(Glass.ink.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
+            }
+            if (services?.online ?? false) && (services?.pendingWrites ?? 0) > 0 {
+                Button {
+                    trying = true; unreachable = false
+                    services?.flush()
+                    Task { try? await Task.sleep(for: .seconds(5)); trying = false; unreachable = (services?.pendingWrites ?? 0) > 0 }
+                } label: {
+                    Text(trying ? "TRYING…" : "UPLOAD NOW").font(AppFont.display(14, "Bold")).tracking(1.1)
+                        .foregroundStyle(Theme.ink).frame(maxWidth: .infinity, minHeight: 48)
+                        .background(Theme.paper, in: Capsule())
+                }.buttonStyle(.plain).disabled(trying)
+            }
+        }
+        .foregroundStyle(Glass.ink)
+        .padding(16)
+        .frame(width: 320)
+        .background(Color(red: 0.03, green: 0.06, blue: 0.13).opacity(0.94))
+        .task(id: services?.pendingWrites ?? 0) { items = await services?.pendingDescriptions() ?? [] }
     }
 }

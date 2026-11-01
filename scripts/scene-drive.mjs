@@ -18,12 +18,13 @@
  *   node scripts/scene-drive.mjs wait <ms>
  *   node scripts/scene-drive.mjs shot [--all]         screenshot now; --all = three viewports
  *   node scripts/scene-drive.mjs size <w>x<h>
+ *   node scripts/scene-drive.mjs offline on|off       cut or restore the browser's network (airplane mode)
  *   node scripts/scene-drive.mjs close
  *
  * Screenshots go to .scene-shots/ (gitignored).
  */
 import { createRequire } from 'node:module'
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync, spawn, spawnSync } from 'node:child_process'
@@ -31,6 +32,7 @@ import { execFileSync, spawn, spawnSync } from 'node:child_process'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const shotsDir = join(root, '.scene-shots')
 const profileDir = join(root, '.scene-shots', '.browser')
+const offlineFile = join(root, '.scene-shots', '.offline')
 const PORT = Number(process.env.SCENE_DRIVE_PORT ?? 9333)
 const WEB = `http://localhost:${process.env.LANDNAM_WEB_PORT ?? 4320}`
 const VIEWPORTS = { phone: [390, 844], landscape: [926, 428], desktop: [1440, 900] }
@@ -50,6 +52,13 @@ if (command === 'serve') {
     args: [`--remote-debugging-port=${PORT}`],
   })
   if (context.pages().length === 0) await context.newPage()
+  // `offline on|off` flips a flag file; the browser's owner applies it, since
+  // network emulation only lasts as long as the session that set it.
+  let offline = false
+  setInterval(() => {
+    const want = existsSync(offlineFile)
+    if (want !== offline) { offline = want; context.setOffline(want).catch(() => {}) }
+  }, 200)
   await new Promise(() => {})
 }
 
@@ -189,6 +198,13 @@ switch (command) {
       .filter(s => !s.includes('""') || s.includes('[')))
     console.log(`url ${page.url().replace(WEB, '')}`)
     console.log([...new Set(items)].join('\n'))
+    break
+  }
+  case 'offline': {
+    const on = positional[0] !== 'off'
+    if (on) writeFileSync(offlineFile, '1'); else rmSync(offlineFile, { force: true })
+    await page.waitForTimeout(600)
+    label = `offline-${on ? 'on' : 'off'}`
     break
   }
   case 'shot':

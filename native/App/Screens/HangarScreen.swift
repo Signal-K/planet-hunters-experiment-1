@@ -148,6 +148,12 @@ struct HangarScreen: View {
         .accessibilityLabel("Vehicle blueprint")
     }
 
+    /// Each unlocked rocket's role in the set-up mission (SSL-728): only the smallest that fits is built for it.
+    private var jobRoles: [String: Rockets.JobRole] {
+        guard let mission = store.mission else { return [:] }
+        return Rockets.jobRoles(Rockets.models.filter { !$0.locked }, mission: mission) { Rockets.compatible($0, with: mission) && $0.maxOrbit >= mission.requires.maxOrbit }
+    }
+
     private func cards(short: Bool, narrow: Bool) -> some View {
         let vehicles: [(id: String, name: String)] = [
             ("explorer", "Explorer"),
@@ -158,11 +164,11 @@ struct HangarScreen: View {
             ForEach(vehicles, id: \.id) { vehicle in
                 let model = Rockets.model(id: vehicle.id)
                 let sealed = model.map { $0.locked || store.player.missionsDone < $0.missionsRequired } ?? false
-                let incompatible = hasMission && (model.flatMap { m in store.mission.map { !Rockets.compatible(m, with: $0) } } ?? false)
+                let role = hasMission ? jobRoles[vehicle.id] : nil
                 let note: String? = sealed
                     ? model.map { "Needs \($0.missionsRequired) \($0.missionsRequired == 1 ? "mission" : "missions")" }
-                    : incompatible ? "Cannot carry this mission" : !hasMission ? "Choose a mission first" : nil
-                let cost = model.map { $0.costFrancs == 0 ? "Free" : Economy.format(francs: $0.costFrancs) } ?? ""
+                    : hasMission && role != .use ? (role?.note ?? "Cannot carry this mission") : !hasMission ? "Choose a mission first" : nil
+                let cost = model.map { $0.costFrancs == 0 ? "No cost" : Economy.format(francs: $0.costFrancs) } ?? ""
                 Button {
                     if note == nil { previewRocketId = vehicle.id }
                 } label: {
@@ -237,7 +243,7 @@ struct HangarScreen: View {
             } label: {
                 VStack(spacing: 2) {
                     Text(model == nil ? "SELECT" : "STAGE").font(AppFont.display(12, "Bold")).tracking(1)
-                    if let model { Text(model.costFrancs == 0 ? "FREE" : Economy.format(francs: model.costFrancs)).font(AppFont.body(11, "Bold")) }
+                    if let model { Text(model.costFrancs == 0 ? "NO COST" : Economy.format(francs: model.costFrancs)).font(AppFont.body(11, "Bold")) }
                 }
                 .foregroundStyle(Theme.ink).padding(.horizontal, narrow ? 8 : 14).frame(minHeight: 52)
                 .background(Glass.cyan, in: RoundedRectangle(cornerRadius: 6))

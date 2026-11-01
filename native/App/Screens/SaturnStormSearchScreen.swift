@@ -36,7 +36,7 @@ struct SaturnStormSearchScreen: View {
             overlay: { grid(locked: saved != nil) },
             answers: {
                 if let saved {
-                    Panel(accent: Theme.teal) { Text("Annotation saved: \(saved.verdict.rawValue.capitalized)").font(AppFont.display(16)) }
+                    Panel(accent: Theme.teal) { Text("Classification submitted: \(saved.verdict.rawValue.capitalized)").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
                         ForEach(SaturnVerdict.allCases, id: \.self) { v in

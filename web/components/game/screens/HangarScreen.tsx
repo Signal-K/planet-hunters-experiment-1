@@ -6,6 +6,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import HangarBay from './HangarBay'
 import { formatCurrency } from '@/lib/format'
+import type { RocketJobRole } from '@/lib/rockets'
 import { captureGameEvent } from '@/lib/posthog'
 import { kitRocketBuilt, markRocketRolloutPending } from '@/lib/rocket-rollout'
 import styles from './HangarScreen.module.css'
@@ -21,8 +22,8 @@ interface HangarScreenProps {
   onBack: () => void
   /** Title of the mission this vehicle is being built for; null when no mission is set up yet. */
   missionTitle?: string | null
-  /** Rocket ids that can carry the set-up mission; null when there is no mission context. */
-  compatibleRocketIds?: string[] | null
+  /** Each unlocked rocket's role in the set-up mission (SSL-728); null when there is no mission context. */
+  rocketRoles?: Record<string, RocketJobRole> | null
   /** Tier of the vehicle standing in the bay, or null when the bay is empty. */
   stagedTier?: number | null
   /** The staged vehicle currently associated with this mission, if any. */
@@ -50,12 +51,12 @@ function RocketThumbnail({ rocketId, tier }: { rocketId?: string; tier: number }
 export default function HangarScreen({
   francs, missionsDone, shipCustomizerParts, landingResearched,
   onConfirmShipCustomizerBuild, onBack,
-  missionTitle = null, compatibleRocketIds = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket,
+  missionTitle = null, rocketRoles = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket,
 }: HangarScreenProps) {
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const [previewRocketId, setPreviewRocketId] = useState<string | null>(selectedRocketId)
   const installed = shipCustomizerParts ?? {}
-  const hasMission = compatibleRocketIds !== null
+  const hasMission = rocketRoles !== null
 
   const build = (rocketId: string) => {
     const rocket = ROCKET_MODELS.find(model => model.id === rocketId)
@@ -65,7 +66,8 @@ export default function HangarScreen({
   }
 
   const previewRocket = ROCKET_MODELS.find(model => model.id === previewRocketId) ?? null
-  const previewReady = previewRocket && hasMission && compatibleRocketIds.includes(previewRocket.id)
+  // Only the smallest rocket that fits the job is built for it; bigger ones are for more cargo or a farther orbit.
+  const previewReady = previewRocket && hasMission && rocketRoles[previewRocket.id]?.kind === 'use'
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="hangar-screen">
@@ -138,7 +140,7 @@ export default function HangarScreen({
             onClick={() => previewRocket && build(previewRocket.id)}
           >
             {previewRocket ? `Stage ${previewRocket.name}` : 'Select a vehicle'}
-            {previewRocket && <small>{previewRocket.costFrancs === 0 ? 'FREE' : formatCurrency(previewRocket.costFrancs, { compact: true })}</small>}
+            {previewRocket && <small>{previewRocket.costFrancs === 0 ? 'NO COST' : formatCurrency(previewRocket.costFrancs, { compact: true })}</small>}
           </button>
         </section>
       )}
@@ -147,12 +149,13 @@ export default function HangarScreen({
         {VEHICLES.map(vehicle => {
           const rocket = ROCKET_MODELS.find(model => model.id === vehicle.rocketId)
           const sealed = !!rocket && (rocket.locked || missionsDone < rocket.missionsRequired)
-          const incompatible = !!rocket && hasMission && !compatibleRocketIds.includes(rocket.id)
+          const role = rocket && hasMission ? rocketRoles[rocket.id] : undefined
+          const incompatible = !!rocket && hasMission && role?.kind !== 'use'
           const waiting = !hasMission
-          const cost = rocket ? (rocket.costFrancs === 0 ? 'Free' : formatCurrency(rocket.costFrancs, { compact: true })) : ''
+          const cost = rocket ? (rocket.costFrancs === 0 ? 'No cost' : formatCurrency(rocket.costFrancs, { compact: true })) : ''
           const note = sealed && rocket
             ? `Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`
-            : incompatible ? 'Cannot carry this mission' : waiting ? 'Choose a mission first' : null
+            : incompatible ? (role && 'note' in role ? role.note : 'Cannot carry this mission') : waiting ? 'Choose a mission first' : null
           const disabled = sealed || incompatible || waiting
           return (
             <button

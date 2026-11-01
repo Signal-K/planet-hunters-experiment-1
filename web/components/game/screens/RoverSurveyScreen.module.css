@@ -17,109 +17,35 @@
   border-radius: 0;
 }
 
+/* Orionids brief, two-tone mission style: a dark translucent rounded panel,
+   cream text, cyan eyebrow. It sits right of the Menu button, or under it on phones. */
 .eventBrief {
   position: absolute;
   z-index: 3;
-  top: 16px;
-  left: 72px;
+  top: 12px;
+  left: 124px;
   display: grid;
   gap: 4px;
-  width: min(360px, calc(100% - 88px));
-  padding: 12px 14px;
-  border: 2px solid var(--ln-cyan);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-blueprint-paper) 94%, transparent);
-  color: var(--ln-blueprint-ink);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-blue) 30%, transparent);
+  width: min(340px, calc(100% - 140px));
+  padding: 12px 16px;
+  border: 1px solid rgba(244, 239, 228, .28);
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(60, 44, 118, .86), rgba(22, 104, 148, .86));
+  color: #f4efe4;
+  box-shadow: 0 8px 24px rgba(4, 10, 20, .4), inset 0 1px 0 rgba(255, 255, 255, .12);
 }
-
-/* Phones: the top row holds the cog, chips and the OPS strip, so the brief sits under them. */
 @media (max-width: 599px) {
-  .eventBrief { top: 140px; left: 16px; width: calc(100% - 32px); }
+  .eventBrief { top: 68px; left: 16px; width: calc(100% - 32px); }
 }
-.eventBrief span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); color: var(--ln-blueprint-blue); }
-.eventBrief strong { font: 700 16px/1.2 var(--ln-font-display); }
-.eventBrief small { font: 14px/1.35 var(--ln-font-body); }
+.eventBrief span { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; color: #9de7ef; }
+.eventBrief strong { font: 800 16px/1.2 var(--ln-font-display); }
+.eventBrief small { font: 600 14px/1.35 var(--ln-font-body); color: #e6e1d6; }
 
-.chrome {
+/* The laser mining controls (MiningControls) position themselves; this layer only lets taps through to the field. */
+.controls {
   position: absolute;
   inset: 0;
   z-index: 4;
   pointer-events: none;
 }
-
-.cog,
-.clock,
-.chips,
-.hud,
-.readout {
-  pointer-events: auto;
-}
-
-/* Survey is an operation surface: its readout and scan controls are the only chrome it needs. */
-.cog,
-.clock,
-.chips { display: none; }
-
-.cog {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
-  cursor: pointer;
-}
-
-.clock {
-  position: absolute;
-  top: 8px;
-  left: 60px;
-}
-
-.clock :global(.scene-chip),
-.chips :global(.scene-chip) {
-  height: 44px;
-  min-height: 44px;
-}
-
-.chips {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.hud {
-  position: absolute;
-  right: 0;
-  bottom: 8px;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 0 8px;
-}
-
-.readout {
-  max-width: min(360px, calc(100% - 16px));
-  padding: 8px 12px;
-  border: 1px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
-  font: 700 14px/1.3 var(--ln-font-body);
-  text-align: center;
-}
-
-.dock {
-  pointer-events: auto;
-}
+.controls > * { pointer-events: auto; }

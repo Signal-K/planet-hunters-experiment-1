@@ -58,11 +58,12 @@ describe('control station registry', () => {
     expect(row(launched, 'saturn-imager')?.openSignal?.inspectorScreen).toBe('saturn-storm-search')
   })
 
-  it('keeps a built ground telescope closed until the shared feed is live', () => {
+  it('opens a built ground telescope on its own, without the Space Telescope', () => {
     const player: StationPlayer = { freeOperations: true, placed: ['ground-telescope'] }
     const model = buildControlStation({ player, signals, bodyId: 'all' })
     expect(model.groups.flatMap(group => group.rows).map(item => item.equipmentId)).toEqual(['ground-telescopes'])
-    expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Standing by', readyCount: 0, openSignal: null, buildPrompt: false })
+    expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Observing', live: true, buildPrompt: false })
+    expect(model.groups[0]?.rows[0]?.openSignal?.inspectorScreen).toBe('asteroid-discovery')
     expect(model.markers.map(marker => marker.equipmentId)).toEqual(['ground-telescopes'])
     expect(model.filters.map(filter => filter.id)).toEqual(['all', 'earth'])
   })

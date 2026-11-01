@@ -1,4 +1,4 @@
-/* Mining d-pad (rover style) and laser gauge. Blue/teal for normal, brick red for low. No orange. */
+/* Mining d-pad (two-tone tiles) and laser gauge. Blue/teal for normal, brick red for low. No orange. */
 .dpad {
   position: absolute;
   left: max(16px, env(safe-area-inset-left));
@@ -11,30 +11,33 @@
     ". up ."
     "left hub right"
     ". down .";
+  gap: 4px;
   touch-action: none;
   user-select: none;
 }
+/* Two-tone pads: dark translucent rounded tiles with a cream edge, like the menu buttons. */
 .pad {
   min-width: 56px;
   min-height: 56px;
   padding: 0;
-  border: 1.5px solid rgba(255, 255, 255, 0.92);
-  background: #05080f;
-  color: #ffffff;
+  border: 2px solid rgba(244, 239, 228, 0.6);
+  border-radius: 14px;
+  background: rgba(8, 16, 34, 0.72);
+  color: #f4efe4;
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 10px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(4, 10, 20, 0.35);
 }
-.pad:active { background: #12324a; color: #fff; box-shadow: 0 0 16px rgba(159, 214, 228, 0.85); transform: translateY(1px); box-shadow: none; }
+.pad:active { background: rgba(88, 208, 234, 0.35); border-color: #58d0ea; color: #fff; transform: translateY(1px); box-shadow: none; }
 .pad:disabled { opacity: 0.45; cursor: default; }
 .pad:focus-visible { outline: 2px solid #2f6fa8; outline-offset: 2px; }
 .obstacleAhead { background: rgba(47, 111, 168, 0.8); border-color: #9fd6e4; box-shadow: 0 0 0 3px rgba(159, 214, 228, 0.35); }
-.up { grid-area: up; border-radius: 6px 6px 0 0; }
-.left { grid-area: left; border-radius: 6px 0 0 6px; }
-.right { grid-area: right; border-radius: 0 6px 6px 0; }
-.down { grid-area: down; border-radius: 0 0 6px 6px; }
-.center { grid-area: hub; width: 100%; height: 100%; background: rgba(14, 22, 34, 0.62); }
+.up { grid-area: up; }
+.left { grid-area: left; }
+.right { grid-area: right; }
+.down { grid-area: down; }
+.center { grid-area: hub; width: 100%; height: 100%; }
 
 .gauge {
   position: absolute;
@@ -179,17 +182,19 @@
   min-height: 44px;
   padding: 6px 14px;
   display: grid; justify-items: center; gap: 2px;
-  border: 1.5px solid var(--ln-bp-paper);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-bp-ink) 88%, transparent);
-  color: var(--ln-bp-paper);
+  border: 2px solid rgba(244, 239, 228, 0.5);
+  border-radius: 16px;
+  background: rgba(8, 16, 34, 0.74);
+  color: #f4efe4;
+  box-shadow: 0 4px 12px rgba(4, 10, 20, 0.35);
   font: 800 14px/1.15 var(--ln-font-display, system-ui);
   letter-spacing: 0.08em; text-transform: uppercase;
   cursor: pointer;
 }
-.progress[data-ready] { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-bp-ink); }
-.progressCue { font-size: 14px; color: var(--ln-cyan); }
-.progress[data-ready] .progressCue { color: var(--ln-bp-ink); }
+/* Ready to go home: the cream contract button, the two-tone call to action. */
+.progress[data-ready] { border-color: #f4efe4; background: #f4efe4; color: #142840; }
+.progressCue { font-size: 14px; color: #9de7ef; }
+.progress[data-ready] .progressCue { color: #142840; }
 .progress:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
 
 /* Phones: d-pad and FIRE sit in the bottom corners; progress stacks just above FIRE when there is no room between. */
@@ -224,8 +229,9 @@
 }
 :global(.mining-start-brief) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
 :global(.mining-start-brief__eyebrow), :global(.mining-menu-eyebrow) { font: 800 14px/1 var(--ln-font-display, system-ui); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ln-cyan); }
-/* The menu sits on the light blueprint sheet: ink colours, not the in-scene cyan. */
-:global(.mining-guide-dock) :global(.mining-menu-eyebrow) { color: var(--ln-bp-blue); }
+/* The menu is two-tone (cream on translucent purple and teal): cyan eyebrow, warm dim line. */
+:global(.mining-guide-dock) :global(.mining-menu-eyebrow) { color: #9de7ef; }
+:global(.mining-guide-dock) :global(.mining-menu-head) span:last-child { color: #d9d4c8; font-weight: 600; }
 :global(.mining-menu-head) { display: grid; gap: 4px; min-width: 0; flex: 1 1 auto; }
 :global(.mining-menu-head) strong { font: 800 20px/1.15 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
 :global(.mining-menu-head) span:last-child { font: 400 14px/1.4 var(--ln-font-body, system-ui); color: var(--ln-bp-ink-dim); }

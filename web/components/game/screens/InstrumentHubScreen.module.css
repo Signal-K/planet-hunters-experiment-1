@@ -1,27 +1,79 @@
-/* Control Station: the two-tone board (ControlStationBoard.module.css) over the ambient galaxy, as Community research. */
+/* Control station shell (SSL-730): a night sky behind the two-tone console, a toast, and the logbook sheet. */
 .screen.screen {
-  background:
-    radial-gradient(1.5px 1.5px at 12% 18%, rgba(244, 239, 228, .7), transparent),
-    radial-gradient(1px 1px at 34% 62%, rgba(244, 239, 228, .6), transparent),
-    radial-gradient(1.5px 1.5px at 58% 28%, rgba(244, 239, 228, .6), transparent),
-    radial-gradient(1px 1px at 76% 74%, rgba(244, 239, 228, .5), transparent),
-    radial-gradient(1.5px 1.5px at 90% 12%, rgba(244, 239, 228, .6), transparent),
-    linear-gradient(#141c38, #0f1426);
+  background: #0b1428;
+  color: #f4efe4;
+  overflow: hidden;
 }
 
-/* Survey scan, charts and badges sit in the teal half: dark rounded panels and cream text instead of the old white plates. */
-.extras {
-  --ln-panel: rgba(8, 16, 34, .3);
-  --ln-surface-2: rgba(8, 16, 34, .45);
-  --ln-text: #f4efe4;
-  --ln-text-dim: #c9d0c2;
-  --ln-hairline-strong: transparent;
-  --ln-ok: #6fe39a;
-  --ln-ok-soft: rgba(111, 227, 154, .14);
-  display: grid;
-  gap: 14px;
+.grid {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(1px 1px at 8% 14%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 22% 62%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 46% 30%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 68% 80%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 88% 12%, rgba(255, 255, 255, 0.6), transparent),
+    linear-gradient(#0a1226, #12224a);
 }
-.extras:empty { display: none; }
-.extras > section { border-radius: 22px !important; padding: 14px 16px !important; }
-.extras :global(.ln-section-label) { color: #9de7ef; }
-.extras button { border-radius: 16px !important; }
+
+.screen .content { position: absolute; inset: 0; z-index: 2; }
+
+.screen .toast {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: min(92%, 460px);
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgba(8, 16, 34, 0.9);
+  border: 1px solid #58d0ea;
+  color: #f4efe4;
+  font: 600 15px/1.3 var(--ln-font-body);
+  text-align: center;
+}
+
+.screen .sheetBackdrop {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(6, 10, 22, 0.6);
+}
+
+.screen .sheet {
+  width: min(100%, 560px);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(244, 239, 228, 0.28);
+  background: rgba(24, 58, 92, 0.94);
+  color: #f4efe4;
+}
+
+.sheetHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sheetHead h2 { margin: 0; font: 800 20px/1 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; }
+.sheetHead button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(244, 239, 228, 0.45);
+  border-radius: 999px;
+  background: rgba(8, 16, 34, 0.5);
+  color: #f4efe4;
+  cursor: pointer;
+}
+.sheetHead svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+
+.chart { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: rgba(8, 16, 34, 0.35); }

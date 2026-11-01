@@ -42,6 +42,7 @@ import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/Mission
 import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
 import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
+import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/InstrumentFeedSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun, orionidsSurfaceResearchMission } from '@/lib/data/missions'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
@@ -53,7 +54,6 @@ import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 const ORBIT_MS_PER_UNIT = 42 * 1000
 // First-time-only reward for classifying a TESS candidate — repeat looks at an
 // already-classified subject earn nothing (see submitTessClassification).
-const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
 const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
 const RESEARCH_XP_PER_ENCELADUS_CHART = 30
 interface GameLoopOpts {
@@ -860,13 +860,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
       const replayReward = earnsTrainingReplayReward(s.player.flightPlan, 'scan')
-      // The training candidate is deliberately available before Free Ops. Once
-      // it is classified, Galaxy would immediately re-render as its normal
-      // locked Telescope gate because the active try has advanced to Part.
-      // Hand the player directly to that next try instead of leaving them on a
-      // screen which says the activity they just completed is unavailable.
-      const completedTrainingScan = subjectId.startsWith(TRAINING_ID_PREFIX)
-        && currentTrainingTry(s.player.flightPlan) === 'scan'
       const showArtifactNarrative = artifactNarrativeEligible({
         transitSatelliteLevel: s.player.transitSatelliteLevel,
         verdict,
@@ -875,7 +868,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
       const next: GameState = {
         ...s,
-        screen: completedTrainingScan ? 'hangar' : s.screen,
+        // The telescope shows the training result card; its Continue opens the hangar.
+        screen: s.screen,
         player: {
           ...(existing ? s.player : grantWswBadges(s.player, 'citizen-science', submittedAt)),
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,

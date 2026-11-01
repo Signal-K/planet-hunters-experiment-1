@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom, applyBuildGroundTelescope } from '@/lib/systems/EconomySystem'
 import { applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
@@ -73,6 +73,16 @@ export function useEconomyActions(
     setState(s => applyUpgradeBuilding(s, id))
   }, [setState])
 
+  const buildGroundTelescope = useCallback(() => {
+    let built = false
+    setState(s => {
+      const next = applyBuildGroundTelescope(s)
+      built = next !== s
+      return next
+    })
+    return built
+  }, [setState])
+
   const excavateSubsurface = useCallback(() => {
     setState(s => applyExcavateSubsurface(s))
   }, [setState])
@@ -142,7 +152,7 @@ export function useEconomyActions(
 
   return {
     sellMinerals, buyMinerals, setPriceAlert, removePriceAlert, checkPriceAlerts, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding,
-    excavateSubsurface, buildSubsurfaceRoom,
+    excavateSubsurface, buildSubsurfaceRoom, buildGroundTelescope,
     abandonMission,
     confirmShipCustomizerBuild,
   }

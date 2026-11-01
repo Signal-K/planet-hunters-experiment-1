@@ -1,11 +1,25 @@
-/* SSL-497 shared instrument console. Light blueprint paper, ink, and blue.
-   The viewport well stays dark because it is the instrument image, not chrome. */
+/* SSL-497 shared instrument console, moved to the two-tone hardware style (Liam, 31.10;
+   notes/decisions "Two-tone mission style" and "Instruments are controls you look through"):
+   the instrument (controls and screen) on deep blue, the review desk on teal, dark console
+   panels with cream ink and a cyan accent. The old white/lilac blueprint paper is retired. */
 
 .screen {
-  --iv-ink: var(--ln-bp-ink, var(--ln-text));
-  --iv-paper: var(--ln-bp-paper, var(--ln-panel));
-  --iv-blue: var(--ln-bp-blue, var(--ln-cyan));
-  --iv-line: var(--ln-bp-line-strong, var(--ln-hairline-strong));
+  --iv-ink: #f4efe4;
+  --iv-paper: #1a2138;
+  --iv-paper-2: #232c48;
+  --iv-mute: #b8c8c0;
+  --iv-blue: #2fb5d4;
+  --iv-line: rgba(244, 239, 228, .34);
+  color: var(--iv-ink);
+  background:
+    linear-gradient(90deg, rgba(26, 66, 168, .62) 0 62%, rgba(18, 104, 116, .6) 62% 100%),
+    #10182c;
+}
+
+.screen :global(.top-bar) {
+  /* TopBar sets its paper background inline; instruments sit under the two-tone dark chrome instead. */
+  background: #0f1730 !important;
+  border-bottom: 1px solid var(--iv-line);
   color: var(--iv-ink);
 }
 
@@ -141,7 +155,7 @@
   border-radius: var(--ln-r-pill);
   border: 2px solid var(--iv-ink);
   background:
-    radial-gradient(circle at 50% 42%, var(--iv-paper), var(--ln-bp-paper-2, var(--ln-surface-2)));
+    radial-gradient(circle at 50% 42%, var(--iv-paper), var(--iv-paper-2));
   position: relative;
 }
 
@@ -195,7 +209,7 @@
 
 .switchTrack[data-on="true"] {
   align-items: flex-end;
-  background: var(--ln-bp-paper-2, var(--ln-surface-2));
+  background: var(--iv-paper-2);
 }
 
 .switchThumb {
@@ -224,7 +238,9 @@
 .optics {
   position: absolute;
   inset: 0;
-  transform: translate(calc(var(--iv-pan-x) * 28%), calc(var(--iv-pan-y) * 28%)) scale(var(--iv-zoom), calc(var(--iv-zoom) * var(--iv-stretch)));
+  /* Pan is a share (-0.72..0.72) of the zoomed-in overflow, (scale - 1) / 2 of the box on each side,
+     so aiming never pulls the image off the screen and shows the frame behind it (Liam, 31.10). */
+  transform: translate(calc(var(--iv-pan-x) / 0.72 * (var(--iv-zoom) - 1) * 50%), calc(var(--iv-pan-y) / 0.72 * (var(--iv-zoom) * var(--iv-stretch) - 1) * 50%)) scale(var(--iv-zoom), calc(var(--iv-zoom) * var(--iv-stretch)));
   filter: contrast(var(--iv-exposure)) blur(var(--iv-blur)) invert(var(--iv-invert));
   transform-origin: center center;
   transition: transform 80ms linear, filter 80ms linear;
@@ -316,7 +332,7 @@
   flex-direction: column;
   gap: var(--ln-s-1);
   min-height: 0;
-  background: var(--ln-bp-paper-2, var(--ln-surface-2));
+  background: var(--iv-paper-2);
   color: var(--iv-ink);
   border: 2px solid var(--iv-ink);
   border-radius: var(--ln-r-lg);
@@ -387,7 +403,7 @@
   padding: 0;
 }
 
-.commandInput::placeholder { color: var(--ln-bp-ink-mute, var(--ln-text-muted)); }
+.commandInput::placeholder { color: var(--iv-mute); }
 
 .status {
   margin: 0;
@@ -421,15 +437,15 @@
   /* SSL-480: disabled stays readable (>=4.5:1) and keeps the 44px target. */
   min-height: 44px;
   opacity: 1;
-  color: #3d4f60;
-  background: #e8eef5;
+  color: var(--iv-mute);
+  background: rgba(255, 255, 255, .04);
   border-color: var(--iv-line);
   border-style: dashed;
   cursor: not-allowed;
 }
 
 .caption[data-attention="true"] {
-  background: var(--ln-info);
+  background: rgba(47, 181, 212, .28);
 }
 
 .toolButton,
@@ -455,11 +471,11 @@
 
 .toolButton[aria-pressed="true"] {
   background: var(--iv-blue);
-  color: #fff;
+  color: #0a1022;
 }
 
 .toolButton:disabled {
-  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  color: var(--iv-mute);
   border-color: var(--iv-line);
   cursor: not-allowed;
 }
@@ -468,7 +484,7 @@
   display: grid;
   place-items: center;
   border: 2px dashed var(--iv-line);
-  color: var(--ln-bp-ink-mute, var(--ln-text-muted));
+  color: var(--iv-mute);
   background: transparent;
 }
 
@@ -676,7 +692,7 @@
   box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
 }
 .well {
-  background: var(--ln-bp-paper-2, #dfe9f3);
+  background: var(--iv-paper-2);
   box-shadow: 4px 4px 0 rgba(31, 120, 193, 0.28);
 }
 .terminal,
@@ -694,7 +710,7 @@
   gap: var(--ln-s-2);
   padding: var(--ln-s-4);
   text-align: center;
-  background: radial-gradient(circle at 50% 42%, var(--ln-bp-paper-2, var(--iv-paper)), var(--ln-bp-bg, var(--iv-paper)));
+  background: radial-gradient(circle at 50% 42%, var(--iv-paper-2), var(--iv-paper));
 }
 
 .standby strong {
@@ -708,7 +724,7 @@
   margin: 0;
   max-width: 36ch;
   font: 500 14px/1.4 var(--ln-font-body);
-  color: var(--ln-bp-ink-dim, var(--iv-ink));
+  color: var(--iv-mute);
 }
 
 .standbyNote {
@@ -725,3 +741,18 @@
 @media (orientation: landscape) and (max-height: 520px) {
   .knob { width: auto; min-width: 56px; }
 }
+
+/* Steps in the review panel (Liam, 31.10: no clear button that saves or moves on). */
+.step { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; color: var(--iv-mute); font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.step b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--iv-ink); color: #0f1730; font-size: 13px; }
+/* The answer that saves now is the one bright button; the mark tool is a tool, not the call to action. */
+.answer[data-primary="true"] { background: #ecebe8; color: #16171a; border: 2px solid #ecebe8; border-style: solid; }
+.toolButton[aria-pressed="true"] { background: rgba(47, 181, 212, .16); color: var(--iv-ink); border-color: var(--iv-blue); }
+/* The review column keeps every control full size: the terminal never shrinks, the column scrolls if it must. */
+.command { overflow-y: auto; overscroll-behavior: contain; }
+.command > .terminal { flex-shrink: 0; }
+
+/* A single answer (Continue on the result card) spans the row instead of sitting in a third of it. */
+.answers:has(> .answer:only-child) { grid-template-columns: minmax(0, 1fr); }
+/* No reticle over a standby message: it sat on top of the result text. */
+.well:has(.standby) .reticle { display: none; }

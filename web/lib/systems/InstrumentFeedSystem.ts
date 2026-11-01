@@ -7,6 +7,28 @@ export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 export const NEW_MOON_EXTRA_ASTEROID_CANDIDATES = 1
 
+/** Research XP the first classification of a transit subject pays. */
+export const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
+
+/** Structure id of the ground telescope the player builds from the control station. */
+export const GROUND_TELESCOPE_STRUCTURE_ID = 'ground-telescope'
+
+/** Extra asteroid candidates a built ground telescope adds to each daily digest (Liam, 31.10). */
+export const GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES = 1
+
+export function groundTelescopeBuilt(player: { placed?: readonly string[] }): boolean {
+  return !!player.placed?.includes(GROUND_TELESCOPE_STRUCTURE_ID)
+}
+
+/**
+ * The asteroid (NEOCP) feed is online once the player owns a ground telescope
+ * or the orbiting Space Telescope. A ground telescope is cheaper and adds its
+ * own candidates each day; the Space Telescope adds its level's worth.
+ */
+export function asteroidFeedOnline(player: { freeOperations?: boolean; deepSpaceTelescopeBuilt?: boolean; placed?: readonly string[] }): boolean {
+  return !!player.freeOperations && (!!player.deepSpaceTelescopeBuilt || groundTelescopeBuilt(player))
+}
+
 export const SATURN_IMAGER_INSTRUMENT_ID = 'saturn-imager'
 
 export type InstrumentSignalKind = 'transit' | 'deep-space' | 'saturn'
@@ -33,6 +55,8 @@ type DeepSpaceInstrumentFeedPlayer = Pick<
   Player,
   | 'deepSpaceTelescopeLevel'
   | 'asteroidClassifications'
+  | 'deepSpaceTelescopeBuilt'
+  | 'placed'
   | 'instrumentDigestNotifiedOn'
 >
 
@@ -100,7 +124,10 @@ export function deepSpaceInstrumentDigest(
   // SSL-491: on the UTC day of a new moon (monthly) the dark sky serves one
   // extra asteroid candidate. Deterministic: same dateKey, same digest.
   const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
-  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player) + extra)
+  // A player with only a ground telescope has no Space Telescope share.
+  const space = player.deepSpaceTelescopeBuilt === false ? 0 : deepSpaceInstrumentLevel(player)
+  const ground = groundTelescopeBuilt(player) ? GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES : 0
+  return dailyAsteroidCandidates(candidates, dateKey, space + ground + extra)
 }
 
 export function unresolvedDeepSpaceInstrumentDigest(
@@ -173,6 +200,7 @@ export function collectInstrumentSignals(opts: {
     | 'freeOperations'
     | 'transitSatelliteLaunchedAt'
     | 'deepSpaceTelescopeBuilt'
+    | 'placed'
     | 'transitSatelliteLevel'
     | 'satelliteTargetId'
     | 'tessClassifications'
@@ -197,7 +225,7 @@ export function collectInstrumentSignals(opts: {
       })
     }
   }
-  if (opts.player.freeOperations && opts.player.deepSpaceTelescopeBuilt) {
+  if (asteroidFeedOnline(opts.player)) {
     for (const item of unresolvedDeepSpaceInstrumentDigest(opts.asteroids, opts.player, opts.dateKey)) {
       signals.push({
         id: item.id,

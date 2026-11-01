@@ -32,4 +32,6 @@ public actor CloudSync {
     /// Drops queued writes (another account signed in).
     public func clear() async { await outbox.clear() }
     public func snapshot() async -> OutboxSnapshot { await outbox.snapshot() }
+    /// Every write still waiting, oldest first (the sync tray lists them).
+    public func pending() async -> [OutboxItem] { await outbox.pending() }
 }

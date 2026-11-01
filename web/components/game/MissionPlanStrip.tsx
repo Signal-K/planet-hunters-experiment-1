@@ -1,15 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { rocketCompatibleWithMission } from '@/lib/rockets'
+import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
 import styles from './MissionPlanStrip.module.css'
+
+// The Solar System map the target picker used; Pixi needs the browser, so it loads client-side only.
+const PixiGalaxyMap = dynamic(() => import('@/components/TargetPicker/PixiGalaxyMap'), { ssr: false })
 
 type Game = ReturnType<typeof useGame>
 type Sheet = 'destination' | 'vehicle' | null
@@ -54,10 +58,10 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
   const targets = sheet === 'destination'
     ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
     : []
-  const rockets = sheet === 'vehicle'
-    ? ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
-    : []
+  // Every unlocked rocket, each with its role in this job: the smallest that fits is the one to fly (SSL-728).
+  const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= player.missionsDone) : []
+  const roles = rocketJobRoles(rockets, mission, model => rocketCompatibleWithMission(model, mission)
+    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
 
   return (
     <div className={styles.host} data-testid="mission-plan-strip">
@@ -94,35 +98,61 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
       )}
       {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
 
-      {sheet && (
-        <div className={styles.sheet} role="group" aria-label={sheet === 'destination' ? 'Choose destination' : 'Choose vehicle'} data-testid={`plan-sheet-${sheet}`}>
-          <div className={styles.sheetHead}>
-            <strong>{sheet === 'destination' ? 'Destination' : 'Vehicle'}</strong>
+      {sheet === 'destination' && (
+        <div className={styles.mapSheet} role="group" aria-label="Choose destination" data-testid="plan-sheet-destination">
+          <div className={styles.mapHead}>
+            <strong>Destination</strong>
             <button type="button" onClick={() => setSheet(null)}>Close</button>
           </div>
-          {sheet === 'destination' && <p>Only targets with the required minerals, range, cargo and drill are shown.</p>}
-          <ul>
-            {sheet === 'destination' && targets.map(t => (
+          <p>Lit bodies suit this mission: the minerals it needs, in range, room in the hold.</p>
+          <div className={styles.mapField} data-testid="plan-destination-map">
+            <PixiGalaxyMap
+              mission={mission}
+              targets={game.catalog.targets}
+              compatibleIds={new Set(targets.map(t => t.id))}
+              pickedId={target.id}
+              onPick={id => { game.onPickTarget(id); setSheet(null) }}
+            />
+          </div>
+          <ul className={styles.mapList}>
+            {targets.map(t => (
               <li key={t.id}><button type="button" data-current={t.id === target.id || undefined} onClick={() => { game.onPickTarget(t.id); setSheet(null) }}>
-                <strong>{t.name}</strong><span>{t.type} · orbit {t.orbit}</span>
+                <strong>{t.name}</strong>
+                <span>{t.type} · orbit {t.orbit} · {t.minerals.map(id => game.catalog.minerals[id]?.name ?? id).join(', ')}</span>
               </button></li>
             ))}
-            {sheet === 'vehicle' && rockets.map(model => {
-              const cost = model.costFrancs === 0 ? 'Free' : formatCurrency(model.costFrancs, { compact: true })
+            {!targets.length && <li><p>Nothing in range has what this mission needs.</p></li>}
+          </ul>
+        </div>
+      )}
+
+      {sheet === 'vehicle' && (
+        <div className={styles.sheet} role="group" aria-label="Choose vehicle" data-testid="plan-sheet-vehicle">
+          <div className={styles.sheetHead}>
+            <strong>Vehicle</strong>
+            <button type="button" onClick={() => setSheet(null)}>Close</button>
+          </div>
+          <p className={styles.sheetLead}>The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.</p>
+          <ul>
+            {rockets.map(model => {
+              const role = roles.get(model.id) ?? { kind: 'too-small' as const, note: 'Cannot fly this job' }
+              const cost = model.costFrancs === 0 ? 'No cost' : formatCurrency(model.costFrancs, { compact: true })
+              const usable = role.kind === 'use'
               return (
-                <li key={model.id}><button type="button" data-current={model.id === selectedRocket?.id || undefined} onClick={() => {
+                <li key={model.id}><button type="button" data-role={role.kind} data-testid={`plan-vehicle-${model.id}`} data-current={model.id === selectedRocket?.id || undefined} disabled={!usable} onClick={() => {
                   if (player.francs < model.costFrancs) { game.addToast(`Not enough francs: you need ${formatCurrency(model.costFrancs - player.francs, { compact: true })} more`, 'warn'); return }
                   game.onPurchaseRocket(model.id)
                   setSheet(null)
                 }}>
                   <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
-                  <strong>{model.name}<small>Tier {model.tier}</small></strong>
-                  <span className={styles.vehicleOptionStats}><span>CAP {model.stats.cargo}</span><span>RANGE {model.stats.maxOrbit}</span><span>LASER {model.stats.drillTier}</span></span>
-                  <span className={styles.vehicleOptionAction}>Stage · {cost}</span>
+                  <strong>{model.name}<small>{model.stats.cargo}U · ORB {model.stats.maxOrbit}</small></strong>
+                  {usable
+                    ? <span className={styles.vehicleOptionAction}>{model.id === selectedRocket?.id ? 'Staged' : 'Stage'} · {cost}</span>
+                    : <span className={styles.vehicleOptionNote}>{role.note}</span>}
                 </button></li>
               )
             })}
-            {((sheet === 'destination' && !targets.length) || (sheet === 'vehicle' && !rockets.length)) && <li><p>Nothing else fits this contract.</p></li>}
+            {!rockets.length && <li><p>No rocket is unlocked yet.</p></li>}
           </ul>
         </div>
       )}

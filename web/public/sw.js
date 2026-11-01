@@ -10,7 +10,7 @@
 // restoring the network lets the existing save sync without a new mutation.
 // `make up` is development mode and unregisters this worker.
 
-const CACHE = 'landnam-shell-v5'
+const CACHE = 'landnam-shell-v6'
 
 const SHELL = [
   '/',
@@ -104,8 +104,14 @@ self.addEventListener('fetch', event => {
         return res
       })
       .catch(async () => {
-        const cached = await caches.match(request)
+        const cached = await caches.match(request, { ignoreSearch: url.pathname.startsWith('/game/') })
         if (cached) return cached
+        // SSL-729: every game screen renders from the saved state, so any game
+        // shell can open an unvisited /game/<screen> offline; the hub shell first.
+        if (request.mode === 'navigate' && url.pathname.startsWith('/game/')) {
+          const shell = await caches.match('/game/hub') ?? await caches.match('/game')
+          if (shell) return shell
+        }
         const offline = await caches.match('/offline')
         return offline ?? new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
       })
@@ -117,6 +123,23 @@ self.addEventListener('fetch', event => {
 // durable caching instead of hard-coding a build-specific asset list.
 self.addEventListener('message', event => {
   const data = event.data
+  // SSL-729: the page sends every /game/<screen> path once it is online, so a
+  // screen the player never opened still has its shell when the network drops.
+  if (data?.type === 'CACHE_SCREENS' && Array.isArray(data.paths)) {
+    const paths = data.paths
+      .filter(path => typeof path === 'string' && /^\/game\/[a-z0-9-]+$/.test(path))
+      .slice(0, 128)
+    event.waitUntil(caches.open(CACHE).then(cache => Promise.all(paths.map(async path => {
+      try {
+        if (await cache.match(path)) return
+        const response = await fetch(path, { credentials: 'same-origin' })
+        if (response.ok) await cache.put(path, response)
+      } catch {
+        // Optional warm-up: a miss only means that screen falls back to the hub shell.
+      }
+    }))))
+    return
+  }
   if (data?.type !== 'CACHE_URLS' || !Array.isArray(data.urls)) return
 
   const urls = data.urls

@@ -6,6 +6,10 @@ import { useGame } from '@/game-context'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { getOutbox } from '@/lib/offline/pbOutbox'
 import type { OutboxSnapshot } from '@/lib/offline/outbox'
+import { syncState } from '@/lib/offline/syncTray'
+import SyncTray from './SyncTray'
+
+const LAST_UPLOAD_KEY = 'ln-last-upload'
 
 export function syncLabel(landnamSynced: boolean, outbox: OutboxSnapshot, online = true): string | null {
   // Offline play keeps going on the local cache; the outbox replays on reconnect (SSL-554).
@@ -42,32 +46,58 @@ export default function LandnamSyncStatus() {
     window.addEventListener('offline', update)
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update) }
   }, [])
+  // SSL-729: the last time the queue emptied while online, so the tray can say when progress last reached the account.
+  const [lastUpload, setLastUpload] = useState<number | null>(null)
+  useEffect(() => {
+    try { const v = Number(window.localStorage.getItem(LAST_UPLOAD_KEY)); if (v > 0) setLastUpload(v) } catch { /* private mode */ }
+  }, [])
+  const [hadWaiting, setHadWaiting] = useState(false)
+  useEffect(() => {
+    if (outbox.waiting > 0) { setHadWaiting(true); return }
+    if (!hadWaiting || !online || outbox.flushing || outbox.failed > 0) return
+    const at = Date.now()
+    setHadWaiting(false)
+    setLastUpload(at)
+    try { window.localStorage.setItem(LAST_UPLOAD_KEY, String(at)) } catch { /* private mode */ }
+  }, [outbox, online, hadWaiting])
   useEffect(() => {
     const box = getOutbox()
     const unsubscribe = box.subscribe(setOutbox)
     const stop = box.start()
     return () => { unsubscribe(); stop() }
   }, [])
+  const [trayOpen, setTrayOpen] = useState(false)
+  const [anchor, setAnchor] = useState<{ left: number; bottom: number } | null>(null)
 
   useTopChipInset()
-  const label = syncLabel(game.landnamSynced, outbox, online)
-  const host = useChipSlot(mounted && !!game.authUserId && !!label)
-  if (!mounted || !game.authUserId || !label) return null
+  // SSL-729: the chip always shows for a signed-in player, so "synced" is something you can see and tap.
+  const label = syncLabel(game.landnamSynced, outbox, online) ?? 'SYNCED'
+  const state = syncState(game.landnamSynced, outbox, online)
+  const host = useChipSlot(mounted && !!game.authUserId)
+  if (!mounted || !game.authUserId) return null
 
   const chip = (
-    <span
+    <button
+      type="button"
       data-ui-zone={UI_ZONES.statusUtility}
       data-testid="sync-chip"
       className={host ? 'scene-chip sync-chip' : 'scene-chip sync-chip sync-chip--floating'}
       data-offline={online ? undefined : 'true'}
-      title="Progress is saved on this device and uploads when this reconnects"
-      aria-label={String(label)}
+      data-state={state}
+      aria-expanded={trayOpen}
+      aria-label={`${label}. Open sync details`}
+      onClick={event => { const r = event.currentTarget.getBoundingClientRect(); setAnchor({ left: r.left, bottom: r.bottom }); setTrayOpen(open => !open) }}
     >
       <span aria-hidden="true" className="sync-chip__dot" />
       <span className="sync-chip__label" style={{ display: 'inline' }}>{label}</span>
-    </span>
+    </button>
   )
-  return host ? createPortal(chip, host) : chip
+  return (
+    <>
+      {host ? createPortal(chip, host) : chip}
+      {trayOpen && <SyncTray state={state} outbox={outbox} box={getOutbox()} lastUpload={lastUpload} online={online} anchor={anchor} onClose={() => setTrayOpen(false)} />}
+    </>
+  )
 }
 
 /**

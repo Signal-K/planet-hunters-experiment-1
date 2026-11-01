@@ -32,7 +32,8 @@ export const MAP_HEIGHT = 320
 export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'saturnImagerLaunchedAt'
 
 /** Structure id a player places to own ground telescopes. */
-export const GROUND_TELESCOPE_STRUCTURE_ID = 'ground-telescope'
+export { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
+import { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
 
 export interface StationPlayer {
   freeOperations?: boolean
@@ -119,7 +120,8 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
     projectIds: ['asteroid-discovery'],
     presence: 'built',
     structureId: GROUND_TELESCOPE_STRUCTURE_ID,
-    feedFlag: 'deepSpaceTelescopeBuilt',
+    // Live as soon as it is built: it adds its own candidates each day.
+    feedFlag: 'always',
     observingLabel: 'Observing',
     readyLabel: 'Observing',
     standbyLabel: 'Standing by',

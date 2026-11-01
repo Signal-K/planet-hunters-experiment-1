@@ -11,7 +11,7 @@ import { paletteById, paletteForTarget } from '@/lib/mining/laserPalette'
 import { openSettings } from '@/lib/mining/openChrome'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import { MiningActionButton, MiningBackButton, MiningDPad, MiningFireButton } from './MiningControls'
+import { MiningActionButton, MiningBackButton, MiningDPad, MiningFireButton, MiningGuideMark as GuideMark } from './MiningControls'
 import { miningSecondaryAction, type MiningSecondaryAction } from '@/lib/mining/secondaryAction'
 import controlStyles from './MiningControls.module.css'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
@@ -59,24 +59,6 @@ function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null)
   return items
 }
 
-function GuideMark({ kind }: { kind: string }) {
-  const blocks: Record<string, Array<[number, number, number, number]>> = {
-    fire: [[6, 0, 2, 4], [8, 2, 2, 2], [10, 3, 2, 3], [8, 5, 2, 2], [6, 6, 2, 2], [4, 7, 2, 3], [6, 9, 2, 5], [4, 13, 2, 2]],
-    charges: [[7, 1, 2, 2], [4, 3, 8, 1], [4, 3, 1, 11], [11, 3, 1, 11], [4, 13, 8, 1], [6, 8, 4, 4]],
-    order: [[2, 3, 12, 2], [2, 7, 12, 2], [2, 11, 8, 2]],
-    scroll: [[1, 7, 2, 2], [3, 5, 2, 2], [3, 9, 2, 2], [5, 3, 2, 2], [5, 11, 2, 2], [9, 3, 2, 2], [9, 11, 2, 2], [11, 5, 2, 2], [11, 9, 2, 2], [13, 7, 2, 2]],
-    inventory: [[3, 4, 10, 1], [3, 4, 1, 9], [12, 4, 1, 9], [3, 12, 10, 1], [5, 7, 6, 1], [7, 7, 2, 4]],
-    deliver: [[2, 4, 8, 1], [2, 4, 1, 8], [9, 4, 1, 8], [2, 11, 8, 1], [12, 6, 2, 2], [11, 4, 2, 2], [11, 8, 2, 2]],
-    return: [[7, 1, 2, 2], [5, 3, 6, 2], [3, 5, 10, 2], [4, 7, 8, 7], [7, 10, 2, 4]],
-  }
-  return (
-    <svg className="mining-guide-mark" viewBox="0 0 16 16" width="32" height="32" aria-hidden="true">
-      {(blocks[kind] ?? blocks.fire).map(([x, y, w, h], index) => (
-        <rect key={index} x={x} y={y} width={w} height={h} />
-      ))}
-    </svg>
-  )
-}
 
 export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission

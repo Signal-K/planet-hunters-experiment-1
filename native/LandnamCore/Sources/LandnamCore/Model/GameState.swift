@@ -7,9 +7,12 @@ public struct FlightPlanProgress: Codable, Equatable, Sendable {
     public var hidden: Bool = false
     public var replayTry: String?
     public init() {}
+    /// The onboarding mission is the mining try; after it, coaches and help sheets stay behind their "?" (web `onboardingMissionDone`).
+    public var onboardingMissionDone: Bool { completed["mining"] == true }
     public var isComplete: Bool { Self.tryIds.allSatisfy { completed[$0] == true } }
     public var currentTry: String? { replayTry ?? Self.tryIds.first { completed[$0] != true } }
-    public mutating func complete(_ id: String) { completed[id] = true; replayTry = nil; hidden = false }
+    /// After a try (the first is the onboarding mission) the next try's coach starts folded to its "?" chip (web `completeFlightPlanTry`).
+    public mutating func complete(_ id: String) { completed[id] = true; replayTry = nil; hidden = true }
 }
 
 public enum HaulDisposition: String, Codable, Sendable { case store, sell }

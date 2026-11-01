@@ -44,6 +44,11 @@ describe('instrument viewport commands', () => {
     expect(applyInstrumentCommand(shifted, 'POINT RESET')!.view.panX).toBe(0)
   })
 
+  it('zooms in before aiming so the image never leaves the screen', () => {
+    expect(nudgeAim(DEFAULT_INSTRUMENT_VIEW, 'n').zoom).toBe(1.5)
+    expect(nudgeAim({ ...DEFAULT_INSTRUMENT_VIEW, zoom: 2 }, 'n').zoom).toBe(2)
+  })
+
   it('clamps zoom and exposure to the instrument range', () => {
     expect(applyInstrumentCommand(DEFAULT_INSTRUMENT_VIEW, 'ZOOM 9')!.view.zoom).toBe(3)
     expect(applyInstrumentCommand(DEFAULT_INSTRUMENT_VIEW, 'EXPOSE 0.1')!.view.exposure).toBe(0.6)

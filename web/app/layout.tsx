@@ -1,3 +1,4 @@
+import { GAME_SCREENS } from '@/lib/game-screens'
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
@@ -71,6 +72,10 @@ export default function RootLayout({
               navigator.serviceWorker
                 .register('/sw.js', { updateViaCache: 'none' })
                 .then(registration => registration.update())
+                // SSL-729: warm every game screen's shell so none of them needs the network later.
+                .then(() => navigator.serviceWorker.ready)
+                .then(registration => registration.active && registration.active.postMessage({ type: 'CACHE_SCREENS', paths: ${JSON.stringify(GAME_SCREENS.map(screen => `/game/${screen}`))} }))
+                .catch(() => {})
             }
           `}</Script>
         ) : (

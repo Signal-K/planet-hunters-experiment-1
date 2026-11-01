@@ -19,6 +19,8 @@ Decided by Liam (SSL-714).
 - ORI-1 listens to the BRAMS beacon (49.97 MHz) through Radio Meteor Zoo on Zooniverse.
   Classifications stay on Landnam's side.
 
-## Open
+## Control station (2026-11-01)
 
-- Add the community instruments to the control station's instrument list.
+- A launched community instrument is just another instrument in the control station: its own switch
+  (tagged Community), a receiver on the horizon, and its live queue as a gold dot that opens its screen.
+  ORI-1 joins after Orionids mission 2. Data: `COMMUNITY_INSTRUMENTS` in `web/lib/control-station-sky.ts`.

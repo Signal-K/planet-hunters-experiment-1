@@ -2,7 +2,7 @@ import SwiftUI
 import LandnamCore
 
 /// Space Telescope classify screen (mirrors web TessDiscoveryScreen, SSL-497): drag across each
-/// dip on the light curve, then Confirm Transit, Mark Noise or Skip. Sector chips and the SECTOR
+/// dip on the light curve, then submit the classification: Transit, Noise or Skip. Sector chips and the SECTOR
 /// command window the curve the same way the web does.
 struct TessDiscoveryScreen: View {
     @Environment(GameStore.self) private var store
@@ -86,11 +86,11 @@ struct TessDiscoveryScreen: View {
             overlay: { EmptyView() },
             answers: {
                 if saved != nil {
-                    Panel(accent: Theme.teal) { Text("Annotation saved").font(AppFont.display(16)) }
+                    Panel(accent: Theme.teal) { Text("Classification submitted").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
-                        InstrumentAnswerButton(title: "Confirm transit", primary: true, dim: ranges.isEmpty) { verdict(.planet, c) }
-                        InstrumentAnswerButton(title: "Mark noise", dim: ranges.isEmpty) { verdict(.notPlanet, c) }
+                        InstrumentAnswerButton(title: "Submit · Transit", primary: true, dim: ranges.isEmpty) { verdict(.planet, c) }
+                        InstrumentAnswerButton(title: "Submit · Noise", dim: ranges.isEmpty) { verdict(.notPlanet, c) }
                         InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges, candidate: c) }
                     }
                 }

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
 import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
-import { rocketCompatibleWithMission } from '@/lib/rockets'
+import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -47,7 +47,7 @@ const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: Screen
 const CommunityResearchScreen = dynamic(() => import('@/components/game/screens/CommunityResearchScreen'), { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardEvent, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -320,8 +320,10 @@ function ScreenBody({
           }}
           onFocusResources={(label, minerals) => {
             game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
-            game.addToast(`${label} added to focus`, 'info')
-            requestMissionBoardTab('program')
+            // Open the map on the places that hold the first missing mineral, not the whole board (Liam, 31.10).
+            const short = Object.entries(minerals).find(([id, amount]) => (game.player.stash?.[id] ?? 0) < amount)?.[0]
+            if (short && game.player.freeOperations) requestMissionBoardMineral(short)
+            else requestMissionBoardTab('program')
             game.goToMissions()
           }}
           subsurface={game.subsurfaceView}
@@ -355,11 +357,12 @@ function ScreenBody({
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
-          onBuild={() => game.go('build')}
+          onBuildGroundTelescope={() => game.buildGroundTelescope()}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
           }}
+          onOpenScreen={screen => game.go(screen)}
           onSnoozePing={() => {
             const dateKey = instrumentDigestDateKey()
             game.setPlayer(player => markInstrumentDigestNotified(
@@ -391,6 +394,7 @@ function ScreenBody({
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
+          onTrainingContinue={() => game.go('hangar')}
         />
       )
 
@@ -531,8 +535,8 @@ function ScreenBody({
           pendingRocketName={rocketDisplay.name}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           missionTitle={game.mission?.title ?? null}
-          compatibleRocketIds={game.mission && game.target
-            ? ROCKET_MODELS.filter(model => rocketCompatibleWithMission(model, game.mission!)).map(model => model.id)
+          rocketRoles={game.mission && game.target
+            ? Object.fromEntries(rocketJobRoles(ROCKET_MODELS.filter(model => !model.locked), game.mission, model => rocketCompatibleWithMission(model, game.mission!)))
             : null}
           stagedTier={(() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId && candidate.location === 'hangar')

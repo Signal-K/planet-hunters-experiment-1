@@ -482,7 +482,8 @@ function GameChrome({ children }: { children: ReactNode }) {
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {!game.authGateOpen && !LOCATION_SCREENS.has(game.screen) && <NotificationBell />}
+      {/* The inbox belongs to the base only (Liam, 2026-11-01); iOS shows it in the hub's HudGearClock alone. */}
+      {!game.authGateOpen && game.screen === 'hub' && <NotificationBell />}
     </main>
   )
 }

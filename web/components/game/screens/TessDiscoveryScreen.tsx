@@ -1,5 +1,6 @@
 'use client'
 
+import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
 import { useEffect, useMemo, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -15,7 +16,7 @@ import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
-import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface TessDiscoveryScreenProps {
   player: Player
@@ -29,16 +30,36 @@ interface TessDiscoveryScreenProps {
   onChooseTarget: (subjectId: string) => void
   /** Set while a training try is active, so the help sheet can point at Menu > Training. */
   onReplayTraining?: () => void
+  /** After the training verdict's result card: move on to the next try. */
+  onTrainingContinue?: () => void
+}
+
+const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body: string }> = {
+  planet: {
+    status: 'SUBMITTED · TRANSIT',
+    title: 'Classification submitted: transit',
+    body: 'You marked a repeating dip in a star\'s light: the shadow of a planet crossing it. Once your Space Telescope is in orbit, real candidates arrive here every day and your verdicts go to Exoplanet Hunters.',
+  },
+  not_planet: {
+    status: 'SUBMITTED · NOISE',
+    title: 'Classification submitted: noise',
+    body: 'You ruled out a dip that is not a transit. Ruling out noise is half the job: real candidates arrive here every day once your Space Telescope is in orbit.',
+  },
+  unsure: {
+    status: 'SKIPPED',
+    title: 'Skipped',
+    body: 'Skipping is fine when a curve is unclear. Real candidates arrive here every day once your Space Telescope is in orbit.',
+  },
 }
 
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
-  { id: 'planet', label: 'Confirm Transit', requiresMark: true },
-  { id: 'not_planet', label: 'Mark Noise', requiresMark: true },
+  { id: 'planet', label: 'Submit · Transit', requiresMark: true },
+  { id: 'not_planet', label: 'Submit · Noise', requiresMark: true },
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining }: TessDiscoveryScreenProps) {
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: true })
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
+  const help = useHelp('galaxy', { onReplayTraining, firstVisit: !onboardingMissionDone(player.flightPlan) })
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
@@ -53,6 +74,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [retryToken, setRetryToken] = useState(0)
   const [dragArmed, setDragArmed] = useState(true)
   const [needsMark, setNeedsMark] = useState(false)
+  // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
+  const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -116,6 +139,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
   ) : undefined
+
+  if (trainingVerdict) {
+    const result = TRAINING_RESULT[trainingVerdict]
+    return (
+      <InstrumentStandbyViewport
+        testId="tess-training-result"
+        sceneClassName="ln-scene-tess-discovery"
+        eyebrow="TRAINING · SCAN"
+        title="Space Telescope"
+        onBack={onBack}
+        status={result.status}
+        messageTitle={`${result.title} · +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`}
+        messageBody={result.body}
+        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Next: tune a rocket part', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
+      />
+    )
+  }
 
   if (!visualCandidate && !player.freeOperations) {
     return (
@@ -192,6 +232,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     // A verdict that needs a marked dip explains itself instead of sitting disabled and looking dead.
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
     const measuredPeriod = periodFromRanges(ranges)
+    if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
@@ -221,7 +262,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       onBack={onBack}
       help={help.button}
       helpLayer={help.layer}
-      status={classification ? 'ANNOTATION SAVED' : 'REVIEW'}
+      status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       onCommand={onCommand}
       devBar={devBar}
       caption={(
@@ -280,7 +321,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         </div>
       )}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Annotation saved</div>
+        <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (
         <InstrumentAnswerRow
           coachTarget="tess-verdicts"
@@ -289,6 +330,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             label: action.label,
             testId: `tess-verdict-${action.id}`,
             dim: action.requiresMark && markCount === 0,
+            primary: action.id === 'planet' && markCount > 0,
             onClick: () => castVerdict(action.id),
           }))}
         />

@@ -45,7 +45,7 @@ struct RootView: View {
             case .instrumentHub: ControlStationScreen()
             case .saturnStormSearch: SaturnStormSearchScreen()
             case .asteroidDiscovery: AsteroidDiscoveryScreen()
-            case .galaxy: TessDiscoveryScreen().helpable(.galaxy, firstVisit: true)
+            case .galaxy: TessDiscoveryScreen().helpable(.galaxy, firstVisit: !store.player.flightPlan.onboardingMissionDone)
             default: StubScreen(screen: store.screen)
             }
         }

@@ -1,156 +1,291 @@
 import SwiftUI
 import LandnamCore
 
-/// Control room palette (web `--ln-world-*`): hull-white panels, a navy outline, and a night-sky window.
-private enum Room {
-    static let outline = Theme.hex(0x16293B)
-    static let hullLit = Theme.hex(0xFAF7F0)
-    static let hull = Theme.hex(0xECE8DF)
-    static let hullShade = Theme.hex(0xC9C4B8)
-    static let blue = Theme.hex(0x2F6FA8)
-    static let teal = Theme.hex(0x2A9AA3)
-    static let glass = Theme.hex(0x9FD6E4)
-    static let nightTop = Theme.hex(0x0E1528)
-    static let nightMid = Theme.hex(0x1A2744)
-    static let asphalt = Theme.hex(0x3A404C)
+/// Two-tone mission palette (web ControlStationConsole.module.css).
+private enum Tone {
+    static let cream = Theme.hex(0xF4EFE4)
+    static let mute = Theme.hex(0xC9D0C2)
+    static let cyan = Theme.hex(0x58D0EA)
+    static let cyanSoft = Theme.hex(0x9DE7EF)
+    static let gold = Theme.hex(0xF2C24C)
+    static let ink = Theme.hex(0x10182C)
+    static let desk = Theme.hex(0x183A5C).opacity(0.85)
+    static let sky = Theme.hex(0x16688F).opacity(0.6)
+    static let night = Theme.hex(0x060B18)
+    static let earth = Theme.hex(0x1D6F8F)
 }
 
-/// Control Station: a control room with a window onto the sky above a desk of monitors, one per owned instrument
-/// (mirrors web ControlStationBoard, SSL-496 and SSL-611). The window is a SwiftUI Canvas drawn from the same
-/// 640x320 diagram data, so markers can't drift from the planets.
+/// Control Station (SSL-730, Liam's drawing): the sky map you look at through your telescopes, Earth's horizon
+/// with each telescope where it sits, then the telescope switches and a history tally. Upright it stacks; on a
+/// sideways phone the telescopes sit left of the map. Mirrors web ControlStationConsole.
 struct ControlStationScreen: View {
     @Environment(GameStore.self) private var store
     @Environment(Services.self) private var services: Services?
-    @State private var bodyId = "all"
+    @Environment(\.verticalSizeClass) private var vertical
     @State private var community: CommunityResearch?
+    @State private var view: StationSky.SkyView = .all
+    @State private var telescopeId: String?
+    @State private var pickedId: String?
+    @State private var logbook = false
     var signals: [InstrumentSignal] = []
 
-    private var model: ControlStation.Model {
-        ControlStation.build(player: store.player, signals: signals, bodyId: bodyId, now: store.now)
-    }
+    private var model: ControlStation.Model { ControlStation.build(player: store.player, signals: signals, bodyId: "all", now: store.now) }
 
     var body: some View {
+        let scopes = StationSky.telescopes(model) + StationSky.communityTelescopes(store.player)
+        let active = scopes.first { $0.id == telescopeId && $0.built }
+        let anomalies = StationSky.sky(player: store.player, signals: signals, view: view, telescope: active)
         ScreenFrame(title: "Control Station", back: { store.go(.hub) }, night: true) {
-            let m = model
-            // SSL-673: the Daily research plate leads the screen.
-            ResearchCalendarPanel(stamps: store.player.researchStamps, now: store.now, community: community, hasDiscovery: !store.player.discoveredExoplanetTargets.isEmpty)
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
-                    ScrollView(.horizontal, showsIndicators: false) { WorldSpaceWeekChips(chips: m.skyBadges) }
+            if vertical == .compact {
+                HStack(alignment: .top, spacing: 0) {
+                    desk(scopes).frame(width: 280)
+                    sky(scopes, anomalies, active)
                 }
-                StationMap(model: m).coachTarget("station-map")
-                filters(m).coachTarget("station-filters")
-                desk(m)
+            } else {
+                VStack(spacing: 0) {
+                    sky(scopes, anomalies, active)
+                    desk(scopes)
+                }
             }
-            .padding(12)
-            .background(LinearGradient(colors: [Room.hullLit, Room.hull], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Room.outline, lineWidth: 2))
-            SkyBadgeRow(badges: store.player.badges)
         }
-        .helpable(.instrumentHub, firstVisit: true)
+        .helpable(.instrumentHub, firstVisit: !store.player.flightPlan.onboardingMissionDone)
+        .sheet(isPresented: $logbook) { logbookSheet }
         .task {
             guard let api = services?.communityResearchAPI(), let res = await api.fetch() else { return }
             community = res
         }
     }
 
-    private func filters(_ m: ControlStation.Model) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(m.filters, id: \.id) { f in
-                    let on = f.id == m.activeBodyId
-                    Button { bodyId = f.id } label: {
-                        Text(f.label.uppercased()).font(AppFont.display(14)).tracking(1.4)
-                            .padding(.horizontal, 18).frame(minHeight: 48)
-                            .foregroundStyle(on ? Room.hullLit : Room.outline)
-                            .background(on ? Room.blue : Room.hullLit, in: RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Room.outline, lineWidth: 2))
-                    }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
-                }
-            }.padding(2)
+    // MARK: Sky (right tone)
+
+    private func sky(_ scopes: [StationSky.Telescope], _ anomalies: [StationSky.Anomaly], _ active: StationSky.Telescope?) -> some View {
+        VStack(spacing: 10) {
+            viewSwitch
+            scope(anomalies, active).frame(height: vertical == .compact ? 220 : 340).coachTarget("station-map")
+            horizon(scopes).frame(height: 120)
         }
+        .padding(.top, 12).padding(.horizontal, 12)
+        .background(Tone.sky)
     }
 
-    /// The desk: a blue edge band over hull panels, holding one console per instrument.
-    private func desk(_ m: ControlStation.Model) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if let empty = m.emptyLabel { Text(empty).font(AppFont.body(14, "Bold")).foregroundStyle(Room.outline) }
-            ForEach(m.groups) { group in
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(group.label.uppercased()).font(AppFont.display(14)).tracking(1.9).foregroundStyle(Room.outline)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 12)], spacing: 12) {
-                        ForEach(group.rows) { row in console(row) }
+    /// Three-way slide switch: a recessed track and a cream thumb.
+    private var viewSwitch: some View {
+        HStack(spacing: 0) {
+            ForEach(StationSky.SkyView.allCases) { v in
+                let on = v == view
+                Button { pickedId = nil; withAnimation(.easeOut(duration: 0.2)) { view = v } } label: {
+                    Text(v.label.uppercased()).font(AppFont.display(14)).tracking(0.8)
+                        .foregroundStyle(on ? Theme.hex(0x142840) : Tone.mute)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background { if on { Capsule().fill(Tone.cream).shadow(color: .black.opacity(0.45), radius: 3, y: 2) } }
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(Tone.ink.opacity(0.7), in: Capsule())
+        .accessibilityIdentifier("control-station-view")
+        .coachTarget("station-filters")
+    }
+
+    private func scope(_ anomalies: [StationSky.Anomaly], _ active: StationSky.Telescope?) -> some View {
+        let waiting = anomalies.filter { $0.state == .unexplored }.count
+        let picked = anomalies.first { $0.id == pickedId }
+        return VStack(spacing: 6) {
+            HStack {
+                Text("SKY MAP").font(AppFont.body(14, "Bold")).foregroundStyle(Tone.mute)
+                Spacer()
+                Text((active?.name ?? "All telescopes").uppercased()).font(AppFont.display(14)).tracking(1.2).foregroundStyle(Tone.cream).lineLimit(1)
+                Spacer()
+                Text("\(waiting) TO CLASSIFY").font(AppFont.body(14, "Bold")).foregroundStyle(Tone.gold)
+            }
+            .padding(.horizontal, 14).padding(.top, 10)
+            GeometryReader { geo in
+                ZStack(alignment: .topLeading) {
+                    if anomalies.isEmpty {
+                        Text(emptyText).font(AppFont.body(15)).foregroundStyle(Tone.mute).multilineTextAlignment(.center)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    }
+                    ForEach(anomalies) { a in
+                        Button {
+                            if let s = a.signal { open(s) } else { pickedId = pickedId == a.id ? nil : a.id }
+                        } label: { AnomalyMark(anomaly: a, picked: a.id == pickedId).frame(width: 44, height: 44).contentShape(Circle()) }
+                        .buttonStyle(.plain)
+                        .position(x: a.x * geo.size.width, y: a.y * geo.size.height)
+                        .accessibilityLabel("\(a.label), \(a.detail)")
+                        .accessibilityIdentifier("control-station-anomaly")
                     }
                 }
             }
+            .background(RoundedRectangle(cornerRadius: 14).fill(LinearGradient(colors: [Tone.night, Theme.hex(0x0C1630)], startPoint: .top, endPoint: .bottom)))
+            .overlay(alignment: .bottom) {
+                if let picked {
+                    HStack {
+                        Text(picked.label).font(AppFont.display(15)).foregroundStyle(Tone.cream)
+                        Spacer()
+                        Text(picked.detail).font(AppFont.body(14)).foregroundStyle(Tone.mute)
+                    }
+                    .padding(12).background(Tone.ink.opacity(0.9), in: RoundedRectangle(cornerRadius: 14))
+                    .padding(10)
+                }
+            }
+            .padding([.horizontal, .bottom], 10)
         }
-        .padding(.horizontal, 12).padding(.top, 18).padding(.bottom, 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LinearGradient(colors: [Room.hull, Room.hullShade], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(alignment: .top) { UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12).fill(Room.blue).frame(height: 8) }
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Room.outline, lineWidth: 2))
+        .background(Tone.night, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Tone.cream.opacity(0.28), lineWidth: 1))
     }
 
-    /// One console: a monitor beside a nameplate, a status lamp and a key.
-    private func console(_ row: ControlStation.Row) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            monitor(row)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(row.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Room.outline).fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 8) {
-                    Circle().fill(row.live ? Room.teal : Color.clear).frame(width: 12, height: 12)
-                        .overlay(Circle().stroke(row.live ? Room.teal : Room.blue, lineWidth: 2))
-                        .shadow(color: row.live ? Room.teal : .clear, radius: 3)
-                    Text(row.status.uppercased()).font(AppFont.body(14, "Bold")).tracking(0.8).foregroundStyle(Room.outline)
+    private var emptyText: String {
+        switch view {
+        case .unexplored: "Nothing waiting. New candidates arrive each day."
+        case .explored: "Nothing classified here yet."
+        case .all: "Nothing in your catalogue here yet."
+        }
+    }
+
+    /// Earth's limb with each telescope where it sits: ground on the surface, Space telescope in orbit, Saturn offworld.
+    private func horizon(_ scopes: [StationSky.Telescope]) -> some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack(alignment: .topLeading) {
+                Canvas { ctx, size in
+                    func limb(_ rx: Double, _ ry: Double) -> Path {
+                        Path(ellipseIn: CGRect(x: size.width / 2 - rx / 600 * size.width, y: 300 / 120 * size.height - ry / 120 * size.height, width: 2 * rx / 600 * size.width, height: 2 * ry / 120 * size.height))
+                    }
+                    ctx.stroke(limb(470, 270), with: .color(Tone.cream.opacity(0.35)), style: StrokeStyle(lineWidth: 1.5, dash: [6, 8]))
+                    ctx.fill(limb(424, 234), with: .color(Tone.cyanSoft.opacity(0.28)))
+                    ctx.fill(limb(420, 230), with: .color(Tone.earth))
                 }
-                WorldSpaceWeekChips(chips: row.wsw)
-                if !row.projects.isEmpty {
-                    ChipFlow(spacing: 6) {
-                        ForEach(row.projects, id: \.self) { project in
-                            Text(project.uppercased()).font(AppFont.display(14, "Bold")).tracking(0.6).foregroundStyle(Room.outline)
-                                .padding(.horizontal, 8).padding(.vertical, 4)
-                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Room.outline, lineWidth: 1))
+                Text("EARTH").font(AppFont.display(14)).tracking(2).foregroundStyle(Tone.cyanSoft)
+                    .position(x: w - 40, y: h - 14)
+                ForEach(scopes) { scope in
+                    let spot = Self.horizonSpot[scope.place] ?? (0.5, 0.5)
+                    let on = scope.id == telescopeId
+                    Button { toggle(scope.id) } label: {
+                        TelescopeGlyph(place: scope.place).frame(width: 30, height: 30).foregroundStyle(Tone.cream)
+                            .frame(width: 48, height: 48)
+                            .background(on ? Tone.cyan.opacity(0.3) : Tone.ink.opacity(0.72), in: RoundedRectangle(cornerRadius: scope.place == .surface ? 14 : 24))
+                            .overlay(RoundedRectangle(cornerRadius: scope.place == .surface ? 14 : 24).stroke(on ? Tone.cyan : Tone.cream.opacity(0.7), style: StrokeStyle(lineWidth: 2, dash: scope.built ? [] : [4, 4])))
+                            .overlay(alignment: .topTrailing) {
+                                if scope.readyCount > 0 {
+                                    Text("\(scope.readyCount)").font(AppFont.display(14)).foregroundStyle(Tone.ink)
+                                        .frame(minWidth: 22, minHeight: 22).background(Tone.gold, in: Capsule()).offset(x: 8, y: -8)
+                                }
+                            }
+                            .opacity(scope.built ? 1 : 0.6)
+                    }
+                    .buttonStyle(.plain).disabled(!scope.built)
+                    .position(x: spot.0 * w, y: spot.1 * h - (scope.place == .surface ? 18 : 0))
+                    .accessibilityLabel("\(scope.name), \(scope.status)")
+                }
+            }
+        }
+        .padding(.horizontal, -12)
+    }
+
+    static let horizonSpot: [StationSky.Place: (Double, Double)] = [.surface: (0.30, 0.70), .orbit: (0.58, 0.24), .offworld: (0.88, 0.18), .relay: (0.10, 0.30)]
+
+    // MARK: Desk (left tone)
+
+    private func desk(_ scopes: [StationSky.Telescope]) -> some View {
+        let history = StationSky.history(store.player)
+        return VStack(alignment: .leading, spacing: 12) {
+            if vertical == .compact { Text("CONTROL STATION").font(AppFont.display(22)).tracking(1).foregroundStyle(Tone.cream) }
+            ForEach(scopes) { scope in key(scope) }
+            VStack(alignment: .leading, spacing: 8) {
+                Divider().overlay(Tone.cream.opacity(0.22))
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("\(history.total)").font(AppFont.display(28)).foregroundStyle(Tone.cyanSoft)
+                    Text("CLASSIFIED").font(AppFont.body(14, "Bold")).tracking(1.4).foregroundStyle(Tone.mute)
+                }
+                ForEach(history.recent.indices, id: \.self) { i in
+                    let item = history.recent[i]
+                    HStack {
+                        Text(item.label).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.cream).lineLimit(1)
+                        Spacer()
+                        Text(item.detail).font(AppFont.body(14)).foregroundStyle(Tone.mute).lineLimit(1)
+                    }
+                }
+                Button { logbook = true } label: {
+                    Text("LOGBOOK").font(AppFont.display(14)).tracking(1.4).foregroundStyle(Tone.cream)
+                        .padding(.horizontal, 18).frame(minHeight: 44)
+                        .background(Tone.ink.opacity(0.3), in: Capsule()).overlay(Capsule().stroke(Tone.cream.opacity(0.5), lineWidth: 1))
+                }
+                .buttonStyle(.plain).accessibilityIdentifier("control-station-logbook")
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Tone.desk)
+    }
+
+    /// A telescope key: a toggle switch that filters the map, an LED, and a digit counter.
+    private func key(_ scope: StationSky.Telescope) -> some View {
+        let on = scope.id == telescopeId
+        return VStack(spacing: 8) {
+            Button { toggle(scope.id) } label: {
+                HStack(spacing: 12) {
+                    ZStack(alignment: on ? .trailing : .leading) {
+                        Capsule().fill(on ? Tone.cyan.opacity(0.55) : Tone.ink.opacity(0.7)).frame(width: 48, height: 28)
+                        Circle().fill(Tone.cream).frame(width: 22, height: 22).padding(3).shadow(color: .black.opacity(0.45), radius: 2, y: 2)
+                    }
+                    .opacity(scope.built ? 1 : 0.45)
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 8) {
+                            Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                            if scope.community {
+                                Text("COMMUNITY").font(AppFont.body(12, "Bold")).tracking(1).foregroundStyle(Tone.gold)
+                                    .padding(.horizontal, 8).padding(.vertical, 2).background(Tone.gold.opacity(0.18), in: Capsule())
+                            }
                         }
+                        HStack(spacing: 6) {
+                            Circle().fill(scope.readyCount > 0 ? Tone.gold : scope.live ? Tone.cyan : Theme.hex(0x3A4558)).frame(width: 9, height: 9)
+                            Text(scope.status).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.mute)
+                        }
+                        Text(scope.finds).font(AppFont.body(14, "Bold")).foregroundStyle(Tone.cyanSoft)
+                    }
+                    Spacer(minLength: 0)
+                    if scope.built {
+                        Text(String(format: "%02d", scope.readyCount)).font(.system(size: 20, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(scope.readyCount > 0 ? Tone.gold : Theme.hex(0x4D5D72))
+                            .frame(minWidth: 44, minHeight: 34).background(Theme.hex(0x070C18), in: RoundedRectangle(cornerRadius: 8))
                     }
                 }
-                if row.buildPrompt { key("BUILD", label: "Build \(row.name)", id: "control-station-build") { store.go(.build) } }
-                if let signal = row.open { key("OPEN", label: "Open \(row.name)", id: "control-station-open") { open(signal) } }
+                .padding(10).frame(minHeight: 60)
             }
-            Spacer(minLength: 0)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Room.hullLit, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Room.outline, lineWidth: 2))
-    }
-
-    @ViewBuilder private func monitor(_ row: ControlStation.Row) -> some View {
-        ZStack(alignment: .topTrailing) {
-            if let signal = row.open {
-                EquipmentThumb(kind: signal.kind, count: row.readyCount)
-                    .frame(width: 96, height: 96)
-            } else {
-                Text((row.buildPrompt ? "No signal" : row.live ? "Listening" : "Standby").uppercased())
-                    .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Room.glass).multilineTextAlignment(.center)
-                    .frame(width: 96, height: 96).background(Room.asphalt)
+            .buttonStyle(.plain).disabled(!scope.built)
+            .accessibilityAddTraits(on ? .isSelected : [])
+            .accessibilityIdentifier("control-station-telescope-\(scope.id)")
+            if !scope.built {
+                Button { store.go(.build) } label: {
+                    Text("BUILD").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
+                        .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))
+                }
+                .buttonStyle(.plain).padding([.horizontal, .bottom], 8)
+                .accessibilityLabel("Build \(scope.name)").accessibilityIdentifier("control-station-build")
             }
         }
-        .frame(width: 96, height: 96)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Room.outline, lineWidth: 3))
-        .padding(3).overlay(RoundedRectangle(cornerRadius: 10).stroke(Room.hullShade, lineWidth: 3))
-        .accessibilityHidden(true)
+        .background(LinearGradient(colors: [on ? Tone.cyan.opacity(0.2) : .white.opacity(0.08), Tone.ink.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(on ? Tone.cyan : Tone.cream.opacity(0.22), lineWidth: 1))
     }
 
-    private func key(_ title: String, label: String, id: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(AppFont.display(14)).tracking(1.7).foregroundStyle(Room.hullLit)
-                .padding(.horizontal, 20).frame(minWidth: 96, minHeight: 48)
-                .background(Room.blue, in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Room.outline, lineWidth: 2))
-        }.buttonStyle(.plain).accessibilityLabel(label).accessibilityIdentifier(id)
+    private var logbookSheet: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("LOGBOOK").font(AppFont.display(20)).tracking(1.6).foregroundStyle(Tone.cream)
+                ResearchCalendarPanel(stamps: store.player.researchStamps, now: store.now, community: community, hasDiscovery: !store.player.discoveredExoplanetTargets.isEmpty)
+                WorldSpaceWeekBanner(banner: WorldSpaceWeek.banner(badges: store.player.badges, now: store.now))
+                ScrollView(.horizontal, showsIndicators: false) { WorldSpaceWeekChips(chips: model.skyBadges) }
+                SkyBadgeRow(badges: store.player.badges)
+            }
+            .padding(16)
+        }
+        .background(Theme.hex(0x183A5C))
+        .presentationDetents([.medium, .large])
     }
+
+    private func toggle(_ id: String) { pickedId = nil; telescopeId = telescopeId == id ? nil : id }
 
     private func open(_ s: InstrumentSignal) {
         switch s.kind {
@@ -161,94 +296,80 @@ struct ControlStationScreen: View {
     }
 }
 
-struct StationMap: View {
-    let model: ControlStation.Model
+/// An anomaly on the sky map: gold and ringed with a ping when unexplored, cyan when explored, cream outline for catalogue.
+private struct AnomalyMark: View {
+    let anomaly: StationSky.Anomaly
+    let picked: Bool
+    @State private var ping = false
 
     var body: some View {
-        Canvas { ctx, size in
-            let k = min(size.width / ControlStation.mapWidth, size.height / ControlStation.mapHeight)
-            let ox = (size.width - ControlStation.mapWidth * k) / 2, oy = (size.height - ControlStation.mapHeight * k) / 2
-            func pt(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: ox + x * k, y: oy + y * k) }
-            for (x, y) in [(36, 42), (84, 96), (300, 48), (360, 210), (420, 64), (590, 46), (560, 250), (70, 250)] {
-                ctx.fill(Path(ellipseIn: CGRect(x: pt(Double(x), Double(y)).x - 1.5, y: pt(Double(x), Double(y)).y - 1.5, width: 3, height: 3)), with: .color(Room.hullLit.opacity(0.8)))
+        let color = anomaly.state == .unexplored ? Tone.gold : anomaly.state == .explored ? Tone.cyan : Tone.cream
+        ZStack {
+            if anomaly.state == .unexplored {
+                Circle().stroke(Tone.gold, lineWidth: 1.5).frame(width: 28, height: 28)
+                    .scaleEffect(ping ? 1.5 : 0.6).opacity(ping ? 0 : 0.9)
+                    .onAppear { withAnimation(.easeOut(duration: 2.2).repeatForever(autoreverses: false)) { ping = true } }
             }
-            for b in model.bodies {
-                let c = pt(b.x, b.y), r = b.r * k
-                if !b.ringed {
-                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - (r + 40 * k), y: c.y - (r + 40 * k), width: 2 * (r + 40 * k), height: 2 * (r + 40 * k))),
-                               with: .color(Room.glass.opacity(0.55)), style: StrokeStyle(lineWidth: 1.5, dash: [5, 7]))
-                }
-                let disc = Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r))
-                ctx.fill(disc, with: .color(b.ringed ? Room.hullShade : Room.blue))
-                if b.ringed {
-                    ctx.stroke(disc, with: .color(Room.hullLit), lineWidth: 2)
-                    var ring = ctx
-                    ring.translateBy(x: c.x, y: c.y); ring.rotate(by: .degrees(-18))
-                    ring.stroke(Path(ellipseIn: CGRect(x: -r * 1.75, y: -r * 0.42, width: r * 3.5, height: r * 0.84)), with: .color(Room.glass), lineWidth: 3)
-                } else {
-                    var land = ctx; land.clip(to: disc)
-                    land.fill(Path(ellipseIn: CGRect(x: c.x - r * 0.68, y: c.y - r * 0.4, width: r * 0.92, height: r * 0.56)), with: .color(Room.glass))
-                    land.fill(Path(ellipseIn: CGRect(x: c.x + r * 0.08, y: c.y - r * 0.14, width: r * 0.4, height: r * 0.68)), with: .color(Room.glass))
-                }
-                ctx.draw(Text(b.name.uppercased()).font(AppFont.display(14)).foregroundStyle(Room.glass), at: CGPoint(x: c.x, y: c.y + r + 18), anchor: .top)
-            }
-            for m in model.markers {
-                let c = pt(m.x, m.y)
-                if m.readyCount > 0 {
-                    let badge = Path(ellipseIn: CGRect(x: c.x - 14, y: c.y - 14, width: 28, height: 28))
-                    ctx.fill(badge, with: .color(Room.hullLit))
-                    ctx.stroke(badge, with: .color(Room.blue), lineWidth: 2)
-                    ctx.draw(Text("\(m.readyCount)").font(AppFont.display(14)).foregroundStyle(Room.outline), at: c)
-                } else {
-                    let dot = Path(ellipseIn: CGRect(x: c.x - 6, y: c.y - 6, width: 12, height: 12))
-                    ctx.fill(dot, with: .color(Room.teal))
-                    ctx.stroke(dot, with: .color(Room.hullLit), lineWidth: 2)
+            Canvas { ctx, size in
+                let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                let fill = anomaly.state == .catalogue ? Color.clear : color.opacity(anomaly.state == .unexplored ? 0.85 : 0.35)
+                switch anomaly.shape {
+                case .asteroid:
+                    var p = Path()
+                    for (i, pt) in [(-4.0, -6.0), (3, -7), (7, -2), (5, 5), (-2, 7), (-7, 1)].enumerated() {
+                        let q = CGPoint(x: c.x + pt.0, y: c.y + pt.1); if i == 0 { p.move(to: q) } else { p.addLine(to: q) }
+                    }
+                    p.closeSubpath(); ctx.fill(p, with: .color(fill)); ctx.stroke(p, with: .color(color), lineWidth: 1.6)
+                case .ringed:
+                    let disc = Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10))
+                    ctx.fill(disc, with: .color(fill)); ctx.stroke(disc, with: .color(color), lineWidth: 1.6)
+                    var ring = ctx; ring.translateBy(x: c.x, y: c.y); ring.rotate(by: .degrees(-18))
+                    ring.stroke(Path(ellipseIn: CGRect(x: -9, y: -3, width: 18, height: 6)), with: .color(color), lineWidth: 1.6)
+                case .planet, .body:
+                    let disc = Path(ellipseIn: CGRect(x: c.x - 6, y: c.y - 6, width: 12, height: 12))
+                    ctx.fill(disc, with: .color(fill)); ctx.stroke(disc, with: .color(color), lineWidth: 1.6)
                 }
             }
+            .frame(width: 22, height: 22)
+            .shadow(color: anomaly.state == .unexplored ? Tone.gold.opacity(0.8) : .clear, radius: 4)
+            if picked { Circle().stroke(Tone.cream, lineWidth: 2).frame(width: 32, height: 32) }
         }
-        .frame(height: 256).frame(maxWidth: .infinity)
-        .background(LinearGradient(colors: [Room.nightTop, Room.nightMid], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 12))
-        .overlay { HStack { Spacer(); Rectangle().fill(Room.hull.opacity(0.55)).frame(width: 3); Spacer(); Rectangle().fill(Room.hull.opacity(0.55)).frame(width: 3); Spacer() } }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Room.outline, lineWidth: 3))
-        .accessibilityHidden(true)
     }
 }
 
-/// Instrument thumbnail with its ready count (web `EquipmentPreview` + count badge).
-struct EquipmentThumb: View {
-    let kind: SignalKind
-    let count: Int
-
+/// Telescope glyphs for the horizon: dome on a pier, a tube with solar wings, a ringed body.
+private struct TelescopeGlyph: View {
+    let place: StationSky.Place
     var body: some View {
         Canvas { ctx, size in
-            let k = size.width / 48
+            let k = size.width / 32
             func p(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: x * k, y: y * k) }
-            func dot(_ x: Double, _ y: Double, _ r: Double) { ctx.fill(Path(ellipseIn: CGRect(x: (x - r) * k, y: (y - r) * k, width: 2 * r * k, height: 2 * r * k)), with: .color(Room.hullLit)) }
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Room.nightTop))
-            switch kind {
-            case .transit:
-                var path = Path(); path.move(to: p(4, 24))
-                path.addCurve(to: p(18, 24), control1: p(10, 22), control2: p(14, 23))
-                path.addCurve(to: p(30, 24), control1: p(22, 18), control2: p(26, 30))
-                path.addCurve(to: p(44, 23), control1: p(34, 20), control2: p(38, 22))
-                ctx.stroke(path, with: .color(Room.glass), lineWidth: 1.6 * k)
-                dot(12, 14, 1.2); dot(34, 12, 1)
-            case .saturn:
-                let c = p(24, 24)
-                var ring = ctx; ring.translateBy(x: c.x, y: c.y); ring.rotate(by: .degrees(-18))
-                ring.stroke(Path(ellipseIn: CGRect(x: -16 * k, y: -6 * k, width: 32 * k, height: 12 * k)), with: .color(Room.glass), lineWidth: 2 * k)
-                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 8 * k, y: c.y - 8 * k, width: 16 * k, height: 16 * k)), with: .color(Room.hullShade))
-            case .deepSpace:
-                dot(12, 16, 1.4); dot(28, 12, 1); dot(36, 22, 1.6); dot(18, 30, 1.2); dot(32, 34, 1)
+            let style = StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round)
+            var path = Path()
+            switch place {
+            case .surface:
+                path.move(to: p(6, 24)); path.addArc(center: p(16, 24), radius: 10 * k, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false); path.closeSubpath()
+                path.move(to: p(16, 14)); path.addLine(to: p(16, 10)); path.move(to: p(19, 11)); path.addLine(to: p(22, 7))
+                path.move(to: p(4, 24)); path.addLine(to: p(28, 24)); path.move(to: p(12, 24)); path.addLines([p(12, 28), p(20, 28), p(20, 24)])
+            case .orbit:
+                path.addRoundedRect(in: CGRect(origin: p(12, 9), size: CGSize(width: 8 * k, height: 14 * k)), cornerSize: CGSize(width: 2 * k, height: 2 * k))
+                path.move(to: p(12, 14)); path.addLines([p(4, 14), p(4, 19), p(12, 19)])
+                path.move(to: p(20, 14)); path.addLines([p(28, 14), p(28, 19), p(20, 19)])
+                path.move(to: p(16, 9)); path.addLine(to: p(16, 5))
+            case .relay:
+                path.move(to: p(16, 14)); path.addLine(to: p(16, 28)); path.move(to: p(11, 28)); path.addLine(to: p(21, 28))
+                path.move(to: p(16, 14)); path.addLine(to: p(11, 22)); path.move(to: p(16, 14)); path.addLine(to: p(21, 22))
+                path.addEllipse(in: CGRect(origin: p(14, 10), size: CGSize(width: 4 * k, height: 4 * k)))
+                path.move(to: p(10, 7)); path.addQuadCurve(to: p(22, 7), control: p(16, 2))
+                path.move(to: p(7, 4)); path.addQuadCurve(to: p(25, 4), control: p(16, -3))
+            case .offworld:
+                path.addEllipse(in: CGRect(origin: p(10, 10), size: CGSize(width: 12 * k, height: 12 * k)))
             }
-        }
-        .frame(width: 96, height: 96)
-        .overlay(alignment: .topTrailing) {
-            Text("\(count)").font(AppFont.display(14)).foregroundStyle(Room.outline)
-                .frame(minWidth: 26, minHeight: 26).padding(.horizontal, 3)
-                .background(Room.hullLit, in: Capsule()).overlay(Capsule().stroke(Room.blue, lineWidth: 2))
-                .offset(x: -4, y: 4)
+            ctx.stroke(path, with: .foreground, style: style)
+            if place == .offworld {
+                var ring = ctx; ring.translateBy(x: 16 * k, y: 16 * k); ring.rotate(by: .degrees(-18))
+                ring.stroke(Path(ellipseIn: CGRect(x: -13 * k, y: -4 * k, width: 26 * k, height: 8 * k)), with: .foreground, style: style)
+            }
         }
         .accessibilityHidden(true)
     }

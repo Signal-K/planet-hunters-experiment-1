@@ -24,7 +24,7 @@ const SCREENS = [
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
-  ['galaxy', 'ui-tess-discovery'], ['targets', 'ui-target-picker'],
+  ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],
   ['build', 'ui-build'], ['intro', 'm1-intro'], ['roveryvey', 'ui-rover-survey'],
 ]

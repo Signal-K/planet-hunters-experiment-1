@@ -19,8 +19,9 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
-import { createBlueprintHueFilter } from '@/lib/takeon/blueprintFilter'
+import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
+import { assistedClimb, type DrivableWorld } from '@/lib/takeon/drivable'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
   bindTakeonHostEvents,
@@ -34,6 +35,10 @@ import styles from './TakeOnMount.module.css'
 export interface TakeOnFieldOrder {
   type: 'goto' | 'mine'
   pos: { x: number; y: number }
+}
+
+const TAKEON_KEY_DIR: Record<string, 0 | 1 | 2 | 3> = {
+  arrowright: 0, d: 0, arrowdown: 1, s: 1, arrowleft: 2, a: 2, arrowup: 3, w: 3,
 }
 
 export type TakeOnBlockedReason = 'cliff' | 'battery' | 'edge' | 'busy'
@@ -63,6 +68,11 @@ export interface TakeOnMountHandle {
   orderMine: (x: number, y: number) => void
   /** Start a manual drill on the column directly ahead of the rover. */
   mine: () => boolean
+  /**
+   * Empty the rover's own Takeon hold. For hosts that count the haul themselves (the rover survey): otherwise
+   * loose regolith fills Takeon's hold and every later drill is silently refused as full.
+   */
+  emptyCargo: () => void
   /** Scanner sweep. Takeon's own control is the X key on the field canvas. */
   scan: () => void
   /**
@@ -128,6 +138,8 @@ export interface TakeOnMountProps {
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
   onReady?: (mission: MissionState) => void
+  /** E / Space on the keyboard. When set, the host drills (so it can dig down); otherwise the mount drills. */
+  onMineKey?: () => void
   onError?: (error: Error) => void
 }
 
@@ -141,6 +153,85 @@ export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth'
   return {
     width: Math.max(1, canvas.clientWidth || 800),
     height: Math.max(1, canvas.clientHeight || 600),
+  }
+}
+
+/** The parts of a mounted Takeon game this file reaches past the public API for. */
+interface DrillableGame {
+  mine: () => boolean
+  sim: { rover: { facing: 0 | 1 | 2 | 3 } }
+}
+
+/**
+ * Drill the column ahead, or failing that whichever neighbour can be drilled, so the
+ * player does not have to line the rover up first (Liam, 2026-10-30: easier Takeon).
+ */
+export function drillAnySide(game: DrillableGame): boolean {
+  const rover = game.sim.rover
+  const start = rover.facing
+  for (let turn = 0; turn < 4; turn++) {
+    rover.facing = ((start + turn) % 4) as 0 | 1 | 2 | 3
+    if (game.mine()) return true
+  }
+  rover.facing = start
+  return false
+}
+
+/**
+ * Give the rover enough climb to leave its landing site (see lib/takeon/drivable.ts).
+ * Rough bodies keep their cliffs; the wheels just get one more step where they need it.
+ */
+function openLandingSite(game: unknown): void {
+  const sim = (game as { sim?: { world?: DrivableWorld; rover?: { pos?: { x: number; y: number }; stats?: { maxClimb?: number } } } }).sim
+  const world = sim?.world
+  const rover = sim?.rover
+  if (!world || !rover?.pos || !rover.stats || typeof rover.stats.maxClimb !== 'number') return
+  rover.stats.maxClimb = assistedClimb(world, rover.pos, rover.stats.maxClimb)
+}
+
+/** Camera zoom the field opens at: Takeon's 3.2 shows only a few tiles, so open wider. */
+export function fieldZoom(viewport: { width: number; height: number }): number {
+  return Math.min(viewport.width, viewport.height) < 500 ? 1.7 : 2
+}
+
+/**
+ * Open the field at a readable distance and keep life where life is: the vendored
+ * renderer scatters wandering critters, flora and a flyer on every body, which on an
+ * airless asteroid reads as wrong. They stay only once a world is blooming or thriving.
+ */
+function settleFieldView(game: unknown, viewport: { width: number; height: number }, lifeStage: LifeStage | undefined): void {
+  const renderer = (game as { renderer?: { camera?: { setZoom?: (z: number) => void }; critters?: unknown[]; flora?: unknown[]; flyers?: unknown[] } }).renderer
+  renderer?.camera?.setZoom?.(fieldZoom(viewport))
+  evenFieldGrid(renderer)
+  if (lifeStage === 'blooming' || lifeStage === 'thriving') return
+  if (renderer?.critters) renderer.critters.length = 0
+  if (renderer?.flora) renderer.flora.length = 0
+  if (renderer?.flyers) renderer.flyers.length = 0
+}
+
+/**
+ * The vendored renderer strokes its surface grid in pale cyan, which disappears on light ground and
+ * glares on dark, so the field looked half gridded. Each surface chunk's context swaps that stroke
+ * for one faint dark line, so the grid reads the same everywhere.
+ */
+function evenFieldGrid(renderer: unknown): void {
+  const r = renderer as { rebuildChunk?: (chunk: { canvas: HTMLCanvasElement }) => void } | undefined
+  const rebuild = r?.rebuildChunk
+  if (!r || typeof rebuild !== 'function') return
+  const stroke = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'strokeStyle')
+  if (!stroke?.set || !stroke.get) return
+  const patched = new WeakSet<CanvasRenderingContext2D>()
+  r.rebuildChunk = function (chunk) {
+    const ctx = chunk.canvas.getContext('2d')
+    if (ctx && !patched.has(ctx)) {
+      patched.add(ctx)
+      Object.defineProperty(ctx, 'strokeStyle', {
+        configurable: true,
+        get() { return stroke.get!.call(ctx) },
+        set(value: unknown) { stroke.set!.call(ctx, isBlueprintGridStroke(value) ? FIELD_GRID_LINE : value) },
+      })
+    }
+    return rebuild.call(this, chunk)
   }
 }
 
@@ -167,6 +258,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   onEvent,
   onRouteChange,
   onReady,
+  onMineKey,
   onError,
 }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -193,14 +285,66 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargoRef.current = seedCargo
   const seedCacheRef = useRef(seedCache)
   seedCacheRef.current = seedCache
-  const callbacksRef = useRef({ onError, onEvent, onRouteChange, onReady })
-  callbacksRef.current = { onError, onEvent, onRouteChange, onReady }
+  const callbacksRef = useRef({ onError, onEvent, onRouteChange, onReady, onMineKey })
+  callbacksRef.current = { onError, onEvent, onRouteChange, onReady, onMineKey }
 
   // Only the target identity matters for the mount; a fresh object with the
   // same id must not remount the field.
   const targetId = target?.id
   const targetRef = useRef(target)
   targetRef.current = target
+
+  // Takeon's own canvas Controls never receive keys inside Landnam (the E drill key did nothing either), so
+  // the arrow keys looked broken. Landnam drives the rover from the keyboard itself, with Takeon's key map:
+  // arrows/WASD drive (a held key keeps driving), E or Space drills, X scans. A duplicate press from Takeon's
+  // Controls, if they ever do fire, is refused as "busy" by the simulation, so it cannot double-move.
+  useEffect(() => {
+    if (readOnly) return
+    const held = new Set<string>()
+    const ignore = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return true
+      const tag = (event.target as HTMLElement | null)?.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (ignore(event)) return
+      const game = gameRef.current
+      if (!game) return
+      const key = event.key.toLowerCase()
+      const dir = TAKEON_KEY_DIR[key]
+      if (dir !== undefined) {
+        event.preventDefault()
+        if (!held.has(key)) game.move(dir)
+        held.add(key)
+        return
+      }
+      if (event.repeat) return
+      if (key === 'e' || key === ' ') {
+        event.preventDefault()
+        const onMineKey = callbacksRef.current.onMineKey
+        if (onMineKey) onMineKey()
+        else drillAnySide(game)
+      }
+      else if (key === 'x') game.scan()
+    }
+    const onKeyUp = (event: KeyboardEvent) => { held.delete(event.key.toLowerCase()) }
+    const onBlur = () => held.clear()
+    // A held key keeps driving, one step attempt every 90 ms (Takeon's own repeat rate).
+    const repeat = window.setInterval(() => {
+      const game = gameRef.current
+      if (!game) return
+      for (const key of held) game.move(TAKEON_KEY_DIR[key])
+    }, 90)
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.clearInterval(repeat)
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [readOnly])
 
   useImperativeHandle(ref, () => ({
     deposit: () => gameRef.current?.deposit() ?? 0,
@@ -222,7 +366,13 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     cancelOrder: () => gameRef.current?.cancelOrder(),
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
     orderMine: (x, y) => gameRef.current?.orderMine(x, y),
-    mine: () => gameRef.current?.mine() ?? false,
+    mine: () => (gameRef.current ? drillAnySide(gameRef.current) : false),
+    emptyCargo: () => {
+      const rover = gameRef.current?.sim.rover
+      if (!rover) return
+      rover.cargo = {}
+      rover.cargoUsed = 0
+    },
     scan: () => { gameRef.current?.scan() },
     move: dir => gameRef.current?.move(dir) ?? false,
     rover: () => {
@@ -254,6 +404,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let app: import('pixi.js').Application | null = null
     let mounted: import('@takeon/pixi').MountedRoverGame | null = null
     let resizeObserver: ResizeObserver | null = null
+    let fieldUpload: (() => void) | null = null
+    let fieldTexture: import('pixi.js').Texture | null = null
     let saveTimer: ReturnType<typeof setTimeout> | null = null
     let unbindHostEvents: (() => void) | null = null
     let unbindStateChanged: (() => void) | null = null
@@ -306,8 +458,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
-        // Light blueprint look (SSL-501): ice sky, ice night (no near-black), neutral tint on every body.
-        body.palette = { sky: '#9fd0ee', skyNight: '#bcd7ea', tint: [1, 1, 1] }
+        // Terrain colour from what the body is made of and its likely conditions (terrainColour.ts).
+        const look = currentTarget ? terrainLookForTarget(currentTarget) : DEFAULT_TERRAIN_LOOK
+        applyTerrainLook(engine as unknown as Parameters<typeof applyTerrainLook>[0], look)
+        body.palette = { sky: look.sky, skyNight: look.skyNight, tint: look.tint }
 
         // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
         // Landnam owns the persisted delivery state, not Takeon — so they
@@ -318,26 +472,20 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const viewport = takeOnViewportSize(canvasElement)
-        const sky = getComputedStyle(canvasElement).getPropertyValue('--ln-bp-bg').trim()
+        const sky = look.skyNight
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
           width: viewport.width,
           height: viewport.height,
-          ...(sky ? { background: sky, backgroundAlpha: 1 } : { backgroundAlpha: 0 }),
+          background: sky,
+          backgroundAlpha: 1,
           antialias: true,
         })
         if (disposed) {
           app.destroy()
           app = null
           return
-        }
-
-        // Hue guard: engine props with fixed warm or green colours land in the cyan/teal band.
-        try {
-          app.stage.filters = [createBlueprintHueFilter(PIXI) as import('pixi.js').Filter]
-        } catch (filterError) {
-          console.warn('[Takeon] blueprint hue filter unavailable', filterError)
         }
 
         mounted = mountRoverGame({
@@ -391,10 +539,37 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         resizeObserver = new ResizeObserver(entries => {
           const entry = entries[0]
           if (!entry || !mounted) return
-          mounted.resize(entry.contentRect.width, entry.contentRect.height)
+          // The Pixi backing canvas must follow too, or a rotated phone shows the field squeezed into a strip.
+          const { width, height } = entry.contentRect
+          app?.renderer.resize(width, height)
+          mounted.resize(width, height)
+          // The vendored adapter's texture keeps its first GPU size, so after a phone turns only a corner of the
+          // field showed. Give the sprite a fresh texture on the resized canvas and upload it ourselves (30 fps,
+          // the adapter's rate); the adapter keeps updating its old, now unused texture.
+          const sprite = mounted.sprite as unknown as import('pixi.js').Sprite
+          const fieldCanvas = sprite.texture.source.resource as unknown
+          if (!(fieldCanvas instanceof HTMLCanvasElement) || !app) return
+          const previous = fieldTexture
+          fieldTexture = new PIXI.Texture({ source: new PIXI.CanvasSource({ resource: fieldCanvas }) })
+          sprite.texture = fieldTexture
+          previous?.destroy(true)
+          sprite.width = width
+          sprite.height = height
+          if (!fieldUpload) {
+            let last = 0
+            fieldUpload = () => {
+              const now = performance.now()
+              if (now - last < 33) return
+              last = now
+              sprite.texture.source.update()
+            }
+            app.ticker.add(fieldUpload)
+          }
         })
         resizeObserver.observe(canvasElement)
 
+        openLandingSite(mounted.game)
+        settleFieldView(mounted.game, viewport, lifeStage)
         mounted.start()
         gameRef.current = mounted.game
         document.addEventListener('visibilitychange', syncVisibility)

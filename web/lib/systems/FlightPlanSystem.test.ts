@@ -20,6 +20,13 @@ describe('FlightPlanSystem', () => {
     expect(revealFlightPlanHint(started, 8_100).hintShownFor).toBe('mining')
   })
 
+  it('folds the next try\'s coach to its chip once the onboarding mission is done, and a replay opens it', () => {
+    const mined = completeFlightPlanEvent(startFlightPlan(EMPTY_FLIGHT_PLAN, 100), 'mining-debriefed')
+    expect(currentTrainingTry(mined)).toBe('scan')
+    expect(mined.hidden).toBe(true)
+    expect(replayFlightPlanTry(mined, 'scan').hidden).toBe(false)
+  })
+
   it('advances only when the active try receives its completion event', () => {
     const started = startFlightPlan(EMPTY_FLIGHT_PLAN, 100)
     expect(currentTrainingTry(completeFlightPlanEvent(started, 'tess-classified'))).toBe('mining')

@@ -4,7 +4,6 @@ import { stampLedger } from '@/lib/sync/ledger'
 import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, BASE_LASER_CHARGES } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
@@ -30,6 +29,7 @@ import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/a
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
+import { pushScreenPath, screenForPath } from '@/lib/offline/offlineNav'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
 import { lockBaseWorldPreview, sanitizeEarthBiome } from '@/lib/scene/base-world'
@@ -197,7 +197,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const router = useRouter()
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
@@ -328,10 +327,25 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     }
     const nextPath = canonicalGamePath(state)
     if ((ui.inflightPath.current ?? window.location.pathname) !== nextPath) {
-      ui.inflightPath.current = nextPath
-      router.push(nextPath)
+      // SSL-729: a screen change is a URL write, not a route fetch. router.push asked the
+      // server for the route and, offline or on a bad connection, fell back to a page load.
+      ui.inflightPath.current = null
+      pushScreenPath(nextPath)
     }
   }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SSL-729: Back/Forward. Screen entries are pushed without a route change, so
+  // Next keeps the [screen] page's param as it was at page load; the screen is
+  // read from the path instead.
+  useEffect(() => {
+    if (!urlSync) return
+    const onPop = () => {
+      const screen = screenForPath(window.location.pathname)
+      if (screen) ui.setScreenFromUrl(screen)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [urlSync]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Dev-only QA bridge (never present when isDevLauncherEnabled() is false, so
   // never in production). Lets a headless driver jump a real, signed-in
@@ -484,6 +498,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       upgradeLaunchpad: economy.upgradeLaunchpad,
       upgradeBuilding: economy.upgradeBuilding,
       excavateSubsurface: economy.excavateSubsurface,
+      buildGroundTelescope: economy.buildGroundTelescope,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,

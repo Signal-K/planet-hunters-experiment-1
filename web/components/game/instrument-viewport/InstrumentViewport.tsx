@@ -21,6 +21,8 @@ export interface InstrumentAnswer {
   disabled?: boolean
   /** Looks unready but stays tappable, so the tap can explain what is missing. */
   dim?: boolean
+  /** The one answer the player is expected to give now: drawn as the bright submit button. */
+  primary?: boolean
   onClick: () => void
 }
 
@@ -144,6 +146,7 @@ export function InstrumentAnswerRow({ actions, groupTestId, coachTarget }: { act
           data-testid={action.testId}
           disabled={action.disabled}
           data-dim={action.dim ? 'true' : undefined}
+          data-primary={action.primary ? 'true' : undefined}
           onClick={action.onClick}
         >
           {action.label}
@@ -355,9 +358,17 @@ export default function InstrumentViewport({
                 </button>
               </div>
             </div>
-            <p className={styles.status} data-testid="instrument-status">{status}</p>
-            {answers}
-            {tool ?? (emptyToolLabel ? <div className={styles.emptyTool} data-testid="instrument-empty-tool">{emptyToolLabel}</div> : null)}
+            {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
+            {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
+            {tool ? <>
+              <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> Mark it</p>
+              {tool}
+              <p className={styles.step} data-testid="instrument-step-save"><b>2</b> Submit your classification</p>
+              {answers}
+            </> : <>
+              {answers}
+              {emptyToolLabel ? <div className={styles.emptyTool} data-testid="instrument-empty-tool">{emptyToolLabel}</div> : null}
+            </>}
           </div>
         </div>
       </div>
@@ -405,7 +416,7 @@ export function InstrumentStandbyViewport({
         </div>
       )}
       answers={answers ?? <p className={styles.standbyNote}>No verdict yet</p>}
-      emptyToolLabel="No tool"
+      emptyToolLabel={answers ? undefined : "No tool"}
     />
   )
 }

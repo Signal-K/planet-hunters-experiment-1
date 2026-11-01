@@ -516,6 +516,8 @@ export interface GameActions {
   upgradeBuilding: (id: string) => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
+  /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
+  buildGroundTelescope: () => boolean
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
   buyMinerals: (mineralId: string, amount: number) => void

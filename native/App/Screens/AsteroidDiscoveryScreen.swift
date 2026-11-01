@@ -49,7 +49,7 @@ struct AsteroidDiscoveryScreen: View {
             overlay: { EmptyView() },
             answers: {
                 if saved != nil {
-                    Panel(accent: Theme.teal) { Text("Annotation saved").font(AppFont.display(16)) }
+                    Panel(accent: Theme.teal) { Text("Classification submitted").font(AppFont.display(16)) }
                 } else {
                     HStack(spacing: 10) {
                         InstrumentAnswerButton(title: "Flag likely real", primary: true) { store.classifyAsteroid(c.id, verdict: .likelyReal) }

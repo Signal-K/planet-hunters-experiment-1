@@ -92,8 +92,15 @@ describe('applyMiningDone', () => {
     expect(next.player.miningCargoInProgress).toBeUndefined()
   })
 
-  it('does not extract cargo from the rover survey screen', () => {
-    const s = makeState({ screen: 'rover-survey' })
+  // SSL-718 (Liam, 2026-10-30): rover mining uses Takeon, so a rover haul is loaded aboard from the survey field.
+  it('loads a rover haul aboard from the rover survey screen', () => {
+    const next = applyMiningDone(makeState({ screen: 'rover-survey' }), { ice: 3 }, 500)
+    expect(next.lastCargo).toEqual({ ice: 3 })
+    expect(next.player.missionPhase).toBe('transit')
+  })
+
+  it('does not extract cargo from an unrelated screen', () => {
+    const s = makeState({ screen: 'hub' })
     expect(applyMiningDone(s, { ice: 3 }, 500)).toBe(s)
   })
 })
