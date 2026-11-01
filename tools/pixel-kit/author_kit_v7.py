@@ -19,6 +19,11 @@ P = {  # kit palette, sampled from the old pad-rocket.png; art-reference.png dir
     "g": (51, 51, 59, 255),
     "A": (146, 138, 128, 255), "a": (112, 106, 100, 255), "e": (176, 168, 156, 255), "d": (74, 70, 68, 255),
     "F": (226, 218, 200, 255), "E": (186, 176, 158, 255),  # warm concrete greys, cream panel + panel shadow
+    # Earth (return leg): ocean night/base/lit/rim, land, desert, ice, cloud, each night/base/lit/rim.
+    "o": (23, 58, 112, 255), "O": (38, 92, 160, 255), "q": (64, 132, 196, 255), "Q": (120, 176, 222, 255),
+    "l": (40, 78, 52, 255), "v": (70, 128, 70, 255), "V": (108, 168, 92, 255), "u": (150, 196, 118, 255),
+    "s": (110, 90, 58, 255), "t": (170, 140, 88, 255), "T": (204, 176, 118, 255), "U": (226, 204, 150, 255),
+    "i": (150, 170, 190, 255), "I": (214, 226, 236, 255), "c": (240, 246, 250, 255), "Z": (255, 255, 255, 255),
 }
 
 class Img:
@@ -241,6 +246,40 @@ STARS = {
  "stars-mid": [(12,20),(52,8),(84,44),(26,66),(108,90),(66,98),(118,12),(40,118)],
  "stars-near": [(30,30),(94,70),(60,110),(8,88)],
 }
+def earth():
+    """48x48 Earth for the return leg (Liam, 01.11: the trip home showed the asteroid). Lit from the upper left
+    like the asteroid, a flat night tone with a checker dither on the terminator, and the kit outline."""
+    import math
+    n, r, cx = 48, 22.5, 23.5
+    tones = {"ocean": "oOqQ", "land": "lvVu", "sand": "stTU", "ice": "iIcZ", "cloud": "iIcZ"}
+    blobs = [(-0.42, -0.30, 0.22, 0.26, 0.3, "land"), (-0.30, 0.02, 0.10, 0.12, 0.0, "land"),
+             (-0.20, 0.30, 0.15, 0.30, -0.25, "land"), (0.22, -0.18, 0.18, 0.16, 0.0, "sand"),
+             (0.30, 0.16, 0.16, 0.26, 0.2, "land"), (0.55, -0.36, 0.22, 0.14, 0.1, "land"), (0.62, 0.42, 0.10, 0.08, 0.0, "sand")]
+    clouds = [(-0.05, -0.55, 0.42, 0.045), (0.15, 0.62, 0.36, 0.04), (-0.55, 0.15, 0.2, 0.035), (0.45, 0.0, 0.18, 0.035)]
+    im = Img(n, n)
+    for y in range(n):
+        for x in range(n):
+            dx, dy = x - cx, y - cx
+            d = math.hypot(dx, dy)
+            if d > r + 0.5: continue
+            if d > r - 1.0: im.set(x, y, "K"); continue
+            u, v = dx / r, dy / r
+            lit = -0.62 * u - 0.55 * v + 0.35 * math.sqrt(max(0, 1 - u * u - v * v))
+            tone = 0 if lit < -0.12 else 1 if lit < 0.3 else 2
+            if tone == 2 and d > r - 3.2 and (u + v) < -0.6: tone = 3
+            kind = "ocean"
+            for bx, by, rx, ry, rot, k in blobs:
+                a, b = u - bx, v - by
+                ca, sa = math.cos(rot), math.sin(rot)
+                p, q = (a * ca + b * sa) / rx, (-a * sa + b * ca) / ry
+                if p * p + q * q < 1 + 0.12 * math.sin(x * 1.7 + y * 0.9) * math.cos(y * 1.3 - x * 0.4): kind = k
+            if abs(v) > 0.80: kind = "ice"
+            for bx, by, rx, ry in clouds:
+                if abs(u - bx) < rx and abs(v - by - 0.04 * math.sin((u - bx) * 9)) < ry: kind = "cloud"
+            if tone == 0 and lit > -0.22 and (x + y) % 2 == 0: tone = 1
+            im.set(x, y, tones[kind][tone])
+    return im
+
 def star_tile(name):
     t = Img(128, 128)
     for i, (x, y) in enumerate(STARS[name]):
@@ -268,14 +307,14 @@ def main():
     os.makedirs(SHEET, exist_ok=True)
     parts = {
         "pad-gantry-frame": gantry_frame(), "pad-slab-concrete": pad_slab(), "hangar-white": hangar(), "pad-rocket": rocket(),
-        "silo-cutaway": silo(), "asteroid-pixel": asteroid(),
+        "silo-cutaway": silo(), "asteroid-pixel": asteroid(), "earth-pixel": earth(),
         "flame-0": Img.grid(FLAME[0]), "flame-1": Img.grid(FLAME[1]), "flame-2": Img.grid(FLAME[2]),
         "stars-far": star_tile("stars-far"), "stars-mid": star_tile("stars-mid"), "stars-near": star_tile("stars-near"),
     }
     for n, im in parts.items(): im.save(os.path.join(KIT, n + ".png"))
     space_bands().save(os.path.join(KIT, "space-bands.png"))
     # full sheet: parts laid out on a 4px-gutter row grid
-    order = ["pad-gantry-frame", "pad-rocket", "pad-slab-concrete", "hangar-white", "silo-cutaway", "asteroid-pixel", "flame-0", "flame-1", "flame-2"]
+    order = ["pad-gantry-frame", "pad-rocket", "pad-slab-concrete", "hangar-white", "silo-cutaway", "asteroid-pixel", "earth-pixel", "flame-0", "flame-1", "flame-2"]
     W = max(parts[n].w for n in order) + 8
     H = sum(parts[n].h + 4 for n in order) + 4
     sheet = Img(max(W, 140), H)
