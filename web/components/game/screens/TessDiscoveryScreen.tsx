@@ -7,7 +7,8 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentStandbyViewport, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import { periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
@@ -76,6 +77,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [needsMark, setNeedsMark] = useState(false)
   // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
+  // SSL-745: photometry module — time zoom, scan, bin and phase fold act on the data itself.
+  const [lc, setLc] = useState<LightcurveControls>(DEFAULT_LIGHTCURVE_CONTROLS)
+  useEffect(() => { setLc(DEFAULT_LIGHTCURVE_CONTROLS) }, [candidate?.id])
 
   useEffect(() => {
     if (visualCandidate) {
@@ -152,6 +156,12 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     const ys = points.map(point => point.y)
     return [Math.min(...ys), Math.max(...ys)]
   }, [points])
+
+  const markedRanges = (candidate && !candidate.id.startsWith(TRAINING_ID_PREFIX) ? classifications[candidate.id]?.ranges : undefined) ?? ranges
+  const measuredPeriod = periodFromRanges(markedRanges)
+  // Fold around the player's first marked dip, so a correct period stacks their marks on T0.
+  const foldEpoch = markedRanges.length ? (markedRanges[0].x1 + markedRanges[0].x2) / 2 : (points[0]?.x ?? 0)
+  const display = useMemo(() => lightcurveDisplay(sectorPoints, points, lc, foldEpoch), [sectorPoints, points, lc, foldEpoch])
 
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="tess" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
@@ -260,6 +270,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const showMap = classification != null || forceMapView
 
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
+    const photometry = applyLightcurveCommand(lc, line, measuredPeriod)
+    if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
     if (head?.toUpperCase() !== 'SECTOR') return null
     const index = Number(arg) - 1
@@ -284,9 +296,25 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       onCommand={onCommand}
       devBar={devBar}
+      module={showMap ? undefined : {
+        name: 'PHOTOMETRY · TP-02',
+        testId: 'tess-photometry',
+        lights: <>
+          <InstrumentLamp label="FOLD" on={lc.fold} />
+          <InstrumentLamp label="BIN" on={lc.bin > 1} tone="amber" />
+        </>,
+        content: <>
+          <InstrumentKnob label="TIME" testId="tess-time" min={LIGHTCURVE_LIMITS.spanMin} max={LIGHTCURVE_LIMITS.spanMax} step={0.5} value={lc.span} readout={display.folded ? '—' : `${(display.xDomain[1] - display.xDomain[0]).toFixed(1)}d`} onChange={span => setLc(c => ({ ...c, span, fold: false }))} />
+          <InstrumentKnob label="SCAN" testId="tess-scan" min={0} max={1} step={0.02} value={lc.scan} readout={display.folded ? '—' : `D${display.xDomain[0].toFixed(1)}`} onChange={scan => setLc(c => ({ ...c, scan, fold: false }))} />
+          <InstrumentKnob label="PERIOD" testId="tess-period" min={LIGHTCURVE_LIMITS.periodMin} max={LIGHTCURVE_LIMITS.periodMax} step={0.01} value={lc.period} readout={`${lc.period.toFixed(2)}d`} onChange={period => setLc(c => ({ ...c, period, fold: true }))} />
+          <InstrumentModuleKey testId="tess-bin" label="BIN" readout={`×${lc.bin}`} pressed={lc.bin > 1} onClick={() => setLc(c => ({ ...c, bin: nextBin(c.bin) }))} />
+          <InstrumentModuleKey testId="tess-snap" label="SNAP" readout={measuredPeriod != null ? `P ${measuredPeriod.toFixed(2)}d` : '2 MARKS'} disabled={measuredPeriod == null} onClick={() => measuredPeriod != null && setLc(c => ({ ...c, fold: true, period: Math.min(LIGHTCURVE_LIMITS.periodMax, Math.max(LIGHTCURVE_LIMITS.periodMin, measuredPeriod)) }))} />
+          <InstrumentSwitch label="FOLD" testId="tess-fold" pressed={lc.fold} onToggle={() => setLc(c => ({ ...c, fold: !c.fold }))} />
+        </>,
+      }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
-          {showMap ? 'TARGET SELECT' : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
+          {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
       viewportChrome={(
@@ -329,7 +357,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         )
       ) : (
         <div data-coach-target="tess-chart" style={{ position: 'absolute', inset: 0 }}>
-          {visualCandidate && (
+          {visualCandidate && !display.folded && lc.span === 1 && (
             /* Dip hint on the deepest transit; ObservatoryChart's plot runs from 66px to 100% - 14px. */
             <span
               aria-hidden="true"
@@ -338,11 +366,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             />
           )}
           <ObservatoryChart
-            points={sectorPoints}
-            ranges={activeRanges}
+            points={display.points}
+            xDomain={display.xDomain}
+            folded={display.folded}
+            ranges={display.folded ? [] : activeRanges}
             onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); setNeedsMark(false); help.reportAction('mark') }}
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
-            locked={!dragArmed}
+            locked={!dragArmed || display.folded}
             yDomain={yDomain}
           />
         </div>

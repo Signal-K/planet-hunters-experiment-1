@@ -102,12 +102,18 @@ export interface ObservatoryChartProps {
   // Pass the full candidate's range so only the sector that actually
   // contains the dip looks dramatic; the rest read as a flat, real curve.
   yDomain?:      [number, number]
+  /** Plotted time window (TIME/SCAN knobs). Defaults to the first and last point. */
+  xDomain?:      [number, number]
+  /** Phase-folded: x is days from the trial transit, drawn as a stacked scatter with a T0 line. */
+  folded?:       boolean
 }
 
-export default function ObservatoryChart({ points, ranges, onRange, onRemoveRange, locked = false, height, yDomain }: ObservatoryChartProps) {
+export default function ObservatoryChart({ points, ranges, onRange, onRemoveRange, locked = false, height, yDomain, xDomain, folded = false }: ObservatoryChartProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const pointsRef = useRef(points); pointsRef.current = points
   const yDomainRef = useRef(yDomain); yDomainRef.current = yDomain
+  const xDomainRef = useRef(xDomain); xDomainRef.current = xDomain
+  const foldedRef = useRef(folded); foldedRef.current = folded
   const rangesRef = useRef(ranges); rangesRef.current = ranges
   const onRangeRef = useRef(onRange); onRangeRef.current = onRange
   const onRemoveRef = useRef(onRemoveRange); onRemoveRef.current = onRemoveRange
@@ -176,7 +182,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       const upPx = (e.clientX - rect.left) * (W / rect.width)
       const deltaPx = Math.abs(upPx - dragAnchorPx)
       const plotW = W - PAD_LEFT - PAD_RIGHT
-      const xMin = pts[0].x, xMax = pts[pts.length - 1].x
+      const [xMin, xMax] = xDomainRef.current ?? [pts[0].x, pts[pts.length - 1].x]
 
       if (deltaPx < 6) {
         const tapX = dataForX(dragAnchorPx, xMin, xMax, plotW)
@@ -205,7 +211,8 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       if (!pts.length) return
       const plotW = W - PAD_LEFT - PAD_RIGHT
       const plotH = H - PAD_TOP - PAD_BOT
-      const xMin = pts[0].x, xMax = pts[pts.length - 1].x
+      const [xMin, xMax] = xDomainRef.current ?? [pts[0].x, pts[pts.length - 1].x]
+      const isFolded = foldedRef.current
       const domain = yDomainRef.current
       const [yMin, yMax] = domain ?? (() => {
         const ys = pts.map(p => p.y)
@@ -263,8 +270,10 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       rangeG.clear()
       labelsC.removeChildren()
       for (const r of rangesRef.current) {
-        const rx1 = toX(Math.min(r.x1, r.x2))
-        const rx2 = toX(Math.max(r.x1, r.x2))
+        // Clipped to the plot: with TIME zoomed in, a mark can sit partly or wholly off the window.
+        const rx1 = Math.max(PAD_LEFT, toX(Math.min(r.x1, r.x2)))
+        const rx2 = Math.min(PAD_LEFT + plotW, toX(Math.max(r.x1, r.x2)))
+        if (rx2 <= rx1) continue
         const rw = rx2 - rx1
         rangeG.rect(rx1, PAD_TOP, rw, plotH).fill({ color: pal.mark, alpha: 0.2 })
         for (const ex of [rx1, rx2]) {
@@ -301,7 +310,14 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       // it (only runs with length > 1 got stroked). There's no reason to
       // break the line at all for this dataset — draw one continuous path.
       dataG.clear()
-      if (pts.length > 1) {
+      if (isFolded) {
+        // T0: where a correct trial period stacks every transit.
+        const zx = toX(0)
+        for (let y = PAD_TOP; y < PAD_TOP + plotH; y += 8) {
+          dataG.moveTo(zx, y).lineTo(zx, Math.min(y + 4, PAD_TOP + plotH)).stroke({ color: pal.hi, alpha: 0.6, width: 1.5 })
+        }
+      }
+      if (pts.length > 1 && !isFolded) {
         dataG.moveTo(toX(pts[0].x), toY(pts[0].y))
         for (let i = 1; i < pts.length; i += 1) dataG.lineTo(toX(pts[i].x), toY(pts[i].y))
         dataG.stroke({ color: pal.line, alpha: 0.68, width: 1.4 })
@@ -316,7 +332,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       for (let i = 0; i <= X_TICKS; i++) {
         const v = xMin + (i / X_TICKS) * (xMax - xMin)
         const cx = PAD_LEFT + (i / X_TICKS) * plotW
-        const t = new Text({ text: v.toFixed(1), style: tickStyle })
+        const t = new Text({ text: isFolded ? (Math.abs(v) < 0.005 ? 'T0' : `${v > 0 ? '+' : ''}${v.toFixed(2)}`) : v.toFixed(1), style: tickStyle })
         t.anchor.set(i === 0 ? 0 : i === X_TICKS ? 1 : 0.5, 0); t.x = cx; t.y = PAD_TOP + plotH + 6
         labelsC.addChild(t)
       }

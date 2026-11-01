@@ -30,6 +30,8 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
     var instrumentId = "instrument"
     /// Instrument level: the default finish and which finishes are unlocked.
     var level = 1
+    /// This project's own instrument (SSL-745, web `InstrumentModule`): knobs and keys that act on its data.
+    var module: InstrumentModule? = nil
     @State private var finishChoice = InstrumentFinish.auto
     private var fin: InstrumentFinish { InstrumentFinish.resolve(finishChoice, level: level) }
     private func chooseFinish(_ choice: String) {
@@ -43,6 +45,7 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
                 header
                 stage
                 controls
+                if let module { modulePlate(module) }
                 if let b = briefing, let i = briefStep, i < b.lines.count { desk(b, i) } else { command }
                 if let b = briefing, briefStep == nil {
                     InstrumentAnswerButton(title: "Briefing · \(b.speaker)") { briefStep = 0 }
@@ -170,6 +173,16 @@ struct InstrumentViewport<Well: View, Overlay: View, Answers: View, Tool: View>:
         })
     }
 
+    private func modulePlate(_ m: InstrumentModule) -> some View {
+        plate(m.name, lights: {
+            HStack(spacing: 8) { ForEach(Array(m.lights.enumerated()), id: \.offset) { _, l in Led(label: l.label, on: l.on, color: l.amber ? ConsoleHW.amber : fin.violet) } }
+        }, content: {
+            m.content.frame(maxWidth: .infinity)
+        })
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(m.name)
+    }
+
     /// Steps AUTO → each unlocked finish. Pips show all five; locked ones are dark.
     private var finishKey: some View {
         Button { chooseFinish(InstrumentFinish.next(after: finishChoice, level: level)) } label: {
@@ -286,6 +299,37 @@ extension InstrumentViewport {
         guard wanted.unlockLevel <= level else { return ["> FINISH \(arg)  LOCKED · REACH LV \(wanted.unlockLevel)"] }
         chooseFinish(wanted.id)
         return ["> FINISH  \(arg)"]
+    }
+}
+
+/// A project's own instrument plate under the optics (web `InstrumentModule`, SSL-745).
+struct InstrumentModule {
+    let name: String
+    var lights: [(label: String, on: Bool, amber: Bool)] = []
+    let content: AnyView
+}
+
+/// A glass keycap for a project module: one tap, one action (SNAP, PALETTE, BIN).
+struct ModuleKey: View {
+    @Environment(\.instrumentFinish) private var fin
+    let label: String
+    var readout: String? = nil
+    var pressed = false
+    var enabled = true
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Text(label).font(AppFont.display(14)).tracking(1).foregroundStyle(ConsoleHW.cream).lineLimit(1)
+                if let readout { Text(readout).font(AppFont.mono(14)).foregroundStyle(fin.phosphor).lineLimit(1).minimumScaleFactor(0.8) }
+            }
+            .padding(.horizontal, 10).frame(minWidth: 64, minHeight: 52)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(pressed ? fin.magenta : .clear, lineWidth: 2))
+        }
+        .buttonStyle(KeycapStyle(fin: fin, radius: 10))
+        .disabled(!enabled).opacity(enabled ? 1 : 0.5)
+        .accessibilityLabel(label + (readout.map { ", \($0)" } ?? ""))
+        .accessibilityAddTraits(pressed ? .isSelected : [])
     }
 }
 
@@ -469,7 +513,7 @@ private struct StageGreebles: View {
 }
 
 /// Status lamp with an engraved label.
-private struct Led: View {
+struct Led: View {
     @Environment(\.instrumentFinish) private var fin
     let label: String
     let on: Bool
@@ -557,7 +601,7 @@ private struct KeycapStyle: ButtonStyle {
 
 /// Round dial: drag up/down to turn, or use VoiceOver adjust. Graduated bezel, a value arc
 /// sweeping blue → violet → magenta, a knurled cap and an LCD readout. 64pt hit area.
-private struct Knob: View {
+struct Knob: View {
     @Environment(\.instrumentFinish) private var fin
     let label: String
     let readout: String
@@ -608,7 +652,7 @@ private struct Knob: View {
 }
 
 /// Bat-lever toggle with a status lamp; the channel lights blue → magenta when on.
-private struct LeverSwitch: View {
+struct LeverSwitch: View {
     @Environment(\.instrumentFinish) private var fin
     let label: String
     let on: Bool

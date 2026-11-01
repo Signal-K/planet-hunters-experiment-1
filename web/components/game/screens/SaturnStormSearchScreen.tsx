@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentStandbyViewport, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { InstrumentAnswerRow, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import {
   SATURN_QUESTION,
@@ -37,6 +38,36 @@ export const SATURN_BRIEFING = [
   'Smooth bands with no knot are NO. If you cannot tell, answer MAYBE. Each answer is saved straight away. Answer all nine squares to finish the frame.',
 ] as const
 
+/**
+ * SSL-745: false-colour maps for the greyscale Cassini frame. Brightness becomes colour, so a
+ * bright storm knot stands out from the bands. Mirrored by native `SaturnPalette`.
+ */
+export const SATURN_PALETTES = [
+  { id: 'clr', name: 'CLR', table: null },
+  { id: 'heat', name: 'HEAT', table: { r: '0 0.7 1 1', g: '0 0.1 0.65 1', b: '0 0.15 0.1 0.9' } },
+  { id: 'ice', name: 'ICE', table: { r: '0 0.05 0.4 1', g: '0 0.3 0.85 1', b: '0.08 0.7 1 1' } },
+  { id: 'mt', name: 'MT', table: { r: '0 0.45 0.95 1', g: '0 0.05 0.35 1', b: '0.1 0.6 0.9 1' } },
+] as const
+
+/** Inline SVG filters the frame and loupe read: one colour map per palette, plus an unsharp kernel. */
+function SaturnFilters() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+      {SATURN_PALETTES.filter(p => p.table).map(p => (
+        <filter key={p.id} id={`sat-${p.id}`} colorInterpolationFilters="sRGB">
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            <feFuncR type="table" tableValues={p.table!.r} />
+            <feFuncG type="table" tableValues={p.table!.g} />
+            <feFuncB type="table" tableValues={p.table!.b} />
+          </feComponentTransfer>
+        </filter>
+      ))}
+      <filter id="sat-sharpen"><feConvolveMatrix order="3" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0" preserveAlpha="true" /></filter>
+    </svg>
+  )
+}
+
 type CellState = { answer: SaturnVerdict | null; storm: boolean }
 
 function emptyCells(): CellState[] {
@@ -49,6 +80,10 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(2)
   const [cells, setCells] = useState<CellState[]>(emptyCells)
+  const [contrast, setContrast] = useState(1)
+  const [palette, setPalette] = useState(0)
+  const [sharpen, setSharpen] = useState(false)
+  const [loupe, setLoupe] = useState(false)
 
   useEffect(() => {
     if (!player.freeOperations || !player.saturnImagerLaunchedAt) {
@@ -152,6 +187,28 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     onSubmit(candidate.id, selected, answer, cells[selected]?.storm ?? false)
   }
 
+  const imageFilter = [
+    SATURN_PALETTES[palette].table ? `url(#sat-${SATURN_PALETTES[palette].id})` : '',
+    sharpen ? 'url(#sat-sharpen)' : '',
+    `contrast(${contrast.toFixed(2)})`,
+  ].filter(Boolean).join(' ')
+  const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
+    const [verb, arg] = line.trim().toUpperCase().split(/\s+/)
+    if (verb === 'PALETTE') {
+      const i = arg ? SATURN_PALETTES.findIndex(p => p.name === arg) : (palette + 1) % SATURN_PALETTES.length
+      if (i < 0) return { view, lines: [`> PALETTE  USE ${SATURN_PALETTES.map(p => p.name).join(' ')}`] }
+      setPalette(i); return { view, lines: [`> PALETTE  ${SATURN_PALETTES[i].name}`] }
+    }
+    if (verb === 'CONTRAST') {
+      const n = Number(arg)
+      if (!arg || !Number.isFinite(n)) return { view, lines: [`> CONTRAST  ${contrast.toFixed(1)}`] }
+      const next = Math.min(3, Math.max(0.5, n)); setContrast(next); return { view, lines: [`> CONTRAST  ${next.toFixed(1)}`] }
+    }
+    if (verb === 'SHARPEN') { setSharpen(on => !on); return { view, lines: [`> SHARPEN  ${sharpen ? 'OFF' : 'ON'}`] } }
+    if (verb === 'LOUPE') { setLoupe(on => !on); return { view, lines: [`> LOUPE  ${loupe ? 'OFF' : 'ON'}`] } }
+    return null
+  }
+
   const markStorm = () => {
     if (savedCells[selected] || complete) return
     const storm = !cells[selected]?.storm
@@ -170,20 +227,50 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       title={candidate.opusId.toUpperCase()}
       onBack={onBack}
       status={complete ? 'FRAME COMPLETE' : `PIECES ${pieces} / 9`}
+      onCommand={onCommand}
+      module={{
+        name: 'IMAGING · SI-04',
+        testId: 'saturn-imaging',
+        lights: <>
+          <InstrumentLamp label="SHRP" on={sharpen} />
+          <InstrumentLamp label="LOUPE" on={loupe} tone="amber" />
+        </>,
+        content: <>
+          <InstrumentKnob label="CONTRAST" testId="saturn-contrast" min={0.5} max={3} step={0.05} value={contrast} readout={`${contrast.toFixed(1)}×`} onChange={setContrast} />
+          <InstrumentModuleKey testId="saturn-palette" label="PALETTE" readout={SATURN_PALETTES[palette].name} pressed={palette > 0} onClick={() => setPalette(i => (i + 1) % SATURN_PALETTES.length)} />
+          <InstrumentSwitch label="SHARPEN" testId="saturn-sharpen" pressed={sharpen} onToggle={() => setSharpen(on => !on)} />
+          <InstrumentModuleKey testId="saturn-next-square" label="NEXT SQ" readout={`SQ ${selected + 1}`} disabled={complete} onClick={() => setSelected(i => (i + 1) % 9)} />
+          <InstrumentSwitch label="LOUPE" testId="saturn-loupe" pressed={loupe} onToggle={() => setLoupe(on => !on)} />
+        </>,
+      }}
+      viewportChrome={loupe && !complete ? (
+        <span className={viewportStyles.loupeTag} data-testid="saturn-loupe-tag">SQ {selected + 1} · 3×</span>
+      ) : undefined}
       briefing={{ speaker: 'Saturn desk', lines: SATURN_BRIEFING, startOpen: Object.keys(classifications).length === 0 }}
       caption={(
         <p className={viewportStyles.caption} data-testid="saturn-question">{SATURN_QUESTION}</p>
       )}
       viewport={(
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          className={viewportStyles.frameImage}
-          data-testid="saturn-frame"
-          src={candidate.imageUrl}
-          alt={`Cassini frame ${candidate.opusId}`}
-        />
+        <>
+          <SaturnFilters />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className={viewportStyles.frameImage}
+            data-testid="saturn-frame"
+            src={candidate.imageUrl}
+            alt={`Cassini frame ${candidate.opusId}`}
+            style={{ filter: imageFilter, visibility: loupe && !complete ? 'hidden' : undefined }}
+          />
+          {loupe && !complete && (
+            /* LOUPE: the selected square fills the well at 3×. Same aspect and cover crop as the frame, so it matches the grid square exactly. */
+            <div className={viewportStyles.loupe} data-testid="saturn-loupe-view">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={candidate.imageUrl} alt={`Square ${selected + 1} of Cassini frame ${candidate.opusId}, magnified`} style={{ filter: imageFilter, left: `${-(selected % 3) * 100}%`, top: `${-Math.floor(selected / 3) * 100}%` }} />
+            </div>
+          )}
+        </>
       )}
-      overlay={(
+      overlay={loupe && !complete ? undefined : (
         <div className={viewportStyles.saturnGrid} data-testid="saturn-grid">
           {cells.map((cell, index) => {
             const saved = savedCells[index]
