@@ -70,6 +70,12 @@ export interface InstrumentBriefing {
 
 const LOG_LIMIT = 8
 
+/** Pointing offset on the aim LCD, in arcminutes from the target. */
+function aimReadout(view: InstrumentView): string {
+  const fmt = (v: number, pos: string, neg: string) => `${v < 0 ? neg : pos}${Math.abs(Math.round(v * 40)).toString().padStart(2, '0')}′`
+  return `${fmt(view.panX, 'E', 'W')} ${fmt(-view.panY, 'N', 'S')}`
+}
+
 function dialAngle(value: number, min: number, max: number): number {
   const span = max - min
   const t = span === 0 ? 0 : (value - min) / span
@@ -83,6 +89,7 @@ function Knob({
   max,
   step,
   value,
+  readout,
   onChange,
 }: {
   label: string
@@ -91,11 +98,15 @@ function Knob({
   max: number
   step: number
   value: number
+  /** What the knob's LCD shows, e.g. "2.4×". */
+  readout: string
   onChange: (value: number) => void
 }) {
+  const angle = dialAngle(value, min, max)
   return (
-    <label className={styles.knob}>
-      <span className={styles.dial} style={{ transform: `rotate(${dialAngle(value, min, max)}deg)` }} aria-hidden="true">
+    <label className={styles.knob} style={{ '--k-sweep': `${angle + 135}deg` } as CSSProperties}>
+      <span className={styles.knobBezel} aria-hidden="true" />
+      <span className={styles.dial} style={{ transform: `rotate(${angle}deg)` }} aria-hidden="true">
         <span className={styles.needle} />
       </span>
       <input
@@ -109,6 +120,7 @@ function Knob({
         value={value}
         onChange={event => onChange(Number(event.target.value))}
       />
+      <span className={styles.lcd} aria-hidden="true">{readout}</span>
       <span className={styles.knobLabel}>{label}</span>
     </label>
   )
@@ -127,6 +139,7 @@ function Switch({
 }) {
   return (
     <button type="button" className={styles.switch} data-testid={testId} aria-pressed={pressed} onClick={onToggle}>
+      <span className={styles.led} data-on={pressed ? 'true' : 'false'} aria-hidden="true" />
       <span className={styles.switchTrack} data-on={pressed ? 'true' : 'false'} aria-hidden="true">
         <span className={styles.switchThumb} />
       </span>
@@ -301,27 +314,38 @@ export default function InstrumentViewport({
         {devBar}
         <div className={styles.stage} data-testid="instrument-stage">
           <div className={styles.controls} data-testid="instrument-controls" aria-label="Instrument controls">
+            <div className={styles.plate} aria-hidden="true">
+              <span className={styles.plateName}>OPTICS · IV-01</span>
+              <span className={styles.lights}>
+                <span className={styles.led} data-on="true" />PWR
+                <span className={styles.led} data-on="true" data-blink="true" />TRK
+                <span className={styles.led} data-on={view.zoom > 1 ? 'true' : 'false'} data-tone="amber" />MAG
+              </span>
+            </div>
             <div className={styles.controlGrid}>
               <div className={styles.dpadBlock}>
                 <div className={styles.dpad} role="group" aria-label="Aim">
+                  <span className={styles.dpadRing} aria-hidden="true" />
                   <button type="button" className={`${styles.aim} ${styles.aimNorth}`} data-testid="instrument-aim-n" aria-label="Aim north" onClick={() => setView(current => nudgeAim(current, 'n'))}><AimIcon direction="n" /></button>
                   <button type="button" className={`${styles.aim} ${styles.aimWest}`} data-testid="instrument-aim-w" aria-label="Aim west" onClick={() => setView(current => nudgeAim(current, 'w'))}><AimIcon direction="w" /></button>
                   <button type="button" className={`${styles.aim} ${styles.aimCenter}`} data-testid="instrument-aim-reset" aria-label="Reset aim" onClick={() => setView(current => nudgeAim(current, 'reset'))}><AimIcon direction="reset" /></button>
                   <button type="button" className={`${styles.aim} ${styles.aimEast}`} data-testid="instrument-aim-e" aria-label="Aim east" onClick={() => setView(current => nudgeAim(current, 'e'))}><AimIcon direction="e" /></button>
                   <button type="button" className={`${styles.aim} ${styles.aimSouth}`} data-testid="instrument-aim-s" aria-label="Aim south" onClick={() => setView(current => nudgeAim(current, 's'))}><AimIcon direction="s" /></button>
                 </div>
+                <span className={styles.lcd} aria-hidden="true" data-testid="instrument-aim-readout">{aimReadout(view)}</span>
                 <span className={styles.aimLabel}>AIM</span>
               </div>
               <div className={styles.knobRow}>
-                <Knob label="ZOOM" testId="instrument-zoom" min={INSTRUMENT_LIMITS.zoomMin} max={INSTRUMENT_LIMITS.zoomMax} step={0.1} value={view.zoom} onChange={zoom => setView(current => ({ ...current, zoom }))} />
-                <Knob label="FOCUS" testId="instrument-focus" min={0} max={1} step={0.05} value={view.focus} onChange={focus => setView(current => ({ ...current, focus }))} />
-                <Knob label="EXPOSURE" testId="instrument-exposure" min={INSTRUMENT_LIMITS.exposureMin} max={INSTRUMENT_LIMITS.exposureMax} step={0.05} value={view.exposure} onChange={exposure => setView(current => ({ ...current, exposure }))} />
+                <Knob label="ZOOM" testId="instrument-zoom" min={INSTRUMENT_LIMITS.zoomMin} max={INSTRUMENT_LIMITS.zoomMax} step={0.1} value={view.zoom} readout={`${view.zoom.toFixed(1)}×`} onChange={zoom => setView(current => ({ ...current, zoom }))} />
+                <Knob label="FOCUS" testId="instrument-focus" min={0} max={1} step={0.05} value={view.focus} readout={`${Math.round(100 - Math.abs(view.focus - 0.5) * 200)}%`} onChange={focus => setView(current => ({ ...current, focus }))} />
+                <Knob label="EXPOSURE" testId="instrument-exposure" min={INSTRUMENT_LIMITS.exposureMin} max={INSTRUMENT_LIMITS.exposureMax} step={0.05} value={view.exposure} readout={`${view.exposure >= 1 ? '+' : ''}${(view.exposure - 1).toFixed(1)}EV`} onChange={exposure => setView(current => ({ ...current, exposure }))} />
               </div>
               <div className={styles.switchRow}>
                 <Switch label="STRETCH" testId="instrument-stretch" pressed={view.stretch} onToggle={() => setView(current => ({ ...current, stretch: !current.stretch }))} />
                 <Switch label="INVERT" testId="instrument-invert" pressed={view.invert} onToggle={() => setView(current => ({ ...current, invert: !current.invert }))} />
               </div>
             </div>
+            <span className={styles.vent} aria-hidden="true" />
           </div>
 
           <div className={styles.wellSlot}>
@@ -347,6 +371,19 @@ export default function InstrumentViewport({
               <div className={styles.fill}>{viewport}</div>
               {overlay}
             </div>
+            {/* Instrument dressing from the v0 telescope mockup, in the house palette (SSL-744). */}
+            <div className={styles.greeble} aria-hidden="true" data-testid="instrument-greeble">
+              <span className={styles.graticule} />
+              <span className={styles.scaleTop} />
+              <span className={styles.scaleLeft} />
+              <span className={styles.scan} />
+              <span className={styles.scan} data-late="true" />
+              <span className={styles.bracket} data-at="tl" />
+              <span className={styles.bracket} data-at="tr" />
+              <span className={styles.bracket} data-at="bl" />
+              <span className={styles.bracket} data-at="br" />
+              <span className={styles.glassReadout} data-at="tr">{aimReadout(view)} · {view.zoom.toFixed(1)}×</span>
+            </div>
             <div className={styles.reticle} aria-hidden="true" />
             {viewportChrome}
             {caption}
@@ -355,6 +392,10 @@ export default function InstrumentViewport({
           </div>
 
           <div className={styles.command} data-testid="instrument-command">
+            <div className={styles.plate} aria-hidden="true">
+              <span className={styles.plateName}>DOWNLINK · CH 02</span>
+              <span className={styles.signal} data-inline="true"><i /><i /><i /><i /><i /></span>
+            </div>
             {briefing && briefLine != null ? (
               <section className={styles.desk} data-testid="instrument-briefing" aria-label={briefing.speaker}>
                 <span className={styles.speaker}>{briefing.speaker}</span>

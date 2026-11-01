@@ -7,8 +7,8 @@
   --iv-ink: #f4efe4;
   --iv-paper: #1a2138;
   --iv-paper-2: #232c48;
-  --iv-mute: #b8c8c0;
-  --iv-blue: #2fb5d4;
+  --iv-mute: #c0c4dc;
+  --iv-blue: #8a7cff;
   --iv-line: rgba(244, 239, 228, .34);
   color: var(--iv-ink);
 }
@@ -448,7 +448,7 @@
 }
 
 .caption[data-attention="true"] {
-  background: rgba(47, 181, 212, .28);
+  background: rgba(138, 124, 255, .28);
 }
 
 .toolButton,
@@ -756,7 +756,7 @@
 .step b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--iv-ink); color: #0f1730; font-size: 13px; }
 /* The answer that saves now is the one bright button; the mark tool is a tool, not the call to action. */
 .answer[data-primary="true"] { background: #ecebe8; color: #16171a; border: 2px solid #ecebe8; border-style: solid; }
-.toolButton[aria-pressed="true"] { background: rgba(47, 181, 212, .16); color: var(--iv-ink); border-color: var(--iv-blue); }
+.toolButton[aria-pressed="true"] { background: rgba(138, 124, 255, .16); color: var(--iv-ink); border-color: var(--iv-blue); }
 /* The review column keeps every control full size: the terminal never shrinks, the column scrolls if it must. */
 .command { overflow-y: auto; overscroll-behavior: contain; }
 .command > .terminal { flex-shrink: 0; }
@@ -823,14 +823,14 @@
    Status lights glow; readouts are amber. Everything is CSS, no extra DOM. */
 .screen {
   --iv-amber: #f2b33d;
-  --iv-glow: rgba(47, 181, 212, .35);
+  --iv-glow: rgba(138, 124, 255, .35);
   --iv-plate: linear-gradient(165deg, #222c4b 0%, #19213a 48%, #141a2f 100%);
   --iv-brush: repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px);
   --iv-screw: radial-gradient(circle, #9aa3b8 0 2px, #3a4258 2.5px 3.5px, transparent 4px);
 }
 .screen.screen {
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(47, 181, 212, .1), transparent 60%),
+    radial-gradient(ellipse at 50% 40%, rgba(138, 124, 255, .1), transparent 60%),
     radial-gradient(circle, rgba(255, 255, 255, .05) 1px, transparent 1.5px) 0 0 / 22px 22px,
     #0c1222 !important;
 }
@@ -850,7 +850,7 @@
 
 .well {
   border-color: #c9d3e6;
-  box-shadow: 0 0 0 1px var(--iv-glow), 0 0 28px rgba(47, 181, 212, .18), 4px 4px 0 rgba(8, 12, 24, .55);
+  box-shadow: 0 0 0 1px var(--iv-glow), 0 0 28px rgba(138, 124, 255, .18), 4px 4px 0 rgba(8, 12, 24, .55);
 }
 .view {
   background: radial-gradient(ellipse at 50% 45%, #13254a 0%, #0a1430 55%, #050a1a 100%);
@@ -869,11 +869,11 @@
 }
 .reticle {
   z-index: 1;
-  border-color: rgba(127, 231, 255, .85);
-  filter: drop-shadow(0 0 4px rgba(127, 231, 255, .6));
+  border-color: rgba(170, 190, 255, .85);
+  filter: drop-shadow(0 0 4px rgba(170, 190, 255, .6));
 }
 .reticle::before,
-.reticle::after { background: rgba(127, 231, 255, .85); }
+.reticle::after { background: rgba(170, 190, 255, .85); }
 
 .titleBar {
   background: linear-gradient(180deg, #24304f, #18203a);
@@ -886,22 +886,22 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #6ff0a8;
-  box-shadow: 0 0 6px #6ff0a8, 0 0 12px rgba(111, 240, 168, .6);
+  background: #b49bff;
+  box-shadow: 0 0 6px #b49bff, 0 0 12px rgba(180, 155, 255, .6);
 }
 
 .terminal {
   background:
     repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .14) 3px 4px),
     radial-gradient(ellipse at 30% 20%, #10283a, #0a1726 70%);
-  border-color: #5fa9bd;
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, .55), 0 0 0 1px rgba(47, 181, 212, .2);
+  border-color: #8a7cff;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, .55), 0 0 0 1px rgba(138, 124, 255, .2);
 }
 .log,
 .commandInput,
-.promptMark { color: #8ff5c4; text-shadow: 0 0 6px rgba(111, 240, 168, .35); }
-.commandInput { border-bottom-color: rgba(143, 245, 196, .5); }
-.commandInput::placeholder { color: rgba(143, 245, 196, .55); }
+.promptMark { color: #ddd3ff; text-shadow: 0 0 6px rgba(180, 155, 255, .35); }
+.commandInput { border-bottom-color: rgba(200, 190, 255, .5); }
+.commandInput::placeholder { color: rgba(200, 190, 255, .55); }
 
 .dial {
   background: radial-gradient(circle at 38% 32%, #3a4766, #1a2240 60%, #10162a);
@@ -912,7 +912,7 @@
   background: linear-gradient(180deg, #27324f, #1a2139);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
 }
-.switchTrack[data-on="true"] { background: rgba(47, 181, 212, .3); border-color: var(--iv-blue); box-shadow: 0 0 8px var(--iv-glow); }
+.switchTrack[data-on="true"] { background: rgba(138, 124, 255, .3); border-color: var(--iv-blue); box-shadow: 0 0 8px var(--iv-glow); }
 .aimLabel, .knobLabel, .switchLabel { color: #d9e3f2; }
 
 /* Asteroid readout: the Minor Planet Center fields, on the glass top-right. */
@@ -935,7 +935,534 @@
 .readout div { display: contents; }
 .readout dt { font: 700 14px/1.4 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: #a9b6cc; }
 .readout dd { margin: 0; text-align: right; font: 700 14px/1.4 var(--ln-font-mono); color: var(--iv-amber); text-shadow: 0 0 6px rgba(242, 179, 61, .4); }
-.readout div[data-tone="hot"] dd { color: #6ff0a8; text-shadow: 0 0 6px rgba(111, 240, 168, .45); }
+.readout div[data-tone="hot"] dd { color: #b49bff; text-shadow: 0 0 6px rgba(180, 155, 255, .45); }
 @media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 520px) {
   .readout { grid-template-columns: repeat(4, auto); gap: 0 8px; padding: 4px 8px; top: 4px; right: 4px; left: 4px; }
 }
+
+/* ── Instrument dressing from the v0 telescope mockup (SSL-744), drawn in the house palette ──
+   A faint graticule, graduated edge scales (fine tick every 2.5%, long every 12.5%), corner
+   brackets and two slow scan lines over the glass. Pointer-transparent; sits under the caption. */
+.greeble { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.greeble > span { position: absolute; display: block; }
+.graticule {
+  inset: 0;
+  opacity: .5;
+  background:
+    linear-gradient(rgba(157, 231, 239, .06) 1px, transparent 1px) 0 0 / 100% 12.5%,
+    linear-gradient(90deg, rgba(157, 231, 239, .06) 1px, transparent 1px) 0 0 / 12.5% 100%,
+    radial-gradient(ellipse 55% 40% at 22% 24%, rgba(88, 208, 234, .07), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 80% 76%, rgba(0, 80, 102, .18), transparent 70%);
+}
+.scaleTop, .scaleLeft { opacity: .75; }
+.scaleTop {
+  top: 0; left: 36px; right: 36px; height: 10px;
+  background:
+    repeating-linear-gradient(90deg, rgba(157, 231, 239, .8) 0 1px, transparent 1px 12.5%) 0 0 / 100% 10px no-repeat,
+    repeating-linear-gradient(90deg, rgba(244, 239, 228, .45) 0 1px, transparent 1px 2.5%) 0 0 / 100% 5px no-repeat;
+}
+.scaleLeft {
+  left: 0; top: 36px; bottom: 36px; width: 10px;
+  background:
+    repeating-linear-gradient(180deg, rgba(157, 231, 239, .8) 0 1px, transparent 1px 12.5%) 0 0 / 10px 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(244, 239, 228, .45) 0 1px, transparent 1px 2.5%) 0 0 / 5px 100% no-repeat;
+}
+.scan { left: 0; right: 0; top: 30%; height: 1px; background: linear-gradient(90deg, transparent, rgba(157, 231, 239, .35), transparent); animation: ivScan 4s ease-in-out infinite; }
+.scan[data-late="true"] { top: 70%; animation-delay: 2s; }
+@keyframes ivScan { 0%, 100% { opacity: 0; transform: translateY(-10px); } 50% { opacity: 1; transform: translateY(0); } }
+.bracket { width: 20px; height: 20px; border: 0 solid rgba(244, 239, 228, .6); }
+.bracket[data-at="tl"] { top: 8px; left: 8px; border-top-width: 2px; border-left-width: 2px; }
+.bracket[data-at="tr"] { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; }
+.bracket[data-at="bl"] { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; }
+.bracket[data-at="br"] { bottom: 8px; right: 8px; border-bottom-width: 2px; border-right-width: 2px; }
+.well:has(.standby) .greeble { display: none; }
+@media (prefers-reduced-motion: reduce) { .scan { animation: none; opacity: 0; } }
+
+/* ══ SSL-744 · Instrument hardware (Liam, 1.11: "a sci-fi instrument with tactile, dynamic controls";
+   greebles after the v0 telescope mockup, in the house palette: deep blue, cream, cyan, amber) ══ */
+.screen {
+  --hw-metal: linear-gradient(180deg, #2a3557 0%, #1c2440 48%, #151c33 100%);
+  --hw-recess: #0a1022;
+  --hw-cyan: #7fe7ff;
+  --hw-green: #b49bff;
+  --hw-amber: #f2b33d;
+  --hw-cream: #f4efe4;
+  --hw-rivet: radial-gradient(circle at 40% 35%, #dfe6f3 0 1px, #7d8aa8 1.5px, #2a3350 3px, transparent 3.5px);
+}
+
+/* Panels: machined plate, four rivets, bevelled edge and a hazard-striped foot. */
+.screen .controls,
+.screen .command {
+  position: relative;
+  border: 1px solid #5b6a92;
+  border-radius: 14px;
+  background:
+    var(--hw-rivet) top 7px left 7px / 8px 8px no-repeat,
+    var(--hw-rivet) top 7px right 7px / 8px 8px no-repeat,
+    var(--hw-rivet) bottom 7px left 7px / 8px 8px no-repeat,
+    var(--hw-rivet) bottom 7px right 7px / 8px 8px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px),
+    var(--hw-metal);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    inset 0 -3px 0 rgba(0, 0, 0, .45),
+    inset 0 0 0 3px rgba(10, 16, 34, .55),
+    inset 0 0 0 4px rgba(170, 190, 255, .14),
+    0 6px 0 rgba(6, 10, 22, .7),
+    0 10px 24px rgba(0, 0, 0, .45);
+}
+.screen .controls { display: flex; flex-direction: column; gap: 10px; }
+
+/* Engraved name plate with status lamps. */
+.plate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  margin: 2px 10px 0;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #0b1124, #121a32);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .1);
+  font: 700 14px/1 var(--ln-font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #9fb0cf;
+  white-space: nowrap;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  padding-block: 6px;
+}
+.plateName { color: var(--hw-amber); text-shadow: 0 0 6px rgba(242, 179, 61, .35); overflow: hidden; text-overflow: ellipsis; }
+.lights { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; }
+.lights .led { margin-left: 6px; }
+
+.led {
+  flex: none;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4a5570, #1a2034);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .6), 0 0 0 1px rgba(0, 0, 0, .5);
+  transition: background 120ms ease, box-shadow 120ms ease;
+}
+.led[data-on="true"] {
+  background: radial-gradient(circle at 35% 30%, #e9fff3, var(--hw-green) 45%, #1f8f58);
+  box-shadow: 0 0 6px var(--hw-green), 0 0 12px rgba(180, 155, 255, .5), 0 0 0 1px rgba(0, 0, 0, .5);
+}
+.led[data-on="true"][data-tone="amber"] {
+  background: radial-gradient(circle at 35% 30%, #fff6dc, var(--hw-amber) 45%, #a0701a);
+  box-shadow: 0 0 6px var(--hw-amber), 0 0 12px rgba(242, 179, 61, .5), 0 0 0 1px rgba(0, 0, 0, .5);
+}
+.led[data-blink="true"] { animation: hwBlink 1.6s steps(1) infinite; }
+@keyframes hwBlink { 50% { background: radial-gradient(circle at 35% 30%, #4a5570, #1a2034); box-shadow: 0 0 0 1px rgba(0, 0, 0, .5); } }
+
+/* LCD readouts under every control. */
+.lcd {
+  display: inline-block;
+  min-width: 56px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #04121a, #072029);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .8), 0 0 0 1px rgba(170, 190, 255, .22);
+  color: var(--hw-cyan);
+  text-shadow: 0 0 6px rgba(170, 190, 255, .55);
+  font: 600 14px/1.1 var(--ln-font-mono);
+  letter-spacing: .04em;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Aim pad: a round housing with a graduated ring; keycaps press in. */
+.screen .dpad { position: relative; isolation: isolate; }
+.dpadRing {
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: 148px;
+  height: 148px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #10172c 0 58%, transparent 58.5%),
+    repeating-conic-gradient(rgba(244, 239, 228, .5) 0 1deg, transparent 1deg 10deg),
+    radial-gradient(circle, #1b2340 0 70%, #0d1326 71%);
+  box-shadow: inset 0 0 0 1px rgba(170, 190, 255, .3), inset 0 4px 10px rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .12);
+  -webkit-mask: radial-gradient(circle, #000 69%, transparent 70%);
+  mask: radial-gradient(circle, #000 69%, transparent 70%);
+}
+.screen .aim {
+  border: 1px solid #0a0f1f;
+  background: linear-gradient(180deg, #3a4870, #232d4d 55%, #1a2240);
+  color: var(--hw-cream);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 -2px 0 rgba(0, 0, 0, .4), 0 3px 0 #070b18;
+  transition: transform 80ms ease, box-shadow 80ms ease, color 80ms ease;
+}
+.screen .aim:active {
+  transform: translateY(2px);
+  color: var(--hw-cyan);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6), 0 1px 0 #070b18, 0 0 10px rgba(170, 190, 255, .35);
+}
+.screen .aimCenter { background: radial-gradient(circle at 40% 35%, #4a5a86, #1d2644); color: var(--hw-cyan); }
+.dpadBlock { gap: 14px; }
+.screen .dpadBlock .lcd { margin-top: 4px; }
+
+/* Knobs: graduated bezel with a lit arc for the current value, knurled cap, glowing pointer. */
+.screen .knob { --kb: 64px; width: auto; min-width: var(--kb); gap: 6px; }
+.knobBezel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--kb);
+  height: var(--kb);
+  border-radius: 50%;
+  background:
+    conic-gradient(from -135deg, var(--hw-cyan) 0 var(--k-sweep), transparent var(--k-sweep) 360deg) ,
+    repeating-conic-gradient(from -135deg, rgba(244, 239, 228, .55) 0 1.2deg, transparent 1.2deg 27deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 62%, #000 63% 100%);
+  mask: radial-gradient(circle, transparent 0 62%, #000 63% 100%);
+  filter: drop-shadow(0 0 4px rgba(170, 190, 255, .45));
+}
+/* The mask above would hide the cap, so the cap is drawn by the dial, outside the masked layer. */
+.knob { position: relative; }
+.screen .dial {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--kb) / 2);
+  width: calc(var(--kb) - 18px);
+  height: calc(var(--kb) - 18px);
+  margin: calc((var(--kb) - 18px) / -2) 0 0 calc((var(--kb) - 18px) / -2);
+  z-index: 1;
+  pointer-events: none;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 32%, #56658f 0, #27304f 45%, #141a30 72%),
+    repeating-conic-gradient(#0b1020 0 4deg, #39456a 4deg 8deg);
+  box-shadow: 0 0 0 3px #0b1020, 0 4px 6px rgba(0, 0, 0, .6), inset 0 1px 1px rgba(255, 255, 255, .25);
+  transition: transform 80ms ease;
+}
+.screen .dial::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 32%, #4e5d86, #222b4a 70%);
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, .5);
+}
+.screen .needle {
+  z-index: 1;
+  top: 5px;
+  width: 4px;
+  height: 14px;
+  background: var(--hw-cyan);
+  box-shadow: 0 0 6px var(--hw-cyan), 0 0 12px rgba(170, 190, 255, .6);
+}
+.screen .knobRange { width: var(--kb); height: var(--kb); left: 50%; margin-left: calc(var(--kb) / -2); }
+.screen .knob:active .dial { box-shadow: 0 0 0 3px #0b1020, 0 0 14px rgba(170, 190, 255, .55), inset 0 1px 1px rgba(255, 255, 255, .25); }
+
+/* Toggles: a metal bat lever in a recessed slot, with a status lamp above. */
+.screen .switch { gap: 6px; }
+.screen .switchTrack {
+  position: relative;
+  width: 30px;
+  height: 46px;
+  padding: 3px;
+  border: 1px solid #0a0f1f;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #070b18, #141b33);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .14);
+}
+.screen .switchTrack[data-on="true"] { background: linear-gradient(180deg, #072029, #0c2c38); box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), 0 0 10px rgba(170, 190, 255, .3); border-color: rgba(170, 190, 255, .5); }
+.screen .switchThumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f4efe4, #b9c1d4 55%, #7f89a3);
+  box-shadow: 0 3px 0 #2a3248, 0 4px 6px rgba(0, 0, 0, .6), inset 0 1px 0 #fff;
+  transition: transform 100ms ease;
+}
+.screen .switch:active .switchThumb { transform: scale(.94); }
+
+/* Vent grille along the panel foot. */
+.vent {
+  display: block;
+  height: 12px;
+  margin: 0 14px 4px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #070b18 0 6px, #2a3557 6px 8px);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .8), 0 1px 0 rgba(255, 255, 255, .1);
+  opacity: .9;
+}
+
+/* Signal meter beside the downlink plate: bars breathe at staggered rates. */
+.signal { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
+.signal i { display: block; width: 4px; border-radius: 1px; background: var(--hw-green); box-shadow: 0 0 4px rgba(180, 155, 255, .6); animation: hwSignal 1.2s ease-in-out infinite alternate; }
+.signal i:nth-child(1) { height: 30%; animation-delay: -.2s; }
+.signal i:nth-child(2) { height: 50%; animation-delay: -.6s; }
+.signal i:nth-child(3) { height: 70%; animation-delay: -.1s; }
+.signal i:nth-child(4) { height: 85%; animation-delay: -.9s; }
+.signal i:nth-child(5) { height: 100%; animation-delay: -.4s; background: #2f4a3f; box-shadow: none; }
+@keyframes hwSignal { from { opacity: .55; transform: scaleY(.7); } to { opacity: 1; transform: scaleY(1); } }
+.signal i { transform-origin: bottom; }
+
+/* Console: a CRT in a thick bezel, with curvature and a slow roll bar. */
+.screen .terminal {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px #070b18,
+    0 0 0 5px #3a4870,
+    inset 0 0 24px rgba(0, 0, 0, .75),
+    inset 0 0 2px rgba(170, 190, 255, .4);
+}
+.screen .terminal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0, rgba(200, 190, 255, .06) 48%, transparent 52%) 0 0 / 100% 300% ,
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, .45) 100%);
+  animation: hwRoll 7s linear infinite;
+}
+@keyframes hwRoll { from { background-position: 0 100%, 0 0; } to { background-position: 0 -200%, 0 0; } }
+
+/* Step numbers are lamps; answers are backlit keycaps that press in. */
+.screen .step b {
+  display: inline-grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fff6dc, var(--hw-amber) 50%, #a0701a);
+  color: #1a1206;
+  box-shadow: 0 0 8px rgba(242, 179, 61, .55);
+}
+.screen .answer,
+.screen .toolButton {
+  position: relative;
+  border: 1px solid #0a0f1f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #34426a, #222c4b 55%, #1a2240);
+  color: var(--hw-cream);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -2px 0 rgba(0, 0, 0, .4), 0 4px 0 #070b18, 0 6px 10px rgba(0, 0, 0, .4);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.screen .answer::before,
+.screen .toolButton::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 28px;
+  height: 3px;
+  margin-left: -14px;
+  border-radius: 2px;
+  background: rgba(170, 190, 255, .35);
+  box-shadow: 0 0 6px rgba(170, 190, 255, .35);
+}
+.screen .answer:active:not(:disabled),
+.screen .toolButton:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .55), 0 1px 0 #070b18;
+}
+.screen .toolButton[aria-pressed="true"] {
+  background: linear-gradient(180deg, #2a8fa8, #1b6c80);
+  color: #04121a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 2px 0 #070b18, 0 0 16px rgba(170, 190, 255, .45);
+  transform: translateY(2px);
+}
+.screen .answer[data-primary="true"]:not(:disabled) {
+  background: linear-gradient(180deg, #fffaf0, var(--hw-cream) 55%, #d8cfbb);
+  color: #10182c;
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 0 rgba(0, 0, 0, .18), 0 4px 0 #8e8572, 0 0 18px rgba(244, 239, 228, .35);
+}
+.screen .answer[data-primary="true"]:not(:disabled)::before { background: var(--hw-green); box-shadow: 0 0 8px var(--hw-green); }
+.screen .answer:disabled,
+.screen .answer[data-dim="true"] {
+  border: 1px dashed rgba(244, 239, 228, .3);
+  background: linear-gradient(180deg, #1a2139, #141a2e);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .5);
+  color: #a9b6cc;
+}
+.screen .answer:disabled::before,
+.screen .answer[data-dim="true"]::before { background: #3a4460; box-shadow: none; }
+
+/* Live pointing readout on the glass, bottom-right inside the brackets. */
+.glassReadout {
+  right: 36px;
+  bottom: 12px;
+  color: var(--hw-cyan);
+  font: 600 14px/1 var(--ln-font-mono);
+  letter-spacing: .04em;
+  text-shadow: 0 0 6px rgba(170, 190, 255, .5), 0 1px 2px #000;
+  white-space: nowrap;
+}
+
+/* Compact sizes keep 44px targets. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .screen .knob { --kb: 54px; }
+  .dpadRing { width: 140px; height: 140px; }
+  .plate { margin: 0 6px; }
+  .vent, .screen .dpadBlock .lcd { display: none; }
+  .glassReadout { display: none; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .screen .knob { --kb: 50px; }
+  .screen .knob .lcd { min-width: 48px; padding: 2px 4px; }
+  .vent { display: none; }
+  .plate .lights { display: none; }
+  .dpadRing { width: 140px; height: 140px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .led[data-blink="true"], .signal i, .screen .terminal::after { animation: none; }
+}
+
+/* ══ SSL-744 · Glass pass (Liam, 1.11: "more sci-fi, more glassy, less green/sea-green, bit more colour").
+   Panels become smoked glass over the scene with an iridescent rim; lamps and arcs run
+   violet → blue → magenta, amber stays for warnings; no green or teal left on the console. ══ */
+.screen {
+  --hw-violet: #b49bff;
+  --hw-blue: #74a8ff;
+  --hw-magenta: #ff73d2;
+  --hw-cyan: #8fd8ff;
+  --hw-green: var(--hw-violet);
+  --hw-rim: conic-gradient(from 200deg, #74a8ff, #b49bff, #ff73d2, #f2b33d, #74a8ff);
+}
+
+/* Smoked-glass panels: blur, a specular top sheen and a colour-shifting rim. */
+.screen .controls,
+.screen .command {
+  border: 1px solid transparent;
+  background:
+    var(--hw-rivet) top 7px left 7px / 8px 8px no-repeat padding-box,
+    var(--hw-rivet) top 7px right 7px / 8px 8px no-repeat padding-box,
+    var(--hw-rivet) bottom 7px left 7px / 8px 8px no-repeat padding-box,
+    var(--hw-rivet) bottom 7px right 7px / 8px 8px no-repeat padding-box,
+    linear-gradient(172deg, rgba(255, 255, 255, .16) 0, rgba(255, 255, 255, .03) 22%, transparent 40%) padding-box,
+    radial-gradient(120% 60% at 0% 0%, rgba(116, 168, 255, .20), transparent 60%) padding-box,
+    radial-gradient(120% 60% at 100% 100%, rgba(255, 115, 210, .16), transparent 60%) padding-box,
+    linear-gradient(180deg, rgba(30, 30, 72, .62), rgba(14, 16, 44, .74)) padding-box,
+    var(--hw-rim) border-box;
+  backdrop-filter: blur(14px) saturate(1.5);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .28),
+    inset 0 0 0 1px rgba(255, 255, 255, .05),
+    inset 0 -18px 30px rgba(116, 80, 255, .10),
+    0 0 24px rgba(140, 110, 255, .22),
+    0 12px 28px rgba(0, 0, 0, .5);
+}
+
+.plate {
+  background: linear-gradient(180deg, rgba(6, 6, 24, .7), rgba(24, 20, 60, .55));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(180, 155, 255, .22), 0 1px 0 rgba(255, 255, 255, .12);
+  color: #c4bce8;
+}
+
+/* Lamps: violet on, magenta for tracking, amber kept for warnings. */
+.led[data-on="true"] {
+  background: radial-gradient(circle at 35% 30%, #fff, var(--hw-violet) 45%, #5a3fc0);
+  box-shadow: 0 0 6px var(--hw-violet), 0 0 14px rgba(180, 155, 255, .6), 0 0 0 1px rgba(0, 0, 0, .5);
+}
+.led[data-on="true"][data-blink="true"] {
+  background: radial-gradient(circle at 35% 30%, #fff, var(--hw-magenta) 45%, #a02a7e);
+  box-shadow: 0 0 6px var(--hw-magenta), 0 0 14px rgba(255, 115, 210, .6), 0 0 0 1px rgba(0, 0, 0, .5);
+}
+.titleStatus::before { background: var(--hw-violet); box-shadow: 0 0 6px var(--hw-violet), 0 0 12px rgba(180, 155, 255, .6); }
+
+/* LCDs read as lit glass strips with a colour wash. */
+.lcd {
+  background: linear-gradient(180deg, rgba(20, 14, 60, .85), rgba(40, 20, 80, .7));
+  color: #dcd2ff;
+  border-color: rgba(180, 155, 255, .45);
+  text-shadow: 0 0 6px rgba(180, 155, 255, .8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), inset 0 -6px 10px rgba(255, 115, 210, .12), 0 0 10px rgba(140, 110, 255, .25);
+}
+
+/* Knob value arcs sweep blue → violet → magenta. */
+.knobBezel {
+  background:
+    conic-gradient(from -135deg, var(--hw-blue), var(--hw-violet) calc(var(--k-sweep) * .6), var(--hw-magenta) var(--k-sweep), transparent var(--k-sweep) 360deg),
+    repeating-conic-gradient(from -135deg, rgba(220, 210, 255, .55) 0 1.5deg, transparent 1.5deg 13.5deg);
+}
+.screen .needle { background: #fff; box-shadow: 0 0 6px var(--hw-magenta), 0 0 12px rgba(255, 115, 210, .7); }
+.screen .knob:active .dial { box-shadow: 0 0 0 3px #0b1020, 0 0 16px rgba(255, 115, 210, .55), inset 0 1px 1px rgba(255, 255, 255, .25); }
+
+/* Aim keys: glass caps that light up violet when pressed. */
+.screen .aim {
+  background: linear-gradient(180deg, rgba(90, 100, 170, .55), rgba(30, 32, 80, .7));
+  border-color: rgba(180, 155, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -2px 0 rgba(0, 0, 0, .4), 0 3px 0 #070b18, 0 0 10px rgba(116, 168, 255, .18);
+}
+.screen .aim:active { color: #fff; box-shadow: inset 0 2px 4px rgba(0, 0, 0, .6), 0 1px 0 #070b18, 0 0 16px rgba(180, 155, 255, .6); }
+.screen .aimCenter { background: radial-gradient(circle at 40% 35%, #8a7cff, #3a2c8c 70%); color: #fff; }
+
+/* Switch: a violet-to-magenta lit channel when on. */
+.screen .switchTrack[data-on="true"] {
+  background: linear-gradient(90deg, rgba(116, 168, 255, .45), rgba(255, 115, 210, .45));
+  border-color: rgba(220, 200, 255, .7);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .5), 0 0 12px rgba(180, 155, 255, .45);
+}
+
+.signal i { background: var(--hw-blue); box-shadow: 0 0 4px rgba(116, 168, 255, .7); }
+.signal i:nth-child(5) { background: #2c2a55; box-shadow: none; }
+
+/* Console glass: deep indigo CRT with lavender phosphor, no sea-green. */
+.screen .terminal {
+  background:
+    repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .16) 3px 4px),
+    radial-gradient(ellipse at 25% 15%, rgba(116, 168, 255, .22), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(255, 115, 210, .16), transparent 55%),
+    linear-gradient(180deg, #120f36, #0a0a24);
+  box-shadow:
+    0 0 0 3px #070b18,
+    0 0 0 5px rgba(150, 130, 230, .55),
+    0 0 18px rgba(140, 110, 255, .3),
+    inset 0 0 24px rgba(0, 0, 0, .7),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+.screen .terminal::after {
+  background:
+    linear-gradient(180deg, transparent 0, rgba(180, 155, 255, .07) 48%, transparent 52%) 0 0 / 100% 300%,
+    linear-gradient(165deg, rgba(255, 255, 255, .09) 0, transparent 30%),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, .45) 100%);
+}
+@keyframes hwRoll { from { background-position: 0 100%, 0 0, 0 0; } to { background-position: 0 -200%, 0 0, 0 0; } }
+.screen .log,
+.screen .commandInput,
+.screen .promptMark { color: #ddd3ff; text-shadow: 0 0 6px rgba(180, 155, 255, .55); }
+.screen .promptMark { color: var(--hw-magenta); text-shadow: 0 0 6px rgba(255, 115, 210, .6); }
+.screen .commandInput { border-bottom-color: rgba(180, 155, 255, .55); }
+.screen .commandInput::placeholder { color: rgba(220, 210, 255, .6); }
+
+/* Keycaps: glass with a coloured backlight strip; pressed tools glow violet. */
+.screen .answer,
+.screen .toolButton {
+  border: 1px solid rgba(180, 155, 255, .3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .14), transparent 45%),
+    linear-gradient(180deg, rgba(70, 70, 150, .6), rgba(26, 26, 70, .75));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.screen .answer::before,
+.screen .toolButton::before { background: linear-gradient(90deg, var(--hw-blue), var(--hw-magenta)); box-shadow: 0 0 8px rgba(180, 155, 255, .6); }
+.screen .toolButton[aria-pressed="true"] {
+  background: linear-gradient(180deg, #a48cff, #6a4fe0);
+  color: #fff;
+  border-color: #d6c8ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 2px 0 #070b18, 0 0 18px rgba(180, 155, 255, .6);
+}
+.screen .answer[data-primary="true"]:not(:disabled)::before { background: linear-gradient(90deg, var(--hw-violet), var(--hw-magenta)); box-shadow: 0 0 8px var(--hw-magenta); }
+.screen .answer:disabled,
+.screen .answer[data-dim="true"] { background: rgba(20, 20, 50, .55); border: 1px dashed rgba(200, 190, 240, .35); color: #b7b2d6; }
+
+/* Glass readouts: blue/magenta instead of teal. */
+.glassReadout { color: #cfe0ff; text-shadow: 0 0 6px rgba(116, 168, 255, .8), 0 1px 2px #000; }
+.readout div[data-tone="hot"] dd { color: var(--hw-magenta); text-shadow: 0 0 6px rgba(255, 115, 210, .5); }
+.readout { background: rgba(14, 12, 40, .6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }

@@ -25,17 +25,17 @@ import type { TransitRange } from '@/lib/data'
 // lavender→violet→amber rather than saturated cyan, and the sky leans on
 // purple/rust/amber with only a faint cool accent (not a blue wash).
 const SKY_BASE   = 0x0a0810
-const SKY_PURPLE = 0x3a688a
-const SKY_VIOLET = 0x2a4152
-const SKY_RUST   = 0x7a2a44
-const SKY_AMBER  = 0x159295
-const MARK_COLOR = 0x36c6e2
+const SKY_PURPLE = 0x3d3a9a
+const SKY_VIOLET = 0x2c3070
+const SKY_RUST   = 0x8a2a6a
+const SKY_AMBER  = 0x3a5ab8
+const MARK_COLOR = 0xff73d2
 const GRID_COLOR = 0x8c7fa0
-const TICK_COLOR = 0x8c7c8e
-const LINE_COLOR = 0xaecce0
-const DOT_LO     = 0xa4c8e0  // shallow dip — pale lavender, not cyan
-const DOT_MID    = 0x6fb2d6  // mid dip — violet
-const DOT_HI     = 0x36c6e2  // deep dip — amber
+const TICK_COLOR = 0xc9d3e6
+const LINE_COLOR = 0xbcc4f0
+const DOT_LO     = 0xc8d4ff  // shallow dip — pale periwinkle
+const DOT_MID    = 0xa48cff  // mid dip — violet
+const DOT_HI     = 0xff73d2  // deep dip — magenta
 
 /**
  * SSL-301: a fixed 3-decimal formatter on an auto Y domain produced runs of
@@ -70,7 +70,8 @@ function mulberry32(seed: number): () => number {
   }
 }
 
-const PAD_LEFT = 44, PAD_RIGHT = 10, PAD_TOP = 10, PAD_BOT = 26
+// Room for 14px tick labels; the bottom pad also clears the viewport caption chip.
+const PAD_LEFT = 66, PAD_RIGHT = 14, PAD_TOP = 22, PAD_BOT = 58
 
 export interface ObservatoryChartProps {
   points:        LightcurvePoint[]
@@ -112,6 +113,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
     let destroyed = false
     let rafId = 0
     let W = 0, H = 0
+    let resizeObserver: ResizeObserver | null = null
 
     const bgG = new Graphics()
     const gridG = new Graphics()
@@ -256,7 +258,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         }
         if (rw > 20) {
           const dur = Math.abs(r.x2 - r.x1).toFixed(2)
-          const lbl = new Text({ text: `${dur}d`, style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 8, fill: MARK_COLOR, fontWeight: '700' }) })
+          const lbl = new Text({ text: `${dur}d`, style: new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 14, fill: MARK_COLOR, fontWeight: '700' }) })
           lbl.anchor.set(0.5, 1); lbl.x = rx1 + rw / 2; lbl.y = PAD_TOP - 2
           labelsC.addChild(lbl)
         }
@@ -294,12 +296,12 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       }
 
       // ── Axis labels ──────────────────────────────────────────────────────
-      const tickStyle = new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 8, fill: TICK_COLOR })
+      const tickStyle = new TextStyle({ fontFamily: 'Oxanium, monospace', fontSize: 14, fill: TICK_COLOR, fontWeight: '600' })
       for (let i = 0; i <= X_TICKS; i++) {
         const v = xMin + (i / X_TICKS) * (xMax - xMin)
         const cx = PAD_LEFT + (i / X_TICKS) * plotW
         const t = new Text({ text: v.toFixed(1), style: tickStyle })
-        t.anchor.set(0.5, 0); t.x = cx; t.y = PAD_TOP + plotH + 5
+        t.anchor.set(i === 0 ? 0 : i === X_TICKS ? 1 : 0.5, 0); t.x = cx; t.y = PAD_TOP + plotH + 6
         labelsC.addChild(t)
       }
       const yTickValues = Array.from({ length: Y_TICKS + 1 }, (_, i) => yMin + (i / Y_TICKS) * yRange)
@@ -324,6 +326,22 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         app.stage.addChild(bgG, gridG, scanG, rangeG, selG, dataG, labelsC)
         redraw()
         app.ticker.add(() => redraw())
+        // SSL-743: the host is often still settling (flex/grid layout, phone
+        // rotation) when Pixi initialises, so a one-off measurement left the
+        // curve drawn at a stale size — half the viewport on desktop, cropped
+        // on phones. Track the host and resize the renderer with it.
+        if (height == null && typeof ResizeObserver !== 'undefined') {
+          resizeObserver = new ResizeObserver(entries => {
+            const box = entries[0]?.contentRect
+            if (!box || destroyed || !app.renderer) return
+            const nextW = Math.round(Math.max(200, box.width))
+            const nextH = Math.round(Math.max(100, box.height))
+            if (nextW === W && nextH === H) return
+            W = nextW; H = nextH
+            app.renderer.resize(W, H)
+          })
+          resizeObserver.observe(host)
+        }
       } catch (err) {
         console.error('[ObservatoryChart] init failed:', err)
       }
@@ -333,6 +351,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
     return () => {
       cancelAnimationFrame(rafId)
       destroyed = true
+      resizeObserver?.disconnect()
       canvas.removeEventListener('pointerdown', handleDown)
       canvas.removeEventListener('pointermove', handleMove)
       canvas.removeEventListener('pointerup', handleUp)
