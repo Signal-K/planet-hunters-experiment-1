@@ -160,7 +160,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     <InstrumentViewport
       testId="asteroid-discovery-screen"
       sceneClassName="ln-scene-asteroid-discovery"
-      eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK"
+      eyebrow="DEEP SPACE · NEO WATCH"
       title={candidate.tempDesig}
       onBack={onBack}
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
@@ -169,6 +169,16 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         <p className={viewportStyles.caption} data-testid="neocp-data-provenance">
           RA {candidate.ra.toFixed(4)}h · DEC {candidate.decl.toFixed(4)}°
         </p>
+      )}
+      viewportChrome={(
+        <dl className={viewportStyles.readout} data-testid="neocp-readout" aria-label="Minor Planet Center data">
+          <div data-tone={candidate.score >= 80 ? 'hot' : undefined}><dt>NEO score</dt><dd>{Math.round(candidate.score)}%</dd></div>
+          <div><dt>Brightness V</dt><dd>{candidate.vMag.toFixed(1)}</dd></div>
+          <div><dt>Size H</dt><dd>{candidate.hMag.toFixed(1)}</dd></div>
+          <div><dt>Sightings</dt><dd>{candidate.nObs}</dd></div>
+          <div><dt>Arc</dt><dd>{candidate.arcDays < 1 ? `${(candidate.arcDays * 24).toFixed(1)} h` : `${candidate.arcDays.toFixed(1)} d`}</dd></div>
+          <div><dt>Last seen</dt><dd>{candidate.lastSeenDays.toFixed(1)} d ago</dd></div>
+        </dl>
       )}
       viewport={(
         <AsteroidSkyPlot
