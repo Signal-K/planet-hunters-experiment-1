@@ -25,7 +25,20 @@ public enum Loop {
         s.player.stagedRockets.first { $0.missionId == missionId && $0.targetId == targetId }
     }
 
+    /// Accepting a mission sends the player through the map to choose where they are going (Liam, 01.11; web
+    /// `destinationChosen`). The body auto-picked behind the scenes keeps the state valid until they tap one.
     public static func pickMission(_ s: GameState, id: String, catalog: Catalog, haul: HaulDisposition? = nil) -> GameState {
+        var n = pickMissionState(s, id: id, catalog: catalog, haul: haul)
+        if n != s && n.missionId == id { n.extras["destinationChosen"] = .bool(false) }
+        return n
+    }
+
+    /// The player still has to choose the destination on the map for the accepted mission.
+    public static func mustChooseDestination(_ s: GameState) -> Bool {
+        s.extras["destinationChosen"] == .bool(false) && Rockets.pastTraining(s.player)
+    }
+
+    static func pickMissionState(_ s: GameState, id: String, catalog: Catalog, haul: HaulDisposition? = nil) -> GameState {
         guard s.screen == .missions || s.screen == .launchpad, let mission = catalog.mission(id) else { return s }
         if s.screen == .launchpad && !mission.isOwnProgram { return s }
         if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram { return s }
@@ -66,7 +79,9 @@ public enum Loop {
 
     public static func pickTarget(_ s: GameState, id: String, catalog: Catalog) -> GameState {
         guard Self.reviewScreens.contains(s.screen), s.missionId != nil else { return s }
-        return finishQuickSetup(pickTargetState(s, id: id, catalog: catalog), catalog: catalog)
+        var n = finishQuickSetup(pickTargetState(s, id: id, catalog: catalog), catalog: catalog)
+        if n.targetId == id { n.extras["destinationChosen"] = .bool(true) }
+        return n
     }
 
     static func pickTargetState(_ s: GameState, id: String, catalog: Catalog) -> GameState {

@@ -22,7 +22,7 @@ struct MissionPlanStrip: View {
         let drill = store.catalog.parts.drill.first { $0.id == store.state.rocket.drill }
         let payload: String? = mission.payload?.name
             ?? (mission.requires.minerals.isEmpty ? (mission.construction != nil ? "Construction kit" : nil)
-                : drill.map { $0.name.lowercased().hasPrefix("laser") ? "Mining laser \($0.name.dropFirst(5).trimmingCharacters(in: .whitespaces))" : $0.name } ?? "Mining laser")
+                : drill.map { $0.id == "cargo-module-t1" ? $0.name : "Mining laser T\($0.tier)" } ?? "Mining laser")
         return "GETTING \(getting.isEmpty ? "Nothing" : getting)" + (payload.map { " · PAYLOAD \($0)" } ?? "")
     }
     private var hold: String? {
@@ -130,12 +130,16 @@ struct MissionPlanSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(sheet == .destination ? "DESTINATION" : "VEHICLE").font(AppFont.display(14, "Bold")).tracking(1.4)
+                let choosing = sheet == .destination && Loop.mustChooseDestination(store.state)
+                Text(choosing ? "WHERE ARE YOU FLYING?" : sheet == .destination ? "DESTINATION" : "VEHICLE").font(AppFont.display(14, "Bold")).tracking(1.4)
                 Spacer()
-                Button(action: close) {
-                    Text("CLOSE").font(AppFont.display(14, "Bold")).tracking(1.2).padding(.horizontal, 16).frame(minHeight: 44)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1))
-                }.buttonStyle(.plain)
+                // Choosing a destination for a new mission has no Close: a body must be picked (the screen's Back still leaves).
+                if !choosing {
+                    Button(action: close) {
+                        Text("CLOSE").font(AppFont.display(14, "Bold")).tracking(1.2).padding(.horizontal, 16).frame(minHeight: 44)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 1))
+                    }.buttonStyle(.plain)
+                }
             }
             if sheet == .destination {
                 Text("Only targets with the required minerals, range, cargo and drill are shown.").font(AppFont.body(14, "Regular"))

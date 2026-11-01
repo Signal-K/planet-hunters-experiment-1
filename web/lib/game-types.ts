@@ -414,6 +414,8 @@ export interface GameState {
   // Set for two-leg "mine then deliver" missions — the second-leg
   // destination, distinct from targetId (the mining/pickup target).
   deliveryTargetId?: string | null
+  /** Liam, 01.11: false from accepting a mission until the player picks its destination on the map. */
+  destinationChosen?: boolean
   rocket: RocketConfig
   lastCargo: Record<string, number> | null
   // Receipt retained after a two-leg mission unloads the ship. `lastCargo`

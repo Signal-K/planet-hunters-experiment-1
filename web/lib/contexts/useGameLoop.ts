@@ -403,6 +403,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
+          destinationChosen: false,
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -413,6 +414,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         deliveryTargetId: mission.deliveryTargetId ?? null,
         screen: 'targets',
         doneSteps: { ...prepared.doneSteps, 2: true },
+        destinationChosen: false,
       }, catalog)
     })
   }, [catalog, setState, stateRef])
@@ -423,7 +425,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // internal setup states as one operation so a change never reopens a
       // separate map screen or strands the player midway through setup.
       if (!['targets', 'rocket-buy', 'fab'].includes(s.screen) || !s.missionId) return s
-      return finishQuickSetup(pickTargetState({ ...s, screen: 'targets' }, catalog, id), catalog)
+      const next = finishQuickSetup(pickTargetState({ ...s, screen: 'targets' }, catalog, id), catalog)
+      // The player chose this body on the map: the launch review can go ahead.
+      return next.targetId === id ? { ...next, destinationChosen: true } : next
     })
   }, [catalog, setState])
 
