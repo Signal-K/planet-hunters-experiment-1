@@ -5081,7 +5081,10 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 
 /* SSL-559: sync chip lives in the top-right chip row (left of francs) in every layout; no amber. */
-.scene-chip.sync-chip { gap: 5px; font: 700 14px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+.scene-chip.sync-chip { gap: 5px; min-height: 44px; font: 700 14px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; cursor: pointer; pointer-events: auto; }
+/* SSL-729: the chip is the sync tray's button; synced shows cyan, waiting blue, offline or a problem red. */
+.sync-chip[data-state='synced'] .sync-chip__dot { background: #2fb7c4; }
+.sync-chip[data-state='problem'] .sync-chip__dot { background: #9b3b32; }
 .sync-chip__dot { width: 7px; height: 7px; border-radius: 999px; background: #3f80f2; flex: none; }
 .sync-chip[data-offline='true'] .sync-chip__dot { background: #9b3b32; }
 /* Keep the sync state readable at every width; the dot alone is ambiguous. */

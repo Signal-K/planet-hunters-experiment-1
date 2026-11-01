@@ -239,6 +239,9 @@ final class Services {
 
     func flush() { let s = sync, o = shared; Task { await s.flush(); await o.flush() } }
 
+    /// SSL-729: the waiting writes, named for the sync tray.
+    func pendingDescriptions() async -> [String] { await sync.pending().map(SyncTray.describe) }
+
     /// One local alert at 22 Oct 02:00, mirrored into scheduled_notifications so it is not device-only.
     private func scheduleOrionidsPeakReminder() {
         let at = SkyEvents.orionidsPeakReminderMs()

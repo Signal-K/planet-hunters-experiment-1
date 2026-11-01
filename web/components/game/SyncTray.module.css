@@ -1,0 +1,14 @@
+/* SSL-729 sync tray, two-tone mission style: dark rounded panel, cream text, cyan accents, cream button as the one action. */
+.tray { --st-paper: #f4efe4; --st-dim: #d9d4c8; --st-ink: #142840; --st-cyan: #9de7ef; position: fixed; z-index: 120; top: calc(env(safe-area-inset-top, 0px) + 60px); right: 8px; box-sizing: border-box; width: min(360px, calc(100vw - 16px)); max-height: calc(100% - 76px); overflow: auto; padding: 16px; color: var(--st-paper); background: rgba(8, 16, 34, .92); border: 1px solid rgba(157, 231, 239, .35); border-radius: 18px; box-shadow: 0 16px 40px rgba(0, 0, 0, .4); backdrop-filter: blur(4px); font-family: var(--ln-font-body), system-ui, sans-serif; }
+.head { display: flex; align-items: center; gap: 10px; }
+.head strong { flex: 1; font: 700 16px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.dot { width: 12px; height: 12px; border-radius: 999px; background: var(--st-cyan); flex: none; }
+.tray[data-state='offline'] .dot, .tray[data-state='problem'] .dot { background: #e4877c; }
+.tray[data-state='waiting'] .dot, .tray[data-state='uploading'] .dot { background: #7fb0ff; }
+.close { min-height: 44px; padding: 0 16px; color: var(--st-paper); font: inherit; font-size: 14px; background: rgba(8, 16, 34, .3); border: 2px solid rgba(244, 239, 228, .55); border-radius: 999px; cursor: pointer; }
+.body { margin: 12px 0 0; font-size: 15px; line-height: 1.45; }
+.list { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; background: rgba(60, 44, 118, .45); border-radius: 12px; font-size: 14px; }
+.list small { color: var(--st-cyan); font-size: 14px; white-space: nowrap; }
+.meta { margin: 12px 0 0; color: var(--st-dim); font-size: 14px; }
+.upload { display: block; width: 100%; min-height: 48px; margin-top: 14px; color: var(--st-ink); font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; background: var(--st-paper); border: 0; border-radius: 999px; cursor: pointer; }
