@@ -816,3 +816,126 @@
 .deskNext { border: 2px solid #ecebe8; background: #ecebe8; color: #16171a; }
 .briefButton { border: 2px solid var(--iv-line); background: transparent; color: var(--iv-ink); }
 .deskNext:focus-visible, .briefButton:focus-visible { outline: 2px solid var(--iv-blue); outline-offset: 2px; }
+
+/* ── Hardware finish (Liam, 01.11: "more colour and texture", v0 telescope mockup) ──────────────
+   Panels are machined plates: a cool metal gradient, faint brushing, an edge highlight and four
+   screws. The viewing window is deep space behind glass: vignette, scanlines and a cyan glow.
+   Status lights glow; readouts are amber. Everything is CSS, no extra DOM. */
+.screen {
+  --iv-amber: #f2b33d;
+  --iv-glow: rgba(47, 181, 212, .35);
+  --iv-plate: linear-gradient(165deg, #222c4b 0%, #19213a 48%, #141a2f 100%);
+  --iv-brush: repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 1px, transparent 1px 3px);
+  --iv-screw: radial-gradient(circle, #9aa3b8 0 2px, #3a4258 2.5px 3.5px, transparent 4px);
+}
+.screen.screen {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(47, 181, 212, .1), transparent 60%),
+    radial-gradient(circle, rgba(255, 255, 255, .05) 1px, transparent 1.5px) 0 0 / 22px 22px,
+    #0c1222 !important;
+}
+
+.controls,
+.command {
+  background:
+    var(--iv-screw) top 6px left 6px / 12px 12px no-repeat,
+    var(--iv-screw) top 6px right 6px / 12px 12px no-repeat,
+    var(--iv-screw) bottom 6px left 6px / 12px 12px no-repeat,
+    var(--iv-screw) bottom 6px right 6px / 12px 12px no-repeat,
+    var(--iv-brush),
+    var(--iv-plate);
+  border-color: #c9d3e6;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -2px 0 rgba(0, 0, 0, .35), 4px 4px 0 rgba(8, 12, 24, .55);
+}
+
+.well {
+  border-color: #c9d3e6;
+  box-shadow: 0 0 0 1px var(--iv-glow), 0 0 28px rgba(47, 181, 212, .18), 4px 4px 0 rgba(8, 12, 24, .55);
+}
+.view {
+  background: radial-gradient(ellipse at 50% 45%, #13254a 0%, #0a1430 55%, #050a1a 100%);
+}
+/* Glass: vignette, scanlines and a soft sheen over the image, under the caption and readout. */
+.view::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, .07), transparent 32%),
+    repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .12) 3px 4px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .55) 100%);
+}
+.reticle {
+  z-index: 1;
+  border-color: rgba(127, 231, 255, .85);
+  filter: drop-shadow(0 0 4px rgba(127, 231, 255, .6));
+}
+.reticle::before,
+.reticle::after { background: rgba(127, 231, 255, .85); }
+
+.titleBar {
+  background: linear-gradient(180deg, #24304f, #18203a);
+  border-bottom-color: #c9d3e6;
+}
+.titleStation { color: var(--iv-amber); }
+.titleStatus { display: inline-flex; align-items: center; gap: 6px; }
+.titleStatus::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6ff0a8;
+  box-shadow: 0 0 6px #6ff0a8, 0 0 12px rgba(111, 240, 168, .6);
+}
+
+.terminal {
+  background:
+    repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .14) 3px 4px),
+    radial-gradient(ellipse at 30% 20%, #10283a, #0a1726 70%);
+  border-color: #5fa9bd;
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, .55), 0 0 0 1px rgba(47, 181, 212, .2);
+}
+.log,
+.commandInput,
+.promptMark { color: #8ff5c4; text-shadow: 0 0 6px rgba(111, 240, 168, .35); }
+.commandInput { border-bottom-color: rgba(143, 245, 196, .5); }
+.commandInput::placeholder { color: rgba(143, 245, 196, .55); }
+
+.dial {
+  background: radial-gradient(circle at 38% 32%, #3a4766, #1a2240 60%, #10162a);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, .18), 0 2px 0 rgba(0, 0, 0, .45);
+}
+.needle { box-shadow: 0 0 6px var(--iv-blue); }
+.aim {
+  background: linear-gradient(180deg, #27324f, #1a2139);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.switchTrack[data-on="true"] { background: rgba(47, 181, 212, .3); border-color: var(--iv-blue); box-shadow: 0 0 8px var(--iv-glow); }
+.aimLabel, .knobLabel, .switchLabel { color: #d9e3f2; }
+
+/* Asteroid readout: the Minor Planet Center fields, on the glass top-right. */
+.readout {
+  position: absolute;
+  top: var(--ln-s-2);
+  right: var(--ln-s-2);
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 2px 14px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(242, 179, 61, .55);
+  border-radius: var(--ln-r-sm);
+  background: rgba(8, 14, 30, .82);
+  box-shadow: 0 0 14px rgba(242, 179, 61, .12);
+  pointer-events: none;
+}
+.readout div { display: contents; }
+.readout dt { font: 700 14px/1.4 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; color: #a9b6cc; }
+.readout dd { margin: 0; text-align: right; font: 700 14px/1.4 var(--ln-font-mono); color: var(--iv-amber); text-shadow: 0 0 6px rgba(242, 179, 61, .4); }
+.readout div[data-tone="hot"] dd { color: #6ff0a8; text-shadow: 0 0 6px rgba(111, 240, 168, .45); }
+@media (max-width: 600px) and (orientation: portrait), (orientation: landscape) and (max-height: 520px) {
+  .readout { grid-template-columns: repeat(4, auto); gap: 0 8px; padding: 4px 8px; top: 4px; right: 4px; left: 4px; }
+}
