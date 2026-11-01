@@ -4,6 +4,8 @@
  * as `translate(x, y) scale(zoom)` with origin top-left, so the world is never smaller than the view.
  */
 export const MIN_ZOOM = 0.1
+/** Wheel and pinch never zoom out past the whole-base view: below it the strip stops covering the viewport. */
+export const GESTURE_MIN_ZOOM = 1
 export const MAX_ZOOM = 2.6
 /** How far past the hard edge a drag may stretch before it springs back, as a fraction of the viewport. */
 export const SOFT_EDGE = 0.08
@@ -45,14 +47,14 @@ function clampAxis(v: number, min: number, max: number): number {
 
 /** Hard clamp: the resting position the camera settles to. */
 export function clampCamera(cam: BaseCameraState, view: Viewport): BaseCameraState {
-  const zoom = clampZoom(cam.zoom)
+  const zoom = Math.max(fitZoom(view), clampZoom(cam.zoom))
   const l = panLimits(zoom, view)
   return { zoom, x: clampAxis(cam.x, l.minX, l.maxX), y: clampAxis(cam.y, l.minY, l.maxY) }
 }
 
 /** Soft clamp while dragging: past the edge the overshoot is damped, so the edge feels elastic. */
 export function softClampCamera(cam: BaseCameraState, view: Viewport): BaseCameraState {
-  const zoom = clampZoom(cam.zoom)
+  const zoom = Math.max(fitZoom(view), clampZoom(cam.zoom))
   const l = panLimits(zoom, view)
   const soft = (v: number, min: number, max: number, span: number) => {
     const room = span * SOFT_EDGE
@@ -63,9 +65,9 @@ export function softClampCamera(cam: BaseCameraState, view: Viewport): BaseCamer
   return { zoom, x: soft(cam.x, l.minX, l.maxX, view.w), y: soft(cam.y, l.minY, l.maxY, view.h) }
 }
 
-/** Zoom about a screen point so the world point under it stays put. */
+/** Zoom about a screen point so the world point under it stays put. Gestures stop at the whole-base view. */
 export function zoomAt(cam: BaseCameraState, nextZoom: number, point: { x: number; y: number }, view: Viewport): BaseCameraState {
-  const zoom = clampZoom(nextZoom)
+  const zoom = Math.max(GESTURE_MIN_ZOOM, clampZoom(nextZoom))
   const k = zoom / cam.zoom
   return clampCamera({ zoom, x: point.x - (point.x - cam.x) * k, y: point.y - (point.y - cam.y) * k }, view)
 }

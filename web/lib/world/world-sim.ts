@@ -267,8 +267,10 @@ function emitAtRate(world: World, key: string, perSecond: number, dt: number, ma
 function startEvent(world: World, ev: SkyEvent, view: WorldView): void {
   const t = ev.elapsed ?? 0
   if (ev.kind === 'launch') {
-    // A rocket from another pad far down the range, on the horizon behind the escarpments' gap.
-    const r = spawn(world, 'far-rocket', { x: stripXAt(view, 0.74, 0.15), y: 56, event: ev.id })
+    // A rocket from another pad far down the range: it rises from behind the escarpments, its pad picked from the
+    // event id so each launch climbs from its own spot.
+    const at = 0.18 + WorldRandom.from(`pad:${ev.id}`).next() * 0.64
+    const r = spawn(world, 'far-rocket', { x: stripXAt(view, at, 0.15), y: 48, event: ev.id })
     if (r && t > 0) fastForward(world, r, Math.min(t, 60), 0.1)
   } else if (ev.kind === 'balloon') {
     const b = spawn(world, 'balloon', { x: stripXAt(view, 0.62, 0.5), y: 26, event: ev.id })

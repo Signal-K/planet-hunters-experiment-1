@@ -13,6 +13,18 @@ export const SKY_EVENTS = calendar
 export type SkyEventKind = 'meteors' | 'eclipse-solar' | 'eclipse-lunar' | 'planet' | 'satellite' | 'launch' | 'balloon' | 'aurora' | 'comet'
 export type WeatherKind = 'clear' | 'cloudy' | 'windy' | 'rain' | 'storm' | 'fog'
 
+export interface LaunchCrew {
+  pilot: string
+  rocket: string
+  mission: string
+}
+
+/** The crew flying a launch, picked deterministically from its id so every player sees the same tag. */
+export function launchCrew(id: string): LaunchCrew {
+  const crews = calendar.launches.crews
+  return crews[Math.floor(WorldRandom.from(`${calendar.salt}:crew:${id}`).next() * crews.length) % crews.length]
+}
+
 export interface SkyEvent {
   id: string
   kind: SkyEventKind
@@ -21,6 +33,8 @@ export interface SkyEvent {
   perMinute?: number
   /** Seconds since the event started, for timed passes and launches. */
   elapsed?: number
+  /** Launches: whose rocket it is, shown on the tag when the player taps it. */
+  crew?: LaunchCrew
   /** Screen-fraction position for fixed sky objects (planets). */
   x?: number
   y?: number
@@ -140,7 +154,17 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
     if (rng.next() < l.chancePerDay) {
       const start = rng.range(l.fromHour * 3600, l.toHour * 3600)
       const elapsed = secondsToday - start
-      if (elapsed >= 0 && elapsed < l.seconds) events.push({ id: `launch-${key}`, kind: 'launch', name: l.name, elapsed })
+      if (elapsed >= 0 && elapsed < l.seconds) events.push({ id: `launch-${key}`, kind: 'launch', name: l.name, elapsed, crew: launchCrew(`launch-${key}`) })
+    }
+    // Other pilots fly from the range through the day: one chance per slot, starting somewhere inside it.
+    const slot = Math.floor(secondsToday / l.everySeconds)
+    for (const s of [slot - 1, slot]) {
+      if (s < 0) continue
+      const srng = WorldRandom.from(`${calendar.salt}:launch:${key}:${s}`)
+      if (srng.next() >= l.chancePerSlot) continue
+      const elapsed = secondsToday - (s * l.everySeconds + srng.range(0, l.everySeconds - l.seconds))
+      const id = `launch-${key}-${s}`
+      if (elapsed >= 0 && elapsed < l.seconds) events.push({ id, kind: 'launch', name: l.name, elapsed, crew: launchCrew(id) })
     }
   }
   for (const hour of calendar.balloons.hours) {
@@ -169,7 +193,7 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
     // Preview showers need to be visibly alive without becoming a white wall
     // of trails. The real calendar controls live event intensity separately.
     if (f === 'meteors') events.push({ id: 'forced-meteors', kind: 'meteors', name: 'Meteor shower', perMinute: 8 })
-    if (f === 'launch') events.push({ id: 'forced-launch', kind: 'launch', name: calendar.launches.name, elapsed: 0 })
+    if (f === 'launch') events.push({ id: 'forced-launch', kind: 'launch', name: calendar.launches.name, elapsed: 0, crew: launchCrew('forced-launch') })
     if (f === 'balloon') events.push({ id: 'forced-balloon', kind: 'balloon', name: calendar.balloons.name, elapsed: 0 })
     if (f === 'satellite') events.push({ id: 'forced-satellite', kind: 'satellite', name: 'Satellite pass', elapsed: 0 })
     if (f === 'aurora') events.push({ id: 'forced-aurora', kind: 'aurora', name: 'Aurora' })

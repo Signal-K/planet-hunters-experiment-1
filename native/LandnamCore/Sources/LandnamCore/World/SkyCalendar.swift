@@ -8,7 +8,19 @@ public struct WorldSkyCalendar: Decodable, Sendable {
     public struct Eclipse: Decodable, Sendable { public let id, kind, date, name: String }
     public struct Planet: Decodable, Sendable { public let id, name, from, to: String; public let grades: [String]; public let x, y: Double }
     public struct Satellites: Decodable, Sendable { public let passesPerNight: Int; public let seconds: Double; public let grades: [String] }
-    public struct Launches: Decodable, Sendable { public let chancePerDay: Double; public let fromHour, toHour: Double; public let seconds: Double; public let name: String }
+    public struct Crew: Decodable, Sendable, Equatable { public let pilot, rocket, mission: String }
+    public struct Launches: Decodable, Sendable {
+        public let chancePerDay: Double; public let fromHour, toHour: Double; public let seconds: Double; public let name: String
+        /// Other pilots launch from the range through the day: one chance per slot of this many seconds.
+        public let everySeconds: Double; public let chancePerSlot: Double
+        public let crews: [Crew]
+    }
+
+    /// The crew flying a launch, picked from its id so every player sees the same tag (web `launchCrew`).
+    public func launchCrew(_ id: String) -> Crew {
+        var rng = WorldRandom(key: "\(salt):crew:\(id)")
+        return launches.crews[Int(rng.next() * Double(launches.crews.count)) % launches.crews.count]
+    }
     public struct Balloons: Decodable, Sendable { public let hours: [Double]; public let seconds: Double; public let name: String }
     public struct WeatherKind: Decodable, Sendable {
         public let id: String; public let weight: Double; public let wind: [Double]; public let clouds: Double
@@ -49,6 +61,7 @@ public struct WorldSkyEvent: Sendable, Equatable {
     public var perMinute: Double?
     public var elapsed: Double?
     public var x: Double?
+    public var crew: WorldSkyCalendar.Crew? = nil
     public var y: Double?
 }
 
@@ -156,7 +169,15 @@ public enum WorldSkyClock {
             var rng = WorldRandom(key: "\(data.salt):launch:\(key)")
             if rng.next() < l.chancePerDay {
                 let elapsed = secondsToday - rng.range(l.fromHour * 3600, l.toHour * 3600)
-                if elapsed >= 0 && elapsed < l.seconds { events.append(WorldSkyEvent(id: "launch-\(key)", kind: .launch, name: l.name, elapsed: elapsed)) }
+                if elapsed >= 0 && elapsed < l.seconds { events.append(WorldSkyEvent(id: "launch-\(key)", kind: .launch, name: l.name, elapsed: elapsed, crew: data.launchCrew("launch-\(key)"))) }
+            }
+            let slot = Int(floor(secondsToday / l.everySeconds))
+            for s in [slot - 1, slot] where s >= 0 {
+                var srng = WorldRandom(key: "\(data.salt):launch:\(key):\(s)")
+                guard srng.next() < l.chancePerSlot else { continue }
+                let elapsed = secondsToday - (Double(s) * l.everySeconds + srng.range(0, l.everySeconds - l.seconds))
+                let id = "launch-\(key)-\(s)"
+                if elapsed >= 0 && elapsed < l.seconds { events.append(WorldSkyEvent(id: id, kind: .launch, name: l.name, elapsed: elapsed, crew: data.launchCrew(id))) }
             }
         }
         for hour in data.balloons.hours {
@@ -186,7 +207,7 @@ public enum WorldSkyClock {
             // Keep preview showers legible. Live events use their authored
             // calendar rates, while the forced scene only needs a clear cue.
             case "meteors": events.append(WorldSkyEvent(id: "forced-meteors", kind: .meteors, name: "Meteor shower", perMinute: 8))
-            case "launch": events.append(WorldSkyEvent(id: "forced-launch", kind: .launch, name: data.launches.name, elapsed: 0))
+            case "launch": events.append(WorldSkyEvent(id: "forced-launch", kind: .launch, name: data.launches.name, elapsed: 0, crew: data.launchCrew("forced-launch")))
             case "balloon": events.append(WorldSkyEvent(id: "forced-balloon", kind: .balloon, name: data.balloons.name, elapsed: 0))
             case "satellite": events.append(WorldSkyEvent(id: "forced-satellite", kind: .satellite, name: "Satellite pass", elapsed: 0))
             case "aurora": events.append(WorldSkyEvent(id: "forced-aurora", kind: .aurora, name: "Aurora"))

@@ -204,7 +204,10 @@ public struct World: Sendable {
         let t = ev.elapsed ?? 0
         switch ev.kind {
         case .launch:
-            if let id = spawn("far-rocket", Over(x: view.stripX(0.74, depth: 0.15), y: 56, event: ev.id)), t > 0 { fastForward(id, seconds: min(t, 60), step: 0.1) }
+            // Each launch climbs from its own pad behind the escarpments (web `startEvent`).
+            var pad = WorldRandom(key: "pad:\(ev.id)")
+            let at = 0.18 + pad.next() * 0.64
+            if let id = spawn("far-rocket", Over(x: view.stripX(at, depth: 0.15), y: 48, event: ev.id)), t > 0 { fastForward(id, seconds: min(t, 60), step: 0.1) }
         case .balloon:
             if let id = spawn("balloon", Over(x: view.stripX(0.62, depth: 0.5), y: 26, event: ev.id)), t > 0 { fastForward(id, seconds: min(t, 200), step: 0.25) }
         case .satellite:

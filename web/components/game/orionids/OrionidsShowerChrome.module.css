@@ -273,12 +273,13 @@
   to { opacity: 1; transform: none; }
 }
 
-/* The art points down-right at about 25 degrees; turn it steep so a streak falls toward the ground, then fades. */
+/* The art points down-right at about 37 degrees with its head leading. Turned a little steeper (45 degrees) and
+   moved along that same line, it reads as a meteor. Turned straight down, it read as an upright craft sinking. */
 @keyframes orionids-drift {
-  0% { transform: translate(0, 0) rotate(55deg); opacity: 0; }
+  0% { transform: translate(0, 0) rotate(8deg); opacity: 0; }
   4% { opacity: 0.42; }
   55% { opacity: 0.42; }
-  64%, 100% { transform: translate(14vw, 52vh) rotate(55deg); opacity: 0; }
+  64%, 100% { transform: translate(22vw, 22vw) rotate(8deg); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
