@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { paletteForTarget } from '@/lib/mining/laserPalette'
 import { layoutForPalette, PIECE_SIZE, type TerrainPiece } from '@/lib/mining/landscape'
-import { cratePlan, groundColor, hex, skyColor, surfaceRatio } from '@/lib/mining/destinationVista'
+import { bodyOutline, bodyTones, cratePlan, groundColor, hex, skyColor, surfaceRatio } from '@/lib/mining/destinationVista'
 
 const TERRAIN: Record<TerrainPiece, string> = {
   mountain: '/game/assets/mining/terrain_mountain.png',
@@ -142,6 +142,43 @@ export default function DestinationLandscape({ target, cargo = [], variant = 'sc
         ctx.fillRect(sx, sy, s, s)
       }
       ctx.globalAlpha = 1
+
+      if (variant === 'card') {
+        // SSL-751: the destination body in the sky above its own ground.
+        const tones = bodyTones(palette.landscape?.tint)
+        const radius = Math.max(10, Math.min(surface * 0.36, width * 0.26))
+        const cx = width * 0.56
+        const cy = surface * 0.48
+        const outline = bodyOutline(target.id || palette.id, target.type)
+        const trace = () => {
+          ctx.beginPath()
+          outline.forEach(([ox, oy], i) => { const px = cx + ox * radius; const py = cy + oy * radius; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py) })
+          ctx.closePath()
+        }
+        trace()
+        const light = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius)
+        light.addColorStop(0, hex(tones.lit))
+        light.addColorStop(0.55, hex(tones.lit))
+        light.addColorStop(1, hex(tones.shade))
+        ctx.fillStyle = light
+        ctx.fill()
+        ctx.save()
+        trace()
+        ctx.clip()
+        ctx.fillStyle = hex(tones.shade)
+        ctx.globalAlpha = 0.55
+        for (const [ox, oy, r] of [[-0.3, -0.15, 0.18], [0.25, 0.2, 0.13], [-0.05, 0.35, 0.1]] as const) {
+          ctx.beginPath()
+          ctx.arc(cx + ox * radius, cy + oy * radius, r * radius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        ctx.restore()
+        ctx.globalAlpha = 1
+        ctx.strokeStyle = hex(tones.rim)
+        ctx.lineWidth = 1.5
+        trace()
+        ctx.stroke()
+      }
 
       const sprite = Object.fromEntries(pieces) as Partial<Record<TerrainPiece, HTMLCanvasElement | null>>
       const scale = variant === 'card' ? Math.max(0.34, width / 920) : Math.max(0.55, Math.min(1.15, width / 1100))

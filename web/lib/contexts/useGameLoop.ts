@@ -1322,6 +1322,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             })
           }),
           debriefPending: false,
+          homeSettlement: undefined,
           cargoSettledOffworld: false,
           returningToEarth: false,
           deliveryUnloadStartedAt: undefined,
@@ -1475,9 +1476,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (newMissionsDone >= FREE_OPS_MISSION_SEQUENCE && !catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stampResearch, stateRef])
 
-  const onDebriefDoneRef = useRef(onDebriefDone)
-  onDebriefDoneRef.current = onDebriefDone
-
   /** SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger. */
   const onHomeDelivery = useCallback((split: HomeSplit) => {
     const current = stateRef.current
@@ -1488,13 +1486,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const demand = clientDemand(mission, current.lastCargo)
     const payout = clientPayout(mission, split, demand, current.player.missionsDone)
     const affinity = payout > 0 && mission?.client ? Math.max(0, mission.payout.affinity) : 0
-    let consumed: Record<string, number> = {}
-    setState(s => {
-      const settled = applyHomeSplit(s, split, Date.now())
-      consumed = settled.consumed
-      return settled.state
-    })
-    onDebriefDoneRef.current(payout, affinity, consumed)
+    // SSL-751: settle the market and silo shares, then show the debrief. Closing the run here sent the
+    // contract to the log without its debrief; the debrief's Complete button now closes it.
+    setState(s => (s.screen !== 'debrief' || !s.player.homeDeliveryPending || !s.lastCargo)
+      ? s
+      : applyHomeSplit(s, split, Date.now(), { payout, affinity }).state)
   }, [catalog.missions, setState, stateRef])
 
   return {

@@ -362,6 +362,7 @@ export default function MissionOperationRoutes({
           originTargetName={originTargetName}
           cargo={debriefCargo}
           onDone={game.onDebriefDone}
+          homeSettlement={game.player.homeSettlement}
           onBuyLaserCapacitor={game.onBuyLaserCapacitor}
           laserCapacitorLevel={game.player.laserCapacitorLevel ?? 0}
           stashUnits={storedUnits(game.player.stash)}

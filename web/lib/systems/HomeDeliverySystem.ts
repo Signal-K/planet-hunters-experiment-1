@@ -4,7 +4,7 @@
 // settling only takes units out again: sold units leave for francs, client units
 // are handed to the debrief ledger as `consumed`, silo units simply stay.
 
-import type { GameState } from '@/lib/game-types'
+import type { GameState, HomeSettlement } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
 import { calibrateOnboardingPayout, isFreeHaulMission } from '@/lib/data'
 import { applySellHaul, earthStorageBuilt, sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
@@ -95,10 +95,21 @@ export function marketValue(player: GameState['player'], units: Record<string, n
  * to consume, and the haul is marked settled so the free-haul store/sell step in
  * the debrief does not run again.
  */
-export function applyHomeSplit(s: GameState, split: HomeSplit, now = Date.now()): { state: GameState; consumed: Record<string, number> } {
-  const sold = applySellHaul(s, pick(split, 'sell'), now)
+export function applyHomeSplit(s: GameState, split: HomeSplit, now = Date.now(), terms: { payout: number; affinity: number } = { payout: 0, affinity: 0 }): { state: GameState; consumed: Record<string, number> } {
+  const soldUnits = pick(split, 'sell')
+  const sold = applySellHaul(s, soldUnits, now)
+  const consumed = pick(split, 'client')
+  // SSL-751: the run stays open on the debrief, which reads this ledger and closes it.
+  const homeSettlement: HomeSettlement = {
+    payout: terms.payout,
+    affinity: terms.affinity,
+    consumed,
+    sold: soldUnits,
+    soldFrancs: Math.max(0, sold.player.francs - s.player.francs),
+    siloed: pick(split, 'silo'),
+  }
   return {
-    state: { ...sold, player: { ...sold.player, homeDeliveryPending: false, cargoSettledOffworld: true, freeHaulDisposition: undefined } },
-    consumed: pick(split, 'client'),
+    state: { ...sold, player: { ...sold.player, homeDeliveryPending: false, homeSettlement, cargoSettledOffworld: true, freeHaulDisposition: undefined } },
+    consumed,
   }
 }

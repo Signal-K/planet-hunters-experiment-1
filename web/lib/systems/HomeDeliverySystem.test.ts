@@ -33,8 +33,13 @@ describe('HomeDeliverySystem (SSL-553)', () => {
     expect(home.screen).toBe('debrief')
     expect(home.player.homeDeliveryPending).toBe(true)
     expect(home.player.stash).toEqual(cargo)
-    const { state, consumed } = applyHomeSplit(home, { iron: { client: 4, silo: 1, sell: 1 }, nickel: { client: 0, silo: 0, sell: 2 } }, 1)
+    const { state, consumed } = applyHomeSplit(home, { iron: { client: 4, silo: 1, sell: 1 }, nickel: { client: 0, silo: 0, sell: 2 } }, 1, { payout: 900, affinity: 2 })
     expect(consumed).toEqual({ iron: 4 })
+    // SSL-751: the run stays open for the debrief, which reads what the sheet settled.
+    expect(state.player.homeSettlement).toEqual({
+      payout: 900, affinity: 2, consumed: { iron: 4 }, sold: { iron: 1, nickel: 2 }, siloed: { iron: 1 },
+      soldFrancs: state.player.francs - home.player.francs,
+    })
     expect(state.player.stash).toEqual({ iron: 5 })
     expect(state.player.francs).toBeGreaterThan(home.player.francs)
     expect(state.player.homeDeliveryPending).toBe(false)

@@ -10,6 +10,18 @@ import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems
 import type { FlightPlanProgress } from './systems/FlightPlanSystem'
 import type { FlightPlanEvent, TrainingTryId } from './systems/FlightPlanSystem'
 
+/** SSL-751: the Homecoming split, as the debrief ledger reads it. Market and silo shares are already settled. */
+export interface HomeSettlement {
+  /** Francs the client pays (0 when the client share does not fill the contract). */
+  payout: number
+  affinity: number
+  /** Client units the debrief ledger takes out of the stash. */
+  consumed: Record<string, number>
+  sold: Record<string, number>
+  soldFrancs: number
+  siloed: Record<string, number>
+}
+
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
   missions: Mission[]
@@ -203,6 +215,11 @@ export interface Player {
   debriefPending?: boolean
   /** Back on the Earth pad with cargo still to settle on the delivery sheet (SSL-553). */
   homeDeliveryPending?: boolean
+  /**
+   * SSL-751: what the delivery sheet settled, held for the debrief. Confirming the sheet used to close the run
+   * at once, so the contract went to the log without its debrief. The debrief shows this and closes the run.
+   */
+  homeSettlement?: HomeSettlement
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
   pendingRemoteDisposition?: 'store' | 'sell'
