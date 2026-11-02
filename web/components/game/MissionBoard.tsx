@@ -29,6 +29,7 @@ import {
 } from '@/lib/mission-board-view'
 import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
+import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
@@ -280,6 +281,13 @@ const EVENT_BANNERS = {
   moon: '/game/assets/events/banners/moon.png',
 } as const
 
+/** SSL-699: a pick for mining, a crane hook for construction, a lens for exploration. */
+function ContractGroupGlyph({ group }: { group: ContractGroup }) {
+  if (group === 'construction') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6h14M4 6l4-3M18 6v5M15 11h6M18 11v3a2 2 0 1 1-2 2" /></svg>
+  if (group === 'exploration') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="M14.5 14.5 20 20M10 7v6M7 10h6" /></svg>
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 14 10M11 5c4-2 8 0 9 4-3-2-6-2-9 0zM11 5l3 5" /></svg>
+}
+
 function SkyBanner({ kind }: { kind: keyof typeof EVENT_BANNERS }) {
   return <img className={styles.banner} src={EVENT_BANNERS[kind]} alt="" />
 }
@@ -341,7 +349,10 @@ export default function MissionBoard({
     [catalog.clients, player.clientMissions, cards],
   )
   const focusedStanding = roster.find(item => item.client.id === clientFocusId) ?? roster[0]
-  const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
+  const [contractGroupFilter, setContractGroupFilter] = useState<ContractGroup | null>(null)
+  const groupCounts = useMemo(() => contractGroupCounts(cards.map(item => item.mission)), [cards])
+  const visibleCards = cards.filter(item => (!contractTargetId || item.targetIds.includes(contractTargetId))
+    && (!contractGroupFilter || contractGroup(item.mission) === contractGroupFilter))
   const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
   const count = visibleCards.length
   const visibleSelectedIndex = selectedCard ? visibleCards.findIndex(item => item.mission.id === selectedCard.mission.id) : -1
@@ -355,7 +366,8 @@ export default function MissionBoard({
   // the highlight moves, and the page turns when the ‹ › counter steps past its edge.
   const windowSize = Math.min(5, count)
   const windowStart = paging ? Math.min(Math.floor(index / windowSize) * windowSize, count - windowSize) : 0
-  const offerWindow = paging
+  // A group can hold a single offer; its tile still shows, so the strip never goes blank under the group chips.
+  const offerWindow = tab === 'contracts' && count > 0
     ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
     : []
   const [view, setView] = useState<MapView>('system')
@@ -416,8 +428,14 @@ export default function MissionBoard({
     if (first) onSelectMission(first.mission.id)
   }
 
+  const pickContractGroup = (group: ContractGroup | null) => {
+    setContractGroupFilter(group)
+    const first = cards.find(item => (!group || contractGroup(item.mission) === group) && (!contractTargetId || item.targetIds.includes(contractTargetId)))
+    if (first) onSelectMission(first.mission.id)
+  }
+
   const selectVisibleRelative = (offset: number) => {
-    if (!contractTargetId) return onSelectRelative(offset)
+    if (!contractTargetId && !contractGroupFilter) return onSelectRelative(offset)
     if (visibleCards.length === 0) return
     const next = (index + offset + visibleCards.length) % visibleCards.length
     onSelectMission(visibleCards[next].mission.id)
@@ -500,6 +518,16 @@ export default function MissionBoard({
         <article className={styles.contractWorkspace} aria-live="polite" data-testid="mission-board-section-client">
           <section className={styles.contractOffers} aria-label="Available contracts">
             <h2>Contracts</h2>
+            {groupCounts.length > 1 && (
+              <div className={styles.offerGroups} role="group" aria-label="Contract type" data-testid="mission-board-groups">
+                <button type="button" data-active={!contractGroupFilter || undefined} aria-pressed={!contractGroupFilter} data-testid="mission-board-group-all" onClick={() => pickContractGroup(null)}>All<b>{cards.length}</b></button>
+                {groupCounts.map(({ group, count: groupCount }) => (
+                  <button key={group} type="button" data-group={group} data-active={contractGroupFilter === group || undefined} aria-pressed={contractGroupFilter === group} data-testid={`mission-board-group-${group}`} onClick={() => pickContractGroup(group)}>
+                    <ContractGroupGlyph group={group} />{CONTRACT_GROUP_LABEL[group]}<b>{groupCount}</b>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className={styles.offerStrip}>
               {offerWindow.map(({ offer, offerIndex }) => {
                 const offerClient = offer.client
@@ -507,6 +535,7 @@ export default function MissionBoard({
                   aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
                   <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={34} />
                   <span>{offerIndex + 1}</span>
+                  <i className={styles.offerKind} data-group={contractGroup(offer.mission)} title={CONTRACT_GROUP_LABEL[contractGroup(offer.mission)]}><ContractGroupGlyph group={contractGroup(offer.mission)} /></i>
                 </button>
               })}
             </div>

@@ -957,3 +957,24 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .railHelp button.log { grid-column: 1; grid-row: 2; }
   .railHelp .balance { grid-column: 2; grid-row: 2; }
 }
+
+/* SSL-699: offers grouped by mining, construction and exploration (Liam, 01.11). The chips filter the strip; each
+   tile also wears its group's glyph so a mixed page still reads at a glance. */
+.offerGroups { width: min(260px, 100%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.offerGroups button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; color: #f4efe4; font: 700 14px/1 var(--ln-font-display); letter-spacing: .04em; background: rgba(8, 16, 34, .3); border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; cursor: pointer; }
+.offerGroups button[data-active] { color: #142840; background: #f4efe4; border-color: #f4efe4; }
+.offerGroups button b { min-width: 20px; padding: 0 5px; font-size: 14px; line-height: 20px; text-align: center; border-radius: 999px; background: rgba(88, 208, 234, .28); }
+.offerGroups button[data-active] b { background: rgba(20, 40, 64, .14); }
+.offerGroups svg, .offerKind svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.contractOffers .offerStrip .offerKind { position: absolute; z-index: 1; left: -7px; top: -7px; display: grid; place-items: center; width: 24px; height: 24px; color: #142840; background: #9de7ef; border: 1.5px solid #142840; border-radius: 50%; }
+.offerKind svg { width: 15px; height: 15px; }
+.contractOffers .offerStrip .offerKind[data-group='construction'] { background: #f4efe4; }
+.contractOffers .offerStrip .offerKind[data-group='exploration'] { background: #c9b8ff; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .offerGroups { width: 100%; flex-wrap: nowrap; justify-content: safe center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .offerGroups button { flex: 0 1 auto; min-width: 0; gap: 4px; padding: 0 8px; letter-spacing: 0; }
+  .offerGroups svg { width: 16px; height: 16px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .offerGroups button { padding: 0 8px; }
+}
