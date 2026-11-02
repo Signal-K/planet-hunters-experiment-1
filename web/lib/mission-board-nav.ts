@@ -1,4 +1,4 @@
-export type MissionBoardTab = 'contracts' | 'program' | 'events' | 'free'
+export type MissionBoardTab = 'contracts' | 'program' | 'clients' | 'events' | 'free'
 
 let pending: MissionBoardTab | null = null
 let pendingEvent: string | null = null

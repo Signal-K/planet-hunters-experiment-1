@@ -7,6 +7,7 @@ import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
 import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
+import { clientRoster } from '@/lib/client-roster'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -66,6 +67,10 @@ function ChartIcon() {
 
 function ClipboardIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" /><path d="M9 4.5h6M9 9h6M9 13h6M9 17h4" /></svg>
+}
+
+function PeopleIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.3 2.7-6 6-6s6 2.7 6 6" /><circle cx="17" cy="9" r="2.6" /><path d="M16 13.2c2.8.2 5 2.6 5 5.8" /></svg>
 }
 
 function StarIcon() {
@@ -330,6 +335,12 @@ export default function MissionBoard({
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
+  const [clientFocusId, setClientFocusId] = useState<string | null>(null)
+  const roster = useMemo(
+    () => clientRoster(Object.values(catalog.clients), player.clientMissions ?? {}, cards.flatMap(item => (item.client ? [item.client.id] : []))),
+    [catalog.clients, player.clientMissions, cards],
+  )
+  const focusedStanding = roster.find(item => item.client.id === clientFocusId) ?? roster[0]
   const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
   const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
   const count = visibleCards.length
@@ -458,6 +469,7 @@ export default function MissionBoard({
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
     <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
+    <button type="button" className={styles.tab} aria-label="Your clients" data-tab="clients" data-active={tab === 'clients'} data-testid="mission-board-tab-clients" onClick={() => chooseTab('clients')}><PeopleIcon /><span className={styles.tabLabel}>Clients</span></button>
     {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
     <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
@@ -604,6 +616,50 @@ export default function MissionBoard({
               </div>}
               {(selectedProgramStep.state === 'current' || selectedProgramStep.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${selectedProgramStep.id}`} onClick={() => startStep(selectedProgramStep)}>{selectedProgramStep.state === 'current' ? 'START' : 'ACCEPT'}</button>}
             </article>}
+          </div>}
+
+          {tab === 'clients' && focusedStanding && <div className={styles.chain} data-testid="mission-board-clients">
+            <header className={styles.chainHead}>
+              <div>
+                <h2>Your clients</h2>
+                <p>Every job for a client raises their affinity: a higher level and a bigger payout bonus · {roster.filter(item => item.met).length} of {roster.length} met</p>
+              </div>
+            </header>
+            <div className={styles.clientList} role="list" aria-label="Clients">
+              {roster.map(item => <button key={item.client.id} type="button" role="listitem" className={styles.clientRow}
+                data-met={item.met || undefined} data-selected={item.client.id === focusedStanding.client.id || undefined}
+                data-testid={`client-row-${item.client.id}`} aria-pressed={item.client.id === focusedStanding.client.id}
+                onClick={() => setClientFocusId(item.client.id)}>
+                <ClientMark initial={item.client.initial} color={item.client.color} uiRole={item.client.uiRole} clientId={item.client.id} size={44} />
+                <span className={styles.clientCopy}>
+                  <strong>{item.client.name}</strong>
+                  <span>{item.met ? `L${item.level} · ${item.jobs} ${item.jobs === 1 ? 'job' : 'jobs'}${item.offers ? ` · ${item.offers} on the board` : ''}` : 'Not met yet'}</span>
+                </span>
+                <span className={styles.affinity} aria-hidden="true"><i style={{ width: `${(item.jobsInLevel / item.jobsPerLevel) * 100}%` }} /></span>
+              </button>)}
+            </div>
+            <article className={styles.clientDetail} data-testid="client-detail">
+              <header>
+                <ClientMark initial={focusedStanding.client.initial} color={focusedStanding.client.color} uiRole={focusedStanding.client.uiRole} clientId={focusedStanding.client.id} size={68} />
+                <div><span className={styles.kicker}>{focusedStanding.met ? `Affinity level ${focusedStanding.level}` : 'Not met yet'}</span><h3>{focusedStanding.client.name}</h3></div>
+              </header>
+              <p className={styles.skillBrief}>{focusedStanding.client.projectType}</p>
+              <div className={styles.gateMeter} role="progressbar" aria-label={`Affinity toward level ${focusedStanding.level + 1}`} aria-valuemin={0} aria-valuemax={focusedStanding.jobsPerLevel} aria-valuenow={focusedStanding.jobsInLevel}>
+                <i style={{ width: `${(focusedStanding.jobsInLevel / focusedStanding.jobsPerLevel) * 100}%` }} />
+                <em>{focusedStanding.jobsInLevel} of {focusedStanding.jobsPerLevel} jobs to level {focusedStanding.level + 1}</em>
+              </div>
+              <dl className={styles.clientFacts}>
+                <div><dt>Affinity bonus</dt><dd>+{Math.round(focusedStanding.bonus * 1000) / 10}%{focusedStanding.bonusMaxed ? ' (max)' : ''}</dd></div>
+                <div><dt>Client premium</dt><dd>+{Math.round(focusedStanding.client.payoutPremium * 100)}%</dd></div>
+                <div><dt>Wants</dt><dd>{focusedStanding.client.mineralPreferences.map(id => catalog.minerals[id]?.name ?? id).join(', ') || 'Any cargo'}</dd></div>
+              </dl>
+              {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
+                const first = cards.find(item => item.client?.id === focusedStanding.client.id)
+                setContractTargetId(null)
+                setTab('contracts')
+                if (first) onSelectMission(first.mission.id)
+              }}>{focusedStanding.offers === 1 ? 'SEE CONTRACT' : `SEE ${focusedStanding.offers} CONTRACTS`}</button>}
+            </article>
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">

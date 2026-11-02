@@ -412,6 +412,36 @@ button.start {
   .skillDetail h3 { font-size: 18px; }
 }
 
+/* SSL-730: Clients tab. Same list-and-detail as Program: your clients with their affinity on the left, the chosen one on the right. */
+.clientList { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 2px 0 12px; }
+.clientRow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 72px; align-items: center; gap: 10px; min-height: 64px; padding: 8px 12px 8px 8px; border: 2px solid var(--ln-board-ink); border-radius: 14px; background: var(--ln-board-paper); color: var(--ln-board-ink); text-align: left; cursor: pointer; }
+.clientRow:not([data-met]) { opacity: .55; }
+.clientRow[data-selected] { opacity: 1; border-color: var(--ln-board-blue, #2f83c5); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ln-board-blue, #2f83c5) 30%, transparent); }
+.clientRow:focus-visible { outline: 2px solid var(--ln-board-blue, #2f83c5); outline-offset: 2px; }
+.clientCopy { display: grid; gap: 3px; min-width: 0; }
+.clientCopy strong { font: 800 15px/1.15 var(--ln-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clientCopy span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.04em; color: var(--ln-board-muted); }
+.affinity { display: block; height: 10px; border: 2px solid var(--ln-board-ink); border-radius: 999px; background-color: var(--ln-board-lavender); overflow: hidden; }
+.affinity i { display: block; height: 100%; background-color: var(--ln-board-teal); }
+.clientDetail { display: grid; gap: 12px; padding: 16px; border: 3px solid var(--ln-board-blue, #2f83c5); border-radius: 16px; background: var(--ln-board-paper); color: var(--ln-board-ink); }
+.clientDetail header { display: flex; align-items: center; gap: 14px; }
+.clientDetail h3 { margin: 2px 0 0; font: 800 22px/1.15 var(--ln-font-display); }
+.clientDetail .gateMeter { width: 100%; }
+.clientFacts { display: grid; gap: 6px; margin: 0; }
+.clientFacts div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid color-mix(in srgb, var(--ln-board-ink) 18%, transparent); }
+.clientFacts dt { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-board-muted); }
+.clientFacts dd { margin: 0; font: 700 14px/1.2 var(--ln-font-body); text-align: right; }
+.clientDetail button.start { justify-self: start; }
+@media (min-width: 801px) {
+  .clientList { grid-column: 1; grid-row: 2; }
+  .clientDetail { grid-column: 2; grid-row: 2; position: sticky; top: 0; align-self: start; }
+}
+@media (max-width: 800px) {
+  .clientDetail { order: 1; }
+  .clientList { order: 2; }
+  .clientDetail button.start { justify-self: stretch; }
+}
+
 /* ── Dispatch (contracts) ─────────────────────────────────────────────
    Contracts arrive as client transmissions over the live base: the scene
    stays visible and undimmed, the work order is one compact slab with the
@@ -890,12 +920,17 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .rail button.tab, .rail button.tab[data-tab] { width: 44px; padding: 0; }
   .rail .tabLabel { display: none; }
   .gxBack, .gxBack[data-testid] { top: 64px; }
+  /* SSL-730: upright, Log and balance wrap to a second row; Program and Clients start below it. */
+  .sheet { top: 116px; }
   .freeDock { grid-template-columns: minmax(0, 1fr); }
   .freeDock > .freeAction { grid-column: 1; }
   .sourceSites > button.sourceAll { margin-left: 0; }
 }
 @media (max-height: 520px) and (orientation: landscape) {
   .rail .tabLabel { display: inline; }
+  /* SSL-730: six tabs plus Log and balance don't fit a phone held sideways with every label: only the open tab keeps its word. */
+  .rail button.tab:not([data-active='true']) .tabLabel { display: none; }
+  .rail button.tab:not([data-active='true']) { width: 44px; padding: 0; justify-content: center; }
   .gxBack, .gxBack[data-testid] { top: 64px; }
   .freeDock { padding: 8px 12px 10px; row-gap: 6px; }
   .sourceSites { padding-bottom: 6px; }
