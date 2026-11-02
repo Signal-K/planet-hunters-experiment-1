@@ -676,7 +676,8 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractOffers .offerStrip { width: min(260px, 100%); display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0; border: 0; overflow: visible; }
 .contractOffers .offerStrip button { position: relative; min-width: 64px; min-height: 64px; display: grid; place-items: center; color: #f4efe4; background: rgba(8, 16, 34, .22); border: 1px solid rgba(244, 239, 228, .58); cursor: pointer; }
 .contractOffers .offerStrip button[data-selected] { background: rgba(8, 16, 34, .72); border: 3px solid #58d0ea; outline: 0; }
-.contractOffers .offerStrip button > span { right: 4px; bottom: 3px; color: #f4efe4; font-size: 14px; }
+/* SSL-730: the offer number is a badge on the tile's corner, clear of the client emblem. */
+.contractOffers .offerStrip button > span { position: absolute; z-index: 1; right: -7px; bottom: -7px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: #142840; border: 1.5px solid #f4efe4; color: #f4efe4; font: 800 14px/19px var(--ln-font-display); text-align: center; }
 .contractFocus { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .contractFocus > span { color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .contractFocus > h2 { max-width: 18ch; font-size: clamp(24px, 3vw, 36px); }
@@ -721,8 +722,11 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 @media (orientation: portrait) and (max-width: 700px) {
   .contractWorkspace { top: 0; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto; }
   .contractWorkspace > section { padding: 14px 16px; }
-  .contractOffers { gap: 10px; padding-top: 74px !important; }
-  .contractOffers .offerStrip { width: 100%; display: flex; justify-content: center; gap: 8px; }
+  /* SSL-730: upright, the Log and balance chips wrap to a second row over the "Contracts" heading. The rail's
+     Contracts tab already names the page, so the heading stays for screen readers only and the strip starts below the chips. */
+  .contractOffers { gap: 10px; padding-top: 112px !important; }
+  .contractOffers > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .contractOffers .offerStrip { width: 100%; display: flex; justify-content: center; gap: 12px; }
   .contractOffers .offerStrip button { flex: 0 1 56px; min-width: 48px; min-height: 52px; }
   .contractFocus { gap: 8px; }
   .contractFocus > h2 { font-size: 24px; }
