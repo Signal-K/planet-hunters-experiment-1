@@ -7,7 +7,7 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
-import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolHint, type InstrumentQuickCommand } from '@/components/game/instrument-viewport/InstrumentViewport'
 import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, measureDips, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import { periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
@@ -73,7 +73,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [loadFailed, setLoadFailed] = useState(false)
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
-  const [dragArmed, setDragArmed] = useState(true)
   const [needsMark, setNeedsMark] = useState(false)
   // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
@@ -274,7 +273,12 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // the view they used and their verdict. The catalogue period only appears once they have submitted.
   const meanDepth = measured.dips.length ? measured.dips.reduce((sum, dip) => sum + dip.depthPpt, 0) / measured.dips.length : null
   const verdictLabel: Record<TessVerdict, string> = { planet: 'TRANSIT', not_planet: 'NOISE', unsure: 'SKIPPED' }
+  // SSL-749: the target star's details sit on the readout, beside what the player measured from its light.
   const readoutRows: InstrumentReadoutRow[] = [
+    { label: 'Star', value: `${candidate.host} · ${/^TIC/i.test(candidate.ticId) ? candidate.ticId : `TIC ${candidate.ticId}`}`, testId: 'tess-readout-star' },
+    ...(candidate.starTeffK ? [{ label: 'Teff', value: `${Math.round(candidate.starTeffK).toLocaleString('en-US')} K`, testId: 'tess-readout-star-teff' }] : []),
+    { label: 'Where', value: [candidate.constellation, candidate.distanceLy ? `${Math.round(candidate.distanceLy).toLocaleString('en-US')} LY` : null].filter(Boolean).join(' · ') || '—', testId: 'tess-readout-star-where' },
+    { label: 'Sector', value: activeSector?.label ?? candidate.sector ?? '—' },
     { label: 'Marks', value: markCount ? String(markCount) : 'NONE · DRAG A DIP', testId: 'tess-readout-marks' },
     ...measured.dips.slice(0, 4).map((dip, index) => ({
       label: `Dip ${index + 1}`,
@@ -290,10 +294,21 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     ...(classification && candidate.periodDays ? [{ label: 'Catalogue P', value: `${candidate.periodDays.toFixed(2)}d`, testId: 'tess-readout-catalogue' }] : []),
   ]
 
+  // SSL-749: the downlink's own keys, so the terminal shows what it does without typing.
+  const quickCommands: InstrumentQuickCommand[] = [
+    { label: lc.fold ? 'FOLD OFF' : 'FOLD', line: lc.fold ? 'FOLD OFF' : 'FOLD', testId: 'tess-cmd-fold' },
+    { label: `BIN ×${nextBin(lc.bin)}`, line: `BIN ${nextBin(lc.bin)}`, testId: 'tess-cmd-bin' },
+    ...(sectors.length > 1 ? [{ label: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, line: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, testId: 'tess-cmd-sector' }] : []),
+    { label: 'HELP', line: 'HELP', testId: 'tess-cmd-help' },
+  ]
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
+    if (head?.toUpperCase() === 'HELP' || head === '?') {
+      return { view, lines: ['> HELP', `FOLD [P|OFF] · PERIOD ${LIGHTCURVE_LIMITS.periodMin}-${LIGHTCURVE_LIMITS.periodMax}`, `TIME ${LIGHTCURVE_LIMITS.spanMin}-${LIGHTCURVE_LIMITS.spanMax} · SCAN 0-100`, 'BIN 1|2|4|8', `SECTOR 1-${Math.max(1, sectors.length)}`, 'ZOOM · FOCUS · POINT', 'FINISH  CONSOLE COLOUR'] }
+    }
     if (head?.toUpperCase() !== 'SECTOR') return null
     const index = Number(arg) - 1
     if (!Number.isInteger(index) || index < 0 || index >= sectors.length) {
@@ -393,7 +408,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             ranges={display.folded ? [] : activeRanges}
             onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); setNeedsMark(false); help.reportAction('mark') }}
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
-            locked={!dragArmed || display.folded}
+            locked={display.folded}
             yDomain={yDomain}
           />
         </div>
@@ -413,13 +428,12 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           }))}
         />
       )}
+      quickCommands={quickCommands}
       tool={(
-        <InstrumentToolButton
+        <InstrumentToolHint
           testId="tess-drag-dip"
-          label={markCount > 0 ? `Drag dip · ${markCount}` : 'Drag dip'}
-          pressed={dragArmed && !showMap}
-          disabled={!!classification || showMap}
-          onClick={() => setDragArmed(armed => !armed)}
+          text={classification ? 'Marks saved with your classification' : 'Drag across a dip on the chart'}
+          detail={classification ? undefined : markCount > 0 ? `${markCount} marked · tap a mark to clear it` : undefined}
         />
       )}
     />
