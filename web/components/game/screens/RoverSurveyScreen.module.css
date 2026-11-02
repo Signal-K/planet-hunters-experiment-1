@@ -18,15 +18,15 @@
 }
 
 /* Orionids brief, two-tone mission style: a dark translucent rounded panel,
-   cream text, cyan eyebrow. It sits right of the Menu button, or under it on phones. */
+   cream text, cyan eyebrow. It sits right of Menu and the battery gauge, or under them on phones and short screens. */
 .eventBrief {
   position: absolute;
   z-index: 3;
   top: 12px;
-  left: 124px;
+  left: 268px; /* right of Menu and the battery gauge (SSL-730) */
   display: grid;
   gap: 4px;
-  width: min(340px, calc(100% - 140px));
+  width: min(330px, calc(100% - 596px));
   padding: 12px 16px;
   border: 1px solid rgba(244, 239, 228, .28);
   border-radius: 18px;
@@ -34,8 +34,8 @@
   color: #f4efe4;
   box-shadow: 0 8px 24px rgba(4, 10, 20, .4), inset 0 1px 0 rgba(255, 255, 255, .12);
 }
-@media (max-width: 599px) {
-  .eventBrief { top: 68px; left: 16px; width: calc(100% - 32px); }
+@media (max-width: 899px) {
+  .eventBrief { top: calc(124px + env(safe-area-inset-top)); left: 16px; width: min(340px, calc(100% - 32px)); }
 }
 .eventBrief span { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; color: #9de7ef; }
 .eventBrief strong { font: 800 16px/1.2 var(--ln-font-display); }
@@ -49,3 +49,70 @@
   pointer-events: none;
 }
 .controls > * { pointer-events: auto; }
+
+/* SSL-730 drawing 3 (rover, upright): terrain owns the middle of the screen. Menu and a round battery gauge
+   top-left, the hold and objective top-right, a bigger d-pad bottom-left, Scan and Drill bottom-right. */
+.gauge {
+  position: absolute;
+  z-index: 8;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(max(12px, env(safe-area-inset-left)) + 108px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 3px 12px 3px 3px;
+  border: 1.5px solid var(--ln-bp-paper);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ln-bp-ink) 88%, transparent);
+  color: var(--ln-bp-paper);
+  pointer-events: none;
+}
+.gaugeDial {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--ln-bp-ink) 0 13px, transparent 14px),
+    conic-gradient(var(--ln-cyan) var(--charge), color-mix(in srgb, var(--ln-bp-paper) 22%, transparent) 0);
+}
+.gauge[data-low] .gaugeDial {
+  background:
+    radial-gradient(circle, var(--ln-bp-ink) 0 13px, transparent 14px),
+    conic-gradient(var(--ln-crit) var(--charge), color-mix(in srgb, var(--ln-bp-paper) 22%, transparent) 0);
+}
+.gaugeDial b { font: 800 14px/1 var(--ln-font-display); font-variant-numeric: tabular-nums; }
+.gaugeLabel { font: 800 14px/1 var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Hold and objective: top-right, out of the way of the terrain and the action buttons. */
+.controls .hold {
+  left: auto;
+  right: max(12px, env(safe-area-inset-right));
+  top: calc(12px + env(safe-area-inset-top));
+  bottom: auto;
+  transform: none;
+  max-width: min(300px, calc(100% - 270px));
+  justify-items: end;
+  text-align: right;
+}
+
+/* A bigger d-pad: 64px pads (thumb-sized), 52px when the screen is short. */
+.controls [data-testid='mining-dpad'] {
+  grid-template-columns: 64px 64px 64px;
+  grid-template-rows: 64px 64px 64px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+}
+.controls [data-testid='mining-dpad'] > button { min-width: 64px; min-height: 64px; border-radius: 16px; }
+.controls [data-testid='mining-dpad'] svg { width: 28px; height: 28px; }
+
+@media (max-width: 599px) {
+  .gaugeLabel { display: none; }
+  .gauge { padding-right: 3px; }
+  .controls .hold { top: calc(12px + env(safe-area-inset-top)); max-width: calc(100% - 190px); }
+}
+@media (max-height: 520px) {
+  .controls [data-testid='mining-dpad'] { grid-template-columns: 52px 52px 52px; grid-template-rows: 52px 52px 52px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .controls [data-testid='mining-dpad'] > button { min-width: 52px; min-height: 52px; }
+}

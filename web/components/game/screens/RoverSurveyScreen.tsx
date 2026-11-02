@@ -240,6 +240,21 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
       )}
       {/* Same controls as laser mining (SSL-708): Menu top-left, d-pad bottom-left, round DRILL bottom-right, SCAN beside it. */}
       <MiningBackButton open={menuOpen} onClick={() => setMenuOpen(o => !o)} />
+      {/* SSL-730 drawing 3: a round gauge top-left beside Menu. The rover runs on battery, so that is what it reads. */}
+      <div
+        className={styles.gauge}
+        data-testid="rover-battery"
+        data-low={batteryPct <= 20 ? 'true' : undefined}
+        role="meter"
+        aria-label="Battery"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={batteryPct}
+        style={{ '--charge': `${batteryPct}%` } as React.CSSProperties}
+      >
+        <span className={styles.gaugeDial} aria-hidden="true"><b>{batteryPct}</b></span>
+        <span className={styles.gaugeLabel}>Battery</span>
+      </div>
       {menuOpen && (
         <div className="mining-guide-dock" role="region" aria-label="Mission menu" data-testid="rover-menu">
           <div className="mining-guide-top">
@@ -286,7 +301,7 @@ export default function RoverSurveyScreen({ mission, target, onComplete, onBack,
         />
         <button
           type="button"
-          className={controlStyles.progress}
+          className={`${controlStyles.progress} ${styles.hold}`}
           data-testid={progressAction === 'return' ? 'rover-load-return' : progressAction === 'continue' ? 'rover-continue-to-laser' : 'rover-progress'}
           data-ready={progressAction ? true : undefined}
           disabled={!progressAction}
