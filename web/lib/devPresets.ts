@@ -860,7 +860,11 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-mission-log':
       return {
         screen: 'mission-history',
-        player: { ...POST_ONBOARDING_PLAYER, },
+        // SSL-751: real entries, so the log's thumbnails and debrief rows can be checked.
+        player: { ...POST_ONBOARDING_PLAYER, completedMissions: [
+          { id: FIRST_MISSION.id, title: FIRST_MISSION.title, targetId: 'eros', targetName: '433 Eros', clientName: 'Helios Propulsion Depot', completedAt: Date.UTC(2026, 9, 30), runId: 'log-fixture-1', kind: 'client' },
+          { id: 'dcp-log-fixture', title: 'Palladium starter contract', targetId: 'bennu', targetName: '101955 Bennu', clientName: 'Helios-Propulsion-Depot', completedAt: Date.UTC(2026, 10, 1), runId: 'log-fixture-2', kind: 'client' },
+        ] },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

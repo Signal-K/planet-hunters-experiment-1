@@ -79,8 +79,33 @@ export function cratePlan(cargo: { id: string; units: number }[]): CrateStack[] 
 
 /** Where the ground line sits. Portrait leaves the upper third open for the ridges and crates. */
 export function surfaceRatio(width: number, height: number, variant: 'scene' | 'card'): number {
-  if (variant === 'card') return 0.64
+  // SSL-751: a low horizon on log cards leaves the sky for the destination body itself.
+  if (variant === 'card') return 0.8
   if (height > width) return 0.36
   if (height < 520) return 0.62
   return 0.72
+}
+
+/**
+ * SSL-751: the destination itself for a mission-log card, so the thumbnail shows Bennu or Eros rather than a
+ * bare strip of ground. Asteroids get a lumpy outline seeded by their id (the same body always looks the same);
+ * planets and moons are round. Points are unit-radius offsets from the body's centre.
+ */
+export function bodyOutline(id: string, type: string, points = 14): [number, number][] {
+  const round = type === 'planet' || type === 'moon' || type === 'dwarf-planet'
+  let seed = 0
+  for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0
+  const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 0x100000000 }
+  const squash = round ? 1 : 0.72 + rand() * 0.2
+  return Array.from({ length: points }, (_, i) => {
+    const a = (i / points) * Math.PI * 2
+    const r = round ? 1 : 0.8 + rand() * 0.2
+    return [Math.cos(a) * r, Math.sin(a) * r * squash] as [number, number]
+  })
+}
+
+/** Lit and shadow tones for the body, from the destination's ground tint. */
+export function bodyTones(tintHex: string | undefined): { lit: number; shade: number; rim: number } {
+  const base = groundColor(tintHex)
+  return { lit: mix(base, 0xe8eef5, 0.35), shade: mix(base, 0x0d1420, 0.45), rim: mix(base, 0xffffff, 0.6) }
 }

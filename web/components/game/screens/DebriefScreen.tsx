@@ -16,11 +16,12 @@ import LaserCapacitorPanel from '@/components/game/screens/LaserCapacitorPanel'
 import DestinationLandscape from '@/components/game/screens/DestinationLandscape'
 import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
+import type { HomeSettlement } from '@/lib/game-types'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { chainInstrument, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -47,8 +48,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   badges?: Record<string, PlayerBadge>
   /** SSL-651: a filled Orionids shower run. Its francs are paid and its fragments kept, not sold. */
   showerRun?: { francs: number; fragments: number } | null
+  /** SSL-751: the Homecoming sheet's split, already settled for market and silo. The debrief shows it and closes the run. */
+  homeSettlement?: HomeSettlement | null
 }) {
-  const isFreeHaul = isFreeHaulMission(mission, cargo)
+  const settled = homeSettlement ?? null
+  // A haul settled on the delivery sheet has no store/sell choice left to make here.
+  const isFreeHaul = !settled && isFreeHaulMission(mission, cargo)
   // Collecting settles the run, which clears the count. Keep showing what was paid until the screen leaves.
   const shownRunRef = useRef(showerRun ?? null)
   if (showerRun) shownRunRef.current = showerRun
@@ -74,7 +79,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const vehicleCost = rocketSource === 'fabricated' ? 0 : starterRocket.costFrancs
 
   const requiredMaterials = mission.construction?.requiredMaterials ?? mission.requires.minerals
-  const delivered = Object.entries(requiredMaterials).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
+  const delivered = settled
+    ? settled.payout > 0 || isFreeHaulMission(mission, cargo)
+    : Object.entries(requiredMaterials).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const client = mission.client ? clients[mission.client] : undefined
   const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
   const isProgramOperation = isOwnProgramMission(mission)
@@ -82,7 +89,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const contractPayout = delivered ? mission.payout.francs : 0
   const rawTotal = contractPayout
   const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
-  const total = calibratedTotal
+  const total = settled ? settled.payout : calibratedTotal
   const isTwoLegJob = !!mission.deliveryTargetId
   const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
@@ -204,7 +211,15 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </p>
         </section>
 
-        {isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
+        {settled ? (
+          <HomeSettlementLedger
+            settlement={settled}
+            clientName={client?.name}
+            vehicleCost={vehicleCost}
+            vehicleName={starterRocket.name}
+            freeHaul={isFreeHaulMission(mission, cargo)}
+          />
+        ) : isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
             cargo={settledCargo}
             disposition={disposition}
@@ -258,7 +273,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           />
         )}
 
-        {!isFreeHaul && !isProgramOperation && !delivered && (
+        {!settled && !isFreeHaul && !isProgramOperation && !delivered && (
           <section className={styles.card} data-surface="cream">
             <p className={styles.note}>Order incomplete. The fee is paid on a full delivery.</p>
           </section>
@@ -279,7 +294,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             if (collectingRef.current) return
             collectingRef.current = true
             setCollecting(true)
-            if (isFreeHaul) {
+            if (settled) {
+              onDone(settled.payout, settled.affinity, settled.consumed)
+            } else if (isFreeHaul) {
               onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
             } else {
               onDone(total, affinityEarned, delivered ? requiredMaterials : {})
@@ -288,6 +305,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         >
           {storyStep
             ? 'Complete mission · continue research'
+            : settled
+            ? settled.payout > 0 ? `Complete mission · return to Base · ${formatCurrency(settled.payout)}` : 'Complete mission · return to Base'
             : isFreeHaul
             ? willStore
               ? overflowUnits > 0 ? `Complete mission · sell ${overflowUnits} over cap` : shownRun ? `Complete mission · keep haul` : 'Complete mission · keep haul'
@@ -389,6 +408,41 @@ function CargoDestinationPanel({
         </div>
       )}
       {!hasEarthStorage && <p className={styles.note}>Build a Mineral Vault to keep ore on Earth.</p>}
+    </section>
+  )
+}
+
+/** SSL-751: the ledger for a haul split on the Homecoming sheet: client fee, market sale and silo, as settled there. */
+function HomeSettlementLedger({ settlement, clientName, vehicleCost, vehicleName, freeHaul }: {
+  settlement: HomeSettlement
+  clientName?: string
+  vehicleCost: number
+  vehicleName: string
+  freeHaul: boolean
+}) {
+  const units = (r: Record<string, number>) => Object.values(r).reduce((sum, n) => sum + Math.max(0, n), 0)
+  const soldUnits = units(settlement.sold)
+  const siloUnits = units(settlement.siloed)
+  const clientUnits = units(settlement.consumed)
+  const net = settlement.payout + settlement.soldFrancs - vehicleCost
+  return (
+    <section className={styles.card} data-surface="cream" data-testid="debrief-home-ledger">
+      <p className={styles.kicker}>Ledger</p>
+      {!freeHaul && (settlement.payout > 0
+        ? <PayRow testId="debrief-home-client" label={`Contract · ${clientName ?? 'Client'} · ${clientUnits} U`} value={settlement.payout} />
+        : <p className={styles.note} data-testid="debrief-home-short">Order incomplete. The fee is paid on a full delivery.</p>)}
+      {soldUnits > 0 && <PayRow testId="debrief-home-sold" label={`Sold at market · ${soldUnits} U`} value={settlement.soldFrancs} />}
+      {siloUnits > 0 && (
+        <div className={styles.row} data-testid="debrief-home-silo">
+          <span>Kept in silo</span>
+          <span>{siloUnits} U</span>
+        </div>
+      )}
+      {vehicleCost !== 0 && <PayRow label={`Vehicle · ${vehicleName}`} value={-vehicleCost} signed />}
+      <div className={styles.netLine}>
+        <span className={styles.netLabel}>Net</span>
+        <AnimatedFrancs value={net} />
+      </div>
     </section>
   )
 }
