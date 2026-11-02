@@ -45,6 +45,7 @@ export function clearActiveRunPlayer(player: Player): Player {
     missionRocketSource: undefined,
     debriefPending: false,
     homeDeliveryPending: false,
+    homeSettlement: undefined,
     cargoSettledOffworld: false,
     pendingRemoteDisposition: undefined,
     returningToEarth: false,
