@@ -682,7 +682,11 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractFocus > span { color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .contractFocus > h2 { max-width: 18ch; font-size: clamp(24px, 3vw, 36px); }
 .contractFocus > p { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 16px/1.35 var(--ln-font-body); }
-.contractFocus > small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
+.contractFocus > small, .offerPager small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
+/* SSL-730: step through every offer from the counter; the strip's page follows the selection. */
+.offerPager { display: inline-flex; align-items: center; gap: 10px; }
+.offerPager button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0 0 3px; border: 1.5px solid rgba(244, 239, 228, .58); border-radius: 999px; background: rgba(8, 16, 34, .4); color: #f4efe4; font: 800 24px/1 var(--ln-font-display); cursor: pointer; }
+.offerPager button:focus-visible { outline: 2px solid #58d0ea; outline-offset: 2px; }
 .contractAction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; overflow: hidden; text-align: center; }
 .contractAction > h2 { max-width: 100%; color: #9de7ef; font-size: 18px; text-transform: uppercase; letter-spacing: .08em; }
 .contractCargo { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }

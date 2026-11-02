@@ -339,11 +339,13 @@ export default function MissionBoard({
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
+  // SSL-730: fixed pages of up to five offers. The strip used to re-centre on the selection, so a tapped tile jumped
+  // to the middle and the others shuffled while the highlight seemed not to move. Tiles now hold their place; only
+  // the highlight moves, and the page turns when the ‹ › counter steps past its edge.
+  const windowSize = Math.min(5, count)
+  const windowStart = paging ? Math.min(Math.floor(index / windowSize) * windowSize, count - windowSize) : 0
   const offerWindow = paging
-    ? Array.from({ length: Math.min(5, count) }, (_, offset) => {
-        const offerIndex = (index - Math.floor(Math.min(5, count) / 2) + offset + count) % count
-        return { offer: visibleCards[offerIndex], offerIndex }
-      })
+    ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
     : []
   const [view, setView] = useState<MapView>('system')
   const mineralSources = useMemo(() => sourceMineral
@@ -503,7 +505,13 @@ export default function MissionBoard({
             <h2>{card.mission.title}</h2>
             {card.mission.brief && <p data-testid="mission-brief">{card.mission.brief}</p>}
             {!card.unlocked && card.lockedDetail && <p>{card.lockedDetail}</p>}
-            <small>{index + 1} / {count}</small>
+            {count > 1 ? (
+              <span className={styles.offerPager} data-testid="mission-board-pager">
+                <button type="button" aria-label="Previous contract" data-testid="mission-board-prev" onClick={() => selectVisibleRelative(-1)}>‹</button>
+                <small>{index + 1} / {count}</small>
+                <button type="button" aria-label="Next contract" data-testid="mission-board-next" onClick={() => selectVisibleRelative(1)}>›</button>
+              </span>
+            ) : <small>{index + 1} / {count}</small>}
           </section>
           <section className={styles.contractAction}>
             <h2>Requirements</h2>
