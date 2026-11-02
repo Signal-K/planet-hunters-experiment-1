@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildControlStation } from '@/lib/control-station'
-import { buildStationSky, communityTelescopes, stationHistory, stationTelescopes } from '@/lib/control-station-sky'
+import { buildStationSky, communityTelescopes, spreadSpots, stationHistory, stationTelescopes } from '@/lib/control-station-sky'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
 const NOW = Date.UTC(2026, 10, 1, 12)
@@ -61,5 +61,17 @@ describe('control station sky', () => {
       ['ORI-1 recordings', 'unexplored', 'radio-meteors'],
     ])
     expect(communityTelescopes({ orionidsEventStage: 3 })[0]).toMatchObject({ readyCount: 0, status: 'Listening' })
+  })
+
+  it('parts targets that would sit on top of each other, and leaves spaced ones alone', () => {
+    const items = [{ id: 'a', x: 0.86, y: 0.24 }, { id: 'b', x: 0.865, y: 0.25 }, { id: 'c', x: 0.86, y: 0.24 }, { id: 'far', x: 0.2, y: 0.7 }]
+    const out = spreadSpots(items)
+    for (let i = 0; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        expect(Math.hypot((out[i].x - out[j].x) * 1.35, out[i].y - out[j].y)).toBeGreaterThanOrEqual(0.08)
+      }
+    }
+    expect(out[3]).toBe(items[3])
+    expect(spreadSpots(items)).toEqual(out)
   })
 })

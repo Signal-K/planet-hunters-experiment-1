@@ -3941,7 +3941,9 @@ button.hub-orbital-network__status:disabled { cursor: default; }
    guidance element can sit on the control it points at. */
 .flight-plan-chip { position: relative; right: auto; bottom: auto; align-self: flex-end; margin: 0; }
 /* The "?" chip sits in the top-left corner under the gear/clock cluster: empty sky, clear of buildings, labels and the dock. */
-.flight-plan-slot > .flight-plan-chip { position: fixed; left: 8px; right: auto; top: calc(env(safe-area-inset-top, 0px) + 68px); bottom: auto; width: 44px; padding: 0; border-radius: 999px; font-size: 18px; z-index: 40; }
+.flight-plan-slot > .flight-plan-chip { position: fixed; left: 8px; right: auto; top: calc(env(safe-area-inset-top, 0px) + 68px); bottom: auto; width: 44px; padding: 0; border-radius: 999px; font-size: 14px; letter-spacing: 0.04em; z-index: 40; }
+/* SSL-748: one "?" per screen. A coach folded away off its path stays out of sight while the screen shows its own help button; that sheet replays training. */
+body:has([data-testid="help-button"]) .flight-plan-slot > .flight-plan-chip[data-folded] { display: none; }
 
 /* SSL-430: the sync chip (offline outbox state) sat on top of the primary
    button on debrief and over the Flight Plan text. On phones it now lives in

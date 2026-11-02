@@ -99,6 +99,19 @@ const HORIZON_SPOT: Record<StationTelescope['place'], { left: number; top: numbe
   relay: { left: 10, top: 30 },
 }
 
+/** SSL-748: where each telescope stands, shown on its desk card next to the same icon as on the horizon. */
+const PLACE_TEXT: Record<StationTelescope['place'], string> = {
+  surface: 'Dome at your base',
+  orbit: 'Earth orbit',
+  offworld: 'Saturn orbit',
+  relay: 'Radio mast',
+}
+
+/** Short horizon label: the kind of instrument without the noun the icon already shows. */
+function postLabel(name: string): string {
+  return name.replace(/ (telescope|satellite)$/i, '')
+}
+
 function ViewSwitch({ view, onView }: { view: SkyView; onView: (view: SkyView) => void }) {
   const index = SKY_VIEWS.findIndex(item => item.id === view)
   const step = (event: KeyboardEvent, delta: number) => {
@@ -157,7 +170,7 @@ export function ControlStationConsole({
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
-  const stars = useMemo(() => starField(70), [])
+  const stars = useMemo(() => starField(150), [])
   const online = telescopes.filter(item => item.live).length
   const status = acquiring ? 'Acquiring' : waiting > 0 ? 'Scanning' : 'Standby'
 
@@ -173,6 +186,7 @@ export function ControlStationConsole({
             <span>{acquiring ? 'Acquiring' : `${waiting} to classify`}</span>
           </div>
           <div className={styles.field}>
+            <div className={styles.galaxy} aria-hidden="true" />
             <div className={styles.stars} aria-hidden="true">
               {stars.map((star, i) => (
                 <i
@@ -253,6 +267,7 @@ export function ControlStationConsole({
             >
               <TelescopeIcon place={scope.place} />
               {scope.readyCount > 0 && <i>{scope.readyCount}</i>}
+              <span className={styles.postLabel} aria-hidden="true">{postLabel(scope.name)}</span>
             </button>
           ))}
         </div>
@@ -292,6 +307,10 @@ export function ControlStationConsole({
                     {scope.status}
                   </small>
                   <em>{scope.finds}</em>
+                  <span className={styles.where}>
+                    <span className={styles.whereIcon} aria-hidden="true"><TelescopeIcon place={scope.place} /></span>
+                    {PLACE_TEXT[scope.place]}
+                  </span>
                 </span>
                 {scope.built && <span className={styles.counter} data-ready={scope.readyCount > 0} aria-label={`${scope.readyCount} ready`}>{String(scope.readyCount).padStart(2, '0')}</span>}
               </button>

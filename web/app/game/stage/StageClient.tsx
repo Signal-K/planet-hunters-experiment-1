@@ -13,6 +13,7 @@ import { trainingTryStep } from '@/lib/data/tutorial'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
 import { HUB_PROMPT_TRANSIT_TELESCOPE } from '@/lib/hub-prompts'
@@ -171,6 +172,8 @@ function Stage() {
       </div>
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {/* ?signed=1 also shows the signed-in sync chip where it lands on this scene. */}
+      {signed && <LandnamSyncStatus preview />}
     </main>
   )
 }

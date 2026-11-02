@@ -94,11 +94,13 @@ export default function FlightPlan({ stepIndex, total, step, onSkip, hidden: per
         type="button"
         className="flight-plan-chip"
         data-testid="flight-plan-chip"
+        data-folded={folded ? 'true' : undefined}
         aria-label={`Show Ops guidance, training ${displayIndex + 1} of ${displayTotal}`}
         title="Show Ops guidance"
         onClick={() => { if (folded) setSummoned(true); else { setHidden(false); onHiddenChange?.(false) } }}
       >
-        ?
+        {/* SSL-748: "OPS", not "?", so it never reads as a second help button beside the screen's own. */}
+        OPS
       </button>
     )
   }
