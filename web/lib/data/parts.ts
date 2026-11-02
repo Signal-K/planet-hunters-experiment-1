@@ -1,7 +1,7 @@
 import { launchpadMissionFloor } from './building-levels'
 // Landnam game data — rocket parts
 
-import type { Part, Mission, Target, RocketConfig, BuildCheck } from './types'
+import type { Part, Mission, Target, RocketConfig, BuildCheck, BuildHold } from './types'
 
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
@@ -79,20 +79,35 @@ export function validateBuild(opts: {
   const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
 
   const problems: string[] = []
+  const holds: BuildHold[] = []
   const maxOrbit = (propulsion.max_orbit ?? 0) + (opts.loadoutBonus?.range ?? 0)
   const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
   const requiredOrbit = Math.max(0, target.orbit - infrastructureOrbitBonus)
   if (maxOrbit < requiredOrbit) {
     problems.push(`Propulsion can only reach Orbit ${maxOrbit}, mission needs Orbit ${requiredOrbit}`)
+    holds.push({ kind: 'orbit', have: maxOrbit, need: requiredOrbit })
   }
   const cargoCapacity = (chassis.cargo ?? 0) + (opts.loadoutBonus?.capacity ?? 0)
   if (cargoCapacity < mission.requires.cargo_min) {
     problems.push(`Ship cargo (${cargoCapacity}U) below mission minimum (${mission.requires.cargo_min}U)`)
+    holds.push({ kind: 'cargo', have: cargoCapacity, need: mission.requires.cargo_min })
   }
   // cargo-module-t1 is a valid drill-slot occupant (rate === 0 is intentional for cargo missions)
   if (drill.id !== 'cargo-module-t1' && (drill.tier ?? 0) < mission.requires.drill_tier) {
     problems.push(`Drill T${drill.tier} below mission requirement T${mission.requires.drill_tier}`)
+    holds.push({ kind: 'drill', have: drill.tier ?? 0, need: mission.requires.drill_tier })
   }
 
-  return { chassis, propulsion, drill, ok: problems.length === 0, problems }
+  return { chassis, propulsion, drill, ok: problems.length === 0, problems, holds }
+}
+
+/**
+ * SSL-750: one short line for the launch review hold, naming the vehicle and what it is short of. Liam found the
+ * old "Ship cargo (6U) below mission minimum (12U)" banner too long and unclear about what to change.
+ */
+export function buildHoldLine(hold: BuildHold, vehicleName?: string | null): string {
+  const who = vehicleName ?? 'This rocket'
+  if (hold.kind === 'cargo') return `${who} holds ${hold.have}U, this job needs ${hold.need}U`
+  if (hold.kind === 'orbit') return `${who} reaches orbit ${hold.have}, this job needs orbit ${hold.need}`
+  return `${who} has a T${hold.have} drill, this job needs T${hold.need}`
 }

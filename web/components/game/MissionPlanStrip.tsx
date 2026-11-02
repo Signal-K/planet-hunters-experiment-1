@@ -21,9 +21,11 @@ type Sheet = 'destination' | 'vehicle' | null
 const STEPS = ['Contract', 'Plan', 'Launch'] as const
 
 /** Contract, Plan, Launch. The plan strip makes the auto-picked destination and vehicle visible and changeable in place. */
-export default function MissionPlanStrip({ game, blockedReason, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
+export default function MissionPlanStrip({ game, blockedReason, blockedFix = null, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
   game: Game
   blockedReason: string | null
+  /** SSL-750: what the hold line offers to change: another vehicle, or the rocket's parts. */
+  blockedFix?: 'vehicle' | 'customize' | null
   launched: boolean
   primaryAction?: () => void
   primaryLabel?: string
@@ -101,7 +103,7 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
           <span>Destination</span><strong>{showerRun ? 'Orionids field' : target.name}</strong><em>Change</em>
         </button>
-        <button type="button" className={styles.slot} data-testid="plan-vehicle" disabled={launched} onClick={() => setSheet('vehicle')}>
+        <button type="button" className={styles.slot} data-testid="plan-vehicle" data-blocked={blockedFix === 'vehicle' || undefined} disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
         <div className={`${styles.slot} ${styles.cargoSlot}`} data-testid="plan-cargo">
@@ -131,7 +133,12 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
           to keep it.
         </p>
       )}
-      {blockedReason && <p className={styles.hold} data-testid="plan-clearance" role="status">Build hold: {blockedReason}</p>}
+      {blockedReason && !launched && (
+        <p className={styles.hold} data-testid="plan-clearance" data-blocked="true" role="status">
+          <span>{blockedReason}.</span>
+          {blockedFix === 'vehicle' && <button type="button" className={styles.holdFix} data-testid="plan-clearance-fix" onClick={() => setSheet('vehicle')}>Change vehicle</button>}
+        </p>
+      )}
 
       {sheet === 'destination' && (
         <div className={styles.mapSheet} role="group" aria-label="Choose destination" data-testid="plan-sheet-destination">

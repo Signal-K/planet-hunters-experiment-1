@@ -552,6 +552,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
+    // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
+    const currentTarget = catalog.targets.find(t => t.id === current.targetId)
+    if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
+      addToast('This rocket cannot do this job. Change the vehicle first.', 'warn')
+      return
+    }
     const isFirstEver = current.player.missionsDone === 0
     let launchedTransitStartedAt: number | null = null
     let earnedLaunchBadge: 'gold' | 'silver' | null = null
@@ -566,6 +572,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
+      if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
@@ -633,7 +640,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (earnedLaunchBadge) addToast(`Rocket Revolution badge · ${earnedLaunchBadge === 'gold' ? 'Gold' : 'Silver'}`, 'ok')
     if (ascentFragments > 0) addToast(`${ascentFragments} Orionid fragments caught on the way up`, 'info', { sticky: true })
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
-  }, [addToast, catalog.missions, catalog.targets, setState, stateRef])
+  }, [addToast, catalog, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
