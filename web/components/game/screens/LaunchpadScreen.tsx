@@ -45,6 +45,8 @@ interface LaunchpadScreenProps {
   onLaunchComplete?: () => void
   launchTestId?: string
   launchDisabled?: boolean
+  /** SSL-750: replaces the phase label, e.g. "Can't launch" when the rocket cannot do the job. */
+  launchLabel?: string
   /** Design, being built on the pad, or ready to launch. Defaults to ready. */
   assembly?: AssemblyPhase
   earthBiome?: EarthBiomeId
@@ -58,7 +60,7 @@ const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1'
 
 export default function LaunchpadScreen({
   onBack, onViewContracts, onLaunchpadAction, onResumeMission, missionRuns = [], onResumeMissionRun, player, rocketImageSrc = '', selectedRocketName = 'Explorer', hydrated = false, onAbandonMission,
-  mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, launchTestId = 'launch-btn', launchDisabled = false,
+  mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, onRequestLaunch, launching = false, onLaunchComplete, launchTestId = 'launch-btn', launchDisabled = false, launchLabel,
   missionsDone, guided = false, assembly, earthBiome, hasStagedRocket = false, onDismantle,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
@@ -96,6 +98,7 @@ export default function LaunchpadScreen({
         towerLabel={towerLabel}
         launchTestId={launchTestId}
         launchDisabled={launchDisabled}
+        launchLabel={launchLabel}
         onChooseMission={onViewContracts}
         onBack={onBack}
         onLaunch={launch}

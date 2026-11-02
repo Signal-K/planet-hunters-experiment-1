@@ -94,6 +94,13 @@
   color: var(--ln-blueprint-ink);
 }
 
+/* SSL-750: Liam read a held Launch as ready. A disabled launch is dashed and flat, never a raised button. */
+.launchDock .launch:disabled {
+  border-style: dashed;
+  box-shadow: none;
+  opacity: .85;
+}
+
 .target {
   display: flex;
   flex-direction: column;
@@ -571,4 +578,27 @@
 /* With room beside the gantry, the call to action sits in the sky over the hangar instead of covering the tower. */
 @media (orientation: landscape) and (min-height: 521px) {
   .choose { left: 64%; top: 8%; width: min(46%, 440px); }
+}
+
+/* SSL-750: on iPad and desktop the pad ends above a clear strip of apron and Launch sits in that strip, under the
+   rocket, instead of covering the pad base. */
+@media (orientation: landscape) and (min-height: 521px) {
+  :global([data-testid='mission-launch-review']) .stage { bottom: 92px; }
+  :global([data-testid='mission-launch-review']) .launchDock { bottom: -78px; }
+}
+
+/* The sync chip joins the action row beside Dismantle; on an upright phone it is a 44px dot, not a stretched cell. */
+@media (orientation: portrait) {
+  .actions :global(.sync-chip) { justify-self: end; width: 44px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  :global([data-testid='mission-launch-review']) .launchDock { left: auto; right: 0; bottom: 4px; transform: none; }
+  :global([data-testid='mission-launch-review']) .launchDock .launch { min-width: 200px; }
+}
+
+/* SSL-750: upright phone. The stage ends above the plan cards and Launch (and the hold line when one shows), so the
+   cards no longer sit on the pad base and booster feet. */
+@media (max-width: 599px) and (min-height: 521px) {
+  :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 206px; }
+  :global(body:has([data-testid='plan-clearance'])) .stage { bottom: 268px; }
 }

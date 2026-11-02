@@ -320,4 +320,12 @@ export interface BuildCheck {
   drill: Part
   ok: boolean
   problems: string[]
+  /** SSL-750: the same problems as numbers, so the launch review can say in a few words what to change. */
+  holds?: BuildHold[]
+}
+
+export interface BuildHold {
+  kind: 'cargo' | 'orbit' | 'drill'
+  have: number
+  need: number
 }

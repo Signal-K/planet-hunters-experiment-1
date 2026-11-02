@@ -112,3 +112,31 @@
 
 /* Nothing in the fleet fits the job: say so and point at research or another destination (Liam, 01.11). */
 .noFit { margin: 0 0 8px; padding: 8px 12px; font-size: 14px; line-height: 1.35; color: var(--ln-world-hull-lit); background: color-mix(in srgb, var(--ln-warn) 22%, transparent); border: 1px solid var(--ln-warn); border-radius: 8px; }
+
+/* SSL-750: on iPad and desktop the cargo card sizes to its two lines instead of spanning the row, so it no longer
+   covers the gantry head; Getting and Payload already say what the card is. */
+@media (min-width: 900px) and (min-height: 600px) {
+  .cargoSlot { flex: 0 1 auto !important; max-width: 100%; }
+  .cargoSlot > span:first-child { display: none; }
+}
+
+/* SSL-750: a rocket that cannot do the job is held. One line says what it is short of; the button fixes it. */
+.hold[data-blocked] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; padding: 4px 4px 4px 14px; font-weight: 700; color: var(--ln-blueprint-ink); background: color-mix(in srgb, var(--ln-warn-soft) 100%, var(--ln-world-hull-lit)); border: 2px solid var(--ln-warn); border-radius: 10px; }
+.holdFix { min-height: 44px; padding: 0 16px; color: var(--ln-blueprint-paper); font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; background: var(--ln-blueprint-ink); border: 0; border-radius: 8px; cursor: pointer; }
+.slot[data-blocked] { border: 2px solid var(--ln-warn); }
+.primary:disabled { border-style: dashed; box-shadow: none; opacity: .8; }
+@media (min-width: 900px) and (min-height: 600px) { .hold[data-blocked] { flex: 0 1 auto; width: auto; } }
+
+/* SSL-750: a landscape phone reserves the plan's height above the pad, so the plan is one row there: destination,
+   vehicle and the two cargo lines side by side. Three rows left the pad a thin strip at the bottom. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .slots { flex-wrap: nowrap !important; width: 100%; justify-content: center; }
+  .slot { min-height: 44px; padding: 2px 10px; }
+  .slot em { display: none; }
+  .slot strong { white-space: nowrap; }
+  .cargoSlot { flex: 0 1 auto !important; min-width: 0; }
+  .cargoSlot > span:first-child { display: none; }
+}
+
+/* SSL-750: upright phone. The step rail is decoration the pad cannot spare; the cards keep their two lines. */
+@media (max-width: 599px) and (min-height: 521px) { .rail { display: none; } }
