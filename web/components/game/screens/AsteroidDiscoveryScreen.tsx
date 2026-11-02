@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
+import { useHelp } from '@/components/ui/useHelp'
 import AsteroidSkyPlot, { SKY_FIELD_LIMITS, eclipticLatitude } from '@/components/game/AsteroidSkyPlot'
 import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentStandbyViewport, InstrumentSwitch, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
@@ -26,6 +27,9 @@ interface AsteroidDiscoveryScreenProps {
 const OFFSET_MAX = 60
 const signed = (n: number, digits = 0) => `${n >= 0 ? '+' : ''}${n.toFixed(digits)}°`
 
+/** SSL-754: readout rows kept on the simple first console. */
+const SIMPLE_READOUT = new Set(['Target', 'Verdict', 'True ecl offset'])
+
 const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string }> = [
   { id: 'likely_real', label: 'Flag Likely Real' },
   { id: 'likely_artifact', label: 'Mark Artifact' },
@@ -47,6 +51,11 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   const [showGrid, setShowGrid] = useState(true)
   const [showEcliptic, setShowEcliptic] = useState(true)
   useEffect(() => { setField(1); setOffsetRead(null) }, [candidate?.id])
+  // SSL-754 (rule "A first classification is a guided, simple console"): until the first NEO verdict,
+  // and through its result, the console shows the sky, the evidence and the verdicts, and the coach plays.
+  const firstClassification = Object.keys(classifications).length === 0
+  const help = useHelp('asteroid-discovery', { firstVisit: firstClassification, firstVisitCoach: true })
+  const [allControls, setAllControls] = useState(false)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -199,8 +208,12 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   const castVerdict = (id: AsteroidVerdict) => {
     if (classification) return
+    help.reportAction('submit')
     onSubmit(candidate.id, id)
   }
+
+  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  const simpleConsole = simpleEligible && !allControls
 
   return (
     <InstrumentViewport
@@ -211,6 +224,9 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       eyebrow="DEEP SPACE · NEO WATCH"
       title={candidate.tempDesig}
       onBack={onBack}
+      help={help.button}
+      helpLayer={help.layer}
+      simple={simpleConsole}
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       devBar={devBar}
       onCommand={onCommand}
@@ -225,23 +241,24 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
           <InstrumentSwitch label="ECLIPTIC" testId="neocp-ecliptic" pressed={showEcliptic} onToggle={() => setShowEcliptic(on => !on)} />
         </>,
       }}
-      readout={{ name: 'READOUT · YOUR RESULT', testId: 'neocp-result', rows: readoutRows }}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'neocp-result', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label)) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="neocp-data-provenance">
           RA {candidate.ra.toFixed(4)}h · DEC {candidate.decl.toFixed(4)}°
         </p>
       )}
-      viewportChrome={(
-        <dl className={viewportStyles.readout} data-testid="neocp-readout" aria-label="Minor Planet Center data">
+      viewportChrome={(<>
+        <dl className={viewportStyles.readout} data-testid="neocp-readout" data-coach-target="neocp-evidence" aria-label="Minor Planet Center data">
           <div data-tone={candidate.score >= 80 ? 'hot' : undefined}><dt>NEO score</dt><dd>{Math.round(candidate.score)}%</dd></div>
-          <div><dt>Brightness V</dt><dd>{candidate.vMag.toFixed(1)}</dd></div>
-          <div><dt>Size H</dt><dd>{candidate.hMag.toFixed(1)}</dd></div>
+          {!simpleConsole && <div><dt>Brightness V</dt><dd>{candidate.vMag.toFixed(1)}</dd></div>}
+          {!simpleConsole && <div><dt>Size H</dt><dd>{candidate.hMag.toFixed(1)}</dd></div>}
           <div><dt>Sightings</dt><dd>{candidate.nObs}</dd></div>
           <div><dt>Arc</dt><dd>{candidate.arcDays < 1 ? `${(candidate.arcDays * 24).toFixed(1)} h` : `${candidate.arcDays.toFixed(1)} d`}</dd></div>
-          <div><dt>Last seen</dt><dd>{candidate.lastSeenDays.toFixed(1)} d ago</dd></div>
+          {!simpleConsole && <div><dt>Last seen</dt><dd>{candidate.lastSeenDays.toFixed(1)} d ago</dd></div>}
         </dl>
-      )}
+      </>)}
       viewport={(
+        <div data-coach-target="neocp-sky" style={{ position: 'absolute', inset: 0 }}>
         <AsteroidSkyPlot
           tempDesig={candidate.tempDesig}
           ra={candidate.ra}
@@ -253,11 +270,13 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
           showGrid={showGrid}
           showEcliptic={showEcliptic}
         />
+        </div>
       )}
       answers={classification ? (
         <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (
         <InstrumentAnswerRow
+          coachTarget="neocp-verdicts"
           actions={VERDICT_ACTIONS.map(action => ({
             id: action.id,
             label: action.label,
@@ -266,7 +285,13 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
           }))}
         />
       )}
-      emptyToolLabel="No tool"
+      // Under the verdicts: on a phone the evidence card fills the top of the sky chart, and there is no tool step.
+      footer={simpleEligible ? (
+        <button type="button" className={viewportStyles.quickKey} data-testid="neocp-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
+          {allControls ? 'Simple view' : 'All controls'}
+        </button>
+      ) : undefined}
+      emptyToolLabel={simpleConsole ? undefined : 'No tool'}
     />
   )
 }

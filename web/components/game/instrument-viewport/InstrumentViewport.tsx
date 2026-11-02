@@ -50,6 +50,8 @@ interface InstrumentViewportProps {
   tool?: ReactNode
   /** Dashed slot when this project has no annotate tool. */
   emptyToolLabel?: string
+  /** Under the answers, outside the numbered steps (the All controls toggle on a console with no tool). */
+  footer?: ReactNode
   /**
    * Project-only verbs. Return null to fall through to the shared command set
    * (POINT, ZOOM, FOCUS, EXPOSE, STRETCH, INVERT, DOWNLINK, HELP).
@@ -335,6 +337,7 @@ export default function InstrumentViewport({
   answers,
   tool,
   emptyToolLabel,
+  footer,
   onCommand,
   briefing,
   instrumentId = 'instrument',
@@ -579,6 +582,7 @@ export default function InstrumentViewport({
               {answers}
               {emptyToolLabel ? <div className={styles.emptyTool} data-testid="instrument-empty-tool">{emptyToolLabel}</div> : null}
             </>}
+            {footer}
           </div>
         </div>
       </div>

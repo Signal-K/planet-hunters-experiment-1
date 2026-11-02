@@ -128,6 +128,22 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       },
     ],
   },
+  // SSL-754: the NEO watch console. First visit plays the coach on a simple console.
+  'asteroid-discovery': {
+    id: 'neocp',
+    title: 'Is it a real asteroid?',
+    cards: [
+      DATA_ANALYSIS_CARD,
+      { title: 'The sky chart', body: 'The chart is the whole sky. The bright dot is a moving object a survey spotted, waiting for a second look. The gold line is the ecliptic, the band most asteroids travel along.' },
+      { title: 'The evidence', body: 'NEO score is the chance it is a near-Earth asteroid. Sightings and Arc say how many times and over how long it was seen. More of both makes it more certain.' },
+      { title: 'Flag or mark', body: 'Flag Likely Real when the score is strong and it was seen several times. Mark Artifact when it is one faint, short blip. Skip when you cannot tell.' },
+    ],
+    coach: [
+      { id: 'read', targets: ['neocp-sky'], anchor: 'neocp-sky', hint: 'This is the whole sky. The bright dot is something a survey saw moving last night. The gold line is where most asteroids travel.' },
+      { id: 'evidence', targets: ['neocp-evidence'], anchor: 'neocp-evidence', hint: 'NEO score is the chance it is a near-Earth asteroid. More sightings over a longer arc make it more certain.' },
+      { id: 'verdict', targets: ['neocp-verdicts'], anchor: 'neocp-verdicts', hint: 'Strong score, seen several times? Flag Likely Real. One short, faint blip? Mark Artifact.', completeOn: 'submit' },
+    ],
+  },
   hub: {
     id: 'base',
     title: 'Between flights',
