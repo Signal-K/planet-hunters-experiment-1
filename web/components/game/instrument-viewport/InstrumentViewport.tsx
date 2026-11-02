@@ -260,18 +260,21 @@ export function InstrumentToolButton({
   pressed,
   disabled,
   onClick,
+  coachTarget,
 }: {
   testId: string
   label: string
   pressed?: boolean
   disabled?: boolean
   onClick: () => void
+  coachTarget?: string
 }) {
   return (
     <button
       type="button"
       className={styles.toolButton}
       data-testid={testId}
+      data-coach-target={coachTarget}
       aria-pressed={pressed}
       disabled={disabled}
       onClick={onClick}

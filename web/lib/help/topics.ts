@@ -144,6 +144,24 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { id: 'verdict', targets: ['neocp-verdicts'], anchor: 'neocp-verdicts', hint: 'Strong score, seen several times? Flag Likely Real. One short, faint blip? Mark Artifact.', completeOn: 'submit' },
     ],
   },
+  // SSL-754: the Saturn storm console. First visit plays the coach on a simple console.
+  'saturn-storm-search': {
+    id: 'saturn',
+    title: 'Find the storm',
+    cards: [
+      DATA_ANALYSIS_CARD,
+      { title: 'Nine squares', body: 'Each frame is a real Cassini photo of Saturn\'s clouds, cut into nine squares. Tap a square to pick it. The white box shows which one you are on.' },
+      { title: 'Mark storm or answer', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands are No. If you cannot tell, answer Maybe.' },
+      { title: 'Finish the frame', body: 'Each answer is saved straight away. Answer all nine squares to finish the frame and record it in your moon atlas.' },
+    ],
+    coach: [
+      { id: 'read', targets: ['saturn-frame'], anchor: 'saturn-frame', hint: 'This is a real Cassini photo of Saturn\'s clouds. A storm is a bright, round knot or swirl in the bands.' },
+      { id: 'pick', targets: ['saturn-frame'], anchor: 'saturn-frame', hint: 'Tap any square to look at it.', completeOn: 'select' },
+      // Its own step: the verdict step dims the frame, so the player looks at the square first.
+      { id: 'look', targets: ['saturn-square'], anchor: 'saturn-square', hint: 'Look closely at your square. Is there a bright, round knot?' },
+      { id: 'verdict', targets: ['saturn-mark-storm', 'saturn-verdicts'], anchor: 'saturn-verdicts', hint: 'A knot? Tap Mark storm. Smooth bands? No. Not sure? Maybe.', completeOn: 'submit' },
+    ],
+  },
   hub: {
     id: 'base',
     title: 'Between flights',
