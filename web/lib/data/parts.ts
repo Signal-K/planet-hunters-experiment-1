@@ -65,6 +65,19 @@ export function suggestBuild(opts: {
   return { chassis: chassis.id, propulsion: prop.id, drill: drill.id }
 }
 
+/**
+ * Find a part by id. A catalog that lacks the id (live PocketBase was missing the heavy frames) must not shrink the
+ * rocket to the first, smallest part, so look in the built-in parts before giving up and taking the first.
+ */
+export function partById<K extends 'chassis' | 'propulsion' | 'drill'>(
+  parts: typeof PARTS, kind: K, id: string,
+): (typeof PARTS)[K][number] {
+  const list = parts[kind] as (typeof PARTS)[K][number][]
+  return list.find(p => p.id === id)
+    ?? (PARTS[kind] as (typeof PARTS)[K][number][]).find(p => p.id === id)
+    ?? list[0]
+}
+
 export function validateBuild(opts: {
   mission: Mission
   target: Target
@@ -74,9 +87,9 @@ export function validateBuild(opts: {
   loadoutBonus?: { capacity: number; range: number }
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
-  const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
-  const propulsion = parts.propulsion.find(p => p.id === rocket.propulsion) ?? parts.propulsion[0]
-  const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
+  const chassis = partById(parts, 'chassis', rocket.chassis)
+  const propulsion = partById(parts, 'propulsion', rocket.propulsion)
+  const drill = partById(parts, 'drill', rocket.drill)
 
   const problems: string[] = []
   const holds: BuildHold[] = []

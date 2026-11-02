@@ -1,4 +1,4 @@
-import { PARTS } from '@/lib/data/parts'
+import { PARTS, partById } from '@/lib/data/parts'
 import type { ShipRoomKind } from '@/lib/data/shipRooms'
 import {
   CUSTOMIZER_PARTS,
@@ -154,9 +154,9 @@ export function rocketBuilderStats(
   installed: BuilderLoadout,
   parts: typeof PARTS = PARTS,
 ): RocketBuilderStats {
-  const chassis = parts.chassis.find(part => part.id === rocket.chassis) ?? parts.chassis[0]
-  const propulsion = parts.propulsion.find(part => part.id === rocket.propulsion) ?? parts.propulsion[0]
-  const drill = parts.drill.find(part => part.id === rocket.drill) ?? parts.drill[0]
+  const chassis = partById(parts, 'chassis', rocket.chassis)
+  const propulsion = partById(parts, 'propulsion', rocket.propulsion)
+  const drill = partById(parts, 'drill', rocket.drill)
   const fitted = loadoutBonuses(installed)
   const laser = partIdForSlot(installed, BUILDER_SLOTS[3])
   const laserPart = laser ? customizerPartById(laser) : undefined
