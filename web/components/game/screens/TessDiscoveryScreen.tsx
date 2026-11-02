@@ -313,6 +313,17 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     { label: 'HELP', line: 'HELP', testId: 'tess-cmd-help' },
   ]
 
+  // SSL-753: on the simple console FOLD stacks the light at the gap between the player's own marks,
+  // so two marks on a real transit land on top of each other. The full console keeps its PERIOD dial.
+  const markedGap = periodFromRanges(ranges)
+  const canSimpleFold = simpleConsole && !classification && markedGap != null
+  const toggleSimpleFold = () => {
+    if (lc.fold) { setLc(c => ({ ...c, fold: false })); return }
+    const period = Math.min(LIGHTCURVE_LIMITS.periodMax, Math.max(LIGHTCURVE_LIMITS.periodMin, markedGap ?? lc.period))
+    setLc(c => ({ ...c, fold: true, period }))
+    help.reportAction('fold')
+  }
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
@@ -359,7 +370,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         </>,
       }}
       simple={simpleConsole}
-      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ')) : readoutRows }}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ') || (row.label === 'Fold' && lc.fold)) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
           {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
@@ -447,11 +458,18 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       )}
       quickCommands={quickCommands}
       tool={(
-        <InstrumentToolHint
-          testId="tess-drag-dip"
-          text={classification ? 'Marks saved with your classification' : 'Drag across a dip on the chart'}
-          detail={classification ? undefined : markCount > 0 ? `${markCount} marked · tap a mark to clear it` : undefined}
-        />
+        <>
+          <InstrumentToolHint
+            testId="tess-drag-dip"
+            text={classification ? 'Marks saved with your classification' : display.folded ? 'Folded at the gap between your marks' : 'Drag across a dip on the chart'}
+            detail={classification ? undefined : display.folded ? 'Dips that repeat stack into one' : markCount > 0 ? `${markCount} marked · tap a mark to clear it` : undefined}
+          />
+          {canSimpleFold && (
+            <button type="button" className={viewportStyles.quickKey} data-testid="tess-simple-fold" data-coach-target="tess-fold" aria-pressed={lc.fold} onClick={toggleSimpleFold}>
+              {lc.fold ? 'FOLD OFF · BACK TO MARKS' : `FOLD · P ${markedGap!.toFixed(2)}D`}
+            </button>
+          )}
+        </>
       )}
     />
   )

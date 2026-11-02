@@ -104,11 +104,26 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         hint: 'Drag across one of the dips to mark it.',
         completeOn: 'mark',
       },
+      // SSL-753 (Liam: "yes", teach FOLD): a second mark gives a gap, and FOLD stacks the light at that gap.
+      {
+        id: 'mark-again',
+        targets: ['tess-chart'],
+        anchor: 'tess-chart',
+        hint: 'Now mark the next dip along the same way.',
+        completeOn: 'mark',
+      },
+      {
+        id: 'fold',
+        targets: ['tess-fold'],
+        anchor: 'tess-fold',
+        hint: 'FOLD stacks the light every time that gap repeats. A real planet\'s dips land on top of each other.',
+        completeOn: 'fold',
+      },
       {
         id: 'verdict',
         targets: ['tess-verdicts'],
         anchor: 'tess-verdicts',
-        hint: 'Dips the same depth, evenly spaced? Submit · Transit. Just jitter? Submit · Noise.',
+        hint: 'One clean dip after the fold? Submit · Transit. Just jitter? Submit · Noise.',
         completeOn: 'submit',
       },
     ],
