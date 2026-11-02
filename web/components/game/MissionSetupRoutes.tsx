@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
@@ -78,8 +78,18 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (!game.mission || !game.target) return null
   const target = game.target
   const selectedRocket = rocketModelForConfig(game.rocket)
-  const launchReady = validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).ok
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
+  // SSL-750: check the rocket that would actually fly. A vehicle left on the pad from another contract keeps its own
+  // parts, so the job is checked against it, not against the design the builder would make for this job.
+  const flyingRocket = selectedVehicle?.rocket ?? game.rocket
+  const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) })
+  const launchReady = check.ok
+  const vehicleName = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId)?.name : null
+  const hold = check.holds?.[0]
+  const blockedReason = launchReady ? null : hold ? buildHoldLine(hold, vehicleName) : (check.problems[0] ?? 'Mission requirements not met')
+  // Nothing is built or launched that cannot do the job (Liam, 02.11).
+  const actionDisabled = !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
+  const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'
   const ownProgram = isOwnProgramMission(game.mission)
 
   return (
@@ -87,9 +97,10 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       <MissionPlanStrip
         game={game}
         launched={launchPending}
-        blockedReason={launchReady ? null : (validateBuild({ mission: game.mission, target, rocket: game.rocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)) }).problems[0] ?? 'Mission requirements not met')}
-        primaryLabel={preparing ? 'Build rocket' : 'Launch'}
-        primaryDisabled={!!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || (!preparing && !launchReady)}
+        blockedReason={blockedReason}
+        blockedFix={hold && hold.kind !== 'drill' ? 'vehicle' : hold ? 'customize' : null}
+        primaryLabel={actionLabel}
+        primaryDisabled={actionDisabled}
         primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
       />
       <LaunchpadScreen
@@ -106,12 +117,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         hydrated={game.hydrated}
         mission={{ title: game.mission.title, payload: game.mission.payload }}
         target={target}
-        rocket={game.rocket}
+        rocket={flyingRocket}
         hasStagedRocket={selectedVehicle?.location === 'launchpad'}
         onDismantle={() => game.onDismantleStagedRocket()}
         assembly={rolling ? 'building' : preparing ? 'design' : 'ready'}
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
-        launchDisabled={!!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || (!preparing && !launchReady)}
+        launchDisabled={actionDisabled}
+        launchLabel={actionLabel}
         onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
         earthBiome={game.player.earthBiome}
         onRequestLaunch={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}

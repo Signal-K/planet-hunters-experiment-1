@@ -37,6 +37,7 @@ interface RocketBuilderSceneProps {
   towerLabel: string
   launchTestId?: string
   launchDisabled?: boolean
+  launchLabel?: string
   onChooseMission: () => void
   onBack?: () => void
   onLaunch: () => void
@@ -70,6 +71,7 @@ export default function RocketBuilderScene({
   towerLabel,
   launchTestId = 'launch-btn',
   launchDisabled = false,
+  launchLabel: launchLabelOverride,
   onBack,
   onChooseMission,
   onLaunch,
@@ -107,7 +109,7 @@ export default function RocketBuilderScene({
   const targetLabel = target ? target.name : 'Choose a mission'
   const hasLaunchPlan = Boolean(missionTitle && target)
   const phase: 'idle' | AssemblyPhase = !hasLaunchPlan ? 'idle' : hasStagedRocket ? assembly : 'design'
-  const launchLabel = phase === 'design' ? 'Build rocket' : phase === 'building' ? 'Building' : 'Launch'
+  const launchLabel = phase === 'building' ? 'Building' : launchLabelOverride ?? (phase === 'design' ? 'Build rocket' : 'Launch')
   const [confirmingDismantle, setConfirmingDismantle] = useState(false)
 
   // Only what can be fitted today: locked parts and slots with nothing available yet stay out of sight instead of reading as dead ends.
@@ -151,7 +153,7 @@ export default function RocketBuilderScene({
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>
           {!guided && hasLaunchPlan && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
-          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
+          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" data-sync-anchor="" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 
         {guided && (

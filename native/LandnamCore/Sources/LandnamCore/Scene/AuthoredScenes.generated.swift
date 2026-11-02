@@ -1497,7 +1497,7 @@ enum AuthoredSceneDeclarations {
           "layout": "shared",
           "space": "parent",
           "rect": {
-            "x": 0.2308,
+            "x": 0.2458,
             "y": 0.261,
             "w": 0.1904,
             "h": 0.647
