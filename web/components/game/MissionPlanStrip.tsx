@@ -57,7 +57,8 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // Liam, 01.11: Cargo says what comes back (the haul and the pay) and what the rocket carries out (its payload).
   const haul = Object.entries(mission.requires.minerals).map(([id, amount]) => `${game.catalog.minerals[id]?.name ?? id} ×${amount}`)
   const pay = mission.payout?.francs ? formatCurrency(mission.payout.francs, { compact: true }) : null
-  const drill = game.catalog.parts.drill.find(part => part.id === game.rocket?.drill)
+  const flyingRocket = selectedVehicle?.rocket ?? game.rocket
+  const drill = game.catalog.parts.drill.find(part => part.id === flyingRocket.drill)
   const payloadName = mission.payload?.name
     ?? (Object.keys(mission.requires.minerals).length > 0
       // Every drill flies as the mining laser in the laser scene; the tier is the drill's.
