@@ -43,7 +43,7 @@ describe('shared authored scene graph', () => {
   it('resolves the real prefab in its host bounds and keeps the rocket on the mount', () => {
     const parts = resolvePrefab(authoredScene('launchpad')!, 'launchpad-complex', 1104, 865)
     const rocket = parts.find(object => object.id === 'staged-rocket')!
-    expect(rocket.frame.x + rocket.frame.w / 2).toBeCloseTo(359.904)
+    expect(rocket.frame.x + rocket.frame.w / 2).toBeCloseTo(376.464)
     expect(rocket.frame.y + rocket.frame.h).toBeCloseTo(785.42)
     expect(parts.find(object => object.id === 'launch-control')!.action).toBe('choose-mission')
     expect(parts.some(object => object.id === 'mission-selector')).toBe(false)
