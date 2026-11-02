@@ -53,6 +53,9 @@ const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body
   },
 }
 
+/** Readout rows kept on the simple console: whose star, what you marked, your verdict. */
+const SIMPLE_READOUT = new Set(['Star', 'Marks', 'Verdict', 'Catalogue P'])
+
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
   { id: 'planet', label: 'Submit · Transit', requiresMark: true },
   { id: 'not_planet', label: 'Submit · Noise', requiresMark: true },
@@ -60,8 +63,12 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 ]
 
 export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: !onboardingMissionDone(player.flightPlan) })
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
+  // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
+  // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
+  const firstClassification = Object.keys(classifications).length === 0
+  const help = useHelp('galaxy', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
+  const [allControls, setAllControls] = useState(false)
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
   const [ranges, setRanges] = useState<TransitRange[]>([])
@@ -260,6 +267,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
+    help.reportAction('submit')
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
@@ -268,6 +276,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const visitedIds = new Set(Object.keys(classifications))
   const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
   const showMap = classification != null || forceMapView
+  // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
+  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  const simpleConsole = simpleEligible && !allControls
 
   // SSL-747: a full readout of the player's result: their marks, what they measured from them,
   // the view they used and their verdict. The catalogue period only appears once they have submitted.
@@ -347,7 +358,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <InstrumentSwitch label="FOLD" testId="tess-fold" pressed={lc.fold} onToggle={() => setLc(c => ({ ...c, fold: !c.fold }))} />
         </>,
       }}
-      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: readoutRows }}
+      simple={simpleConsole}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ')) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
           {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
@@ -355,7 +367,12 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       )}
       viewportChrome={(
         <div className={viewportStyles.viewportChrome}>
-          {!classification && sectors.length > 1 && sectors.map((sector, index) => (
+          {simpleEligible && (
+            <button type="button" className={viewportStyles.chip} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
+              {allControls ? 'Simple view' : 'All controls'}
+            </button>
+          )}
+          {!classification && !simpleConsole && sectors.length > 1 && sectors.map((sector, index) => (
             <button
               key={sector.label}
               type="button"

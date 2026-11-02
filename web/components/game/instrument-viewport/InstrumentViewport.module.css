@@ -1654,3 +1654,12 @@
   .resultPlate { flex: 0 1 auto; min-height: 120px; display: flex; flex-direction: column; }
   .resultPlate .result { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 }
+
+/* Simple console (first classification): the data well and the answer column only. */
+@media (orientation: landscape), (min-width: 960px) {
+  .stage[data-simple="true"] {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    grid-template-areas: "viewport command";
+  }
+}
+.stage[data-simple="true"] .command { justify-content: flex-start; }

@@ -89,19 +89,27 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         body: 'Submit · Noise sends your classification when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark.',
       },
     ],
+    // Played on the first visit (Liam, 2.11: "too much going on, more of an interactive tutorial"): read, mark, submit.
     coach: [
+      {
+        id: 'read',
+        targets: ['tess-chart'],
+        anchor: 'tess-chart',
+        hint: 'This is one star\'s brightness over 27 days. When a planet passes in front of it, the light dips for a few hours.',
+      },
       {
         id: 'mark',
         targets: ['tess-chart'],
         anchor: 'tess-chart',
-        hint: 'Drag across the dip in the light curve to mark it.',
+        hint: 'Drag across one of the dips to mark it.',
         completeOn: 'mark',
       },
       {
         id: 'verdict',
         targets: ['tess-verdicts'],
         anchor: 'tess-verdicts',
-        hint: 'Submit your classification: Transit if it is a real dip, Noise if it is not, Skip if unsure.',
+        hint: 'Dips the same depth, evenly spaced? Submit · Transit. Just jitter? Submit · Noise.',
+        completeOn: 'submit',
       },
     ],
   },

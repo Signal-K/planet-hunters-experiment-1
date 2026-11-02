@@ -39,21 +39,23 @@ describe('help coach sequencing (SSL-432)', () => {
   })
 
   it('starts on step one, then waits for the named action', () => {
-    let run = startRun(idleRun(topic))
+    let run = advanceRun(startRun(idleRun(topic)))
     expect(currentStep(run)?.id).toBe('mark')
     run = completeAction(run, 'something-else')
     expect(currentStep(run)?.id).toBe('mark')
     run = completeAction(run, 'mark')
     expect(currentStep(run)?.id).toBe('verdict')
+    run = completeAction(run, 'submit')
+    expect(run.index).toBeNull()
   })
 
   it('ignores an action for a step that is not current', () => {
-    const second = advanceRun(startRun(idleRun(topic)))
-    expect(completeAction(second, 'mark')).toEqual(second)
+    const third = advanceRun(advanceRun(startRun(idleRun(topic))))
+    expect(completeAction(third, 'mark')).toEqual(third)
   })
 
   it('ends after the last step and can be stopped early', () => {
-    const run = advanceRun(advanceRun(startRun(idleRun(topic))))
+    const run = advanceRun(advanceRun(advanceRun(startRun(idleRun(topic)))))
     expect(run.index).toBeNull()
     expect(stopRun(startRun(idleRun(topic))).index).toBeNull()
   })

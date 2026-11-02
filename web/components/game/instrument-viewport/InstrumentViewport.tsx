@@ -76,6 +76,11 @@ interface InstrumentViewportProps {
    * without typing. Each runs its line exactly as if typed. Defaults to the shared optics verbs.
    */
   quickCommands?: InstrumentQuickCommand[]
+  /**
+   * Just the data, the readout and the answer steps: no optics or project plate and no downlink terminal.
+   * For a player's first classification (Liam, 2.11: "too complex, too much going on").
+   */
+  simple?: boolean
 }
 
 export interface InstrumentQuickCommand { label: string; line: string; testId?: string }
@@ -337,6 +342,7 @@ export default function InstrumentViewport({
   module,
   readout,
   quickCommands = DEFAULT_QUICK_COMMANDS,
+  simple = false,
 }: InstrumentViewportProps) {
   // Device-local choice, read after mount so the server render (AUTO) hydrates cleanly.
   const [finishChoice, setFinishChoice] = useState<string>(AUTO_FINISH)
@@ -410,8 +416,8 @@ export default function InstrumentViewport({
       {helpLayer}
       <div className={styles.body}>
         {devBar}
-        <div className={styles.stage} data-testid="instrument-stage">
-          <div className={styles.controls} data-testid="instrument-controls" aria-label="Instrument controls">
+        <div className={styles.stage} data-testid="instrument-stage" data-simple={simple ? 'true' : undefined}>
+          {!simple && <div className={styles.controls} data-testid="instrument-controls" aria-label="Instrument controls">
             {/* SSL-749: just the plate name. The PWR/TRK/MAG lamps and the finish row read as noise beside real
                 controls; the colourway stays a FINISH command in the downlink. */}
             <div className={styles.plate} aria-hidden="true">
@@ -450,7 +456,7 @@ export default function InstrumentViewport({
               </section>
             )}
             <span className={styles.vent} aria-hidden="true" />
-          </div>
+          </div>}
 
           <div className={styles.wellSlot}>
           <div className={styles.well} data-testid="instrument-viewport" data-ui-zone={UI_ZONES.screenContent}>
@@ -496,11 +502,11 @@ export default function InstrumentViewport({
           </div>
 
           <div className={styles.command} data-testid="instrument-command">
-            <div className={styles.plate} aria-hidden="true">
+            {!simple && <div className={styles.plate} aria-hidden="true">
               <span className={styles.plateName}>DOWNLINK · CH 02</span>
               <span className={styles.signal} data-inline="true"><i /><i /><i /><i /><i /></span>
-            </div>
-            {briefing && briefLine != null ? (
+            </div>}
+            {simple ? null : briefing && briefLine != null ? (
               <section className={styles.desk} data-testid="instrument-briefing" aria-label={briefing.speaker}>
                 <span className={styles.speaker}>{briefing.speaker}</span>
                 <p className={styles.deskLine} data-testid="instrument-briefing-line" aria-live="polite">{briefLine}</p>
