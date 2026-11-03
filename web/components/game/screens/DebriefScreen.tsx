@@ -131,7 +131,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       {/* Two tones like Community research: what the flight did on the left, settling up on the right. */}
       <article className={styles.workspace} data-ui-zone={UI_ZONES.screenContent}>
         <section className={styles.story} aria-label="Flight">
-        <SkyBadgeRow badges={badges} />
+        <SkyBadgeRow badges={badges} className={styles.badges} />
         {isOrbitalInstrumentDeployment ? (
           <section className={`debrief-result-panel ${styles.card}`} aria-label="Mission result" data-testid="debrief-result-panel" data-surface="cream">
             <p className="debrief-result-panel__status"><span aria-hidden="true" /> Commissioned · instrument online</p>
