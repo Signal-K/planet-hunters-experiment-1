@@ -27,7 +27,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import styles from './MissionBoard.module.css'
@@ -331,7 +331,7 @@ export default function MissionBoard({
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
-  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
+  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? lastMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
@@ -469,7 +469,7 @@ export default function MissionBoard({
       }
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
-      setTab('free')
+      chooseTab('free')
       setView('belt')
       setEventFocus(event.name)
       setPickedId(target?.id ?? null)
@@ -483,7 +483,7 @@ export default function MissionBoard({
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
-  const chooseTab = (next: MissionBoardTab) => setTab(next)
+  const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
     <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
@@ -685,7 +685,7 @@ export default function MissionBoard({
               {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
                 const first = cards.find(item => item.client?.id === focusedStanding.client.id)
                 setContractTargetId(null)
-                setTab('contracts')
+                chooseTab('contracts')
                 if (first) onSelectMission(first.mission.id)
               }}>{focusedStanding.offers === 1 ? 'SEE CONTRACT' : `SEE ${focusedStanding.offers} CONTRACTS`}</button>}
             </article>
