@@ -86,6 +86,8 @@
 .settle { justify-content: flex-start; padding-bottom: 12px; background: rgba(22, 104, 148, .58); }
 /* Settling up sits just above the buttons; an auto margin (not flex-end) keeps an overflowing half scrollable to its top. */
 .settle > :first-child { margin-top: auto; }
+/* Earned badges sit in the story column's flow, after the cards. Pinned to the screen they spread over the Next build card and the dock, blocking the way out. */
+.story .badges { position: static; order: 99; left: auto; bottom: auto; z-index: auto; max-width: 480px; }
 .story > *,
 .settle > * { flex: 0 0 auto; width: 100%; max-width: 480px; align-self: center; }
 
