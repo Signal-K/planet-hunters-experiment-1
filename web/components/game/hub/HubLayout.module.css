@@ -116,11 +116,13 @@
 .root :global(.scene-chip) {
   height: 44px;
   min-height: 44px;
-  border: 2px solid var(--ln-world-outline);
-  border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
-  box-shadow: inset 0 -4px 0 color-mix(in srgb, var(--ln-world-glass) 32%, transparent), 2px 2px 0 color-mix(in srgb, var(--ln-world-outline) 24%, transparent);
+  padding: 0 14px;
+  /* Dark pill like the Overview row and the sky chip (SSL-716), not the old square hull chip. */
+  border: 2px solid rgba(244, 239, 228, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 18, 40, 0.82);
+  color: #f4efe4;
+  box-shadow: none;
 }
 .chips {
   margin-left: 0;
