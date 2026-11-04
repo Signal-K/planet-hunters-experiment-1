@@ -254,13 +254,13 @@ func seedBallots(app core.App) {
 // source Atlas uses) and checked against a second source on 4 Nov; the launch is not yet
 // confirmed by the operator, so it carries no verifiedAt.
 func initialBallots() []ballotRow {
-	const astroDisclaimer = "Dates come from published sky calendars. Cloud and moonlight can change what you see."
+	const astroDisclaimer = "Dates come from published sky calendars."
 	return []ballotRow{
 		{
 			Key:        "astronomy-2026-11",
 			Category:   "astronomy",
 			Title:      "What should we observe next?",
-			Blurb:      "The winner sets what the community builds next and the sky it studies.",
+			Blurb:      "The winner sets what we build next.",
 			Disclaimer: astroDisclaimer,
 			Status:     ballotStatusOpen,
 			OpensAt:    mustTime("2026-11-04T00:00:00Z"),
@@ -268,21 +268,21 @@ func initialBallots() []ballotRow {
 			Options: []ballotOption{
 				{
 					ID: "geminids-2026", Label: "Geminids meteor shower",
-					Detail:      "Peak night 13 to 14 December. The Moon is a thin crescent that sets early, so the sky is dark. Our GEM-1 receiver is ready.",
+					Detail:      "Peak night 13 to 14 December. Dark skies, and GEM-1 is ready.",
 					WindowStart: "2026-12-13", WindowEnd: "2026-12-15",
 					SourceLabel: "IMO meteor calendar, checked against EarthSky", SourceURL: "https://www.imo.net/resources/calendar/", VerifiedAt: "2026-11-04",
 					Policy: ballotPolicy{Template: "observatory-instrument", FocusRef: "geminids-2026"},
 				},
 				{
 					ID: "jupiter-opposition-2027", Label: "Jupiter at opposition",
-					Detail:      "11 February 2027. Jupiter is opposite the Sun, up all night and at its brightest of the year.",
+					Detail:      "Brightest of the year, up all night.",
 					WindowStart: "2027-02-11",
 					SourceLabel: "Astronomy Engine, checked against EarthSky", SourceURL: "https://earthsky.org/astronomy-essentials/jupiter-at-opposition/", VerifiedAt: "2026-11-04",
 					Policy: ballotPolicy{Template: "observatory-instrument", FocusRef: "jupiter-opposition-2027"},
 				},
 				{
 					ID: "mars-opposition-2027", Label: "Mars at opposition",
-					Detail:      "19 February 2027. Mars is at its closest and brightest for two years. A bright Moon will wash out faint stars.",
+					Detail:      "Closest in two years. A bright Moon dims the sky.",
 					WindowStart: "2027-02-19",
 					SourceLabel: "Astronomy Engine, checked against Sky at Night", SourceURL: "https://skyatnightmagazine.com/advice/skills/mars-opposition", VerifiedAt: "2026-11-04",
 					Policy: ballotPolicy{Template: "observatory-instrument", FocusRef: "mars-opposition-2027"},
@@ -293,14 +293,14 @@ func initialBallots() []ballotRow {
 			Key:           "launch-2026-11",
 			Category:      "launch",
 			Title:         "Which launch do we follow next?",
-			Blurb:         "We follow Electron first. The vote for the launch after it opens once the next launches are confirmed.",
-			Disclaimer:    "Launch dates change often. This one has not been confirmed by the operator yet.",
+			Blurb:         "We follow Electron first.",
+			Disclaimer:    "Launch dates change often.",
 			Status:        ballotStatusPending,
 			DefaultOption: "electron-mountain-god-rises",
 			Options: []ballotOption{
 				{
 					ID: "electron-mountain-god-rises", Label: "Electron: The Mountain God Rises",
-					Detail:      "Rocket Lab for iQPS, launching from Mahia, New Zealand. Planned for 10 November 2026, time to be confirmed.",
+					Detail:      "Rocket Lab, from New Zealand. Planned 10 November, time to be confirmed.",
 					WindowStart: "2026-11-10",
 					SourceLabel: "Launch Library 2 listing, not yet confirmed by Rocket Lab", SourceURL: "https://www.spacelaunchschedule.com/launch/electron-the-mountain-god-rises-iqps-launch-10/",
 					Policy: ballotPolicy{Template: "spaceport-launch-site", FocusRef: "electron-mountain-god-rises"},

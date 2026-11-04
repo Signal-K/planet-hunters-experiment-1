@@ -1,28 +1,67 @@
 'use client'
 
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { closesLabel, optionById, policyLabel, voteShare, windowLabel, type Ballot, type BallotOption } from '@/lib/community/ballots'
 import type { BallotsState } from '@/lib/community/useBallots'
 import styles from './CommunityBallots.module.css'
 
-function verifiedLabel(option: BallotOption): string {
-  if (!option.verifiedAt) return 'Date not confirmed by the operator yet'
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function checked(option: BallotOption): string {
+  if (!option.verifiedAt) return 'Date not confirmed yet'
   const [, m, d] = option.verifiedAt.split('-').map(Number)
-  return `Dates checked ${d} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}`
+  return `Checked ${d} ${MONTHS[m - 1]}`
 }
 
-function Source({ option }: { option: BallotOption }) {
-  return (
-    <small className={styles.source}>
-      <a href={option.sourceUrl} target="_blank" rel="noopener noreferrer">{option.sourceLabel}</a> · {verifiedLabel(option)}
-    </small>
-  )
+/** One line for the entry card: what the player should know about this ballot right now. */
+function summary(ballot: Ballot, now: number): string {
+  const name = ballot.category === 'launch' ? 'Launch' : 'Sky'
+  if (ballot.phase === 'pending') return `${name} · following ${optionById(ballot, ballot.defaultOption)?.label.split(':')[0] ?? 'next launch'}`
+  if (ballot.phase === 'closed') return `${name} · winner ${optionById(ballot, ballot.winner)?.label ?? 'none'}`
+  const mine = optionById(ballot, ballot.myVote)
+  return mine ? `${name} · you voted ${mine.label}` : `${name} · ${closesLabel(ballot.closesAt, now).toLowerCase()}`
 }
 
-function OpenBallot({ ballot, now, onVote }: { ballot: Ballot; now: number; onVote: (option: string) => void }) {
+/** One step: one ballot, a few short tiles, and detail only for the option you picked. */
+function Step({ ballot, now, onVote }: { ballot: Ballot; now: number; onVote: (option: string) => void }) {
+  const mine = optionById(ballot, ballot.myVote)
+  if (ballot.phase === 'pending') {
+    const following = optionById(ballot, ballot.defaultOption)
+    return (
+      <div className={styles.body} data-testid={`ballot-following-${ballot.category}`}>
+        <span className={styles.eyebrow}>The community is following</span>
+        {following && <div className={styles.big}><b>{following.label}</b><span className={styles.when}>{windowLabel(following, now)}</span></div>}
+        <p className={styles.line}>The next launch vote opens when launches are confirmed.</p>
+        {following && <small className={styles.source}><a href={following.sourceUrl} target="_blank" rel="noopener noreferrer">Source</a> · {checked(following)}</small>}
+        <small className={styles.source}>{ballot.disclaimer}</small>
+      </div>
+    )
+  }
+  if (ballot.phase === 'closed') {
+    const winner = optionById(ballot, ballot.winner)
+    return (
+      <div className={styles.body}>
+        <span className={styles.eyebrow}>Voting closed</span>
+        {winner ? (
+          <div className={`${styles.big} ${styles.win}`} data-testid={`ballot-winner-${ballot.category}`}>
+            <b>{winner.label}</b>
+            <span className={styles.when}>{windowLabel(winner, now)}</span>
+            <span className={styles.next} data-testid={`ballot-next-${ballot.category}`}>Coming next: {policyLabel(winner.policy)}</span>
+          </div>
+        ) : <p className={styles.line}>No votes were cast.</p>}
+        <ul className={styles.results} aria-label="Final results">
+          {ballot.options.map(option => (
+            <li key={option.id} data-winner={option.id === ballot.winner || undefined}><span>{option.label}</span><b>{voteShare(ballot, option.id)}%</b></li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
   const voted = !!ballot.myVote
   return (
-    <>
-      <div className={styles.closes} data-testid={`ballot-closes-${ballot.category}`}>{closesLabel(ballot.closesAt, now)}{voted ? ' · you can change your vote' : ''}</div>
+    <div className={styles.body}>
+      <span className={styles.closes} data-testid={`ballot-closes-${ballot.category}`}>{closesLabel(ballot.closesAt, now)}</span>
       <div role="radiogroup" aria-label={ballot.title} className={styles.options}>
         {ballot.options.map(option => {
           const selected = ballot.myVote === option.id
@@ -30,80 +69,66 @@ function OpenBallot({ ballot, now, onVote }: { ballot: Ballot; now: number; onVo
           return (
             <button key={option.id} type="button" role="radio" aria-checked={selected} className={styles.option} data-selected={selected || undefined}
               data-testid={`ballot-option-${option.id}`} onClick={() => { if (!selected) onVote(option.id) }}>
-              <span className={styles.optionHead}>
-                <b>{option.label}</b>
-                <span className={styles.when}>{windowLabel(option, now)}</span>
-              </span>
-              <span className={styles.detail}>{option.detail}</span>
+              <span className={styles.tick} aria-hidden="true">{selected ? '✓' : ''}</span>
+              <b>{option.label}</b>
+              <span className={styles.when}>{windowLabel(option, now)}</span>
               {voted && (ballot.total ?? 0) > 0 && <span className={styles.share} aria-label={`${share} percent of votes`}><i style={{ width: `${share}%` }} /><em>{share}%</em></span>}
-              <span className={styles.mark} aria-hidden="true">{selected ? '✓ Your vote' : ''}</span>
             </button>
           )
         })}
       </div>
-      <Source option={optionById(ballot, ballot.myVote) ?? ballot.options[0]} />
-    </>
-  )
-}
-
-function ClosedBallot({ ballot, now }: { ballot: Ballot; now: number }) {
-  const winner = optionById(ballot, ballot.winner)
-  return (
-    <>
-      {winner ? (
-        <div className={styles.winner} data-testid={`ballot-winner-${ballot.category}`}>
-          <span className={styles.eyebrow}>Winner</span>
-          <b>{winner.label}</b>
-          <span>{windowLabel(winner, now)}</span>
-          <span className={styles.next} data-testid={`ballot-next-${ballot.category}`}>Coming next: {policyLabel(winner.policy)}</span>
+      {mine ? (
+        <div className={styles.about} data-testid="ballot-about">
+          <p className={styles.line}>{mine.detail}</p>
+          <small className={styles.source}><a href={mine.sourceUrl} target="_blank" rel="noopener noreferrer">{mine.sourceLabel}</a> · {checked(mine)}</small>
+          <small className={styles.source}>{ballot.disclaimer} You can change your vote until it closes.</small>
         </div>
-      ) : <div className={styles.closes}>Voting closed. No votes were cast.</div>}
-      <ul className={styles.results} aria-label="Final results">
-        {ballot.options.map(option => (
-          <li key={option.id} data-winner={option.id === ballot.winner || undefined}>
-            <span>{option.label}{ballot.myVote === option.id ? ' · your vote' : ''}</span>
-            <b>{voteShare(ballot, option.id)}%</b>
-          </li>
-        ))}
-      </ul>
-    </>
-  )
-}
-
-function PendingBallot({ ballot, now }: { ballot: Ballot; now: number }) {
-  const following = optionById(ballot, ballot.defaultOption)
-  if (!following) return null
-  return (
-    <div className={styles.following} data-testid={`ballot-following-${ballot.category}`}>
-      <span className={styles.eyebrow}>The community is following</span>
-      <b>{following.label}</b>
-      <span className={styles.when}>{windowLabel(following, now)}</span>
-      <span className={styles.detail}>{following.detail}</span>
-      <Source option={following} />
-      <span className={styles.soon}>The vote for the launch after this one opens once the next launches are confirmed.</span>
+      ) : <p className={styles.hint}>Tap one to vote.</p>}
     </div>
   )
 }
 
-/** SSL-757: the community votes, shown beside the weekly path choice. They never block it. */
+/**
+ * SSL-757: the community votes. The picker shows one small card; it opens a short flow, one ballot per
+ * step. Voting never blocks choosing a path.
+ */
 export default function CommunityBallots({ state }: { state: BallotsState }) {
   const { ballots, serverNow, queued, problem, vote } = state
+  const [step, setStep] = useState<number | null>(null)
   if (!ballots || ballots.length === 0) return null
+  const open = ballots.filter(b => b.phase === 'open' && !b.myVote).length
+  const ballot = step === null ? null : ballots[Math.min(step, ballots.length - 1)]
   return (
-    <div className={styles.panel} data-testid="community-ballots">
-      {ballots.map(ballot => (
-        <section key={ballot.key} className={styles.ballot} data-phase={ballot.phase} data-testid={`ballot-${ballot.category}`} aria-label={ballot.title}>
-          <span className={styles.eyebrow}>{ballot.category === 'launch' ? 'Launch vote' : 'Sky vote'}</span>
-          <h3>{ballot.title}</h3>
-          <p className={styles.blurb}>{ballot.blurb}</p>
-          {ballot.phase === 'open' && <OpenBallot ballot={ballot} now={serverNow} onVote={option => vote(ballot.key, option)} />}
-          {ballot.phase === 'closed' && <ClosedBallot ballot={ballot} now={serverNow} />}
-          {ballot.phase === 'pending' && <PendingBallot ballot={ballot} now={serverNow} />}
-          <small className={styles.disclaimer}>{ballot.disclaimer}</small>
-        </section>
-      ))}
-      {queued && <p className={styles.note} role="status">Saved on this device. It will send when you are back online.</p>}
-      {problem && <p className={styles.note} role="alert">{problem}</p>}
-    </div>
+    <>
+      <button type="button" className={styles.entry} data-testid="community-ballots" onClick={() => setStep(0)}>
+        <span className={styles.entryText}>
+          <span className={styles.eyebrow}>Community votes</span>
+          <b>{ballots.map(b => summary(b, serverNow)).find((_, i) => ballots[i].phase !== 'pending') ?? summary(ballots[0], serverNow)}</b>
+        </span>
+        {open > 0 && <span className={styles.badge} aria-label={`${open} to vote on`}>{open}</span>}
+        <span className={styles.chevron} aria-hidden="true">›</span>
+      </button>
+      {ballot && step !== null && createPortal(
+        <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={ballot.title} data-testid="community-ballot-step">
+          <header className={styles.head}>
+            <button type="button" className={styles.back} aria-label="Close votes" onClick={() => setStep(null)}>‹</button>
+            <span className={styles.dots} aria-label={`Step ${step + 1} of ${ballots.length}`}>
+              {ballots.map((b, i) => <i key={b.key} data-on={i === step || undefined} />)}
+            </span>
+          </header>
+          <h2 className={styles.title}>{ballot.title}</h2>
+          <Step ballot={ballot} now={serverNow} onVote={option => vote(ballot.key, option)} />
+          {queued && <p className={styles.note} role="status">Saved on this device. It sends when you are back online.</p>}
+          {problem && <p className={styles.note} role="alert">{problem}</p>}
+          <footer className={styles.foot}>
+            {step > 0 && <button type="button" className={styles.ghost} onClick={() => setStep(step - 1)}>Back</button>}
+            {step < ballots.length - 1
+              ? <button type="button" className={styles.primary} data-testid="ballot-next" onClick={() => setStep(step + 1)}>Next</button>
+              : <button type="button" className={styles.primary} onClick={() => setStep(null)}>Done</button>}
+          </footer>
+        </div>,
+        document.body,
+      )}
+    </>
   )
 }
