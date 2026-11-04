@@ -35,11 +35,11 @@ describe('research stamps', () => {
   })
   it('counts the month and fills the community bar', () => {
     expect(stampsInMonth({ '2026-10-01': ['survey', 'event'], '2026-09-30': ['survey'] }, 2026, 9)).toBe(2)
-    const server = { month: '2026-10', others: 500, goal: 1000, bonusPct: 3, reachedAt: null, bonusUntil: null }
+    const server = { month: '2026-10', others: 41, goal: 100, bonusPct: 3, reachedAt: null, bonusUntil: null }
     expect(communityBar(10, server).fill).toBeCloseTo(0.51)
     expect(communityBar(10, server).reached).toBe(false)
-    expect(communityBar(10, { ...server, others: 995, reachedAt: t, bonusUntil: t + 7 * D }).reached).toBe(true)
-    expect(communityBar(4, null)).toMatchObject({ total: 4, goal: 1000, reached: false })
+    expect(communityBar(10, { ...server, others: 95, reachedAt: t, bonusUntil: t + 7 * D }).reached).toBe(true)
+    expect(communityBar(4, null)).toMatchObject({ total: 4, goal: 100, reached: false })
   })
   it('returns recent personal months newest first', () => {
     expect(researchMonthHistory({ '2026-10-22': ['survey'], '2026-09-03': ['event', 'survey'] }, Date.UTC(2026, 9, 26), 2)).toEqual([

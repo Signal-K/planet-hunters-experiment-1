@@ -23,16 +23,16 @@ import (
 //     through the SSL-321 outbox, so there is no separate write path to abuse.
 //   - The first time the total reaches researchGoal, the month is recorded in
 //     research_months. Every player then earns +researchBonusPct on Exchange
-//     sells for researchBonusDays from that moment.
+//     sells and +researchFuelPct fuel efficiency until the end of that UTC month (SSL-685).
 //   - The response leaves out the caller's own stamps (`others`), so the client
 //     adds its local count, including stamps not yet synced, without counting twice.
 //
 // Mirrors web/lib/research/stamps.ts COMMUNITY_GOAL / COMMUNITY_WEEKLY_REVENUE_PCT.
 
 const (
-	researchGoal       = 1000
+	researchGoal       = 100
 	researchBonusPct   = 3
-	researchBonusDays  = 7
+	researchFuelPct    = 7
 	researchCacheTTL   = time.Minute
 	researchKindsLimit = 4
 )
@@ -162,12 +162,13 @@ func communityResearchHandler(app core.App) func(e *core.RequestEvent) error {
 			"others":     totals.total - totals.byUser[e.Auth.Id],
 			"goal":       researchGoal,
 			"bonusPct":   researchBonusPct,
+			"fuelPct":    researchFuelPct,
 			"reachedAt":  nil,
 			"bonusUntil": nil,
 		}
 		if !reached.IsZero() {
 			body["reachedAt"] = reached.UnixMilli()
-			body["bonusUntil"] = reached.Add(researchBonusDays * 24 * time.Hour).UnixMilli()
+			body["bonusUntil"] = time.Date(now.Year(), now.Month()+1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
 		}
 		return e.JSON(http.StatusOK, body)
 	}

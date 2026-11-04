@@ -108,7 +108,7 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
+  const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -311,6 +311,8 @@ function ScreenBody({
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
           onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined }))}
+          communityResearch={communityResearch}
+          onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={() => {
             // Completing the sky reading should reveal the event brief first.
             // Accepting the focused event is the explicit step that starts

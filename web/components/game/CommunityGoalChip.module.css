@@ -1,0 +1,53 @@
+.chip {
+  position: absolute;
+  top: 72px;
+  right: 12px;
+  z-index: 30;
+  min-height: 44px;
+  width: 232px;
+  max-width: calc(100vw - 24px);
+  display: grid;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  box-shadow: var(--ln-shadow-panel);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Below the Base overview row (top 64px, 44px tall) whenever the two would meet. */
+@media (max-width: 960px) {
+  .chip { top: 116px; right: 8px; }
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.track {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .14);
+  overflow: hidden;
+}
+
+.track i {
+  display: block;
+  height: 100%;
+  background: var(--ln-cyan, #58d0ea);
+}
+
+.chip small {
+  font: 700 14px/1.1 var(--ln-font-display);
+}
+
+.chip[data-reached] .track i { background: var(--ln-green, #6fd28f); }

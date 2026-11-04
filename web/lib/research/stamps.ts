@@ -134,7 +134,10 @@ export function researchMonthHistory(stamps: ResearchStamps | undefined, now: nu
 }
 
 /** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
-export const COMMUNITY_GOAL = 1000
+export const COMMUNITY_GOAL = 100
+/** SSL-685: what a full monthly bar gives every player until the month ends. */
+export const COMMUNITY_REWARD = { salePct: 3, fuelPct: 7 } as const
+export const COMMUNITY_REWARD_TEXT = `+${COMMUNITY_REWARD.salePct}% Exchange prices, +${COMMUNITY_REWARD.fuelPct}% fuel efficiency`
 
 /** `GET /api/community/research`. `others` leaves out the caller, so local stamps not yet synced are counted once. */
 export interface CommunityResearch {
@@ -142,6 +145,7 @@ export interface CommunityResearch {
   others: number
   goal: number
   bonusPct: number
+  fuelPct?: number
   reachedAt: number | null
   bonusUntil: number | null
 }
