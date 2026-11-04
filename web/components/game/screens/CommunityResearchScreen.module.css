@@ -103,3 +103,10 @@
 .record li[data-held] { border-color: #f4efe4; color: #f4efe4; }
 .record li[data-held]::before { background: #6fe39a; border-color: #6fe39a; }
 .record em { color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); font-style: normal; }
+
+/* Short landscape screens: the picker's right column is taller than the screen, so it starts at the top,
+   packs tighter, and fades at the bottom edge so a clipped chip reads as "scroll", not as a bug. */
+@media (max-height: 520px) {
+  .right { justify-content: flex-start; gap: 10px; padding-top: 56px; padding-bottom: 40px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
+  .how { gap: 8px; }
+}
