@@ -15,7 +15,8 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
-import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
+import { isUnderConstruction, structureBuildMs } from '@/lib/systems/HubConstructionSystem'
+import { wasAway, withWelcomeBack } from '@/lib/systems/WelcomeBack'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
@@ -296,6 +297,14 @@ export function normalizeState(input: PartialSave): GameState {
   const underConstruction = Object.fromEntries(
     Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
   )
+  // Structures that finished since the player's last visit feed the welcome-back
+  // card (SSL-702) before the finished records are dropped for good.
+  const finishedAway = Object.entries(player.underConstruction ?? {})
+    .filter(([kind, startedAt]) => !isUnderConstruction(startedAt, kind) && typeof player.lastVisitAt === 'number' && startedAt + structureBuildMs(kind) > player.lastVisitAt)
+    .map(([kind]) => kind)
+  const welcomeBack = finishedAway.length > 0 && wasAway(player.lastVisitAt)
+    ? withWelcomeBack(player.welcomeBack, player.lastVisitAt as number, { built: finishedAway })
+    : player.welcomeBack
   // Levels 2-3 of upgradable buildings. Old saves have none (level 1); the legacy
   // launchpad flag is level 2. Only the level map is touched, never `placed`, so a
   // malformed value can never drop a building.
@@ -335,7 +344,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, welcomeBack, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or

@@ -318,7 +318,7 @@ function ScreenBody({
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
-          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined }))}
+          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined, welcomeBack: undefined }))}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={() => {

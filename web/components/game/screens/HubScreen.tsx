@@ -34,7 +34,7 @@ import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { economyArrivalSummary } from '@/lib/systems/EconomyArrival'
+import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -278,15 +278,23 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
   // Welcome back: the daily board moved while the player was away. It speaks
   // from the Exchange when there is one, otherwise from a quiet launchpad.
-  const arrival = player.economyArrival
-  const economyCallout: BuildingCallout | undefined = arrival && !onboardingActive && !coachVisible && onDismissEconomyArrival
+  // Only a return after 4+ hours opens a welcome-back, and only with something to say.
+  const welcomeBack = player.welcomeBack
+  const welcomeRows = welcomeBack ? welcomeBackRows(player.economyArrival, welcomeBack, kind => kind.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase())) : []
+  const openWelcomeScene = (scene: 'market' | 'instrument' | 'base' | 'friends') => {
+    onDismissEconomyArrival?.()
+    if (scene === 'market') onOpenMarket?.()
+    else if (scene === 'instrument') onOpenScene('instrument-hub')
+    else if (scene === 'friends') openFriends()
+  }
+  const economyCallout: BuildingCallout | undefined = welcomeRows.length > 0 && !onboardingActive && !coachVisible && onDismissEconomyArrival
     ? {
       title: 'Welcome back',
-      body: economyArrivalSummary(arrival),
-      cta: 'Open Market',
+      body: 'While you were away:',
+      cta: 'Got it',
       placement: 'viewport-clear',
-      onCta: () => { onDismissEconomyArrival(); onOpenMarket?.() },
-      onDismiss: onDismissEconomyArrival,
+      rows: welcomeRows.map(row => ({ text: row.text, onOpen: () => openWelcomeScene(row.scene) })),
+      onCta: onDismissEconomyArrival,
     }
     : undefined
   const economyCalloutAt = !economyCallout ? null : placed.includes('market') ? 'market' : launchpadCallout ? null : 'launchpad'
