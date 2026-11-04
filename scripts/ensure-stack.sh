@@ -9,7 +9,7 @@ if healthy; then echo "Landnam stack already up on :${PORT}"; exit 0; fi
 LOCK=/tmp/landnam-ensure.lock
 if ! mkdir "$LOCK" 2>/dev/null; then
   # Another session is starting it; wait for that rather than starting a second one.
-  for _ in $(seq 1 60); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
+  for _ in $(seq 1 180); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
   echo "Another session is starting the stack and it is not healthy yet. See /tmp/landnam-make-up.log" >&2; exit 1
 fi
 trap 'rmdir "$LOCK"' EXIT
@@ -19,5 +19,9 @@ else
   # No parent ~/Navigation checkout or no Docker (cloud sessions): run the self-contained local stack.
   nohup scripts/dev-local.sh >/tmp/landnam-make-up.log 2>&1 &
 fi
-for _ in $(seq 1 60); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
-echo "Stack did not become healthy. See /tmp/landnam-make-up.log" >&2; exit 1
+# A cold cloud container first downloads the Go toolchain and modules (several minutes), so wait up to 6 minutes.
+for _ in $(seq 1 180); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
+echo "Stack did not become healthy. Last lines of /tmp/landnam-make-up.log:" >&2
+tail -5 /tmp/landnam-make-up.log >&2
+grep -q "go: downloading go" /tmp/landnam-make-up.log 2>/dev/null && echo "The Go toolchain is still downloading; run this again in a minute." >&2
+exit 1
