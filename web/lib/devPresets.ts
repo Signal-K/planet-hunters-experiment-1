@@ -182,6 +182,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
+      { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -314,6 +315,20 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
     }
+
+    case 'hub-orionids-complete':
+      return {
+        screen: 'hub',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 },
+          badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: 1 } },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
 
     case 'constellation-hub':
       return {
