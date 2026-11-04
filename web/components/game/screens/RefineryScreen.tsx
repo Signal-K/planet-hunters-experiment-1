@@ -1,5 +1,6 @@
 'use client'
 
+import type { Player } from '@/lib/game-types'
 import { useEffect, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import TopBar from '@/components/ui/TopBar'
@@ -15,7 +16,7 @@ import ScenePanel from '@/components/game/ScenePanel'
 import { captureGameEvent } from '@/lib/posthog'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; researchPermanentBonuses?: Record<string, number> }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; researchPermanentBonuses?: Record<string, number>; communityBonus?: Player['communityBonus'] }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void

@@ -385,6 +385,8 @@ export interface Player {
   researchCosmetics?: string[]
   /** Permanent research marketplace bonus count by item id. */
   researchPermanentBonuses?: Record<string, number>
+  /** SSL-685: the monthly community goal reward the server reported, kept until `until` (epoch ms, end of that UTC month). */
+  communityBonus?: { month: string; salePct: number; fuelPct: number; until: number }
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>

@@ -65,6 +65,7 @@ import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
+import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { choosePath, claimResearchReward } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
@@ -109,6 +110,13 @@ function ScreenBody({
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
+
+  // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
+  useEffect(() => {
+    if (communityResearch?.reachedAt == null) return
+    game.setPlayer(current => withCommunityBonus(current, communityResearch))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communityResearch])
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -488,6 +496,7 @@ function ScreenBody({
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
             researchPermanentBonuses: game.player.researchPermanentBonuses,
+            communityBonus: game.player.communityBonus,
           }}
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
@@ -506,6 +515,7 @@ function ScreenBody({
           researchUniversalFragments={game.player.researchUniversalFragments ?? 0}
           researchPurchases={game.player.researchPurchases}
           researchPermanentBonuses={game.player.researchPermanentBonuses}
+          communityBonus={game.player.communityBonus}
           francs={game.player.francs}
           exchangeBuilt={exchangeBuilt(game.player)}
           priceAlerts={game.player.priceAlerts}

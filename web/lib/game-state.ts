@@ -95,6 +95,7 @@ export const DEFAULT_STATE: GameState = {
     researchPurchases: {},
     researchCosmetics: [],
     researchPermanentBonuses: {},
+    communityBonus: undefined,
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
@@ -676,6 +677,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)
   merged.player.researchPurchases = maxMergeRecord(current.player.researchPurchases, remoteState.player?.researchPurchases)
   merged.player.researchPermanentBonuses = maxMergeRecord(current.player.researchPermanentBonuses, remoteState.player?.researchPermanentBonuses)
+  merged.player.communityBonus = [current.player.communityBonus, remoteState.player?.communityBonus]
+    .filter((b): b is NonNullable<typeof b> => !!b).sort((a, b) => b.until - a.until)[0]
   merged.player.researchCosmetics = [...new Set([...(current.player.researchCosmetics ?? []), ...(remoteState.player?.researchCosmetics ?? [])])]
   merged.player.badges = mergeBadges(current.player.badges, remoteState.player?.badges)
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)

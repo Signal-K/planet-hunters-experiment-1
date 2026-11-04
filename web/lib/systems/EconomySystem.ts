@@ -65,7 +65,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -84,7 +84,7 @@ export function sellUnitPrice(
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
-  const permanentRate = permanentResearchSaleRate(player)
+  const permanentRate = permanentResearchSaleRate(player, now)
   const bonusApplied = permanentRate > 0
   return {
     price: bonusApplied ? Math.round(quoted * (1 + permanentRate)) : quoted,
@@ -97,7 +97,7 @@ export function sellUnitPrice(
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {
@@ -231,9 +231,9 @@ export function applyFreeHaulDisposition(
 
 /** Sell collected refined goods at their recipe output value. */
 /** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
-export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchPermanentBonuses'>, now: number = Date.now()): number {
+export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchPermanentBonuses' | 'communityBonus'>, now: number = Date.now()): number {
   const price = recipe.output.price
-  const rate = permanentResearchSaleRate(player)
+  const rate = permanentResearchSaleRate(player, now)
   return rate > 0 ? Math.round(price * (1 + rate)) : price
 }
 
