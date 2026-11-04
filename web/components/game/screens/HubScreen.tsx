@@ -668,6 +668,30 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         </div>
       )}
 
+        {!subsurface && (
+          <div className="base-overview" data-testid="base-overview">
+            <button
+              type="button"
+              className="base-overview-toggle"
+              data-testid="base-overview-toggle"
+              onClick={() => (camera.cam.zoom < 1 ? camera.focusX(homeCenter(builtKinds, viewSize.w / px) * px) : camera.overview())}
+            >
+              {camera.cam.zoom < 1 ? 'Back' : 'Overview'}
+            </button>
+            <input
+              type="range"
+              className="base-overview-slider"
+              data-testid="base-overview-slider"
+              aria-label="Position along the Base"
+              min={0}
+              max={1}
+              step={0.01}
+              value={camera.cam.zoom < 1 ? 0 : overviewPosition}
+              disabled={camera.cam.zoom < 1}
+              onChange={event => camera.setPosition(Number(event.target.value))}
+            />
+          </div>
+        )}
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
       {/* The delivery sheet of a homecoming covers the dock, so it is not drawn under it (it would only be an inert, overlapped control). */}
