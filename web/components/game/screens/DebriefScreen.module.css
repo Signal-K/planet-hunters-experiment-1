@@ -293,9 +293,11 @@
 
 /* Phone portrait: the story on top, settling up below, one scrolling column. */
 @media (max-width: 800px) and (orientation: portrait) {
-  .workspace { display: block; overflow-y: auto; }
+  .workspace { display: flex; flex-direction: column; overflow-y: auto; }
   .story, .settle { min-height: auto; overflow: visible; justify-content: flex-start; padding: 16px; }
   .story { padding-top: 76px; }
+  /* A short result centres in the free height instead of leaving a gap above the dock. */
+  .story { flex: 1 0 auto; justify-content: center; }
   /* The way out stays in reach while the cards scroll under it. */
   .dock { position: sticky; z-index: 2; bottom: 0; padding: 10px 16px 14px; background: rgba(22, 82, 118, .96); box-shadow: 0 -6px 18px rgba(8, 16, 34, .35); }
 }
