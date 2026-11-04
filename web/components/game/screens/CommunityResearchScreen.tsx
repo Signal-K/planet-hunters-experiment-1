@@ -9,11 +9,19 @@ import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH
 import type { Player } from '@/lib/game-types'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
+import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
+import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
+import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
+  /** SSL-746: a reviewer back from the instrument with their own readout, or null. */
+  pendingReview?: PendingConsensusReview | null
+  /** Opens the instrument on a queued subject so the reviewer does their own work first. */
+  onStartReview?: (item: ConsensusQueueItem) => void
+  onFinishReview?: () => void
   player: Player
   communityResearch?: CommunityResearch | null
   onBack: () => void
@@ -78,7 +86,7 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo }: CommunityResearchScreenProps) {
+export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
@@ -98,6 +106,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
+  const consensus = useConsensus(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -154,6 +163,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
                 <CommunityBallots state={ballotState} />
+                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
               {confirmingPath && (
@@ -204,6 +214,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 </> : readout === 'votes' ? <>
                   <h2>Community votes</h2>
                   <CommunityBallots state={ballotState} />
+                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">

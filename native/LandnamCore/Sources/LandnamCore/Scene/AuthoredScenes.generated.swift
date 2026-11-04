@@ -578,6 +578,15 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "SSL-757: the sky vote and the launch vote beside the weekly path choice (Votes tab once a path is chosen). Server-owned ballots; one vote per player, changeable until close. Stage fixtures: add &ballots=open, &ballots=voted or &ballots=closed to /game/stage?preset=ui-community-research. Never blocks path choice."
+        },
+        {
+          "id": "community-consensus",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-746: the review area. Any player can ask for consensus on their own classification (ASK COMMUNITY key on the finished readout) and review others'. The reviewer runs the instrument first; only then is the requester's readout released and Support, Dispute (with a reason) or Unsure accepted. Reviewers never see running counts. Verified at ceil(log2(active players + 1)) supports, 3 to 9, with disputes under a third of supports. Reachable without choosing a weekly path. Stage fixtures: add &consensus=queue, &consensus=review or &consensus=settled to /game/stage?preset=ui-community-research. Transit only so far; asteroid and Saturn follow."
         }
       ]
     },

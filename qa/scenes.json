@@ -305,7 +305,7 @@
    "flow": "records",
    "web": "ui-community-research",
    "native": "community-research-phone",
-   "tickets": ["SSL-691", "SSL-694", "SSL-757"]
+   "tickets": ["SSL-691", "SSL-694", "SSL-746", "SSL-757"]
   },
   {
    "id": "economy-arrival",

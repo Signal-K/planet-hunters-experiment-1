@@ -1,0 +1,28 @@
+/* SSL-746: the review area of Community research. Text is at least 14px and taps at least 44px. */
+.wrap { display: grid; gap: 14px; }
+.group { display: grid; gap: 8px; }
+.eyebrow { color: #9de7ef; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
+.item { min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 2px solid rgba(244, 239, 228, .35); border-radius: 16px; background: rgba(8, 16, 34, .3); color: #f4efe4; }
+.item[data-state='verified'] { border-color: #6ee0a0; }
+.item[data-state='disputed'] { border-color: #e0805c; }
+.itemText { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.itemText b { font: 800 16px/1.2 var(--ln-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.itemText span { color: #c9d0c2; font: 700 14px/1.3 var(--ln-font-body); }
+.state { flex: none; font: 800 14px/1.2 var(--ln-font-body); color: #f2c24c; }
+.item[data-state='verified'] .state { color: #6ee0a0; }
+.item[data-state='disputed'] .state { color: #e0805c; }
+.go { flex: none; min-width: 44px; min-height: 44px; padding: 0 16px; border: 2px solid #58d0ea; border-radius: 22px; background: rgba(88, 208, 234, .18); color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.note { margin: 0; color: #c9d0c2; font: 700 14px/1.35 var(--ln-font-body); }
+.problem { margin: 0; color: #f2c24c; font: 800 14px/1.3 var(--ln-font-body); }
+
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.col { display: grid; align-content: start; gap: 4px; padding: 10px 12px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.col h3 { margin: 0 0 2px; color: #9de7ef; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
+.row { display: grid; gap: 1px; font: 600 14px/1.3 var(--ln-font-body); }
+.row b { color: #b8c8c0; font: 700 14px/1.2 var(--ln-font-body); }
+.verdicts { position: sticky; bottom: 0; padding: 8px 0 12px; background: #12405e; display: flex; flex-wrap: wrap; gap: 10px; }
+.verdicts button { flex: 1 1 100px; min-height: 48px; border: 2px solid rgba(244, 239, 228, .45); border-radius: 24px; background: rgba(8, 16, 34, .35); color: #f4efe4; font: 800 15px/1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.verdicts button[data-verdict='support'] { border-color: #6ee0a0; }
+.verdicts button[data-verdict='dispute'] { border-color: #e0805c; }
+.reason { width: 100%; min-height: 72px; padding: 10px 12px; border: 2px solid rgba(244, 239, 228, .4); border-radius: 14px; background: rgba(8, 16, 34, .4); color: #f4efe4; font: 600 16px/1.35 var(--ln-font-body); resize: vertical; }
+@media (max-width: 520px) { .compare { grid-template-columns: 1fr; } }

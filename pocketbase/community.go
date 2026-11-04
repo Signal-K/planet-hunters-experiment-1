@@ -122,6 +122,7 @@ func ensureCommunityCollections(app core.App) {
 
 	ensureResearchCollection(app)
 	ensureBallotCollections(app)
+	ensureConsensusCollections(app)
 }
 
 // ensureCommentModerationFields adds the report/hide columns to a
@@ -177,6 +178,10 @@ func registerCommunityRoutes(app core.App) {
 		g.GET("/research", communityResearchHandler(app))
 		g.GET("/ballots", communityBallotsHandler(app))
 		g.POST("/vote", communityVoteHandler(app))
+		g.GET("/consensus", consensusOverviewHandler(app))
+		g.POST("/consensus/request", consensusRequestHandler(app))
+		g.POST("/consensus/reveal", consensusRevealHandler(app))
+		g.POST("/consensus/vote", consensusVoteHandler(app))
 
 		return se.Next()
 	})

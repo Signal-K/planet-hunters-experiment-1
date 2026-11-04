@@ -7,6 +7,7 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
+import type { ConsensusReadout } from '@/lib/community/consensus'
 import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolHint, type InstrumentQuickCommand } from '@/components/game/instrument-viewport/InstrumentViewport'
 import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, measureDips, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
@@ -33,6 +34,10 @@ interface TessDiscoveryScreenProps {
   onReplayTraining?: () => void
   /** After the training verdict's result card: move on to the next try. */
   onTrainingContinue?: () => void
+  /** SSL-746: share this finished readout, to ask for consensus or (when `reviewing`) to answer a review. */
+  onShareReadout?: (subjectId: string, readout: ConsensusReadout) => void
+  /** True when the player came here to do their own run on someone else's subject. */
+  reviewing?: boolean
 }
 
 const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body: string }> = {
@@ -62,7 +67,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
   // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
@@ -310,6 +315,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     { label: lc.fold ? 'FOLD OFF' : 'FOLD', line: lc.fold ? 'FOLD OFF' : 'FOLD', testId: 'tess-cmd-fold' },
     { label: `BIN ×${nextBin(lc.bin)}`, line: `BIN ${nextBin(lc.bin)}`, testId: 'tess-cmd-bin' },
     ...(sectors.length > 1 ? [{ label: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, line: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, testId: 'tess-cmd-sector' }] : []),
+    ...(classification && onShareReadout ? [{ label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', line: 'CONSENSUS', testId: 'tess-cmd-consensus' }] : []),
     { label: 'HELP', line: 'HELP', testId: 'tess-cmd-help' },
   ]
 
@@ -328,6 +334,11 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
+    if (head?.toUpperCase() === 'CONSENSUS' && classification && onShareReadout) {
+      // The catalogue period is the answer key, so it never travels with a readout.
+      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+      return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
+    }
     if (head?.toUpperCase() === 'HELP' || head === '?') {
       return { view, lines: ['> HELP', `FOLD [P|OFF] · PERIOD ${LIGHTCURVE_LIMITS.periodMin}-${LIGHTCURVE_LIMITS.periodMax}`, `TIME ${LIGHTCURVE_LIMITS.spanMin}-${LIGHTCURVE_LIMITS.spanMax} · SCAN 0-100`, 'BIN 1|2|4|8', `SECTOR 1-${Math.max(1, sectors.length)}`, 'ZOOM · FOCUS · POINT', 'FINISH  CONSOLE COLOUR'] }
     }
