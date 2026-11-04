@@ -1,5 +1,4 @@
-/* SSL-432: bottom sheet on phones, right-hand panel on desktop. Light
-   blueprint surfaces only. Every text size is 14px or larger and every
+/* SSL-432: bottom sheet on phones, right-hand panel on desktop. Two-tone (SSL-716). Every text size is 14px or larger and every
    control is at least 44px tall. */
 .scrim.scrim {
   /* Doubled class: `.ln-scene-panel > :not(...)` sets position: relative on a scene's direct children and would pin the sheet in flow behind the screen. */
@@ -16,20 +15,26 @@
 
 .sheet {
   width: 100%;
-  max-height: min(82dvh, 640px);
+  max-height: min(56dvh, 520px);
   display: flex;
   flex-direction: column;
-  /* The sheet is always a light surface, so pin its text and panel tokens: dark screens (theme-deep) would otherwise give light text on this white sheet. */
-  --ln-text: var(--ln-bp-ink, #0f2436);
-  --ln-text-muted: color-mix(in srgb, var(--ln-bp-ink, #0f2436) 72%, #fff);
-  --ln-panel: #f3f8fc;
-  --ln-cyan-border: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 45%, #fff);
-  background: var(--ln-blueprint-paper, #fff);
-  color: var(--ln-text);
+  /* Two-tone like the mission and Exchange scenes (SSL-716): navy head over a teal body, cream actions. Tokens are pinned so every scene theme gets the same sheet. */
+  --hs-ink: #f4efe4;
+  --hs-mute: #c9d0c2;
+  --hs-cyan: #58d0ea;
+  --hs-navy: #16204a;
+  --hs-teal: #1d5a70;
+  --ln-text: var(--hs-ink);
+  --ln-text-muted: var(--hs-mute);
+  --ln-panel: rgba(8, 16, 34, 0.34);
+  --ln-cyan-border: rgba(244, 239, 228, 0.28);
+  background: var(--hs-teal);
+  color: var(--hs-ink);
   border: 2px solid var(--ln-cyan-border);
   border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 -8px 0 var(--ln-blueprint-blue, #1f78c1);
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -10px 28px rgba(4, 8, 20, 0.45);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -38,13 +43,14 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
+  background: var(--hs-navy);
   border-bottom: 1px solid var(--ln-cyan-border);
 }
 
 .titleBlock { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.kicker { font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: 0.12em; color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); }
-.badge { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--ln-bp-blue, #1f78c1); border-radius: 8px; background: var(--ln-bp-blue-soft, rgba(31,120,193,.08)); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: .08em; }
-.num { font-family: var(--ln-font-mono); color: color-mix(in srgb, var(--ln-bp-blue, #1f78c1) 85%, var(--ln-bp-ink, #0f2436)); margin-right: 4px; }
+.kicker { font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: 0.12em; color: var(--hs-cyan); }
+.badge { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 2px solid var(--hs-cyan); border-radius: 999px; background: transparent; color: var(--hs-cyan); font-family: var(--ln-font-display); font-size: 14px; font-weight: 800; letter-spacing: .08em; }
+.num { font-family: var(--ln-font-mono); color: var(--hs-cyan); margin-right: 4px; }
 .title {
   flex: 1;
   min-width: 0;
@@ -61,19 +67,23 @@
   min-width: 44px;
   padding: 0 16px;
   cursor: pointer;
-  border-radius: var(--ln-r-md);
+  border-radius: 999px;
   border: 2px solid var(--ln-cyan-border);
-  background: var(--ln-panel);
+  background: transparent;
   color: var(--ln-text);
   font-family: var(--ln-font-display);
   font-size: 14px;
   font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
+.close { background: var(--hs-ink); border-color: var(--hs-ink); color: var(--hs-navy); }
+
 .primary {
-  background: var(--ln-bp-blue, #1f78c1);
-  border-color: var(--ln-bp-ink, #0f2436);
-  color: var(--ln-bp-paper, #fff);
+  background: var(--hs-ink);
+  border-color: var(--hs-ink);
+  color: var(--hs-navy);
 }
 
 .body {
@@ -82,14 +92,15 @@
   overflow-y: auto;
   padding: 12px 16px;
   display: grid;
+  align-content: start;
   gap: 12px;
 }
 
 .card {
   border: 1px solid var(--ln-cyan-border);
-  border-radius: var(--ln-r-md);
+  border-radius: 14px;
   background: var(--ln-panel);
-  padding: 12px;
+  padding: 12px 14px;
 }
 
 .card h3 {
@@ -139,6 +150,6 @@
     border: 0;
     border-left: 2px solid var(--ln-cyan-border);
     border-radius: 0;
-    box-shadow: -8px 0 0 var(--ln-blueprint-blue, #1f78c1);
+    box-shadow: -10px 0 28px rgba(4, 8, 20, 0.45);
   }
 }
