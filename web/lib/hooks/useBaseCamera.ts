@@ -16,6 +16,9 @@ import {
 /** Pixels a pointer must travel before a press becomes a pan, so taps on structures still open them. */
 const DRAG_THRESHOLD = 6
 
+/** Opening zoom on tall, narrow screens, anchored to the ground so the sky shrinks and the pad grows. */
+const PORTRAIT_HOME_ZOOM = 1.5
+
 /**
  * Pan (drag/swipe with inertia and soft edges) and zoom (pinch, wheel) for the base scene (SSL-503).
  * Attach `ref` to the viewport element and apply `transform` to the world element inside it.
@@ -45,7 +48,9 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
   useEffect(() => {
     if (homeX == null || !ref.current) return
     const v = view()
-    commit(clampCamera({ zoom: 1, x: v.w / 2 - homeX, y: 0 }, v))
+    // Upright phones: start zoomed in on the ground (SSL-716), so the launchpad is the subject, not a speck under empty sky.
+    const zoom = v.h > v.w * 1.3 ? PORTRAIT_HOME_ZOOM : 1
+    commit(clampCamera({ zoom, x: v.w / 2 - homeX * zoom, y: v.h * (1 - zoom) }, v))
   }, [commit, homeX, view, worldWidth])
 
   const stop = useCallback(() => { cancelAnimationFrame(raf.current) }, [])
