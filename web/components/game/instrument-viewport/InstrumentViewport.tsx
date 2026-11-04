@@ -87,7 +87,7 @@ interface InstrumentViewportProps {
 
 export interface InstrumentQuickCommand { label: string; line: string; testId?: string }
 
-const DEFAULT_QUICK_COMMANDS: InstrumentQuickCommand[] = [
+export const DEFAULT_QUICK_COMMANDS: InstrumentQuickCommand[] = [
   { label: 'ZOOM IN', line: 'ZOOM IN' },
   { label: 'ZOOM OUT', line: 'ZOOM OUT' },
   { label: 'HELP', line: 'HELP' },

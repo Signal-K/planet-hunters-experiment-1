@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { useHelp } from '@/components/ui/useHelp'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { DEFAULT_QUICK_COMMANDS, InstrumentAnswerRow, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/lib/data'
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import type { Player } from '@/lib/game-types'
+import type { ConsensusReadout } from '@/lib/community/consensus'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface SaturnStormSearchScreenProps {
@@ -23,6 +24,10 @@ interface SaturnStormSearchScreenProps {
   onBack: () => void
   onLaunchImager: () => void
   onSubmit: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
+  /** SSL-746: share this finished frame, to ask for consensus or (when `reviewing`) to answer a review. */
+  onShareReadout?: (subjectId: string, readout: ConsensusReadout) => void
+  /** True when the player came here to do their own run on someone else's frame. */
+  reviewing?: boolean
 }
 
 const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string; mark: string }> = [
@@ -78,7 +83,7 @@ function emptyCells(): CellState[] {
   return Array.from({ length: 9 }, () => ({ answer: null, storm: false }))
 }
 
-export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBack, onLaunchImager, onSubmit }: SaturnStormSearchScreenProps) {
+export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBack, onLaunchImager, onSubmit, onShareReadout, reviewing }: SaturnStormSearchScreenProps) {
   const classifications = useMemo(() => player.saturnClassifications ?? {}, [player.saturnClassifications])
   const [candidate, setCandidate] = useState<SaturnCandidate | null>(null)
   const [loading, setLoading] = useState(true)
@@ -107,7 +112,9 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
         const active = player.saturnActiveFrameId
           ? pool.find(item => item.id === player.saturnActiveFrameId) ?? digest.find(item => item.id === player.saturnActiveFrameId)
           : undefined
-        setCandidate(active ?? pickInstrumentInspectCandidate(digest, inspectSubjectId))
+        // A review opens the requested frame itself, ahead of the player's own active frame.
+        const requested = reviewing && inspectSubjectId ? pool.find(item => item.id === inspectSubjectId) : undefined
+        setCandidate(requested ?? active ?? pickInstrumentInspectCandidate(digest, inspectSubjectId))
       })
       .catch(() => { if (!cancelled) setCandidate(null) })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -115,7 +122,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     // Classifications stay out of the dependency list so a submission does not
     // clear the frame before the saved state can render (KES-116).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inspectSubjectId, player.freeOperations, player.saturnImagerLaunchedAt])
+  }, [inspectSubjectId, player.freeOperations, player.saturnImagerLaunchedAt, reviewing])
 
   useEffect(() => {
     setSelected(2)
@@ -215,6 +222,10 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     }
     if (verb === 'SHARPEN') { setSharpen(on => !on); return { view, lines: [`> SHARPEN  ${sharpen ? 'OFF' : 'ON'}`] } }
     if (verb === 'LOUPE') { setLoupe(on => !on); return { view, lines: [`> LOUPE  ${loupe ? 'OFF' : 'ON'}`] } }
+    if (verb === 'CONSENSUS' && complete && onShareReadout) {
+      onShareReadout(candidate.id, { verdict: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE`, rows: readoutRows.map(({ label, value }) => ({ label, value })) })
+      return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
+    }
     return null
   }
 
@@ -262,6 +273,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       onBack={onBack}
       status={complete ? 'FRAME COMPLETE' : `PIECES ${pieces} / 9`}
       onCommand={onCommand}
+      quickCommands={complete && onShareReadout ? [...DEFAULT_QUICK_COMMANDS, { label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', line: 'CONSENSUS', testId: 'saturn-cmd-consensus' }] : undefined}
       help={help.button}
       helpLayer={help.layer}
       simple={simpleConsole}

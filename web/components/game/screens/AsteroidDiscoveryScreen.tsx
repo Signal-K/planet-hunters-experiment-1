@@ -4,11 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { useHelp } from '@/components/ui/useHelp'
 import AsteroidSkyPlot, { SKY_FIELD_LIMITS, eclipticLatitude } from '@/components/game/AsteroidSkyPlot'
-import InstrumentViewport, { InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentStandbyViewport, InstrumentSwitch, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
+import InstrumentViewport, { DEFAULT_QUICK_COMMANDS, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentStandbyViewport, InstrumentSwitch, type InstrumentReadoutRow } from '@/components/game/instrument-viewport/InstrumentViewport'
 import type { InstrumentCommandResult, InstrumentView } from '@/lib/instrument-viewport/view'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
+import type { ConsensusReadout } from '@/lib/community/consensus'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { asteroidFeedOnline, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
@@ -21,6 +22,10 @@ interface AsteroidDiscoveryScreenProps {
   onBack: () => void
   onLaunchTelescope: () => void
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
+  /** SSL-746: share this finished readout, to ask for consensus or (when `reviewing`) to answer a review. */
+  onShareReadout?: (subjectId: string, readout: ConsensusReadout) => void
+  /** True when the player came here to do their own run on someone else's subject. */
+  reviewing?: boolean
 }
 
 /** Widest ecliptic offset the OFFSET knob can log, in degrees. */
@@ -36,7 +41,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string }> = [
   { id: 'unsure', label: 'Skip' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onLaunchTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onLaunchTelescope, onSubmit, onShareReadout, reviewing }: AsteroidDiscoveryScreenProps) {
   const classifications = useMemo(() => player.asteroidClassifications ?? {}, [player.asteroidClassifications])
   const [candidate, setCandidate] = useState<AsteroidCandidate | null>(null)
   const [loading, setLoading] = useState(true)
@@ -79,7 +84,9 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
         const today = instrumentDigestDateKey(todayDate)
         const nextDaily = unresolvedDeepSpaceInstrumentDigest(liveCandidates, player, today)
-        setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
+        // A review opens the requested subject itself, even when today's digest no longer lists it.
+        const requested = reviewing && inspectSubjectId ? liveCandidates.find(item => item.id === inspectSubjectId) : undefined
+        setCandidate(requested ?? pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
       })
       .catch(error => {
         console.warn('[NEOCP] live candidate fetch failed', error)
@@ -95,7 +102,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     // Classifications stay out of the dependency list so a fresh submission
     // does not clear the candidate before the saved state can render (KES-116).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.placed, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.placed, player.deepSpaceTelescopeLevel, devDayOffset, retryToken, reviewing])
 
   const devBar = process.env.NODE_ENV === 'development' ? (
     <InstrumentDevDayBar testIdPrefix="neocp" offset={devDayOffset} onAdvance={() => setDevDayOffset(offset => offset + 1)} onReset={() => setDevDayOffset(0)} />
@@ -193,6 +200,11 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       setOffsetRead(next)
       return { view, lines: [`> OFFSET  ${signed(next)} LOGGED`] }
     }
+    if (verb === 'CONSENSUS' && classification && onShareReadout) {
+      // The true ecliptic offset is the answer key, so it never travels with a readout.
+      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'True ecl offset').map(({ label, value }) => ({ label, value })) })
+      return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
+    }
     return null
   }
 
@@ -230,6 +242,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       devBar={devBar}
       onCommand={onCommand}
+      quickCommands={classification && onShareReadout ? [...DEFAULT_QUICK_COMMANDS, { label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', line: 'CONSENSUS', testId: 'neocp-cmd-consensus' }] : undefined}
       module={{
         name: 'ASTROMETRY · AS-03',
         testId: 'neocp-astrometry',

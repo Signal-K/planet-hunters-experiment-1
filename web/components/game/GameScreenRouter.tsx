@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { requestConsensus } from '@/lib/community/client'
-import type { ConsensusQueueItem } from '@/lib/community/consensus'
+import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/lib/community/consensus'
 import type { PendingConsensusReview } from '@/components/game/screens/CommunityConsensus'
 import { useGame } from '@/game-context'
 import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
@@ -115,6 +115,19 @@ function ScreenBody({
   // SSL-746: a review in progress, and the reviewer's own finished run waiting to be compared.
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
+
+  /** SSL-746: a finished readout either asks for consensus, or (in review mode) answers the review. */
+  const shareReadout = (project: ConsensusProject, subjectId: string, readout: ConsensusReadout) => {
+    if (reviewTarget?.project === project) {
+      setPendingReview({ requestId: reviewTarget.id, project, subjectId, ownReadout: readout })
+      setReviewTarget(null)
+      setInspectSignal(null)
+      return game.go('community-research')
+    }
+    requestConsensus(project, subjectId, readout)
+      .then(() => game.addToast('Asked the community to check it. See Community research > Review.', 'ok'))
+      .catch(() => game.addToast('Could not send the request. Check your connection.', 'warn'))
+  }
   const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
 
   // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
@@ -409,17 +422,7 @@ function ScreenBody({
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
           reviewing={reviewTarget?.project === 'tess'}
-          onShareReadout={(subjectId, readout) => {
-            if (reviewTarget?.project === 'tess') {
-              setPendingReview({ requestId: reviewTarget.id, project: 'tess', subjectId, ownReadout: readout })
-              setReviewTarget(null)
-              setInspectSignal(null)
-              return game.go('community-research')
-            }
-            requestConsensus('tess', subjectId, readout)
-              .then(() => game.addToast('Asked the community to check it. See Community research > Review.', 'ok'))
-              .catch(() => game.addToast('Could not send the request. Check your connection.', 'warn'))
-          }}
+          onShareReadout={(subjectId, readout) => shareReadout('tess', subjectId, readout)}
           onChooseTarget={game.chooseSatelliteTarget}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
           onTrainingContinue={() => game.go('hangar')}
@@ -432,9 +435,11 @@ function ScreenBody({
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => game.goBack()}
+          onBack={() => { setReviewTarget(null); game.goBack() }}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
+          reviewing={reviewTarget?.project === 'asteroid'}
+          onShareReadout={(subjectId, readout) => shareReadout('asteroid', subjectId, readout)}
         />
       )
 
@@ -443,9 +448,11 @@ function ScreenBody({
         <SaturnStormSearchScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
-          onBack={() => game.goBack()}
+          onBack={() => { setReviewTarget(null); game.goBack() }}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
+          reviewing={reviewTarget?.project === 'saturn'}
+          onShareReadout={(subjectId, readout) => shareReadout('saturn', subjectId, readout)}
         />
       )
 
@@ -591,11 +598,15 @@ function ScreenBody({
           pendingReview={pendingReview}
           onFinishReview={() => setPendingReview(null)}
           onStartReview={item => {
-            // Only transit reviews are wired to an instrument so far; the others join in their own slices.
-            if (item.project !== 'tess') return game.addToast('Reviewing this kind is coming soon.', 'info')
+            // Each kind opens on its own instrument, on the requester's subject, for the player's own run first.
+            const route = {
+              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'galaxy' },
+              asteroid: { kind: 'deep-space', instrumentId: 'deep-space-telescope', inspectorScreen: 'asteroid-discovery' },
+              saturn: { kind: 'saturn', instrumentId: 'saturn-imager', inspectorScreen: 'saturn-storm-search' },
+            }[item.project] as { kind: InstrumentSignal['kind']; instrumentId: InstrumentSignal['instrumentId']; inspectorScreen: InstrumentSignal['inspectorScreen'] }
             setReviewTarget(item)
-            setInspectSignal({ id: item.subjectId, kind: 'transit', instrumentId: 'transit-telescope', title: item.subjectId, subtitle: '', inspectorScreen: 'galaxy' })
-            game.go('galaxy')
+            setInspectSignal({ id: item.subjectId, title: item.subjectId, subtitle: '', ...route })
+            game.go(route.inspectorScreen)
           }}
           onGo={kind => {
             // SSL-714: from mission 3 on, the Orionids step happens on ORI-1, not the mission board.
