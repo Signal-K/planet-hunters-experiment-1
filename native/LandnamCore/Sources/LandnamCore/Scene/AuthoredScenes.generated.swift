@@ -569,6 +569,15 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "Return to the base."
+        },
+        {
+          "id": "community-ballots",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-757: the sky vote and the launch vote beside the weekly path choice (Votes tab once a path is chosen). Server-owned ballots; one vote per player, changeable until close. Stage fixtures: add &ballots=open, &ballots=voted or &ballots=closed to /game/stage?preset=ui-community-research. Never blocks path choice."
         }
       ]
     },

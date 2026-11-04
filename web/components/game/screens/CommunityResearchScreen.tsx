@@ -7,6 +7,8 @@ import { communityBar, historicalContributionMonths, researchMonthHistory, stamp
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
+import CommunityBallots from './CommunityBallots'
+import { useBallots } from '@/lib/community/useBallots'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
@@ -93,7 +95,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
-  const [readout, setReadout] = useState<'mission' | 'rewards'>('mission')
+  const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
+  // SSL-757: community votes. They sit beside the path choice and never block it.
+  const ballotState = useBallots(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -149,6 +153,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
+                <CommunityBallots state={ballotState} />
                 <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
               {confirmingPath && (
@@ -184,6 +189,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
                   <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
                   <button type="button" role="tab" aria-selected={readout === 'rewards'} onClick={() => setReadout('rewards')}>Rewards</button>
+                  <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
                 {readout === 'mission' ? <>
                   <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
@@ -195,6 +201,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                     {days.map(day => <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}><i aria-hidden="true" /><span>{day.letter}</span></div>)}
                   </div>
                   <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
+                </> : readout === 'votes' ? <>
+                  <h2>Community votes</h2>
+                  <CommunityBallots state={ballotState} />
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">

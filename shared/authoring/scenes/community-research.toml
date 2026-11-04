@@ -5,7 +5,8 @@ format = 1
 id = "community-research"
 type = "menu"
 name = "Community research"
-summary = "Daily stamps, the shared monthly bar and the live event week."
+summary = "Daily stamps, the shared monthly bar, the live event week and the community votes."
+tickets = ["SSL-757"]
 qa = ["community-research"]
 
 [runtime]
@@ -40,3 +41,10 @@ kind = "button"
 layout = "host"
 mechanics = ["records"]
 note = "Return to the base."
+
+[[objects]]
+id = "community-ballots"
+kind = "panel"
+layout = "host"
+mechanics = ["records"]
+note = "SSL-757: the sky vote and the launch vote beside the weekly path choice (Votes tab once a path is chosen). Server-owned ballots; one vote per player, changeable until close. Stage fixtures: add &ballots=open, &ballots=voted or &ballots=closed to /game/stage?preset=ui-community-research. Never blocks path choice."

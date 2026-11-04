@@ -4,6 +4,8 @@
 import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 import type { CommunityResearch } from '@/lib/research/stamps'
+import type { Ballot, BallotsResponse } from './ballots'
+import { queueCommunityPost } from '@/lib/offline/pbOutbox'
 
 export interface FriendWorldSnapshot {
   username: string
@@ -40,4 +42,39 @@ export { CommunityApiError }
 /** SSL-673: this month's community research total, without the caller's own stamps. */
 export function fetchCommunityResearch(): Promise<CommunityResearch> {
   return communityFetch('/research')
+}
+
+/** SSL-757: the open, pending and closed ballots with the caller's own vote. */
+export function fetchBallots(): Promise<BallotsResponse> {
+  return communityFetch('/ballots')
+}
+
+export type CastVoteResult = { kind: 'saved'; ballot: Ballot } | { kind: 'queued' }
+
+/**
+ * Cast or change a vote. The server decides whether the ballot is still open. When the
+ * network is down the vote waits in the offline outbox (shown in the sync tray as
+ * Community research) and the last choice sent is the one that counts. A rejection from
+ * the server (closed, unknown option) is thrown so the screen can say so.
+ */
+export async function castVote(ballot: string, option: string): Promise<CastVoteResult> {
+  const token = pbLandnam.authStore.token
+  let res: Response
+  try {
+    res = await fetch(`${landnamPbUrl().replace(/\/$/, '')}/api/community/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ ballot, option }),
+    })
+  } catch {
+    queueCommunityPost('/vote', { ballot, option })
+    return { kind: 'queued' }
+  }
+  const body = await res.json().catch(() => ({}))
+  if (res.status === 401 || res.status === 403 || res.status >= 502) {
+    queueCommunityPost('/vote', { ballot, option })
+    return { kind: 'queued' }
+  }
+  if (!res.ok) throw new CommunityApiError(body?.message || 'vote failed', res.status)
+  return { kind: 'saved', ballot: body.ballot as Ballot }
 }

@@ -1,7 +1,7 @@
 /* Two tones: the task and its story on the left, your week and the way in on the right. Tiles and the Go button come from MissionBoard.module.css. */
 .workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .34); }
 .left { background: rgba(60, 44, 118, .5); display: flex; flex-direction: column; align-items: stretch; gap: 18px; padding: 84px clamp(16px, 4vw, 48px) 32px; min-width: 0; }
-.right { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 72px clamp(16px, 4vw, 48px) 32px; min-width: 0; text-align: center; }
+.right { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; align-items: center; justify-content: safe center; overflow-y: auto; gap: 16px; padding: 72px clamp(16px, 4vw, 48px) 32px; min-width: 0; text-align: center; }
 .right > h2 { margin: 0; color: #9de7ef; font: 800 18px/1.1 var(--ln-font-display); text-transform: uppercase; letter-spacing: .12em; }
 .left .tiles.tiles { padding: 0 !important; background: none; width: 100%; gap: 0; }
 .left .tiles.tiles .offerStrip { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
@@ -19,7 +19,7 @@
 .pathCopy b { color: #b8c8c0; font: 800 12px/1 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .pathCopy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 16px/1.15 var(--ln-font-display); }
 .pathCount { color: #c9d0c2; font: 800 14px/1 var(--ln-font-body); }
-.readoutTabs { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 340px); padding: 4px; border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; background: rgba(8, 16, 34, .22); }
+.readoutTabs { display: grid; grid-template-columns: repeat(3, 1fr); width: min(100%, 400px); padding: 4px; border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; background: rgba(8, 16, 34, .22); }
 .readoutTabs button { min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: #c9d0c2; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .readoutTabs button[aria-selected='true'] { background: #f4efe4; color: #142840; box-shadow: 0 2px 8px rgba(8, 16, 34, .28); }
 .readoutCopy { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 17px/1.35 var(--ln-font-body); }
