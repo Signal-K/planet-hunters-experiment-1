@@ -72,6 +72,8 @@ export function validateBuild(opts: {
   parts?: typeof PARTS
     /** Cargo units and orbit reach added by fitted customizer parts; the builder chips already show them (SSL-647). */
   loadoutBonus?: { capacity: number; range: number }
+  /** The monthly community goal's fuel efficiency as a fraction (0.07); adds orbit reach (SSL-685). */
+  fuelFraction?: number
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
   const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
@@ -80,7 +82,8 @@ export function validateBuild(opts: {
 
   const problems: string[] = []
   const holds: BuildHold[] = []
-  const maxOrbit = (propulsion.max_orbit ?? 0) + (opts.loadoutBonus?.range ?? 0)
+  const fittedOrbit = (propulsion.max_orbit ?? 0) + (opts.loadoutBonus?.range ?? 0)
+  const maxOrbit = fittedOrbit + (fittedOrbit > 0 && (opts.fuelFraction ?? 0) > 0 ? Math.max(1, Math.ceil(fittedOrbit * opts.fuelFraction!)) : 0)
   const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
   const requiredOrbit = Math.max(0, target.orbit - infrastructureOrbitBonus)
   if (maxOrbit < requiredOrbit) {

@@ -33,6 +33,8 @@ interface RocketBuilderSceneProps {
   hasStagedRocket?: boolean
   rocket: RocketConfig
   installed?: BuilderLoadout | null
+  /** Community goal fuel efficiency as a fraction; extends the Range chip (SSL-685). */
+  fuelFraction?: number
   missionsDone: number
   towerLabel: string
   launchTestId?: string
@@ -67,6 +69,7 @@ export default function RocketBuilderScene({
   hasStagedRocket = false,
   rocket,
   installed,
+  fuelFraction = 0,
   missionsDone,
   towerLabel,
   launchTestId = 'launch-btn',
@@ -103,7 +106,7 @@ export default function RocketBuilderScene({
   // The pad and the cinematic must resolve the physical vehicle from the
   // same config. A display name is copy; it is not a stable visual identity.
   const rocketId = rocketModelForConfig(rocket).id
-  const stats = rocketBuilderStats(rocket, loadout)
+  const stats = rocketBuilderStats(rocket, loadout, undefined, fuelFraction)
   const fitted = fittedModules(loadout)
   const fittedCount = BUILDER_SLOTS.filter(slot => partIdForSlot(loadout, slot)).length
   const targetLabel = target ? target.name : 'Choose a mission'

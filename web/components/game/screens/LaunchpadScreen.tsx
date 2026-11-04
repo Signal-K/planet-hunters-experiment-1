@@ -1,5 +1,6 @@
 'use client'
 
+import { communityBonusRate } from '@/lib/research/marketplace'
 import React, { useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
@@ -94,6 +95,7 @@ export default function LaunchpadScreen({
         hasStagedRocket={hasStagedRocket}
         rocket={rocket}
         installed={player.shipCustomizerParts}
+        fuelFraction={communityBonusRate(player).fuel}
         missionsDone={missionsDone}
         towerLabel={towerLabel}
         launchTestId={launchTestId}

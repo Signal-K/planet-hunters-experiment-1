@@ -1,4 +1,5 @@
 import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
+import { communityBonusRate } from '@/lib/research/marketplace'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
@@ -103,6 +104,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     rocket: stagedRocket.rocket,
     parts: catalog.parts,
     loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
+    fuelFraction: communityBonusRate(state.player).fuel,
   }).ok
 }
 
