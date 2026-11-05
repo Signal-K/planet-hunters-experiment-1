@@ -7,8 +7,7 @@ import type { MineralMeta, Mission, Target } from '@/lib/data'
 import { deliveryUnloadProgress } from '@/lib/systems/DeliverySystem'
 import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 import { formatCurrency, formatCountdown } from '@/lib/format'
-import TopBar from '@/components/ui/TopBar'
-import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
+import { SceneActions, SceneCard, SceneGhost, SceneMeter, SceneMeterHead, SceneNote, ScenePill, ScenePrimary, SceneRow, SceneRows, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import DeliveryCanvas from './DeliveryCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
@@ -147,17 +146,23 @@ export default function DeliveryScreen({
     return () => window.clearTimeout(id)
   }, [useTakeonDropoff, progress, onComplete])
 
+  const manifest = (
+    <SceneRows testId="delivery-cargo-hold">
+      {cargoEntries.map(([id, amount]) => {
+        const mineral = minerals[id]
+        return <SceneRow key={id} swatch={mineral?.color ?? '#7a879a'} label={mineral?.name ?? id} value={`${amount} U`} />
+      })}
+    </SceneRows>
+  )
+  const fee = (
+    <div data-testid="delivery-service-fee">
+      <SceneRow label="TRANSPORT SERVICE FEE" sub="Settles at Earth debrief" value={formatCurrency(transportFee)} />
+    </div>
+  )
+
   if (useTakeonDropoff) {
     return (
-      <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
-        <TopBar
-          eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
-          title="Cargo Transfer"
-          onBack={onBack}
-          right={help.button}
-        />
-        {help.layer}
-
+      <div className={`game-screen ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
         <div className={styles.stage}>
           <TakeOnMount
             ref={takeonRef}
@@ -173,126 +178,67 @@ export default function DeliveryScreen({
           />
           {!dumped && <div className={`${styles.siteLock} lock-on`} data-testid="delivery-site-lock" aria-hidden="true" />}
         </div>
+        <SceneVignette />
 
-        <section className={styles.hud} aria-label="Cargo unload status">
-          <div className={styles.statusRow}>
-            <div>
-              {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
-              <div className={styles.kicker}>{roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'}</div>
-              <div className={styles.contract}>{clientName ?? 'CLIENT SITE'} · {target.name}</div>
-            </div>
-            <span className={styles.timer}>{roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'}</span>
+        <SceneTop onBack={onBack}>
+          <ScenePill>Cargo transfer</ScenePill>
+          <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>SITE</i> {target.name}</ScenePill>
+          <span style={{ display: 'inline-flex' }}>{help.button}</span>
+        </SceneTop>
+        {help.layer}
+
+        <SceneCard label="Cargo unload status">
+          <div className={styles.cardHead}>
+            {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
+            <SceneMeterHead kicker={roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'} value={roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'} />
           </div>
+          {manifest}
+          {fee}
+          {dumpError && <SceneNote>{dumpError}</SceneNote>}
+          {dumped && !roverReturned && <SceneNote>Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.</SceneNote>}
+          {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth and settle the transport fee.</SceneNote>}
+        </SceneCard>
 
-          <div className={styles.manifest} data-testid="delivery-cargo-hold">
-            {cargoEntries.map(([id, amount]) => {
-              const mineral = minerals[id]
-              return (
-                <div className={styles.cargoRow} key={id}>
-                  <span className={styles.swatch} style={{ background: mineral?.color ?? '#7a879a' }} />
-                  <span>{mineral?.name ?? id}</span>
-                  <strong>{amount} U</strong>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className={styles.fee} data-testid="delivery-service-fee">
-            <div>
-              <span>TRANSPORT SERVICE FEE</span>
-              <small>Settles at Earth debrief</small>
-            </div>
-            <strong>{formatCurrency(transportFee)}</strong>
-          </div>
-
-          {dumpError && <div className={styles.dumpError} role="status">{dumpError}</div>}
+        <SceneActions>
           {!dumped ? (
-            <button type="button" className={styles.dumpBtn} disabled={!takeonReady} data-testid="delivery-dump-cargo" onClick={handleDump}>
-              {takeonReady ? 'Dump Cargo At Building Site' : 'Preparing Rover'}
-            </button>
+            <ScenePrimary testId="delivery-dump-cargo" disabled={!takeonReady} onClick={handleDump}>
+              {takeonReady ? 'Dump cargo at building site' : 'Preparing rover'}
+            </ScenePrimary>
           ) : (
-            <PrimaryBtn disabled={roverReturned} testId="delivery-return-rover" onClick={() => setRoverReturned(true)}>
-              {roverReturned ? 'Rover Redocked · Launch Ready' : 'Return Rover To Ship'}
-            </PrimaryBtn>
+            <ScenePrimary testId="delivery-return-rover" disabled={roverReturned} onClick={() => setRoverReturned(true)}>
+              {roverReturned ? 'Rover redocked · launch ready' : 'Return rover to ship'}
+            </ScenePrimary>
           )}
-          {dumped && !roverReturned && (
-            <div className={styles.transferNote} role="status">
-              Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.
-            </div>
-          )}
-          {roverReturned && (
-            <div className={styles.transferNote} role="status">
-              Rover secured. The ship is ready to launch for Earth and settle the transport fee.
-            </div>
-          )}
-          <GhostBtn onClick={onBack}>PAUSE AT HUB</GhostBtn>
-        </section>
+          <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
+        </SceneActions>
       </div>
     )
   }
 
   return (
-    <div className={`game-screen theme-blueprint ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
-      <TopBar
-        eyebrow={`DELIVERY TARGET · ${target.name.toUpperCase()}`}
-        title="Cargo Transfer"
-        onBack={onBack}
-        right={help.button}
-      />
-      {help.layer}
-
+    <div className={`game-screen ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
       <div className={styles.stage}>
         <DeliveryCanvas progress={progress} cargoUnits={cargoUnits} />
-        <div className={styles.targetLabel}>
-          <span>BERTH</span>
-          <strong>{target.name}</strong>
-        </div>
       </div>
+      <SceneVignette />
 
-      <section className={styles.hud} aria-label="Cargo unload status">
-        <div className={styles.statusRow}>
-          <div>
-            <div className={styles.kicker}>{progress >= 1 ? 'TRANSFER VERIFIED' : 'UNLOAD IN PROGRESS'}</div>
-            <div className={styles.contract}>{mission.title}</div>
-          </div>
-          <div className={styles.timer}>{progress >= 1 ? 'SECURED' : formatCountdown(remainingMs)}</div>
-        </div>
+      <SceneTop onBack={onBack}>
+        <ScenePill>Cargo transfer</ScenePill>
+        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>BERTH</i> {target.name}</ScenePill>
+        <span style={{ display: 'inline-flex' }}>{help.button}</span>
+      </SceneTop>
+      {help.layer}
 
-        <div className={styles.progressMeta}>
-          <span>SHIP HOLD → CONTRACT DEPOT</span>
-          <strong data-testid="delivery-progress">{progressPct}%</strong>
-        </div>
-        <div className={styles.track}>
-          <div className={styles.fill} style={{ width: `${progressPct}%` }} />
-        </div>
+      <SceneCard label="Cargo unload status">
+        <SceneMeter kicker={progress >= 1 ? 'TRANSFER VERIFIED' : 'UNLOAD IN PROGRESS'} value={progress >= 1 ? 'SECURED' : formatCountdown(remainingMs)} pct={progressPct} caption="SHIP HOLD → CONTRACT DEPOT" captionValue={`${progressPct}%`} testId="delivery-progress" />
+        {manifest}
+        <SceneRows><SceneRow label="HOLD REMAINING" value={`${Math.max(0, Math.round(cargoUnits * (1 - progress)))} U`} /></SceneRows>
+        {fee}
+      </SceneCard>
 
-        <div className={styles.manifest} data-testid="delivery-cargo-hold">
-          {cargoEntries.map(([id, amount]) => {
-            const mineral = minerals[id]
-            return (
-              <div className={styles.cargoRow} key={id}>
-                <span className={styles.swatch} style={{ background: mineral?.color ?? '#7a879a' }} />
-                <span>{mineral?.name ?? id}</span>
-                <strong>{amount} U</strong>
-              </div>
-            )
-          })}
-          <div className={styles.holdState}>
-            <span>HOLD REMAINING</span>
-            <strong>{Math.max(0, Math.round(cargoUnits * (1 - progress)))} U</strong>
-          </div>
-        </div>
-
-        <div className={styles.fee} data-testid="delivery-service-fee">
-          <div>
-            <span>TRANSPORT SERVICE FEE</span>
-            <small>Settles at Earth debrief</small>
-          </div>
-          <strong>{formatCurrency(transportFee)}</strong>
-        </div>
-
-        <GhostBtn onClick={onBack}>PAUSE AT HUB</GhostBtn>
-      </section>
+      <SceneActions>
+        <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
+      </SceneActions>
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { formatCountdown } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import LandingScene from './LandingScene'
+import { SceneActions, SceneCard, SceneGhost, SceneMeter, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './LandingScreen.module.css'
 
 interface LandingScreenProps {
@@ -84,35 +85,24 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
 
   return (
     <div className={`game-screen ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
-      <div className={styles.stage}>
-        <LandingScene target={target} progress={progress} mode={mode} />
-      </div>
-      <div className={styles.vignette} aria-hidden="true" />
+      <LandingScene target={target} progress={progress} mode={mode} />
+      <SceneVignette />
 
-      <div className={styles.top}>
-        <button type="button" className={styles.back} onClick={onBack}>BACK</button>
-        <span className={styles.eyebrow}>{copy.eyebrow}</span>
-        <span className={styles.target}><i>TARGET</i> {target.name}</span>
-        <span className={styles.help}>{help.button}</span>
-      </div>
+      <SceneTop onBack={onBack}>
+        <ScenePill>{copy.eyebrow}</ScenePill>
+        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>TARGET</i> {target.name}</ScenePill>
+        <span style={{ display: 'inline-flex' }}>{help.button}</span>
+      </SceneTop>
       {help.layer}
 
-      <section className={styles.hud} aria-label="Landing sequence status">
-        <div className={styles.statusRow}>
-          <div className={styles.kicker}>{ready ? copy.ready : copy.inProgress}</div>
-          <div className={styles.timer}>{ready ? 'READY' : formatCountdown(remainingMs)}</div>
-        </div>
-        <div className={styles.track}><div className={styles.fill} style={{ width: `${progressPct}%` }} /></div>
-        <div className={styles.progressMeta}>
-          <span>{copy.progressLabel}</span>
-          <strong data-testid="landing-progress">{progressPct}%</strong>
-        </div>
-      </section>
+      <SceneCard label="Landing sequence status">
+        <SceneMeter kicker={ready ? copy.ready : copy.inProgress} value={ready ? 'READY' : formatCountdown(remainingMs)} pct={progressPct} caption={copy.progressLabel} captionValue={`${progressPct}%`} testId="landing-progress" />
+      </SceneCard>
 
-      <div className={styles.action}>
-        <button type="button" className={styles.primary} data-testid="landing-continue" disabled={!ready} onClick={onContinue}>{copy.cta}</button>
-        <button type="button" className={styles.ghost} onClick={onBack}>PAUSE AT HUB</button>
-      </div>
+      <SceneActions>
+        <ScenePrimary testId="landing-continue" disabled={!ready} onClick={onContinue}>{copy.cta}</ScenePrimary>
+        <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
+      </SceneActions>
     </div>
   )
 }

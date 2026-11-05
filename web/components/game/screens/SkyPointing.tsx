@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
+import { SceneActions, ScenePill, ScenePrimary, SceneTop } from '@/components/game/hud/SceneChrome'
 import styles from './SkyPointing.module.css'
 
 const SPEED = 46 // view units per second at full stick
@@ -207,10 +208,9 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
         <span key={t.id} className={styles.label} data-active={readout?.id === t.id} data-side={t.side ?? 'below'} style={{ ...(t.side === 'above' ? pct(t.x, t.y - t.hh) : t.side === 'left' ? pct(t.x - t.hw, t.y) : t.side === 'right' ? pct(t.x + t.hw, t.y) : pct(t.x, t.y + t.hh)) }}>{t.name}</span>
       ))}
 
-      <div className={styles.top}>
-        <button type="button" className={styles.back} data-testid="sky-pointing-back" onClick={onCancel}>BACK</button>
-        <span className={styles.station} data-testid="sky-station">{view.station}</span>
-      </div>
+      <SceneTop onBack={onCancel} testId="sky-pointing-back">
+        <ScenePill align="end" testId="sky-station">{view.station}</ScenePill>
+      </SceneTop>
 
       <div className={styles.caption}>
         <h2 className={styles.title} data-testid="sky-pointing-title">{lockedNow ? `${INSTRUMENTS[lockedNow.instrument].name}: ${lockedNow.target.name}` : readout ? readout.name : view.name}</h2>
@@ -242,15 +242,15 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
         </>
       )}
 
-      <div className={styles.action}>
+      <SceneActions className={styles.actionSlot}>
         {confirmed ? (
-          <button type="button" className={styles.primary} data-testid="sky-pointing-done" onClick={() => onLock(confirmed.instrument)}>SIGNALS INCOMING · CONTINUE</button>
+          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
         ) : (
-          <button type="button" className={styles.primary} data-testid="sky-pointing-lock" disabled={!over} onClick={() => over && setConfirmed({ instrument, id: over.id })}>
+          <ScenePrimary testId="sky-pointing-lock" disabled={!over} onClick={() => over && setConfirmed({ instrument, id: over.id })}>
             {over ? view.lockLabel : 'STEER TO A TARGET'}
-          </button>
+          </ScenePrimary>
         )}
-      </div>
+      </SceneActions>
       <span hidden>{unitsPerPx}</span>
     </div>
   )

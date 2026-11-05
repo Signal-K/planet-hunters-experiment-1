@@ -1358,7 +1358,7 @@ enum AuthoredSceneDeclarations {
         "surface": "canvas",
         "web": [
           "web/components/game/screens/LandingScreen.tsx",
-          "web/components/game/screens/LandingCanvas.tsx"
+          "web/components/game/screens/LandingScene.tsx"
         ],
         "native": [
           "native/App/Screens/FlightScreens.swift"

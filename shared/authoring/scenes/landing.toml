@@ -10,7 +10,7 @@ qa = ["landing"]
 
 [runtime]
 surface = "canvas"
-web = ["web/components/game/screens/LandingScreen.tsx", "web/components/game/screens/LandingCanvas.tsx"]
+web = ["web/components/game/screens/LandingScreen.tsx", "web/components/game/screens/LandingScene.tsx"]
 native = ["native/App/Screens/FlightScreens.swift"]
 engine = ["web/public/game/scenes/landing.scene.json"]
 

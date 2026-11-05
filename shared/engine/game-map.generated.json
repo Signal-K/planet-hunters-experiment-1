@@ -1135,7 +1135,7 @@
         ],
         "web": [
           "web/components/game/screens/LandingScreen.tsx",
-          "web/components/game/screens/LandingCanvas.tsx"
+          "web/components/game/screens/LandingScene.tsx"
         ],
         "native": [
           "native/App/Screens/FlightScreens.swift"
@@ -1983,6 +1983,7 @@
       "web/components/game/hub/StashChip.tsx",
       "web/components/game/hub/TerrainScene.tsx",
       "web/components/game/hub/WorldBackdrop.tsx",
+      "web/components/game/hud/SceneChrome.tsx",
       "web/components/game/instrument-viewport/InstrumentViewport.tsx",
       "web/components/game/orionids/OrionidsPlanetMark.tsx",
       "web/components/game/orionids/OrionidsShowerChrome.tsx",
@@ -2007,7 +2008,6 @@
       "web/components/game/screens/HubScreen.tsx",
       "web/components/game/screens/InstrumentHubScreen.tsx",
       "web/components/game/screens/IntroScreen.tsx",
-      "web/components/game/screens/LandingCanvas.tsx",
       "web/components/game/screens/LandingScene.tsx",
       "web/components/game/screens/LandingScreen.tsx",
       "web/components/game/screens/LaserCapacitorPanel.tsx",
