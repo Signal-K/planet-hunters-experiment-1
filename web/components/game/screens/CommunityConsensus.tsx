@@ -139,7 +139,7 @@ export default function CommunityConsensus(props: Props) {
       </button>
       {open && createPortal(
         <div className={sheet.backdrop} onClick={event => { if (event.target === event.currentTarget) setOpen(false) }}>
-          <div className={sheet.sheet} role="dialog" aria-modal="true" aria-label="Review" data-testid="community-consensus-sheet">
+          <div className={sheet.sheet} aria-label="Review" data-testid="community-consensus-sheet">
             <header className={sheet.head}>
               <button type="button" className={sheet.back} aria-label="Close review" onClick={() => setOpen(false)}>×</button>
             </header>

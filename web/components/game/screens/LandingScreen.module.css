@@ -114,8 +114,15 @@
 }
 
 @media (orientation: landscape) and (max-width: 1023px) {
+  /* The scene gets the full height; status sits beside it. */
+  .screen {
+    flex-direction: row;
+  }
+
   .stage {
-    min-height: 96px;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
     margin-top: 56px;
   }
 
@@ -126,13 +133,13 @@
   }
 
   .hud {
-    gap: 4px;
-    padding: 8px 12px;
-  }
-
-  .contract,
-  .timer {
-    font-size: var(--ln-fs-micro);
+    width: 300px;
+    justify-content: center;
+    gap: 8px;
+    padding: 64px 14px 12px;
+    border-top: 0;
+    border-left: 1px solid rgba(112,217,234, .18);
+    background: linear-gradient(90deg, var(--ln-panel), var(--ln-void) 30%);
   }
 
   .progressMeta {

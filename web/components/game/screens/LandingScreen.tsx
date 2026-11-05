@@ -12,7 +12,7 @@ import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController
 import { formatCountdown } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
-import LandingCanvas from './LandingCanvas'
+import LandingScene from './LandingScene'
 import styles from './LandingScreen.module.css'
 
 interface LandingScreenProps {
@@ -88,7 +88,7 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
       {help.layer}
 
       <div className={styles.stage}>
-        <LandingCanvas progress={progress} mode={mode} />
+        <LandingScene target={target} progress={progress} mode={mode} />
         <div className={styles.targetLabel}>
           <span>TARGET</span>
           <strong>{target.name}</strong>

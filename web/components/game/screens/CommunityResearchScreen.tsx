@@ -62,7 +62,7 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
   const stage = player.orionidsEventStage ?? 0
   const held = showerItems(ORIONIDS_CHAIN, stage).length
   const recordings = radioChecked(player)
-  if (!stage && !recordedOn) return null
+  if (!stage && recordings === 0) return null
   return (
     <section className={styles.record} data-testid="community-research-history" aria-label="Orionids record">
       <b>{stage >= 1 ? 'Orionids record complete' : 'Orionids · no fragments yet'}</b>
@@ -73,9 +73,9 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
 }
 
 const HOW_IT_WORKS = [
-  'Pick a path. It is locked for the week and resets on Monday.',
-  'Finish its five steps in any order. Missing a day costs nothing.',
-  'Every step is a stamp that also fills the shared community bar.',
+  'Pick a path for the week.',
+  'Do its five steps in any order.',
+  'Every step fills the community bar.',
 ]
 
 function contributionTimes(player: Player): number[] {
@@ -168,7 +168,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Aim your instruments at the sky to find new anomalies, then check what they catch. Five steps, and the research helps everyone.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices.' : 'Aim your instruments at the sky, then check what they catch.'}</p>
                 </div>
               </section>
               <section className={styles.right}>

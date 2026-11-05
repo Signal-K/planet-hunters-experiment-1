@@ -93,6 +93,9 @@
 }
 @media (max-height: 520px) {
   .bar small { display: none; }
+  .right { gap: 10px; padding-top: 64px; padding-bottom: 16px; }
+  .how { gap: 8px; }
+  .how li { font-size: 15px; }
 }
 /* SSL-714: the Orionids chain in the research history. */
 .record { width: min(100%, 390px); display: grid; justify-items: center; gap: 8px; color: #f4efe4; }

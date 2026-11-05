@@ -112,7 +112,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
-        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
+        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/TakeonMapping.swift"
       ],
       "note": "Same world source; render adapters still host-owned.",
       "components": [
@@ -129,7 +130,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
+        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
       ],
       "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
       "components": [
@@ -199,7 +201,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/LandingSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Landing.swift"
       ],
       "note": "Native landing route currently renders MiningScreen, not the web landing sequence.",
       "components": []
@@ -228,7 +231,9 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Delivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Dropoff.swift"
       ],
       "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent.",
       "components": []
@@ -239,13 +244,17 @@ enum AuthoredSceneDeclarations {
       "web": [
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
-        "web/lib/systems/MarketplaceSystem.ts"
+        "web/lib/systems/MarketplaceSystem.ts",
+        "web/lib/systems/DailyEconomyInput.ts",
+        "web/lib/systems/EconomyArrival.ts",
+        "web/lib/systems/WelcomeBack.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
-        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/EconomyArrival.swift"
       ],
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": []
@@ -336,7 +345,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
       "components": []

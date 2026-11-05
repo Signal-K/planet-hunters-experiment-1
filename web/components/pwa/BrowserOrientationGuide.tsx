@@ -73,7 +73,7 @@ export default function BrowserOrientationGuide() {
   }
 
   return (
-    <div className={styles.guide} role="dialog" aria-modal="true" aria-labelledby="orient-guide-title" data-testid="browser-orientation-guide" data-platform={platform}>
+    <div className={styles.guide} aria-labelledby="orient-guide-title" data-testid="browser-orientation-guide" data-platform={platform}>
       <section className={styles.turn}>
         <svg className={styles.phone} viewBox="0 0 120 120" aria-hidden="true">
           <g className={styles.handset}>

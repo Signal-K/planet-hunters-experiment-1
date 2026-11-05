@@ -130,7 +130,7 @@ export default function CommunityBallots({ state }: { state: BallotsState }) {
       </button>
       {ballot && step !== null && createPortal(
         <div className={styles.backdrop} onClick={event => { if (event.target === event.currentTarget) setStep(null) }}>
-        <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={ballot.title} data-testid="community-ballot-step">
+        <div className={styles.sheet} aria-label={ballot.title} data-testid="community-ballot-step">
           <header className={styles.head}>
             <button type="button" className={styles.back} aria-label="Close votes" onClick={() => setStep(null)}>×</button>
             <span className={styles.dots} aria-label={`Step ${step + 1} of ${ballots.length}`}>
