@@ -30,6 +30,22 @@
 .sectorName[data-active='true'] { color: #ffd678; }
 
 .ecliptic { fill: none; stroke: rgba(159, 214, 228, 0.22); stroke-width: 0.35; stroke-dasharray: 1.5 1.5; }
+.tile { fill: none; stroke: rgba(159, 214, 228, 0.18); stroke-width: 0.3; }
+.mover { fill: #cfe3ff; animation: drift 9s linear infinite; }
+.orbit { fill: none; stroke: rgba(159, 214, 228, 0.25); stroke-width: 0.3; stroke-dasharray: 1.2 1.4; }
+.ringBack { fill: none; stroke: rgba(226, 205, 150, 0.55); stroke-width: 5; }
+.ringFront { fill: none; stroke: rgba(226, 205, 150, 0.85); stroke-width: 5; }
+.limb { fill: none; stroke: rgba(120, 190, 255, 0.55); stroke-width: 0.8; }
+.cone { fill: rgba(255, 214, 120, 0.16); }
+.storm { fill: none; stroke: #fff; stroke-width: 0.5; opacity: 0.8; animation: swirl 3s linear infinite; transform-box: fill-box; transform-origin: center; stroke-dasharray: 3 2; }
+.craft { offset-rotate: 0deg; animation: orbit 26s linear infinite; }
+.craft[data-parked='true'] { animation-play-state: paused; }
+.slit { transition: transform 1.2s ease; }
+.zoomLayer { transition: transform 1.6s ease-in-out; }
+.tag { position: absolute; top: 8px; right: 8px; padding: 4px 10px; border: 1px solid rgba(159, 214, 228, 0.6); border-radius: 999px; background: rgba(3, 6, 12, 0.75); color: #9fd6e4; font: 800 14px/1.2 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; }
+.tabs { display: grid; gap: 6px; }
+.tab { min-height: 44px; padding: 6px 12px; border: 1.5px solid rgba(159, 214, 228, 0.5); border-radius: 10px; background: rgba(255, 255, 255, 0.04); color: #e8f1ff; font: 800 14px/1.1 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-align: left; cursor: pointer; }
+.tab[data-active='true'] { border-color: #ffd678; background: rgba(255, 214, 120, 0.14); color: #ffd678; }
 .sector { fill: rgba(159, 214, 228, 0.05); stroke: rgba(159, 214, 228, 0.45); stroke-width: 0.4; stroke-dasharray: 1.2 1; transition: fill 120ms ease, stroke 120ms ease; }
 .sector[data-active='true'] { fill: rgba(255, 214, 120, 0.16); stroke: #ffd678; stroke-dasharray: none; stroke-width: 0.6; }
 .sectorLabel { fill: rgba(232, 241, 255, 0.78); font-size: 3.4px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; }
@@ -40,6 +56,9 @@
 .beam { stroke: rgba(255, 214, 120, 0.35); stroke-width: 0.35; stroke-dasharray: 1 1.4; animation: march 1.2s linear infinite; }
 .packet { fill: #ffd678; offset-rotate: 0deg; animation: travel 2.8s linear infinite; opacity: 0; }
 
+@keyframes drift { from { transform: translateX(-6px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { transform: translateX(10px) translateY(-1.5px); opacity: 0; } }
+@keyframes orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes swirl { to { transform: rotate(360deg); } }
 @keyframes ring { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(7); opacity: 0; } }
 @keyframes march { to { stroke-dashoffset: -4.8; } }
 @keyframes travel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
@@ -116,12 +135,15 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .root { grid-template-columns: minmax(0, 1fr) 250px; padding: 8px; gap: 8px; }
+  .tabs { gap: 4px; }
+  .tab { min-height: 44px; padding-block: 4px; }
+  .copy { font-size: 14px; line-height: 1.25; }
   .stick { width: 96px; height: 96px; left: 22px; bottom: 18px; }
   .knob { width: 46px; height: 46px; }
   .title { font-size: 19px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ring, .beam, .packet { animation: none; }
+  .ring, .beam, .packet, .mover, .craft, .storm { animation: none; }
   .ring { opacity: 0.4; }
 }

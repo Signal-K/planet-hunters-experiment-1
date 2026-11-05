@@ -249,9 +249,20 @@
 }
 
 @media (orientation: landscape) and (max-width: 1023px) {
+  /* Phone landscape is short: the site sits beside the order, not above it. */
+  .screen { flex-direction: row; }
   .stage {
-    min-height: 96px;
+    flex: 1 1 52%;
+    min-height: 0;
     margin-top: 56px;
+  }
+  .hud {
+    flex: 0 0 48%;
+    min-height: 0;
+    overflow-y: auto;
+    margin-top: 56px;
+    border-top: 0;
+    border-left: 1px solid rgba(112,217,234, .18);
   }
 
   .targetLabel {
