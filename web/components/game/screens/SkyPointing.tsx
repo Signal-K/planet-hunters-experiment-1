@@ -193,7 +193,7 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
   const origin = instrument === 'transit' ? CRAFT : instrument === 'deep-space' ? DISH : EARTH
 
   return (
-    <div className={styles.root} data-testid="sky-pointing" data-instrument={instrument} role="dialog" aria-label="Point your instruments">
+    <div className={styles.root} data-testid="sky-pointing" data-instrument={instrument} aria-label="Point your instruments">
       <button type="button" className={styles.close} data-testid="sky-pointing-back" onClick={onCancel}>BACK</button>
       <div className={styles.sky}>
         <div className={styles.plane}>

@@ -92,7 +92,6 @@ export type Screen =
   | 'market'
   | 'hangar'
   | 'rocket-buy'
-  | 'rover-survey'
   | 'launchpad'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
@@ -120,7 +119,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-survey',
   'delivery',
   'refinery',
   'hangar',
@@ -134,7 +132,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'mission-history',
 ])
 
-export type MissionPhase = 'transit' | 'landing' | 'survey' | 'mining' | 'delivery' | 'debrief'
+export type MissionPhase = 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
 
 export interface ResourceFocus {
   label: string
@@ -559,7 +557,6 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
-  onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

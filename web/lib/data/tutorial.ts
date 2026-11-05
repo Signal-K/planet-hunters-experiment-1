@@ -42,12 +42,12 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
 const LOOP_SCREENS = new Set([
-  'fab', 'rover-survey', 'targets', 'rocket-buy', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+  'fab', 'targets', 'rocket-buy', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
 
 /** Launch-prep screens share the launch step; the rover survey is an extension
  * (SSL-675), not a first-run stop. */
-const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy', 'rover-survey'])
+const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy'])
 /** Flight and landing are one zero-tap sequence with no coach step (SSL-675). */
 const FLIGHT_SCREENS = new Set(['transit', 'landing', 'delivery'])
 
@@ -84,7 +84,7 @@ export function trainingStepOnPath(step: TrainingTryStep, screen: string): boole
 const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
   intro: 1, build: 1,
   hub: 2, launchpad: 2, missions: 2,
-  'rocket-buy': 3, fab: 3, targets: 3, 'rover-survey': 3,
+  'rocket-buy': 3, fab: 3, targets: 3,
   mining: 4,
   debrief: 5,
 }

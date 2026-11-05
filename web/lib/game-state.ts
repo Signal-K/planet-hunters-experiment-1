@@ -29,8 +29,8 @@ import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-survey', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch'])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager'])
 
@@ -180,12 +180,11 @@ export function normalizeState(input: PartialSave): GameState {
   const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
   const completedMissions = normalizeCompletedMissions(player.completedMissions)
   const orionidsProgress = detectOrionidsProgress({ ...player, completedMissions })
-  // Raises only: a save that already finished the radio mission (stage 3) keeps it.
-  const orionidsEventStage = orionidsProgress.surfaceCompleted
+  // Raises only: a save that already finished the radio mission (stage 3) keeps it. Stage 1 is retired
+  // (the rover observation step was removed), so anyone who ran the shower reads as stage 2.
+  const orionidsEventStage = orionidsProgress.attempted
     ? Math.max(player.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
-    : orionidsProgress.attempted
-      ? Math.max(player.orionidsEventStage ?? 0, 1) as 0 | 1 | 2 | 3
-      : player.orionidsEventStage ?? 0
+    : player.orionidsEventStage ?? 0
   const researchXP = Number.isFinite(player.researchXP)
     ? Math.max(0, Math.floor(player.researchXP ?? 0))
     : DEFAULT_STATE.player.researchXP

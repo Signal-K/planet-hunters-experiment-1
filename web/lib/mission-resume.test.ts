@@ -10,8 +10,8 @@ describe('missionResumeScreen', () => {
     expect(missionResumeScreen({ missionPhase: 'transit', arrivalAt: 500 }, 1_000)).toBe('landing')
   })
 
-  it('resumes a starter-rover survey on the survey surface, not the laser', () => {
-    expect(missionResumeScreen({ missionPhase: 'survey' })).toBe('rover-survey')
+  it('resumes a run saved mid-survey (survey removed) on the mining surface', () => {
+    expect(missionResumeScreen({ missionPhase: 'survey' as never })).toBe('mining')
   })
 
   it('resolves completed delivery and return legs', () => {

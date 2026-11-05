@@ -339,7 +339,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             </div>
             {(onMission || justCompleted) && (
               <div className={styles.mission} data-testid="radio-mission" data-complete={justCompleted || undefined}>
-                <span>{justCompleted ? 'Orionids · complete' : 'Orionids · 3 of 3'}</span>
+                <span>{justCompleted ? 'Orionids · complete' : 'Orionids · 2 of 2'}</span>
                 <ol>
                   {ORIONIDS_CHAIN.items.map((item, i) => (
                     <li key={item.id} data-held={i < showerItems(ORIONIDS_CHAIN, stage).length || undefined}>{item.name}</li>

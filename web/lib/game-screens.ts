@@ -23,7 +23,6 @@ const SCREEN_LIST = {
   market: true,
   hangar: true,
   'rocket-buy': true,
-  'rover-survey': true,
   launchpad: true,
   'asteroid-discovery': true,
   'saturn-storm-search': true,

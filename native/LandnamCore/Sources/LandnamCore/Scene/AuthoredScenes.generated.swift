@@ -43,7 +43,6 @@ enum AuthoredSceneDeclarations {
         "name": "Work",
         "routes": [
           "mining",
-          "rover-survey",
           "surface-ops"
         ],
         "policy": "Perform mining, survey or field work with the appropriate engine adapter."
@@ -2202,83 +2201,6 @@ enum AuthoredSceneDeclarations {
             "rocket-assembly"
           ],
           "note": "Optional fitting controls."
-        }
-      ]
-    },
-    {
-      "id": "rover-survey",
-      "type": "field",
-      "route": "rover-survey",
-      "surface": "dom",
-      "runtime": {
-        "surface": "dom",
-        "web": [
-          "web/components/game/screens/RoverSurveyScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/RoverFieldScreen.swift",
-          "native/App/Screens/TakeonSceneScreen.swift"
-        ]
-      },
-      "objects": [
-        {
-          "id": "survey-field",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Rover field or TakeOn adapter selected by the feature flag."
-        },
-        {
-          "id": "rover",
-          "kind": "vehicle",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Surface survey vehicle, separate from laser extraction."
-        },
-        {
-          "id": "survey-markers",
-          "kind": "collection",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Field observation targets."
-        },
-        {
-          "id": "drive-controls",
-          "kind": "panel",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Movement and interaction commands."
-        },
-        {
-          "id": "survey-result",
-          "kind": "panel",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Observation result before returning."
-        },
-        {
-          "id": "complete-action",
-          "kind": "button",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "flight"
-          ],
-          "note": "Complete the survey using the canonical transition."
         }
       ]
     },

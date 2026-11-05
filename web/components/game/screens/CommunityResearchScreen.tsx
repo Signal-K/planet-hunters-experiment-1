@@ -65,7 +65,7 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
   if (!stage && !recordedOn) return null
   return (
     <section className={styles.record} data-testid="community-research-history" aria-label="Orionids record">
-      <b>{stage >= 3 ? 'Orionids record complete' : `Orionids · ${held} of 3 items`}</b>
+      <b>{stage >= 3 ? 'Orionids record complete' : `Orionids · ${held} of 2 items`}</b>
       <ol>{ORIONIDS_CHAIN.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
       {recordings > 0 && <em>{chainInstrument().callsign} · {recordings} recording{recordings === 1 ? '' : 's'} checked</em>}
     </section>

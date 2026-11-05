@@ -45,7 +45,7 @@ import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward,
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/InstrumentFeedSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, orionidsNightRun, orionidsSurfaceResearchMission } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
@@ -224,7 +224,7 @@ function parkOrDropActiveRun(state: GameState): GameState {
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
   return {
     ...state,
-    screen: snapshot.missionPhase === 'survey' ? 'rover-survey' : (snapshot.missionPhase ?? 'transit'),
+    screen: (snapshot.missionPhase as string) === 'survey' ? 'mining' : (snapshot.missionPhase ?? 'transit'),
     missionId: snapshot.missionId,
     targetId: snapshot.targetId,
     deliveryTargetId: snapshot.deliveryTargetId,
@@ -335,11 +335,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
-    const entryMission = id === ORIONIDS_NIGHT_RUN_ID
-      ? orionidsNightRun()
-      : id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
-        ? orionidsSurfaceResearchMission()
-        : null
+    const entryMission = id === ORIONIDS_NIGHT_RUN_ID ? orionidsNightRun() : null
     const pickedMission = catalog.missions.find(m => m.id === id)
       ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
       ?? entryMission
@@ -352,7 +348,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     setState(s => {
-      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID || id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID
       if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
@@ -708,12 +704,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyReturnArrived(s))
     // Debrief owns the recovery outcome and cargo receipt; a transient global
     // notification would cover the next task if the player advances quickly.
-  }, [setState])
-
-  const onRoverSurveyComplete = useCallback(() => {
-    setState(s => s.screen === 'rover-survey'
-      ? { ...s, screen: 'mining', player: { ...s.player, missionPhase: 'mining' } }
-      : s)
   }, [setState])
 
   const onLandingTouchdown = useCallback(() => {
@@ -1152,8 +1142,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // SSL-714: each Orionids mission hands over to the next one on the Events board.
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) requestMissionBoardTab('events')
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID || current.missionId === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) stampResearch('event')
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) requestMissionBoardTab('events')
+    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
     // market. Runs as its own state step before the payout/ledger update below
@@ -1299,16 +1289,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         s.player.missionStartedAt,
       )
       // SSL-674: a survey flight to a world the player discovered is community research.
-      const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+      const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
-        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 1) as 0 | 1 | 2 | 3
-        : mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
-          ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
-          : wswBadgedPlayer.orionidsEventStage ?? 0
+        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
+        : wswBadgedPlayer.orionidsEventStage ?? 0
       const next: GameState = {
         ...s,
         player: {
@@ -1374,7 +1362,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
-            : mission?.id === ORIONIDS_NIGHT_RUN_ID || mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+            : mission?.id === ORIONIDS_NIGHT_RUN_ID
               ? 'missions'
               : isProgramOperation
               ? 'launchpad'
@@ -1503,7 +1491,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverSurveyComplete, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification,

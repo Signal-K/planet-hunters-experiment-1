@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -58,9 +58,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const shownRunRef = useRef(showerRun ?? null)
   if (showerRun) shownRunRef.current = showerRun
   const shownRun = shownRunRef.current
-  const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID || mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID
+  const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID
   // SSL-714: each Orionids mission hands over the story item that lets the next one start.
-  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID ? 1 : mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID ? 2 : 0
+  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID ? 1 : 0
   const storyItem = storyStep ? ORIONIDS_CHAIN.items[storyStep - 1] : null
   const instrument = chainInstrument()
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
@@ -152,7 +152,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
         {storyItem && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-story-item" data-item={storyItem.id}>
-            <p className={styles.kicker}>Orionids · mission {storyStep} of 3 · unlocked</p>
+            <p className={styles.kicker}>Orionids · mission {storyStep} of 2 · unlocked</p>
             <div className={styles.storyItem}>
               <span className={styles.storyIcon} aria-hidden="true">{storyStep === 1
                 ? <svg viewBox="0 0 24 24"><path d="M12 3 5 9l2 9h10l2-9Z" /><path d="m9 11 3-2 3 2-1 4h-4Z" /></svg>
@@ -161,7 +161,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </div>
           </section>
         )}
-        {storyStep === 2 && (
+        {storyStep === 1 && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-community-launch">
             <p className={styles.kicker}>Community launch</p>
             <div className={styles.launch}>
@@ -176,7 +176,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </svg>
               <div>
                 <strong>{instrument.callsign} is up</strong>
-                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz along your bearing.</p>
+                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz for the echoes your shower run lit up.</p>
               </div>
             </div>
           </section>

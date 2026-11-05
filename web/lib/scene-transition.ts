@@ -13,7 +13,7 @@ export const CINEMATIC_TRANSITION_IN_MS = 200
 
 export type SceneTransitionKind = 'fade' | 'climb' | 'arrival' | 'debrief'
 
-const ARRIVAL_SCREENS = new Set(['mining', 'rover-survey', 'landing', 'delivery'])
+const ARRIVAL_SCREENS = new Set(['mining', 'landing', 'delivery'])
 
 export function sceneTransitionTiming(kind: SceneTransitionKind): { out: number; in: number } {
   return kind === 'fade'
@@ -31,6 +31,6 @@ export function transitionKind(from: string, to: string): SceneTransitionKind {
   if (from === 'launch' && to === 'transit') return 'climb'
   if (to === 'debrief' && (from === 'transit' || from === 'landing')) return 'debrief'
   if (from === 'transit' && ARRIVAL_SCREENS.has(to)) return 'arrival'
-  if (from === 'landing' && (to === 'mining' || to === 'rover-survey')) return 'arrival'
+  if (from === 'landing' && to === 'mining') return 'arrival'
   return 'fade'
 }

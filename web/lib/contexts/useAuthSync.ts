@@ -575,7 +575,9 @@ export function useAuthSync({
             return
           }
           const launchedAt = typeof run.launched_at === 'string' ? new Date(run.launched_at).getTime() : NaN
-          const phase = ['transit', 'landing', 'survey', 'mining', 'delivery', 'debrief'].includes(run.phase)
+          const phase = run.phase === 'survey'
+            ? 'mining'
+            : ['transit', 'landing', 'mining', 'delivery', 'debrief'].includes(run.phase)
             ? run.phase as NonNullable<GameState['player']['missionPhase']>
             : 'transit'
           setState(current => {

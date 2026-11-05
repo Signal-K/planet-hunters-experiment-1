@@ -2,9 +2,9 @@
 // local stack only (npm run test:cypress:orionids defaults to http://localhost:4320); nothing here
 // signs in or writes to PocketBase.
 //
-// Mission 1, the shower run, hands over the fragment sample (and no badge: mining alone never earns it).
-// Mission 2, the rover observation on Eros, hands over the impact bearing and the community launches ORI-1.
-// Mission 3 is three recordings checked on ORI-1; the third grades the badge.
+// Mission 1, the shower run, hands over the fragment sample (and no badge: mining alone never earns it),
+// and the community launches ORI-1.
+// Mission 2 is three recordings checked on ORI-1; the third grades the badge.
 
 const ORIONIDS_GOLD_UNTIL = Date.parse('2026-11-08T00:00:00Z')
 
@@ -37,43 +37,32 @@ function boxAnEcho() {
     .trigger('pointerup', 'center', { button: 0, pointerId: 1, isPrimary: true })
 }
 
-describe('Orionids badge: three missions joined by story items', () => {
+describe('Orionids badge: two missions joined by story items', () => {
   beforeEach(() => {
     cy.viewport(1440, 900)
   })
 
-  it('mission 1: the shower run hands over the fragment sample, not the badge, and opens the rover mission', () => {
+  it('mission 1: the shower run hands over the fragment sample, not the badge, and opens ORI-1', () => {
     cy.visit('/game/stage?preset=ui-orionids-shower-debrief')
 
-    byTest('debrief-story-item').should('contain', 'mission 1 of 3').and('contain', 'Fragment sample')
+    byTest('debrief-story-item').should('contain', 'mission 1 of 2').and('contain', 'Fragment sample')
     byTest('debrief-story-item').should('have.attr', 'data-item', 'fragment-sample')
-    byTest('mission-next-handoff').should('contain', 'Mission 2 is ready on the Events board')
+    byTest('debrief-community-launch').should('contain', 'ORI-1 is up')
+    byTest('mission-next-handoff').should('contain', 'confirm meteor echoes on ORI-1')
     // Mining alone never earns the Orionids badge.
     cy.get('[data-testid="sky-badge"]').should('not.exist')
 
     byTest('collect-reward-btn').click()
 
-    byTest('events-orionids').should('contain', 'Mission 2 of 3')
-    byTest('event-action-orionids-2026').should('contain', 'Continue research').click()
-
-    // Mission 2 is a rover trip to Eros, not another pass through the shower field.
-    byTest('plan-destination').should('contain', '433 Eros')
-    byTest('plan-cargo').should('contain', 'rover')
-    byTest('orionids-shower-field').should('not.exist')
+    byTest('events-orionids').should('contain', 'Mission 2 of 2')
+    byTest('event-action-orionids-2026').should('contain', 'Listen on ORI-1')
   })
 
-  it('missions 2 and 3: the bearing launches ORI-1, and three checked recordings complete the chain and grade the badge', () => {
+  it('mission 2: three checked recordings on ORI-1 complete the chain and grade the badge', () => {
     stubRadioMeteorZoo()
-    cy.visit('/game/stage?preset=ui-orionids-rover-debrief')
+    cy.visit('/game/stage?preset=ui-orionids-events-stage2')
 
-    byTest('debrief-story-item').should('contain', 'mission 2 of 3').and('contain', 'Impact bearing')
-    byTest('debrief-story-item').should('have.attr', 'data-item', 'impact-bearing')
-    byTest('debrief-community-launch').should('contain', 'ORI-1 is up')
-    byTest('mission-next-handoff').should('contain', 'confirm meteor echoes on ORI-1')
-
-    byTest('collect-reward-btn').click()
-
-    byTest('events-orionids').should('contain', 'Mission 3 of 3')
+    byTest('events-orionids').should('contain', 'Mission 2 of 2')
     byTest('event-action-orionids-2026').should('contain', 'Listen on ORI-1').click()
 
     byTest('radio-meteor-screen').should('be.visible')

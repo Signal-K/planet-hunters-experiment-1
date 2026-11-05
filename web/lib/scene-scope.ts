@@ -23,7 +23,6 @@ const TARGET_SURFACE_SCREENS = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-survey',
   'delivery',
 ])
 

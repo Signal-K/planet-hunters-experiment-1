@@ -76,17 +76,11 @@ describe('mission board view', () => {
     ])
   })
 
-  it('changes the Orionids action to the next research tier', () => {
-    const board = eventsBoard(Date.parse('2026-10-24T12:00:00Z'), {}, Date.parse('2026-10-24T12:00:00Z'), {}, 0, 1)
-    expect(board.orionids.actionLabel).toBe('Continue research')
-    expect(board.orionids.rewardLabel).toBe('Mission 2 of 3 · surface observation ready')
-  })
-
-  it('points the Orionids card at ORI-1 for mission 3, then keeps listening once the badge is earned', () => {
+  it('points the Orionids card at ORI-1 for mission 2, then keeps listening once the badge is earned', () => {
     const at = Date.parse('2026-10-24T12:00:00Z')
     const radio = eventsBoard(at, {}, at, {}, 0, 2)
     expect(radio.orionids.actionLabel).toBe('Listen on ORI-1')
-    expect(radio.orionids.rewardLabel).toBe('Mission 3 of 3 · confirm echoes on ORI-1')
+    expect(radio.orionids.rewardLabel).toBe('Mission 2 of 2 · confirm echoes on ORI-1')
     const done = eventsBoard(at, { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: at } }, at, {}, 0, 3)
     expect(done.orionids.actionLabel).toBe('Keep listening')
     expect(done.orionids.earnedTier).toBe('gold')

@@ -13,7 +13,7 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
 import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -484,7 +484,6 @@ function ScreenBody({
     case 'transit':
     case 'landing':
     case 'mining':
-    case 'rover-survey':
     case 'delivery':
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) {

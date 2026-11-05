@@ -256,26 +256,6 @@
    ]
   },
   {
-   "id": "rover",
-   "name": "Rover field",
-   "flow": "field",
-   "web": "ui-rover-survey",
-   "native": "rover-field-phone",
-   "tickets": [
-    "SSL-485",
-    "SSL-486",
-    "SSL-487"
-   ]
-  },
-  {
-   "id": "rover-touchdown",
-   "name": "Rover touchdown",
-   "flow": "field",
-   "web": "ui-rover-survey",
-   "native": "rover-touchdown-phone",
-   "tickets": []
-  },
-  {
    "id": "refinery",
    "name": "Refinery",
    "flow": "progression",
@@ -305,15 +285,22 @@
    "flow": "records",
    "web": "ui-community-research",
    "native": "community-research-phone",
-   "tickets": ["SSL-691", "SSL-694", "SSL-746", "SSL-757"]
+   "tickets": [
+    "SSL-691",
+    "SSL-694",
+    "SSL-746",
+    "SSL-757"
+   ]
   },
   {
    "id": "sky-pointing",
    "name": "Sky pointing",
    "flow": "records",
    "web": "ui-sky-pointing",
-   "native": "",
-   "tickets": ["SSL-768"]
+   "native": "community-research-phone",
+   "tickets": [
+    "SSL-768"
+   ]
   },
   {
    "id": "economy-arrival",
@@ -565,14 +552,6 @@
    "flow": "core-loop",
    "web": "ui-mission-board",
    "native": "mission-board-live",
-   "tickets": []
-  },
-  {
-   "id": "rover-survey",
-   "name": "Rover Survey",
-   "flow": "field",
-   "web": "ui-rover-survey",
-   "native": "rover-field-phone",
    "tickets": []
   },
   {

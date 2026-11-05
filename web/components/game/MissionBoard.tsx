@@ -19,7 +19,7 @@ import {
   skyEventNow,
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
-import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -382,7 +382,6 @@ export default function MissionBoard({
     (sourceMineral
       ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
       : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
-    || (run.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID && player.orionidsEventStage === 1 && run.targetId === picked.id)
   ) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
   const contractTarget = contractTargetId ? catalog.targets.find(target => target.id === contractTargetId) ?? null : null
@@ -451,13 +450,9 @@ export default function MissionBoard({
       if (event.status === 'upcoming') return
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
-      // SSL-714: mission 3 (and listening on afterwards) happens on the community receiver, ORI-1.
-      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 2) {
+      // SSL-714: mission 2 (and listening on afterwards) happens on the community receiver, ORI-1.
+      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 1) {
         onOpenEvent('radio-meteors')
-        return
-      }
-      if (event.id === 'orionids-2026' && player.orionidsEventStage === 1 && catalog.missions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {
-        onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
         return
       }
       // Orionids is its own event chain, not a filter over ordinary Free Run
@@ -579,7 +574,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={`${styles.dock} ${styles.freeDock}`} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
+          <b>{eventFocus}</b><span>Mission 1 of 2 · launch catches fragments · no cargo used</span>
         </div>}
         {sourceMineralName && <div className={styles.sourceSites} data-testid="mineral-sources" role="group" aria-label={`Where to mine ${sourceMineralName}`}>
           <b>{sourceMineralName}</b>

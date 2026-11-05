@@ -305,7 +305,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
       const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
-      const state = player.missionPhase === 'mining' ? 'mining' : (arrived || player.missionPhase === 'survey') ? 'arrived' : 'transit'
+      const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
       return {
         state,
         label: state === 'mining' ? 'MINING CRAFT' : state === 'arrived' ? 'CRAFT ARRIVED' : 'CRAFT IN TRANSIT',
