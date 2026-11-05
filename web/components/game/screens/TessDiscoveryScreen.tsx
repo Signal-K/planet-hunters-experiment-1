@@ -59,8 +59,8 @@ const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body
 const SIMPLE_READOUT = new Set(['Star', 'Marks', 'Verdict', 'Catalogue P'])
 
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
-  { id: 'planet', label: 'Submit · Transit', requiresMark: true },
-  { id: 'not_planet', label: 'Submit · Noise', requiresMark: true },
+  { id: 'planet', label: 'Planet transit', requiresMark: true },
+  { id: 'not_planet', label: 'Just noise', requiresMark: true },
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
@@ -435,6 +435,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         />
       )}
       quickCommands={quickCommands}
+      toolStepLabels={{ find: 'Find the dip in the star\'s light', answer: 'Is it a planet passing in front?' }}
       tool={(
         <>
           <InstrumentToolHint

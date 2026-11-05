@@ -48,6 +48,8 @@ interface InstrumentViewportProps {
   viewportChrome?: ReactNode
   answers: ReactNode
   tool?: ReactNode
+  /** The two numbered steps beside a tool. Say what to do, not what the system records. */
+  toolStepLabels?: { find: string; answer: string }
   /** Dashed slot when this project has no annotate tool. */
   emptyToolLabel?: string
   /** Under the answers, outside the numbered steps (the All controls toggle on a console with no tool). */
@@ -339,6 +341,7 @@ export default function InstrumentViewport({
   viewportChrome,
   answers,
   tool,
+  toolStepLabels,
   emptyToolLabel,
   footer,
   onCommand,
@@ -577,10 +580,12 @@ export default function InstrumentViewport({
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
             {tool ? <>
-              <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> Mark it</p>
+              <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> {toolStepLabels?.find ?? 'Mark it on the picture'}</p>
               {tool}
-              <p className={styles.step} data-testid="instrument-step-save"><b>2</b> Submit your classification</p>
-              {answers}
+              <div className={styles.answerBlock}>
+                <p className={styles.step} data-testid="instrument-step-save"><b>2</b> {toolStepLabels?.answer ?? 'Give your answer'}</p>
+                {answers}
+              </div>
             </> : <>
               {answers}
               {emptyToolLabel ? <div className={styles.emptyTool} data-testid="instrument-empty-tool">{emptyToolLabel}</div> : null}

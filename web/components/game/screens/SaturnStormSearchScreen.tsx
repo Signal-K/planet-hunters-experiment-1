@@ -360,6 +360,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           }))}
         />
       )}
+      toolStepLabels={{ find: 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
       tool={(
         <InstrumentToolButton
           testId="saturn-mark-storm"

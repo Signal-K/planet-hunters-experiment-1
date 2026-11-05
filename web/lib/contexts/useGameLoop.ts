@@ -1378,8 +1378,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
               ? 'missions'
               : isProgramOperation
               ? 'launchpad'
-              : flightPlan.completed.mining && !flightPlan.completed.scan
-                ? 'galaxy'
               : 'hub',
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
