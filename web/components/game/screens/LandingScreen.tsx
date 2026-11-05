@@ -83,40 +83,36 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
   }, [ready, onContinue])
 
   return (
-    <div className={`game-screen theme-blueprint ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
-      <TopBar eyebrow={copy.eyebrow} title={copy.title} onBack={onBack} right={help.button} />
-      {help.layer}
-
+    <div className={`game-screen ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
       <div className={styles.stage}>
         <LandingScene target={target} progress={progress} mode={mode} />
-        <div className={styles.targetLabel}>
-          <span>TARGET</span>
-          <strong>{target.name}</strong>
-        </div>
       </div>
+      <div className={styles.vignette} aria-hidden="true" />
+
+      <div className={styles.top}>
+        <button type="button" className={styles.back} onClick={onBack}>BACK</button>
+        <span className={styles.eyebrow}>{copy.eyebrow}</span>
+        <span className={styles.target}><i>TARGET</i> {target.name}</span>
+        <span className={styles.help}>{help.button}</span>
+      </div>
+      {help.layer}
 
       <section className={styles.hud} aria-label="Landing sequence status">
         <div className={styles.statusRow}>
-          <div>
-            <div className={styles.kicker}>{ready ? copy.ready : copy.inProgress}</div>
-            <div className={styles.contract}>{target.name}</div>
-          </div>
+          <div className={styles.kicker}>{ready ? copy.ready : copy.inProgress}</div>
           <div className={styles.timer}>{ready ? 'READY' : formatCountdown(remainingMs)}</div>
         </div>
-
+        <div className={styles.track}><div className={styles.fill} style={{ width: `${progressPct}%` }} /></div>
         <div className={styles.progressMeta}>
           <span>{copy.progressLabel}</span>
           <strong data-testid="landing-progress">{progressPct}%</strong>
         </div>
-        <div className={styles.track}>
-          <div className={styles.fill} style={{ width: `${progressPct}%` }} />
-        </div>
-
-        <PrimaryBtn disabled={!ready} testId="landing-continue" onClick={onContinue}>
-          {copy.cta}
-        </PrimaryBtn>
-        <GhostBtn onClick={onBack}>PAUSE AT HUB</GhostBtn>
       </section>
+
+      <div className={styles.action}>
+        <button type="button" className={styles.primary} data-testid="landing-continue" disabled={!ready} onClick={onContinue}>{copy.cta}</button>
+        <button type="button" className={styles.ghost} onClick={onBack}>PAUSE AT HUB</button>
+      </div>
     </div>
   )
 }

@@ -77,10 +77,10 @@ export default function LandingScene({ target, progress, mode }: Props) {
 
   // The body: a circle whose curvature relaxes as the lander descends.
   const R = lerp(W * 0.62, W * 7, low)
-  const limbY = lerp(H * 0.8, H * 0.7, low)
+  const limbY = lerp(H * 0.74, H * 0.56, low)
   const cx = W / 2
   const cy = limbY + R
-  const groundY = H * 0.78
+  const groundY = H * 0.68
 
   // Lander position.
   const padX = W * 0.56
@@ -106,7 +106,8 @@ export default function LandingScene({ target, progress, mode }: Props) {
             <stop offset="1" stopColor={horizon} />
           </linearGradient>
           <linearGradient id="ls-ground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={ground} />
+            <stop offset="0" stopColor={ridge} />
+            <stop offset="0.35" stopColor={ground} />
             <stop offset="1" stopColor={deep} />
           </linearGradient>
           <radialGradient id="ls-glow" cx="50%" cy="50%" r="50%">
@@ -129,6 +130,15 @@ export default function LandingScene({ target, progress, mode }: Props) {
 
         <rect width={W} height={H} fill="url(#ls-sky)" />
         {stars.map((s, i) => <circle key={i} cx={s.x * (W / 160)} cy={s.y} r={s.s} fill="#fff" opacity={s.o * (1 - low * 0.55)} />)}
+        <g opacity={0.5 - low * 0.25}>
+          <path d={`M${-W * 0.1} ${H * 0.55}Q${W * 0.35} ${H * 0.05} ${W * 1.1} ${H * 0.3}`} stroke="#9fb8e8" strokeWidth={H * 0.16} fill="none" opacity="0.1" filter="url(#ls-blur)" />
+          <path d={`M${-W * 0.1} ${H * 0.55}Q${W * 0.35} ${H * 0.05} ${W * 1.1} ${H * 0.3}`} stroke="#fff" strokeWidth={H * 0.04} fill="none" opacity="0.1" filter="url(#ls-blur)" />
+        </g>
+        <g transform={`translate(${W * 0.14} ${H * 0.3})`} opacity={0.9 - low * 0.3}>
+          <circle r={H * 0.09} fill={ground} />
+          <circle r={H * 0.09} fill="none" stroke={horizon} strokeWidth="0.4" />
+          <path d={`M${-H * 0.09} 0A${H * 0.09} ${H * 0.09} 0 0 0 ${H * 0.07} ${H * 0.06}A${H * 0.11} ${H * 0.09} 0 0 1 ${-H * 0.09} 0Z`} fill="#000" opacity="0.4" />
+        </g>
         <rect width={W} height={H} fill="url(#ls-atmo)" opacity={0.5 * low} />
 
         {/* The body */}
