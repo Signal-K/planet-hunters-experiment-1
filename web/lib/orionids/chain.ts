@@ -1,7 +1,7 @@
-// SSL-714: the Orionids badge is two missions, each handing the player a story item that lets the
-// next one start: the shower run (mine) → listening on the community receiver (confirm). The badge is
-// graded when the second one is done, never on mining alone. Stage 1 is retired (it was the rover
-// observation, removed in cycle 8); saves at stage 1 read as stage 2.
+// The Orionids event is the shower run: catch fragments and bring them home for the community record.
+// Finishing the run hands over the fragment sample and grades the badge, never mining alone. ORI-1 keeps
+// listening afterwards as ordinary community research. (Stage 1 was the rover step and is retired; stage 2
+// is the old "listen on ORI-1" step, kept so saves already there can still finish it.)
 // Shaped so a later shower can declare its own chain.
 
 import { badgeTierFor, getSkyEvent, grantBadge } from '@/lib/data/sky-events'
@@ -23,7 +23,7 @@ export interface ShowerChain {
   /** Recordings to check on the community receiver for the last mission. */
   radioTarget: number
   /** One item per mission, in order. Mission n hands over items[n - 1]. */
-  items: [ShowerStoryItem, ShowerStoryItem]
+  items: [ShowerStoryItem]
 }
 
 export const ORIONIDS_CHAIN: ShowerChain = {
@@ -34,21 +34,14 @@ export const ORIONIDS_CHAIN: ShowerChain = {
       id: 'fragment-sample',
       name: 'Fragment sample',
       detail: 'A sealed Orionid fragment from your shower run. Its scorch marks show where to listen for more of the shower.',
-      unlocks: 'Mission 2 is ready on the Events board: confirm meteor echoes on ORI-1.',
-    },
-    {
-      id: 'radio-confirmation',
-      name: 'Radio confirmation',
-      detail: 'Recordings you checked on ORI-1, confirming the shower in real radio data from the BRAMS network.',
-      unlocks: 'The Orionids record is complete.',
+      unlocks: 'The Orionids record is complete. ORI-1 keeps listening: every recording you check still fills the shared bar.',
     },
   ],
 }
 
 /** Items the player holds at this stage. Derived from the stage, so every existing save has the right ones. */
 export function showerItems(chain: ShowerChain, stage: number | undefined): ShowerStoryItem[] {
-  const held = (stage ?? 0) >= 3 ? 2 : (stage ?? 0) >= 1 ? 1 : 0
-  return chain.items.slice(0, held)
+  return (stage ?? 0) >= 1 ? chain.items.slice(0, 1) : []
 }
 
 export function radioChecked(player: Pick<Player, 'radioMeteorClassifications'>): number {
@@ -72,10 +65,8 @@ export function orionidsResearchStep(stage: number | undefined): { title: string
   // A non-breaking hyphen keeps ORI-1 on one line in the step title.
   const callsign = chainInstrument().callsign.replace('-', '\u2011')
   switch (stage ?? 0) {
-    case 0: return { title: 'Orionids 1 of 2: fly the shower run', brief: 'Catch fragments in the shower. You bring back the sample the next mission needs.' }
-    case 1:
-    case 2: return { title: `Orionids 2 of 2: listen on ${callsign}`, brief: `Check recordings on ${callsign}, the receiver everyone launched. Three confirm the shower.` }
-    default: return { title: `Orionids: keep listening on ${callsign}`, brief: 'The record is complete. Every recording you check still fills the shared bar.' }
+    case 0: return { title: 'Orionids: catch and contribute fragments', brief: 'Fly the shower run and bring the fragments home for the community record.' }
+    default: return { title: 'Orionids: fragments delivered', brief: `Your fragments are in the record. ${callsign} is still listening: every recording you check fills the shared bar.` }
   }
 }
 

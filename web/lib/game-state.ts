@@ -182,9 +182,11 @@ export function normalizeState(input: PartialSave): GameState {
   const orionidsProgress = detectOrionidsProgress({ ...player, completedMissions })
   // Raises only: a save that already finished the radio mission (stage 3) keeps it. Stage 1 is retired
   // (the rover observation step was removed), so anyone who ran the shower reads as stage 2.
-  const orionidsEventStage = orionidsProgress.attempted
-    ? Math.max(player.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
-    : player.orionidsEventStage ?? 0
+  const orionidsEventStage = orionidsProgress.completed
+    ? Math.max(player.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
+    : orionidsProgress.attempted
+      ? Math.max(player.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
+      : player.orionidsEventStage ?? 0
   const researchXP = Number.isFinite(player.researchXP)
     ? Math.max(0, Math.floor(player.researchXP ?? 0))
     : DEFAULT_STATE.player.researchXP

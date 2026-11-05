@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
-import { liveEventWeek } from '@/lib/research/event-week'
+import { featuredEventWeek, liveEventWeek } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, POINTING_OPTIONS, pointingThisWeek, type InstrumentPointing, type PathStep, type ResearchPathId } from '@/lib/research/paths'
@@ -57,7 +57,7 @@ function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>
 }
 
-/** SSL-714: the Orionids chain in the research history: the three story items and what ORI-1 has heard. */
+/** SSL-714: the Orionids chain in the research history: the fragment sample and what ORI-1 has heard. */
 function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
   const stage = player.orionidsEventStage ?? 0
   const held = showerItems(ORIONIDS_CHAIN, stage).length
@@ -65,7 +65,7 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
   if (!stage && !recordedOn) return null
   return (
     <section className={styles.record} data-testid="community-research-history" aria-label="Orionids record">
-      <b>{stage >= 3 ? 'Orionids record complete' : `Orionids · ${held} of 2 items`}</b>
+      <b>{stage >= 1 ? 'Orionids record complete' : 'Orionids · no fragments yet'}</b>
       <ol>{ORIONIDS_CHAIN.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
       {recordings > 0 && <em>{chainInstrument().callsign} · {recordings} recording{recordings === 1 ? '' : 's'} checked</em>}
     </section>
@@ -91,6 +91,7 @@ function contributionTimes(player: Player): number[] {
 export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onPoint, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
+  const flagship = featuredEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
@@ -152,6 +153,13 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
+                {flagship && (
+                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
+                    <span className={styles.flagshipKicker}>Flagship event</span>
+                    <strong>{flagship.name}</strong>
+                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
+                  </div>
+                )}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -187,6 +195,13 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
+                {flagship && (
+                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
+                    <span className={styles.flagshipKicker}>Flagship event</span>
+                    <strong>{flagship.name}</strong>
+                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
+                  </div>
+                )}
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
                   <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete</span>

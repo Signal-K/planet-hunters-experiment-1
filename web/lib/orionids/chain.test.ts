@@ -25,7 +25,7 @@ describe('Orionids chain (SSL-714)', () => {
     expect(showerItems(ORIONIDS_CHAIN, 0)).toEqual([])
     expect(showerItems(ORIONIDS_CHAIN, 1).map(item => item.id)).toEqual(['fragment-sample'])
     expect(showerItems(ORIONIDS_CHAIN, 2).map(item => item.id)).toEqual(['fragment-sample'])
-    expect(showerItems(ORIONIDS_CHAIN, 3).map(item => item.id)).toEqual(['fragment-sample', 'radio-confirmation'])
+    expect(showerItems(ORIONIDS_CHAIN, 3).map(item => item.id)).toEqual(['fragment-sample'])
   })
 
   it('completes mission 3 on the third recording and grades the badge then', () => {
@@ -43,19 +43,18 @@ describe('Orionids chain (SSL-714)', () => {
     expect(completeRadioMission({ orionidsEventStage: 3, radioMeteorClassifications: checked(5), badges: noBadges }, IN_EVENT).completed).toBe(false)
   })
 
-  it('reads a shower run as stage 2, and never lowers a finished chain', () => {
+  it('reads a finished shower run as the record complete (stage 3), and never lowers a finished chain', () => {
     const run = { id: 'self-directed-orionids-night-run', title: 'Orionids shower run', completedAt: IN_EVENT, runId: 'r1', kind: 'program' as const }
     const after = normalizeState({ player: { completedMissions: [run], orionidsEventStage: 1 } as Partial<Player> } as never)
-    expect(after.player.orionidsEventStage).toBe(2)
+    expect(after.player.orionidsEventStage).toBe(3)
     const finished = normalizeState({ player: { completedMissions: [run], orionidsEventStage: 3 } as Partial<Player> } as never)
     expect(finished.player.orionidsEventStage).toBe(3)
   })
 
   it('words the Community research event step for the next mission in the chain', () => {
     const step = (stage: number) => explorerSteps({ hasDiscovery: false, eventName: 'Orionids', eventStep: orionidsResearchStep(stage) }).find(s => s.id === 'event')!
-    expect(step(0).title).toBe('Orionids 1 of 2: fly the shower run')
-    expect(step(2).title).toBe('Orionids 2 of 2: listen on ORI\u20111')
-    expect(step(3).title).toBe('Orionids: keep listening on ORI\u20111')
-    expect(step(2).kind).toBe('event')
+    expect(step(0).title).toBe('Orionids: catch and contribute fragments')
+    expect(step(3).title).toBe('Orionids: fragments delivered')
+    expect(step(3).kind).toBe('event')
   })
 })

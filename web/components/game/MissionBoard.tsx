@@ -574,7 +574,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={`${styles.dock} ${styles.freeDock}`} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>Mission 1 of 2 · launch catches fragments · no cargo used</span>
+          <b>{eventFocus}</b><span>Shower run · launch catches fragments · no cargo used</span>
         </div>}
         {sourceMineralName && <div className={styles.sourceSites} data-testid="mineral-sources" role="group" aria-label={`Where to mine ${sourceMineralName}`}>
           <b>{sourceMineralName}</b>

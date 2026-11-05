@@ -25,7 +25,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
-import { isOrionidsWindow } from '@/lib/data/sky-events'
+import { grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
@@ -1294,15 +1294,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
+      // The shower run is the whole event: finishing it records the fragments and grades the badge.
+      const orionidsBadged = mission?.id === ORIONIDS_NIGHT_RUN_ID ? grantBadge(wswBadgedPlayer, 'orionids-2026', Date.now()) : wswBadgedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
-        ? Math.max(wswBadgedPlayer.orionidsEventStage ?? 0, 2) as 0 | 1 | 2 | 3
-        : wswBadgedPlayer.orionidsEventStage ?? 0
+        ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
+        : orionidsBadged.orionidsEventStage ?? 0
       const next: GameState = {
         ...s,
         player: {
-          ...wswBadgedPlayer,
+          ...orionidsBadged,
           francs,
-          researchXP: (wswBadgedPlayer.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
+          researchXP: (orionidsBadged.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
           activeMission: null,
           missionRunId: undefined,
           missionStartedAt: undefined,

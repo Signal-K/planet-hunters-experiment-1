@@ -2,9 +2,9 @@
 // local stack only (npm run test:cypress:orionids defaults to http://localhost:4320); nothing here
 // signs in or writes to PocketBase.
 //
-// Mission 1, the shower run, hands over the fragment sample (and no badge: mining alone never earns it),
-// and the community launches ORI-1.
-// Mission 2 is three recordings checked on ORI-1; the third grades the badge.
+// The shower run is the event: it hands over the fragment sample, and the community launches ORI-1.
+// Saves that were already on the old "listen on ORI-1" step can still finish it: three recordings, the
+// third grades the badge.
 
 const ORIONIDS_GOLD_UNTIL = Date.parse('2026-11-08T00:00:00Z')
 
@@ -37,32 +37,28 @@ function boxAnEcho() {
     .trigger('pointerup', 'center', { button: 0, pointerId: 1, isPrimary: true })
 }
 
-describe('Orionids badge: two missions joined by story items', () => {
+describe('Orionids: fragments, then ORI-1', () => {
   beforeEach(() => {
     cy.viewport(1440, 900)
   })
 
-  it('mission 1: the shower run hands over the fragment sample, not the badge, and opens ORI-1', () => {
+  it('the shower run hands over the fragment sample and opens ORI-1', () => {
     cy.visit('/game/stage?preset=ui-orionids-shower-debrief')
 
-    byTest('debrief-story-item').should('contain', 'mission 1 of 2').and('contain', 'Fragment sample')
+    byTest('debrief-story-item').should('contain', 'fragments delivered').and('contain', 'Fragment sample')
     byTest('debrief-story-item').should('have.attr', 'data-item', 'fragment-sample')
     byTest('debrief-community-launch').should('contain', 'ORI-1 is up')
-    byTest('mission-next-handoff').should('contain', 'confirm meteor echoes on ORI-1')
-    // Mining alone never earns the Orionids badge.
-    cy.get('[data-testid="sky-badge"]').should('not.exist')
+    byTest('mission-next-handoff').should('contain', 'ORI-1 keeps listening')
 
     byTest('collect-reward-btn').click()
 
-    byTest('events-orionids').should('contain', 'Mission 2 of 2')
     byTest('event-action-orionids-2026').should('contain', 'Listen on ORI-1')
   })
 
-  it('mission 2: three checked recordings on ORI-1 complete the chain and grade the badge', () => {
+  it('a save on the old listen step: three checked recordings complete it and grade the badge', () => {
     stubRadioMeteorZoo()
     cy.visit('/game/stage?preset=ui-orionids-events-stage2')
 
-    byTest('events-orionids').should('contain', 'Mission 2 of 2')
     byTest('event-action-orionids-2026').should('contain', 'Listen on ORI-1').click()
 
     byTest('radio-meteor-screen').should('be.visible')

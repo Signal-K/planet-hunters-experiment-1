@@ -152,7 +152,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
         {storyItem && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-story-item" data-item={storyItem.id}>
-            <p className={styles.kicker}>Orionids · mission {storyStep} of 2 · unlocked</p>
+            <p className={styles.kicker}>Orionids · fragments delivered</p>
             <div className={styles.storyItem}>
               <span className={styles.storyIcon} aria-hidden="true">{storyStep === 1
                 ? <svg viewBox="0 0 24 24"><path d="M12 3 5 9l2 9h10l2-9Z" /><path d="m9 11 3-2 3 2-1 4h-4Z" /></svg>
