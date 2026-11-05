@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
-import { SceneActions, ScenePill, ScenePrimary, SceneTop } from '@/components/game/hud/SceneChrome'
+import { SceneActions, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './SkyPointing.module.css'
 
 const SPEED = 46 // view units per second at full stick
@@ -192,7 +192,13 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
 
   return (
     <div ref={rootRef} className={styles.root} data-testid="sky-pointing" data-instrument={instrument} data-portrait={portrait} aria-label="Point your instruments">
-      <svg className={styles.svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <div className={styles.sky} aria-hidden="true">
+        <img src="/game/assets/base/kit/space-bands.png" alt="" draggable={false} className={styles.bands} />
+        <div className={styles.starTile} data-layer="far" />
+        <div className={styles.starTile} data-layer="mid" />
+        <div className={styles.starTile} data-layer="near" />
+      </div>
+      <svg className={styles.svg} shapeRendering="crispEdges" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : at} />}
         {instrument === 'deep-space' && <GroundScene g={g} target={showing} />}
         {instrument === 'saturn' && <SaturnScene g={g} target={showing} zoomed={zoomed} />}
@@ -202,7 +208,7 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
         {showing && instrument === 'transit' && <g transform={`translate(${showing.x} ${showing.y})`}><Sight kind="frame" w={sightSize.w} h={sightSize.h} locked /></g>}
         {showing && instrument === 'deep-space' && <g transform={`translate(${showing.x} ${showing.y})`}><Sight kind="cross" w={0} h={0} locked /></g>}
       </svg>
-      <div className={styles.vignette} aria-hidden="true" />
+      <SceneVignette />
 
       {!(instrument === 'saturn' && zoomed) && targets.map(t => (
         <span key={t.id} className={styles.label} data-active={readout?.id === t.id} data-side={t.side ?? 'below'} style={{ ...(t.side === 'above' ? pct(t.x, t.y - t.hh) : t.side === 'left' ? pct(t.x - t.hw, t.y) : t.side === 'right' ? pct(t.x + t.hw, t.y) : pct(t.x, t.y + t.hh)) }}>{t.name}</span>

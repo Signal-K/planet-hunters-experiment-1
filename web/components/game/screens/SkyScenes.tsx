@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { PixelImage, PixelStar, useEarthImage, useGroundImage, useProbeImage, useSaturnImage, useTelescopeImage } from './SkyPixels'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import styles from './SkyPointing.module.css'
 
@@ -42,7 +43,7 @@ const g_ts = (portrait: boolean) => (portrait ? [0.2, 0.5, 0.8] : [0.16, 0.44, 0
 
 /** Ground telescope: dome on a ridge, targets along the ecliptic. */
 export function groundGeom({ W, H, portrait }: Geom) {
-  const horizon = H * (portrait ? 0.82 : 0.74)
+  const horizon = H * (portrait ? 0.82 : 0.66)
   const p0 = [0, H * (portrait ? 0.6 : 0.6)]
   const p1 = [W / 2, H * (portrait ? 0.12 : 0.04)]
   const p2 = [W, p0[1]]
@@ -79,41 +80,13 @@ export function saturnGeom({ W, H, portrait }: Geom) {
 
 export function Stars({ W, H, count, seed, warm = false }: { W: number; H: number; count: number; seed: number; warm?: boolean }) {
   const r = rng(seed)
-  const list = Array.from({ length: count }, () => {
-    const t = r()
-    const colour = t < 0.12 ? '#ffd9a8' : t < 0.3 ? '#bcd4ff' : '#ffffff'
-    return { x: r() * W, y: r() * H, s: 0.12 + Math.pow(r(), 3) * 0.7, o: 0.35 + r() * 0.65, colour, spike: r() > 0.965, tw: r() > 0.8 }
-  })
   return (
     <g>
-      {list.map((s, i) => (
-        <g key={i}>
-          <circle cx={s.x} cy={s.y} r={s.s} fill={warm && s.colour === '#ffffff' ? '#fff3dc' : s.colour} opacity={s.o} className={s.tw ? styles.twinkle : undefined} style={s.tw ? { animationDelay: `${-(i % 7)}s` } : undefined} />
-          {s.spike && <path d={`M${s.x - 2.2} ${s.y}H${s.x + 2.2}M${s.x} ${s.y - 2.2}V${s.y + 2.2}`} stroke="#fff" strokeWidth="0.12" opacity="0.55" />}
-        </g>
-      ))}
-    </g>
-  )
-}
-
-function MilkyWay({ W, H, angle, y, h, id }: { W: number; H: number; angle: number; y: number; h: number; id: string }) {
-  return (
-    <g transform={`rotate(${angle} ${W / 2} ${y})`} opacity="0.9">
-      <defs>
-        <filter id={`${id}-dust`} x="-10%" y="-60%" width="120%" height="220%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.018 0.05" numOctaves="4" seed="11" result="n" />
-          <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.78  0 0 0 0 0.82  0 0 0 0 0.95  2.4 0 0 0 -0.85" />
-          <feGaussianBlur stdDeviation="0.6" />
-        </filter>
-        <linearGradient id={`${id}-fade`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#7f93c7" stopOpacity="0" />
-          <stop offset="0.5" stopColor="#c8d4ee" stopOpacity="0.34" />
-          <stop offset="1" stopColor="#7f93c7" stopOpacity="0" />
-        </linearGradient>
-        <mask id={`${id}-mask`}><rect x={-W} y={y - h / 2} width={W * 3} height={h} fill={`url(#${id}-fade)`} /></mask>
-      </defs>
-      <rect x={-W} y={y - h / 2} width={W * 3} height={h} fill={`url(#${id}-fade)`} />
-      <g mask={`url(#${id}-mask)`}><rect x={-W} y={y - h / 2} width={W * 3} height={h} filter={`url(#${id}-dust)`} /></g>
+      {Array.from({ length: count }, (_, i) => {
+        const t = r()
+        const colour = t < 0.12 ? '#ffd9a8' : t < 0.3 ? '#bcd4ff' : warm ? '#fff3dc' : '#ffffff'
+        return <PixelStar key={i} x={r() * W} y={r() * H} tone={colour} big={r() > 0.97} opacity={0.5 + r() * 0.5} />
+      })}
     </g>
   )
 }
@@ -140,7 +113,7 @@ export function Sight({ kind, w, h, locked }: { kind: 'frame' | 'cross' | 'zoom'
   )
 }
 
-/** A cluster of stars thickest at the middle, so a field reads as a place and not a rectangle. */
+/** A cluster of stars thickest at the middle, so a field reads as a place and not a rectangle. One cell per star. */
 function Cluster({ cx, cy, rx, ry, count, seed, angle = 0, tone = '#ffffff' }: { cx: number; cy: number; rx: number; ry: number; count: number; seed: number; angle?: number; tone?: string }) {
   const r = rng(seed)
   const a = rad(angle)
@@ -151,20 +124,14 @@ function Cluster({ cx, cy, rx, ry, count, seed, angle = 0, tone = '#ffffff' }: {
         const gy = (r() + r() + r() - 1.5) / 1.5
         const lx = gx * rx
         const ly = gy * ry
-        return <circle key={i} cx={cx + lx * Math.cos(a) - ly * Math.sin(a)} cy={cy + lx * Math.sin(a) + ly * Math.cos(a)} r={0.1 + Math.pow(r(), 3) * 0.45} fill={tone} opacity={0.3 + r() * 0.6} />
+        return <PixelStar key={i} x={cx + lx * Math.cos(a) - ly * Math.sin(a)} y={cy + lx * Math.sin(a) + ly * Math.cos(a)} tone={tone} opacity={0.45 + r() * 0.55} />
       })}
     </g>
   )
 }
 
 function Bright({ x, y, r = 0.9, tone = '#ffffff' }: { x: number; y: number; r?: number; tone?: string }) {
-  return (
-    <g>
-      <circle cx={x} cy={y} r={r * 2.6} fill={tone} opacity="0.16" />
-      <circle cx={x} cy={y} r={r} fill={tone} />
-      <path d={`M${x - r * 3} ${y}H${x + r * 3}M${x} ${y - r * 3}V${y + r * 3}`} stroke={tone} strokeWidth="0.12" opacity="0.6" />
-    </g>
-  )
+  return <PixelStar x={x} y={y} tone={tone} big={r > 0.7} />
 }
 
 /**
@@ -176,7 +143,7 @@ function StarField({ target: t, active, portrait }: { target: SkyTarget; active:
   const k = portrait ? 0.85 : 1
   return (
     <g transform={`translate(${t.x} ${t.y}) scale(${k})`} data-testid={`sky-field-${t.id}`} data-active={active}>
-      {active && <ellipse rx={t.hw * 1.05} ry={t.hh * 1.1} fill="rgba(255, 214, 120, 0.07)" stroke="#ffd678" strokeWidth="0.25" strokeDasharray="1.2 1" />}
+      {active && <ellipse rx={t.hw * 1.05} ry={t.hh * 1.1} fill="none" stroke="#ffd678" strokeWidth="0.4" strokeDasharray="1.5 1.5" />}
       {t.id === 'north' && (
         <>
           <Cluster cx={0} cy={0} rx={t.hw * 0.95} ry={t.hh * 0.9} count={150} seed={21} />
@@ -190,7 +157,6 @@ function StarField({ target: t, active, portrait }: { target: SkyTarget; active:
       )}
       {t.id === 'plane' && (
         <>
-          <ellipse rx={t.hw * 1.1} ry={t.hh * 0.55} transform="rotate(-18)" fill="#aebbe0" opacity="0.2" filter="url(#tr-glow)" />
           <Cluster cx={0} cy={0} rx={t.hw * 1.1} ry={t.hh * 0.5} count={260} seed={33} angle={-18} tone="#f1f4ff" />
           <Cluster cx={-3} cy={1} rx={t.hw * 0.5} ry={t.hh * 0.25} count={90} seed={35} angle={-18} tone="#ffe2b8" />
           <Bright x={5} y={-3} r={0.8} tone="#ffe7bd" />
@@ -199,7 +165,6 @@ function StarField({ target: t, active, portrait }: { target: SkyTarget; active:
       )}
       {t.id === 'south' && (
         <>
-          <ellipse cx={t.hw * 0.62} cy={-t.hh * 0.45} rx={5.5} ry={3.4} transform={`rotate(-20 ${t.hw * 0.62} ${-t.hh * 0.45})`} fill="#c5d4f5" opacity="0.16" filter="url(#tr-glow)" />
           <Cluster cx={t.hw * 0.62} cy={-t.hh * 0.45} rx={4.5} ry={2.6} count={40} seed={47} angle={-20} tone="#dce6ff" />
           <path d="M0 8L0 -8M-5.5 1.5L4.5 -1.5" {...line} />
           <path d="M-17 5L-12 8" {...line} />
@@ -220,118 +185,38 @@ function StarField({ target: t, active, portrait }: { target: SkyTarget; active:
  * The space telescope: four wide-field cameras on the front of a bus with two solar wings, lit from the sun's side.
  * The whole spacecraft slews so the cameras face wherever the sight is, and a faint sightline joins lens and sight.
  */
-function TelescopeCraft({ x, y, s, aim, sighting }: { x: number; y: number; s: number; aim: { x: number; y: number }; sighting: boolean }) {
+function TelescopeCraft({ x, y, aim, sighting }: { x: number; y: number; aim: { x: number; y: number }; sighting: boolean }) {
   const dx = aim.x - x
   const dy = aim.y - y
   const raw = (Math.atan2(dx, -dy) * 180) / Math.PI
   const angle = Math.max(-75, Math.min(75, raw))
   const len = Math.hypot(dx, dy)
-  const tip = { x: x + Math.sin(rad(angle)) * 8.2 * s, y: y - Math.cos(rad(angle)) * 8.2 * s }
+  const sprite = useTelescopeImage(angle)
+  const tip = { x: x + Math.sin(rad(sprite.step)) * 11, y: y - Math.cos(rad(sprite.step)) * 11 }
   return (
     <g data-testid="sky-craft" data-angle={Math.round(angle)}>
-      {sighting && len > 14 && <line x1={tip.x} y1={tip.y} x2={aim.x} y2={aim.y} stroke="#9fd6e4" strokeWidth="0.2" strokeDasharray="0.8 1.4" opacity="0.5" />}
-      <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${s})`}>
-        <defs>
-          <linearGradient id="tc-body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#7e8ca1" /><stop offset="0.55" stopColor="#d8e1ee" /><stop offset="1" stopColor="#f4f8ff" /></linearGradient>
-          <linearGradient id="tc-foil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#8a6a22" /><stop offset="1" stopColor="#f0c860" /></linearGradient>
-          <linearGradient id="tc-panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3b6aa8" /><stop offset="1" stopColor="#16305a" /></linearGradient>
-          <pattern id="tc-cells" width="2" height="1.6" patternUnits="userSpaceOnUse"><rect width="2" height="1.6" fill="url(#tc-panel)" /><path d="M0 0H2M0 0V1.6" stroke="#9cc4f2" strokeWidth="0.08" opacity="0.7" /></pattern>
-        </defs>
-        {/* solar wings, on short booms */}
-        <path d="M-4 2H-6M4 2H6" stroke="#aab6c8" strokeWidth="0.5" />
-        <rect x="-17.5" y="-0.2" width="11.5" height="4.4" fill="url(#tc-cells)" stroke="#a8c8f0" strokeWidth="0.2" />
-        <rect x="6" y="-0.2" width="11.5" height="4.4" fill="url(#tc-cells)" stroke="#a8c8f0" strokeWidth="0.2" />
-        {/* bus */}
-        <rect x="-4" y="-3.4" width="8" height="8.4" rx="0.7" fill="url(#tc-body)" stroke="#2a3a52" strokeWidth="0.3" />
-        <rect x="-4" y="3.4" width="8" height="1.6" fill="url(#tc-foil)" />
-        <path d="M-2.4 -3.4V5M0 -3.4V5M2.4 -3.4V5" stroke="#6c7b92" strokeWidth="0.1" opacity="0.6" />
-        {/* camera array: four lens barrels */}
-        {[-3, -1, 1, 3].map(cx => (
-          <g key={cx}>
-            <rect x={cx - 0.8} y="-7.4" width="1.6" height="4.2" fill="#10192b" stroke="#c4d2e6" strokeWidth="0.2" />
-            <ellipse cx={cx} cy="-7.4" rx="0.8" ry="0.35" fill="#9fd6e4" />
-          </g>
-        ))}
-        <path d="M-4.2 -3.2H4.2" stroke="#2a3a52" strokeWidth="0.3" />
-        {/* high-gain dish on the back */}
-        <path d="M5.2 4.6L8.4 6.4" stroke="#aab6c8" strokeWidth="0.3" />
-        <ellipse cx="8.8" cy="6.7" rx="2" ry="0.8" transform="rotate(30 8.8 6.7)" fill="#e6edf7" stroke="#6c7b92" strokeWidth="0.2" />
-      </g>
+      {sighting && len > 16 && <line x1={tip.x} y1={tip.y} x2={aim.x} y2={aim.y} stroke="#9fd6e4" strokeWidth="0.4" strokeDasharray="1 2" opacity="0.7" />}
+      <PixelImage href={sprite.src} x={Math.round(x - sprite.px)} y={Math.round(y - sprite.py)} w={sprite.size} h={sprite.size} />
     </g>
   )
 }
 
 /* ───────────── Space telescope ───────────── */
 
-/** Continents, cloud bands and night-side city lights for the visible slice of Earth. */
-function earthWorld(earth: { cx: number; cy: number; r: number }, W: number) {
-  const r = rng(23)
-  const top = earth.cy - earth.r
-  const hue = ['#3f8f3a', '#4c9a44', '#35803a', '#5aa04a']
-  const land = Array.from({ length: 7 }, (_, i) => {
-    const rad = W * (0.07 + r() * 0.09)
-    const n = 11
-    const pts = Array.from({ length: n }, (_, k) => { const a = (k / n) * Math.PI * 2; const rr = rad * (0.55 + r() * 0.6); return [Math.cos(a) * rr * 1.5, Math.sin(a) * rr * 0.55] as const }
-    )
-    let d = `M${(pts[0][0] + pts[n - 1][0]) / 2} ${(pts[0][1] + pts[n - 1][1]) / 2}`
-    pts.forEach((q, k) => { const nx = pts[(k + 1) % n]; d += ` Q${q[0]} ${q[1]} ${(q[0] + nx[0]) / 2} ${(q[1] + nx[1]) / 2}` })
-    const x = (i + 0.3 + r() * 0.4) * (W / 7)
-    const y = top + 6 + r() * 34 + (Math.abs(x - earth.cx) / W) * 6
-    return { d: d + 'Z', cx: x, cy: y, r: rad, hue: hue[i % hue.length] }
-  })
-  const clouds = Array.from({ length: 12 }, () => { const x = r() * W; return { x, y: top + 3 + r() * 44 + (Math.abs(x - earth.cx) / W) * 8, rx: 8 + r() * 22, ry: 0.9 + r() * 1.8, a: -8 + r() * 16, o: 0.35 + r() * 0.4 } })
-  const cities = Array.from({ length: 46 }, () => { const x = r() * W * 0.38; return { x, y: top + 4 + r() * 50 + (Math.abs(x - earth.cx) / W) * 14, r: 0.22 + r() * 0.3, o: 0.5 + r() * 0.5 } })
-  return { land, clouds, cities }
-}
-
 export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | null; aim: { x: number; y: number } }) {
   const { W, H } = g
   const { earth, craft, targets, dish } = transitGeom(g)
-  const world = useMemo(() => earthWorld(earth, W), [earth.cx, earth.cy, earth.r, W])
+  const earthImg = useEarthImage(W, H, earth)
   const detections = target
     ? (() => { const r = rng(91); return Array.from({ length: 7 }, () => ({ x: target.x + (r() - 0.5) * target.hw * 1.7, y: target.y + (r() - 0.5) * target.hh * 1.7 })) })()
     : []
   return (
     <g>
-      <defs>
-        <radialGradient id="tr-sky" cx="50%" cy="100%" r="110%"><stop offset="0" stopColor="#132a4d" /><stop offset="0.6" stopColor="#060d20" /><stop offset="1" stopColor="#02040c" /></radialGradient>
-        <radialGradient id="tr-ocean" cx="50%" cy="0%" r="100%"><stop offset="0" stopColor="#6fc0ff" /><stop offset="0.12" stopColor="#2a74c8" /><stop offset="0.5" stopColor="#0f3a78" /><stop offset="1" stopColor="#04132c" /></radialGradient>
-        <radialGradient id="tr-sun" cx="85%" cy="0%" r="55%"><stop offset="0" stopColor="#ffd08a" stopOpacity="0.9" /><stop offset="1" stopColor="#ff8a3a" stopOpacity="0" /></radialGradient>
-        <filter id="tr-land" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.014" numOctaves="5" seed="3" /><feColorMatrix type="matrix" values="0 0 0 0 0.16  0 0 0 0 0.42  0 0 0 0 0.16  30 0 0 0 -14.6" /></filter>
-        <filter id="tr-desert" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.011 0.017" numOctaves="4" seed="11" /><feColorMatrix type="matrix" values="0 0 0 0 0.8  0 0 0 0 0.64  0 0 0 0 0.36  26 0 0 0 -14.4" /></filter>
-        <filter id="tr-shallows" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.014" numOctaves="5" seed="3" /><feColorMatrix type="matrix" values="0 0 0 0 0.3  0 0 0 0 0.8  0 0 0 0 0.85  10 0 0 0 -4.4" /></filter>
-        <filter id="tr-cloud" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.014 0.04" numOctaves="5" seed="8" /><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  5 0 0 0 -2.7" /></filter>
-        <filter id="tr-wisp" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="1.1" /></filter>
-        <filter id="tr-city" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="2" seed="5" /><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.82  0 0 0 0 0.45  0 0 0 0 0  26 0 0 0 -17.5" /></filter>
-        <linearGradient id="tr-night" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#010410" stopOpacity="0.82" /><stop offset="0.5" stopColor="#010410" stopOpacity="0.1" /><stop offset="1" stopColor="#010410" stopOpacity="0" /></linearGradient>
-        <linearGradient id="tr-haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9fd6ff" stopOpacity="0.55" /><stop offset="1" stopColor="#9fd6ff" stopOpacity="0" /></linearGradient>
-        <filter id="tr-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4" /></filter>
-        <clipPath id="tr-earth"><circle cx={earth.cx} cy={earth.cy} r={earth.r} /></clipPath>
-      </defs>
-      <rect width={W} height={H} fill="url(#tr-sky)" />
-      <MilkyWay W={W} H={H} angle={g.portrait ? -62 : -18} y={H * 0.32} h={H * (g.portrait ? 0.5 : 0.7)} id="tr" />
-      <Stars W={W} H={H} count={g.portrait ? 170 : 260} seed={7} />
       {/* the three star fields, drawn where their targets are */}
       {targets.map(t => <StarField key={t.id} target={t} active={target?.id === t.id} portrait={g.portrait} />)}
-      {/* Earth */}
-      <circle cx={earth.cx} cy={earth.cy} r={earth.r + 1.6} fill="none" stroke="#7cc4ff" strokeWidth="2.4" opacity="0.5" filter="url(#tr-glow)" />
-      <circle cx={earth.cx} cy={earth.cy} r={earth.r} fill="url(#tr-ocean)" />
-      <g clipPath="url(#tr-earth)">
-        {world.land.map((c, i) => (
-          <g key={i}>
-            <path d={c.d} fill="#5fc6c2" opacity="0.45" transform={`translate(${c.cx} ${c.cy}) scale(1.14)`} />
-            <path d={c.d} fill={c.hue} stroke="#1f3d1a" strokeWidth="0.25" transform={`translate(${c.cx} ${c.cy})`} />
-            <path d={c.d} fill="#c9a869" opacity="0.55" transform={`translate(${c.cx + c.r * 0.12} ${c.cy + c.r * 0.1}) scale(0.5)`} />
-          </g>
-        ))}
-        {world.clouds.map((c, i) => <ellipse key={i} cx={c.x} cy={c.y} rx={c.rx} ry={c.ry} transform={`rotate(${c.a} ${c.x} ${c.y})`} fill="#fff" opacity={c.o} filter="url(#tr-wisp)" />)}
-        <rect x="0" y={earth.cy - earth.r} width={W} height={earth.r * 0.45} fill="url(#tr-sun)" />
-        {world.cities.map((c, i) => <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="#ffd98a" opacity={c.o} />)}
-        <rect x="0" y={earth.cy - earth.r} width={W} height={earth.r * 0.45} fill="url(#tr-night)" />
-        <rect x="0" y={earth.cy - earth.r} width={W} height={earth.r * 0.07} fill="url(#tr-haze)" />
-      </g>
-      <circle cx={earth.cx} cy={earth.cy} r={earth.r} fill="none" stroke="#bfe3ff" strokeWidth="0.5" opacity="0.65" />
-      <TelescopeCraft x={craft.x} y={craft.y} s={g.portrait ? 0.85 : 1} aim={aim} sighting={!target} />
+      {/* Earth: pixel art, same palette family as the flight sprite */}
+      <PixelImage href={earthImg} x={0} y={0} w={Math.ceil(W)} h={Math.ceil(H)} testId="sky-earth" />
+      <TelescopeCraft x={craft.x} y={craft.y} aim={aim} sighting={!target} />
       {target && (
         <g data-testid="sky-signal">
           {detections.map((d, i) => <path key={i} d={`M${d.x - 1.6} ${d.y - 0.6}V${d.y - 1.6}H${d.x - 0.6}M${d.x + 0.6} ${d.y - 1.6}H${d.x + 1.6}V${d.y - 0.6}M${d.x - 1.6} ${d.y + 0.6}V${d.y + 1.6}H${d.x - 0.6}M${d.x + 0.6} ${d.y + 1.6}H${d.x + 1.6}V${d.y + 0.6}`} className={styles.detect} style={{ animationDelay: `${i * 0.35}s` }} />)}
@@ -352,46 +237,22 @@ export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | 
 export function GroundScene({ g, target }: { g: Geom; target: SkyTarget | null }) {
   const { W, H } = g
   const { horizon, p0, p1, p2, targets, dome } = groundGeom(g)
-  const r = rng(5)
-  const trees = Array.from({ length: g.portrait ? 12 : 26 }, () => ({ x: r() * W, h: 3 + r() * 6 }))
+  const groundImg = useGroundImage(W, H, { horizon, dome }, g.portrait)
   const mover = Array.from({ length: 6 }, (_, i) => { const [x, y] = quad(p0, p1, p2, 0.12 + i * 0.15); return { x, y: y - 3 + (i % 3) * 3 } })
   const slitAngle = target ? Math.max(-24, Math.min(24, (target.x - dome.x) / 3)) : 0
   const beamTop = target ? { x: target.x, y: target.y } : null
   return (
     <g>
-      <defs>
-        <linearGradient id="gr-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#030816" /><stop offset="0.55" stopColor="#0c2347" /><stop offset="0.86" stopColor="#2a4466" /><stop offset="1" stopColor="#8a6a58" /></linearGradient>
-        <linearGradient id="gr-ridge1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#14202f" /><stop offset="1" stopColor="#070c14" /></linearGradient>
-        <filter id="gr-beam" x="-50%" y="-5%" width="200%" height="110%"><feGaussianBlur stdDeviation="0.5" /></filter>
-        <filter id="gr-fog" x="0" y="0" width="100%" height="100%"><feGaussianBlur stdDeviation="1.8" /></filter>
-      </defs>
-      <rect width={W} height={H} fill="url(#gr-sky)" />
-      <MilkyWay W={W} H={H} angle={g.portrait ? -74 : -28} y={H * 0.36} h={H * (g.portrait ? 0.4 : 0.55)} id="gr" />
-      <Stars W={W} H={H} count={g.portrait ? 200 : 300} seed={13} />
+      <PixelImage href={groundImg} x={0} y={0} w={Math.ceil(W)} h={Math.ceil(H)} />
       <path d={`M${p0[0]} ${p0[1]} Q ${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`} className={styles.ecliptic} />
       {targets.map(t => <circle key={t.id} cx={t.x} cy={t.y} r={t.hw} className={styles.sector} data-active={target?.id === t.id} />)}
       {mover.map((m, i) => <g key={i} className={styles.mover} style={{ animationDelay: `${-i * 1.7}s` }}><circle cx={m.x} cy={m.y} r="0.55" fill="#dfe9ff" /><path d={`M${m.x - 3} ${m.y + 0.4}L${m.x - 0.6} ${m.y}`} stroke="#dfe9ff" strokeWidth="0.2" opacity="0.5" /></g>)}
-      {/* ridges and trees */}
-      <path d={`M0 ${horizon - 9} Q ${W * 0.2} ${horizon - 17} ${W * 0.42} ${horizon - 8} T ${W * 0.8} ${horizon - 12} T ${W} ${horizon - 7} V ${H} H0Z`} fill="#1b2c40" opacity="0.8" filter="url(#gr-fog)" />
-      <path d={`M0 ${horizon - 4} Q ${W * 0.15} ${horizon - 11} ${W * 0.35} ${horizon - 4} T ${W * 0.7} ${horizon - 6} T ${W} ${horizon - 3} V ${H} H0Z`} fill="url(#gr-ridge1)" />
-      <path d={`M0 ${horizon + 1} Q ${W * 0.3} ${horizon - 3} ${W * 0.5} ${horizon + 1} T ${W} ${horizon + 1} V ${H} H0Z`} fill="#03060b" />
-      {trees.map((t, i) => <path key={i} d={`M${t.x} ${horizon + 2}l-1.2 0 1.2 -${t.h} 1.2 ${t.h}z`} fill="#02040a" />)}
-      {/* the observatory */}
-      <g transform={`translate(${dome.x} ${dome.y}) scale(1.4)`}>
-        <rect x="-9" y="-1" width="18" height="6" fill="#0a111c" stroke="#1d2f47" strokeWidth="0.25" />
-        <path d="M-7.5 -1 A7.5 7.5 0 0 1 7.5 -1Z" fill="#c9d3df" stroke="#20324a" strokeWidth="0.35" />
-        <g transform={`rotate(${slitAngle} 0 -1)`}>
-          <rect x="-1.1" y="-8.5" width="2.2" height="7.5" fill={target ? '#ffe39a' : '#0a111c'} className={styles.slit} />
-        </g>
-        <path d="M-7.5 -1 A7.5 7.5 0 0 1 7.5 -1" fill="none" stroke="#7aa6dd" strokeWidth="0.2" opacity="0.7" />
-        <rect x="10" y="1" width="9" height="4" fill="#0a111c" />
-        <rect x="11.2" y="1.8" width="1.4" height="1.2" fill="#ffd98a" /><rect x="14" y="1.8" width="1.4" height="1.2" fill="#ffd98a" />
-        <path d="M-18 4 L-18 -5 L-16.6 -5 L-16.6 4Z" fill="#0a111c" /><circle cx="-17.3" cy="-5.3" r="0.6" fill="#ff4d4d" className={styles.blink} />
-      </g>
+      {/* the dome's slit lights up when a target is locked */}
+      {target && <rect x={Math.round(dome.x) - 1} y={Math.round(dome.y) - 12} width="3" height="11" fill="#ffe39a" transform={`rotate(${slitAngle} ${Math.round(dome.x)} ${Math.round(dome.y) - 1})`} />}
+      <rect x={Math.round(dome.x) - 26} y={Math.round(dome.y) - 12} width="2" height="2" fill="#ff4d4d" className={styles.blink} />
       {target && beamTop && (
         <g data-testid="sky-signal">
-          <line x1={dome.x} y1={dome.y - 11} x2={beamTop.x} y2={beamTop.y} stroke="#9bff9b" strokeWidth="1.6" opacity="0.28" filter="url(#gr-beam)" />
-          <line x1={dome.x} y1={dome.y - 11} x2={beamTop.x} y2={beamTop.y} stroke="#caffca" strokeWidth="0.35" className={styles.laser} />
+          <line x1={dome.x} y1={dome.y - 11} x2={beamTop.x} y2={beamTop.y} stroke="#caffca" strokeWidth="0.6" strokeDasharray="1.5 1" className={styles.laser} />
           <circle cx={beamTop.x} cy={beamTop.y} r="1.1" fill="#caffca" className={styles.blink} />
           {[0, 1, 2, 3].map(i => <circle key={i} r={0.8} className={styles.packet} style={{ offsetPath: `path('M${beamTop.x} ${beamTop.y} L ${dome.x} ${dome.y - 11}')`, animationDelay: `${i * 0.7}s` }} />)}
           <circle cx={beamTop.x} cy={beamTop.y} r={target.hw} className={styles.lockRing} />
@@ -423,38 +284,18 @@ export function SaturnScene({ g, target, zoomed }: { g: Geom; target: SkyTarget 
   const { W, H } = g
   const s = saturnGeom(g)
   const { R, cx, cy, craft, earth, targets } = s
+  const planetImg = useSaturnImage(W, H, s)
+  const probe = useProbeImage()
   const zoom = target && zoomed
     ? `translate(${W / 2}px, ${H / 2}px) scale(3.4) translate(${-target.x}px, ${-target.y}px)`
     : `translate(${W / 2}px, ${H / 2}px) scale(1) translate(${-W / 2}px, ${-H / 2}px)`
   return (
     <g>
-      <defs>
-        <radialGradient id="sat-bg" cx="60%" cy="45%" r="90%"><stop offset="0" stopColor="#10172b" /><stop offset="1" stopColor="#02040a" /></radialGradient>
-        <linearGradient id="sat-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#c8ab74" /><stop offset="0.12" stopColor="#e9d5a2" /><stop offset="0.26" stopColor="#b8935a" /><stop offset="0.38" stopColor="#ecd9aa" />
-          <stop offset="0.52" stopColor="#c9a869" /><stop offset="0.66" stopColor="#e4cd9a" /><stop offset="0.8" stopColor="#a98456" /><stop offset="1" stopColor="#8a6a3e" />
-        </linearGradient>
-        <radialGradient id="sat-shade" cx="35%" cy="38%" r="75%"><stop offset="0.35" stopColor="#000" stopOpacity="0" /><stop offset="0.85" stopColor="#1a0f04" stopOpacity="0.55" /><stop offset="1" stopColor="#000" stopOpacity="0.85" /></radialGradient>
-        <filter id="sat-bands" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.11" numOctaves="3" seed="6" /><feColorMatrix type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 0 0.12  1.6 0 0 0 -0.45" /></filter>
-        <filter id="sat-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" /></filter>
-        <clipPath id="sat-planet"><circle cx={cx} cy={cy} r={R} /></clipPath>
-        <clipPath id="sat-back"><rect x={cx - R * 3} y={cy - R * 3} width={R * 6} height={R * 3} /></clipPath>
-        <clipPath id="sat-front"><rect x={cx - R * 3} y={cy} width={R * 6} height={R * 3} /></clipPath>
-      </defs>
-      <rect width={W} height={H} fill="url(#sat-bg)" />
       <g className={styles.zoomLayer} style={{ transform: zoom }} data-testid="sky-zoom">
         <Stars W={W} H={H} count={g.portrait ? 120 : 170} seed={21} />
-        <circle cx={cx} cy={cy} r={R * 1.05} fill="#e3c88f" opacity="0.28" filter="url(#sat-glow)" />
-        <Rings g={g} half="back" />
-        <circle cx={cx} cy={cy} r={R} fill="url(#sat-body)" />
-        <g clipPath="url(#sat-planet)">
-          <rect x={cx - R} y={cy - R} width={R * 2} height={R * 2} filter="url(#sat-bands)" />
-          <ellipse cx={cx} cy={cy - R * 0.02} rx={R * 1.1} ry={R * 0.075} fill="#1a0f04" opacity="0.3" transform={`rotate(-16 ${cx} ${cy})`} />
-          <circle cx={cx} cy={cy} r={R} fill="url(#sat-shade)" />
-        </g>
-        <Rings g={g} half="front" />
-        <circle cx={cx + R * 2.7} cy={cy - R * 0.55} r="1.3" fill="#e8a64d" /><circle cx={cx + R * 2.7} cy={cy - R * 0.55} r="2.8" fill="#e8a64d" opacity="0.22" />
-        <circle cx={cx - R * 2.3} cy={cy + R * 0.7} r="0.5" fill="#fff" />
+        <PixelImage href={planetImg} x={0} y={0} w={Math.ceil(W)} h={Math.ceil(H)} />
+        <rect x={Math.round(cx + R * 2.7) - 1} y={Math.round(cy - R * 0.55) - 1} width="3" height="3" fill="#e8a64d" />
+        <rect x={Math.round(cx - R * 2.3)} y={Math.round(cy + R * 0.7)} width="1" height="1" fill="#fff" />
         {/* close-up detail, revealed by the zoom */}
         {target && (
           <g className={styles.detail} data-on={zoomed}>
@@ -485,14 +326,11 @@ export function SaturnScene({ g, target, zoomed }: { g: Geom; target: SkyTarget 
         )}
       </g>
       {/* spacecraft and downlink, never zoomed */}
-      <g transform={`translate(${craft.x} ${craft.y}) rotate(-20)`} data-testid="sky-craft" className={styles.craft} data-parked={Boolean(target)}>
-        <rect x="-3" y="-2.6" width="6" height="5.2" fill="#c4cdd8" stroke="#0c1a2e" strokeWidth="0.3" />
-        <rect x="-3" y="-2.6" width="6" height="1.1" fill="#e9c46a" />
-        <path d="M-1 -2.6 L-6.4 -9.5 Q 0 -13 6.4 -9.5 L1 -2.6Z" fill="#e4e9ef" stroke="#0c1a2e" strokeWidth="0.3" />
-        <path d="M0 -2.6V-11" stroke="#0c1a2e" strokeWidth="0.3" />
-        <rect x="-8.4" y="-1.4" width="5.4" height="2" fill="#4d5560" /><rect x="3" y="-1.4" width="5.4" height="2" fill="#4d5560" />
+      <g data-testid="sky-craft" className={styles.craft} data-parked={Boolean(target)}>
+        <PixelImage href={probe.src} x={Math.round(craft.x - probe.w / 2)} y={Math.round(craft.y - probe.h / 2)} w={probe.w} h={probe.h} />
       </g>
-      <circle cx={earth.x} cy={earth.y} r="3.4" fill="#4aa3ff" /><circle cx={earth.x} cy={earth.y} r="3.4" fill="none" stroke="#bfe3ff" strokeWidth="0.3" />
+      {/* Earth, a small blue dot, drawn as pixels */}
+      <g>{[[3, 0], [5, 1], [7, 2], [7, 3], [7, 4], [5, 5], [3, 6]].map(([n, row], i) => <rect key={i} x={Math.round(earth.x) - (n - 1) / 2 - 0.5} y={Math.round(earth.y) - 3 + (row ?? i)} width={n} height="1" fill="#4aa3ff" />)}</g>
       {target && (
         <g data-testid="sky-signal">
           <line x1={craft.x} y1={craft.y - 8} x2={earth.x} y2={earth.y} className={styles.beam} />
