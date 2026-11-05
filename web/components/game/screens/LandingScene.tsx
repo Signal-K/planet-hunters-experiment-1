@@ -26,8 +26,8 @@ function rng(seed0: number) {
  * the ground (read-only, the same world the rovers later work on); this layer
  * adds the star field, the lander with its plume and dust, the landing ring and
  * the orbiter. Altitude runs from 1 (orbit: the world is a small, hazy diorama
- * in space) to 0 (surface: the field fills the view). The Takeon view is wider
- * than the screen so the field's own parked rover sits off to the right, out of frame.
+ * in space) to 0 (surface: the field fills the view). The field is drawn
+ * without its rover (`showRover={false}`): a landing has no vehicle on the ground yet.
  */
 export default function LandingScene({ target, progress, mode }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -77,12 +77,13 @@ export default function LandingScene({ target, progress, mode }: Props) {
         {stars.map((s, i) => <circle key={i} cx={s.x * W} cy={s.y * H} r={s.s} fill="#fff" opacity={s.o} />)}
       </svg>
 
-      <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '240%', transform: `scale(${lerp(0.5, 1.08, low)})`, transformOrigin: '20.8% 62%', opacity: lerp(0.55, 1, low), filter: `blur(${(1 - low) * 1.6}px)` }}>
+      <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.5, 1.08, low)})`, transformOrigin: '50% 62%', opacity: lerp(0.55, 1, low), filter: `blur(${(1 - low) * 1.6}px)` }}>
         <TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
           rover={rover}
           startView="iso"
+          showRover={false}
           readOnly
         />
       </div>

@@ -134,6 +134,8 @@ export interface TakeOnMountProps {
    * need no rotated-axis reasoning. The iso diorama stays one toggle away.
    */
   startView?: ViewKind
+  /** Draw the rover (default true). Off for scenes that show the ground with no vehicle in it, like a landing. Isometric view only. */
+  showRover?: boolean
   onEvent?: (event: TakeonHostEvent) => void
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
@@ -255,6 +257,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   lifeStage = 'dormant',
   readOnly = false,
   startView = 'flat',
+  showRover = true,
   onEvent,
   onRouteChange,
   onReady,
@@ -502,6 +505,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           seed,
           resume: resume ?? undefined,
           startView,
+          showRover,
         })
 
         const handleHostEvent = (event: TakeonHostEvent) => {
@@ -651,6 +655,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     rover,
     roverName,
     seed,
+    showRover,
     startView,
     targetId,
   ])
