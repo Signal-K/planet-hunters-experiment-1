@@ -111,10 +111,3 @@
   .how { gap: 8px; }
 }
 
-.pointing { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; margin-top: 4px; }
-.pointing .eyebrow { grid-column: 1 / -1; }
-.pointOption { display: grid; gap: 2px; align-content: center; min-height: 44px; padding: 6px 8px; border: 1.5px solid rgba(255, 255, 255, .45); border-radius: 10px; background: rgba(3, 6, 12, .55); color: #f4efe4; text-align: center; cursor: pointer; }
-.pointOption b { font: 800 14px/1.15 var(--ln-font-body); }
-.pointOption small { color: #b8c8c0; font: 600 14px/1.15 var(--ln-font-body); }
-.pointOption[data-selected='true'] { border-color: var(--ln-world-glass); box-shadow: 0 0 0 2px var(--ln-world-glass); }
-@media (max-height: 520px), (max-width: 720px) { .pointOption small { display: none; } }

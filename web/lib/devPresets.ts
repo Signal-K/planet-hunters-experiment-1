@@ -176,6 +176,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 3 of 3', hint: 'Explorer path this week, on Orionids mission 3 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
+      { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Explorer chosen this week, instruments not aimed yet: steer the sight across the night sky with the stick and lock on', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
@@ -920,6 +921,12 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-sky-pointing':
+      return {
+        ...fixture('ui-community-research')!,
+        player: { ...POST_ONBOARDING_PLAYER, researchPath: { week: weekKey(Date.now()), path: 'explorer' } },
+      }
+
     case 'ui-community-research-orionids': {
       // SSL-714: the Orionids chain inside Community research.
       const today = new Date().toISOString().slice(0, 10)
@@ -928,7 +935,7 @@ function fixture(name: string): Partial<GameState> | null {
         ...fixture('ui-community-research')!,
         player: {
           ...POST_ONBOARDING_PLAYER,
-          researchPath: { week: weekKey(checkedAt), path: 'explorer' },
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
           researchStamps: { [today]: ['classification', 'event'] },
           orionidsEventStage: 2,
           orionidsFragments: { caught: 25, redeemed: 0 },

@@ -308,6 +308,14 @@
    "tickets": ["SSL-691", "SSL-694", "SSL-746", "SSL-757"]
   },
   {
+   "id": "sky-pointing",
+   "name": "Sky pointing",
+   "flow": "records",
+   "web": "ui-sky-pointing",
+   "native": "",
+   "tickets": ["SSL-768"]
+  },
+  {
    "id": "economy-arrival",
    "name": "Welcome back: market board",
    "flow": "progression",

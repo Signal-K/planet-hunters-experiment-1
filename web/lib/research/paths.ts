@@ -29,6 +29,13 @@ export function choosePath<T extends { researchPath?: ResearchPathChoice }>(play
   return { ...player, researchPath: { week: weekKey(now), path, ...(path === 'explorer' && pointing ? { pointing } : {}) } }
 }
 
+/** Aim this week's instruments. Only an Explorer with no aim yet can point, and only once. */
+export function setPointing<T extends { researchPath?: ResearchPathChoice }>(player: T, pointing: InstrumentPointing, now: number): T {
+  const choice = player.researchPath
+  if (!choice || choice.week !== weekKey(now) || choice.path !== 'explorer' || choice.pointing) return player
+  return { ...player, researchPath: { ...choice, pointing } }
+}
+
 /** The instrument the player aimed this week, or null when none was picked or the week has rolled over. */
 export function pointingThisWeek(choice: ResearchPathChoice | undefined, now: number): InstrumentPointing | null {
   return choice && choice.week === weekKey(now) ? choice.pointing ?? null : null

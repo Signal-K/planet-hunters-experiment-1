@@ -14,6 +14,7 @@ import CommunityConsensus, { type PendingConsensusReview } from './CommunityCons
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
+import SkyPointing from './SkyPointing'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
@@ -25,7 +26,8 @@ interface CommunityResearchScreenProps {
   player: Player
   communityResearch?: CommunityResearch | null
   onBack: () => void
-  onChoosePath: (path: ResearchPathId, pointing?: InstrumentPointing) => void
+  onChoosePath: (path: ResearchPathId) => void
+  onPoint: (pointing: InstrumentPointing) => void
   onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
@@ -86,13 +88,13 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
+export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onPoint, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
-  const [pointing, setPointing] = useState<InstrumentPointing>('transit')
+  const [pointingOpen, setPointingOpen] = useState(true)
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
@@ -101,6 +103,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
   const pointedLabel = POINTING_OPTIONS.find(option => option.id === pointingThisWeek(player.researchPath, now))?.label.toLowerCase() ?? null
+  const aimed = pointingThisWeek(player.researchPath, now)
+  const needsPointing = path === 'explorer' && !aimed
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
@@ -132,6 +136,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   }, [path, rewardSignature])
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
+      {needsPointing && pointingOpen && <SkyPointing onLock={onPoint} onCancel={() => setPointingOpen(false)} />}
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
@@ -155,17 +160,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Point your instruments at the sky to find new anomalies, then classify what they catch. Five steps, and the research helps everyone.'}</p>
-                  {selectedPath === 'explorer' && (
-                    <div className={styles.pointing} role="radiogroup" aria-label="Point your instruments" data-testid="community-research-pointing">
-                      <span className={styles.eyebrow}>Point your instruments</span>
-                      {POINTING_OPTIONS.map(option => (
-                        <button key={option.id} type="button" role="radio" aria-checked={pointing === option.id} className={styles.pointOption} data-selected={pointing === option.id} data-testid={`research-pointing-${option.id}`} onClick={() => setPointing(option.id)}>
-                          <b>{option.label}</b><small>{option.note}</small>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Aim your instruments at the sky to find new anomalies, then check what they catch. Five steps, and the research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>
@@ -184,7 +179,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
                   description="Your path is locked until Monday, when it resets and you can pick again."
                   confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
-                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath, selectedPath === 'explorer' ? pointing : undefined) }}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
                   onDismiss={() => setConfirmingPath(false)}
                 />
               )}
@@ -195,6 +190,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
                   <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete</span>
+                  {needsPointing && !pointingOpen && <button type="button" className={board.contractTake} data-testid="community-research-point" onClick={() => setPointingOpen(true)}>POINT INSTRUMENTS</button>}
                 </div>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (
