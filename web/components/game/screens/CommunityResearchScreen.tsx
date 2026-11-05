@@ -5,7 +5,7 @@ import { GalaxyMap } from '@/components/game/MissionBoard'
 import { liveEventWeek } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
+import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, POINTING_OPTIONS, pointingThisWeek, type InstrumentPointing, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
@@ -25,7 +25,7 @@ interface CommunityResearchScreenProps {
   player: Player
   communityResearch?: CommunityResearch | null
   onBack: () => void
-  onChoosePath: (path: ResearchPathId) => void
+  onChoosePath: (path: ResearchPathId, pointing?: InstrumentPointing) => void
   onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
@@ -92,6 +92,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
+  const [pointing, setPointing] = useState<InstrumentPointing>('transit')
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
@@ -99,6 +100,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
+  const pointedLabel = POINTING_OPTIONS.find(option => option.id === pointingThisWeek(player.researchPath, now))?.label.toLowerCase() ?? null
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
@@ -154,6 +156,16 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
                   <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Point your instruments at the sky to find new anomalies, then classify what they catch. Five steps, and the research helps everyone.'}</p>
+                  {selectedPath === 'explorer' && (
+                    <div className={styles.pointing} role="radiogroup" aria-label="Point your instruments" data-testid="community-research-pointing">
+                      <span className={styles.eyebrow}>Point your instruments</span>
+                      {POINTING_OPTIONS.map(option => (
+                        <button key={option.id} type="button" role="radio" aria-checked={pointing === option.id} className={styles.pointOption} data-selected={pointing === option.id} data-testid={`research-pointing-${option.id}`} onClick={() => setPointing(option.id)}>
+                          <b>{option.label}</b><small>{option.note}</small>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </section>
               <section className={styles.right}>
@@ -172,7 +184,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
                   description="Your path is locked until Monday, when it resets and you can pick again."
                   confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
-                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath, selectedPath === 'explorer' ? pointing : undefined) }}
                   onDismiss={() => setConfirmingPath(false)}
                 />
               )}
@@ -182,7 +194,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
               <section className={styles.left}>
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
-                  <span>{finished}/{steps.length} complete</span>
+                  <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete</span>
                 </div>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (

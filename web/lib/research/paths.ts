@@ -1,7 +1,15 @@
 import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
 
 export type ResearchPathId = 'explorer' | 'trader'
-export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[] }
+export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
+export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing }
+
+/** What an Explorer can aim their instruments at for the week. */
+export const POINTING_OPTIONS: { id: InstrumentPointing; label: string; note: string }[] = [
+  { id: 'transit', label: 'Planet transits', note: 'Stars that dim as a world crosses them.' },
+  { id: 'deep-space', label: 'Moving objects', note: 'Asteroids drifting across the deep sky.' },
+  { id: 'saturn', label: 'Saturn storms', note: 'Cassini images of Saturn’s rings and clouds.' },
+]
 
 const DAY_MS = 86_400_000
 
@@ -16,9 +24,14 @@ export function pathThisWeek(choice: ResearchPathChoice | undefined, now: number
   return choice && choice.week === weekKey(now) ? choice.path : null
 }
 
-export function choosePath<T extends { researchPath?: ResearchPathChoice }>(player: T, path: ResearchPathId, now: number): T {
+export function choosePath<T extends { researchPath?: ResearchPathChoice }>(player: T, path: ResearchPathId, now: number, pointing?: InstrumentPointing): T {
   if (pathThisWeek(player.researchPath, now)) return player
-  return { ...player, researchPath: { week: weekKey(now), path } }
+  return { ...player, researchPath: { week: weekKey(now), path, ...(path === 'explorer' && pointing ? { pointing } : {}) } }
+}
+
+/** The instrument the player aimed this week, or null when none was picked or the week has rolled over. */
+export function pointingThisWeek(choice: ResearchPathChoice | undefined, now: number): InstrumentPointing | null {
+  return choice && choice.week === weekKey(now) ? choice.pointing ?? null : null
 }
 
 export interface PathStep {

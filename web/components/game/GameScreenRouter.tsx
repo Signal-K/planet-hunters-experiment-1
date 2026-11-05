@@ -423,7 +423,6 @@ function ScreenBody({
           onSubmit={game.submitTessClassification}
           reviewing={reviewTarget?.project === 'tess'}
           onShareReadout={(subjectId, readout) => shareReadout('tess', subjectId, readout)}
-          onChooseTarget={game.chooseSatelliteTarget}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
           onTrainingContinue={() => game.go('hangar')}
         />
@@ -593,7 +592,7 @@ function ScreenBody({
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
-          onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
+          onChoosePath={(path, pointing) => game.setPlayer(current => choosePath(current, path, Date.now(), pointing))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
           onFinishReview={() => setPendingReview(null)}

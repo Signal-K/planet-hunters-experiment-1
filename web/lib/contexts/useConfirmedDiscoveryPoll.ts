@@ -36,13 +36,13 @@ export function useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, enable
           const alreadyKnew = player.lastSeenConfirmedAt != null
           setState(s => ({
             ...s,
-            player: { ...s.player, lastSeenConfirmedAt: lastConfirmedAt, pendingRepick: true },
+            player: { ...s.player, lastSeenConfirmedAt: lastConfirmedAt, },
           }))
           // Don't toast on the very first check after load/reset — that
           // would fire for every historical confirmation on first launch,
           // not just genuinely new ones.
           if (alreadyKnew) {
-            addToast('A candidate was just confirmed as a real planet — point the satellite anywhere, right now', 'ok')
+            addToast('A candidate was just confirmed as a real planet', 'ok')
           }
         }
       } catch {

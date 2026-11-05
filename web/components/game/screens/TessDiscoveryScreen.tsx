@@ -5,8 +5,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
-import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
-import SolSystemPreview from '@/components/game/SolSystemPreview'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolHint, type InstrumentQuickCommand } from '@/components/game/instrument-viewport/InstrumentViewport'
 import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, measureDips, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
@@ -29,7 +27,6 @@ interface TessDiscoveryScreenProps {
   onBuildStation: () => void
   onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
-  onChooseTarget: (subjectId: string) => void
   /** Set while a training try is active, so the help sheet can point at Menu > Training. */
   onReplayTraining?: () => void
   /** After the training verdict's result card: move on to the next try. */
@@ -67,7 +64,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
   // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
@@ -78,9 +75,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [pool, setPool] = useState<TessCandidate[]>([])
   const [ranges, setRanges] = useState<TransitRange[]>([])
   const [sectorIndex, setSectorIndex] = useState(0)
-  const [pendingTargetId, setPendingTargetId] = useState<string | null>(null)
-  const [viewingSol, setViewingSol] = useState(false)
-  const [forceMapView, setForceMapView] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
   const [devDayOffset, setDevDayOffset] = useState(0)
@@ -98,7 +92,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       setPool([visualCandidate])
       setRanges([])
       setSectorIndex(0)
-      setViewingSol(false)
       setLoadFailed(false)
       setLoading(false)
       return
@@ -122,7 +115,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
         setRanges([])
         setSectorIndex(0)
-        setViewingSol(false)
       })
       .catch(error => {
         if (cancelled) return
@@ -278,11 +270,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
 
   const activeRanges = classification?.ranges ?? ranges
   const markCount = activeRanges.length
-  const visitedIds = new Set(Object.keys(classifications))
-  const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
-  // After a verdict the player stays on their result. The candidate map lists stars they have not scanned,
-  // so it is only reachable through the explicit repick flag, never as the post-classification screen.
-  const showMap = forceMapView
   // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
   const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
   const simpleConsole = simpleEligible && !allControls
@@ -367,7 +354,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       onCommand={onCommand}
       devBar={devBar}
-      module={showMap ? undefined : {
+      module={{
         name: 'PHOTOMETRY · TP-02',
         testId: 'tess-photometry',
         lights: <>
@@ -386,7 +373,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ') || (row.label === 'Fold' && lc.fold)) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
-          {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
+          {display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
       viewportChrome={(
@@ -408,31 +395,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
               {sector.label}
             </button>
           ))}
-          {!classification && player.pendingRepick && !forceMapView && (
-            <button type="button" className={viewportStyles.chip} onClick={() => setForceMapView(true)}>Point satellite</button>
-          )}
-          {forceMapView && !classification && (
-            <button type="button" className={viewportStyles.chip} onClick={() => setForceMapView(false)}>Back to review</button>
-          )}
         </div>
       )}
-      viewport={showMap ? (
-        viewingSol ? (
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <SolSystemPreview onBack={() => setViewingSol(false)} />
-          </div>
-        ) : (
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <PixiGalaxyStarMap
-              candidates={pool}
-              visitedIds={visitedIds}
-              selectedId={targetChosen}
-              onSelect={id => { setPendingTargetId(id); onChooseTarget(id); setForceMapView(false) }}
-              onOpenSol={() => setViewingSol(true)}
-            />
-          </div>
-        )
-      ) : (
+      viewport={(
         <div data-coach-target="tess-chart" style={{ position: 'absolute', inset: 0 }}>
           {visualCandidate && !display.folded && lc.span === 1 && (
             /* Dip hint on the deepest transit; ObservatoryChart's plot runs from 66px to 100% - 14px. */
