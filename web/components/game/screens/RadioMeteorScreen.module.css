@@ -88,8 +88,9 @@
   .comms { padding: 10px 12px; gap: 8px; }
   .comms p { font-size: 15px; }
   .tally b { font-size: 20px; }
-  .actions { gap: 8px; }
-  .secondary { min-height: 44px; }
+  .actions { grid-template-columns: 1fr 1fr 1.3fr; gap: 6px; position: sticky; bottom: 0; z-index: 2; padding-top: 4px; background: linear-gradient(180deg, transparent, rgba(8, 14, 30, .9) 30%); }
+  .actions > :last-child { grid-column: auto; }
+  .secondary { min-height: 44px; padding: 0 6px; letter-spacing: 0; }
 }
 
 /* Phone portrait: receiver on top, desk under it. */
