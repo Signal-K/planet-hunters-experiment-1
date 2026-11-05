@@ -153,7 +153,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Point your instruments at the sky to find new anomalies, then classify what they catch. Five steps, and the research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>

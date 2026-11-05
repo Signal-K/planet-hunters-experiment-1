@@ -280,7 +280,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const markCount = activeRanges.length
   const visitedIds = new Set(Object.keys(classifications))
   const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
-  const showMap = classification != null || forceMapView
+  // After a verdict the player stays on their result. The candidate map lists stars they have not scanned,
+  // so it is only reachable through the explicit repick flag, never as the post-classification screen.
+  const showMap = forceMapView
   // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
   const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
   const simpleConsole = simpleEligible && !allControls
