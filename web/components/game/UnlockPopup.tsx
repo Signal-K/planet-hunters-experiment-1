@@ -36,10 +36,10 @@ const UNLOCKS: Record<string, {
     accent: '#3fa9ff',
     eyebrow: 'Vehicle Available',
     title: 'PROSPECTOR',
-    body: 'Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
+    body: 'Prospector is the first heavier workhorse: larger cargo bay, stronger mining laser, and enough range for deeper starter targets.',
     art: 'rocket',
     imgSrc: '/game/assets/ships/ship_sr2.png',
-    stats: [['CARGO', '10 UNITS'], ['DRILL', 'TIER 2'], ['ROLE', 'BULK RUNS']],
+    stats: [['CARGO', '10 UNITS'], ['LASER', 'LEVEL 2'], ['ROLE', 'BULK RUNS']],
     cta: 'Select Prospector',
   },
   loan: {
