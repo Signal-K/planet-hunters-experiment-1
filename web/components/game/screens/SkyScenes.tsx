@@ -18,17 +18,17 @@ function rng(seed0: number) {
   return () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
 }
 
-/** Space telescope: Earth's limb below, three camera sectors above. */
+/** Space telescope: Earth's limb below, three real star fields above (each target sits on what it names). */
 export function transitGeom({ W, H, portrait }: Geom) {
   const earthR = portrait ? W * 1.7 : W * 0.95
   const limbY = H * (portrait ? 0.76 : 0.72)
   const earth = { cx: W / 2, cy: limbY + earthR, r: earthR }
-  const craft = { x: portrait ? W * 0.72 : W * 0.8, y: limbY - (portrait ? 9 : 10) }
+  const craft = { x: portrait ? W * 0.72 : W * 0.7, y: limbY - (portrait ? 12 : 9) }
   const tw = portrait ? 34 : 38
   const th = portrait ? 22 : 24
   const spots = portrait
     ? [[0.5, 0.26], [0.5, 0.43], [0.5, 0.6]]
-    : [[0.17, 0.34], [0.43, 0.26], [0.69, 0.38]]
+    : [[0.17, 0.3], [0.45, 0.32], [0.68, 0.34]]
   const targets: SkyTarget[] = [
     { id: 'north', name: 'Cygnus field', note: 'A dense patch of stars. Many will have planets.', coord: 'RA 19h 24m · DEC +44°' },
     { id: 'plane', name: 'Galactic plane', note: 'The Milky Way crowds the frame with stars.', coord: 'RA 18h 05m · DEC −20°' },
@@ -117,22 +117,6 @@ function MilkyWay({ W, H, angle, y, h, id }: { W: number; H: number; angle: numb
   )
 }
 
-/** A simple satellite silhouette: bus, two solar wings, a camera barrel. */
-function Craft({ x, y, s = 1, flip = false }: { x: number; y: number; s?: number; flip?: boolean }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`} data-testid="sky-craft">
-      <rect x="-3.2" y="-3" width="6.4" height="6" rx="0.8" fill="#cdd8e6" stroke="#0c1a2e" strokeWidth="0.3" />
-      <rect x="-3.2" y="-3" width="6.4" height="1.2" fill="#e9c46a" opacity="0.9" />
-      <rect x="-16" y="-2" width="12" height="4" fill="#27456f" stroke="#7aa6dd" strokeWidth="0.25" />
-      <rect x="4" y="-2" width="12" height="4" fill="#27456f" stroke="#7aa6dd" strokeWidth="0.25" />
-      {[-13, -10, -7].map(px => <path key={px} d={`M${px} -2V2`} stroke="#7aa6dd" strokeWidth="0.15" />)}
-      {[7, 10, 13].map(px => <path key={px} d={`M${px} -2V2`} stroke="#7aa6dd" strokeWidth="0.15" />)}
-      <rect x="-1.6" y="-6.5" width="3.2" height="3.5" fill="#0a1424" stroke="#9fd6e4" strokeWidth="0.3" />
-      <circle cx="0" cy="-6.5" r="1.3" fill="#9fd6e4" opacity="0.7" />
-    </g>
-  )
-}
-
 export function Sight({ kind, w, h, locked }: { kind: 'frame' | 'cross' | 'zoom'; w: number; h: number; locked: boolean }) {
   const c = styles.reticle
   if (kind === 'frame') return (
@@ -155,9 +139,130 @@ export function Sight({ kind, w, h, locked }: { kind: 'frame' | 'cross' | 'zoom'
   )
 }
 
+/** A cluster of stars thickest at the middle, so a field reads as a place and not a rectangle. */
+function Cluster({ cx, cy, rx, ry, count, seed, angle = 0, tone = '#ffffff' }: { cx: number; cy: number; rx: number; ry: number; count: number; seed: number; angle?: number; tone?: string }) {
+  const r = rng(seed)
+  const a = rad(angle)
+  return (
+    <g>
+      {Array.from({ length: count }, (_, i) => {
+        const gx = (r() + r() + r() - 1.5) / 1.5
+        const gy = (r() + r() + r() - 1.5) / 1.5
+        const lx = gx * rx
+        const ly = gy * ry
+        return <circle key={i} cx={cx + lx * Math.cos(a) - ly * Math.sin(a)} cy={cy + lx * Math.sin(a) + ly * Math.cos(a)} r={0.1 + Math.pow(r(), 3) * 0.45} fill={tone} opacity={0.3 + r() * 0.6} />
+      })}
+    </g>
+  )
+}
+
+function Bright({ x, y, r = 0.9, tone = '#ffffff' }: { x: number; y: number; r?: number; tone?: string }) {
+  return (
+    <g>
+      <circle cx={x} cy={y} r={r * 2.6} fill={tone} opacity="0.16" />
+      <circle cx={x} cy={y} r={r} fill={tone} />
+      <path d={`M${x - r * 3} ${y}H${x + r * 3}M${x} ${y - r * 3}V${y + r * 3}`} stroke={tone} strokeWidth="0.12" opacity="0.6" />
+    </g>
+  )
+}
+
+/**
+ * What each target actually is, drawn at the target: Cygnus's Northern Cross in its dense star cloud, a thick lump
+ * of the Milky Way's plane, and the Southern Cross with the Pointers and the Large Magellanic Cloud.
+ */
+function StarField({ target: t, active, portrait }: { target: SkyTarget; active: boolean; portrait: boolean }) {
+  const line = { stroke: active ? '#ffd678' : '#9fd6e4', strokeWidth: 0.18, opacity: active ? 0.85 : 0.45, fill: 'none' } as const
+  const k = portrait ? 0.85 : 1
+  return (
+    <g transform={`translate(${t.x} ${t.y}) scale(${k})`} data-testid={`sky-field-${t.id}`} data-active={active}>
+      {active && <ellipse rx={t.hw * 1.05} ry={t.hh * 1.1} fill="rgba(255, 214, 120, 0.07)" stroke="#ffd678" strokeWidth="0.25" strokeDasharray="1.2 1" />}
+      {t.id === 'north' && (
+        <>
+          <Cluster cx={0} cy={0} rx={t.hw * 0.95} ry={t.hh * 0.9} count={150} seed={21} />
+          <path d="M0 -9L0 0L0 9.5M-8 -1.5L0 0L7 1.5" {...line} />
+          <Bright x={0} y={-9} r={1.1} tone="#dbe8ff" />
+          <Bright x={0} y={0} r={0.9} tone="#ffe7bd" />
+          <Bright x={0} y={9.5} r={0.8} tone="#ffd29a" />
+          <Bright x={-8} y={-1.5} r={0.6} />
+          <Bright x={7} y={1.5} r={0.6} tone="#cfe0ff" />
+        </>
+      )}
+      {t.id === 'plane' && (
+        <>
+          <ellipse rx={t.hw * 1.1} ry={t.hh * 0.55} transform="rotate(-18)" fill="#aebbe0" opacity="0.2" filter="url(#tr-glow)" />
+          <Cluster cx={0} cy={0} rx={t.hw * 1.1} ry={t.hh * 0.5} count={260} seed={33} angle={-18} tone="#f1f4ff" />
+          <Cluster cx={-3} cy={1} rx={t.hw * 0.5} ry={t.hh * 0.25} count={90} seed={35} angle={-18} tone="#ffe2b8" />
+          <Bright x={5} y={-3} r={0.8} tone="#ffe7bd" />
+          <Bright x={-9} y={2} r={0.7} tone="#cfe0ff" />
+        </>
+      )}
+      {t.id === 'south' && (
+        <>
+          <ellipse cx={t.hw * 0.62} cy={-t.hh * 0.45} rx={5.5} ry={3.4} transform={`rotate(-20 ${t.hw * 0.62} ${-t.hh * 0.45})`} fill="#c5d4f5" opacity="0.16" filter="url(#tr-glow)" />
+          <Cluster cx={t.hw * 0.62} cy={-t.hh * 0.45} rx={4.5} ry={2.6} count={40} seed={47} angle={-20} tone="#dce6ff" />
+          <path d="M0 8L0 -8M-5.5 1.5L4.5 -1.5" {...line} />
+          <path d="M-17 5L-12 8" {...line} />
+          <Bright x={0} y={8} r={1.1} tone="#bcd4ff" />
+          <Bright x={0} y={-8} r={0.9} tone="#ffbf8a" />
+          <Bright x={-5.5} y={1.5} r={0.9} tone="#bcd4ff" />
+          <Bright x={4.5} y={-1.5} r={0.7} tone="#cfe0ff" />
+          <Bright x={1.4} y={2} r={0.4} />
+          <Bright x={-17} y={5} r={1.1} tone="#bcd4ff" />
+          <Bright x={-12} y={8} r={0.9} tone="#cfe0ff" />
+        </>
+      )}
+    </g>
+  )
+}
+
+/**
+ * The space telescope: four wide-field cameras on the front of a bus with two solar wings, lit from the sun's side.
+ * The whole spacecraft slews so the cameras face wherever the sight is, and a faint sightline joins lens and sight.
+ */
+function TelescopeCraft({ x, y, s, aim, sighting }: { x: number; y: number; s: number; aim: { x: number; y: number }; sighting: boolean }) {
+  const dx = aim.x - x
+  const dy = aim.y - y
+  const raw = (Math.atan2(dx, -dy) * 180) / Math.PI
+  const angle = Math.max(-75, Math.min(75, raw))
+  const len = Math.hypot(dx, dy)
+  const tip = { x: x + Math.sin(rad(angle)) * 8.2 * s, y: y - Math.cos(rad(angle)) * 8.2 * s }
+  return (
+    <g data-testid="sky-craft" data-angle={Math.round(angle)}>
+      {sighting && len > 14 && <line x1={tip.x} y1={tip.y} x2={aim.x} y2={aim.y} stroke="#9fd6e4" strokeWidth="0.2" strokeDasharray="0.8 1.4" opacity="0.5" />}
+      <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${s})`}>
+        <defs>
+          <linearGradient id="tc-body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#7e8ca1" /><stop offset="0.55" stopColor="#d8e1ee" /><stop offset="1" stopColor="#f4f8ff" /></linearGradient>
+          <linearGradient id="tc-foil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#8a6a22" /><stop offset="1" stopColor="#f0c860" /></linearGradient>
+          <linearGradient id="tc-panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3b6aa8" /><stop offset="1" stopColor="#16305a" /></linearGradient>
+          <pattern id="tc-cells" width="2" height="1.6" patternUnits="userSpaceOnUse"><rect width="2" height="1.6" fill="url(#tc-panel)" /><path d="M0 0H2M0 0V1.6" stroke="#9cc4f2" strokeWidth="0.08" opacity="0.7" /></pattern>
+        </defs>
+        {/* solar wings, on short booms */}
+        <path d="M-4 2H-6M4 2H6" stroke="#aab6c8" strokeWidth="0.5" />
+        <rect x="-17.5" y="-0.2" width="11.5" height="4.4" fill="url(#tc-cells)" stroke="#a8c8f0" strokeWidth="0.2" />
+        <rect x="6" y="-0.2" width="11.5" height="4.4" fill="url(#tc-cells)" stroke="#a8c8f0" strokeWidth="0.2" />
+        {/* bus */}
+        <rect x="-4" y="-3.4" width="8" height="8.4" rx="0.7" fill="url(#tc-body)" stroke="#2a3a52" strokeWidth="0.3" />
+        <rect x="-4" y="3.4" width="8" height="1.6" fill="url(#tc-foil)" />
+        <path d="M-2.4 -3.4V5M0 -3.4V5M2.4 -3.4V5" stroke="#6c7b92" strokeWidth="0.1" opacity="0.6" />
+        {/* camera array: four lens barrels */}
+        {[-3, -1, 1, 3].map(cx => (
+          <g key={cx}>
+            <rect x={cx - 0.8} y="-7.4" width="1.6" height="4.2" fill="#10192b" stroke="#c4d2e6" strokeWidth="0.2" />
+            <ellipse cx={cx} cy="-7.4" rx="0.8" ry="0.35" fill="#9fd6e4" />
+          </g>
+        ))}
+        <path d="M-4.2 -3.2H4.2" stroke="#2a3a52" strokeWidth="0.3" />
+        {/* high-gain dish on the back */}
+        <path d="M5.2 4.6L8.4 6.4" stroke="#aab6c8" strokeWidth="0.3" />
+        <ellipse cx="8.8" cy="6.7" rx="2" ry="0.8" transform="rotate(30 8.8 6.7)" fill="#e6edf7" stroke="#6c7b92" strokeWidth="0.2" />
+      </g>
+    </g>
+  )
+}
+
 /* ───────────── Space telescope ───────────── */
 
-export function TransitScene({ g, target }: { g: Geom; target: SkyTarget | null }) {
+export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | null; aim: { x: number; y: number } }) {
   const { W, H } = g
   const { earth, craft, targets, dish } = transitGeom(g)
   const detections = target
@@ -177,13 +282,8 @@ export function TransitScene({ g, target }: { g: Geom; target: SkyTarget | null 
       <rect width={W} height={H} fill="url(#tr-sky)" />
       <MilkyWay W={W} H={H} angle={g.portrait ? -62 : -18} y={H * 0.32} h={H * (g.portrait ? 0.5 : 0.7)} id="tr" />
       <Stars W={W} H={H} count={g.portrait ? 170 : 260} seed={7} />
-      {/* camera sectors */}
-      {targets.map(t => (
-        <g key={t.id} className={styles.sectorBox} data-active={target?.id === t.id}>
-          <rect x={t.x - t.hw} y={t.y - t.hh} width={t.hw * 2} height={t.hh * 2} />
-          <path d={`M${t.x - t.hw} ${t.y - t.hh + 3}V${t.y - t.hh}H${t.x - t.hw + 3}M${t.x + t.hw - 3} ${t.y - t.hh}H${t.x + t.hw}V${t.y - t.hh + 3}M${t.x - t.hw} ${t.y + t.hh - 3}V${t.y + t.hh}H${t.x - t.hw + 3}M${t.x + t.hw - 3} ${t.y + t.hh}H${t.x + t.hw}V${t.y + t.hh - 3}`} className={styles.corner} />
-        </g>
-      ))}
+      {/* the three star fields, drawn where their targets are */}
+      {targets.map(t => <StarField key={t.id} target={t} active={target?.id === t.id} portrait={g.portrait} />)}
       {/* Earth */}
       <circle cx={earth.cx} cy={earth.cy} r={earth.r + 1.6} fill="none" stroke="#7cc4ff" strokeWidth="2.4" opacity="0.5" filter="url(#tr-glow)" />
       <circle cx={earth.cx} cy={earth.cy} r={earth.r} fill="url(#tr-ocean)" />
@@ -193,7 +293,7 @@ export function TransitScene({ g, target }: { g: Geom; target: SkyTarget | null 
         <rect x="0" y={earth.cy - earth.r} width={W} height={earth.r * 0.3} fill="url(#tr-sun)" />
       </g>
       <circle cx={earth.cx} cy={earth.cy} r={earth.r} fill="none" stroke="#bfe3ff" strokeWidth="0.5" opacity="0.65" />
-      <Craft x={craft.x} y={craft.y} s={g.portrait ? 0.9 : 1.1} />
+      <TelescopeCraft x={craft.x} y={craft.y} s={g.portrait ? 0.85 : 1} aim={aim} sighting={!target} />
       {target && (
         <g data-testid="sky-signal">
           {detections.map((d, i) => <path key={i} d={`M${d.x - 1.6} ${d.y - 0.6}V${d.y - 1.6}H${d.x - 0.6}M${d.x + 0.6} ${d.y - 1.6}H${d.x + 1.6}V${d.y - 0.6}M${d.x - 1.6} ${d.y + 0.6}V${d.y + 1.6}H${d.x - 0.6}M${d.x + 0.6} ${d.y + 1.6}H${d.x + 1.6}V${d.y + 0.6}`} className={styles.detect} style={{ animationDelay: `${i * 0.35}s` }} />)}

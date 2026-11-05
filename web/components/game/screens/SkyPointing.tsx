@@ -23,7 +23,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
   transit: {
     short: 'Space telescope',
     name: 'Space telescope',
-    station: 'In orbit · 375,000 km above Earth',
+    station: 'In orbit · 600 km above Earth',
     blurb: 'A wide-field camera above the air. Slew it to a patch of stars and stare: planets show up as tiny dips in starlight.',
     sight: 'frame',
     lockLabel: 'POINT HERE',
@@ -193,7 +193,7 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
   return (
     <div ref={rootRef} className={styles.root} data-testid="sky-pointing" data-instrument={instrument} data-portrait={portrait} aria-label="Point your instruments">
       <svg className={styles.svg} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-        {instrument === 'transit' && <TransitScene g={g} target={showing} />}
+        {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : at} />}
         {instrument === 'deep-space' && <GroundScene g={g} target={showing} />}
         {instrument === 'saturn' && <SaturnScene g={g} target={showing} zoomed={zoomed} />}
         {!confirmed && (

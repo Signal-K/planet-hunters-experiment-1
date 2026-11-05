@@ -10,10 +10,6 @@
 .ecliptic { fill: none; stroke: rgba(159, 214, 228, 0.3); stroke-width: 0.25; stroke-dasharray: 1.2 1.2; }
 .sector { fill: rgba(159, 214, 228, 0.04); stroke: rgba(159, 214, 228, 0.5); stroke-width: 0.3; stroke-dasharray: 1.2 1; transition: fill 120ms ease, stroke 120ms ease; }
 .sector[data-active='true'] { fill: rgba(255, 214, 120, 0.14); stroke: #ffd678; stroke-dasharray: none; stroke-width: 0.5; }
-.sectorBox rect { fill: rgba(159, 214, 228, 0.03); stroke: rgba(159, 214, 228, 0.4); stroke-width: 0.25; stroke-dasharray: 1.4 1.2; }
-.sectorBox[data-active='true'] rect { fill: rgba(255, 214, 120, 0.1); stroke: #ffd678; stroke-dasharray: none; }
-.corner { fill: none; stroke: rgba(159, 214, 228, 0.9); stroke-width: 0.4; }
-.sectorBox[data-active='true'] .corner { stroke: #ffd678; }
 .pin circle:first-child { fill: rgba(255, 255, 255, 0.04); stroke: rgba(232, 241, 255, 0.85); stroke-width: 0.3; }
 .pin circle:last-child { fill: #fff; }
 .pin[data-active='true'] circle:first-child { stroke: #ffd678; stroke-width: 0.5; fill: rgba(255, 214, 120, 0.2); }
