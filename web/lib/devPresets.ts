@@ -188,6 +188,7 @@ export const DEV_GROUPS: DevGroup[] = [
     color: '#91ccef',
     shots: [
       { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
+      { key: 'ui-landing-ascend', label: 'Landing: ascent', hint: 'Lift-off from Eros back to the orbiter, mid-mission', stage: 'tutorial' },
       { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
       { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
       { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view before excavation', stage: 'free-ops' },
@@ -888,6 +889,16 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
+      }
+
+    case 'ui-landing-ascend':
+      return {
+        screen: 'landing',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'landing', landingStartedAt: Date.now() - 60_000, landingReturnStartedAt: Date.now() },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
       }
 
     case 'ui-landing':

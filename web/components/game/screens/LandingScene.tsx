@@ -3,17 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
+import { terrainLookForTarget, type TerrainLook } from '@/lib/takeon/terrainColour'
 import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController'
 import type { Target } from '@/lib/data'
 
 interface Props {
-  target: Pick<Target, 'id' | 'type'>
+  target: Target
   progress: number
   mode: LandingSequenceMode
 }
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const ease = (t: number) => t * t * (3 - 2 * t)
+const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 
 function rng(seed0: number) {
   let seed = seed0
@@ -52,6 +54,16 @@ export default function LandingScene({ target, progress, mode }: Props) {
   const alt = mode === 'descend' ? 1 - progress : progress
   const low = 1 - ease(alt)
 
+  const look = useMemo<TerrainLook | null>(() => {
+    try { return terrainLookForTarget(target) } catch { return null }
+  }, [target])
+  const ground = look?.ground ?? ['#8a7967', '#675b4f', '#4a4037']
+  const atmo = look?.atmosphere ?? 'none'
+  const craters = useMemo(() => {
+    const r = rng(target.id.length * 977 + 13)
+    return Array.from({ length: 26 }, () => ({ a: r() * Math.PI, d: 0.1 + r() * 0.85, s: 0.7 + r() * 2.4 }))
+  }, [target.id])
+
   const stars = useMemo(() => {
     const r = rng(41)
     return Array.from({ length: 110 }, () => ({ x: r(), y: r(), s: 0.12 + r() * 0.3, o: 0.35 + r() * 0.6 }))
@@ -69,13 +81,48 @@ export default function LandingScene({ target, progress, mode }: Props) {
   const orbY = lerp(landerY - 13, -14, ease(low))
   const orbA = Math.max(0, 1 - low * 1.25)
 
+  // The world below: its limb rises and flattens as the lander drops, then the
+  // field fades in over it so the hand-off to the ground is never a hard edge.
+  const t = ease(clamp01(low / 0.78))
+  const limbY = lerp(H * 0.8, H * 0.3, t)
+  const limbR = lerp(95, 1400, t * t)
+  const limbX = W / 2
+  const worldOpacity = 1 - clamp01((low - 0.82) / 0.16)
+  const fieldOpacity = clamp01((low - 0.5) / 0.35)
+  const fieldReach = lerp(34, 112, ease(clamp01((low - 0.45) / 0.55)))
+  const mask = `radial-gradient(ellipse ${fieldReach}% ${fieldReach * 0.86}% at 50% 64%, #000 52%, transparent 100%)`
+  const heat = atmo === 'none' ? 0 : Math.sin(Math.PI * clamp01((low - 0.18) / 0.5))
+  const glowRim = atmo === 'none' ? 0 : lerp(1, 0.25, t)
+
   return (
     <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#02040b' }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
         {stars.map((s, i) => <circle key={i} cx={s.x * W} cy={s.y * H} r={s.s} fill="#fff" opacity={s.o} />)}
       </svg>
 
-      <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.5, 1.08, low)})`, transformOrigin: '50% 62%', opacity: lerp(0.55, 1, low), filter: `blur(${(1 - low) * 1.6}px)` }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" shapeRendering="crispEdges" data-testid="landing-world" style={{ position: 'absolute', inset: 0, opacity: worldOpacity }}>
+        <defs>
+          <clipPath id="ls-limb"><circle cx={limbX} cy={limbY + limbR} r={limbR} /></clipPath>
+          <linearGradient id="ls-air" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0.7" />
+            <stop offset="1" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 5} fill="none" stroke="url(#ls-air)" strokeWidth={5} opacity={glowRim} />}
+        <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />
+        <g clipPath="url(#ls-limb)">
+          <circle cx={limbX - limbR * 0.16} cy={limbY + limbR + limbR * 0.06} r={limbR * 0.96} fill={ground[1]} />
+          <circle cx={limbX - limbR * 0.3} cy={limbY + limbR + limbR * 0.14} r={limbR * 0.86} fill={ground[0]} />
+          {craters.map((c, i) => {
+            const cx = limbX + Math.cos(c.a) * limbR * 0.55 * (c.d * 2 - 1) * (limbR > 200 ? 0.5 : 1)
+            const cy = limbY + 4 + c.d * Math.min(limbR * 0.3, H * 0.5)
+            return <ellipse key={i} cx={cx} cy={cy} rx={c.s * lerp(1, 4, t)} ry={c.s * lerp(0.7, 1.6, t)} fill={ground[2]} opacity={0.55 * (1 - clamp01((low - 0.55) / 0.3))} />
+          })}
+        </g>
+        {heat > 0 && <ellipse cx={padX} cy={landerY + 6} rx={9 * heat} ry={14 * heat} fill="#ff8a3c" opacity={0.18 * heat} />}
+      </svg>
+
+      <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.82, 1.08, low)})`, transformOrigin: '50% 64%', opacity: fieldOpacity, WebkitMaskImage: mask, maskImage: mask, pointerEvents: 'none' }}>
         <TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
@@ -94,7 +141,7 @@ export default function LandingScene({ target, progress, mode }: Props) {
           <filter id="ls-blur"><feGaussianBlur stdDeviation="1.1" /></filter>
         </defs>
 
-        <g opacity={Math.min(1, low * 1.6)}>
+        <g opacity={fieldOpacity}>
           <ellipse cx={padX} cy={padY + 2} rx={lerp(6, 15, low)} ry={lerp(1.4, 3.2, low)} fill="none" stroke="#70d9ea" strokeWidth="0.45" strokeDasharray="1.6 1.2" />
           <ellipse cx={padX} cy={padY + 2} rx={lerp(2, 5, low)} ry={lerp(0.5, 1.1, low)} fill="#70d9ea" opacity="0.25" />
         </g>

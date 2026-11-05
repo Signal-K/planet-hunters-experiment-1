@@ -433,6 +433,14 @@
    "tickets": []
   },
   {
+   "id": "landing-ascend",
+   "name": "Landing: ascent",
+   "flow": "core-loop",
+   "web": "ui-landing-ascend",
+   "native": "landing-live",
+   "tickets": []
+  },
+  {
    "id": "rocket-buy",
    "name": "Rocket buy",
    "flow": "ship",
