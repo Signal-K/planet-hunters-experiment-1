@@ -12,7 +12,9 @@ import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../mi
 import type { DebrisArtSet } from '../debrisArt'
 import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
 
-export const SCROLL_SPEED = 36
+// Liam, 05.11: the ground should scroll faster. At 36 a deposit took ~8s to cross a
+// 280px gap and ~2.5s to pass the beam; 56 gives a deposit about every 5s with a ~1.6s window.
+export const SCROLL_SPEED = 56
 export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
