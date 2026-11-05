@@ -199,9 +199,9 @@
 /* Landscape phones: title and balance share one row (see globals.css for
    the matching right-hand buttons). */
 @media (orientation: landscape) and (max-height: 500px) {
-  .buildPicker { top: 56px; bottom: auto; }
-  /* Narrow enough to stay clear of the sky event chip on the right. */
-  .buildOptions { width: min(480px, calc(100vw - 400px)); }
+  /* Below the Overview bar (centred, about 56-112px down), never on top of it. */
+  .buildPicker { top: 120px; bottom: auto; }
+  .buildOptions { width: min(640px, calc(100vw - 120px)); grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
   .topHud { flex-direction: row; align-items: center; gap: 12px; padding: 8px 12px 16px; }
   .topRow { width: 100%; }
   .root { --hub-ground: 20%; --px: 2px; }
