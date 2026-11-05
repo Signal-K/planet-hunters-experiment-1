@@ -101,7 +101,11 @@ export interface TakeOnMountHandle {
 export interface TakeOnMountProps {
   missionId: string
   bodyId: string
-  rover: RoverSpec
+  /**
+   * The rover this scene drives. Leave it out for a scene that only shows the
+   * ground (a landing): Takeon then draws no rover.
+   */
+  rover?: RoverSpec
   roverName?: string
   seed?: number
   adapter?: SyncAdapter
@@ -134,8 +138,6 @@ export interface TakeOnMountProps {
    * need no rotated-axis reasoning. The iso diorama stays one toggle away.
    */
   startView?: ViewKind
-  /** Draw the rover (default true). Off for scenes that show the ground with no vehicle in it, like a landing. Isometric view only. */
-  showRover?: boolean
   onEvent?: (event: TakeonHostEvent) => void
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
@@ -247,7 +249,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   missionId,
   bodyId,
   rover,
-  roverName = rover.name,
+  roverName = rover?.name,
   seed,
   adapter: suppliedAdapter,
   className,
@@ -257,7 +259,6 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   lifeStage = 'dormant',
   readOnly = false,
   startView = 'flat',
-  showRover = true,
   onEvent,
   onRouteChange,
   onReady,
@@ -438,7 +439,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     const save = async () => {
       if (readOnly) return
       const state = snapshot()
-      if (state) await adapter.saveMission(state, roverName)
+      if (state) await adapter.saveMission(state, roverName ?? 'Rover')
     }
 
     const reportError = (reason: unknown) => {
@@ -505,7 +506,6 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           seed,
           resume: resume ?? undefined,
           startView,
-          showRover,
         })
 
         const handleHostEvent = (event: TakeonHostEvent) => {
@@ -655,7 +655,6 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     rover,
     roverName,
     seed,
-    showRover,
     startView,
     targetId,
   ])

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { defaultSpec } from '@takeon/engine'
 import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
 import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController'
@@ -26,14 +25,13 @@ function rng(seed0: number) {
  * the ground (read-only, the same world the rovers later work on); this layer
  * adds the star field, the lander with its plume and dust, the landing ring and
  * the orbiter. Altitude runs from 1 (orbit: the world is a small, hazy diorama
- * in space) to 0 (surface: the field fills the view). The field is drawn
- * without its rover (`showRover={false}`): a landing has no vehicle on the ground yet.
+ * in space) to 0 (surface: the field fills the view). No rover is passed, so
+ * Takeon draws none: a landing has no vehicle on the ground yet.
  */
 export default function LandingScene({ target, progress, mode }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 160, h: 100 })
   const [tick, setTick] = useState(0)
-  const rover = useMemo(() => defaultSpec(), [])
 
   useEffect(() => {
     const el = ref.current
@@ -81,9 +79,7 @@ export default function LandingScene({ target, progress, mode }: Props) {
         <TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
-          rover={rover}
           startView="iso"
-          showRover={false}
           readOnly
         />
       </div>

@@ -71,8 +71,9 @@ Landnam-local repack of the 0.2.1 engine: the flat map backdrop uses the body's 
 
 ## Local patches
 
-`takeon-engine-0.2.3.tgz` / `takeon-pixi-0.2.3.tgz` are the 0.2.2 builds with the
-`showRover` option added to the compiled output (`RoverGameOptions.showRover`,
-`IsoRenderer.showRover`, passed through `mountRoverGame`). The same change is on
-the `landnam/show-rover` branch of signal-k/takeon. The 0.2.2 build was ahead of
-that repo's published `main`, so it was patched in place rather than rebuilt.
+`takeon-engine-0.2.3.tgz` / `takeon-pixi-0.2.3.tgz` are the 0.2.2 builds with
+"a scene only has a rover when it brings one" applied to the compiled output:
+`spec` is optional on `RoverGameOptions` / `Simulation`; with no spec the game
+draws no rover (iso and flat views), and `showRover` overrides. The same change
+is on the `landnam/show-rover` branch of signal-k/takeon. The 0.2.2 build was
+ahead of that repo's `main`, so it was patched in place rather than rebuilt.
