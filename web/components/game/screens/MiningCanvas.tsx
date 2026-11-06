@@ -163,9 +163,14 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         // (never less than 200px of ground), ship hovering above it.
         // Ground is the bottom third (min 150px) so there is sky to fly in (SSL-536).
         // Phones keep a clear control strip under the deposits (SSL-538).
-        const surfaceFromBottom = worldH > worldW ? Math.max(330, worldH * 0.33) : (worldH < 520 ? Math.max(190, worldH * 0.45) : Math.max(150, worldH * 0.33))
+        // Portrait: the control panel takes the bottom 210px, a ~120px ground band sits above it, and the
+        // ship hovers high so the sky above the ground is flying room, not empty backdrop.
+        const portrait = worldH > worldW
+        const surfaceFromBottom = portrait ? 330 : (worldH < 520 ? Math.max(190, worldH * 0.45) : Math.max(150, worldH * 0.33))
         const surfaceY = Math.round(worldH - surfaceFromBottom)
-        const shipFromBottom = Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
+        const shipFromBottom = portrait
+          ? Math.min(worldH - 96, surfaceFromBottom + Math.min(400, worldH * 0.5))
+          : Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
         const shipY = Math.round(worldH - shipFromBottom)
 
         const [sceneData] = await Promise.all([
@@ -236,6 +241,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           worldHeight: worldH,
           surfaceY,
           shipY,
+          depositGap: worldH > worldW ? 190 : undefined,
           shipX: () => shipX,
           shipYNow: () => shipY + altitude,
           onCatchCue: ready => { onCatchCueRef?.current?.(ready) },
