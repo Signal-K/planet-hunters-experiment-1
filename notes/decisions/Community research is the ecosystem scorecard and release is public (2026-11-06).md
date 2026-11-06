@@ -25,7 +25,15 @@ Decided by Liam, after the release plan.
 - Public launch means the release checklist covers abuse and load: server-light reads (`fields=`, paging, no polling), moderation for anything player-written, and sign-in required.
 - Landnám is the front door: from its Community research a player can see which game suits them.
 
+## Audit (SSL-782, 2026-11-06)
+
+- Shared scorecard in `signal-k/client` (becoming Garden, `docs/specs/garden-rename-and-ecosystem.md`): the community garden, driven by the `platform_contributions` ledger on the shared backend. One row per player, game, kind and UTC day (unique, so repeats are no-ops). It has no weight field. The monthly goal is `max(60, 8 x P)`, set on the 1st.
+- Landnám already reports into it (SSL-763, `pocketbase/ledger_report.go`): batched, off the `game_states` save, last 7 days only, never blocks a save, kinds `classification`, `survey`, `discovery-mission`, `event` and the trader kinds. Landnám's own bar (`research.go`) never reads the ledger.
+- `classificationPoints` on `profiles` is the old client's per-profile score (leaderboards, hub top five). Only the client's `PostForm` raises it. Landnám classifications go to shared `subject_classifications`, `asteroid_classifications` and `ss_saturn_storm_classifications` but do not touch it.
+
 ## Open
 
-- The per-project weights for `classificationPoints` (set per project or game).
-- How Landnám's stamps and classifications feed the shared `signal-k/client` scorecard today, and what is missing. Not yet audited.
+- Weighting does not exist yet: every ledger row counts 1. If a classification is worth more in one project, the ledger needs a project field and a weight table (per project or game).
+- The ledger's `kind` is not a project. A rover classification and a transit classification look the same.
+- Whether the old `classificationPoints` and leaderboards stay, or the ledger replaces them.
+- The Garden spec's feature map is out of date: it sends rover to Landnám and Zoodex to Atlas; rover is now its own game (SSL-777).
