@@ -1,8 +1,10 @@
 import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
+import { asteroidFeedOnline } from '@/lib/systems/InstrumentFeedSystem'
 import { markMapped, type SkyAim, type SkyMap } from './sky-map'
 
 export type ResearchPathId = 'explorer' | 'trader'
 export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
+export type TelescopeAim = Partial<Record<InstrumentPointing, { week: string; aim?: SkyAim }>>
 export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing; /** Where in the sky the week's instrument was locked (SSL-788). */ aim?: SkyAim }
 
 /** What an Explorer can aim their instruments at for the week. */
@@ -30,20 +32,38 @@ export function choosePath<T extends { researchPath?: ResearchPathChoice }>(play
   return { ...player, researchPath: { week: weekKey(now), path, ...(path === 'explorer' && pointing ? { pointing } : {}) } }
 }
 
-/** Aim this week's instruments. Only an Explorer with no aim yet can point, and only once. The lock marks the sky field it falls in. */
-export function setPointing<T extends { researchPath?: ResearchPathChoice; skyMap?: SkyMap }>(player: T, pointing: InstrumentPointing, now: number, aim?: SkyAim): T {
-  const choice = player.researchPath
-  if (!choice || choice.week !== weekKey(now) || choice.path !== 'explorer' || choice.pointing) return player
+/** A launched telescope is pointed once a week. The lock marks the sky field it falls in on the player's sky map. */
+export function pointTelescope<T extends { telescopeAim?: TelescopeAim; skyMap?: SkyMap }>(player: T, instrument: InstrumentPointing, now: number, aim?: SkyAim): T {
+  const week = weekKey(now)
+  if (player.telescopeAim?.[instrument]?.week === week) return player
   return {
     ...player,
-    researchPath: { ...choice, pointing, ...(aim ? { aim } : {}) },
-    ...(aim && pointing !== 'saturn' ? { skyMap: markMapped(player.skyMap, aim, choice.week, pointing) } : {}),
+    telescopeAim: { ...(player.telescopeAim ?? {}), [instrument]: { week, ...(aim ? { aim } : {}) } },
+    ...(aim && instrument !== 'saturn' ? { skyMap: markMapped(player.skyMap, aim, week, instrument) } : {}),
   }
 }
 
-/** The instrument the player aimed this week, or null when none was picked or the week has rolled over. */
-export function pointingThisWeek(choice: ResearchPathChoice | undefined, now: number): InstrumentPointing | null {
-  return choice && choice.week === weekKey(now) ? choice.pointing ?? null : null
+export interface TelescopeOwner { freeOperations?: boolean; transitSatelliteLaunchedAt?: number | null; saturnImagerLaunchedAt?: number | null; deepSpaceTelescopeBuilt?: boolean; placed?: readonly string[]; telescopeAim?: TelescopeAim }
+
+/** Telescopes the player has launched or built, in the order they are offered. */
+export function onlineTelescopes(player: TelescopeOwner): InstrumentPointing[] {
+  return [
+    ...(player.freeOperations && player.transitSatelliteLaunchedAt ? ['transit' as const] : []),
+    ...(asteroidFeedOnline(player) ? ['deep-space' as const] : []),
+    ...(player.freeOperations && player.saturnImagerLaunchedAt ? ['saturn' as const] : []),
+  ]
+}
+
+/** Telescopes that are online and not yet pointed this week. These are what the sky asks the player to position. */
+export function telescopesNeedingPointing(player: TelescopeOwner, now: number): InstrumentPointing[] {
+  const week = weekKey(now)
+  return onlineTelescopes(player).filter(id => player.telescopeAim?.[id]?.week !== week)
+}
+
+/** Telescopes the player pointed this week. */
+export function pointedThisWeek(telescopeAim: TelescopeAim | undefined, now: number): InstrumentPointing[] {
+  const week = weekKey(now)
+  return (Object.keys(telescopeAim ?? {}) as InstrumentPointing[]).filter(id => telescopeAim?.[id]?.week === week)
 }
 
 export interface PathStep {

@@ -110,6 +110,7 @@ export const GAME_ROUTES = [
   { path: '/game/mission-history', screen: 'mission-history', surface: 'instrument' },
   { path: '/game/narrative-ledger', screen: 'narrative-ledger', surface: 'instrument' },
   { path: '/game/community-research', screen: 'community-research', surface: 'instrument' },
+  { path: '/game/sky-pointing', screen: 'sky-pointing', surface: 'instrument' },
 
   // Dev-only
   { path: '/game/launcher', surface: 'dev', dev: true },

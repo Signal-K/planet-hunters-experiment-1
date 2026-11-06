@@ -33,6 +33,7 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   'mission-history': 'hub',
   'narrative-ledger': 'hub',
   'community-research': 'hub',
+  'sky-pointing': 'hub',
   'instrument-hub': 'hub',
   transit: 'hub',
   landing: 'hub',

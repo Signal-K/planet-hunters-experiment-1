@@ -1,0 +1,46 @@
+#:schema ../schema/scene.schema.json
+# Sky pointing: scene script (SSL-788, SSL-790). The telescopes are positioned from here, anywhere on the whole sky.
+format = 1
+id = "sky-pointing"
+type = "menu"
+name = "Sky pointing"
+summary = "Steer a telescope anywhere on the sky with the joystick and lock on. Every lock maps a field; the goal is the whole sky."
+tickets = ["SSL-788", "SSL-790"]
+qa = ["sky-pointing", "sky-dialogue"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/SkyPointing.tsx"]
+native = []
+
+[preview]
+route = "sky-pointing"
+state = "ui-sky-pointing"
+
+[[objects]]
+id = "sky-chart"
+kind = "instrument"
+layout = "host"
+mechanics = ["records"]
+note = "The whole sky as one chart: stars, the 15 degree field grid, mapped fields and landmarks. The chart pans under a fixed sight."
+
+[[objects]]
+id = "pointing-stick"
+kind = "button"
+layout = "host"
+mechanics = ["records"]
+note = "The joystick. Reaches any right ascension and declination."
+
+[[objects]]
+id = "lock-action"
+kind = "button"
+layout = "host"
+mechanics = ["records"]
+note = "MAP THIS FIELD, or POINT HERE AGAIN for a field already mapped. Once per telescope per week. Reached from the sky dialogue over the Control Station on the Base, which appears when an online telescope needs positioning."
+
+[[objects]]
+id = "back-action"
+kind = "button"
+layout = "host"
+mechanics = ["records"]
+note = "Return to the base."

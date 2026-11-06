@@ -565,6 +565,17 @@ function mergeBadges(local: Player['badges'], remote: Player['badges']): NonNull
   return out
 }
 
+/** The later week wins for each telescope. */
+function mergeTelescopeAim(local: Player['telescopeAim'], remote: Player['telescopeAim']): Player['telescopeAim'] {
+  if (!local && !remote) return undefined
+  const out = { ...(remote ?? {}) }
+  for (const [id, aim] of Object.entries(local ?? {}) as [keyof NonNullable<Player['telescopeAim']>, { week: string; aim?: { ra: number; dec: number } }][]) {
+    const other = out[id]
+    if (!other || aim.week >= other.week) out[id] = aim
+  }
+  return out
+}
+
 function mergeResearchPath(local: Player['researchPath'], remote: Player['researchPath']): Player['researchPath'] {
   if (!local) return remote
   if (!remote || local.week > remote.week) return local
@@ -684,6 +695,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
   merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
+  merged.player.telescopeAim = mergeTelescopeAim(current.player.telescopeAim, remoteState.player?.telescopeAim)
   merged.player.skyMap = mergeSkyMaps(current.player.skyMap, remoteState.player?.skyMap)
   merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
   merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)

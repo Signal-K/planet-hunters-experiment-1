@@ -2281,6 +2281,57 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "sky-pointing",
+      "type": "menu",
+      "route": "sky-pointing",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/SkyPointing.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "sky-chart",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "The whole sky as one chart: stars, the 15 degree field grid, mapped fields and landmarks. The chart pans under a fixed sight."
+        },
+        {
+          "id": "pointing-stick",
+          "kind": "button",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "The joystick. Reaches any right ascension and declination."
+        },
+        {
+          "id": "lock-action",
+          "kind": "button",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "MAP THIS FIELD, or POINT HERE AGAIN for a field already mapped. Once per telescope per week. Reached from the sky dialogue over the Control Station on the Base, which appears when an online telescope needs positioning."
+        },
+        {
+          "id": "back-action",
+          "kind": "button",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "Return to the base."
+        }
+      ]
+    },
+    {
       "id": "targets",
       "type": "menu",
       "route": "targets",
