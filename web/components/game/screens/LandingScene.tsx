@@ -148,6 +148,20 @@ export default function LandingScene({ target, progress, mode }: Props) {
             <stop offset="0.5" stopColor="#ff8a3c" stopOpacity="0.5" />
             <stop offset="1" stopColor="#ff8a3c" stopOpacity="0" />
           </radialGradient>
+          <linearGradient id="ls-hull" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#97a6bb" />
+            <stop offset="0.28" stopColor="#f3f7fc" />
+            <stop offset="0.55" stopColor="#d2dbe7" />
+            <stop offset="1" stopColor="#7a8aa1" />
+          </linearGradient>
+          <linearGradient id="ls-shade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0.5" stopColor="#000" stopOpacity="0" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.4" />
+          </linearGradient>
+          <radialGradient id="ls-glass" cx="40%" cy="35%" r="70%">
+            <stop offset="0" stopColor="#3e86b8" />
+            <stop offset="1" stopColor="#0b1d33" />
+          </radialGradient>
           <filter id="ls-blur"><feGaussianBlur stdDeviation="1.1" /></filter>
         </defs>
 
@@ -176,16 +190,42 @@ export default function LandingScene({ target, progress, mode }: Props) {
             <ellipse cx={0} cy={5.5} rx={4.5 * flick} ry={7 * flick} fill="url(#ls-glow)" />
             <path d={`M-1.3 3.6L0 ${5 + 9 * flick}L1.3 3.6Z`} fill="#ffe9bf" opacity="0.9" />
           </>}
-          <g stroke="#8fa0b4" strokeWidth="0.45" strokeLinecap="round" opacity={0.4 + 0.6 * legs}>
-            <line x1={-2.6} y1={2.4} x2={-2.6 - 3.4 * legs} y2={2.4 + 3.1 * legs} />
-            <line x1={2.6} y1={2.4} x2={2.6 + 3.4 * legs} y2={2.4 + 3.1 * legs} />
-            <line x1={-2.6 - 3.4 * legs - 1} y1={2.4 + 3.1 * legs} x2={-2.6 - 3.4 * legs + 1} y2={2.4 + 3.1 * legs} />
-            <line x1={2.6 + 3.4 * legs - 1} y1={2.4 + 3.1 * legs} x2={2.6 + 3.4 * legs + 1} y2={2.4 + 3.1 * legs} />
-          </g>
-          <path d="M-3 2.8L-3.6 -1L-1.8 -3.6L1.8 -3.6L3.6 -1L3 2.8Z" fill="#dde4ee" stroke="#8fa0b4" strokeWidth="0.35" />
-          <path d="M-3.6 -1L3.6 -1" stroke="#9fb0c4" strokeWidth="0.3" />
-          <circle cx={0} cy={-1.2} r={1.15} fill="#13324d" stroke="#70d9ea" strokeWidth="0.3" />
-          <rect x={-1.5} y={2.2} width={3} height={1.1} rx={0.3} fill="#47576b" />
+          {/* Landing legs: struts with foot pads, swung out as the ground nears. */}
+          {[-1, 1].map((d) => {
+            const ex = d * (2.4 + 3.8 * legs)
+            const ey = 1.2 + 4.3 * legs
+            return (
+              <g key={d} opacity={0.5 + 0.5 * legs}>
+                <line x1={d * 2.3} y1={1.1} x2={ex} y2={ey} stroke="#5f6e84" strokeWidth="0.55" strokeLinecap="round" />
+                <line x1={d * 2.3} y1={2.3} x2={d * 2.4 + (ex - d * 2.4) * 0.6} y2={2.3 + (ey - 2.3) * 0.7} stroke="#8393a9" strokeWidth="0.3" strokeLinecap="round" />
+                <ellipse cx={ex} cy={ey + 0.1} rx={1.15} ry={0.32} fill="#47576b" stroke="#8fa0b4" strokeWidth="0.2" />
+              </g>
+            )
+          })}
+          {/* Engine bell. */}
+          <path d="M-1.1 2.1L-1.9 3.9Q0 4.5 1.9 3.9L1.1 2.1Z" fill="url(#ls-hull)" stroke="#47576b" strokeWidth="0.25" />
+          <ellipse cx={0} cy={3.95} rx={1.9} ry={0.5} fill="#1a2433" stroke="#47576b" strokeWidth="0.2" />
+          {/* Side fins, lit side and shadow side, plus the front fin seen end-on. */}
+          <path d="M-2.5 -0.2L-5.1 3.4L-2.5 2.5Z" fill="#d8573c" stroke="#7d2f20" strokeWidth="0.25" strokeLinejoin="round" />
+          <path d="M2.5 -0.2L5.1 3.4L2.5 2.5Z" fill="#a63f2c" stroke="#7d2f20" strokeWidth="0.25" strokeLinejoin="round" />
+          {/* Fuselage: a cylinder lit from the upper left, with a rounded base. */}
+          <path d="M-2.6 -3.2L-2.6 2.3Q0 3.3 2.6 2.3L2.6 -3.2Z" fill="url(#ls-hull)" stroke="#6b7a90" strokeWidth="0.3" strokeLinejoin="round" />
+          <path d="M-2.6 0.2L-2.6 1Q0 1.9 2.6 1L2.6 0.2Q0 1.1 -2.6 0.2Z" fill="#1f4a7a" />
+          <path d="M-2.6 0.2L-2.6 1Q0 1.9 2.6 1L2.6 0.2Q0 1.1 -2.6 0.2Z" fill="url(#ls-shade)" />
+          <path d="M-2.6 -3.2L-2.6 2.3Q0 3.3 2.6 2.3L2.6 -3.2Z" fill="url(#ls-shade)" />
+          <path d="M-2.6 -0.8Q0 0 2.6 -0.8" fill="none" stroke="#6b7a90" strokeWidth="0.18" opacity="0.7" />
+          <path d="M-2.6 -2.3Q0 -1.6 2.6 -2.3" fill="none" stroke="#6b7a90" strokeWidth="0.18" opacity="0.6" />
+          {/* Nose cone. */}
+          <path d="M-2.6 -3.2C-2.6 -5.2 -1.1 -6.6 0 -7.3C1.1 -6.6 2.6 -5.2 2.6 -3.2Q0 -2.4 -2.6 -3.2Z" fill="url(#ls-hull)" stroke="#6b7a90" strokeWidth="0.3" strokeLinejoin="round" />
+          <path d="M-2.6 -3.2C-2.6 -5.2 -1.1 -6.6 0 -7.3C1.1 -6.6 2.6 -5.2 2.6 -3.2Q0 -2.4 -2.6 -3.2Z" fill="url(#ls-shade)" />
+          <ellipse cx={0} cy={-7.3} rx={0.25} ry={0.25} fill="#d8573c" />
+          <path d="M-1.7 -5.3Q-1.2 -6.3 -0.5 -6.7" fill="none" stroke="#fff" strokeWidth="0.3" strokeLinecap="round" opacity="0.6" />
+          {/* Porthole with rim and a glint. */}
+          <circle cx={-0.1} cy={-1.7} r={1.15} fill="#7d8da3" stroke="#47576b" strokeWidth="0.25" />
+          <circle cx={-0.1} cy={-1.7} r={0.85} fill="url(#ls-glass)" />
+          <ellipse cx={-0.45} cy={-2.0} rx={0.28} ry={0.18} fill="#fff" opacity="0.75" transform="rotate(-35 -0.45 -2)" />
+          {/* Front fin end-on, over the hull. */}
+          <path d="M-0.5 1.7L0.5 1.7L0.5 3.6Q0 3.9 -0.5 3.6Z" fill="#e0644a" stroke="#7d2f20" strokeWidth="0.2" />
         </g>
 
         {[5, W - 5].map((gx, gi) => (
