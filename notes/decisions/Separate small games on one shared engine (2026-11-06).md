@@ -19,7 +19,9 @@ Decided by Liam, starting SSL-764.
 - Takeon gets a Go core (decided later the same day). `@takeon/engine` and `@takeon/pixi` are built from the core; the Swift and Kotlin builds consume the same core.
 - Citizen science around Mars rovers (AI4Mars, Planet Four and similar) is a dedicated rover game, not part of Landnám for now. The other citizen-science structures each get their own project or game.
 - Solar deploy and solar citizen science is its own game.
-- Rover waypoint routes are wanted (reverses the earlier drop). Full base building may be better served in the rover game; undecided, and Landnám keeps its base builder until then.
+- Rover waypoint routes are wanted, and live only in the rover game for now.
+- Landnám gives "tapas": small tastes of the scenes in the other games (for example a short rover scene), not the full games. Its base building stays minimal for the same reason.
+- Old data is imported once: `user_mineral_inventory` as starting Earth stock, `linked_anomalies` as discovered bodies and rovers left on site. `mineral_deposits` and `inventory` are ignored and kept untouched.
 
 ## Consequences
 
@@ -28,5 +30,4 @@ Decided by Liam, starting SSL-764.
 
 ## Open
 
-- Where waypoint routes live (assumed: the rover game) and whether full base building moves there.
-- Migration of `native/TakeonKit` and the TypeScript engine onto the Go core.
+- Migration of `native/TakeonKit` and the TypeScript engine onto the Go core (SSL-778).
