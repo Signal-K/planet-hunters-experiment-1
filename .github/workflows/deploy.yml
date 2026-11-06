@@ -61,7 +61,15 @@ jobs:
           NEXT_PUBLIC_FEATURE_SCAN_STATION: true
 
       - name: Deploy
-        run: npx wrangler deploy
+        run: |
+          # Cloudflare's API returns transient 503/504 ("no healthy upstream", gateway timeout).
+          # The build already passed, so retry the upload instead of failing the deploy.
+          for attempt in 1 2 3 4; do
+            npx wrangler deploy && exit 0
+            echo "wrangler deploy failed (attempt $attempt of 4)"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 20))
+          done
+          exit 1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -102,7 +110,15 @@ jobs:
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           NEXT_PUBLIC_FEATURE_SCAN_STATION: true
       - name: Deploy staging worker
-        run: npx wrangler deploy --env staging
+        run: |
+          # Cloudflare's API returns transient 503/504 ("no healthy upstream", gateway timeout).
+          # The build already passed, so retry the upload instead of failing the deploy.
+          for attempt in 1 2 3 4; do
+            npx wrangler deploy --env staging && exit 0
+            echo "wrangler deploy failed (attempt $attempt of 4)"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 20))
+          done
+          exit 1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
