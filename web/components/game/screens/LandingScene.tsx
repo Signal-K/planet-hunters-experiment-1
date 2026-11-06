@@ -1,5 +1,6 @@
 'use client'
 
+import styles from './LandingScene.module.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
@@ -71,13 +72,16 @@ export default function LandingScene({ target, progress, mode }: Props) {
 
   const padX = W * 0.5
   const padY = H * 0.66
-  const landerY = lerp(H * 0.2, padY - 4, ease(1 - alt))
+  const topPad = size.h > size.w ? H * 0.32 : H * 0.2
+  const starK = Math.min(1, 428 / Math.max(1, size.h))
+  const ladderH = size.h > size.w ? H * 0.42 : H * 0.58
+  const landerY = lerp(topPad, padY - 4, ease(1 - alt))
   const scale = lerp(0.8, 1.3, low)
   const burning = mode === 'descend' ? progress < 0.985 : progress > 0.02
   const flick = 0.75 + 0.25 * Math.sin(tick * 1.9)
   const legs = Math.min(1, Math.max(0, (low - 0.45) / 0.35))
   const dust = Math.max(0, (low - 0.82) / 0.18)
-  const orbX = lerp(padX - 4, padX - 26, low)
+  const orbX = padX
   const orbY = lerp(landerY - 13, -14, ease(low))
   const orbA = Math.max(0, 1 - low * 1.25)
 
@@ -97,18 +101,23 @@ export default function LandingScene({ target, progress, mode }: Props) {
   return (
     <div ref={ref} style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#02040b' }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
-        {stars.map((s, i) => <circle key={i} cx={s.x * W} cy={s.y * H} r={s.s} fill="#fff" opacity={s.o} />)}
+        {stars.map((s, i) => <circle key={i} cx={s.x * W} cy={s.y * H} r={s.s * starK} fill="#fff" opacity={s.o} />)}
       </svg>
 
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" aria-hidden="true" shapeRendering="crispEdges" data-testid="landing-world" style={{ position: 'absolute', inset: 0, opacity: worldOpacity }}>
         <defs>
           <clipPath id="ls-limb"><circle cx={limbX} cy={limbY + limbR} r={limbR} /></clipPath>
+          <radialGradient id="ls-heat" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stopColor="#ffb870" stopOpacity="0.8" />
+            <stop offset="0.6" stopColor="#ff7a30" stopOpacity="0.25" />
+            <stop offset="1" stopColor="#ff7a30" stopOpacity="0" />
+          </radialGradient>
           <linearGradient id="ls-air" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0.7" />
             <stop offset="1" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0" />
           </linearGradient>
         </defs>
-        {glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 5} fill="none" stroke="url(#ls-air)" strokeWidth={5} opacity={glowRim} />}
+        {glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 3} fill="none" stroke="url(#ls-air)" strokeWidth={6} opacity={glowRim} />}
         <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />
         <g clipPath="url(#ls-limb)">
           <circle cx={limbX - limbR * 0.16} cy={limbY + limbR + limbR * 0.06} r={limbR * 0.96} fill={ground[1]} />
@@ -119,7 +128,7 @@ export default function LandingScene({ target, progress, mode }: Props) {
             return <ellipse key={i} cx={cx} cy={cy} rx={c.s * lerp(1, 4, t)} ry={c.s * lerp(0.7, 1.6, t)} fill={ground[2]} opacity={0.55 * (1 - clamp01((low - 0.55) / 0.3))} />
           })}
         </g>
-        {heat > 0 && <ellipse cx={padX} cy={landerY + 6} rx={9 * heat} ry={14 * heat} fill="#ff8a3c" opacity={0.18 * heat} />}
+        {heat > 0 && <ellipse cx={padX} cy={landerY + 4} rx={16 * heat} ry={22 * heat} fill="url(#ls-heat)" opacity={0.5 * heat} />}
       </svg>
 
       <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.82, 1.08, low)})`, transformOrigin: '50% 64%', opacity: fieldOpacity, WebkitMaskImage: mask, maskImage: mask, pointerEvents: 'none' }}>
@@ -128,6 +137,7 @@ export default function LandingScene({ target, progress, mode }: Props) {
           bodyId={takeonBodyForTarget(target)}
           startView="iso"
           readOnly
+          className={styles.field}
         />
       </div>
 
@@ -178,11 +188,13 @@ export default function LandingScene({ target, progress, mode }: Props) {
           <rect x={-1.5} y={2.2} width={3} height={1.1} rx={0.3} fill="#47576b" />
         </g>
 
-        <g transform={`translate(5 ${H * 0.2})`}>
-          <line x1={0} y1={0} x2={0} y2={H * 0.58} stroke="#70d9ea" strokeWidth="0.3" opacity="0.5" />
-          {Array.from({ length: 11 }, (_, i) => <line key={i} x1={0} y1={(i / 10) * H * 0.58} x2={i % 5 === 0 ? 2.2 : 1.2} y2={(i / 10) * H * 0.58} stroke="#70d9ea" strokeWidth="0.3" opacity="0.6" />)}
-          <path d={`M-0.6 ${(1 - alt) * H * 0.58 - 1.2}L2.8 ${(1 - alt) * H * 0.58}L-0.6 ${(1 - alt) * H * 0.58 + 1.2}Z`} fill="#70d9ea" />
+        {[5, W - 5].map((gx, gi) => (
+        <g key={gi} transform={`translate(${gx} ${topPad}) scale(${gi ? -1 : 1} 1)`}>
+          <line x1={0} y1={0} x2={0} y2={ladderH} stroke="#70d9ea" strokeWidth="0.3" opacity="0.5" />
+          {Array.from({ length: 11 }, (_, i) => <line key={i} x1={0} y1={(i / 10) * ladderH} x2={i % 5 === 0 ? 2.2 : 1.2} y2={(i / 10) * ladderH} stroke="#70d9ea" strokeWidth="0.3" opacity="0.6" />)}
+          <path d={`M-0.6 ${(1 - alt) * ladderH - 1.2}L2.8 ${(1 - alt) * ladderH}L-0.6 ${(1 - alt) * ladderH + 1.2}Z`} fill="#70d9ea" />
         </g>
+        ))}
       </svg>
     </div>
   )

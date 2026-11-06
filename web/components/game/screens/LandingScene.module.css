@@ -1,0 +1,14 @@
+/* The terrain fills the whole scene, edge to edge, so it can be masked softly. */
+.field.field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+.field.field canvas {
+  min-height: 0;
+  height: 100%;
+}

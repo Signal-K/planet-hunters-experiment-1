@@ -88,6 +88,9 @@ function Stage() {
       game.setTargetId(null)
       game.setScreenFromUrl('missions')
     }
+    // ?target=<id> swaps the fixture's destination (check one scene against another body).
+    const targetOverride = params.get('target')
+    if (targetOverride) game.setTargetId(targetOverride)
     if (!raw) return
     try {
       const patch = JSON.parse(raw)

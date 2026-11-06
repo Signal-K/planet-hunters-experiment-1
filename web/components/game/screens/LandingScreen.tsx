@@ -90,14 +90,14 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
     landed.current = true
     // Dim to black first so the next scene is not a hard cut from the ground.
     setLeaving(true)
-    window.setTimeout(() => onContinueRef.current(), 420)
+    window.setTimeout(() => onContinueRef.current(), 1500)
   }, [ready])
 
   return (
     <div className={`game-screen ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
       <LandingScene target={target} progress={progress} mode={mode} />
       <SceneVignette />
-      <div aria-hidden="true" data-testid="landing-fade" style={{ position: 'absolute', inset: 0, background: '#02040b', opacity: leaving || !arrived ? 1 : 0, transition: `opacity ${leaving ? 400 : 700}ms ease`, pointerEvents: 'none', zIndex: 5 }} />
+      <div aria-hidden="true" data-testid="landing-fade" style={{ position: 'absolute', inset: 0, background: '#02040b', opacity: leaving || !arrived ? 1 : 0, transition: `opacity ${leaving ? 1400 : 700}ms ease`, pointerEvents: 'none', zIndex: 5 }} />
 
       <SceneTop onBack={onBack}>
         <ScenePill>{copy.eyebrow}</ScenePill>
