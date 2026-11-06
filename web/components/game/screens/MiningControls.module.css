@@ -209,6 +209,10 @@
   .action { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
   .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
 }
+/* Portrait: the order readout is one centred line above the pad and Fire, not a wrapped corner box, and the brief card sits in the sky clear of the ship. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .progress { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(176px + env(safe-area-inset-bottom)); max-width: calc(100% - 24px); white-space: nowrap; }
+}
 @media (max-height: 520px) {
   .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
   .action { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
@@ -245,3 +249,7 @@
 @media (prefers-reduced-motion: reduce) { :global(.mining-start-brief) { animation: none; } }
 /* The menu covers the scene completely, sky effects included. */
 :global(.mining-guide-dock) { z-index: 80; }
+
+@media (max-width: 600px) and (orientation: portrait) {
+  :global(.mining-start-brief) { top: 24%; }
+}
