@@ -9,6 +9,13 @@
 .starTile[data-layer='mid'] { background-image: url('/game/assets/base/kit/stars-mid.png'); background-size: 256px 256px; background-position: 90px 40px; }
 .starTile[data-layer='near'] { background-image: url('/game/assets/base/kit/stars-near.png'); background-size: 384px 384px; background-position: 30px 120px; }
 
+/* the whole-sky chart (SSL-788) */
+.field { fill: none; stroke: rgba(159, 214, 228, 0.16); stroke-width: 0.15; }
+.field[data-mapped='true'] { fill: rgba(127, 255, 212, 0.13); stroke: rgba(127, 255, 212, 0.4); }
+.field[data-current='true'] { stroke: #ffd678; stroke-width: 0.35; }
+.landmark { fill: none; stroke: rgba(255, 255, 255, 0.75); stroke-width: 0.3; }
+.mapline { margin: 0; color: #7fffd4; font: 700 14px/1.2 var(--ln-font-mono, ui-monospace, monospace); letter-spacing: 0.04em; }
+
 /* scene bits */
 .twinkle { animation: twinkle 4.5s ease-in-out infinite; }
 .ecliptic { fill: none; stroke: rgba(159, 214, 228, 0.3); stroke-width: 0.25; stroke-dasharray: 1.2 1.2; }

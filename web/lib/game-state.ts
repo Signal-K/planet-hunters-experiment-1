@@ -24,6 +24,7 @@ import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS } from '@/lib/game-screens'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
+import { mergeSkyMaps } from '@/lib/research/sky-map'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -683,6 +684,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
   merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
+  merged.player.skyMap = mergeSkyMaps(current.player.skyMap, remoteState.player?.skyMap)
   merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
   merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)
   merged.player.researchPurchases = maxMergeRecord(current.player.researchPurchases, remoteState.player?.researchPurchases)

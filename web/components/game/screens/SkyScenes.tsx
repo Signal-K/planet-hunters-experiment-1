@@ -203,7 +203,7 @@ function TelescopeCraft({ x, y, aim, sighting }: { x: number; y: number; aim: { 
 
 /* ───────────── Space telescope ───────────── */
 
-export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | null; aim: { x: number; y: number } }) {
+export function TransitScene({ g, target, aim, bare = false }: { g: Geom; target: SkyTarget | null; aim: { x: number; y: number }; bare?: boolean }) {
   const { W, H } = g
   const { earth, craft, targets, dish } = transitGeom(g)
   const earthImg = useEarthImage(W, H, earth)
@@ -213,7 +213,7 @@ export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | 
   return (
     <g>
       {/* the three star fields, drawn where their targets are */}
-      {targets.map(t => <StarField key={t.id} target={t} active={target?.id === t.id} portrait={g.portrait} />)}
+      {!bare && targets.map(t => <StarField key={t.id} target={t} active={target?.id === t.id} portrait={g.portrait} />)}
       {/* Earth: pixel art, same palette family as the flight sprite */}
       <PixelImage href={earthImg} x={0} y={0} w={Math.ceil(W)} h={Math.ceil(H)} testId="sky-earth" />
       <TelescopeCraft x={craft.x} y={craft.y} aim={aim} sighting={!target} />
@@ -234,7 +234,7 @@ export function TransitScene({ g, target, aim }: { g: Geom; target: SkyTarget | 
 
 /* ───────────── Ground telescope ───────────── */
 
-export function GroundScene({ g, target }: { g: Geom; target: SkyTarget | null }) {
+export function GroundScene({ g, target, bare = false }: { g: Geom; target: SkyTarget | null; bare?: boolean }) {
   const { W, H } = g
   const { horizon, p0, p1, p2, targets, dome } = groundGeom(g)
   const groundImg = useGroundImage(W, H, { horizon, dome }, g.portrait)
@@ -244,9 +244,9 @@ export function GroundScene({ g, target }: { g: Geom; target: SkyTarget | null }
   return (
     <g>
       <PixelImage href={groundImg} x={0} y={0} w={Math.ceil(W)} h={Math.ceil(H)} />
-      <path d={`M${p0[0]} ${p0[1]} Q ${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`} className={styles.ecliptic} />
-      {targets.map(t => <circle key={t.id} cx={t.x} cy={t.y} r={t.hw} className={styles.sector} data-active={target?.id === t.id} />)}
-      {mover.map((m, i) => <g key={i} className={styles.mover} style={{ animationDelay: `${-i * 1.7}s` }}><circle cx={m.x} cy={m.y} r="0.55" fill="#dfe9ff" /><path d={`M${m.x - 3} ${m.y + 0.4}L${m.x - 0.6} ${m.y}`} stroke="#dfe9ff" strokeWidth="0.2" opacity="0.5" /></g>)}
+      {!bare && <path d={`M${p0[0]} ${p0[1]} Q ${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`} className={styles.ecliptic} />}
+      {!bare && targets.map(t => <circle key={t.id} cx={t.x} cy={t.y} r={t.hw} className={styles.sector} data-active={target?.id === t.id} />)}
+      {!bare && mover.map((m, i) => <g key={i} className={styles.mover} style={{ animationDelay: `${-i * 1.7}s` }}><circle cx={m.x} cy={m.y} r="0.55" fill="#dfe9ff" /><path d={`M${m.x - 3} ${m.y + 0.4}L${m.x - 0.6} ${m.y}`} stroke="#dfe9ff" strokeWidth="0.2" opacity="0.5" /></g>)}
       {/* the dome's slit lights up when a target is locked */}
       {target && <rect x={Math.round(dome.x) - 1} y={Math.round(dome.y) - 12} width="3" height="11" fill="#ffe39a" transform={`rotate(${slitAngle} ${Math.round(dome.x)} ${Math.round(dome.y) - 1})`} />}
       <rect x={Math.round(dome.x) - 26} y={Math.round(dome.y) - 12} width="2" height="2" fill="#ff4d4d" className={styles.blink} />
