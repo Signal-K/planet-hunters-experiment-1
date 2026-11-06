@@ -100,6 +100,7 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
   | 'community-research'
+  | 'sky-pointing'
 
 // Screens that render a physical place in the game world (or a step in a
 // mission run through one) get the full, edge-to-edge viewport on desktop —
@@ -376,6 +377,8 @@ export interface Player {
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
+  /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
+  telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number } }>>
   researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
   /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
   skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>

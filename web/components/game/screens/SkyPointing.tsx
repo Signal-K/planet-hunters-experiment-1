@@ -81,8 +81,10 @@ function Icon({ id }: { id: InstrumentPointing }) {
 }
 
 interface Props {
-  /** The instrument already aimed this week, if any. */
-  locked?: InstrumentPointing | null
+  /** The telescope the sky asked the player to position. */
+  start?: InstrumentPointing
+  /** Telescopes the player has online; only these can be picked. */
+  online?: InstrumentPointing[]
   onLock: (pointing: InstrumentPointing, aim?: SkyAim) => void
   onCancel: () => void
   /** Fields the player's telescopes have already mapped. */
@@ -93,10 +95,10 @@ interface Props {
  * The weekly pointing step, as one full-screen viewport. Pick the instrument you are driving; each has its
  * own scene, sight and lock-on. Steer with the joystick, lock on, and the signal comes in over the week.
  */
-export default function SkyPointing({ locked = null, onLock, onCancel, mapped }: Props) {
+export default function SkyPointing({ start = 'transit', online, onLock, onCancel, mapped }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 926, h: 428 })
-  const [instrument, setInstrument] = useState<InstrumentPointing>(locked ?? 'transit')
+  const [instrument, setInstrument] = useState<InstrumentPointing>(start)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
   const [aim, setAim] = useState<SkyAim>(START_AIM)
   const [confirmed, setConfirmed] = useState<{ instrument: InstrumentPointing; target: SkyTarget; aim: SkyAim } | null>(null)
@@ -262,7 +264,7 @@ export default function SkyPointing({ locked = null, onLock, onCancel, mapped }:
       {!confirmed && (
         <>
           <div className={styles.rail} role="radiogroup" aria-label="Instrument">
-            {ORDER.map(id => (
+            {ORDER.filter(id => !online || online.includes(id)).map(id => (
               <button key={id} type="button" role="radio" aria-checked={id === instrument} className={styles.tab} data-active={id === instrument} data-testid={`sky-instrument-${id}`} onClick={() => switchTo(id)}>
                 <Icon id={id} /><span>{INSTRUMENTS[id].short}</span>
               </button>

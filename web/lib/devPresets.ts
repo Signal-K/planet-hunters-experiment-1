@@ -172,7 +172,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
-      { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Explorer chosen this week, instruments not aimed yet: steer the sight across the night sky with the stick and lock on', stage: 'free-ops' },
+      { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
+      { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
@@ -855,9 +856,27 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-sky-pointing':
       return {
-        ...fixture('ui-community-research')!,
-        player: { ...POST_ONBOARDING_PLAYER, researchPath: { week: weekKey(Date.now()), path: 'explorer' } },
+        screen: 'sky-pointing',
+        popup: null,
+        player: { ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now() - 86_400_000, transitSatelliteLevel: 1, saturnImagerLaunchedAt: Date.now() - 86_400_000 },
       }
+
+    case 'ui-sky-dialogue': {
+      const base = fixture('cp-late') as GameState
+      return {
+        ...base,
+        screen: 'hub',
+        player: {
+          ...base.player,
+          placed: ['launchpad', 'market', 'hangar', 'control-station'],
+          placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
+          freeOperations: true,
+          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+          transitSatelliteLevel: 1,
+          telescopeAim: undefined,
+        },
+      }
+    }
 
     case 'ui-community-research-orionids': {
       // SSL-714: the Orionids chain inside Community research.

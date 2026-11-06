@@ -303,6 +303,16 @@
    ]
   },
   {
+   "id": "sky-dialogue",
+   "name": "Sky dialogue",
+   "flow": "records",
+   "web": "ui-sky-dialogue",
+   "native": "community-research-phone",
+   "tickets": [
+    "SSL-790"
+   ]
+  },
+  {
    "id": "economy-arrival",
    "name": "Welcome back: market board",
    "flow": "progression",

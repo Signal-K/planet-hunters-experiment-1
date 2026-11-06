@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TOTAL_FIELDS, fieldCentre, fieldId, landmarkNear, mappedCount, markMapped, mergeSkyMaps, raDelta, wrapRa, type SkyMap } from './sky-map'
-import { setPointing, type ResearchPathChoice } from './paths'
+import { pointTelescope, telescopesNeedingPointing, type TelescopeAim } from './paths'
 
 describe('sky map', () => {
   it('cuts the whole sky into 288 fields and wraps right ascension', () => {
@@ -34,11 +34,23 @@ describe('sky map', () => {
     expect(landmarkNear({ ra: 150, dec: -30 })).toBeNull()
   })
 
-  it('a weekly lock stores where the telescope looked and marks that field, once', () => {
-    const player: { researchPath?: ResearchPathChoice; skyMap?: SkyMap } = { researchPath: { week: '2026-11-02', path: 'explorer' } }
-    const locked = setPointing(player, 'transit', Date.parse('2026-11-04T12:00:00Z'), { ra: 120, dec: -40 })
-    expect(locked.researchPath?.aim).toEqual({ ra: 120, dec: -40 })
+  it('a weekly lock stores where the telescope looked and marks that field, once per telescope', () => {
+    const player: { telescopeAim?: TelescopeAim; skyMap?: SkyMap } = {}
+    const locked = pointTelescope(player, 'transit', Date.parse('2026-11-04T12:00:00Z'), { ra: 120, dec: -40 })
+    expect(locked.telescopeAim?.transit?.aim).toEqual({ ra: 120, dec: -40 })
     expect(Object.keys(locked.skyMap ?? {})).toEqual([fieldId({ ra: 120, dec: -40 })])
-    expect(setPointing(locked, 'transit', Date.parse('2026-11-05T12:00:00Z'), { ra: 5, dec: 5 })).toBe(locked)
+    expect(pointTelescope(locked, 'transit', Date.parse('2026-11-05T12:00:00Z'), { ra: 5, dec: 5 })).toBe(locked)
+    // Another telescope can still be pointed the same week, and the next Monday asks again.
+    expect(pointTelescope(locked, 'deep-space', Date.parse('2026-11-05T12:00:00Z'), { ra: 5, dec: 5 })).not.toBe(locked)
+    expect(pointTelescope(locked, 'transit', Date.parse('2026-11-10T12:00:00Z'), { ra: 5, dec: 5 })).not.toBe(locked)
+  })
+
+  it('asks for a telescope to be pointed only when it is online and not yet pointed this week', () => {
+    const online = { freeOperations: true, transitSatelliteLaunchedAt: 1 }
+    const now = Date.parse('2026-11-04T12:00:00Z')
+    expect(telescopesNeedingPointing({}, now)).toEqual([])
+    expect(telescopesNeedingPointing(online, now)).toEqual(['transit'])
+    expect(telescopesNeedingPointing(pointTelescope<typeof online & { telescopeAim?: TelescopeAim }>(online, 'transit', now, { ra: 1, dec: 1 }), now)).toEqual([])
+    expect(telescopesNeedingPointing(pointTelescope<typeof online & { telescopeAim?: TelescopeAim }>(online, 'transit', now, { ra: 1, dec: 1 }), Date.parse('2026-11-10T12:00:00Z'))).toEqual(['transit'])
   })
 })

@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 25,
+    "webRoutes": 26,
     "nativeScreenCases": 24,
-    "qaScenes": 62,
+    "qaScenes": 64,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 25,
-    "authoringSources": 58,
-    "authoredObjectNodes": 147,
-    "authoredGameObjects": 75,
-    "authoredUiElements": 72,
+    "authoredSceneScripts": 26,
+    "authoringSources": 60,
+    "authoredObjectNodes": 151,
+    "authoredGameObjects": 76,
+    "authoredUiElements": 75,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 25,
-    "compiledObjectNodes": 147,
+    "compiledScenes": 26,
+    "compiledObjectNodes": 151,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 142,
-    "webGameComponents": 106,
+    "hostLayoutObjects": 146,
+    "webGameComponents": 108,
     "nativeAppComponents": 56
   },
   "scenes": {
@@ -123,6 +123,10 @@
       {
         "route": "saturn-storm-search",
         "type": "exchange-lab"
+      },
+      {
+        "route": "sky-pointing",
+        "type": "menu"
       },
       {
         "route": "targets",
@@ -537,6 +541,16 @@
         ]
       },
       {
+        "id": "sky-dialogue",
+        "name": "Sky dialogue",
+        "flow": "records",
+        "web": "ui-sky-dialogue",
+        "native": "community-research-phone",
+        "tickets": [
+          "SSL-790"
+        ]
+      },
+      {
         "id": "economy-arrival",
         "name": "Welcome back: market board",
         "flow": "progression",
@@ -663,6 +677,14 @@
         "name": "Landing",
         "flow": "core-loop",
         "web": "ui-landing",
+        "native": "landing-live",
+        "tickets": []
+      },
+      {
+        "id": "landing-ascend",
+        "name": "Landing: ascent",
+        "flow": "core-loop",
+        "web": "ui-landing-ascend",
         "native": "landing-live",
         "tickets": []
       },
@@ -1343,6 +1365,23 @@
         ]
       },
       {
+        "id": "sky-pointing",
+        "path": "shared/authoring/scenes/sky-pointing.toml",
+        "objects": 4,
+        "gameObjects": 1,
+        "uiElements": 3,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 4,
+        "mechanics": [
+          "records"
+        ],
+        "web": [
+          "web/components/game/screens/SkyPointing.tsx"
+        ],
+        "native": []
+      },
+      {
         "id": "targets",
         "path": "shared/authoring/scenes/targets.toml",
         "objects": 4,
@@ -1476,6 +1515,10 @@
       {
         "id": "saturn-storm-search",
         "objects": 5
+      },
+      {
+        "id": "sky-pointing",
+        "objects": 4
       },
       {
         "id": "targets",
@@ -1811,7 +1854,8 @@
       "scenes": [
         "community-research",
         "mission-history",
-        "narrative-ledger"
+        "narrative-ledger",
+        "sky-pointing"
       ]
     },
     {
@@ -2023,6 +2067,8 @@
       "web/components/game/screens/RocketBuilderScene.tsx",
       "web/components/game/screens/SaturnStormSearchScreen.tsx",
       "web/components/game/screens/SkyBadgeRow.tsx",
+      "web/components/game/screens/SkyChart.tsx",
+      "web/components/game/screens/SkyPixels.tsx",
       "web/components/game/screens/SkyPointing.tsx",
       "web/components/game/screens/SkyScenes.tsx",
       "web/components/game/screens/TessDiscoveryScreen.tsx",
@@ -2124,6 +2170,7 @@
       "shared/authoring/fixtures/refinery.toml",
       "shared/authoring/fixtures/rocket-buy.toml",
       "shared/authoring/fixtures/saturn-storm-search.toml",
+      "shared/authoring/fixtures/sky-pointing.toml",
       "shared/authoring/fixtures/targets.toml",
       "shared/authoring/fixtures/transit.toml",
       "shared/authoring/flows/launch-telescope.toml",
@@ -2154,6 +2201,7 @@
       "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
       "shared/authoring/scenes/saturn-storm-search.toml",
+      "shared/authoring/scenes/sky-pointing.toml",
       "shared/authoring/scenes/targets.toml",
       "shared/authoring/scenes/transit.toml",
       "shared/authoring/worlds/base-world.toml",
@@ -2174,7 +2222,8 @@
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
       "radio-meteors",
-      "refinery"
+      "refinery",
+      "sky-pointing"
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
@@ -2202,6 +2251,7 @@
       "refinery",
       "rocket-buy",
       "saturn-storm-search",
+      "sky-pointing",
       "targets",
       "transit"
     ]

@@ -34,6 +34,7 @@ import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
+import { telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
@@ -75,6 +76,8 @@ export interface HubBuildOption {
   reason?: string
 }
 
+const TELESCOPE_NAMES: Record<InstrumentPointing, string> = { transit: 'space telescope', 'deep-space': 'ground telescope', saturn: 'Saturn orbiter' }
+
 interface HubScreenProps {
   player: Player
   onBuild?: () => void
@@ -89,6 +92,8 @@ interface HubScreenProps {
   coachVisible?: boolean
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
+  /** Opens the whole-sky pointing view on one telescope. */
+  onPointTelescope?: (instrument: InstrumentPointing) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
   onUpgradeBuilding?: (id: string) => void
   onExcavateSubsurface?: () => void
@@ -109,7 +114,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -291,6 +296,29 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
     : undefined
 
+  // The sky speaks for the citizen science tools: a telescope that needs positioning, or one with data ready to
+  // classify. It opens the tool. Pointing comes first because a pointed telescope is what brings the data.
+  const needsPointing = telescopesNeedingPointing(player, Date.now())
+  const stationQuiet = !onboardingActive && !coachVisible && !player.activeMission
+  const stationCallout: BuildingCallout | undefined = !stationQuiet ? undefined
+    : needsPointing.length > 0 && onPointTelescope
+    ? {
+      title: `Point the ${TELESCOPE_NAMES[needsPointing[0]]}`,
+      body: 'It has no target this week. Aim it at any part of the sky and map it.',
+      cta: 'Point',
+      placement: 'viewport-clear',
+      onCta: () => onPointTelescope(needsPointing[0]),
+    }
+    : signals.length > 0
+    ? {
+      title: signals.length === 1 ? '1 signal ready' : `${signals.length} signals ready`,
+      body: 'Your telescopes found something. Classify it and the research moves forward.',
+      cta: 'Classify',
+      placement: 'viewport-clear',
+      onCta: () => onOpenScene('instrument-hub'),
+    }
+    : undefined
+
   // Welcome back: the daily board moved while the player was away. It speaks
   // from the Exchange when there is one, otherwise from a quiet launchpad.
   // Only a return after 4+ hours opens a welcome-back, and only with something to say.
@@ -358,6 +386,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
+        callout: menuOpen || editMode || agencyLandmark ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
       }

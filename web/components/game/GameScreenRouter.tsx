@@ -70,7 +70,8 @@ import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
-import { choosePath, claimResearchReward } from '@/lib/research/paths'
+import SkyPointing from '@/components/game/screens/SkyPointing'
+import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -114,6 +115,7 @@ function ScreenBody({
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   // SSL-746: a review in progress, and the reviewer's own finished run waiting to be compared.
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
+  const [pointingTarget, setPointingTarget] = useState<InstrumentPointing>('transit')
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
 
   /** SSL-746: a finished readout either asks for consensus, or (in review mode) answers the review. */
@@ -291,6 +293,7 @@ function ScreenBody({
             if (s === 'launchpad') { game.openLaunchpad(); return }
             game.go(s)
           }}
+          onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
@@ -582,6 +585,17 @@ function ScreenBody({
           onChooseMission={() => game.goToMissions()}
           onBuildRocket={game.onPurchaseRocket}
           onBack={onBackFromHangar ?? game.returnFromHangar}
+        />
+      )
+
+    case 'sky-pointing':
+      return (
+        <SkyPointing
+          start={pointingTarget}
+          online={onlineTelescopes(game.player)}
+          mapped={game.player.skyMap}
+          onCancel={() => game.goBack('hub')}
+          onLock={(instrument, aim) => { game.setPlayer(current => pointTelescope(current, instrument, Date.now(), aim)); game.goBack('hub') }}
         />
       )
 
