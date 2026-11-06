@@ -1,8 +1,18 @@
-export type MissionBoardTab = 'contracts' | 'program' | 'events' | 'free'
+export type MissionBoardTab = 'contracts' | 'program' | 'clients' | 'events' | 'free'
 
 let pending: MissionBoardTab | null = null
 let pendingEvent: string | null = null
 let pendingMineral: string | null = null
+let lastTab: MissionBoardTab | null = null
+
+/** The tab the player last used. Coming back to the board (Back from a launch review, a remount) keeps it instead of snapping to Contracts. */
+export function rememberMissionBoardTab(tab: MissionBoardTab): void {
+  lastTab = tab
+}
+
+export function lastMissionBoardTab(): MissionBoardTab | null {
+  return lastTab
+}
 
 /** Open the Free run map showing only the places that hold this mineral (e.g. "Find aluminium"). */
 export function requestMissionBoardMineral(mineralId: string): void {

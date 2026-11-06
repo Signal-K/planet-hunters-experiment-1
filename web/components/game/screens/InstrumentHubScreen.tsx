@@ -116,7 +116,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
         </p>
       )}
       {logbookOpen && (
-        <div className={styles.sheetBackdrop} role="dialog" aria-modal="true" aria-label="Logbook" data-testid="control-station-logbook-sheet" onClick={event => { if (event.target === event.currentTarget) setLogbookOpen(false) }}>
+        <div className={styles.sheetBackdrop} aria-label="Logbook" data-testid="control-station-logbook-sheet" onClick={event => { if (event.target === event.currentTarget) setLogbookOpen(false) }}>
           <section className={styles.sheet}>
             <header className={styles.sheetHead}>
               <h2>Logbook</h2>

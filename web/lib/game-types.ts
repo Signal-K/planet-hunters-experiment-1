@@ -92,7 +92,6 @@ export type Screen =
   | 'market'
   | 'hangar'
   | 'rocket-buy'
-  | 'rover-survey'
   | 'launchpad'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
@@ -120,7 +119,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'transit',
   'landing',
   'mining',
-  'rover-survey',
   'delivery',
   'refinery',
   'hangar',
@@ -134,7 +132,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'mission-history',
 ])
 
-export type MissionPhase = 'transit' | 'landing' | 'survey' | 'mining' | 'delivery' | 'debrief'
+export type MissionPhase = 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
 
 export interface ResourceFocus {
   label: string
@@ -249,6 +247,10 @@ export interface Player {
   dailyEconomySnapshot?: DailyEconomySnapshot
   /** Board changes since the last snapshot the player saw; cleared once read. */
   economyArrival?: import('@/lib/systems/EconomyArrival').EconomyArrival
+  /** Last time the player was in the game (ms). Drives the welcome-back catch-up (SSL-702). */
+  lastVisitAt?: number
+  /** Non-market catch-up sources for the welcome-back card (SSL-702). */
+  welcomeBack?: import('@/lib/systems/WelcomeBack').WelcomeBack
   /** Immutable evidence that a player-built client structure completed. */
   clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>
@@ -374,7 +376,7 @@ export interface Player {
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
-  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[] }
+  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn' }
   /** Permanent regular fragments earned from completed weekly research paths. */
   researchFragments?: number
   /** Universal fragments converted from regular research fragments. */
@@ -385,6 +387,8 @@ export interface Player {
   researchCosmetics?: string[]
   /** Permanent research marketplace bonus count by item id. */
   researchPermanentBonuses?: Record<string, number>
+  /** SSL-685: the monthly community goal reward the server reported, kept until `until` (epoch ms, end of that UTC month). */
+  communityBonus?: { month: string; salePct: number; fuelPct: number; until: number }
   /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
   dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>
@@ -553,7 +557,6 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
-  onRoverSurveyComplete: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

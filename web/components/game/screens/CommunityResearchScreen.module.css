@@ -1,7 +1,7 @@
 /* Two tones: the task and its story on the left, your week and the way in on the right. Tiles and the Go button come from MissionBoard.module.css. */
 .workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .34); }
 .left { background: rgba(60, 44, 118, .5); display: flex; flex-direction: column; align-items: stretch; gap: 18px; padding: 84px clamp(16px, 4vw, 48px) 32px; min-width: 0; }
-.right { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 72px clamp(16px, 4vw, 48px) 32px; min-width: 0; text-align: center; }
+.right { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; align-items: center; justify-content: safe center; overflow-y: auto; gap: 16px; padding: 72px clamp(16px, 4vw, 48px) 32px; min-width: 0; text-align: center; }
 .right > h2 { margin: 0; color: #9de7ef; font: 800 18px/1.1 var(--ln-font-display); text-transform: uppercase; letter-spacing: .12em; }
 .left .tiles.tiles { padding: 0 !important; background: none; width: 100%; gap: 0; }
 .left .tiles.tiles .offerStrip { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
@@ -19,7 +19,7 @@
 .pathCopy b { color: #b8c8c0; font: 800 12px/1 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .pathCopy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 16px/1.15 var(--ln-font-display); }
 .pathCount { color: #c9d0c2; font: 800 14px/1 var(--ln-font-body); }
-.readoutTabs { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 340px); padding: 4px; border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; background: rgba(8, 16, 34, .22); }
+.readoutTabs { display: grid; grid-template-columns: repeat(3, 1fr); width: min(100%, 400px); padding: 4px; border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; background: rgba(8, 16, 34, .22); }
 .readoutTabs button { min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: #c9d0c2; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .readoutTabs button[aria-selected='true'] { background: #f4efe4; color: #142840; box-shadow: 0 2px 8px rgba(8, 16, 34, .28); }
 .readoutCopy { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 17px/1.35 var(--ln-font-body); }
@@ -93,6 +93,9 @@
 }
 @media (max-height: 520px) {
   .bar small { display: none; }
+  .right { gap: 10px; padding-top: 64px; padding-bottom: 16px; }
+  .how { gap: 8px; }
+  .how li { font-size: 15px; }
 }
 /* SSL-714: the Orionids chain in the research history. */
 .record { width: min(100%, 390px); display: grid; justify-items: center; gap: 8px; color: #f4efe4; }
@@ -103,3 +106,18 @@
 .record li[data-held] { border-color: #f4efe4; color: #f4efe4; }
 .record li[data-held]::before { background: #6fe39a; border-color: #6fe39a; }
 .record em { color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); font-style: normal; }
+
+/* Short landscape screens: the picker's right column is taller than the screen, so it starts at the top,
+   packs tighter, and fades at the bottom edge so a clipped chip reads as "scroll", not as a bug. */
+@media (max-height: 520px) {
+  .right { justify-content: flex-start; gap: 10px; padding-top: 56px; padding-bottom: 40px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
+  .how { gap: 8px; }
+}
+
+
+/* The flagship event: the current or next meteor shower sits above everything else. */
+.flagship { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; row-gap: 2px; padding: 8px 12px; border: 2px solid #e8a24a; border-radius: 12px; background: linear-gradient(90deg, rgba(232, 162, 74, 0.22), rgba(232, 162, 74, 0.06)); color: #fff; }
+.flagship strong { font-size: 18px; line-height: 1.15; }
+.flagship > span:last-child { grid-column: 1 / -1; font-size: 14px; opacity: 0.9; }
+.flagshipKicker { color: #e8a24a; font: 800 14px/1.2 var(--ln-font-display, system-ui); letter-spacing: 0.1em; text-transform: uppercase; }
+.flagship[data-live='true'] { box-shadow: 0 0 18px rgba(232, 162, 74, 0.35); }

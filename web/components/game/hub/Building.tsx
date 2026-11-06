@@ -23,6 +23,8 @@ export interface BuildingCallout {
   /** A scene prompt can reserve a viewport-safe area instead of covering art. */
   placement?: 'anchored' | 'viewport-clear'
   onCta: () => void
+  /** Tappable list rows under the body (welcome-back catch-up). Each is a 44px+ tap into its scene. */
+  rows?: { text: string; onOpen: () => void }[]
   /** Optional "not now" for prompts the player can wave off. */
   onDismiss?: () => void
 }
@@ -339,6 +341,27 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             <div style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--dusk-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
+            {callout.rows && callout.rows.length > 0 && (
+              <ul style={{ listStyle: 'none', margin: '2px 0 0', padding: 0, display: 'grid', gap: 2 }}>
+                {callout.rows.map(row => (
+                  <li key={row.text}>
+                    <button
+                      type="button"
+                      data-testid="welcome-back-row"
+                      onClick={e => { e.stopPropagation(); setCalloutOpen(false); row.onOpen() }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, width: '100%',
+                        minHeight: 44, padding: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--ln-hairline)',
+                        cursor: 'pointer', textAlign: 'left', fontSize: 14, lineHeight: 1.35, color: 'var(--dusk-ink)',
+                      }}
+                    >
+                      <span>{row.text}</span>
+                      <span style={{ flex: '0 0 auto', display: 'inline-flex' }}><ArrowGlyph /></span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <button
               type="button"

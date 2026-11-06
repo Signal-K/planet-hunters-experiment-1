@@ -7,6 +7,7 @@ import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
 import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
+import { clientRoster } from '@/lib/client-roster'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -18,7 +19,7 @@ import {
   skyEventNow,
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
-import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -26,8 +27,9 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
+import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
@@ -66,6 +68,10 @@ function ChartIcon() {
 
 function ClipboardIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" /><path d="M9 4.5h6M9 9h6M9 13h6M9 17h4" /></svg>
+}
+
+function PeopleIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.3 2.7-6 6-6s6 2.7 6 6" /><circle cx="17" cy="9" r="2.6" /><path d="M16 13.2c2.8.2 5 2.6 5 5.8" /></svg>
 }
 
 function StarIcon() {
@@ -275,6 +281,13 @@ const EVENT_BANNERS = {
   moon: '/game/assets/events/banners/moon.png',
 } as const
 
+/** SSL-699: a pick for mining, a crane hook for construction, a lens for exploration. */
+function ContractGroupGlyph({ group }: { group: ContractGroup }) {
+  if (group === 'construction') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6h14M4 6l4-3M18 6v5M15 11h6M18 11v3a2 2 0 1 1-2 2" /></svg>
+  if (group === 'exploration') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="M14.5 14.5 20 20M10 7v6M7 10h6" /></svg>
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 14 10M11 5c4-2 8 0 9 4-3-2-6-2-9 0zM11 5l3 5" /></svg>
+}
+
 function SkyBanner({ kind }: { kind: keyof typeof EVENT_BANNERS }) {
   return <img className={styles.banner} src={EVENT_BANNERS[kind]} alt="" />
 }
@@ -318,7 +331,7 @@ export default function MissionBoard({
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
-  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? 'contracts')
+  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? lastMissionBoardTab() ?? 'contracts')
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
@@ -330,7 +343,16 @@ export default function MissionBoard({
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
-  const visibleCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
+  const [clientFocusId, setClientFocusId] = useState<string | null>(null)
+  const roster = useMemo(
+    () => clientRoster(Object.values(catalog.clients), player.clientMissions ?? {}, cards.flatMap(item => (item.client ? [item.client.id] : []))),
+    [catalog.clients, player.clientMissions, cards],
+  )
+  const focusedStanding = roster.find(item => item.client.id === clientFocusId) ?? roster[0]
+  const [contractGroupFilter, setContractGroupFilter] = useState<ContractGroup | null>(null)
+  const groupCounts = useMemo(() => contractGroupCounts(cards.map(item => item.mission)), [cards])
+  const visibleCards = cards.filter(item => (!contractTargetId || item.targetIds.includes(contractTargetId))
+    && (!contractGroupFilter || contractGroup(item.mission) === contractGroupFilter))
   const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
   const count = visibleCards.length
   const visibleSelectedIndex = selectedCard ? visibleCards.findIndex(item => item.mission.id === selectedCard.mission.id) : -1
@@ -339,11 +361,14 @@ export default function MissionBoard({
   const client = card?.client
   const clientLevel = client ? clientAffinityLevel(player.clientMissions[client.id] ?? 0) : 0
   const paging = tab === 'contracts' && count > 1
-  const offerWindow = paging
-    ? Array.from({ length: Math.min(5, count) }, (_, offset) => {
-        const offerIndex = (index - Math.floor(Math.min(5, count) / 2) + offset + count) % count
-        return { offer: visibleCards[offerIndex], offerIndex }
-      })
+  // SSL-730: fixed pages of up to five offers. The strip used to re-centre on the selection, so a tapped tile jumped
+  // to the middle and the others shuffled while the highlight seemed not to move. Tiles now hold their place; only
+  // the highlight moves, and the page turns when the ‹ › counter steps past its edge.
+  const windowSize = Math.min(5, count)
+  const windowStart = paging ? Math.min(Math.floor(index / windowSize) * windowSize, count - windowSize) : 0
+  // A group can hold a single offer; its tile still shows, so the strip never goes blank under the group chips.
+  const offerWindow = tab === 'contracts' && count > 0
+    ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
     : []
   const [view, setView] = useState<MapView>('system')
   const mineralSources = useMemo(() => sourceMineral
@@ -357,7 +382,6 @@ export default function MissionBoard({
     (sourceMineral
       ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
       : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
-    || (run.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID && player.orionidsEventStage === 1 && run.targetId === picked.id)
   ) : []
   const pickedRun = pickedRuns.find(run => run.id === runId) ?? pickedRuns[0] ?? null
   const contractTarget = contractTargetId ? catalog.targets.find(target => target.id === contractTargetId) ?? null : null
@@ -403,8 +427,14 @@ export default function MissionBoard({
     if (first) onSelectMission(first.mission.id)
   }
 
+  const pickContractGroup = (group: ContractGroup | null) => {
+    setContractGroupFilter(group)
+    const first = cards.find(item => (!group || contractGroup(item.mission) === group) && (!contractTargetId || item.targetIds.includes(contractTargetId)))
+    if (first) onSelectMission(first.mission.id)
+  }
+
   const selectVisibleRelative = (offset: number) => {
-    if (!contractTargetId) return onSelectRelative(offset)
+    if (!contractTargetId && !contractGroupFilter) return onSelectRelative(offset)
     if (visibleCards.length === 0) return
     const next = (index + offset + visibleCards.length) % visibleCards.length
     onSelectMission(visibleCards[next].mission.id)
@@ -420,13 +450,9 @@ export default function MissionBoard({
       if (event.status === 'upcoming') return
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
-      // SSL-714: mission 3 (and listening on afterwards) happens on the community receiver, ORI-1.
-      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 2) {
+      // SSL-714: mission 2 (and listening on afterwards) happens on the community receiver, ORI-1.
+      if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 1) {
         onOpenEvent('radio-meteors')
-        return
-      }
-      if (event.id === 'orionids-2026' && player.orionidsEventStage === 1 && catalog.missions.some(mission => mission.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID)) {
-        onAccept(ORIONIDS_SURFACE_RESEARCH_MISSION_ID)
         return
       }
       // Orionids is its own event chain, not a filter over ordinary Free Run
@@ -438,7 +464,7 @@ export default function MissionBoard({
       }
       const target = catalog.targets.find(candidate => candidate.type === 'asteroid' && freeRuns.some(run =>
         Object.keys(run.requires.minerals).some(mineral => candidate.minerals.includes(mineral))))
-      setTab('free')
+      chooseTab('free')
       setView('belt')
       setEventFocus(event.name)
       setPickedId(target?.id ?? null)
@@ -452,10 +478,11 @@ export default function MissionBoard({
 
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
-  const chooseTab = (next: MissionBoardTab) => setTab(next)
+  const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
   const tabButtons = <>
     <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
     <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
+    <button type="button" className={styles.tab} aria-label="Your clients" data-tab="clients" data-active={tab === 'clients'} data-testid="mission-board-tab-clients" onClick={() => chooseTab('clients')}><PeopleIcon /><span className={styles.tabLabel}>Clients</span></button>
     {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
     <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
@@ -486,6 +513,16 @@ export default function MissionBoard({
         <article className={styles.contractWorkspace} aria-live="polite" data-testid="mission-board-section-client">
           <section className={styles.contractOffers} aria-label="Available contracts">
             <h2>Contracts</h2>
+            {groupCounts.length > 1 && (
+              <div className={styles.offerGroups} role="group" aria-label="Contract type" data-testid="mission-board-groups">
+                <button type="button" data-active={!contractGroupFilter || undefined} aria-pressed={!contractGroupFilter} data-testid="mission-board-group-all" onClick={() => pickContractGroup(null)}>All<b>{cards.length}</b></button>
+                {groupCounts.map(({ group, count: groupCount }) => (
+                  <button key={group} type="button" data-group={group} data-active={contractGroupFilter === group || undefined} aria-pressed={contractGroupFilter === group} data-testid={`mission-board-group-${group}`} onClick={() => pickContractGroup(group)}>
+                    <ContractGroupGlyph group={group} />{CONTRACT_GROUP_LABEL[group]}<b>{groupCount}</b>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className={styles.offerStrip}>
               {offerWindow.map(({ offer, offerIndex }) => {
                 const offerClient = offer.client
@@ -493,6 +530,7 @@ export default function MissionBoard({
                   aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
                   <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={34} />
                   <span>{offerIndex + 1}</span>
+                  <i className={styles.offerKind} data-group={contractGroup(offer.mission)} title={CONTRACT_GROUP_LABEL[contractGroup(offer.mission)]}><ContractGroupGlyph group={contractGroup(offer.mission)} /></i>
                 </button>
               })}
             </div>
@@ -503,7 +541,13 @@ export default function MissionBoard({
             <h2>{card.mission.title}</h2>
             {card.mission.brief && <p data-testid="mission-brief">{card.mission.brief}</p>}
             {!card.unlocked && card.lockedDetail && <p>{card.lockedDetail}</p>}
-            <small>{index + 1} / {count}</small>
+            {count > 1 ? (
+              <span className={styles.offerPager} data-testid="mission-board-pager">
+                <button type="button" aria-label="Previous contract" data-testid="mission-board-prev" onClick={() => selectVisibleRelative(-1)}>‹</button>
+                <small>{index + 1} / {count}</small>
+                <button type="button" aria-label="Next contract" data-testid="mission-board-next" onClick={() => selectVisibleRelative(1)}>›</button>
+              </span>
+            ) : <small>{index + 1} / {count}</small>}
           </section>
           <section className={styles.contractAction}>
             <h2>Requirements</h2>
@@ -530,7 +574,7 @@ export default function MissionBoard({
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
       </article>) : tab === 'free' ? <article className={`${styles.dock} ${styles.freeDock}`} data-testid="mission-board-free">
         {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>{player.orionidsEventStage === 1 ? 'Mission 2 of 3 ready · surface observation' : 'Mission 1 of 3 · launch catches fragments · no cargo used'}</span>
+          <b>{eventFocus}</b><span>Shower run · launch catches fragments · no cargo used</span>
         </div>}
         {sourceMineralName && <div className={styles.sourceSites} data-testid="mineral-sources" role="group" aria-label={`Where to mine ${sourceMineralName}`}>
           <b>{sourceMineralName}</b>
@@ -596,6 +640,50 @@ export default function MissionBoard({
               </div>}
               {(selectedProgramStep.state === 'current' || selectedProgramStep.state === 'available') && <button type="button" className={styles.start} data-testid={`program-start-${selectedProgramStep.id}`} onClick={() => startStep(selectedProgramStep)}>{selectedProgramStep.state === 'current' ? 'START' : 'ACCEPT'}</button>}
             </article>}
+          </div>}
+
+          {tab === 'clients' && focusedStanding && <div className={styles.chain} data-testid="mission-board-clients">
+            <header className={styles.chainHead}>
+              <div>
+                <h2>Your clients</h2>
+                <p>Every job for a client raises their affinity: a higher level and a bigger payout bonus · {roster.filter(item => item.met).length} of {roster.length} met</p>
+              </div>
+            </header>
+            <div className={styles.clientList} role="list" aria-label="Clients">
+              {roster.map(item => <button key={item.client.id} type="button" role="listitem" className={styles.clientRow}
+                data-met={item.met || undefined} data-selected={item.client.id === focusedStanding.client.id || undefined}
+                data-testid={`client-row-${item.client.id}`} aria-pressed={item.client.id === focusedStanding.client.id}
+                onClick={() => setClientFocusId(item.client.id)}>
+                <ClientMark initial={item.client.initial} color={item.client.color} uiRole={item.client.uiRole} clientId={item.client.id} size={44} />
+                <span className={styles.clientCopy}>
+                  <strong>{item.client.name}</strong>
+                  <span>{item.met ? `L${item.level} · ${item.jobs} ${item.jobs === 1 ? 'job' : 'jobs'}${item.offers ? ` · ${item.offers} on the board` : ''}` : 'Not met yet'}</span>
+                </span>
+                <span className={styles.affinity} aria-hidden="true"><i style={{ width: `${(item.jobsInLevel / item.jobsPerLevel) * 100}%` }} /></span>
+              </button>)}
+            </div>
+            <article className={styles.clientDetail} data-testid="client-detail">
+              <header>
+                <ClientMark initial={focusedStanding.client.initial} color={focusedStanding.client.color} uiRole={focusedStanding.client.uiRole} clientId={focusedStanding.client.id} size={68} />
+                <div><span className={styles.kicker}>{focusedStanding.met ? `Affinity level ${focusedStanding.level}` : 'Not met yet'}</span><h3>{focusedStanding.client.name}</h3></div>
+              </header>
+              <p className={styles.skillBrief}>{focusedStanding.client.projectType}</p>
+              <div className={styles.gateMeter} role="progressbar" aria-label={`Affinity toward level ${focusedStanding.level + 1}`} aria-valuemin={0} aria-valuemax={focusedStanding.jobsPerLevel} aria-valuenow={focusedStanding.jobsInLevel}>
+                <i style={{ width: `${(focusedStanding.jobsInLevel / focusedStanding.jobsPerLevel) * 100}%` }} />
+                <em>{focusedStanding.jobsInLevel} of {focusedStanding.jobsPerLevel} jobs to level {focusedStanding.level + 1}</em>
+              </div>
+              <dl className={styles.clientFacts}>
+                <div><dt>Affinity bonus</dt><dd>+{Math.round(focusedStanding.bonus * 1000) / 10}%{focusedStanding.bonusMaxed ? ' (max)' : ''}</dd></div>
+                <div><dt>Client premium</dt><dd>+{Math.round(focusedStanding.client.payoutPremium * 100)}%</dd></div>
+                <div><dt>Wants</dt><dd>{focusedStanding.client.mineralPreferences.map(id => catalog.minerals[id]?.name ?? id).join(', ') || 'Any cargo'}</dd></div>
+              </dl>
+              {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
+                const first = cards.find(item => item.client?.id === focusedStanding.client.id)
+                setContractTargetId(null)
+                chooseTab('contracts')
+                if (first) onSelectMission(first.mission.id)
+              }}>{focusedStanding.offers === 1 ? 'SEE CONTRACT' : `SEE ${focusedStanding.offers} CONTRACTS`}</button>}
+            </article>
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">

@@ -551,7 +551,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <section className={gateStyles.gate} aria-label="Choose where this haul goes">
             <span className={gateStyles.eyebrow}>Free run · your haul</span>
             <h2>Where does it go?</h2>
-            <p>No client is owed this haul. Choose before you start drilling.</p>
+            <p>No client is owed this haul. Choose before you start mining.</p>
             <div className={gateStyles.choices}>
               <button type="button" className={gateStyles.choice} data-testid="mining-gate-sell" onClick={() => setEarthDisposition('sell')}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M14.5 9.5c-.6-.9-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.7 5.4 1.4 5.4 4 0 1.1-1.1 1.9-2.7 1.9-1.2 0-2.2-.5-2.8-1.4M12 6.5v11" /></svg>

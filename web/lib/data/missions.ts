@@ -45,7 +45,6 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
-export const ORIONIDS_SURFACE_RESEARCH_MISSION_ID = 'self-directed-orionids-surface-research'
 export const ORIONIDS_SHOWER_TARGET_ID = 'orionids-shower-field'
 
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
@@ -68,35 +67,6 @@ export function orionidsNightRun(): Mission {
     // optional discoveries in the shower field, never a named-rock order.
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 2 },
     payout: { francs: normalizeMissionPayout((debris?.price ?? 0) * amount, FREE_OPS_MISSION_SEQUENCE), affinity: 0 },
-  }
-}
-
-/** The second Orionids tier deliberately changes activity: observe the marked
- * surface with the rover instead of running another mining pass. */
-export function orionidsSurfaceResearchMission(): Mission {
-  return {
-    id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
-    title: 'Orionids surface observation',
-    brief: 'Your fragment sample points back to a fresh impact on Eros. Drive the rover to it, scan the rock formation, and take a bearing for the community research record.',
-    tag: 'EVENT RESEARCH',
-    difficulty: 'L1',
-    locked: false,
-    sequence: FREE_OPS_MISSION_SEQUENCE,
-    unlockAt: 'Bring back a fragment sample from the Orionids shower run',
-    targetId: 'eros',
-    payload: { type: 'rover', name: 'Orionids field rover', cargoCost: 0 },
-    survey: {
-      scanRequired: true,
-      scanCount: 1,
-      scanSource: 'rover',
-      depositsToMap: 1,
-      revealsMinerals: false,
-      revealsLandmarks: ['Orionids fracture outcrop'],
-      unlocksLanding: false,
-      onWorldVehicle: 'starter-rover',
-    },
-    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 5 },
-    payout: { francs: 0, affinity: 0 },
   }
 }
 

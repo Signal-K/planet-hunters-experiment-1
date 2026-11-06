@@ -1,6 +1,6 @@
 'use client'
 
-import { dailyTasksFor, RESEARCH_TITLE, communityBar, stampDayKey, stampStreak, stampsInMonth, type CommunityResearch, type ResearchStamps } from '@/lib/research/stamps'
+import { COMMUNITY_REWARD_TEXT, dailyTasksFor, RESEARCH_TITLE, communityBar, stampDayKey, stampStreak, stampsInMonth, type CommunityResearch, type ResearchStamps } from '@/lib/research/stamps'
 import styles from './ResearchCalendar.module.css'
 
 const DAY_MS = 86_400_000
@@ -43,6 +43,7 @@ export function ResearchCalendar({ stamps, now, community, hasDiscovery = false 
         </div>
         <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div>
       </div>
+        <small className={styles.note}>{bar.reached ? `Goal reached: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal}: ${COMMUNITY_REWARD_TEXT}.`}</small>
     </section>
   )
 }

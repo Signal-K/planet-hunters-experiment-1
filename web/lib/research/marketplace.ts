@@ -47,7 +47,7 @@ export const RESEARCH_MARKETPLACE_ITEMS: readonly ResearchMarketplaceItem[] = [
   },
 ]
 
-type ResearchPlayer = Pick<Player, 'researchFragments' | 'researchUniversalFragments' | 'researchPurchases' | 'researchCosmetics' | 'researchPermanentBonuses'>
+type ResearchPlayer = Pick<Player, 'researchFragments' | 'researchUniversalFragments' | 'researchPurchases' | 'researchCosmetics' | 'researchPermanentBonuses' | 'communityBonus'>
 
 export function researchItemById(id: string): ResearchMarketplaceItem | undefined {
   return RESEARCH_MARKETPLACE_ITEMS.find(item => item.id === id)
@@ -98,8 +98,28 @@ export function buyResearchItem<T extends ResearchPlayer>(player: T, itemId: str
   }
 }
 
-export function permanentResearchSaleRate(player: Pick<ResearchPlayer, 'researchPermanentBonuses'>): number {
+/** Exchange sale rate from permanent research items plus this month's community goal while it lasts (SSL-685). */
+export function permanentResearchSaleRate(player: Pick<ResearchPlayer, 'researchPermanentBonuses' | 'communityBonus'>, now: number = Date.now()): number {
   const exchange = Math.max(0, player.researchPermanentBonuses?.['exchange-calibration'] ?? 0) * 0.02
   const account = Math.max(0, player.researchPermanentBonuses?.['research-network'] ?? 0) * 0.01
-  return exchange + account
+  return exchange + account + communityBonusRate(player, now).sale
+}
+
+/** The community goal reward as fractions (0.03 / 0.07), zero once the month it was earned in has ended. */
+export function communityBonusRate(player: Pick<ResearchPlayer, 'communityBonus'>, now: number = Date.now()): { sale: number; fuel: number } {
+  const b = player.communityBonus
+  if (!b || !(b.until > now)) return { sale: 0, fuel: 0 }
+  return { sale: Math.max(0, b.salePct) / 100, fuel: Math.max(0, b.fuelPct) / 100 }
+}
+
+/** Record what `/api/community/research` says the goal gives; the same player comes back when nothing changes. */
+export function withCommunityBonus<T extends Pick<ResearchPlayer, 'communityBonus'>>(
+  player: T,
+  server: { month: string; reachedAt: number | null; bonusUntil: number | null; bonusPct: number; fuelPct?: number } | null | undefined,
+): T {
+  if (!server || server.reachedAt == null || server.bonusUntil == null) return player
+  const next = { month: server.month, salePct: server.bonusPct, fuelPct: server.fuelPct ?? 0, until: server.bonusUntil }
+  const have = player.communityBonus
+  if (have && have.month === next.month && have.salePct === next.salePct && have.fuelPct === next.fuelPct && have.until === next.until) return player
+  return { ...player, communityBonus: next }
 }

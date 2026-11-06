@@ -33,7 +33,6 @@ export const OWN_PROGRAM_CLIENT_ID = 'mission-control'
 
 const ORIONIDS_EVENT_MISSION_IDS = new Set([
   'self-directed-orionids-night-run',
-  'self-directed-orionids-surface-research',
 ])
 
 /** Event evidence is not an ordinary player-owned haul. It is protected research data. */
@@ -162,15 +161,6 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
         ? 'Haul the materials out and raise the structure on site. It stays yours and keeps working after you leave.'
         : 'Haul the materials out and raise the client\'s structure on site before heading home.',
       steps: ['Launch', 'Deliver', 'Build', 'Return'],
-      owner,
-    }
-  }
-
-  if (mission.survey?.onWorldVehicle) {
-    return {
-      label: 'Rover landing',
-      summary: 'Land the rover, scan the surface for deposits, then mine what it finds before flying home.',
-      steps: ['Launch', 'Land', 'Scan', 'Mine'],
       owner,
     }
   }

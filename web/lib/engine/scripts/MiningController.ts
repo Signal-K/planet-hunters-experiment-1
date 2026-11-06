@@ -12,7 +12,9 @@ import { hitStopSeconds, pickupPosition, stepHitStop, type HitKind } from '../mi
 import type { DebrisArtSet } from '../debrisArt'
 import { fallFrameIndex, landFrameIndex } from '@/lib/orionids/theme'
 
-export const SCROLL_SPEED = 36
+// Liam, 05.11: the ground should scroll faster. At 36 a deposit took ~8s to cross a
+// 280px gap and ~2.5s to pass the beam; 56 gives a deposit about every 5s with a ~1.6s window.
+export const SCROLL_SPEED = 56
 export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
@@ -152,6 +154,8 @@ export interface MiningControllerOptions {
   surfaceY?: number
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
+  /** Distance between labelled deposits. Narrow portrait screens pass a smaller gap so more seams are in view. */
+  depositGap?: number
   /** Live horizontal ship position. The d-pad steers the ship; the field still scrolls independently. */
   shipX?: () => number
   minerals: string[]
@@ -412,7 +416,7 @@ export class MiningController extends ScriptBehaviour {
   /** Native stride. A phone-width pass shows one or two deposits. */
   private depositGap(): number {
     // Sparse during the shower run so labelled ore does not crowd the falling fragments.
-    return this.opts.debris?.getSpawn()?.catchable ? 640 : 280
+    return this.opts.debris?.getSpawn()?.catchable ? 640 : (this.opts.depositGap ?? 280)
   }
 
   update(realDt: number): void {

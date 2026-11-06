@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
-import { AUTO_FINISH, INSTRUMENT_FINISHES, finishStyle, nextFinishChoice, readFinishChoice, resolveFinish, unlockedFinishes, writeFinishChoice, type InstrumentFinish } from '@/lib/instrument-finish'
+import { AUTO_FINISH, INSTRUMENT_FINISHES, finishStyle, readFinishChoice, resolveFinish, unlockedFinishes, writeFinishChoice, type InstrumentFinish } from '@/lib/instrument-finish'
 import TopBar from '@/components/ui/TopBar'
 import { UI_ZONES } from '@/lib/ui-zones'
 import {
@@ -48,8 +48,12 @@ interface InstrumentViewportProps {
   viewportChrome?: ReactNode
   answers: ReactNode
   tool?: ReactNode
+  /** The two numbered steps beside a tool. Say what to do, not what the system records. */
+  toolStepLabels?: { find: string; answer: string }
   /** Dashed slot when this project has no annotate tool. */
   emptyToolLabel?: string
+  /** Under the answers, outside the numbered steps (the All controls toggle on a console with no tool). */
+  footer?: ReactNode
   /**
    * Project-only verbs. Return null to fall through to the shared command set
    * (POINT, ZOOM, FOCUS, EXPOSE, STRETCH, INVERT, DOWNLINK, HELP).
@@ -71,7 +75,25 @@ interface InstrumentViewportProps {
    * used and their verdict. A record of their work, never a grade or a hint.
    */
   readout?: InstrumentReadout
+  /**
+   * Tappable command keys under the downlink log (SSL-749), so the terminal shows what it is for
+   * without typing. Each runs its line exactly as if typed. Defaults to the shared optics verbs.
+   */
+  quickCommands?: InstrumentQuickCommand[]
+  /**
+   * Just the data, the readout and the answer steps: no optics or project plate and no downlink terminal.
+   * For a player's first classification (Liam, 2.11: "too complex, too much going on").
+   */
+  simple?: boolean
 }
+
+export interface InstrumentQuickCommand { label: string; line: string; testId?: string }
+
+export const DEFAULT_QUICK_COMMANDS: InstrumentQuickCommand[] = [
+  { label: 'ZOOM IN', line: 'ZOOM IN' },
+  { label: 'ZOOM OUT', line: 'ZOOM OUT' },
+  { label: 'HELP', line: 'HELP' },
+]
 
 export interface InstrumentReadoutRow { label: string; value: string; testId?: string }
 export interface InstrumentReadout {
@@ -240,18 +262,21 @@ export function InstrumentToolButton({
   pressed,
   disabled,
   onClick,
+  coachTarget,
 }: {
   testId: string
   label: string
   pressed?: boolean
   disabled?: boolean
   onClick: () => void
+  coachTarget?: string
 }) {
   return (
     <button
       type="button"
       className={styles.toolButton}
       data-testid={testId}
+      data-coach-target={coachTarget}
       aria-pressed={pressed}
       disabled={disabled}
       onClick={onClick}
@@ -259,6 +284,16 @@ export function InstrumentToolButton({
       <span aria-hidden="true">{pressed ? '●' : '○'}</span>
       {label}
     </button>
+  )
+}
+
+/** An instruction for the annotate step, drawn as engraved text rather than a key (SSL-749: "Drag dip" read as a button). */
+export function InstrumentToolHint({ testId, text, detail }: { testId: string; text: string; detail?: string }) {
+  return (
+    <p className={styles.toolHint} data-testid={testId}>
+      <span>{text}</span>
+      {detail && <span className={styles.toolHintDetail}>{detail}</span>}
+    </p>
   )
 }
 
@@ -306,13 +341,17 @@ export default function InstrumentViewport({
   viewportChrome,
   answers,
   tool,
+  toolStepLabels,
   emptyToolLabel,
+  footer,
   onCommand,
   briefing,
   instrumentId = 'instrument',
   level = 1,
   module,
   readout,
+  quickCommands = DEFAULT_QUICK_COMMANDS,
+  simple = false,
 }: InstrumentViewportProps) {
   // Device-local choice, read after mount so the server render (AUTO) hydrates cleanly.
   const [finishChoice, setFinishChoice] = useState<string>(AUTO_FINISH)
@@ -386,32 +425,13 @@ export default function InstrumentViewport({
       {helpLayer}
       <div className={styles.body}>
         {devBar}
-        <div className={styles.stage} data-testid="instrument-stage">
-          <div className={styles.controls} data-testid="instrument-controls" aria-label="Instrument controls">
+        <div className={styles.stage} data-testid="instrument-stage" data-simple={simple ? 'true' : undefined}>
+          {!simple && <div className={styles.controls} data-testid="instrument-controls" aria-label="Instrument controls">
+            {/* SSL-749: just the plate name. The PWR/TRK/MAG lamps and the finish row read as noise beside real
+                controls; the colourway stays a FINISH command in the downlink. */}
             <div className={styles.plate} aria-hidden="true">
               <span className={styles.plateName}>OPTICS · IV-01</span>
-              <span className={styles.lights}>
-                <span className={styles.led} data-on="true" />PWR
-                <span className={styles.led} data-on="true" data-blink="true" />TRK
-                <span className={styles.led} data-on={view.zoom > 1 ? 'true' : 'false'} data-tone="amber" />MAG
-              </span>
             </div>
-            <button
-              type="button"
-              className={styles.finishKey}
-              data-testid="instrument-finish"
-              aria-label={`Console finish: ${finish.name}${finishChoice === AUTO_FINISH ? ', following level' : ''}. Change finish.`}
-              onClick={() => chooseFinish(nextFinishChoice(finishChoice, level))}
-            >
-              <span className={styles.finishSwatch} aria-hidden="true" />
-              <span className={styles.finishName}>FINISH · {finish.name.toUpperCase()}</span>
-              <span className={styles.finishPips} aria-hidden="true">
-                {INSTRUMENT_FINISHES.map(f => (
-                  <i key={f.id} data-locked={f.unlockLevel > level ? 'true' : 'false'} data-current={f.id === finish.id ? 'true' : 'false'} style={{ background: `linear-gradient(135deg, ${f.a}, ${f.b}, ${f.c})` }} title={f.unlockLevel > level ? `LV ${f.unlockLevel}` : f.name} />
-                ))}
-              </span>
-              <span className={styles.finishMode}>{finishChoice === AUTO_FINISH ? `AUTO · LV ${level}` : 'PINNED'}</span>
-            </button>
             <div className={styles.controlGrid}>
               <div className={styles.dpadBlock}>
                 <div className={styles.dpad} role="group" aria-label="Aim">
@@ -445,7 +465,7 @@ export default function InstrumentViewport({
               </section>
             )}
             <span className={styles.vent} aria-hidden="true" />
-          </div>
+          </div>}
 
           <div className={styles.wellSlot}>
           <div className={styles.well} data-testid="instrument-viewport" data-ui-zone={UI_ZONES.screenContent}>
@@ -491,11 +511,11 @@ export default function InstrumentViewport({
           </div>
 
           <div className={styles.command} data-testid="instrument-command">
-            <div className={styles.plate} aria-hidden="true">
+            {!simple && <div className={styles.plate} aria-hidden="true">
               <span className={styles.plateName}>DOWNLINK · CH 02</span>
               <span className={styles.signal} data-inline="true"><i /><i /><i /><i /><i /></span>
-            </div>
-            {briefing && briefLine != null ? (
+            </div>}
+            {simple ? null : briefing && briefLine != null ? (
               <section className={styles.desk} data-testid="instrument-briefing" aria-label={briefing.speaker}>
                 <span className={styles.speaker}>{briefing.speaker}</span>
                 <p className={styles.deskLine} data-testid="instrument-briefing-line" aria-live="polite">{briefLine}</p>
@@ -533,6 +553,11 @@ export default function InstrumentViewport({
                   {lastLine.replace(/^>\s*/, '').replace(/\s{2,}/g, ' · ')} {terminalOpen ? '▾' : '▴'}
                 </button>
               </div>
+              <div className={styles.quickKeys} role="group" aria-label="Commands" data-testid="instrument-quick-commands">
+                {quickCommands.map(cmd => (
+                  <button key={cmd.line} type="button" className={styles.quickKey} data-testid={cmd.testId} onClick={() => runCommand(cmd.line)}>{cmd.label}</button>
+                ))}
+              </div>
               {briefing && (
                 <button type="button" className={styles.briefButton} data-testid="instrument-briefing-open" onClick={() => setBriefStep(0)}>
                   BRIEFING · {briefing.speaker}
@@ -555,14 +580,17 @@ export default function InstrumentViewport({
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
             {tool ? <>
-              <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> Mark it</p>
+              <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> {toolStepLabels?.find ?? 'Mark it on the picture'}</p>
               {tool}
-              <p className={styles.step} data-testid="instrument-step-save"><b>2</b> Submit your classification</p>
-              {answers}
+              <div className={styles.answerBlock}>
+                <p className={styles.step} data-testid="instrument-step-save"><b>2</b> {toolStepLabels?.answer ?? 'Give your answer'}</p>
+                {answers}
+              </div>
             </> : <>
               {answers}
               {emptyToolLabel ? <div className={styles.emptyTool} data-testid="instrument-empty-tool">{emptyToolLabel}</div> : null}
             </>}
+            {footer}
           </div>
         </div>
       </div>

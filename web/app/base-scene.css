@@ -255,3 +255,57 @@
   .scene-location-actions .scene-dock-word svg { display: block; }
   .scene-location-actions .scene-dock-word span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 }
+
+/* SSL-692: whole-strip overview toggle and a position slider above the dock. */
+.base-overview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  width: min(100% - 24px, 420px);
+  padding: 0 6px 0 0;
+  border: 1px solid color-mix(in srgb, var(--ln-cyan) 52%, var(--ln-world-outline));
+  border-radius: 12px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ln-world-outline) 96%, var(--ln-world-trim-blue)), color-mix(in srgb, var(--ln-void) 88%, var(--ln-world-outline)));
+  box-shadow: 0 8px 20px rgb(0 0 0 / 28%);
+  overflow: hidden;
+  pointer-events: auto;
+}
+.base-overview-toggle {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--ln-world-hull-lit) 20%, transparent);
+  background: color-mix(in srgb, var(--ln-void) 42%, transparent);
+  color: var(--ln-world-hull-lit);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: 0.04em;
+}
+.base-overview-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  accent-color: var(--ln-cyan);
+}
+
+/* SSL-786: on a phone the flight plan (and its folded OPS chip) sits under the overview bar, not on top of it. */
+@media (max-width: 599px) {
+  body:has([data-testid="base-overview"]) .flight-plan-slot,
+  body:has([data-testid="base-overview"]) .flight-plan-slot > .flight-plan-chip {
+    top: calc(env(safe-area-inset-top, 0px) + 118px);
+  }
+}
+
+/* SSL-786: in short landscape the plan card shares the top row and wraps tall, so the overview pill moves under the clock cluster, clear of it. */
+@media (min-width: 600px) and (max-height: 640px) {
+  body:has([data-testid="flight-plan"]) .base-overview {
+    left: 12px;
+    transform: none;
+    width: min(300px, 100% - 24px);
+  }
+}

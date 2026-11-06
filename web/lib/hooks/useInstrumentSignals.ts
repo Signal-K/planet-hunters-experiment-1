@@ -5,6 +5,7 @@ import type { Player } from '@/lib/game-types'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { pointingThisWeek } from '@/lib/research/paths'
 import {
   asteroidFeedOnline,
   collectInstrumentSignals,
@@ -40,13 +41,16 @@ export function useInstrumentSignals(player: Player): {
     ])
       .then(([tess, asteroids, saturn]) => {
         if (cancelled) return
-        setSignals(collectInstrumentSignals({
+        const collected = collectInstrumentSignals({
           tess: tess.status === 'fulfilled' ? tess.value : [],
           asteroids: asteroids.status === 'fulfilled' ? asteroids.value : [],
           saturn: saturn.status === 'fulfilled' ? saturn.value : [],
           player,
           dateKey: instrumentDigestDateKey(),
-        }))
+        })
+        // The weekly pointing puts what the player aimed at first.
+        const aimed = pointingThisWeek(player.researchPath, Date.now())
+        setSignals(aimed ? [...collected.filter(s => s.kind === aimed), ...collected.filter(s => s.kind !== aimed)] : collected)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -65,6 +69,7 @@ export function useInstrumentSignals(player: Player): {
     player.transitSatelliteLevel,
     player.deepSpaceTelescopeLevel,
     player.satelliteTargetId,
+    player.researchPath,
   ])
 
   return { signals, loading }

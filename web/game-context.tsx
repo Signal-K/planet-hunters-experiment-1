@@ -22,6 +22,7 @@ import { useDailyClientPoolSync } from '@/lib/contexts/useDailyClientPoolSync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
+import { useWelcomeBack } from '@/lib/contexts/useWelcomeBack'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
@@ -270,6 +271,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
+  const returnedSince = useWelcomeBack(stateRef, setState, hydrated, isPreview.current, !!auth.authUserId && pbShared.authStore.isValid)
   useDailyClientPoolSync(setState, hydrated, isPreview.current, !!state.player.freeOperations, state.player.missionsDone, state.player.clientMissions)
   const runtimeCatalog = useRuntimeCatalog(catalog, state)
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
@@ -299,6 +301,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     player: state.player,
     setState,
     addToast: ui.addToast,
+    returnedSince,
   })
 
   // Sync location changes to the URL. Mission creation is one location at
@@ -354,7 +357,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   //   __landnam.patch({ francs: 5e6 })     merge into player
   //   __landnam.goto('hangar', {missionId, targetId})
   //   __landnam.skipTutorial()
-  //   __landnam.scenario('ui-rover-survey')  load a DEV preset into this session
+  //   __landnam.scenario('ui-mission-board')  load a DEV preset into this session
   //   __landnam.scenarios()                  list preset keys
   useEffect(() => {
     if (!isDevLauncherEnabled()) return
@@ -365,7 +368,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       goto: (screen: GameState['screen'], ids?: { missionId?: string | null; targetId?: string | null }) =>
         setState(s => ({ ...s, screen, missionId: ids?.missionId ?? s.missionId, targetId: ids?.targetId ?? s.targetId })),
       skipTutorial: () => tutorial.skipTutorial([0, 1, 2, 3, 4, 5, 6, 8, 9, 30, 31, 32, 33, 40, 41]),
-      // Load any DEV preset (m1-mining, ui-rover-survey, ship-customizer, ...)
+      // Load any DEV preset (m1-mining, ui-mission-board, ship-customizer, ...)
       // into the live signed-in session. Returns false for an unknown key.
       scenario: (name: string) => {
         const p = resolvePreset(name)
@@ -456,7 +459,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onDeliveryArrived: loop.onDeliveryArrived,
       onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
       onReturnArrived: loop.onReturnArrived,
-      onRoverSurveyComplete: loop.onRoverSurveyComplete,
       onLandingTouchdown: loop.onLandingTouchdown,
       onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,

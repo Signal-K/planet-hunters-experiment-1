@@ -1,0 +1,92 @@
+/* Weekly pointing: one full-screen viewport. The scene fills the screen; the controls float on top of it. */
+
+.root { position: absolute; inset: 0; z-index: 30; overflow: hidden; background: var(--ln-world-night-top, #0b0a2e); color: #e8f1ff; }
+.svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bands { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; image-rendering: pixelated; }
+.starTile { position: absolute; inset: 0; background-repeat: repeat; image-rendering: pixelated; }
+.starTile[data-layer='far'] { background-image: url('/game/assets/base/kit/stars-far.png'); background-size: 256px 256px; }
+.starTile[data-layer='mid'] { background-image: url('/game/assets/base/kit/stars-mid.png'); background-size: 256px 256px; background-position: 90px 40px; }
+.starTile[data-layer='near'] { background-image: url('/game/assets/base/kit/stars-near.png'); background-size: 384px 384px; background-position: 30px 120px; }
+
+/* scene bits */
+.twinkle { animation: twinkle 4.5s ease-in-out infinite; }
+.ecliptic { fill: none; stroke: rgba(159, 214, 228, 0.3); stroke-width: 0.25; stroke-dasharray: 1.2 1.2; }
+.sector { fill: rgba(159, 214, 228, 0.04); stroke: rgba(159, 214, 228, 0.5); stroke-width: 0.3; stroke-dasharray: 1.2 1; transition: fill 120ms ease, stroke 120ms ease; }
+.sector[data-active='true'] { fill: rgba(255, 214, 120, 0.14); stroke: #ffd678; stroke-dasharray: none; stroke-width: 0.5; }
+.pin circle:first-child { fill: rgba(255, 255, 255, 0.04); stroke: rgba(232, 241, 255, 0.85); stroke-width: 0.3; }
+.pin circle:last-child { fill: #fff; }
+.pin[data-active='true'] circle:first-child { stroke: #ffd678; stroke-width: 0.5; fill: rgba(255, 214, 120, 0.2); }
+.reticle { fill: none; stroke: #9fd6e4; stroke-width: 0.45; vector-effect: non-scaling-stroke; stroke-width: 1.6px; }
+.mover { animation: drift 10s linear infinite; }
+.detect { fill: none; stroke: #7fffd4; stroke-width: 0.2; animation: ping 2.2s ease-in-out infinite; }
+.sweep { fill: rgba(127, 255, 212, 0.55); animation: sweep 2.6s ease-in-out infinite alternate; }
+.laser { animation: pulse 1.4s ease-in-out infinite; }
+.blink { animation: pulse 1.2s ease-in-out infinite; }
+.lockRing { fill: none; stroke: #ffd678; stroke-width: 0.35; transform-box: fill-box; transform-origin: center; animation: lockpulse 1.8s ease-out infinite; }
+.slit { transition: fill 600ms ease; }
+.zoomLayer { transition: transform 1.8s cubic-bezier(0.5, 0, 0.2, 1); }
+.detail { opacity: 0; transition: opacity 1.2s ease 0.9s; }
+.detail[data-on='true'] { opacity: 1; }
+.swirl { transform-box: fill-box; transform-origin: center; animation: swirl 9s linear infinite; }
+.craft { transition: transform 1.2s ease; }
+
+.beam { fill: none; stroke: rgba(255, 214, 120, 0.45); stroke-width: 0.3; stroke-dasharray: 1 1.3; animation: march 1.2s linear infinite; }
+.packet { fill: #ffd678; offset-rotate: 0deg; animation: travel 2.8s linear infinite; opacity: 0; }
+.ring { fill: none; stroke: #9fd6e4; stroke-width: 0.3; transform-box: fill-box; transform-origin: center; animation: ring 2.7s ease-out infinite; }
+
+@keyframes twinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes ping { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes sweep { from { transform: translateX(0); } to { transform: translateX(var(--sweep, 30px)); } }
+@keyframes drift { from { transform: translateX(-4px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { transform: translateX(10px); opacity: 0; } }
+@keyframes swirl { to { transform: rotate(360deg); } }
+@keyframes march { to { stroke-dashoffset: -4.6; } }
+@keyframes travel { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes lockpulse { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.7); opacity: 0; } }
+@keyframes ring { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(6); opacity: 0; } }
+
+/* labels sit on the scene */
+.label { position: absolute; transform: translate(-50%, 4px); padding: 2px 8px; border-radius: 999px; background: rgba(2, 4, 11, 0.55); color: rgba(232, 241, 255, 0.92); font: 800 14px/1.2 var(--ln-font-display, system-ui); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; pointer-events: none; }
+.label[data-side='above'] { transform: translate(-50%, calc(-100% - 4px)); }
+.label[data-side='left'] { transform: translate(calc(-100% - 4px), -50%); }
+.label[data-side='right'] { transform: translate(4px, -50%); }
+.label[data-active='true'] { color: #ffd678; background: rgba(40, 28, 4, 0.7); }
+
+/* HUD */
+.tab, .stick { pointer-events: auto; }
+
+.caption { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(36%, 520px); display: grid; gap: 3px; padding: 8px 14px; border: 1.5px solid rgba(159, 214, 228, 0.55); border-radius: 14px; background: rgba(3, 6, 12, 0.78); text-align: center; pointer-events: none; text-shadow: 0 1px 6px #000; }
+.title { margin: 0; font-size: 22px; line-height: 1.1; }
+.note { margin: 0; font-size: 14px; line-height: 1.3; opacity: 0.9; }
+.coord { margin: 0; color: #9fd6e4; font: 700 14px/1.2 var(--ln-font-mono, ui-monospace, monospace); letter-spacing: 0.04em; }
+
+.rail { position: absolute; right: 14px; top: 76px; display: grid; gap: 6px; }
+.tab { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px; border: 1.5px solid rgba(159, 214, 228, 0.55); border-radius: 12px; background: rgba(3, 6, 12, 0.78); color: #e8f1ff; font: 800 14px/1.1 var(--ln-font-display, system-ui); letter-spacing: 0.05em; text-align: left; cursor: pointer; }
+.tab[data-active='true'] { border-color: #ffd678; background: rgba(60, 42, 6, 0.82); color: #ffd678; }
+
+
+.stick { position: absolute; left: 22px; bottom: 18px; width: 108px; height: 108px; border: 2px solid rgba(159, 214, 228, 0.85); border-radius: 50%; background: rgba(3, 6, 12, 0.55); touch-action: none; display: grid; place-items: center; }
+.knob { width: 50px; height: 50px; border-radius: 50%; background: #9fd6e4; box-shadow: 0 0 14px rgba(159, 214, 228, 0.6); pointer-events: none; }
+
+/* phone, portrait: caption under the top bar, instrument row above the stick */
+.root[data-portrait='true'] .caption { left: 14px; right: 14px; top: 72px; bottom: auto; transform: none; width: auto; text-align: left; padding: 8px 12px; border-radius: 12px; background: rgba(2, 4, 11, 0.6); }
+.root[data-portrait='true'] .rail { left: 14px; right: 14px; top: auto; bottom: 142px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.root[data-portrait='true'] .tab { flex-direction: column; justify-content: center; text-align: center; gap: 2px; padding: 6px 4px; font-size: 14px; }
+.root[data-portrait='true'] .actionSlot { left: 150px; right: 14px; width: auto; bottom: 38px; }
+.root[data-portrait='true'] .stick { bottom: 14px; }
+
+/* phone, landscape: tighter */
+@media (orientation: landscape) and (max-height: 500px) {
+  .rail { top: 66px; }
+  .title { font-size: 20px; }
+  .caption { width: min(36%, 480px); bottom: 12px; }
+  .stick { width: 96px; height: 96px; bottom: 14px; }
+  .knob { width: 44px; height: 44px; }
+  .actionSlot { bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .twinkle, .mover, .detect, .sweep, .laser, .blink, .lockRing, .beam, .packet, .ring, .swirl { animation: none; }
+  .zoomLayer { transition: none; }
+}

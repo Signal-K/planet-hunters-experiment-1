@@ -287,7 +287,8 @@
   .note, .buildPill { min-height: 44px; }
   .vehicleIcon { height: 40px; }
   .status { top: 8px; }
-  .preview { bottom: 112px; min-height: 88px; grid-template-columns: 80px 1fr 180px auto; gap: 8px; padding: 6px 10px; }
+  .blueprint { display: none; }
+  .preview { top: 54px; bottom: auto; min-height: 88px; grid-template-columns: 80px 1fr 180px auto; gap: 8px; padding: 6px 10px; }
   .previewVisual .vehicleIcon { height: 42px; }
   .crewSprite { width: 18px; height: 28px; }
   .previewCopy strong { font-size: 17px; }

@@ -5,11 +5,10 @@ import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
-import RoverSurveyScreen from '@/components/game/screens/RoverSurveyScreen'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
@@ -44,7 +43,7 @@ function stepFlightDock(game: Game, dir: -1 | 1) {
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'rover-survey' | 'delivery' | 'debrief'>
+export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'>
 
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
@@ -99,8 +98,7 @@ export default function MissionOperationRoutes({
               game.onDeliveryArrived()
               return
             }
-            const isRoverSurvey = game.mission?.survey?.onWorldVehicle === 'starter-rover'
-            const hasLander = !isRoverSurvey && !!game.player.shipCustomizerParts?.lander
+            const hasLander = !!game.player.shipCustomizerParts?.lander
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -135,9 +133,9 @@ export default function MissionOperationRoutes({
             }
             game.setPlayer(player => ({
               ...player,
-              missionPhase: isRoverSurvey ? 'survey' : 'mining',
+              missionPhase: 'mining',
             }))
-            game.go(isRoverSurvey ? 'rover-survey' : 'mining')
+            game.go('mining')
           }}
         />
       )
@@ -291,34 +289,6 @@ export default function MissionOperationRoutes({
               screenshot,
               capturedAt: debrisNow(),
             })
-          }}
-        />
-      )
-    }
-
-    case 'rover-survey': {
-      if (!game.mission || !game.target) return null
-      const roverTarget = game.target
-      return (
-        <RoverSurveyScreen
-          mission={game.mission}
-          target={roverTarget}
-          rocketImageSrc={rocketDisplay.img}
-          player={game.player}
-          holdCapacity={(game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)?.cargo ?? 0) + (loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity ?? 0)}
-          onLoadAndReturn={haul => game.onMiningDone(haul)}
-          onComplete={() => {
-            if (game.mission?.id === ORIONIDS_SURFACE_RESEARCH_MISSION_ID) {
-              game.setLastCargo({})
-              game.setPlayer(player => ({ ...player, missionPhase: 'debrief', debriefPending: false, returningToEarth: false }))
-              game.go('debrief')
-              return
-            }
-            game.onRoverSurveyComplete()
-          }}
-          onBack={() => {
-            game.setPlayer(player => ({ ...player, missionPhase: 'survey' }))
-            game.go('hub')
           }}
         />
       )

@@ -46,6 +46,7 @@ func main() {
 	registerLandnamAuthExchange(app, sharedAuth)
 	registerLandnamOIDCAuth(app)
 	registerLandnamOwnerAlerts(app)
+	registerLandnamLedgerReport(app)
 	registerFriendsRoutes(app)
 	registerNotificationRoutes(app)
 	registerCommunityRoutes(app)

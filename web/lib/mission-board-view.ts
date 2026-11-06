@@ -261,15 +261,10 @@ export function eventsBoard(
     countdownLabel: status === 'upcoming' ? countdownLabel(orionidsNow) : null,
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: "Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.",
-    // SSL-714: three missions, each handing over the story item the next one needs; the badge comes after the third.
-    actionLabel: orionidsEventStage === 1 ? 'Continue research'
-      : orionidsEventStage === 2 ? 'Listen on ORI-1'
-        : orionidsEventStage >= 3 ? 'Keep listening'
-          : eventActionLabel(status),
-    rewardLabel: orionidsEventStage === 1 ? 'Mission 2 of 3 · surface observation ready'
-      : orionidsEventStage === 2 ? 'Mission 3 of 3 · confirm echoes on ORI-1'
-        : orionidsEventStage >= 3 ? eventRewardLabel(status, earned)
-          : status === 'live' ? 'Mission 1 of 3 · shower run' : eventRewardLabel(status, earned),
+    // The event is the shower run. After it, ORI-1 is open for listening.
+    actionLabel: orionidsEventStage >= 1 ? 'Listen on ORI-1' : eventActionLabel(status),
+    rewardLabel: orionidsEventStage >= 1 ? eventRewardLabel(status, earned)
+      : status === 'live' ? 'Shower run · catch and contribute fragments' : eventRewardLabel(status, earned),
   }
   const order = [
     ...WSW_CARD_ORDER.filter(id => (WSW_EVENT_IDS as readonly string[]).includes(id)),

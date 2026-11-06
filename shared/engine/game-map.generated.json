@@ -8,34 +8,30 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 27,
-    "nativeScreenCases": 26,
-    "qaScenes": 49,
-    "authoredSceneFiles": 8,
-    "authoredSceneScripts": 27,
-    "authoringSources": 34,
-    "authoredObjectNodes": 162,
-    "authoredGameObjects": 87,
-    "authoredUiElements": 75,
+    "webRoutes": 25,
+    "nativeScreenCases": 24,
+    "qaScenes": 62,
+    "authoredSceneFiles": 6,
+    "authoredSceneScripts": 25,
+    "authoringSources": 58,
+    "authoredObjectNodes": 147,
+    "authoredGameObjects": 75,
+    "authoredUiElements": 72,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 27,
-    "compiledObjectNodes": 162,
+    "compiledScenes": 25,
+    "compiledObjectNodes": 147,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
-    "mechanics": 27,
-    "sharedLayoutObjects": 4,
-    "hostLayoutObjects": 158,
-    "webGameComponents": 112,
-    "nativeAppComponents": 53
+    "mechanics": 19,
+    "sharedLayoutObjects": 5,
+    "hostLayoutObjects": 142,
+    "webGameComponents": 106,
+    "nativeAppComponents": 56
   },
   "scenes": {
     "routed": [
-      {
-        "route": "academy",
-        "type": "exchange-lab"
-      },
       {
         "route": "asteroid-discovery",
         "type": "exchange-lab"
@@ -43,6 +39,10 @@
       {
         "route": "build",
         "type": "base"
+      },
+      {
+        "route": "community-research",
+        "type": "menu"
       },
       {
         "route": "debrief",
@@ -109,6 +109,10 @@
         "type": "menu"
       },
       {
+        "route": "radio-meteors",
+        "type": "exchange-lab"
+      },
+      {
         "route": "refinery",
         "type": "exchange-lab"
       },
@@ -117,20 +121,8 @@
         "type": "build"
       },
       {
-        "route": "rover-survey",
-        "type": "field"
-      },
-      {
         "route": "saturn-storm-search",
         "type": "exchange-lab"
-      },
-      {
-        "route": "skills",
-        "type": "menu"
-      },
-      {
-        "route": "surface-ops",
-        "type": "field"
       },
       {
         "route": "targets",
@@ -142,9 +134,9 @@
       }
     ],
     "nativeCases": [
-      "academy",
       "asteroidDiscovery",
       "build",
+      "communityResearch",
       "debrief",
       "delivery",
       "fab",
@@ -164,16 +156,10 @@
       "rocketBuy",
       "roverSurvey",
       "saturnStormSearch",
-      "skills",
-      "surfaceOps",
       "targets",
       "transit"
     ],
     "nativeScreens": [
-      {
-        "name": "academy",
-        "route": "academy"
-      },
       {
         "name": "asteroidDiscovery",
         "route": "asteroid-discovery"
@@ -181,6 +167,10 @@
       {
         "name": "build",
         "route": "build"
+      },
+      {
+        "name": "communityResearch",
+        "route": "community-research"
       },
       {
         "name": "debrief",
@@ -259,14 +249,6 @@
         "route": "saturn-storm-search"
       },
       {
-        "name": "skills",
-        "route": "skills"
-      },
-      {
-        "name": "surfaceOps",
-        "route": "surface-ops"
-      },
-      {
         "name": "targets",
         "route": "targets"
       },
@@ -295,6 +277,16 @@
         "tickets": [
           "SSL-345",
           "SSL-451"
+        ]
+      },
+      {
+        "id": "constellation-hub",
+        "name": "Base with unlocked constellation",
+        "flow": "core-loop",
+        "web": "constellation-hub",
+        "native": "hub-constellations-landscape",
+        "tickets": [
+          "SSL-684"
         ]
       },
       {
@@ -332,7 +324,7 @@
         "name": "Mining",
         "flow": "core-loop",
         "web": "m1-mining",
-        "native": "mining-phone",
+        "native": "mining-laser-live",
         "tickets": [
           "SSL-411",
           "SSL-430"
@@ -349,11 +341,39 @@
         ]
       },
       {
+        "id": "free-mining",
+        "name": "Free mining run",
+        "flow": "core-loop",
+        "web": "ui-free-mining",
+        "native": "mining-laser-live",
+        "tickets": [
+          "SSL-711"
+        ]
+      },
+      {
+        "id": "radio-meteors",
+        "name": "Meteor radio",
+        "flow": "events",
+        "web": "ui-radio-meteors",
+        "native": "radio-meteors",
+        "tickets": [
+          "SSL-714"
+        ]
+      },
+      {
+        "id": "orionids-shower-mining",
+        "name": "Orionids shower run",
+        "flow": "core-loop",
+        "web": "ui-orionids-shower-mining-fresh",
+        "native": "mining-shower-live",
+        "tickets": []
+      },
+      {
         "id": "flight",
         "name": "Transit",
         "flow": "core-loop",
         "web": "telescope-transit",
-        "native": "flight-phone",
+        "native": "flight-live",
         "tickets": []
       },
       {
@@ -415,7 +435,18 @@
         "web": "ui-instrument-hub",
         "native": "control-station-phone",
         "tickets": [
-          "SSL-496"
+          "SSL-496",
+          "SSL-730"
+        ]
+      },
+      {
+        "id": "tess-training",
+        "name": "Telescope training",
+        "flow": "instruments",
+        "web": "ui-tess-training",
+        "native": "tess-discovery-phone",
+        "tickets": [
+          "SSL-721"
         ]
       },
       {
@@ -459,65 +490,11 @@
         ]
       },
       {
-        "id": "sky-badges",
-        "name": "Sky badges",
-        "flow": "instruments",
-        "web": null,
-        "native": "sky-badges-phone",
-        "tickets": [
-          "SSL-491"
-        ]
-      },
-      {
-        "id": "rover",
-        "name": "Rover field",
-        "flow": "field",
-        "web": "ui-rover-survey",
-        "native": "rover-field-phone",
-        "tickets": [
-          "SSL-485",
-          "SSL-486",
-          "SSL-487"
-        ]
-      },
-      {
-        "id": "rover-touchdown",
-        "name": "Rover touchdown",
-        "flow": "field",
-        "web": "ui-rover-survey",
-        "native": "rover-touchdown-phone",
-        "tickets": []
-      },
-      {
-        "id": "skill-tree",
-        "name": "Skill tree",
-        "flow": "progression",
-        "web": "ui-skill-tree",
-        "native": "skill-tree-phone",
-        "tickets": []
-      },
-      {
-        "id": "academy",
-        "name": "Academy",
-        "flow": "progression",
-        "web": "ui-academy",
-        "native": "academy-phone",
-        "tickets": []
-      },
-      {
         "id": "refinery",
         "name": "Refinery",
         "flow": "progression",
         "web": "ui-refinery",
-        "native": "refinery-phone",
-        "tickets": []
-      },
-      {
-        "id": "surface-ops",
-        "name": "Surface ops",
-        "flow": "progression",
-        "web": "ui-surface-ops",
-        "native": "surface-ops-phone",
+        "native": "exchange-phone",
         "tickets": []
       },
       {
@@ -529,7 +506,7 @@
         "tickets": []
       },
       {
-        "id": "ledger",
+        "id": "narrative-ledger",
         "name": "Ledger",
         "flow": "records",
         "web": "ui-ledger",
@@ -537,13 +514,36 @@
         "tickets": []
       },
       {
-        "id": "help",
-        "name": "Help sheet",
-        "flow": "chrome",
-        "web": null,
-        "native": "help-sheet-phone",
+        "id": "community-research",
+        "name": "Community research",
+        "flow": "records",
+        "web": "ui-community-research",
+        "native": "community-research-phone",
         "tickets": [
-          "SSL-451"
+          "SSL-691",
+          "SSL-694",
+          "SSL-746",
+          "SSL-757"
+        ]
+      },
+      {
+        "id": "sky-pointing",
+        "name": "Sky pointing",
+        "flow": "records",
+        "web": "ui-sky-pointing",
+        "native": "community-research-phone",
+        "tickets": [
+          "SSL-768"
+        ]
+      },
+      {
+        "id": "economy-arrival",
+        "name": "Welcome back: market board",
+        "flow": "progression",
+        "web": "ui-economy-arrival",
+        "native": "economy-arrival-phone",
+        "tickets": [
+          "SSL-701"
         ]
       },
       {
@@ -551,7 +551,7 @@
         "name": "Market",
         "flow": "progression",
         "web": "ui-market",
-        "native": "market-phone",
+        "native": "exchange-phone",
         "tickets": []
       },
       {
@@ -715,32 +715,111 @@
         "web": "cp-late",
         "native": "cp-late",
         "tickets": []
+      },
+      {
+        "id": "asteroid-discovery",
+        "name": "Asteroid Discovery",
+        "flow": "instruments",
+        "web": "ui-asteroid-discovery",
+        "native": "asteroid-discovery-phone",
+        "tickets": []
+      },
+      {
+        "id": "delivery",
+        "name": "Cargo Delivery",
+        "flow": "core-loop",
+        "web": "transport-delivery",
+        "native": "transport-delivery-live",
+        "tickets": []
+      },
+      {
+        "id": "fab",
+        "name": "Assembly",
+        "flow": "core-loop",
+        "web": "telescope-fab",
+        "native": "telescope-fab-live",
+        "tickets": []
+      },
+      {
+        "id": "galaxy",
+        "name": "Galaxy Map",
+        "flow": "instruments",
+        "web": "ui-tess-discovery",
+        "native": "tess-discovery-phone",
+        "tickets": []
+      },
+      {
+        "id": "hangar",
+        "name": "Hangar",
+        "flow": "ship",
+        "web": "ui-hangar-assembly",
+        "native": "hangar-workshop-phone",
+        "tickets": []
+      },
+      {
+        "id": "hub-subsurface",
+        "name": "Base Subsurface",
+        "flow": "core-loop",
+        "web": "ui-subsurface",
+        "native": "hub-silo-surface-phone",
+        "tickets": []
+      },
+      {
+        "id": "instrument-hub",
+        "name": "Control Station",
+        "flow": "instruments",
+        "web": "ui-instrument-hub",
+        "native": "control-station-phone",
+        "tickets": []
+      },
+      {
+        "id": "mission-history",
+        "name": "Mission Log",
+        "flow": "records",
+        "web": "ui-mission-log",
+        "native": "mission-log-phone",
+        "tickets": []
+      },
+      {
+        "id": "missions",
+        "name": "Mission Board",
+        "flow": "core-loop",
+        "web": "ui-mission-board",
+        "native": "mission-board-live",
+        "tickets": []
+      },
+      {
+        "id": "saturn-storm-search",
+        "name": "Saturn Storm Search",
+        "flow": "instruments",
+        "web": "ui-saturn-storm-search",
+        "native": "saturn-imager-phone",
+        "tickets": []
+      },
+      {
+        "id": "targets",
+        "name": "Solar System Map",
+        "flow": "core-loop",
+        "web": "ui-target-picker",
+        "native": "mission-board-live",
+        "tickets": []
+      },
+      {
+        "id": "transit",
+        "name": "Transit",
+        "flow": "core-loop",
+        "web": "sandbox-transit",
+        "native": "transit-live",
+        "tickets": []
       }
     ],
     "authored": [
-      {
-        "path": "web/public/game/scenes/academy.scene.json",
-        "name": "academy",
-        "entityCount": 2,
-        "componentTypes": [
-          "AcademyController",
-          "TrainingFacility"
-        ]
-      },
       {
         "path": "web/public/game/scenes/build-place.scene.json",
         "name": "build-place",
         "entityCount": 4,
         "componentTypes": [
           "BuildPlot"
-        ]
-      },
-      {
-        "path": "web/public/game/scenes/construction-target.scene.json",
-        "name": "construction-target",
-        "entityCount": 1,
-        "componentTypes": [
-          "ConstructionController"
         ]
       },
       {
@@ -787,26 +866,6 @@
     ],
     "scripts": [
       {
-        "id": "academy",
-        "path": "shared/authoring/scenes/academy.toml",
-        "objects": 6,
-        "gameObjects": 3,
-        "uiElements": 3,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
-        "mechanics": [
-          "academy"
-        ],
-        "web": [
-          "web/components/game/screens/AcademyScreen.tsx",
-          "web/components/game/screens/AcademyCanvas.tsx"
-        ],
-        "native": [
-          "native/App/Screens/AcademyScreen.swift"
-        ]
-      },
-      {
         "id": "asteroid-discovery",
         "path": "shared/authoring/scenes/asteroid-discovery.toml",
         "objects": 5,
@@ -845,6 +904,23 @@
         "native": [
           "native/App/Screens/BuildScreen.swift"
         ]
+      },
+      {
+        "id": "community-research",
+        "path": "shared/authoring/scenes/community-research.toml",
+        "objects": 5,
+        "gameObjects": 0,
+        "uiElements": 5,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 5,
+        "mechanics": [
+          "records"
+        ],
+        "web": [
+          "web/components/game/screens/CommunityResearchScreen.tsx"
+        ],
+        "native": []
       },
       {
         "id": "debrief",
@@ -1059,7 +1135,7 @@
         ],
         "web": [
           "web/components/game/screens/LandingScreen.tsx",
-          "web/components/game/screens/LandingCanvas.tsx"
+          "web/components/game/screens/LandingScene.tsx"
         ],
         "native": [
           "native/App/Screens/FlightScreens.swift"
@@ -1068,11 +1144,11 @@
       {
         "id": "launchpad",
         "path": "shared/authoring/scenes/launchpad.toml",
-        "objects": 13,
-        "gameObjects": 9,
+        "objects": 14,
+        "gameObjects": 10,
         "uiElements": 4,
         "prefabs": 1,
-        "sharedLayoutObjects": 4,
+        "sharedLayoutObjects": 5,
         "hostLayoutObjects": 9,
         "mechanics": [
           "mission-planning",
@@ -1092,15 +1168,14 @@
       {
         "id": "market",
         "path": "shared/authoring/scenes/market.toml",
-        "objects": 6,
-        "gameObjects": 3,
+        "objects": 5,
+        "gameObjects": 2,
         "uiElements": 3,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
+        "hostLayoutObjects": 5,
         "mechanics": [
-          "economy",
-          "treasury"
+          "economy"
         ],
         "web": [
           "web/components/game/screens/MarketScreen.tsx"
@@ -1112,15 +1187,17 @@
       {
         "id": "mining",
         "path": "shared/authoring/scenes/mining.toml",
-        "objects": 8,
+        "objects": 10,
         "gameObjects": 4,
-        "uiElements": 4,
+        "uiElements": 6,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 8,
+        "hostLayoutObjects": 10,
         "mechanics": [
           "delivery",
           "laser-mining",
+          "mission-planning",
+          "sky-events",
           "training"
         ],
         "web": [
@@ -1193,6 +1270,23 @@
         ]
       },
       {
+        "id": "radio-meteors",
+        "path": "shared/authoring/scenes/radio-meteors.toml",
+        "objects": 4,
+        "gameObjects": 3,
+        "uiElements": 1,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 4,
+        "mechanics": [
+          "sky-events"
+        ],
+        "web": [
+          "web/components/game/screens/RadioMeteorScreen.tsx"
+        ],
+        "native": []
+      },
+      {
         "id": "refinery",
         "path": "shared/authoring/scenes/refinery.toml",
         "objects": 5,
@@ -1230,29 +1324,6 @@
         ]
       },
       {
-        "id": "rover-survey",
-        "path": "shared/authoring/scenes/rover-survey.toml",
-        "objects": 6,
-        "gameObjects": 3,
-        "uiElements": 3,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
-        "mechanics": [
-          "field-engine",
-          "flight",
-          "instruments",
-          "sandbox"
-        ],
-        "web": [
-          "web/components/game/screens/RoverSurveyScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/RoverFieldScreen.swift",
-          "native/App/Screens/TakeonSceneScreen.swift"
-        ]
-      },
-      {
         "id": "saturn-storm-search",
         "path": "shared/authoring/scenes/saturn-storm-search.toml",
         "objects": 5,
@@ -1269,50 +1340,6 @@
         ],
         "native": [
           "native/App/Screens/SaturnStormSearchScreen.swift"
-        ]
-      },
-      {
-        "id": "skills",
-        "path": "shared/authoring/scenes/skills.toml",
-        "objects": 5,
-        "gameObjects": 1,
-        "uiElements": 4,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 5,
-        "mechanics": [
-          "progression"
-        ],
-        "web": [
-          "web/components/game/screens/SkillTreeScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/SkillTreeScreen.swift"
-        ]
-      },
-      {
-        "id": "surface-ops",
-        "path": "shared/authoring/scenes/surface-ops.toml",
-        "objects": 9,
-        "gameObjects": 8,
-        "uiElements": 1,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 9,
-        "mechanics": [
-          "field-engine",
-          "field-refining",
-          "ownership",
-          "sandbox",
-          "site-rights",
-          "surface-logistics"
-        ],
-        "web": [
-          "web/components/game/screens/SurfaceOpsScreen.tsx",
-          "web/components/game/screens/ConstructionTargetCanvas.tsx"
-        ],
-        "native": [
-          "native/App/Screens/SurfaceOpsScreen.swift"
         ]
       },
       {
@@ -1359,16 +1386,16 @@
     ],
     "compiled": [
       {
-        "id": "academy",
-        "objects": 6
-      },
-      {
         "id": "asteroid-discovery",
         "objects": 5
       },
       {
         "id": "build",
         "objects": 6
+      },
+      {
+        "id": "community-research",
+        "objects": 5
       },
       {
         "id": "debrief",
@@ -1412,15 +1439,15 @@
       },
       {
         "id": "launchpad",
-        "objects": 13
+        "objects": 14
       },
       {
         "id": "market",
-        "objects": 6
+        "objects": 5
       },
       {
         "id": "mining",
-        "objects": 8
+        "objects": 10
       },
       {
         "id": "mission-history",
@@ -1435,6 +1462,10 @@
         "objects": 3
       },
       {
+        "id": "radio-meteors",
+        "objects": 4
+      },
+      {
         "id": "refinery",
         "objects": 5
       },
@@ -1443,20 +1474,8 @@
         "objects": 5
       },
       {
-        "id": "rover-survey",
-        "objects": 6
-      },
-      {
         "id": "saturn-storm-search",
         "objects": 5
-      },
-      {
-        "id": "skills",
-        "objects": 5
-      },
-      {
-        "id": "surface-ops",
-        "objects": 9
       },
       {
         "id": "targets",
@@ -1478,7 +1497,8 @@
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
-        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
+        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/TakeonMapping.swift"
       ],
       "note": "Same world source; render adapters still host-owned.",
       "components": [
@@ -1501,7 +1521,8 @@
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
+        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
       ],
       "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
       "components": [
@@ -1537,6 +1558,7 @@
         "fab",
         "hub",
         "launchpad",
+        "mining",
         "missions",
         "rocket-buy",
         "targets"
@@ -1587,7 +1609,6 @@
       "note": "Physical travel, separate from transit photometry. Use persisted timestamps.",
       "components": [],
       "scenes": [
-        "rover-survey",
         "transit"
       ]
     },
@@ -1598,7 +1619,8 @@
         "web/lib/systems/LandingSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Landing.swift"
       ],
       "note": "Native landing route currently renders MiningScreen, not the web landing sequence.",
       "components": [],
@@ -1633,7 +1655,9 @@
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Delivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Dropoff.swift"
       ],
       "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent.",
       "components": [],
@@ -1651,13 +1675,17 @@
       "web": [
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
-        "web/lib/systems/MarketplaceSystem.ts"
+        "web/lib/systems/MarketplaceSystem.ts",
+        "web/lib/systems/DailyEconomyInput.ts",
+        "web/lib/systems/EconomyArrival.ts",
+        "web/lib/systems/WelcomeBack.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
-        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/EconomyArrival.swift"
       ],
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": [],
@@ -1669,20 +1697,17 @@
     },
     {
       "id": "progression",
-      "name": "Skills, licences and XP",
+      "name": "Research XP and blueprints",
       "web": [
-        "web/lib/systems/ProgressionSystem.ts",
-        "web/lib/systems/XPSystem.ts"
+        "web/lib/systems/ProgressionSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Progression.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Milestones.swift"
       ],
       "note": "XP source and native progression differ in granularity; source mapping is not behavior parity.",
       "components": [],
       "scenes": [
-        "debrief",
-        "skills"
+        "debrief"
       ]
     },
     {
@@ -1706,104 +1731,6 @@
       ]
     },
     {
-      "id": "academy",
-      "name": "Academy, staff and crew",
-      "web": [
-        "web/lib/systems/AcademySystem.ts",
-        "web/lib/systems/CrewSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/Academy.swift"
-      ],
-      "note": "Roster and training ownership. Crew never increases citizen-science yield.",
-      "components": [],
-      "scenes": [
-        "academy"
-      ]
-    },
-    {
-      "id": "surface-logistics",
-      "name": "Off-world sites, construction and ferries",
-      "web": [
-        "web/lib/systems/SurfaceOpsSystem.ts"
-      ],
-      "native": [
-        "native/LandnamCore/Sources/LandnamCore/Industry/SurfaceOps.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
-      ],
-      "note": "Native settlement logistics exists; embedded field factory and biosphere commands need separate adapters.",
-      "components": [],
-      "scenes": [
-        "surface-ops"
-      ]
-    },
-    {
-      "id": "field-refining",
-      "name": "Field refinery pipeline",
-      "web": [
-        "web/lib/systems/OffworldRefinerySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native field refinery adapter identified; base Refinery is a different mechanic.",
-      "components": [],
-      "scenes": [
-        "surface-ops"
-      ]
-    },
-    {
-      "id": "ownership",
-      "name": "Ownership transfers",
-      "web": [
-        "web/lib/systems/OwnershipSystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native transfer domain identified.",
-      "components": [],
-      "scenes": [
-        "surface-ops"
-      ]
-    },
-    {
-      "id": "site-rights",
-      "name": "Site purchases and leases",
-      "web": [
-        "web/lib/systems/SiteRightsSystem.ts"
-      ],
-      "native": [],
-      "note": "Native SurfaceOps site access is not the full lease/deed model.",
-      "components": [],
-      "scenes": [
-        "surface-ops"
-      ]
-    },
-    {
-      "id": "treasury",
-      "name": "Treasury ledger, science rewards and loans",
-      "web": [
-        "web/lib/systems/TreasurySystem.ts"
-      ],
-      "native": [],
-      "note": "No equivalent native treasury ledger or loan implementation identified.",
-      "components": [],
-      "scenes": [
-        "market"
-      ]
-    },
-    {
-      "id": "sandbox",
-      "name": "Field sandbox rules",
-      "web": [
-        "web/lib/systems/SandboxSystem.ts"
-      ],
-      "native": [],
-      "note": "Do not confuse field sandbox domain rules with Studio preview presets.",
-      "components": [],
-      "scenes": [
-        "rover-survey",
-        "surface-ops"
-      ]
-    },
-    {
       "id": "instruments",
       "name": "Instrument feed and survey scans",
       "web": [
@@ -1820,8 +1747,7 @@
       "components": [],
       "scenes": [
         "hub",
-        "instrument-hub",
-        "rover-survey"
+        "instrument-hub"
       ]
     },
     {
@@ -1873,17 +1799,17 @@
       "id": "records",
       "name": "Mission history and narrative ledger",
       "web": [
-        "web/lib/mission-log.ts",
-        "web/lib/data/narrative-ledger.ts"
+        "web/lib/mission-log.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
       "components": [],
       "scenes": [
+        "community-research",
         "mission-history",
         "narrative-ledger"
       ]
@@ -1904,27 +1830,6 @@
       "components": [],
       "scenes": [
         "hub"
-      ]
-    },
-    {
-      "id": "field-engine",
-      "name": "TakeOn rover and field runtime",
-      "web": [
-        "web/lib/takeon/goRuntime.ts",
-        "web/lib/takeon/events.ts",
-        "web/lib/takeon/LandnamSync.ts",
-        "web/lib/takeon/field-operation.ts"
-      ],
-      "native": [
-        "native/TakeonKit/Sources/TakeonKit/TakeonEngine.swift",
-        "native/TakeonKit/Sources/TakeonKit/GoTakeonEngine.swift",
-        "native/App/TakeonPersistence.swift"
-      ],
-      "note": "Shared Go engine with host adapters. Native field factory/biosphere state commands remain separate gaps; a linked runtime is not full game parity.",
-      "components": [],
-      "scenes": [
-        "rover-survey",
-        "surface-ops"
       ]
     },
     {
@@ -1956,7 +1861,9 @@
       "note": "Orionids launch catches and fragment ledger. General research fragments must not erase historical contributions when converted.",
       "scenes": [
         "hub",
-        "launchpad"
+        "launchpad",
+        "mining",
+        "radio-meteors"
       ]
     }
   ],
@@ -1997,7 +1904,6 @@
         "name": "Work",
         "routes": [
           "mining",
-          "rover-survey",
           "surface-ops"
         ],
         "policy": "Perform mining, survey or field work with the appropriate engine adapter."
@@ -2019,14 +1925,12 @@
       "web/components/game/AsteroidSkyPlot.tsx",
       "web/components/game/AuthGateSheet.tsx",
       "web/components/game/BackendStatus.tsx",
-      "web/components/game/CommunityButton.tsx",
-      "web/components/game/CommunityHubSheet.tsx",
+      "web/components/game/ClerkGate.tsx",
+      "web/components/game/CommunityGoalChip.tsx",
       "web/components/game/EnceladusSurveyChart.tsx",
       "web/components/game/FlightPlan.tsx",
       "web/components/game/FriendAvatar.tsx",
-      "web/components/game/FriendsButton.tsx",
       "web/components/game/FriendsSheet.tsx",
-      "web/components/game/GameApp.tsx",
       "web/components/game/GameScreenRouter.tsx",
       "web/components/game/LandnamSyncStatus.tsx",
       "web/components/game/LaunchSequenceCanvas.tsx",
@@ -2038,8 +1942,8 @@
       "web/components/game/MissionPlanStrip.tsx",
       "web/components/game/MissionSetupRoutes.tsx",
       "web/components/game/MissionTicker.tsx",
+      "web/components/game/NotificationBell.tsx",
       "web/components/game/ObservatoryChart.tsx",
-      "web/components/game/ObservatoryReadout.tsx",
       "web/components/game/OrionidsTeaser.tsx",
       "web/components/game/PixiGalaxyStarMap.tsx",
       "web/components/game/PushOptIn.tsx",
@@ -2052,16 +1956,14 @@
       "web/components/game/SkyEventChip.tsx",
       "web/components/game/SolSystemPreview.tsx",
       "web/components/game/SuiteHopRail.tsx",
-      "web/components/game/TargetSphere.tsx",
-      "web/components/game/TelescopeConsole.tsx",
-      "web/components/game/TerritoryClaimPopup.tsx",
+      "web/components/game/SyncTray.tsx",
       "web/components/game/TutorialCompleteSheet.tsx",
       "web/components/game/UnlockPopup.tsx",
       "web/components/game/WorldSpaceWeek.tsx",
-      "web/components/game/control-station/ControlStationBoard.tsx",
+      "web/components/game/control-station/ControlStationConsole.tsx",
       "web/components/game/control-station/ResearchCalendar.tsx",
       "web/components/game/control-station/SurveyScanConsole.tsx",
-      "web/components/game/hub/AmbientMotes.tsx",
+      "web/components/game/hub/BaseConstellations.tsx",
       "web/components/game/hub/BaseDock.tsx",
       "web/components/game/hub/BaseLayerScene.tsx",
       "web/components/game/hub/BaseMenuSheet.tsx",
@@ -2073,26 +1975,24 @@
       "web/components/game/hub/HubWorldBackground.tsx",
       "web/components/game/hub/KitRocket.tsx",
       "web/components/game/hub/MeteorShowerWeather.tsx",
-      "web/components/game/hub/OpsHubSheet.tsx",
       "web/components/game/hub/OrbitalInstrumentNetwork.tsx",
-      "web/components/game/hub/PadLaunchSequence.tsx",
       "web/components/game/hub/PixelStructure.tsx",
       "web/components/game/hub/RoadRover.tsx",
       "web/components/game/hub/RocketRollout.tsx",
       "web/components/game/hub/SiteMarker.tsx",
-      "web/components/game/hub/SoilCrossSection.tsx",
       "web/components/game/hub/StashChip.tsx",
       "web/components/game/hub/TerrainScene.tsx",
       "web/components/game/hub/WorldBackdrop.tsx",
+      "web/components/game/hud/SceneChrome.tsx",
       "web/components/game/instrument-viewport/InstrumentViewport.tsx",
       "web/components/game/orionids/OrionidsPlanetMark.tsx",
       "web/components/game/orionids/OrionidsShowerChrome.tsx",
       "web/components/game/previews/MissionFlowPreview.tsx",
       "web/components/game/previews/missionFlowPreviewData.ts",
-      "web/components/game/screens/AcademyCanvas.tsx",
-      "web/components/game/screens/AcademyScreen.tsx",
       "web/components/game/screens/AsteroidDiscoveryScreen.tsx",
-      "web/components/game/screens/ConstructionTargetCanvas.tsx",
+      "web/components/game/screens/CommunityBallots.tsx",
+      "web/components/game/screens/CommunityConsensus.tsx",
+      "web/components/game/screens/CommunityResearchScreen.tsx",
       "web/components/game/screens/ControlRoomBackdrop.tsx",
       "web/components/game/screens/DebriefScreen.tsx",
       "web/components/game/screens/DeliveryCanvas.tsx",
@@ -2108,7 +2008,7 @@
       "web/components/game/screens/HubScreen.tsx",
       "web/components/game/screens/InstrumentHubScreen.tsx",
       "web/components/game/screens/IntroScreen.tsx",
-      "web/components/game/screens/LandingCanvas.tsx",
+      "web/components/game/screens/LandingScene.tsx",
       "web/components/game/screens/LandingScreen.tsx",
       "web/components/game/screens/LaserCapacitorPanel.tsx",
       "web/components/game/screens/LaunchpadScreen.tsx",
@@ -2118,13 +2018,13 @@
       "web/components/game/screens/MiningScreen.tsx",
       "web/components/game/screens/MissionHistoryScreen.tsx",
       "web/components/game/screens/NarrativeLedgerScreen.tsx",
+      "web/components/game/screens/RadioMeteorScreen.tsx",
       "web/components/game/screens/RefineryScreen.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
-      "web/components/game/screens/RoverSurveyScreen.tsx",
       "web/components/game/screens/SaturnStormSearchScreen.tsx",
-      "web/components/game/screens/SkillTreeScreen.tsx",
       "web/components/game/screens/SkyBadgeRow.tsx",
-      "web/components/game/screens/SurfaceOpsScreen.tsx",
+      "web/components/game/screens/SkyPointing.tsx",
+      "web/components/game/screens/SkyScenes.tsx",
       "web/components/game/screens/TessDiscoveryScreen.tsx",
       "web/components/game/screens/TransitScreen.tsx"
     ],
@@ -2132,12 +2032,13 @@
       "native/App/Mining/Landscape.swift",
       "native/App/Mining/LaserPalette.swift",
       "native/App/Mining/MiningControls.swift",
+      "native/App/Scenes/DeliveryWorldScene.swift",
       "native/App/Scenes/FlightWorldScene.swift",
+      "native/App/Scenes/LandingWorldScene.swift",
       "native/App/Scenes/LaunchAtlas.swift",
       "native/App/Scenes/LaunchScene.swift",
       "native/App/Scenes/MiningScene.swift",
       "native/App/Scenes/SceneKit+Landnam.swift",
-      "native/App/Screens/AcademyScreen.swift",
       "native/App/Screens/ArchiveScreen.swift",
       "native/App/Screens/AsteroidDiscoveryScreen.swift",
       "native/App/Screens/BaseCamera.swift",
@@ -2151,20 +2052,24 @@
       "native/App/Screens/CoachStrip.swift",
       "native/App/Screens/ControlStationScreen.swift",
       "native/App/Screens/CoreLoop.swift",
+      "native/App/Screens/DeliveryScreen.swift",
       "native/App/Screens/DestinationVista.swift",
       "native/App/Screens/EventsBoard.swift",
       "native/App/Screens/FlightScreens.swift",
+      "native/App/Screens/FriendsSheet.swift",
       "native/App/Screens/HangarBayArt.swift",
       "native/App/Screens/HangarScreen.swift",
       "native/App/Screens/HomecomingScreen.swift",
       "native/App/Screens/HubScreen.swift",
       "native/App/Screens/InstrumentGate.swift",
       "native/App/Screens/InstrumentViewport.swift",
+      "native/App/Screens/LandingScreen.swift",
       "native/App/Screens/LaunchReview.swift",
       "native/App/Screens/LaunchpadPrefab.swift",
       "native/App/Screens/MarketScene.swift",
       "native/App/Screens/MeteorShowerWeather.swift",
       "native/App/Screens/MissionPlanStrip.swift",
+      "native/App/Screens/NotificationTray.swift",
       "native/App/Screens/ProgramRoadmap.swift",
       "native/App/Screens/ResearchCalendarPanel.swift",
       "native/App/Screens/RocketBuilderScreen.swift",
@@ -2175,9 +2080,7 @@
       "native/App/Screens/SettingsStyle.swift",
       "native/App/Screens/SharedHud.swift",
       "native/App/Screens/SignInScreen.swift",
-      "native/App/Screens/SkillTreeScreen.swift",
       "native/App/Screens/SkyEventChip.swift",
-      "native/App/Screens/SurfaceOpsScreen.swift",
       "native/App/Screens/TakeonIsoRenderer.swift",
       "native/App/Screens/TakeonSceneScreen.swift",
       "native/App/Screens/TessDiscoveryScreen.swift",
@@ -2197,14 +2100,40 @@
     ],
     "sharedData": [
       "shared/authoring/README.md",
+      "shared/authoring/constellations.toml",
+      "shared/authoring/fixtures/asteroid-discovery.toml",
+      "shared/authoring/fixtures/build.toml",
+      "shared/authoring/fixtures/community-research.toml",
+      "shared/authoring/fixtures/debrief.toml",
+      "shared/authoring/fixtures/delivery.toml",
+      "shared/authoring/fixtures/fab.toml",
+      "shared/authoring/fixtures/galaxy.toml",
+      "shared/authoring/fixtures/hangar.toml",
+      "shared/authoring/fixtures/hub-subsurface.toml",
+      "shared/authoring/fixtures/hub.toml",
+      "shared/authoring/fixtures/instrument-hub.toml",
+      "shared/authoring/fixtures/intro.toml",
+      "shared/authoring/fixtures/landing.toml",
+      "shared/authoring/fixtures/launchpad.toml",
+      "shared/authoring/fixtures/market.toml",
+      "shared/authoring/fixtures/mining.toml",
+      "shared/authoring/fixtures/mission-history.toml",
+      "shared/authoring/fixtures/missions.toml",
+      "shared/authoring/fixtures/narrative-ledger.toml",
+      "shared/authoring/fixtures/radio-meteors.toml",
+      "shared/authoring/fixtures/refinery.toml",
+      "shared/authoring/fixtures/rocket-buy.toml",
+      "shared/authoring/fixtures/saturn-storm-search.toml",
+      "shared/authoring/fixtures/targets.toml",
+      "shared/authoring/fixtures/transit.toml",
       "shared/authoring/flows/launch-telescope.toml",
       "shared/authoring/instructions/next.md",
       "shared/authoring/instructions/persistent.md",
       "shared/authoring/missions/client-contract.toml",
       "shared/authoring/missions/free-mining.toml",
-      "shared/authoring/scenes/academy.toml",
       "shared/authoring/scenes/asteroid-discovery.toml",
       "shared/authoring/scenes/build.toml",
+      "shared/authoring/scenes/community-research.toml",
       "shared/authoring/scenes/debrief.toml",
       "shared/authoring/scenes/delivery.toml",
       "shared/authoring/scenes/fab.toml",
@@ -2221,12 +2150,10 @@
       "shared/authoring/scenes/mission-history.toml",
       "shared/authoring/scenes/missions.toml",
       "shared/authoring/scenes/narrative-ledger.toml",
+      "shared/authoring/scenes/radio-meteors.toml",
       "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
-      "shared/authoring/scenes/rover-survey.toml",
       "shared/authoring/scenes/saturn-storm-search.toml",
-      "shared/authoring/scenes/skills.toml",
-      "shared/authoring/scenes/surface-ops.toml",
       "shared/authoring/scenes/targets.toml",
       "shared/authoring/scenes/transit.toml",
       "shared/authoring/worlds/base-world.toml",
@@ -2234,6 +2161,7 @@
       "shared/layout/base-site.json",
       "shared/scenes/base-world.json",
       "shared/scenes/biome-pitch.json",
+      "shared/scenes/constellations.json",
       "shared/scenes/sky-events.json",
       "shared/scenes/world-fixture.json"
     ]
@@ -2241,28 +2169,20 @@
   "gaps": {
     "routesWithoutSceneType": [],
     "unknownSlots": [],
-    "qaWithoutWebPreset": [
-      "sky-badges",
-      "help"
-    ],
+    "qaWithoutWebPreset": [],
     "qaWithoutNativeScene": [],
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
+      "radio-meteors",
       "refinery"
     ],
     "scenesWithoutMechanics": [],
-    "mechanicsWithoutNativeSources": [
-      "field-refining",
-      "ownership",
-      "site-rights",
-      "treasury",
-      "sandbox"
-    ],
+    "mechanicsWithoutNativeSources": [],
     "unownedDomainFiles": [],
     "compiledScenesWithoutRuntimeConsumer": [
-      "academy",
       "asteroid-discovery",
       "build",
+      "community-research",
       "debrief",
       "delivery",
       "fab",
@@ -2278,12 +2198,10 @@
       "mission-history",
       "missions",
       "narrative-ledger",
+      "radio-meteors",
       "refinery",
       "rocket-buy",
-      "rover-survey",
       "saturn-storm-search",
-      "skills",
-      "surface-ops",
       "targets",
       "transit"
     ]

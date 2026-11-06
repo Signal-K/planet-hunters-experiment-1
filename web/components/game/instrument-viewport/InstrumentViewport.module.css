@@ -626,8 +626,9 @@
 }
 
 @media (orientation: landscape), (min-width: 960px) {
-  /* The top bar is 76px tall (18 + 44 + 12 padding, 2px rule); 64 slid every panel under it. */
-  .body { top: 80px; }
+  /* SSL-749: start under the bar's measured height (TopBar publishes it). A fixed 80px let a taller bar
+     (sync chip, safe area) cover the top plates. 76px is the usual bar: 18 + 44 + 12 padding, 2px rule. */
+  .body { top: calc(var(--ln-topbar-h, 76px) + 4px); }
 
   .stage {
     grid-template-columns: minmax(168px, 220px) minmax(0, 1fr) minmax(200px, 280px);
@@ -674,15 +675,20 @@
 
 @media (orientation: landscape) and (max-height: 520px) {
   /* The top bar is 62px here; 52 slid the panels under it. */
-  .body { top: 66px; padding-bottom: var(--ln-s-1); }
+  .body { top: calc(var(--ln-topbar-h, 62px) + 4px); padding-bottom: var(--ln-s-1); }
   /* Wide enough that no label is cut: EXPOSURE wraps under ZOOM and FOCUS, and the verdicts stack. */
   .stage {
-    grid-template-columns: 200px minmax(0, 1fr) 232px;
+    grid-template-columns: 190px minmax(0, 1fr) 280px;
   }
   .knobRow { flex-wrap: wrap; justify-content: center; gap: var(--ln-s-1) 16px; }
   .knob { width: auto; min-width: 56px; }
   .knobLabel, .switchLabel { letter-spacing: 0; white-space: nowrap; }
-  .answers { grid-template-columns: minmax(0, 1fr); gap: var(--ln-s-1); }
+  .answers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ln-s-1); }
+  .answer { padding-left: 4px; padding-right: 4px; letter-spacing: 0; }
+  /* The verdicts are the way on: they stay in reach while the readout above them scrolls. */
+  .command .answers { position: sticky; bottom: 0; z-index: 2; padding-top: var(--ln-s-1); background: linear-gradient(180deg, transparent, rgba(8, 14, 30, .92) 30%); }
+  .command .answerBlock { position: sticky; bottom: 0; z-index: 2; padding-top: var(--ln-s-1); background: linear-gradient(180deg, transparent, rgba(8, 14, 30, .92) 18%); }
+  .command .answerBlock .answers { position: static; padding-top: 0; background: none; }
   .commandInput { min-width: 0; text-overflow: ellipsis; }
   .controlGrid { gap: var(--ln-s-1); }
   .controls, .command { padding: var(--ln-s-1); }
@@ -1592,3 +1598,73 @@
   font: 600 14px/1.2 var(--ln-font-mono);
   pointer-events: none;
 }
+
+/* SSL-749: downlink command keys. Tapping one runs it as if typed, so the terminal shows what it is for. */
+.quickKeys { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; }
+.quickKey {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(var(--hw-b-rgb), .45);
+  border-radius: 8px;
+  background: rgba(var(--hw-glass-bottom-rgb), .6);
+  color: var(--hw-phosphor);
+  font: 600 14px/1 var(--ln-font-mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.quickKey:active { transform: translateY(1px); }
+.quickKey:focus-visible { outline: 2px solid var(--hw-c); outline-offset: 2px; }
+/* Collapsed phone terminal: keys appear with the log. */
+.terminal[data-open="false"] .quickKeys { display: none; }
+@media (orientation: landscape), (min-width: 960px) {
+  .terminal[data-open="false"] .quickKeys { display: flex; }
+}
+
+/* SSL-749: the annotate step is an instruction, not a key. */
+.toolHint {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  padding: 6px 2px 2px;
+  color: var(--iv-ink);
+  font: 600 14px/1.35 var(--ln-font-body);
+}
+.toolHintDetail { color: var(--hw-phosphor); font: 600 14px/1.35 var(--ln-font-mono); }
+
+/* SSL-749: with a project module (TESS photometry) the left column was taller than an iPad and the
+   module was cut off at the bottom. Widen the column a little and pack the optics: switches beside
+   the aim pad, the three dials in one row, so optics and module both fit. */
+@media (orientation: landscape) and (min-height: 521px) {
+  .stage:has(.module) { grid-template-columns: minmax(200px, 272px) minmax(0, 1fr) minmax(200px, 280px); }
+  .stage:has(.module) .controlGrid {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas: "dpad switches" "knobs knobs";
+    align-items: center;
+    justify-content: space-around;
+    gap: 10px 8px;
+  }
+  .stage:has(.module) .dpadBlock { grid-area: dpad; gap: 8px; }
+  .stage:has(.module) .switchRow { grid-area: switches; flex-direction: column; gap: 10px; }
+  .stage:has(.module) .knobRow { grid-area: knobs; flex-wrap: nowrap; justify-content: space-between; gap: 6px; }
+  .stage:has(.module) .vent { display: none; }
+  .stage:has(.module) .module { margin-top: 4px; }
+  /* Right column: the readout grows a row per marked dip and pushed the verdicts off the bottom.
+     The log keeps its newest lines in a short window and the readout scrolls inside its own plate. */
+  .command > .terminal { flex: none; }
+  .log { flex: none; max-height: 7.5em; overflow: hidden; justify-content: flex-end; }
+  .command:has(.resultPlate) { overflow: hidden; }
+  .resultPlate { flex: 0 1 auto; min-height: 120px; display: flex; flex-direction: column; }
+  .resultPlate .result { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* Simple console (first classification): the data well and the answer column only. */
+@media (orientation: landscape), (min-width: 960px) {
+  .stage[data-simple="true"] {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    grid-template-areas: "viewport command";
+  }
+}
+.stage[data-simple="true"] .command { justify-content: flex-start; }

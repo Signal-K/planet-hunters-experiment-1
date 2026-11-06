@@ -15,6 +15,8 @@
  *   node scripts/scene-drive.mjs tap <x> <y>          tap a point (canvas scenes)
  *   node scripts/scene-drive.mjs drag <x1> <y1> <x2> <y2>  press, move and release (draw a box)
  *   node scripts/scene-drive.mjs key <Key> [--hold <ms>]
+ *   node scripts/scene-drive.mjs type "<text>"        type into the focused field (click it first); sign in with this
+ *   node scripts/scene-drive.mjs signout              forget the signed-in player (local save, session, offline queue), then reopen /
  *   node scripts/scene-drive.mjs wait <ms>
  *   node scripts/scene-drive.mjs shot [--all]         screenshot now; --all = three viewports
  *   node scripts/scene-drive.mjs size <w>x<h>
@@ -179,6 +181,22 @@ switch (command) {
     if (hold > 0) { await page.keyboard.down(positional[0]); await page.waitForTimeout(hold); await page.keyboard.up(positional[0]) }
     else await page.keyboard.press(positional[0])
     label = `key-${positional[0]}`
+    break
+  }
+  case 'signout': {
+    await page.evaluate(async () => {
+      localStorage.clear(); sessionStorage.clear()
+      const dbs = (await indexedDB.databases?.()) ?? []
+      await Promise.all(dbs.map(d => d.name && new Promise(done => { const r = indexedDB.deleteDatabase(d.name); r.onsuccess = r.onerror = r.onblocked = () => done(null) })))
+    })
+    await page.context().clearCookies()
+    await page.goto(WEB + '/', { waitUntil: 'domcontentloaded', timeout: 90_000 })
+    label = 'signout'
+    break
+  }
+  case 'type': {
+    await page.keyboard.type(positional.join(' '), { delay: 15 })
+    label = 'type'
     break
   }
   case 'wait':

@@ -2,20 +2,32 @@
 
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
-import { liveEventWeek } from '@/lib/research/event-week'
-import { communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
+import { featuredEventWeek, liveEventWeek } from '@/lib/research/event-week'
+import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
+import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, POINTING_OPTIONS, pointingThisWeek, type InstrumentPointing, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
+import CommunityBallots from './CommunityBallots'
+import { useBallots } from '@/lib/community/useBallots'
+import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
+import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
+import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
+import SkyPointing from './SkyPointing'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
+  /** SSL-746: a reviewer back from the instrument with their own readout, or null. */
+  pendingReview?: PendingConsensusReview | null
+  /** Opens the instrument on a queued subject so the reviewer does their own work first. */
+  onStartReview?: (item: ConsensusQueueItem) => void
+  onFinishReview?: () => void
   player: Player
   communityResearch?: CommunityResearch | null
   onBack: () => void
   onChoosePath: (path: ResearchPathId) => void
+  onPoint: (pointing: InstrumentPointing) => void
   onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
@@ -45,15 +57,15 @@ function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>
 }
 
-/** SSL-714: the Orionids chain in the research history: the three story items and what ORI-1 has heard. */
+/** SSL-714: the Orionids chain in the research history: the fragment sample and what ORI-1 has heard. */
 function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
   const stage = player.orionidsEventStage ?? 0
   const held = showerItems(ORIONIDS_CHAIN, stage).length
   const recordings = radioChecked(player)
-  if (!stage && !recordedOn) return null
+  if (!stage && recordings === 0) return null
   return (
     <section className={styles.record} data-testid="community-research-history" aria-label="Orionids record">
-      <b>{stage >= 3 ? 'Orionids record complete' : `Orionids · ${held} of 3 items`}</b>
+      <b>{stage >= 1 ? 'Orionids record complete' : 'Orionids · no fragments yet'}</b>
       <ol>{ORIONIDS_CHAIN.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
       {recordings > 0 && <em>{chainInstrument().callsign} · {recordings} recording{recordings === 1 ? '' : 's'} checked</em>}
     </section>
@@ -61,9 +73,9 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
 }
 
 const HOW_IT_WORKS = [
-  'Pick a path. It is locked for the week and resets on Monday.',
-  'Finish its five steps in any order. Missing a day costs nothing.',
-  'Every step is a stamp that also fills the shared community bar.',
+  'Pick a path for the week.',
+  'Do its five steps in any order.',
+  'Every step fills the community bar.',
 ]
 
 function contributionTimes(player: Player): number[] {
@@ -76,12 +88,14 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo }: CommunityResearchScreenProps) {
+export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onPoint, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
+  const flagship = featuredEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
+  const [pointingOpen, setPointingOpen] = useState(true)
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
@@ -89,11 +103,17 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
+  const pointedLabel = POINTING_OPTIONS.find(option => option.id === pointingThisWeek(player.researchPath, now))?.label.toLowerCase() ?? null
+  const aimed = pointingThisWeek(player.researchPath, now)
+  const needsPointing = path === 'explorer' && !aimed
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
-  const [readout, setReadout] = useState<'mission' | 'rewards'>('mission')
+  const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
+  // SSL-757: community votes. They sit beside the path choice and never block it.
+  const ballotState = useBallots(true)
+  const consensus = useConsensus(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -117,6 +137,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   }, [path, rewardSignature])
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
+      {needsPointing && pointingOpen && <SkyPointing onLock={onPoint} onCancel={() => setPointingOpen(false)} />}
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
@@ -132,6 +153,13 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
+                {flagship && (
+                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
+                    <span className={styles.flagshipKicker}>Flagship event</span>
+                    <strong>{flagship.name}</strong>
+                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
+                  </div>
+                )}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -140,7 +168,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices.' : 'Aim your instruments at the sky, then check what they catch.'}</p>
                 </div>
               </section>
               <section className={styles.right}>
@@ -149,6 +177,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
+                <CommunityBallots state={ballotState} />
+                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
               {confirmingPath && (
@@ -165,9 +195,17 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
+                {flagship && (
+                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
+                    <span className={styles.flagshipKicker}>Flagship event</span>
+                    <strong>{flagship.name}</strong>
+                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
+                  </div>
+                )}
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
-                  <span>{finished}/{steps.length} complete</span>
+                  <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete</span>
+                  {needsPointing && !pointingOpen && <button type="button" className={board.contractTake} data-testid="community-research-point" onClick={() => setPointingOpen(true)}>POINT INSTRUMENTS</button>}
                 </div>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (
@@ -184,6 +222,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
                   <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
                   <button type="button" role="tab" aria-selected={readout === 'rewards'} onClick={() => setReadout('rewards')}>Rewards</button>
+                  <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
                 {readout === 'mission' ? <>
                   <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
@@ -195,6 +234,10 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                     {days.map(day => <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}><i aria-hidden="true" /><span>{day.letter}</span></div>)}
                   </div>
                   <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
+                </> : readout === 'votes' ? <>
+                  <h2>Community votes</h2>
+                  <CommunityBallots state={ballotState} />
+                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
@@ -204,6 +247,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
                   <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}

@@ -93,7 +93,6 @@ export const GAME_ROUTES = [
   { path: '/game/mining', screen: 'mining', surface: 'mining' },
 
   // Takeon
-  { path: '/game/rover-survey', screen: 'rover-survey', surface: 'takeon' },
   { path: '/game/delivery', screen: 'delivery', surface: 'takeon' },
 
   // Post-mission summary

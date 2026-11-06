@@ -90,18 +90,6 @@ export interface PocketBaseMissionSeed {
   payout_affinity: number
 }
 
-const STARTER_ROVER_SURVEY = {
-  scanRequired: true,
-  scanCount: 1,
-  scanSource: 'rover',
-  depositsToMap: 1,
-  revealsMinerals: true,
-  revealsLandmarks: ['surface deposit'],
-  unlocksLanding: true,
-  onWorldVehicle: 'starter-rover',
-  anyTargetType: true,
-} satisfies MissionTemplate['survey']
-
 const FUEL_DEPOT_CONSTRUCTION: MissionConstructionPlan = {
   structureKind: 'fuel-depot',
   requiredMaterials: { hydrogen: 8, aluminium: 6 },
@@ -131,7 +119,7 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, clientRole: 'prospect', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, clientRole: 'bulk', payoutFormula: 'contract fee + cargo value bonus' },
-  { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus + landing bonus', survey: STARTER_ROVER_SURVEY },
+  { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus + landing bonus' },
   { id: 'construct-fuel-depot', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 2.8, clientRole: 'prospect', payoutFormula: 'structure value * 2 + delivery bonus', construction: FUEL_DEPOT_CONSTRUCTION },
   { id: 'construct-battery-station', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['cobalt', 'nickel', 'copper', 'gold'], cargoRange: [8, 14], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.2, clientRole: 'command', payoutFormula: 'structure value * 2 + delivery bonus', construction: BATTERY_STATION_CONSTRUCTION },
   { id: 'construct-fabrication-pad', tag: 'CONSTRUCT', difficulty: 'L3', mineralKeys: ['iron', 'silicon', 'aluminium', 'carbon'], cargoRange: [10, 18], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.6, clientRole: 'bulk', payoutFormula: 'structure value * 2 + delivery bonus', construction: FABRICATION_PAD_CONSTRUCTION },
@@ -429,7 +417,7 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
     reveals_minerals: template.survey?.revealsMinerals,
     reveals_landmarks: template.survey?.revealsLandmarks,
     unlocks_landing: template.survey?.unlocksLanding,
-    on_world_vehicle: template.survey?.onWorldVehicle,
+    
     on_world_any_target: template.survey?.anyTargetType,
     construction_structure_kind: template.construction?.structureKind,
     construction_required_materials: template.construction?.requiredMaterials,

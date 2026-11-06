@@ -412,6 +412,36 @@ button.start {
   .skillDetail h3 { font-size: 18px; }
 }
 
+/* SSL-730: Clients tab. Same list-and-detail as Program: your clients with their affinity on the left, the chosen one on the right. */
+.clientList { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 2px 0 12px; }
+.clientRow { display: grid; grid-template-columns: 44px minmax(0, 1fr) 72px; align-items: center; gap: 10px; min-height: 64px; padding: 8px 12px 8px 8px; border: 2px solid var(--ln-board-ink); border-radius: 14px; background: var(--ln-board-paper); color: var(--ln-board-ink); text-align: left; cursor: pointer; }
+.clientRow:not([data-met]) { opacity: .55; }
+.clientRow[data-selected] { opacity: 1; border-color: var(--ln-board-blue, #2f83c5); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ln-board-blue, #2f83c5) 30%, transparent); }
+.clientRow:focus-visible { outline: 2px solid var(--ln-board-blue, #2f83c5); outline-offset: 2px; }
+.clientCopy { display: grid; gap: 3px; min-width: 0; }
+.clientCopy strong { font: 800 15px/1.15 var(--ln-font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clientCopy span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.04em; color: var(--ln-board-muted); }
+.affinity { display: block; height: 10px; border: 2px solid var(--ln-board-ink); border-radius: 999px; background-color: var(--ln-board-lavender); overflow: hidden; }
+.affinity i { display: block; height: 100%; background-color: var(--ln-board-teal); }
+.clientDetail { display: grid; gap: 12px; padding: 16px; border: 3px solid var(--ln-board-blue, #2f83c5); border-radius: 16px; background: var(--ln-board-paper); color: var(--ln-board-ink); }
+.clientDetail header { display: flex; align-items: center; gap: 14px; }
+.clientDetail h3 { margin: 2px 0 0; font: 800 22px/1.15 var(--ln-font-display); }
+.clientDetail .gateMeter { width: 100%; }
+.clientFacts { display: grid; gap: 6px; margin: 0; }
+.clientFacts div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 6px; border-bottom: 1px solid color-mix(in srgb, var(--ln-board-ink) 18%, transparent); }
+.clientFacts dt { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ln-board-muted); }
+.clientFacts dd { margin: 0; font: 700 14px/1.2 var(--ln-font-body); text-align: right; }
+.clientDetail button.start { justify-self: start; }
+@media (min-width: 801px) {
+  .clientList { grid-column: 1; grid-row: 2; }
+  .clientDetail { grid-column: 2; grid-row: 2; position: sticky; top: 0; align-self: start; }
+}
+@media (max-width: 800px) {
+  .clientDetail { order: 1; }
+  .clientList { order: 2; }
+  .clientDetail button.start { justify-self: stretch; }
+}
+
 /* ── Dispatch (contracts) ─────────────────────────────────────────────
    Contracts arrive as client transmissions over the live base: the scene
    stays visible and undimmed, the work order is one compact slab with the
@@ -676,12 +706,17 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractOffers .offerStrip { width: min(260px, 100%); display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0; border: 0; overflow: visible; }
 .contractOffers .offerStrip button { position: relative; min-width: 64px; min-height: 64px; display: grid; place-items: center; color: #f4efe4; background: rgba(8, 16, 34, .22); border: 1px solid rgba(244, 239, 228, .58); cursor: pointer; }
 .contractOffers .offerStrip button[data-selected] { background: rgba(8, 16, 34, .72); border: 3px solid #58d0ea; outline: 0; }
-.contractOffers .offerStrip button > span { right: 4px; bottom: 3px; color: #f4efe4; font-size: 14px; }
+/* SSL-730: the offer number is a badge on the tile's corner, clear of the client emblem. */
+.contractOffers .offerStrip button > span { position: absolute; z-index: 1; right: -7px; bottom: -7px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: #142840; border: 1.5px solid #f4efe4; color: #f4efe4; font: 800 14px/19px var(--ln-font-display); text-align: center; }
 .contractFocus { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
 .contractFocus > span { color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .contractFocus > h2 { max-width: 18ch; font-size: clamp(24px, 3vw, 36px); }
 .contractFocus > p { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 16px/1.35 var(--ln-font-body); }
-.contractFocus > small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
+.contractFocus > small, .offerPager small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
+/* SSL-730: step through every offer from the counter; the strip's page follows the selection. */
+.offerPager { display: inline-flex; align-items: center; gap: 10px; }
+.offerPager button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0 0 3px; border: 1.5px solid rgba(244, 239, 228, .58); border-radius: 999px; background: rgba(8, 16, 34, .4); color: #f4efe4; font: 800 24px/1 var(--ln-font-display); cursor: pointer; }
+.offerPager button:focus-visible { outline: 2px solid #58d0ea; outline-offset: 2px; }
 .contractAction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; overflow: hidden; text-align: center; }
 .contractAction > h2 { max-width: 100%; color: #9de7ef; font-size: 18px; text-transform: uppercase; letter-spacing: .08em; }
 .contractCargo { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
@@ -721,8 +756,11 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 @media (orientation: portrait) and (max-width: 700px) {
   .contractWorkspace { top: 0; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) auto; }
   .contractWorkspace > section { padding: 14px 16px; }
-  .contractOffers { gap: 10px; padding-top: 74px !important; }
-  .contractOffers .offerStrip { width: 100%; display: flex; justify-content: center; gap: 8px; }
+  /* SSL-730: upright, the Log and balance chips wrap to a second row over the "Contracts" heading. The rail's
+     Contracts tab already names the page, so the heading stays for screen readers only and the strip starts below the chips. */
+  .contractOffers { gap: 10px; padding-top: 112px !important; }
+  .contractOffers > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .contractOffers .offerStrip { width: 100%; display: flex; justify-content: center; gap: 12px; }
   .contractOffers .offerStrip button { flex: 0 1 56px; min-width: 48px; min-height: 52px; }
   .contractFocus { gap: 8px; }
   .contractFocus > h2 { font-size: 24px; }
@@ -882,12 +920,17 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .rail button.tab, .rail button.tab[data-tab] { width: 44px; padding: 0; }
   .rail .tabLabel { display: none; }
   .gxBack, .gxBack[data-testid] { top: 64px; }
+  /* SSL-730: upright, Log and balance wrap to a second row; Program and Clients start below it. */
+  .sheet { top: 116px; }
   .freeDock { grid-template-columns: minmax(0, 1fr); }
   .freeDock > .freeAction { grid-column: 1; }
   .sourceSites > button.sourceAll { margin-left: 0; }
 }
 @media (max-height: 520px) and (orientation: landscape) {
   .rail .tabLabel { display: inline; }
+  /* SSL-730: six tabs plus Log and balance don't fit a phone held sideways with every label: only the open tab keeps its word. */
+  .rail button.tab:not([data-active='true']) .tabLabel { display: none; }
+  .rail button.tab:not([data-active='true']) { width: 44px; padding: 0; justify-content: center; }
   .gxBack, .gxBack[data-testid] { top: 64px; }
   .freeDock { padding: 8px 12px 10px; row-gap: 6px; }
   .sourceSites { padding-bottom: 6px; }
@@ -913,4 +956,25 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .railHelp > :last-child { grid-column: 2; grid-row: 1; }
   .railHelp button.log { grid-column: 1; grid-row: 2; }
   .railHelp .balance { grid-column: 2; grid-row: 2; }
+}
+
+/* SSL-699: offers grouped by mining, construction and exploration (Liam, 01.11). The chips filter the strip; each
+   tile also wears its group's glyph so a mixed page still reads at a glance. */
+.offerGroups { width: min(260px, 100%); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.offerGroups button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; color: #f4efe4; font: 700 14px/1 var(--ln-font-display); letter-spacing: .04em; background: rgba(8, 16, 34, .3); border: 1px solid rgba(244, 239, 228, .45); border-radius: 999px; cursor: pointer; }
+.offerGroups button[data-active] { color: #142840; background: #f4efe4; border-color: #f4efe4; }
+.offerGroups button b { min-width: 20px; padding: 0 5px; font-size: 14px; line-height: 20px; text-align: center; border-radius: 999px; background: rgba(88, 208, 234, .28); }
+.offerGroups button[data-active] b { background: rgba(20, 40, 64, .14); }
+.offerGroups svg, .offerKind svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.contractOffers .offerStrip .offerKind { position: absolute; z-index: 1; left: -7px; top: -7px; display: grid; place-items: center; width: 24px; height: 24px; color: #142840; background: #9de7ef; border: 1.5px solid #142840; border-radius: 50%; }
+.offerKind svg { width: 15px; height: 15px; }
+.contractOffers .offerStrip .offerKind[data-group='construction'] { background: #f4efe4; }
+.contractOffers .offerStrip .offerKind[data-group='exploration'] { background: #c9b8ff; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .offerGroups { width: 100%; flex-wrap: nowrap; justify-content: safe center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .offerGroups button { flex: 0 1 auto; min-width: 0; gap: 4px; padding: 0 8px; letter-spacing: 0; }
+  .offerGroups svg { width: 16px; height: 16px; }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .offerGroups button { padding: 0 8px; }
 }

@@ -80,7 +80,7 @@ export function rocketMissionFit(rocket: RocketModel, mission: Mission): RocketF
     },
     {
       key: 'drill',
-      label: 'Drill',
+      label: 'Laser',
       have: `T${rocket.stats.drillTier}`,
       need: `T${mission.requires.drill_tier}`,
       ok: rocket.stats.drillTier >= mission.requires.drill_tier,

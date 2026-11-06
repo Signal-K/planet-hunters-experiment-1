@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { requestConsensus } from '@/lib/community/client'
+import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/lib/community/consensus'
+import type { PendingConsensusReview } from '@/components/game/screens/CommunityConsensus'
 import { useGame } from '@/game-context'
 import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
@@ -10,7 +13,7 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { formatCurrency } from '@/lib/format'
 import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -65,8 +68,9 @@ import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
+import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
-import { choosePath, claimResearchReward } from '@/lib/research/paths'
+import { choosePath, setPointing, claimResearchReward } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -108,7 +112,30 @@ function ScreenBody({
   const [launchPending, setLaunchPending] = useState(() =>
     process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('launchscene'))
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const communityResearch = useCommunityResearch(screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
+  // SSL-746: a review in progress, and the reviewer's own finished run waiting to be compared.
+  const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
+  const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
+
+  /** SSL-746: a finished readout either asks for consensus, or (in review mode) answers the review. */
+  const shareReadout = (project: ConsensusProject, subjectId: string, readout: ConsensusReadout) => {
+    if (reviewTarget?.project === project) {
+      setPendingReview({ requestId: reviewTarget.id, project, subjectId, ownReadout: readout })
+      setReviewTarget(null)
+      setInspectSignal(null)
+      return game.go('community-research')
+    }
+    requestConsensus(project, subjectId, readout)
+      .then(() => game.addToast('Asked the community to check it. See Community research > Review.', 'ok'))
+      .catch(() => game.addToast('Could not send the request. Check your connection.', 'warn'))
+  }
+  const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
+
+  // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
+  useEffect(() => {
+    if (communityResearch?.reachedAt == null) return
+    game.setPlayer(current => withCommunityBonus(current, communityResearch))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communityResearch])
 
   useEffect(() => {
     if (screen !== 'hub') return
@@ -310,7 +337,9 @@ function ScreenBody({
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
-          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined }))}
+          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined, welcomeBack: undefined }))}
+          communityResearch={communityResearch}
+          onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={() => {
             // Completing the sky reading should reveal the event brief first.
             // Accepting the focused event is the explicit step that starts
@@ -388,11 +417,12 @@ function ScreenBody({
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
-          onBack={() => game.goBack()}
+          onBack={() => { setReviewTarget(null); game.goBack() }}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
-          onChooseTarget={game.chooseSatelliteTarget}
+          reviewing={reviewTarget?.project === 'tess'}
+          onShareReadout={(subjectId, readout) => shareReadout('tess', subjectId, readout)}
           onReplayTraining={currentTrainingTry(game.player.flightPlan) === 'scan' ? () => game.replayTrainingTry('scan') : undefined}
           onTrainingContinue={() => game.go('hangar')}
         />
@@ -404,9 +434,11 @@ function ScreenBody({
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => game.goBack()}
+          onBack={() => { setReviewTarget(null); game.goBack() }}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
+          reviewing={reviewTarget?.project === 'asteroid'}
+          onShareReadout={(subjectId, readout) => shareReadout('asteroid', subjectId, readout)}
         />
       )
 
@@ -415,9 +447,11 @@ function ScreenBody({
         <SaturnStormSearchScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
-          onBack={() => game.goBack()}
+          onBack={() => { setReviewTarget(null); game.goBack() }}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
+          reviewing={reviewTarget?.project === 'saturn'}
+          onShareReadout={(subjectId, readout) => shareReadout('saturn', subjectId, readout)}
         />
       )
 
@@ -450,7 +484,6 @@ function ScreenBody({
     case 'transit':
     case 'landing':
     case 'mining':
-    case 'rover-survey':
     case 'delivery':
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) {
@@ -486,6 +519,7 @@ function ScreenBody({
             refinedGoods: game.player.refinedGoods,
             refineryLastStartedAt: game.player.refineryLastStartedAt,
             researchPermanentBonuses: game.player.researchPermanentBonuses,
+            communityBonus: game.player.communityBonus,
           }}
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
@@ -504,6 +538,7 @@ function ScreenBody({
           researchUniversalFragments={game.player.researchUniversalFragments ?? 0}
           researchPurchases={game.player.researchPurchases}
           researchPermanentBonuses={game.player.researchPermanentBonuses}
+          communityBonus={game.player.communityBonus}
           francs={game.player.francs}
           exchangeBuilt={exchangeBuilt(game.player)}
           priceAlerts={game.player.priceAlerts}
@@ -557,7 +592,21 @@ function ScreenBody({
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
+          onPoint={pointing => game.setPlayer(current => setPointing(current, pointing, Date.now()))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
+          pendingReview={pendingReview}
+          onFinishReview={() => setPendingReview(null)}
+          onStartReview={item => {
+            // Each kind opens on its own instrument, on the requester's subject, for the player's own run first.
+            const route = {
+              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'galaxy' },
+              asteroid: { kind: 'deep-space', instrumentId: 'deep-space-telescope', inspectorScreen: 'asteroid-discovery' },
+              saturn: { kind: 'saturn', instrumentId: 'saturn-imager', inspectorScreen: 'saturn-storm-search' },
+            }[item.project] as { kind: InstrumentSignal['kind']; instrumentId: InstrumentSignal['instrumentId']; inspectorScreen: InstrumentSignal['inspectorScreen'] }
+            setReviewTarget(item)
+            setInspectSignal({ id: item.subjectId, title: item.subjectId, subtitle: '', ...route })
+            game.go(route.inspectorScreen)
+          }}
           onGo={kind => {
             // SSL-714: from mission 3 on, the Orionids step happens on ORI-1, not the mission board.
             if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')

@@ -78,6 +78,7 @@
   .dpad { grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; bottom: calc(8px + env(safe-area-inset-bottom)); left: 12px; }
   .pad { min-width: 44px; min-height: 44px; }
 }
+/* Phone landscape keeps the 3x3 cross at 44px (see the max-height block above). */
 
 /* SSL-708: controller layout. Back button top-left is the only top control; FIRE is a round
    action button bottom-right opposite the d-pad; progress sits bottom-centre between them. */
@@ -204,6 +205,35 @@
   .action { width: 72px; height: 72px; right: 112px; bottom: calc(52px + env(safe-area-inset-bottom)); }
   .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
 }
+/* Portrait: the order readout is one centred line above the pad and Fire, not a wrapped corner box, and the brief card sits in the sky clear of the ship. */
+/* Portrait cockpit: a solid bottom panel holds the d-pad (left), the order readout
+   (above Fire) and Fire (right), so nothing floats over the ground and every control is in thumb reach. */
+@media (max-width: 600px) and (orientation: portrait) {
+  :global(.mining-viewport)::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: calc(204px + env(safe-area-inset-bottom));
+    z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(10, 20, 40, 0.94), rgba(6, 12, 26, 0.98));
+    border-top: 2px solid rgba(244, 239, 228, 0.55);
+    box-shadow: 0 -10px 24px rgba(2, 6, 14, 0.45);
+  }
+  .dpad { bottom: calc(16px + env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); }
+  .pad { background: rgba(244, 239, 228, 0.14); border-color: rgba(244, 239, 228, 0.75); box-shadow: none; }
+  .pad:active { background: rgba(88, 208, 234, 0.4); }
+  .fire { bottom: calc(22px + env(safe-area-inset-bottom)); right: max(16px, env(safe-area-inset-right)); }
+  .progress {
+    left: auto; right: max(8px, env(safe-area-inset-right)); transform: none;
+    bottom: calc(120px + env(safe-area-inset-bottom));
+    width: 190px; max-width: 190px; min-height: 64px;
+    padding: 6px 8px; align-content: center;
+    white-space: normal; text-align: center; letter-spacing: 0.03em;
+  }
+  .progressCue { letter-spacing: 0.02em; text-wrap: balance; }
+  .action { right: max(16px, env(safe-area-inset-right)); bottom: calc(220px + env(safe-area-inset-bottom)); }
+}
 @media (max-height: 520px) {
   .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
   .action { width: 68px; height: 68px; bottom: calc(40px + env(safe-area-inset-bottom)); }
@@ -240,3 +270,7 @@
 @media (prefers-reduced-motion: reduce) { :global(.mining-start-brief) { animation: none; } }
 /* The menu covers the scene completely, sky effects included. */
 :global(.mining-guide-dock) { z-index: 80; }
+
+@media (max-width: 600px) and (orientation: portrait) {
+  :global(.mining-start-brief) { top: 24%; }
+}

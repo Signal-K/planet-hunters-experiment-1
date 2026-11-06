@@ -27,7 +27,8 @@ export function syncLabel(landnamSynced: boolean, outbox: OutboxSnapshot, online
 // disappears and is easy to miss, but an unsynced session silently loses
 // its ability to persist progress server-side for as long as it stays
 // unsynced, so this stays visible the whole time rather than firing once.
-export default function LandnamSyncStatus() {
+/** `preview`: the account-free stage shows the chip with `?signed=1` so its place on a scene can be checked (SSL-748). */
+export default function LandnamSyncStatus({ preview = false }: { preview?: boolean } = {}) {
   const game = useGame()
   // pbShared's authStore initializes synchronously from localStorage, so a
   // returning player with a stored session already has authUserId set on
@@ -73,8 +74,9 @@ export default function LandnamSyncStatus() {
   // SSL-729: the chip always shows for a signed-in player, so "synced" is something you can see and tap.
   const label = syncLabel(game.landnamSynced, outbox, online) ?? 'SYNCED'
   const state = syncState(game.landnamSynced, outbox, online)
-  const host = useChipSlot(mounted && !!game.authUserId)
-  if (!mounted || !game.authUserId) return null
+  const signedIn = preview || !!game.authUserId
+  const host = useChipSlot(mounted && signedIn)
+  if (!mounted || !signedIn) return null
 
   const chip = (
     <button
@@ -113,12 +115,15 @@ function useChipSlot(active: boolean): HTMLElement | null {
     let frame = 0
     const place = () => {
       frame = 0
-      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip'))
-        .find(el => el.offsetParent !== null)
+      const visible = (el: HTMLElement) => el.offsetParent !== null
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip')).find(visible)
+      // SSL-748: screens with no francs chip (control station, launch pad, consoles) keep their own controls in the
+      // top-right corner, so a fixed floating chip covered them. Join the screen's own top row beside its help button.
+      const anchor = francs ?? Array.from(document.querySelectorAll<HTMLElement>('[data-sync-anchor], [data-testid="help-button"]')).find(visible)
       let slot = document.querySelector<HTMLElement>('[data-sync-slot]')
-      if (!francs) { slot?.remove(); setHost(null); return }
+      if (!anchor) { slot?.remove(); setHost(null); return }
       if (!slot) { slot = document.createElement('span'); slot.setAttribute('data-sync-slot', ''); slot.style.display = 'contents' }
-      if (slot.nextElementSibling !== francs) francs.parentElement?.insertBefore(slot, francs)
+      if (slot.nextElementSibling !== anchor) anchor.parentElement?.insertBefore(slot, anchor)
       setHost(current => current === slot ? current : slot)
     }
     place()

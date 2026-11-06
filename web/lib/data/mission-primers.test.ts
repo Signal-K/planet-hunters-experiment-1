@@ -38,14 +38,6 @@ describe('missionTypePrimer', () => {
     expect(primer.steps).toContain('Build')
   })
 
-  it('names a rover landing', () => {
-    const rover = missionTypePrimer({
-      ...base,
-      survey: { scanRequired: true, scanCount: 1, scanSource: 'rover', depositsToMap: 1, revealsMinerals: true, revealsLandmarks: [], unlocksLanding: true, onWorldVehicle: 'starter-rover' },
-    })
-    expect(rover.label).toBe('Rover landing')
-  })
-
   it('prefers the payload type over the delivery leg', () => {
     const primer = missionTypePrimer({
       ...base,

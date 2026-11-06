@@ -1,6 +1,7 @@
-// SSL-714: the Orionids badge is three missions, each handing the player a story item that lets the
-// next one start: the shower run (mine) → the rover observation (observe) → listening on the
-// community receiver (confirm). The badge is graded when the third one is done, never on mining alone.
+// The Orionids event is the shower run: catch fragments and bring them home for the community record.
+// Finishing the run hands over the fragment sample and grades the badge, never mining alone. ORI-1 keeps
+// listening afterwards as ordinary community research. (Stage 1 was the rover step and is retired; stage 2
+// is the old "listen on ORI-1" step, kept so saves already there can still finish it.)
 // Shaped so a later shower can declare its own chain.
 
 import { badgeTierFor, getSkyEvent, grantBadge } from '@/lib/data/sky-events'
@@ -22,7 +23,7 @@ export interface ShowerChain {
   /** Recordings to check on the community receiver for the last mission. */
   radioTarget: number
   /** One item per mission, in order. Mission n hands over items[n - 1]. */
-  items: [ShowerStoryItem, ShowerStoryItem, ShowerStoryItem]
+  items: [ShowerStoryItem]
 }
 
 export const ORIONIDS_CHAIN: ShowerChain = {
@@ -32,27 +33,15 @@ export const ORIONIDS_CHAIN: ShowerChain = {
     {
       id: 'fragment-sample',
       name: 'Fragment sample',
-      detail: 'A sealed Orionid fragment from your shower run. Its scorch marks point back to a fresh impact on Eros.',
-      unlocks: 'Mission 2 is ready on the Events board: take the field rover to the impact and observe it.',
-    },
-    {
-      id: 'impact-bearing',
-      name: 'Impact bearing',
-      detail: 'Your rover’s bearing on the fresh impact: the direction to listen along for more of the shower.',
-      unlocks: 'Mission 3 is ready on the Events board: confirm meteor echoes on ORI-1.',
-    },
-    {
-      id: 'radio-confirmation',
-      name: 'Radio confirmation',
-      detail: 'Recordings you checked on ORI-1, confirming the shower in real radio data from the BRAMS network.',
-      unlocks: 'The Orionids record is complete.',
+      detail: 'A sealed Orionid fragment from your shower run. Its scorch marks show where to listen for more of the shower.',
+      unlocks: 'The Orionids record is complete. ORI-1 keeps listening: every recording you check still fills the shared bar.',
     },
   ],
 }
 
 /** Items the player holds at this stage. Derived from the stage, so every existing save has the right ones. */
 export function showerItems(chain: ShowerChain, stage: number | undefined): ShowerStoryItem[] {
-  return chain.items.slice(0, Math.max(0, Math.min(3, stage ?? 0)))
+  return (stage ?? 0) >= 1 ? chain.items.slice(0, 1) : []
 }
 
 export function radioChecked(player: Pick<Player, 'radioMeteorClassifications'>): number {
@@ -62,7 +51,7 @@ export function radioChecked(player: Pick<Player, 'radioMeteorClassifications'>)
 type ChainPlayer = Pick<Player, 'orionidsEventStage' | 'radioMeteorClassifications' | 'badges'>
 
 /**
- * After a radio classification: with the rover mission done and enough recordings checked, the
+ * After a radio classification: with the shower run done and enough recordings checked, the
  * third mission completes and the badge is graded now. Returns the same player when nothing changes.
  */
 export function completeRadioMission<T extends ChainPlayer>(player: T, at: number, chain: ShowerChain = ORIONIDS_CHAIN): { player: T; completed: boolean } {
@@ -76,10 +65,8 @@ export function orionidsResearchStep(stage: number | undefined): { title: string
   // A non-breaking hyphen keeps ORI-1 on one line in the step title.
   const callsign = chainInstrument().callsign.replace('-', '\u2011')
   switch (stage ?? 0) {
-    case 0: return { title: 'Orionids 1 of 3: fly the shower run', brief: 'Catch fragments in the shower. You bring back the sample the next mission needs.' }
-    case 1: return { title: 'Orionids 2 of 3: observe the impact', brief: 'Take the field rover to the impact on Eros and take a bearing.' }
-    case 2: return { title: `Orionids 3 of 3: listen on ${callsign}`, brief: `Check recordings on ${callsign}, the receiver everyone launched. Three confirm the shower.` }
-    default: return { title: `Orionids: keep listening on ${callsign}`, brief: 'The record is complete. Every recording you check still fills the shared bar.' }
+    case 0: return { title: 'Orionids: catch and contribute fragments', brief: 'Fly the shower run and bring the fragments home for the community record.' }
+    default: return { title: 'Orionids: fragments delivered', brief: `Your fragments are in the record. ${callsign} is still listening: every recording you check fills the shared bar.` }
   }
 }
 

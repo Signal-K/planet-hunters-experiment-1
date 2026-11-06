@@ -15,7 +15,6 @@ export interface MissionSurveyPlan {
   revealsMinerals: boolean
   revealsLandmarks: string[]
   unlocksLanding: boolean
-  onWorldVehicle?: 'starter-rover'
   anyTargetType?: boolean
 }
 

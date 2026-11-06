@@ -153,6 +153,7 @@ export function rocketBuilderStats(
   rocket: RocketConfig,
   installed: BuilderLoadout,
   parts: typeof PARTS = PARTS,
+  fuelFraction = 0,
 ): RocketBuilderStats {
   const chassis = parts.chassis.find(part => part.id === rocket.chassis) ?? parts.chassis[0]
   const propulsion = parts.propulsion.find(part => part.id === rocket.propulsion) ?? parts.propulsion[0]
@@ -162,9 +163,17 @@ export function rocketBuilderStats(
   const laserPart = laser ? customizerPartById(laser) : undefined
   return {
     capacity: (chassis.cargo ?? 0) + fitted.capacity,
-    range: (propulsion.max_orbit ?? 0) + fitted.range,
+    range: (propulsion.max_orbit ?? 0) + fitted.range + communityRangeBonus((propulsion.max_orbit ?? 0) + fitted.range, fuelFraction),
     laser: BASE_LASER_CHARGES + (laserPart ? laserPart.power : (drill.rate ?? 1)),
   }
+}
+
+/**
+ * SSL-685: the community goal's fuel efficiency as extra orbit reach. Orbits are whole numbers, so any
+ * reward is at least one orbit; it rounds up from the share of the ship's own reach.
+ */
+export function communityRangeBonus(baseRange: number, fuelFraction: number): number {
+  return baseRange > 0 && fuelFraction > 0 ? Math.max(1, Math.ceil(baseRange * fuelFraction)) : 0
 }
 
 /**

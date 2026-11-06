@@ -5,9 +5,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
-import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
-import SolSystemPreview from '@/components/game/SolSystemPreview'
-import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolButton } from '@/components/game/instrument-viewport/InstrumentViewport'
+import type { ConsensusReadout } from '@/lib/community/consensus'
+import InstrumentViewport, { type InstrumentReadoutRow, InstrumentAnswerRow, InstrumentDevDayBar, InstrumentKnob, InstrumentLamp, InstrumentModuleKey, InstrumentStandbyViewport, InstrumentSwitch, InstrumentToolHint, type InstrumentQuickCommand } from '@/components/game/instrument-viewport/InstrumentViewport'
 import { DEFAULT_LIGHTCURVE_CONTROLS, LIGHTCURVE_LIMITS, applyLightcurveCommand, lightcurveDisplay, measureDips, nextBin, type LightcurveControls } from '@/lib/instrument-viewport/lightcurve-controls'
 import viewportStyles from '@/components/game/instrument-viewport/InstrumentViewport.module.css'
 import { periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
@@ -28,11 +27,14 @@ interface TessDiscoveryScreenProps {
   onBuildStation: () => void
   onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
-  onChooseTarget: (subjectId: string) => void
   /** Set while a training try is active, so the help sheet can point at Menu > Training. */
   onReplayTraining?: () => void
   /** After the training verdict's result card: move on to the next try. */
   onTrainingContinue?: () => void
+  /** SSL-746: share this finished readout, to ask for consensus or (when `reviewing`) to answer a review. */
+  onShareReadout?: (subjectId: string, readout: ConsensusReadout) => void
+  /** True when the player came here to do their own run on someone else's subject. */
+  reviewing?: boolean
 }
 
 const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body: string }> = {
@@ -53,27 +55,30 @@ const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body
   },
 }
 
+/** Readout rows kept on the simple console: whose star, what you marked, your verdict. */
+const SIMPLE_READOUT = new Set(['Star', 'Marks', 'Verdict', 'Catalogue P'])
+
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
-  { id: 'planet', label: 'Submit · Transit', requiresMark: true },
-  { id: 'not_planet', label: 'Submit · Noise', requiresMark: true },
+  { id: 'planet', label: 'Planet transit', requiresMark: true },
+  { id: 'not_planet', label: 'Just noise', requiresMark: true },
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onChooseTarget, onReplayTraining, onTrainingContinue }: TessDiscoveryScreenProps) {
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: !onboardingMissionDone(player.flightPlan) })
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
+  // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
+  // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
+  const firstClassification = Object.keys(classifications).length === 0
+  const help = useHelp('galaxy', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
+  const [allControls, setAllControls] = useState(false)
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
   const [ranges, setRanges] = useState<TransitRange[]>([])
   const [sectorIndex, setSectorIndex] = useState(0)
-  const [pendingTargetId, setPendingTargetId] = useState<string | null>(null)
-  const [viewingSol, setViewingSol] = useState(false)
-  const [forceMapView, setForceMapView] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
-  const [dragArmed, setDragArmed] = useState(true)
   const [needsMark, setNeedsMark] = useState(false)
   // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
@@ -87,7 +92,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       setPool([visualCandidate])
       setRanges([])
       setSectorIndex(0)
-      setViewingSol(false)
       setLoadFailed(false)
       setLoading(false)
       return
@@ -111,7 +115,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
         setRanges([])
         setSectorIndex(0)
-        setViewingSol(false)
       })
       .catch(error => {
         if (cancelled) return
@@ -261,20 +264,26 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
+    help.reportAction('submit')
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
   const activeRanges = classification?.ranges ?? ranges
   const markCount = activeRanges.length
-  const visitedIds = new Set(Object.keys(classifications))
-  const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
-  const showMap = classification != null || forceMapView
+  // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
+  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  const simpleConsole = simpleEligible && !allControls
 
   // SSL-747: a full readout of the player's result: their marks, what they measured from them,
   // the view they used and their verdict. The catalogue period only appears once they have submitted.
   const meanDepth = measured.dips.length ? measured.dips.reduce((sum, dip) => sum + dip.depthPpt, 0) / measured.dips.length : null
   const verdictLabel: Record<TessVerdict, string> = { planet: 'TRANSIT', not_planet: 'NOISE', unsure: 'SKIPPED' }
+  // SSL-749: the target star's details sit on the readout, beside what the player measured from its light.
   const readoutRows: InstrumentReadoutRow[] = [
+    { label: 'Star', value: `${candidate.host} · ${/^TIC/i.test(candidate.ticId) ? candidate.ticId : `TIC ${candidate.ticId}`}`, testId: 'tess-readout-star' },
+    ...(candidate.starTeffK ? [{ label: 'Teff', value: `${Math.round(candidate.starTeffK).toLocaleString('en-US')} K`, testId: 'tess-readout-star-teff' }] : []),
+    { label: 'Where', value: [candidate.constellation, candidate.distanceLy ? `${Math.round(candidate.distanceLy).toLocaleString('en-US')} LY` : null].filter(Boolean).join(' · ') || '—', testId: 'tess-readout-star-where' },
+    { label: 'Sector', value: activeSector?.label ?? candidate.sector ?? '—' },
     { label: 'Marks', value: markCount ? String(markCount) : 'NONE · DRAG A DIP', testId: 'tess-readout-marks' },
     ...measured.dips.slice(0, 4).map((dip, index) => ({
       label: `Dip ${index + 1}`,
@@ -290,10 +299,38 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     ...(classification && candidate.periodDays ? [{ label: 'Catalogue P', value: `${candidate.periodDays.toFixed(2)}d`, testId: 'tess-readout-catalogue' }] : []),
   ]
 
+  // SSL-749: the downlink's own keys, so the terminal shows what it does without typing.
+  const quickCommands: InstrumentQuickCommand[] = [
+    { label: lc.fold ? 'FOLD OFF' : 'FOLD', line: lc.fold ? 'FOLD OFF' : 'FOLD', testId: 'tess-cmd-fold' },
+    { label: `BIN ×${nextBin(lc.bin)}`, line: `BIN ${nextBin(lc.bin)}`, testId: 'tess-cmd-bin' },
+    ...(sectors.length > 1 ? [{ label: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, line: `SECTOR ${((sectorIndex + 1) % sectors.length) + 1}`, testId: 'tess-cmd-sector' }] : []),
+    ...(classification && onShareReadout ? [{ label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', line: 'CONSENSUS', testId: 'tess-cmd-consensus' }] : []),
+    { label: 'HELP', line: 'HELP', testId: 'tess-cmd-help' },
+  ]
+
+  // SSL-753: on the simple console FOLD stacks the light at the gap between the player's own marks,
+  // so two marks on a real transit land on top of each other. The full console keeps its PERIOD dial.
+  const markedGap = periodFromRanges(ranges)
+  const canSimpleFold = simpleConsole && !classification && markedGap != null
+  const toggleSimpleFold = () => {
+    if (lc.fold) { setLc(c => ({ ...c, fold: false })); return }
+    const period = Math.min(LIGHTCURVE_LIMITS.periodMax, Math.max(LIGHTCURVE_LIMITS.periodMin, markedGap ?? lc.period))
+    setLc(c => ({ ...c, fold: true, period }))
+    help.reportAction('fold')
+  }
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
+    if (head?.toUpperCase() === 'CONSENSUS' && classification && onShareReadout) {
+      // The catalogue period is the answer key, so it never travels with a readout.
+      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+      return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
+    }
+    if (head?.toUpperCase() === 'HELP' || head === '?') {
+      return { view, lines: ['> HELP', `FOLD [P|OFF] · PERIOD ${LIGHTCURVE_LIMITS.periodMin}-${LIGHTCURVE_LIMITS.periodMax}`, `TIME ${LIGHTCURVE_LIMITS.spanMin}-${LIGHTCURVE_LIMITS.spanMax} · SCAN 0-100`, 'BIN 1|2|4|8', `SECTOR 1-${Math.max(1, sectors.length)}`, 'ZOOM · FOCUS · POINT', 'FINISH  CONSOLE COLOUR'] }
+    }
     if (head?.toUpperCase() !== 'SECTOR') return null
     const index = Number(arg) - 1
     if (!Number.isInteger(index) || index < 0 || index >= sectors.length) {
@@ -317,7 +354,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
       onCommand={onCommand}
       devBar={devBar}
-      module={showMap ? undefined : {
+      module={{
         name: 'PHOTOMETRY · TP-02',
         testId: 'tess-photometry',
         lights: <>
@@ -332,15 +369,21 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <InstrumentSwitch label="FOLD" testId="tess-fold" pressed={lc.fold} onToggle={() => setLc(c => ({ ...c, fold: !c.fold }))} />
         </>,
       }}
-      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: readoutRows }}
+      simple={simpleConsole}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ') || (row.label === 'Fold' && lc.fold)) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
-          {showMap ? 'TARGET SELECT' : display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
+          {display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
       viewportChrome={(
         <div className={viewportStyles.viewportChrome}>
-          {!classification && sectors.length > 1 && sectors.map((sector, index) => (
+          {simpleEligible && (
+            <button type="button" className={viewportStyles.chip} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
+              {allControls ? 'Simple view' : 'All controls'}
+            </button>
+          )}
+          {!classification && !simpleConsole && sectors.length > 1 && sectors.map((sector, index) => (
             <button
               key={sector.label}
               type="button"
@@ -352,31 +395,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
               {sector.label}
             </button>
           ))}
-          {!classification && player.pendingRepick && !forceMapView && (
-            <button type="button" className={viewportStyles.chip} onClick={() => setForceMapView(true)}>Point satellite</button>
-          )}
-          {forceMapView && !classification && (
-            <button type="button" className={viewportStyles.chip} onClick={() => setForceMapView(false)}>Back to review</button>
-          )}
         </div>
       )}
-      viewport={showMap ? (
-        viewingSol ? (
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <SolSystemPreview onBack={() => setViewingSol(false)} />
-          </div>
-        ) : (
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <PixiGalaxyStarMap
-              candidates={pool}
-              visitedIds={visitedIds}
-              selectedId={targetChosen}
-              onSelect={id => { setPendingTargetId(id); onChooseTarget(id); setForceMapView(false) }}
-              onOpenSol={() => setViewingSol(true)}
-            />
-          </div>
-        )
-      ) : (
+      viewport={(
         <div data-coach-target="tess-chart" style={{ position: 'absolute', inset: 0 }}>
           {visualCandidate && !display.folded && lc.span === 1 && (
             /* Dip hint on the deepest transit; ObservatoryChart's plot runs from 66px to 100% - 14px. */
@@ -393,7 +414,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             ranges={display.folded ? [] : activeRanges}
             onRange={(x1, x2) => { setRanges(prev => [...prev, { x1, x2 }]); setNeedsMark(false); help.reportAction('mark') }}
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
-            locked={!dragArmed || display.folded}
+            locked={display.folded}
             yDomain={yDomain}
           />
         </div>
@@ -413,14 +434,21 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           }))}
         />
       )}
+      quickCommands={quickCommands}
+      toolStepLabels={{ find: 'Find the dip in the star\'s light', answer: 'Is it a planet passing in front?' }}
       tool={(
-        <InstrumentToolButton
-          testId="tess-drag-dip"
-          label={markCount > 0 ? `Drag dip · ${markCount}` : 'Drag dip'}
-          pressed={dragArmed && !showMap}
-          disabled={!!classification || showMap}
-          onClick={() => setDragArmed(armed => !armed)}
-        />
+        <>
+          <InstrumentToolHint
+            testId="tess-drag-dip"
+            text={classification ? 'Marks saved with your classification' : display.folded ? 'Folded at the gap between your marks' : 'Drag across a dip on the chart'}
+            detail={classification ? undefined : display.folded ? 'Dips that repeat stack into one' : markCount > 0 ? `${markCount} marked · tap a mark to clear it` : undefined}
+          />
+          {canSimpleFold && (
+            <button type="button" className={viewportStyles.quickKey} data-testid="tess-simple-fold" data-coach-target="tess-fold" aria-pressed={lc.fold} onClick={toggleSimpleFold}>
+              {lc.fold ? 'FOLD OFF · BACK TO MARKS' : `FOLD · P ${markedGap!.toFixed(2)}D`}
+            </button>
+          )}
+        </>
       )}
     />
   )

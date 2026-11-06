@@ -28,3 +28,7 @@ Use a small source check only when it protects changed logic. The acceptance
 check is the independent mission or scene fixture, not a repository-wide test
 suite. Record the scene, viewport, and commands actually used in the Linear
 handoff.
+
+## Mining timing checks (local only)
+
+The scene driver takes 3 to 5 seconds per action, longer than the laser window (about 2 seconds at ground speed 56). To test a timed hit by hand, open `/game/stage?preset=m1-mining&miningSpeed=0.1` (ground at a tenth speed; `off` clears it; dev server on loopback only), poll `look` until the cue says FIRE NOW, then `tap 864 366` (the Fire button; a `click` never settles because the button pulses). `&scroll=0` holds the field still instead.

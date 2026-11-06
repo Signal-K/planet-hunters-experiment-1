@@ -22,26 +22,6 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
     expect(catalog.targets.find(target => target.id === 'orionids-shower-field')?.type).toBe('event-field')
   })
-  it('offers the next Orionids tier only after debris capture', () => {
-    const next = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 3,
-      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 1 },
-    })
-    expect(next.missions.find(mission => mission.id === 'self-directed-orionids-surface-research')).toMatchObject({
-      payload: { type: 'rover' },
-      requires: { minerals: {} },
-    })
-    const complete = buildRuntimeCatalog({
-      catalog: STATIC_CATALOG,
-      freeOperations: true,
-      missionsDone: 4,
-      player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 2 },
-    })
-    expect(complete.missions.some(mission => mission.id === 'self-directed-orionids-surface-research')).toBe(false)
-  })
-
   it('offers the Orionids shower mission after the field guide is complete', () => {
     const ready = buildRuntimeCatalog({
       catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },

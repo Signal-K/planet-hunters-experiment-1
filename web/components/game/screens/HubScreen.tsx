@@ -28,13 +28,14 @@ import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
 import { STRIP_W, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
+import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { economyArrivalSummary } from '@/lib/systems/EconomyArrival'
+import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -43,13 +44,15 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import CommunityGoalChip from '@/components/game/CommunityGoalChip'
+import type { CommunityResearch } from '@/lib/research/stamps'
 import { BaseConstellations } from '@/components/game/hub/BaseConstellations'
 
 function hubQuery(): URLSearchParams {
   return new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
 }
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -96,6 +99,8 @@ interface HubScreenProps {
   /** Clears the welcome-back market note once read. */
   onDismissEconomyArrival?: () => void
   onOpenEvents?: () => void
+  communityResearch?: CommunityResearch | null
+  onOpenCommunity?: () => void
   subsurface?: boolean
   /** SSL-553: the rocket is touching down on the pad after the trip home. */
   padLanding?: boolean
@@ -104,7 +109,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -153,10 +158,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // A kind with a home site always stands on that site's plot, whatever slot
   // an older save recorded: skipping the tutorial stored the Launchpad on
   // plot 1, the Exchange's site, which hid the Exchange's place marker.
+  const agencyLandmark = placed.includes('launchpad') && !placed.includes('control-station')
   const effectivePlots: Record<string, number> = Object.fromEntries(
     Object.entries({
       ...placementPlots,
       ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
+      // SSL-675: the agency's control station stands on the Base from the first launchpad as a landmark, so the
+      // Base is not an empty plain. It is display-only: nothing is placed or unlocked until the player builds
+      // their own on this same site. Stand-in art until the dedicated agency building sprite ships.
+      ...(agencyLandmark ? { 'control-station': homeSite('control-station')?.plot ?? 3 } : {}),
     })
       .map(([kind, plot]): [string, number] => [kind, homeSite(kind)?.plot ?? plot])
       // Kinds on their own site come first, so they win a plot an older off-site kind still claims.
@@ -274,15 +284,23 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
   // Welcome back: the daily board moved while the player was away. It speaks
   // from the Exchange when there is one, otherwise from a quiet launchpad.
-  const arrival = player.economyArrival
-  const economyCallout: BuildingCallout | undefined = arrival && !onboardingActive && !coachVisible && onDismissEconomyArrival
+  // Only a return after 4+ hours opens a welcome-back, and only with something to say.
+  const welcomeBack = player.welcomeBack
+  const welcomeRows = welcomeBack ? welcomeBackRows(player.economyArrival, welcomeBack, kind => kind.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase())) : []
+  const openWelcomeScene = (scene: 'market' | 'instrument' | 'base' | 'friends') => {
+    onDismissEconomyArrival?.()
+    if (scene === 'market') onOpenMarket?.()
+    else if (scene === 'instrument') onOpenScene('instrument-hub')
+    else if (scene === 'friends') openFriends()
+  }
+  const economyCallout: BuildingCallout | undefined = welcomeRows.length > 0 && !onboardingActive && !coachVisible && onDismissEconomyArrival
     ? {
       title: 'Welcome back',
-      body: economyArrivalSummary(arrival),
-      cta: 'Open Market',
+      body: 'While you were away:',
+      cta: 'Got it',
       placement: 'viewport-clear',
-      onCta: () => { onDismissEconomyArrival(); onOpenMarket?.() },
-      onDismiss: onDismissEconomyArrival,
+      rows: welcomeRows.map(row => ({ text: row.text, onOpen: () => openWelcomeScene(row.scene) })),
+      onCta: onDismissEconomyArrival,
     }
     : undefined
   const economyCalloutAt = !economyCallout ? null : placed.includes('market') ? 'market' : launchpadCallout ? null : 'launchpad'
@@ -293,7 +311,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
       const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
-      const state = player.missionPhase === 'mining' ? 'mining' : (arrived || player.missionPhase === 'survey') ? 'arrived' : 'transit'
+      const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
       return {
         state,
         label: state === 'mining' ? 'MINING CRAFT' : state === 'arrived' ? 'CRAFT ARRIVED' : 'CRAFT IN TRANSIT',
@@ -327,11 +345,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
     if (kind === 'control-station') {
       return {
-        kind, label: 'Control station',
-        sub: 'TELESCOPES',
+        kind, label: agencyLandmark ? 'Agency' : 'Control station',
+        sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
-        onClick: () => onFocusBuilding('control-station'),
+        // The landmark opens the build list once the station is unlocked and does nothing before.
+        onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
       }
     }
     if (kind === 'market') {
@@ -583,6 +602,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {/* ── End persistent Base world ── */}
 
       {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
+      {!subsurface && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same
@@ -668,6 +688,30 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         </div>
       )}
 
+        {!subsurface && (
+          <div className="base-overview" data-testid="base-overview">
+            <button
+              type="button"
+              className="base-overview-toggle"
+              data-testid="base-overview-toggle"
+              onClick={() => (camera.cam.zoom < 1 ? camera.focusX(homeCenter(builtKinds, viewSize.w / px) * px) : camera.overview())}
+            >
+              {camera.cam.zoom < 1 ? 'Back' : 'Overview'}
+            </button>
+            <input
+              type="range"
+              className="base-overview-slider"
+              data-testid="base-overview-slider"
+              aria-label="Position along the Base"
+              min={0}
+              max={1}
+              step={0.01}
+              value={camera.cam.zoom < 1 ? 0 : overviewPosition}
+              disabled={camera.cam.zoom < 1}
+              onChange={event => camera.setPosition(Number(event.target.value))}
+            />
+          </div>
+        )}
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
       {/* The delivery sheet of a homecoming covers the dock, so it is not drawn under it (it would only be an inert, overlapped control). */}

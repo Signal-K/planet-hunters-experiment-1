@@ -84,16 +84,15 @@ describe('FlightPlanSystem', () => {
       expect(step?.try, screen).toBe('mining')
       expect(step?.screen, screen).toBe(screen)
     }
-    // SSL-675: launch prep shares the launch step; flight and landing carry no step; the rover is not a first-run stop.
-    for (const screen of ['targets', 'rocket-buy', 'rover-survey']) expect(trainingTryStep('mining', screen)?.id, screen).toBe('mine-launch')
+    // SSL-675: launch prep shares the launch step; flight and landing carry no step.
+    for (const screen of ['targets', 'rocket-buy']) expect(trainingTryStep('mining', screen)?.id, screen).toBe('mine-launch')
     for (const screen of ['transit', 'landing', 'delivery']) {
       expect(trainingTryStep('mining', screen), screen).toBeUndefined()
       expect(trainingTryStep('scan', screen), screen).toBeUndefined()
     }
     expect(TRAINING_TRIES.filter(step => step.try === 'mining').length).toBeLessThanOrEqual(7)
-    expect(TRAINING_TRIES.some(step => step.screen === 'rover-survey')).toBe(false)
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
-    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Galaxy map')
+    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Control Station')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
     expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')

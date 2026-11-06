@@ -293,7 +293,42 @@ export function buildStationSky(input: {
   const known = catalogue(input.player)
   const shown = input.view === 'unexplored' ? open : input.view === 'explored' ? done : [...known, ...done, ...open]
   const kinds = input.telescope?.kinds
-  return kinds ? shown.filter(item => item.kind !== null && kinds.includes(item.kind)) : shown
+  return spreadSpots(kinds ? shown.filter(item => item.kind !== null && kinds.includes(item.kind)) : shown)
+}
+
+/** The sky field is about this much wider than tall, so a gap across reads shorter than the same gap down. */
+const FIELD_ASPECT = 1.35
+/** About one 44px tap target on the iPad field. */
+const MIN_GAP = 0.085
+
+/**
+ * SSL-748: hashed spots can land two targets on top of each other (a gold blip under Saturn on Liam's iPad). Push any
+ * pair closer than one tap target apart, a few passes, keeping them inside the field. Deterministic: same input, same map.
+ */
+export function spreadSpots<T extends { x: number; y: number }>(items: readonly T[], gap = MIN_GAP): T[] {
+  const spots = items.map(item => ({ x: item.x, y: item.y }))
+  const clampX = (x: number) => Math.min(0.93, Math.max(0.07, x))
+  const clampY = (y: number) => Math.min(0.88, Math.max(0.12, y))
+  for (let pass = 0; pass < 24; pass++) {
+    let moved = false
+    for (let i = 0; i < spots.length; i++) {
+      for (let j = i + 1; j < spots.length; j++) {
+        const a = spots[i], b = spots[j]
+        let dx = (b.x - a.x) * FIELD_ASPECT
+        let dy = b.y - a.y
+        let dist = Math.hypot(dx, dy)
+        if (dist >= gap) continue
+        if (dist < 1e-6) { dx = 0.6; dy = 0.8; dist = 1 } // exactly stacked: part them on a fixed diagonal
+        const push = (gap - Math.min(dist, gap)) / 2 + 0.002
+        const ux = dx / dist, uy = dy / dist
+        a.x = clampX(a.x - (ux * push) / FIELD_ASPECT); a.y = clampY(a.y - uy * push)
+        b.x = clampX(b.x + (ux * push) / FIELD_ASPECT); b.y = clampY(b.y + uy * push)
+        moved = true
+      }
+    }
+    if (!moved) break
+  }
+  return items.map((item, i) => (spots[i].x === item.x && spots[i].y === item.y ? item : { ...item, ...spots[i] }))
 }
 
 export function stationHistory(player: SkyPlayer): StationHistory {

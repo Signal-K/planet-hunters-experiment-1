@@ -11,7 +11,7 @@
       { "id": "plan", "name": "Plan", "routes": ["missions", "targets", "rocket-buy"], "policy": "One Plan for contracts and Free Ops. Suggest a ship; changing it is optional." },
       { "id": "launch", "name": "Launch", "routes": ["fab", "launchpad"], "policy": "Assembly and launch are one scene. Preserve old routes as deep links." },
       { "id": "flight", "name": "Flight", "routes": ["transit", "landing"], "policy": "A faster multi-scene animated sequence with zero required confirmation taps." },
-      { "id": "work", "name": "Work", "routes": ["mining", "rover-survey", "surface-ops"], "policy": "Perform mining, survey or field work with the appropriate engine adapter." },
+      { "id": "work", "name": "Work", "routes": ["mining", "surface-ops"], "policy": "Perform mining, survey or field work with the appropriate engine adapter." },
       { "id": "result", "name": "Result", "routes": ["delivery", "debrief"], "policy": "Combine delivery and result presentation, preserving exactly-once cargo and reward settlement, then return to Base." }
     ]
   },
@@ -37,7 +37,7 @@
     "field": {
       "description": "Direct-control mining, rover and surface operations.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["mining", "rover-survey", "surface-ops"]
+      "routes": ["mining", "surface-ops"]
     },
     "build": {
       "description": "Assembly and customisation around a physical vehicle or structure.",

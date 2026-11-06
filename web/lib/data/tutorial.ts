@@ -32,7 +32,7 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
-  { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Galaxy map', radio: 'Transit candidates are classified from the Galaxy map.', doneOn: 'tess-classified' },
+  { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Control Station', radio: 'Your telescope sends its signals to the Control Station. Open it from the hub.', doneOn: 'tess-classified' },
   { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
   { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'The Hangar is where ship modules are fitted.', doneOn: 'part-tweaked' },
   { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
@@ -42,12 +42,12 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
 const LOOP_SCREENS = new Set([
-  'fab', 'rover-survey', 'targets', 'rocket-buy', 'mining', 'debrief', 'transit', 'landing', 'delivery',
+  'fab', 'targets', 'rocket-buy', 'mining', 'debrief', 'transit', 'landing', 'delivery',
 ])
 
 /** Launch-prep screens share the launch step; the rover survey is an extension
  * (SSL-675), not a first-run stop. */
-const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy', 'rover-survey'])
+const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy'])
 /** Flight and landing are one zero-tap sequence with no coach step (SSL-675). */
 const FLIGHT_SCREENS = new Set(['transit', 'landing', 'delivery'])
 
@@ -84,7 +84,7 @@ export function trainingStepOnPath(step: TrainingTryStep, screen: string): boole
 const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
   intro: 1, build: 1,
   hub: 2, launchpad: 2, missions: 2,
-  'rocket-buy': 3, fab: 3, targets: 3, 'rover-survey': 3,
+  'rocket-buy': 3, fab: 3, targets: 3,
   mining: 4,
   debrief: 5,
 }

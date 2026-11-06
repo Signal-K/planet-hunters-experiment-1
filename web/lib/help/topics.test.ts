@@ -39,21 +39,31 @@ describe('help coach sequencing (SSL-432)', () => {
   })
 
   it('starts on step one, then waits for the named action', () => {
-    let run = startRun(idleRun(topic))
+    let run = advanceRun(startRun(idleRun(topic)))
     expect(currentStep(run)?.id).toBe('mark')
     run = completeAction(run, 'something-else')
     expect(currentStep(run)?.id).toBe('mark')
     run = completeAction(run, 'mark')
+    expect(currentStep(run)?.id).toBe('mark-again')
+    run = completeAction(run, 'mark')
+    expect(currentStep(run)?.id).toBe('fold')
+    run = completeAction(run, 'mark')
+    expect(currentStep(run)?.id).toBe('fold')
+    run = completeAction(run, 'fold')
     expect(currentStep(run)?.id).toBe('verdict')
+    run = completeAction(run, 'submit')
+    expect(run.index).toBeNull()
   })
 
   it('ignores an action for a step that is not current', () => {
-    const second = advanceRun(startRun(idleRun(topic)))
-    expect(completeAction(second, 'mark')).toEqual(second)
+    const fold = advanceRun(advanceRun(advanceRun(startRun(idleRun(topic)))))
+    expect(currentStep(fold)?.id).toBe('fold')
+    expect(completeAction(fold, 'mark')).toEqual(fold)
   })
 
   it('ends after the last step and can be stopped early', () => {
-    const run = advanceRun(advanceRun(startRun(idleRun(topic))))
+    let run = startRun(idleRun(topic))
+    for (let i = 0; i < (topic?.coach?.length ?? 0); i++) run = advanceRun(run)
     expect(run.index).toBeNull()
     expect(stopRun(startRun(idleRun(topic))).index).toBeNull()
   })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { HelpCoachStep } from '@/lib/help/topics'
 
@@ -36,15 +36,15 @@ const SIDE_MIN_W = 200
 /** Keep the bubble outside the lit area so it never covers the control it names.
  *  Above or below when there is room, else beside a tall target, else (nothing
  *  fits) pinned to the bottom edge. */
-export function placeBubble(hole: Rect, vw: number, vh: number, bubbleW: number): { top?: number; bottom?: number; left: number; width: number } {
+export function placeBubble(hole: Rect, vw: number, vh: number, bubbleW: number, bubbleH = BUBBLE_H): { top?: number; bottom?: number; left: number; width: number } {
   const left = Math.max(GUTTER, Math.min(vw - GUTTER - bubbleW, hole.left + hole.width / 2 - bubbleW / 2))
   const below = vh - (hole.top + hole.height)
   const above = hole.top
-  if (below >= BUBBLE_H + HOLE_PAD) return { top: hole.top + hole.height + HOLE_PAD, left, width: bubbleW }
-  if (above >= BUBBLE_H + HOLE_PAD) return { bottom: vh - hole.top + HOLE_PAD, left, width: bubbleW }
+  if (below >= bubbleH + HOLE_PAD) return { top: hole.top + hole.height + HOLE_PAD, left, width: bubbleW }
+  if (above >= bubbleH + HOLE_PAD) return { bottom: vh - hole.top + HOLE_PAD, left, width: bubbleW }
   const right = vw - (hole.left + hole.width) - HOLE_PAD - GUTTER
   const leftRoom = hole.left - HOLE_PAD - GUTTER
-  const top = Math.max(GUTTER, Math.min(vh - GUTTER - BUBBLE_H, hole.top))
+  const top = Math.max(GUTTER, Math.min(vh - GUTTER - bubbleH, hole.top))
   if (right >= SIDE_MIN_W && right >= leftRoom) return { top, left: hole.left + hole.width + HOLE_PAD, width: Math.min(bubbleW, right) }
   if (leftRoom >= SIDE_MIN_W) { const w = Math.min(bubbleW, leftRoom); return { top, left: hole.left - HOLE_PAD - w, width: w } }
   return { bottom: GUTTER, left, width: bubbleW }
@@ -66,13 +66,22 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
   const [hole, setHole] = useState<Rect | null>(null)
   const [view, setView] = useState({ w: 0, h: 0 })
   const [flightPlan, setFlightPlan] = useState<HTMLElement | null>(null)
+  const dockRef = useRef<HTMLDivElement>(null)
+  const [dockH, setDockH] = useState(BUBBLE_H)
+  useLayoutEffect(() => {
+    const h = dockRef.current?.offsetHeight
+    if (h && Math.abs(h - dockH) > 1) setDockH(h)
+  })
 
   useLayoutEffect(() => {
     const isVisible = (element: HTMLElement) => element.getClientRects().length > 0
     const miningCue = document.querySelector<HTMLElement>('[data-testid="mining-training-tip"]')
     const flightPlan = document.querySelector<HTMLElement>('[data-testid="flight-plan-slot"]')
+    // On an instrument console the Flight Plan slot sits over the data well the coach is pointing at, so the
+    // hint is placed beside the lit control instead (Liam, 2.11 TESS tutorial).
+    const onConsole = !!document.querySelector('[data-testid="instrument-stage"]')
     setFlightPlan((miningCue && isVisible(miningCue) ? miningCue : null)
-      ?? flightPlan)
+      ?? (onConsole ? null : flightPlan))
   }, [])
 
   useEffect(() => {
@@ -105,8 +114,9 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
   if (!hole || !view.w) return null
 
   const bubbleW = Math.min(BUBBLE_MAX_W, view.w - GUTTER * 2)
-  const pos = placeBubble(hole, view.w, view.h, bubbleW)
-  const shade = { position: 'absolute' as const, background: 'rgba(15, 36, 54, 0.38)', pointerEvents: 'auto' as const }
+  const pos = placeBubble(hole, view.w, view.h, bubbleW, dockH)
+  // Dark enough that the lit control is the only thing that reads, on the dark instrument consoles too.
+  const shade = { position: 'absolute' as const, background: 'rgba(8, 14, 26, 0.66)', pointerEvents: 'auto' as const }
   const holeBottom = hole.top + hole.height
   const holeRight = hole.left + hole.width
   const last = index + 1 >= total
@@ -117,6 +127,7 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
 
   const dock = (
     <div
+      ref={dockRef}
       role="status"
       aria-label={`Show me, ${index + 1} of ${total}`}
       data-testid="help-coach-hint"
@@ -136,12 +147,13 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
         {step.hint}
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-        <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-panel)', color: 'var(--ln-bp-ink, #0f2436)' }}>
+        <button type="button" data-testid="help-coach-stop" onClick={onStop} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-bp-ink, #0f2436)' }}>
           Skip
         </button>
-        <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-bp-ink, #0f2436)' }}>
+        {/* A step that waits for the player's own action has no Next: doing it is how the run moves on. */}
+        {!step.completeOn && <button type="button" data-testid="help-coach-next" onClick={onNext} style={{ ...buttonStyle, border: '2px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)', color: 'var(--ln-bp-ink, #0f2436)' }}>
           {last ? 'Done' : 'Next'}
-        </button>
+        </button>}
       </div>
     </div>
   )

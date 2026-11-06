@@ -2,6 +2,7 @@
 
 import React from 'react'
 import type { ClientSlot } from '@/lib/data'
+import ClientEmblem, { hasClientEmblem } from './ClientEmblem'
 
 // Client tier visual identity (STS-239) — a small role-keyed geometric
 // glyph behind the initials, same "shape + color + label, no emoji"
@@ -232,6 +233,8 @@ export default function ClientMark({
   clientId?: string
   size?: number
 }) {
+  // SSL-730: a client with a company emblem shows that instead of its initials.
+  if (hasClientEmblem(clientId)) return <ClientEmblem clientId={clientId} color={color} size={size} />
   const bespoke = clientId ? CLIENT_GLYPHS[clientId] : undefined
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>

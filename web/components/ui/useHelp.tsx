@@ -18,7 +18,7 @@ import HelpSheet from './HelpSheet'
  * The sheet opens only on a tap on the "?", except with `firstVisit`, which
  * opens it once per topic on the player's first visit to the screen.
  */
-export function useHelp(screen: Screen, options: { onReplayTraining?: () => void; firstVisit?: boolean } = {}): {
+export function useHelp(screen: Screen, options: { onReplayTraining?: () => void; firstVisit?: boolean; firstVisitCoach?: boolean } = {}): {
   button: ReactNode
   layer: ReactNode
   reportAction: (actionId: string) => void
@@ -31,7 +31,7 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   const [run, setRun] = useState<CoachRun>(() => idleRun(topic))
   const step = currentStep(run)
   const open = sheetOpen || step != null
-  const { onReplayTraining, firstVisit } = options
+  const { onReplayTraining, firstVisit, firstVisitCoach } = options
 
   // A different screen means a different topic: drop any open help.
   useEffect(() => {
@@ -45,9 +45,20 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
     const key = `ln-help-seen:${topic.id}`
     // Marked seen on dismissal, not here: StrictMode re-runs this effect and would otherwise close the sheet.
     try { if (window.localStorage.getItem(key)) return } catch { return }
+    // SSL-749 follow-up (Liam: "too much going on, more of an interactive tutorial"): a screen with a coach run
+    // starts it on the first visit, so the player learns by doing rather than reading a stack of cards.
+    if (firstVisitCoach && topic.coach?.length) {
+      setRun(startRun(idleRun(topic)))
+      captureGameEvent('help_coach_started', { topic: topic.id, screen, via: 'first_visit' })
+      return
+    }
     setSheetOpen(true)
     captureGameEvent('help_opened', { topic: topic.id, screen, via: 'first_visit' })
-  }, [firstVisit, topic, screen])
+  }, [firstVisit, firstVisitCoach, topic, screen])
+
+  const markSeen = useCallback(() => {
+    if (topic) { try { window.localStorage.setItem(`ln-help-seen:${topic.id}`, '1') } catch { /* private mode */ } }
+  }, [topic])
 
   // Pause the Flight Plan beacon and 8s hint while help is on screen.
   useEffect(() => (open ? acquireHelpOpen() : undefined), [open])
@@ -59,9 +70,9 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   const openSheet = useCallback(() => { setSheetOpen(true); track('help_opened') }, [track])
   const closeSheet = useCallback(() => {
     setSheetOpen(false)
-    if (topic) { try { window.localStorage.setItem(`ln-help-seen:${topic.id}`, '1') } catch { /* private mode */ } }
+    markSeen()
     track('help_closed', { via: 'sheet' })
-  }, [track, topic])
+  }, [markSeen, track])
 
   const trackStep = useCallback((target: CoachRun) => {
     const next = currentStep(target)
@@ -78,22 +89,23 @@ export function useHelp(screen: Screen, options: { onReplayTraining?: () => void
   const next = useCallback(() => {
     const advanced = advanceRun(run)
     setRun(advanced)
-    if (advanced.index == null) track('help_closed', { via: 'coach_done' })
+    if (advanced.index == null) { markSeen(); track('help_closed', { via: 'coach_done' }) }
     else trackStep(advanced)
-  }, [run, track, trackStep])
+  }, [markSeen, run, track, trackStep])
 
   const stop = useCallback(() => {
     setRun(stopRun(run))
+    markSeen()
     track('help_closed', { via: 'coach_stop', step_id: step?.id })
-  }, [run, step?.id, track])
+  }, [markSeen, run, step?.id, track])
 
   const reportAction = useCallback((actionId: string) => {
     setRun(prev => {
       const advanced = completeAction(prev, actionId)
-      if (advanced !== prev) queueMicrotask(() => (advanced.index == null ? track('help_closed', { via: 'coach_done' }) : trackStep(advanced)))
+      if (advanced !== prev) queueMicrotask(() => { if (advanced.index == null) { markSeen(); track('help_closed', { via: 'coach_done' }) } else trackStep(advanced) })
       return advanced
     })
-  }, [track, trackStep])
+  }, [markSeen, track, trackStep])
 
   if (!topic) return { button: null, layer: null, reportAction, open: false, show: () => {} }
 

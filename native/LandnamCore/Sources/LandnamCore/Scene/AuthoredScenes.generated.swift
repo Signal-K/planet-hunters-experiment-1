@@ -43,7 +43,6 @@ enum AuthoredSceneDeclarations {
         "name": "Work",
         "routes": [
           "mining",
-          "rover-survey",
           "surface-ops"
         ],
         "policy": "Perform mining, survey or field work with the appropriate engine adapter."
@@ -113,7 +112,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/World/WorldSim.swift",
-        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift"
+        "native/LandnamCore/Sources/LandnamCore/World/SkyCalendar.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/TakeonMapping.swift"
       ],
       "note": "Same world source; render adapters still host-owned.",
       "components": [
@@ -130,7 +130,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift"
+        "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
       ],
       "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
       "components": [
@@ -200,7 +201,8 @@ enum AuthoredSceneDeclarations {
         "web/lib/systems/LandingSystem.ts"
       ],
       "native": [
-        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Landing.swift"
       ],
       "note": "Native landing route currently renders MiningScreen, not the web landing sequence.",
       "components": []
@@ -229,7 +231,9 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Transitions.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/HomeDelivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Delivery.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/Dropoff.swift"
       ],
       "note": "Separate destination unload, return leg and home cargo allocation. Settlement must be idempotent.",
       "components": []
@@ -240,13 +244,17 @@ enum AuthoredSceneDeclarations {
       "web": [
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
-        "web/lib/systems/MarketplaceSystem.ts"
+        "web/lib/systems/MarketplaceSystem.ts",
+        "web/lib/systems/DailyEconomyInput.ts",
+        "web/lib/systems/EconomyArrival.ts",
+        "web/lib/systems/WelcomeBack.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
-        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/EconomyArrival.swift"
       ],
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": []
@@ -337,7 +345,8 @@ enum AuthoredSceneDeclarations {
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Station/MissionLog.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift"
+        "native/LandnamCore/Sources/LandnamCore/Systems/Archive.swift",
+        "native/LandnamCore/Sources/LandnamCore/Industry/NarrativeLedger.swift"
       ],
       "note": "Read canonical records; do not create a parallel editor save.",
       "components": []
@@ -569,6 +578,24 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "Return to the base."
+        },
+        {
+          "id": "community-ballots",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-757: the sky vote and the launch vote beside the weekly path choice (Votes tab once a path is chosen). Server-owned ballots; one vote per player, changeable until close. Stage fixtures: add &ballots=open, &ballots=voted or &ballots=closed to /game/stage?preset=ui-community-research. Never blocks path choice."
+        },
+        {
+          "id": "community-consensus",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-746: the review area. Any player can ask for consensus on their own classification (ASK COMMUNITY key on the finished readout) and review others'. The reviewer runs the instrument first; only then is the requester's readout released and Support, Dispute (with a reason) or Unsure accepted. Reviewers never see running counts. Verified at ceil(log2(active players + 1)) supports, 3 to 9, with disputes under a third of supports. Reachable without choosing a weekly path. Stage fixtures: add &consensus=queue, &consensus=review or &consensus=settled to /game/stage?preset=ui-community-research. Transit only so far; asteroid and Saturn follow."
         }
       ]
     },
@@ -1331,7 +1358,7 @@ enum AuthoredSceneDeclarations {
         "surface": "canvas",
         "web": [
           "web/components/game/screens/LandingScreen.tsx",
-          "web/components/game/screens/LandingCanvas.tsx"
+          "web/components/game/screens/LandingScene.tsx"
         ],
         "native": [
           "native/App/Screens/FlightScreens.swift"
@@ -2184,83 +2211,6 @@ enum AuthoredSceneDeclarations {
             "rocket-assembly"
           ],
           "note": "Optional fitting controls."
-        }
-      ]
-    },
-    {
-      "id": "rover-survey",
-      "type": "field",
-      "route": "rover-survey",
-      "surface": "dom",
-      "runtime": {
-        "surface": "dom",
-        "web": [
-          "web/components/game/screens/RoverSurveyScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/RoverFieldScreen.swift",
-          "native/App/Screens/TakeonSceneScreen.swift"
-        ]
-      },
-      "objects": [
-        {
-          "id": "survey-field",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Rover field or TakeOn adapter selected by the feature flag."
-        },
-        {
-          "id": "rover",
-          "kind": "vehicle",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Surface survey vehicle, separate from laser extraction."
-        },
-        {
-          "id": "survey-markers",
-          "kind": "collection",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Field observation targets."
-        },
-        {
-          "id": "drive-controls",
-          "kind": "panel",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Movement and interaction commands."
-        },
-        {
-          "id": "survey-result",
-          "kind": "panel",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "instruments"
-          ],
-          "note": "Observation result before returning."
-        },
-        {
-          "id": "complete-action",
-          "kind": "button",
-          "parent": "survey-field",
-          "layout": "host",
-          "mechanics": [
-            "flight"
-          ],
-          "note": "Complete the survey using the canonical transition."
         }
       ]
     },

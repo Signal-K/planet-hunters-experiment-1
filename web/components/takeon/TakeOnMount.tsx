@@ -101,7 +101,11 @@ export interface TakeOnMountHandle {
 export interface TakeOnMountProps {
   missionId: string
   bodyId: string
-  rover: RoverSpec
+  /**
+   * The rover this scene drives. Leave it out for a scene that only shows the
+   * ground (a landing): Takeon then draws no rover.
+   */
+  rover?: RoverSpec
   roverName?: string
   seed?: number
   adapter?: SyncAdapter
@@ -245,7 +249,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   missionId,
   bodyId,
   rover,
-  roverName = rover.name,
+  roverName = rover?.name,
   seed,
   adapter: suppliedAdapter,
   className,
@@ -435,7 +439,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     const save = async () => {
       if (readOnly) return
       const state = snapshot()
-      if (state) await adapter.saveMission(state, roverName)
+      if (state) await adapter.saveMission(state, roverName ?? 'Rover')
     }
 
     const reportError = (reason: unknown) => {

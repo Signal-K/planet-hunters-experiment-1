@@ -24,8 +24,8 @@
   align-items: flex-start;
 }
 
-@media (max-width: 520px) {
-  .hud { top: 64px; right: 8px; }
+@media (max-width: 960px) {
+  .hud { top: 116px; right: 8px; }
   .eventButton { padding-inline-end: 8px; }
 }
 

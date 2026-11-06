@@ -112,7 +112,16 @@ without bypassing hooks. Subject format:
 `🚀🐺 ↝ [SSL-123]: Concise outcome`
 
 Use two distinct non-face emoji and every worked SSL key. Rebase and push to
-the current `cycle/<N>` branch, then add the proof and remaining caveats to Linear.
+the current `cycle/<N>` branch, then close the loop in Linear for every SSL key
+in the commit:
+
+1. Comment with the commit hash, the proof and the remaining caveats.
+2. Set the status: **Done** when the ticket's outcome is shipped (caveats such
+   as deferred iOS parity go in the comment, not in the status); **In Progress**
+   only when part of the ticket is still unbuilt, and say what in the comment.
+3. Make sure the ticket is in the current cycle; add it if it is not.
+
+A pushed commit whose ticket still reads Todo or Backlog is unfinished work.
 
 ## Map
 

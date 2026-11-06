@@ -68,3 +68,12 @@ no code changes needed elsewhere, just the `package.json` dependency line.
 
 ## 2026-10-08: `@takeon/engine` 0.2.1 → 0.2.2 (light backdrop, local patch, SSL-482)
 Landnam-local repack of the 0.2.1 engine: the flat map backdrop uses the body's `skyNight` directly (was mixed 45% toward #05070f), void tiles are the ice backdrop (188,215,234) instead of near-black (8,10,20), and the minimap background is ice. Without this the Cargo Transfer field sat in a black square on the light blueprint UI. Re-apply on any engine upgrade.
+
+## Local patches
+
+`takeon-engine-0.2.3.tgz` / `takeon-pixi-0.2.3.tgz` are the 0.2.2 builds with
+"a scene only has a rover when it brings one" applied to the compiled output:
+`spec` is optional on `RoverGameOptions` / `Simulation`; with no spec the game
+draws no rover (iso and flat views), and `showRover` overrides. The same change
+is on the `landnam/show-rover` branch of signal-k/takeon. The 0.2.2 build was
+ahead of that repo's `main`, so it was patched in place rather than rebuilt.

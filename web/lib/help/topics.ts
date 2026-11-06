@@ -89,20 +89,77 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
         body: 'Submit · Noise sends your classification when the marked dip is just jitter or a glitch. Use Skip when you cannot tell. Skip needs no mark.',
       },
     ],
+    // Played on the first visit (Liam, 2.11: "too much going on, more of an interactive tutorial"): read, mark, submit.
     coach: [
+      {
+        id: 'read',
+        targets: ['tess-chart'],
+        anchor: 'tess-chart',
+        hint: 'This is one star\'s brightness over 27 days. When a planet passes in front of it, the light dips for a few hours.',
+      },
       {
         id: 'mark',
         targets: ['tess-chart'],
         anchor: 'tess-chart',
-        hint: 'Drag across the dip in the light curve to mark it.',
+        hint: 'Drag across one of the dips to mark it.',
         completeOn: 'mark',
+      },
+      // SSL-753 (Liam: "yes", teach FOLD): a second mark gives a gap, and FOLD stacks the light at that gap.
+      {
+        id: 'mark-again',
+        targets: ['tess-chart'],
+        anchor: 'tess-chart',
+        hint: 'Now mark the next dip along the same way.',
+        completeOn: 'mark',
+      },
+      {
+        id: 'fold',
+        targets: ['tess-fold'],
+        anchor: 'tess-fold',
+        hint: 'FOLD stacks the light every time that gap repeats. A real planet\'s dips land on top of each other.',
+        completeOn: 'fold',
       },
       {
         id: 'verdict',
         targets: ['tess-verdicts'],
         anchor: 'tess-verdicts',
-        hint: 'Submit your classification: Transit if it is a real dip, Noise if it is not, Skip if unsure.',
+        hint: 'One clean dip after the fold? Submit · Transit. Just jitter? Submit · Noise.',
+        completeOn: 'submit',
       },
+    ],
+  },
+  // SSL-754: the NEO watch console. First visit plays the coach on a simple console.
+  'asteroid-discovery': {
+    id: 'neocp',
+    title: 'Is it a real asteroid?',
+    cards: [
+      DATA_ANALYSIS_CARD,
+      { title: 'The sky chart', body: 'The chart is the whole sky. The bright dot is a moving object a survey spotted, waiting for a second look. The gold line is the ecliptic, the band most asteroids travel along.' },
+      { title: 'The evidence', body: 'NEO score is the chance it is a near-Earth asteroid. Sightings and Arc say how many times and over how long it was seen. More of both makes it more certain.' },
+      { title: 'Flag or mark', body: 'Flag Likely Real when the score is strong and it was seen several times. Mark Artifact when it is one faint, short blip. Skip when you cannot tell.' },
+    ],
+    coach: [
+      { id: 'read', targets: ['neocp-sky'], anchor: 'neocp-sky', hint: 'This is the whole sky. The bright dot is something a survey saw moving last night. The gold line is where most asteroids travel.' },
+      { id: 'evidence', targets: ['neocp-evidence'], anchor: 'neocp-evidence', hint: 'NEO score is the chance it is a near-Earth asteroid. More sightings over a longer arc make it more certain.' },
+      { id: 'verdict', targets: ['neocp-verdicts'], anchor: 'neocp-verdicts', hint: 'Strong score, seen several times? Flag Likely Real. One short, faint blip? Mark Artifact.', completeOn: 'submit' },
+    ],
+  },
+  // SSL-754: the Saturn storm console. First visit plays the coach on a simple console.
+  'saturn-storm-search': {
+    id: 'saturn',
+    title: 'Find the storm',
+    cards: [
+      DATA_ANALYSIS_CARD,
+      { title: 'Nine squares', body: 'Each frame is a real Cassini photo of Saturn\'s clouds, cut into nine squares. Tap a square to pick it. The white box shows which one you are on.' },
+      { title: 'Mark storm or answer', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands are No. If you cannot tell, answer Maybe.' },
+      { title: 'Finish the frame', body: 'Each answer is saved straight away. Answer all nine squares to finish the frame and record it in your moon atlas.' },
+    ],
+    coach: [
+      { id: 'read', targets: ['saturn-frame'], anchor: 'saturn-frame', hint: 'This is a real Cassini photo of Saturn\'s clouds. A storm is a bright, round knot or swirl in the bands.' },
+      { id: 'pick', targets: ['saturn-frame'], anchor: 'saturn-frame', hint: 'Tap any square to look at it.', completeOn: 'select' },
+      // Its own step: the verdict step dims the frame, so the player looks at the square first.
+      { id: 'look', targets: ['saturn-square'], anchor: 'saturn-square', hint: 'Look closely at your square. Is there a bright, round knot?' },
+      { id: 'verdict', targets: ['saturn-mark-storm', 'saturn-verdicts'], anchor: 'saturn-verdicts', hint: 'A knot? Tap Mark storm. Smooth bands? No. Not sure? Maybe.', completeOn: 'submit' },
     ],
   },
   hub: {

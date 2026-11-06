@@ -1,5 +1,6 @@
 'use client'
 
+import type { Player } from '@/lib/game-types'
 import { requestAlertPermission } from '@/lib/priceAlertNotify'
 import { useEffect, useState } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
@@ -33,6 +34,7 @@ interface MarketScreenProps {
   researchUniversalFragments: number
   researchPurchases?: Record<string, number>
   researchPermanentBonuses?: Record<string, number>
+  communityBonus?: Player['communityBonus']
   francs: number
   /** The Exchange building. Buying, research and price alerts need it. */
   exchangeBuilt: boolean
@@ -57,19 +59,19 @@ interface MarketScreenProps {
 export default function MarketScreen({
   stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, exchangeBuilt, priceAlerts = [], buyBlocker,
   onSell, onBuy, onSetAlert, onRemoveAlert, refinedGoods, onSellRefined, onBack, onBuild, clientId,
-  researchFragments, researchUniversalFragments, researchPurchases, researchPermanentBonuses, onConvertResearchFragments, onBuyResearchItem,
+  researchFragments, researchUniversalFragments, researchPurchases, researchPermanentBonuses, communityBonus, onConvertResearchFragments, onBuyResearchItem,
 }: MarketScreenProps) {
   const [tab, setTab] = useState<Tab>('sell')
   const [armed, setArmed] = useState(false)
   const [targets, setTargets] = useState<Record<string, number>>({})
   // Two-tone flow (Liam, 31.10): pick on the left, act on the right. One selection per tab.
   const [picked, setPicked] = useState<Partial<Record<Tab, string>>>({})
-  const prices: SpotQuote[] = spotBoard({ stash, placed: exchangeBuilt ? ['market'] : [], marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchPermanentBonuses }, clientId)
+  const prices: SpotQuote[] = spotBoard({ stash, placed: exchangeBuilt ? ['market'] : [], marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, researchPermanentBonuses, communityBonus }, clientId)
   // Selling leads with what you hold; the other tabs list the whole board by price.
   const board = tab === 'sell' ? [...prices].sort((a, b) => Number(b.held > 0) - Number(a.held > 0)) : prices
   const refined = REFINERY_RECIPES.map(r => ({ recipe: r, qty: refinedGoods[r.id] ?? 0 })).filter(r => r.qty > 0)
   const alertFor = (id: string) => priceAlerts.find(a => a.mineralId === id)
-  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + refinedUnitPrice(r.recipe, { researchPermanentBonuses }) * r.qty, 0)
+  const sellAllValue = prices.reduce((sum, q) => sum + q.spot * q.held, 0) + refined.reduce((sum, r) => sum + refinedUnitPrice(r.recipe, { researchPermanentBonuses, communityBonus }) * r.qty, 0)
   const hasCargo = prices.some(q => q.held > 0) || refined.length > 0
 
   useEffect(() => {
@@ -143,7 +145,7 @@ export default function MarketScreen({
       )
     }
     if (refinedPick) {
-      const unit = refinedUnitPrice(refinedPick.recipe, { researchPermanentBonuses })
+      const unit = refinedUnitPrice(refinedPick.recipe, { researchPermanentBonuses, communityBonus })
       return (
         <div className={styles.focus}>
           <span className={styles.eyebrow}>Refined · {refinedPick.qty} held</span>
@@ -251,7 +253,7 @@ export default function MarketScreen({
                 <li key={recipe.id}>
                   <button type="button" className={styles.row} data-selected={pickedId === recipe.id} data-testid={`exchange-price-${recipe.id}`} onClick={() => pick(recipe.id)}>
                     <span className={styles.who}><b>{recipe.output.name}</b><small>{qty} held · refined</small></span>
-                    <span className={styles.price}>{formatCurrency(refinedUnitPrice(recipe, { researchPermanentBonuses }), { compact: true })}</span>
+                    <span className={styles.price}>{formatCurrency(refinedUnitPrice(recipe, { researchPermanentBonuses, communityBonus }), { compact: true })}</span>
                   </button>
                 </li>
               ))}

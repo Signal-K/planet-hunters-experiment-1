@@ -2,7 +2,7 @@ import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SURFACE_RESEARCH_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -151,7 +151,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
-      { key: 'ui-rover-survey', label: 'Rover Survey', hint: 'Starter-rover live TakeOn field — survey before ship-laser extraction', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
@@ -161,27 +160,26 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-orionids-rover', label: 'Orionids: rover survey', hint: 'Orionids surface observation on Eros with the field rover', stage: 'free-ops' },
-      { key: 'ui-orionids-events-stage1', label: 'Orionids: rover step', hint: 'Mission board at event stage 1: Events tab offers the Orionids surface observation with the rover', stage: 'free-ops' },
-      { key: 'ui-orionids-rover-debrief', label: 'Orionids: rover debrief', hint: 'Mission 2 of 3 done: the impact bearing is unlocked and the community launches ORI-1', stage: 'free-ops' },
-      { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 3 on ORI-1', stage: 'free-ops' },
-      { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 3 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
+      { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 2 on ORI-1', stage: 'free-ops' },
+      { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 2 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base with the Exchange built and a new daily market board since the last visit: price moves and a client level-up', stage: 'free-ops' },
+      { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base after 4+ hours away: market moves, a client level-up, telescope items, a finished build and a friend gift in one list', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-community-research-orionids', label: 'Community research: Orionids 3 of 3', hint: 'Explorer path this week, on Orionids mission 3 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
+      { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
+      { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Explorer chosen this week, instruments not aimed yet: steer the sight across the night sky with the stick and lock on', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
       { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
+      { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -190,6 +188,7 @@ export const DEV_GROUPS: DevGroup[] = [
     color: '#91ccef',
     shots: [
       { key: 'ui-landing', label: 'Landing', hint: 'Touchdown scene on arrival at Eros, mid-mission', stage: 'tutorial' },
+      { key: 'ui-landing-ascend', label: 'Landing: ascent', hint: 'Lift-off from Eros back to the orbiter, mid-mission', stage: 'tutorial' },
       { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
       { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
       { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view before excavation', stage: 'free-ops' },
@@ -232,7 +231,7 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
         'neo-c4tq2a1': { candidateId: 'neo-c4tq2a1', verdict: 'likely_real', submittedAt: Date.now() - 5 * 3_600_000 },
         'neo-p21mxk0': { candidateId: 'neo-p21mxk0', verdict: 'likely_artifact', submittedAt: Date.now() - 50 * 3_600_000 },
       },
-      // SSL-730: the community has launched ORI-1 (Orionids mission 3 open), one recording checked.
+      // SSL-730: the community has launched ORI-1 (Orionids mission 2 open), one recording checked.
       orionidsEventStage: 2,
       radioMeteorClassifications: {
         '101234567': { subjectId: '101234567', workflowId: '29473', imageUrl: '', filename: 'RAD_BEDOUR_20261021_0215_BEECON_SYS001.png', imageWidth: 864, imageHeight: 595, boxes: [{ x: 120, y: 200, width: 30, height: 80 }, { x: 400, y: 180, width: 24, height: 60 }], submittedAt: Date.now() - 2 * 3_600_000 },
@@ -314,6 +313,20 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
     }
+
+    case 'hub-orionids-complete':
+      return {
+        screen: 'hub',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 },
+          badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: 1 } },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
 
     case 'constellation-hub':
       return {
@@ -538,12 +551,8 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-free-ops-fab':
       // Free Ops opens the launch route with no mission picked; it must hand over to the Mission Board.
       return { ...fixture('ui-mission-board'), screen: 'fab' }
-    case 'ui-orionids-events-stage1':
-      // Shower run done (event stage 1): the Events board offers the rover surface observation.
-      { const board = fixture('ui-mission-board')!
-      return { ...board, player: { ...board.player!, orionidsEventStage: 1, orionidsFragments: { caught: 25, redeemed: 0 } } } }
     case 'ui-orionids-events-stage2':
-      // Rover observation done (event stage 2): the Orionids card opens mission 3 on ORI-1.
+      // Shower run done (event stage 2): the Orionids card opens mission 2 on ORI-1.
       { const board = fixture('ui-mission-board')!
       return { ...board, player: { ...board.player!, orionidsEventStage: 2, orionidsFragments: { caught: 25, redeemed: 0 } } } }
     case 'ui-orionids-ready':
@@ -653,67 +662,6 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
-    case 'ui-rover-survey':
-      return {
-        screen: 'rover-survey',
-        player: {
-          ...BASE_PLAYER,
-          missionsDone: 1,
-          activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId ?? 'bennu'}` },
-        },
-        tutorial: false,
-        doneSteps: EXTRACTION_DONE,
-        missionId: TRANSPORT_MISSION.id,
-        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
-        deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-orionids-rover-debrief':
-      // Mission 2 of 3 done: the debrief hands over the impact bearing and shows ORI-1 going up.
-      return {
-        screen: 'debrief',
-        player: {
-          ...BASE_PLAYER,
-          missionsDone: 6,
-          freeOperations: true,
-          orionidsEventStage: 1,
-          orionidsFragments: { caught: 25, redeemed: 0 },
-          missionPhase: 'debrief',
-          activeMission: { id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID, label: 'Orionids surface observation' },
-        },
-        tutorial: false,
-        doneSteps: EXTRACTION_DONE,
-        missionId: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
-        targetId: 'eros',
-        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        lastCargo: {},
-        popup: null,
-      }
-
-    case 'ui-orionids-rover':
-      // The event's second step: the surface observation on Eros with the Orionids field rover.
-      return {
-        screen: 'rover-survey',
-        player: {
-          ...BASE_PLAYER,
-          missionsDone: 6,
-          freeOperations: true,
-          orionidsEventStage: 1,
-          missionPhase: 'survey',
-          activeMission: { id: ORIONIDS_SURFACE_RESEARCH_MISSION_ID, label: 'Orionids surface observation' },
-        },
-        tutorial: false,
-        doneSteps: EXTRACTION_DONE,
-        missionId: ORIONIDS_SURFACE_RESEARCH_MISSION_ID,
-        targetId: 'eros',
-        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        lastCargo: null,
-        popup: null,
-      }
-
     case 'ui-research-calendar-empty':
       return instrumentHubFixture({})
 
@@ -753,7 +701,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-radio-meteors':
     case 'ui-radio-meteors-last':
-      // SSL-714: Orionids mission 3 on ORI-1. The "last" fixture has two recordings already checked.
+      // SSL-714: Orionids mission 2 on ORI-1. The "last" fixture has two recordings already checked.
       return {
         screen: 'radio-meteors',
         player: {
@@ -905,6 +853,12 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-sky-pointing':
+      return {
+        ...fixture('ui-community-research')!,
+        player: { ...POST_ONBOARDING_PLAYER, researchPath: { week: weekKey(Date.now()), path: 'explorer' } },
+      }
+
     case 'ui-community-research-orionids': {
       // SSL-714: the Orionids chain inside Community research.
       const today = new Date().toISOString().slice(0, 10)
@@ -913,7 +867,7 @@ function fixture(name: string): Partial<GameState> | null {
         ...fixture('ui-community-research')!,
         player: {
           ...POST_ONBOARDING_PLAYER,
-          researchPath: { week: weekKey(checkedAt), path: 'explorer' },
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
           researchStamps: { [today]: ['classification', 'event'] },
           orionidsEventStage: 2,
           orionidsFragments: { caught: 25, redeemed: 0 },
@@ -935,6 +889,16 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
+      }
+
+    case 'ui-landing-ascend':
+      return {
+        screen: 'landing',
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'landing', landingStartedAt: Date.now() - 60_000, landingReturnStartedAt: Date.now() },
+        tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true },
+        missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
       }
 
     case 'ui-landing':
@@ -1047,6 +1011,9 @@ function fixture(name: string): Partial<GameState> | null {
             ],
             levelUps: [{ clientId: 'atlas-aggregate', clientName: 'Atlas Aggregate', levelAfter: 3 }],
           },
+          // A 4h+ return: telescope digest, a finished build and a friend gift join the market note.
+          lastVisitAt: 1_792_000_000_000,
+          welcomeBack: { since: 1_792_000_000_000, built: ['refinery'], digest: 3, gifts: 1 },
         },
       }
     }
