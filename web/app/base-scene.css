@@ -300,3 +300,12 @@
     top: calc(env(safe-area-inset-top, 0px) + 118px);
   }
 }
+
+/* SSL-786: in short landscape the plan card shares the top row and wraps tall, so the overview pill moves under the clock cluster, clear of it. */
+@media (min-width: 600px) and (max-height: 640px) {
+  body:has([data-testid="flight-plan"]) .base-overview {
+    left: 12px;
+    transform: none;
+    width: min(300px, 100% - 24px);
+  }
+}
