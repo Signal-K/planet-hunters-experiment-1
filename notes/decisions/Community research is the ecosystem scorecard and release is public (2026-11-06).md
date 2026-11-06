@@ -41,5 +41,6 @@ Decided by Liam, after the release plan.
 
 - Weighting does not exist yet: every ledger row counts 1. If a classification is worth more in one project, the ledger needs a project field and a weight table (per project or game).
 - The ledger's `kind` is not a project. A rover classification and a transit classification look the same.
-- Leaderboards and the hub top five still read `classificationPoints`; switching them to the ledger is not done.
+- Hub leaderboard and top five now read the ledger (SSL-784, built on branches, not deployed): score = `SUM(COALESCE(points,1))` over `classification` and `legacy-classification-points` rows, via `GET /api/platform/leaderboard` on the shared backend; falls back to `classificationPoints` if the shared backend is not configured or empty. The ledger holds one classification row per player per day, so new play adds at most 1 point a day.
+- The sunspot leaderboard and the player's own points shown elsewhere in the client still use their old sources.
 - The Garden spec's feature map is out of date: it sends rover to Landnám and Zoodex to Atlas; rover is now its own game (SSL-777).
