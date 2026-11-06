@@ -23,7 +23,7 @@ const PORTRAIT_HOME_ZOOM = 1.5
  * Pan (drag/swipe with inertia and soft edges) and zoom (pinch, wheel) for the base scene (SSL-503).
  * Attach `ref` to the viewport element and apply `transform` to the world element inside it.
  */
-export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; homeX?: number } = {}) {
+export function useBaseCamera({ worldWidth, homeX, locked = false }: { worldWidth?: number; homeX?: number; locked?: boolean } = {}) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [cam, setCam] = useState<BaseCameraState>(BASE_CAMERA_HOME)
   const camRef = useRef(cam)
@@ -49,9 +49,9 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
     if (homeX == null || !ref.current) return
     const v = view()
     // Upright phones: start zoomed in on the ground (SSL-716), so the launchpad is the subject, not a speck under empty sky.
-    const zoom = v.h > v.w * 1.3 ? PORTRAIT_HOME_ZOOM : 1
+    const zoom = !locked && v.h > v.w * 1.3 ? PORTRAIT_HOME_ZOOM : 1
     commit(clampCamera({ zoom, x: v.w / 2 - homeX * zoom, y: v.h * (1 - zoom) }, v))
-  }, [commit, homeX, view, worldWidth])
+  }, [commit, homeX, locked, view, worldWidth])
 
   const stop = useCallback(() => { cancelAnimationFrame(raf.current) }, [])
 
@@ -163,10 +163,11 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
       const factor = Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))
       commit(zoomAt(camRef.current, camRef.current.zoom * factor, point(e), view()))
     }
+    if (locked) return
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => { el.removeEventListener('wheel', onWheel); stop() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commit, stop, view])
+  }, [commit, locked, stop, view])
 
   const transform = cam.zoom < 1
     ? `translate(${cam.x}px, ${cam.y}px) scaleX(${cam.zoom})`
@@ -178,6 +179,7 @@ export function useBaseCamera({ worldWidth, homeX }: { worldWidth?: number; home
     overview,
     focusX,
     setPosition,
-    handlers: { onPointerDown, onPointerMove, onPointerUp: end, onPointerCancel: end, onClickCapture },
+    // A locked camera (phones) has no drag, pinch or wheel: the Base stays where it was framed.
+    handlers: locked ? {} : { onPointerDown, onPointerMove, onPointerUp: end, onPointerCancel: end, onClickCapture },
   }
 }

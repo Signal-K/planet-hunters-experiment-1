@@ -26,7 +26,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
@@ -115,10 +115,19 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
   // and starts centred on the pad site, which is where a fresh base asks for its first structure.
   const [viewSize, setViewSize] = useState(() => (typeof window === 'undefined' ? { w: 1440, h: 900 } : { w: window.innerWidth, h: window.innerHeight }))
-  const px = kitScale(viewSize)
+  // Phones keep the Base still (SSL-787): no pan, pinch or overview slider. Portrait picks the kit scale (1 to 2) that
+  // fills the width with everything built; landscape already fits (kitScale caps it at width / 460).
+  const phoneView = viewSize.w < 600 || viewSize.h < 500
+  const standingKinds = (player.placed ?? []).includes('launchpad') && !(player.placed ?? []).includes('control-station')
+    ? [...(player.placed ?? []), 'control-station']
+    : (player.placed ?? [])
+  const fullPx = kitScale(viewSize)
+  const px = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
+    ? Math.min(2, Math.max(1, Math.floor(((viewSize.w - 16) / builtSpan(standingKinds)) * 100) / 100))
+    : fullPx
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(builtKinds, viewSize.w / px) * px })
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
@@ -688,7 +697,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         </div>
       )}
 
-        {!subsurface && (
+        {!subsurface && !phoneView && (
           <div className="base-overview" data-testid="base-overview">
             <button
               type="button"
@@ -731,6 +740,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
               locationNavigationDisabled={false}
+              hideLocationArrows={phoneView}
               showLocationBuild={buildOptions.length > 0}
               buildLabel={editMode ? 'Done' : 'Build'}
               buildTestId={editMode ? 'hub-build-done-btn' : 'hub-build-btn'}

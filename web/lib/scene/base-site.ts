@@ -68,6 +68,12 @@ export function homeCenter(kinds: readonly string[], viewUnits: number): number 
   return Math.min(Math.max((l + r) / 2, pad.x + pad.half - viewUnits / 2), pad.x - pad.half + viewUnits / 2)
 }
 
+/** Width in kit units of the stretch of the Base the given kinds stand on (at least the pad site), for fitting a fixed phone view. */
+export function builtSpan(kinds: readonly string[]): number {
+  const sites = [...kinds.map(homeSite), siteById('pad')].filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+  return Math.max(...sites.map(s => s.x + s.half)) - Math.min(...sites.map(s => s.x - s.half))
+}
+
 export function structureSprite(kind: string): StructureSprite | null {
   return STRUCTURES[kind === 'garage' ? 'hangar' : kind] ?? null
 }
