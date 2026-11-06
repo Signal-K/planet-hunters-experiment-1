@@ -71,17 +71,18 @@
 .breakthrough { margin: 0; color: #f2c24c; font: 700 14px/1.25 var(--ln-font-body); }
 @media (orientation: portrait) and (max-width: 700px) {
   /* Six steps (an event week) are taller than half a phone, so the halves stack and scroll together. */
-  .workspace { display: block; overflow-y: auto; }
-  .right { padding-bottom: 24px; }
+  .workspace { display: flex; flex-direction: column; overflow-y: auto; }
+  .left { flex: none; }
+  .right { flex: 1 0 auto; padding-bottom: 24px; }
   .left { padding-top: 70px; gap: 8px; }
   .pathway { max-width: none; }
   .pathStep { min-height: 56px; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; }
   .pathMarker { width: 44px; height: 44px; }
   .pathway::before { left: 21px; top: 34px; bottom: 34px; }
-  .pathCopy strong { font-size: 14px; }
+  .pathCopy strong { font-size: 14px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .paths { flex-wrap: wrap; gap: 8px; }
   .path { flex: 1 1 72px; min-width: 72px; min-height: 80px; }
-  .right { justify-content: flex-start; gap: 10px; padding-top: 14px; }
+  .right { justify-content: safe center; gap: 14px; padding-top: 14px; }
   .focus p { font-size: 14px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .stepBig { width: 56px; height: 56px; }
   .stepBig svg { width: 36px; height: 36px; }
