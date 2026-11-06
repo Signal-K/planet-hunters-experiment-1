@@ -28,6 +28,7 @@ import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
 import { STRIP_W, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
+import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
@@ -51,7 +52,7 @@ function hubQuery(): URLSearchParams {
   return new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
 }
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -157,10 +158,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // A kind with a home site always stands on that site's plot, whatever slot
   // an older save recorded: skipping the tutorial stored the Launchpad on
   // plot 1, the Exchange's site, which hid the Exchange's place marker.
+  const agencyLandmark = placed.includes('launchpad') && !placed.includes('control-station')
   const effectivePlots: Record<string, number> = Object.fromEntries(
     Object.entries({
       ...placementPlots,
       ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
+      // SSL-675: the agency's control station stands on the Base from the first launchpad as a landmark, so the
+      // Base is not an empty plain. It is display-only: nothing is placed or unlocked until the player builds
+      // their own on this same site. Stand-in art until the dedicated agency building sprite ships.
+      ...(agencyLandmark ? { 'control-station': homeSite('control-station')?.plot ?? 3 } : {}),
     })
       .map(([kind, plot]): [string, number] => [kind, homeSite(kind)?.plot ?? plot])
       // Kinds on their own site come first, so they win a plot an older off-site kind still claims.
@@ -339,11 +345,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
     if (kind === 'control-station') {
       return {
-        kind, label: 'Control station',
-        sub: 'TELESCOPES',
+        kind, label: agencyLandmark ? 'Agency' : 'Control station',
+        sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
-        onClick: () => onFocusBuilding('control-station'),
+        // The landmark opens the build list once the station is unlocked and does nothing before.
+        onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
       }
     }
     if (kind === 'market') {
