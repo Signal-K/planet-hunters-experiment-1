@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
-import { featuredEventWeek, liveEventWeek } from '@/lib/research/event-week'
+import { liveEventWeek } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, POINTING_OPTIONS, pointingThisWeek, type InstrumentPointing, type PathStep, type ResearchPathId } from '@/lib/research/paths'
+import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
@@ -14,8 +14,6 @@ import CommunityConsensus, { type PendingConsensusReview } from './CommunityCons
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
-import SkyPointing from './SkyPointing'
-import { TOTAL_FIELDS, mappedCount, type SkyAim } from '@/lib/research/sky-map'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
@@ -28,7 +26,6 @@ interface CommunityResearchScreenProps {
   communityResearch?: CommunityResearch | null
   onBack: () => void
   onChoosePath: (path: ResearchPathId) => void
-  onPoint: (pointing: InstrumentPointing, aim?: SkyAim) => void
   onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
@@ -58,7 +55,7 @@ function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{art}</svg>
 }
 
-/** SSL-714: the Orionids chain in the research history: the fragment sample and what ORI-1 has heard. */
+/** SSL-714: the Orionids chain in the research history: the three story items and what ORI-1 has heard. */
 function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
   const stage = player.orionidsEventStage ?? 0
   const held = showerItems(ORIONIDS_CHAIN, stage).length
@@ -74,9 +71,9 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
 }
 
 const HOW_IT_WORKS = [
-  'Pick a path for the week.',
-  'Do its five steps in any order.',
-  'Every step fills the community bar.',
+  'Pick a path. It is locked for the week and resets on Monday.',
+  'Finish its five steps in any order. Missing a day costs nothing.',
+  'Every step is a stamp that also fills the shared community bar.',
 ]
 
 function contributionTimes(player: Player): number[] {
@@ -89,15 +86,12 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onPoint, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
+export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
-  const flagship = featuredEventWeek(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
-  // SSL-789: pointing never covers Community research on entry. It opens from its button, and right after choosing Explorer.
-  const [pointingOpen, setPointingOpen] = useState(false)
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
@@ -105,9 +99,6 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
-  const pointedLabel = POINTING_OPTIONS.find(option => option.id === pointingThisWeek(player.researchPath, now))?.label.toLowerCase() ?? null
-  const aimed = pointingThisWeek(player.researchPath, now)
-  const needsPointing = path === 'explorer' && !aimed
   const stamps = player.researchStamps ?? {}
   const progress = steps.map(st => stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
@@ -139,7 +130,6 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   }, [path, rewardSignature])
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
-      {pointingOpen && !aimed && <SkyPointing mapped={player.skyMap} onLock={onPoint} onCancel={() => setPointingOpen(false)} />}
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
@@ -155,13 +145,6 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
-                {flagship && (
-                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
-                    <span className={styles.flagshipKicker}>Flagship event</span>
-                    <strong>{flagship.name}</strong>
-                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
-                  </div>
-                )}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -170,7 +153,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices.' : 'Aim your instruments at the sky, then check what they catch.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>
@@ -189,7 +172,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
                   description="Your path is locked until Monday, when it resets and you can pick again."
                   confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
-                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath); if (selectedPath === 'explorer') setPointingOpen(true) }}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
                   onDismiss={() => setConfirmingPath(false)}
                 />
               )}
@@ -197,18 +180,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
-                {flagship && (
-                  <div className={styles.flagship} data-testid="community-research-flagship" data-live={flagship.live}>
-                    <span className={styles.flagshipKicker}>Flagship event</span>
-                    <strong>{flagship.name}</strong>
-                    <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
-                  </div>
-                )}
-                <div className={styles.bar} data-testid="research-community-bar-main"><div className={styles.barLabel}><span>Community goal</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div><small>{bar.reached ? `Reached: ${COMMUNITY_REWARD_TEXT} until the month ends.` : `Everyone gets ${COMMUNITY_REWARD_TEXT} at ${bar.goal}.`}</small></div>
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
-                  <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete · Sky mapped {mappedCount(player.skyMap)}/{TOTAL_FIELDS}</span>
-                  {needsPointing && !pointingOpen && <button type="button" className={board.contractTake} data-testid="community-research-point" onClick={() => setPointingOpen(true)}>POINT INSTRUMENTS</button>}
+                  <span>{finished}/{steps.length} complete</span>
                 </div>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (

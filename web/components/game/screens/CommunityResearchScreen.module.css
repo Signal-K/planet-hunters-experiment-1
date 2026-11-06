@@ -93,9 +93,6 @@
 }
 @media (max-height: 520px) {
   .bar small { display: none; }
-  .right { gap: 10px; padding-top: 64px; padding-bottom: 16px; }
-  .how { gap: 8px; }
-  .how li { font-size: 15px; }
 }
 /* SSL-714: the Orionids chain in the research history. */
 .record { width: min(100%, 390px); display: grid; justify-items: center; gap: 8px; color: #f4efe4; }
@@ -113,11 +110,3 @@
   .right { justify-content: flex-start; gap: 10px; padding-top: 56px; padding-bottom: 40px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
   .how { gap: 8px; }
 }
-
-
-/* The flagship event: the current or next meteor shower sits above everything else. */
-.flagship { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; row-gap: 2px; padding: 8px 12px; border: 2px solid #e8a24a; border-radius: 12px; background: linear-gradient(90deg, rgba(232, 162, 74, 0.22), rgba(232, 162, 74, 0.06)); color: #fff; }
-.flagship strong { font-size: 18px; line-height: 1.15; }
-.flagship > span:last-child { grid-column: 1 / -1; font-size: 14px; opacity: 0.9; }
-.flagshipKicker { color: #e8a24a; font: 800 14px/1.2 var(--ln-font-display, system-ui); letter-spacing: 0.1em; text-transform: uppercase; }
-.flagship[data-live='true'] { box-shadow: 0 0 18px rgba(232, 162, 74, 0.35); }
