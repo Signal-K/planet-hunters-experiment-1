@@ -46,7 +46,9 @@ function Stage() {
     const params = new URLSearchParams(window.location.search)
     const sandbox = isSandboxName(params.get('preset'))
     const shower = params.get('shower') === '1'
-    const w = window as unknown as { __LANDNAM_DEV_NOW?: number; __LANDNAM_FORCE_ORIONIDS?: boolean }
+    const w = window as unknown as { __LANDNAM_DEV_NOW?: number; __LANDNAM_FORCE_ORIONIDS?: boolean; __LANDNAM_STAGE_FEED?: boolean }
+    // The stage has no sign-in, so the instrument feeds answer from fixed records (lib/stage-feed.ts). ?feed=off shows the empty feed.
+    w.__LANDNAM_STAGE_FEED = params.get('feed') !== 'off'
     if (sandbox) {
       w.__LANDNAM_DEV_NOW = SANDBOX_NOW
       // Every screen's first-visit help sheet (ln-help-seen:<topic>) counts as seen. Nothing is written, so it never reaches the real game.
