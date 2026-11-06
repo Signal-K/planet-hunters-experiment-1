@@ -1,10 +1,12 @@
 import { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT } from '@/lib/citizen-science/open-anomaly'
+import { STAGE_TESS_FEED, stageFeedOn } from '@/lib/stage-feed'
 import { pbShared } from '@/lib/pb'
 import { isReviewableTessSubject, toTessCandidate, type TessCandidate } from '@/lib/data'
 
 export { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT }
 
 export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> {
+  if (stageFeedOn()) return STAGE_TESS_FEED
   // Let PocketBase make the request even while auth restoration is finishing.
   // The screen can mount in the same commit as the restored auth record; an
   // `isValid` early return here made that one-shot effect silently resolve to

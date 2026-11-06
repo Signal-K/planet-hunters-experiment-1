@@ -1,10 +1,12 @@
 import { ASTEROID_CANDIDATE_SORT, REVIEWABLE_ASTEROID_CANDIDATE_FILTER } from '@/lib/citizen-science/open-anomaly'
+import { STAGE_ASTEROID_FEED, stageFeedOn } from '@/lib/stage-feed'
 import { pbShared } from '@/lib/pb'
 import { isReviewableAsteroidCandidate, toAsteroidCandidate, type AsteroidCandidate } from '@/lib/data'
 
 export { REVIEWABLE_ASTEROID_CANDIDATE_FILTER }
 
 export async function fetchReviewableAsteroidCandidates(): Promise<AsteroidCandidate[]> {
+  if (stageFeedOn()) return STAGE_ASTEROID_FEED
   const records = await pbShared.collection('asteroid_candidates').getFullList({
     filter: REVIEWABLE_ASTEROID_CANDIDATE_FILTER,
     // This collection defines `created` (unlike `subjects` — SSL-10). Do not

@@ -1,3 +1,4 @@
+import { stageFeedOn } from '@/lib/stage-feed'
 import { pbShared } from '@/lib/pb'
 import { getSaturnFallbackCandidates, toSaturnCandidate, type SaturnCandidate } from '@/lib/data'
 
@@ -5,6 +6,7 @@ import { getSaturnFallbackCandidates, toSaturnCandidate, type SaturnCandidate } 
 // Falls back to the static seed when the pool is unreachable or empty so the
 // imager still works offline.
 export async function fetchReviewableSaturnCandidates(): Promise<SaturnCandidate[]> {
+  if (stageFeedOn()) return getSaturnFallbackCandidates()
   try {
     const records = await pbShared.collection('ss_saturn_storm_frames').getFullList({
       filter: 'retired = false',
