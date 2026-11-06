@@ -86,7 +86,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'PLAYER',
     state: 'live',
     dependencies: ['Instrument', 'Classification', 'Contribution record'],
-    implementation: 'Classification and discovery flows exist. Treasury-funded contribution rewards are on this roadmap under Public treasury and loans.',
+    implementation: 'Classification and discovery flows exist. Treasury-funded contribution rewards are on this roadmap under Public treasury and loans. Rover citizen science (AI4Mars, Planet Four) and solar citizen science are their own games on Takeon (SSL-777, SSL-779); Landnám keeps only small tapas scenes of them.',
   },
   {
     id: 'client-growth',
@@ -163,7 +163,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'PLAYER',
     state: 'planned',
     dependencies: ['Landing', 'Structure palette', 'Crafting', 'Territory claims', 'Biosphere seeds'],
-    implementation: 'Planned. Previously built on web: a structure palette and crafting, ownership of what was built, territory claims by division, biosphere seeding with life stages, a field-operation mechanic and a rover drive pad. The biome and body codes stay.',
+    implementation: 'Planned. Previously built on web: a structure palette and crafting, ownership of what was built, territory claims by division, biosphere seeding with life stages, a field-operation mechanic and a rover drive pad. The biome and body codes stay. Full base building and rover waypoint routes now belong to the separate rover game (SSL-777); Landnám keeps one minimal base mechanic.',
   },
   {
     id: 'community-hub',
@@ -185,7 +185,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'PLAYER',
     state: 'planned',
     dependencies: ['Own programme', 'Off-world site', 'Build right', 'Off-world refinery'],
-    implementation: 'Planned. Previously built on web and iOS: two own-programme build missions (a Mars settlement and a remote silo), the remote silo structure and an off-world refinery that recorded a target-specific deployment against an active build right. Only the generic client construction stays.',
+    implementation: 'Planned. Previously built on web and iOS: two own-programme build missions (a Mars settlement and a remote silo), the remote silo structure and an off-world refinery that recorded a target-specific deployment against an active build right. Only the generic client construction stays. Keep it minimal: anything larger belongs to the rover game (SSL-777).',
   },
 ]
 

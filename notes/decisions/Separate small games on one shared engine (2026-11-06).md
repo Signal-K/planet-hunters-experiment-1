@@ -28,6 +28,11 @@ Decided by Liam, starting SSL-764.
 - When a ticket asks to port an old feature, the question is "is it Landnam, a separate game, or dropped". It is never "add it to Landnam so it is not lost".
 - Landnam must not become a sandbox again (see "Deleted 2026-10-24" in `docs/agents/product.md`).
 
+## Related
+
+- Release plan and cycle schedule: `notes/cycles/Release plan.md`.
+- How Landnám consumes Takeon until the Go core ships: `docs/architecture/takeon-core.md`.
+
 ## Open
 
 - Migration of `native/TakeonKit` and the TypeScript engine onto the Go core (SSL-778).
