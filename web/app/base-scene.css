@@ -292,3 +292,11 @@
   min-height: 44px;
   accent-color: var(--ln-cyan);
 }
+
+/* SSL-786: on a phone the flight plan (and its folded OPS chip) sits under the overview bar, not on top of it. */
+@media (max-width: 599px) {
+  body:has([data-testid="base-overview"]) .flight-plan-slot,
+  body:has([data-testid="base-overview"]) .flight-plan-slot > .flight-plan-chip {
+    top: calc(env(safe-area-inset-top, 0px) + 118px);
+  }
+}
