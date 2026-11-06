@@ -20,8 +20,8 @@ export function ScenePill({ children, align, testId, tone }: { children: ReactNo
   return <span className={styles.pill} data-align={align} data-tone={tone ?? 'cyan'} data-testid={testId}>{children}</span>
 }
 
-export function SceneCard({ children, label }: { children: ReactNode; label: string }) {
-  return <section className={styles.card} aria-label={label}>{children}</section>
+export function SceneCard({ children, label, solo }: { children: ReactNode; label: string; solo?: boolean }) {
+  return <section className={styles.card} data-solo={solo || undefined} aria-label={label}>{children}</section>
 }
 
 export function SceneMeter({ kicker, value, readout, pct, caption, captionValue, testId }: {

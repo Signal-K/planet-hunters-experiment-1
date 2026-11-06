@@ -32,5 +32,6 @@
 
 @media (orientation: portrait) {
   .card { left: 14px; right: 14px; width: auto; bottom: 138px; }
+  .card[data-solo] { bottom: calc(18px + env(safe-area-inset-bottom)); }
   .actions { left: 14px; right: 14px; width: auto; }
 }

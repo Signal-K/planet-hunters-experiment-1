@@ -13,7 +13,7 @@ import { formatCountdown } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import LandingScene from './LandingScene'
-import { SceneActions, SceneCard, SceneGhost, SceneMeter, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
+import { SceneCard, SceneMeter, ScenePill, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './LandingScreen.module.css'
 
 interface LandingScreenProps {
@@ -106,14 +106,9 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
       </SceneTop>
       {help.layer}
 
-      <SceneCard label="Landing sequence status">
+      <SceneCard solo label="Landing sequence status">
         <SceneMeter kicker={ready ? copy.ready : stage} value={ready ? 'READY' : formatCountdown(remainingMs)} pct={progressPct} caption={copy.progressLabel} captionValue={`${progressPct}%`} testId="landing-progress" />
       </SceneCard>
-
-      <SceneActions>
-        <ScenePrimary testId="landing-continue" disabled={!ready} onClick={onContinue}>{copy.cta}</ScenePrimary>
-        <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
-      </SceneActions>
     </div>
   )
 }
