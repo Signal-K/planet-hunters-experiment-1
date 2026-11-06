@@ -1,8 +1,9 @@
 import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
+import { markMapped, type SkyAim, type SkyMap } from './sky-map'
 
 export type ResearchPathId = 'explorer' | 'trader'
 export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
-export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing }
+export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing; /** Where in the sky the week's instrument was locked (SSL-788). */ aim?: SkyAim }
 
 /** What an Explorer can aim their instruments at for the week. */
 export const POINTING_OPTIONS: { id: InstrumentPointing; label: string; note: string }[] = [
@@ -29,11 +30,15 @@ export function choosePath<T extends { researchPath?: ResearchPathChoice }>(play
   return { ...player, researchPath: { week: weekKey(now), path, ...(path === 'explorer' && pointing ? { pointing } : {}) } }
 }
 
-/** Aim this week's instruments. Only an Explorer with no aim yet can point, and only once. */
-export function setPointing<T extends { researchPath?: ResearchPathChoice }>(player: T, pointing: InstrumentPointing, now: number): T {
+/** Aim this week's instruments. Only an Explorer with no aim yet can point, and only once. The lock marks the sky field it falls in. */
+export function setPointing<T extends { researchPath?: ResearchPathChoice; skyMap?: SkyMap }>(player: T, pointing: InstrumentPointing, now: number, aim?: SkyAim): T {
   const choice = player.researchPath
   if (!choice || choice.week !== weekKey(now) || choice.path !== 'explorer' || choice.pointing) return player
-  return { ...player, researchPath: { ...choice, pointing } }
+  return {
+    ...player,
+    researchPath: { ...choice, pointing, ...(aim ? { aim } : {}) },
+    ...(aim && pointing !== 'saturn' ? { skyMap: markMapped(player.skyMap, aim, choice.week, pointing) } : {}),
+  }
 }
 
 /** The instrument the player aimed this week, or null when none was picked or the week has rolled over. */

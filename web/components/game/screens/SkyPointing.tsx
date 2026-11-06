@@ -2,11 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InstrumentPointing } from '@/lib/research/paths'
+import { LANDMARKS, TOTAL_FIELDS, clampDec, fieldId, formatAim, landmarkNear, mappedCount, mappedPercent, wrapRa, type SkyAim, type SkyMap } from '@/lib/research/sky-map'
+import { SkyChart, project, sightCentre } from './SkyChart'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
 import { SceneActions, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './SkyPointing.module.css'
 
-const SPEED = 46 // view units per second at full stick
+const SPEED = 46 // view units per second at full stick (Saturn's view)
+const SKY_SPEED = 40 // degrees of sky per second at full stick
+const START_AIM: SkyAim = { ra: 291, dec: 44 }
 
 interface Instrument {
   short: string
@@ -24,7 +28,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     short: 'Space telescope',
     name: 'Space telescope',
     station: 'In orbit · 600 km above Earth',
-    blurb: 'A wide-field camera above the air. Slew it to a patch of stars and stare: planets show up as tiny dips in starlight.',
+    blurb: 'A wide-field camera above the air. Steer it anywhere on the sky and stare: planets show up as tiny dips in starlight.',
     sight: 'frame',
     lockLabel: 'POINT HERE',
     lockedCopy: t => `Staring at the ${t.name.toLowerCase()}. Starlight is measured nonstop; dips reach your Control Station through the week.`,
@@ -32,8 +36,8 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
   'deep-space': {
     short: 'Ground telescope',
     name: 'Ground telescope',
-    station: 'On the ground · dome open · laser guide star on',
-    blurb: 'A dome on the hill. Swing the slit along the ecliptic, where asteroids drift past the stars.',
+    station: 'On the ground · dome open',
+    blurb: 'A dome on the hill. Swing the slit anywhere on the sky; asteroids drift past the stars.',
     sight: 'cross',
     lockLabel: 'POINT HERE',
     lockedCopy: t => `Dome open on the ${t.name.toLowerCase()}. Frames are taken all week; moving dots land in your Control Station.`,
@@ -42,7 +46,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     short: 'Saturn orbiter',
     name: 'Saturn orbiter',
     station: 'In orbit around Saturn',
-    blurb: 'A probe circling Saturn. Pick a spot on the planet or its rings and the camera zooms in.',
+    blurb: 'A probe circling Saturn. Steer to any spot on the planet or its rings and the camera zooms in.',
     sight: 'zoom',
     lockLabel: 'ZOOM IN HERE',
     lockedCopy: t => `Zoomed in on the ${t.name.toLowerCase()}. Images come down to Earth through the week.`,
@@ -79,20 +83,23 @@ function Icon({ id }: { id: InstrumentPointing }) {
 interface Props {
   /** The instrument already aimed this week, if any. */
   locked?: InstrumentPointing | null
-  onLock: (pointing: InstrumentPointing) => void
+  onLock: (pointing: InstrumentPointing, aim?: SkyAim) => void
   onCancel: () => void
+  /** Fields the player's telescopes have already mapped. */
+  mapped?: SkyMap
 }
 
 /**
  * The weekly pointing step, as one full-screen viewport. Pick the instrument you are driving; each has its
  * own scene, sight and lock-on. Steer with the joystick, lock on, and the signal comes in over the week.
  */
-export default function SkyPointing({ locked = null, onLock, onCancel }: Props) {
+export default function SkyPointing({ locked = null, onLock, onCancel, mapped }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 926, h: 428 })
   const [instrument, setInstrument] = useState<InstrumentPointing>(locked ?? 'transit')
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
-  const [confirmed, setConfirmed] = useState<{ instrument: InstrumentPointing; id: string } | null>(null)
+  const [aim, setAim] = useState<SkyAim>(START_AIM)
+  const [confirmed, setConfirmed] = useState<{ instrument: InstrumentPointing; target: SkyTarget; aim: SkyAim } | null>(null)
   const [zoomed, setZoomed] = useState(false)
   const stick = useRef({ x: 0, y: 0 })
   const keys = useRef({ x: 0, y: 0 })
@@ -114,15 +121,21 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
   const W = portrait ? 100 : 100 * aspect
   const H = portrait ? 100 / aspect : 100
   const g: Geom = { W, H, portrait }
-  const targets = geomFor(instrument, g)
+  const freeSky = instrument !== 'saturn'
+  const targets = freeSky ? [] : geomFor(instrument, g)
   const view = INSTRUMENTS[instrument]
   const at = pos ?? { x: W / 2, y: H / 2 }
-  const over = confirmed ? null : targetAt(targets, at.x, at.y)
-  const showing = confirmed?.instrument === instrument ? targets.find(t => t.id === confirmed.id) ?? null : null
+  const near = freeSky ? landmarkNear(aim) : null
+  const field = fieldId(aim)
+  const alreadyMapped = !!mapped?.[field]
+  const over = confirmed ? null : freeSky ? null : targetAt(targets, at.x, at.y)
+  const sightTarget = (id: string, name: string, note: string, coord: string, x: number, y: number, hw: number, hh: number): SkyTarget => ({ id, name, note, coord, x, y, hw, hh })
+  const showing = confirmed && confirmed.instrument === instrument ? confirmed.target : null
   const unitsPerPx = W / box.w
+  const mappedLine = `Sky mapped: ${mappedCount(mapped)} of ${TOTAL_FIELDS} fields (${mappedPercent(mapped).toFixed(1)}%)`
 
-  const live = useRef({ W, H })
-  live.current = { W, H }
+  const live = useRef({ W, H, freeSky })
+  live.current = { W, H, freeSky }
 
   useEffect(() => {
     if (confirmed) return
@@ -134,11 +147,15 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
       const vx = stick.current.x + keys.current.x
       const vy = stick.current.y + keys.current.y
       if (vx || vy) {
-        setPos(p => {
-          const { W: w, H: h } = live.current
-          const cur = p ?? { x: w / 2, y: h / 2 }
-          return { x: Math.max(3, Math.min(w - 3, cur.x + vx * SPEED * dt)), y: Math.max(3, Math.min(h - 3, cur.y + vy * SPEED * dt)) }
-        })
+        if (live.current.freeSky) {
+          setAim(a => ({ ra: wrapRa(a.ra + (vx * SKY_SPEED * dt) / Math.max(0.35, Math.cos((a.dec * Math.PI) / 180))), dec: clampDec(a.dec - vy * SKY_SPEED * dt) }))
+        } else {
+          setPos(p => {
+            const { W: w, H: h } = live.current
+            const cur = p ?? { x: w / 2, y: h / 2 }
+            return { x: Math.max(3, Math.min(w - 3, cur.x + vx * SPEED * dt)), y: Math.max(3, Math.min(h - 3, cur.y + vy * SPEED * dt)) }
+          })
+        }
       }
       frame = requestAnimationFrame(tick)
     }
@@ -185,10 +202,21 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
   const switchTo = (id: InstrumentPointing) => { setInstrument(id); setPos(null) }
   useEffect(() => { setPos(null) }, [portrait])
 
-  const sightSize = instrument === 'transit' ? { w: targets[0].hw * 2, h: targets[0].hh * 2 } : { w: 0, h: 0 }
+  const sightSize = instrument === 'transit' ? { w: portrait ? 34 : 38, h: portrait ? 22 : 24 } : { w: 0, h: 0 }
+  const lockHere = () => {
+    if (freeSky) {
+      const name = near?.name ?? 'Open sky'
+      setConfirmed({ instrument, aim, target: sightTarget('aim', name, near?.note ?? 'A patch of sky nobody has pointed at yet.', formatAim(aim), sightCentre(g).x, sightCentre(g).y, instrument === 'transit' ? sightSize.w / 2 : 9, instrument === 'transit' ? sightSize.h / 2 : 9) })
+    } else {
+      const t = over ?? sightTarget('free', 'Open view', 'Zoomed on the spot you chose.', 'FREE POINTING', at.x, at.y, 5.5, 5.5)
+      setConfirmed({ instrument, aim, target: t })
+    }
+  }
   const pct = (x: number, y: number) => ({ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%` })
   const readout = showing ?? over
   const lockedNow = confirmed && showing ? { instrument: confirmed.instrument, target: showing } : null
+  const skyTitle = near?.name ?? 'Open sky'
+  const skyNote = near ? near.note : alreadyMapped ? 'You have already mapped this field. Lock on to look again, or steer somewhere new.' : 'Not mapped yet. Lock on to add this field to your sky map.'
 
   return (
     <div ref={rootRef} className={styles.root} data-testid="sky-pointing" data-instrument={instrument} data-portrait={portrait} aria-label="Point your instruments">
@@ -199,11 +227,12 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
         <div className={styles.starTile} data-layer="near" />
       </div>
       <svg className={styles.svg} shapeRendering="crispEdges" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-        {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : at} />}
-        {instrument === 'deep-space' && <GroundScene g={g} target={showing} />}
+        {freeSky && <SkyChart g={g} aim={aim} mapped={mapped} current={field} />}
+        {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : sightCentre(g)} bare />}
+        {instrument === 'deep-space' && <GroundScene g={g} target={showing} bare />}
         {instrument === 'saturn' && <SaturnScene g={g} target={showing} zoomed={zoomed} />}
         {!confirmed && (
-          <g transform={`translate(${at.x} ${at.y})`}><Sight kind={view.sight} w={sightSize.w} h={sightSize.h} locked={false} /></g>
+          <g transform={`translate(${freeSky ? sightCentre(g).x : at.x} ${freeSky ? sightCentre(g).y : at.y})`}><Sight kind={view.sight} w={sightSize.w} h={sightSize.h} locked={false} /></g>
         )}
         {showing && instrument === 'transit' && <g transform={`translate(${showing.x} ${showing.y})`}><Sight kind="frame" w={sightSize.w} h={sightSize.h} locked /></g>}
         {showing && instrument === 'deep-space' && <g transform={`translate(${showing.x} ${showing.y})`}><Sight kind="cross" w={0} h={0} locked /></g>}
@@ -213,15 +242,21 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
       {!(instrument === 'saturn' && zoomed) && targets.map(t => (
         <span key={t.id} className={styles.label} data-active={readout?.id === t.id} data-side={t.side ?? 'below'} style={{ ...(t.side === 'above' ? pct(t.x, t.y - t.hh) : t.side === 'left' ? pct(t.x - t.hw, t.y) : t.side === 'right' ? pct(t.x + t.hw, t.y) : pct(t.x, t.y + t.hh)) }}>{t.name}</span>
       ))}
+      {freeSky && !confirmed && LANDMARKS.map(l => {
+        const p = project(aim, g, l.ra, l.dec)
+        if (p.x < 6 || p.x > W - 6 || p.y < H * 0.2 || p.y > H * 0.6) return null
+        return <span key={l.id} className={styles.label} data-active={near?.id === l.id} data-side="below" style={pct(p.x, p.y + 2)}>{l.name}</span>
+      })}
 
       <SceneTop onBack={onCancel} testId="sky-pointing-back">
         <ScenePill align="end" testId="sky-station">{view.station}</ScenePill>
       </SceneTop>
 
       <div className={styles.caption}>
-        <h2 className={styles.title} data-testid="sky-pointing-title">{lockedNow ? `${INSTRUMENTS[lockedNow.instrument].name}: ${lockedNow.target.name}` : readout ? readout.name : view.name}</h2>
-        <p className={styles.note}>{lockedNow ? INSTRUMENTS[lockedNow.instrument].lockedCopy(lockedNow.target) : readout ? readout.note : view.blurb}</p>
-        {(readout || lockedNow) && <p className={styles.coord}>{(lockedNow?.target ?? readout)!.coord}</p>}
+        <h2 className={styles.title} data-testid="sky-pointing-title">{lockedNow ? `${INSTRUMENTS[lockedNow.instrument].name}: ${lockedNow.target.name}` : freeSky ? skyTitle : readout ? readout.name : view.name}</h2>
+        <p className={styles.note}>{lockedNow ? INSTRUMENTS[lockedNow.instrument].lockedCopy(lockedNow.target) : freeSky ? skyNote : readout ? readout.note : view.blurb}</p>
+        {freeSky ? <p className={styles.coord} data-testid="sky-coord">{formatAim(confirmed?.aim ?? aim)}</p> : (readout || lockedNow) && <p className={styles.coord}>{(lockedNow?.target ?? readout)!.coord}</p>}
+        {freeSky && <p className={styles.mapline} data-testid="sky-mapped">{mappedLine}</p>}
       </div>
 
       {!confirmed && (
@@ -250,10 +285,10 @@ export default function SkyPointing({ locked = null, onLock, onCancel }: Props) 
 
       <SceneActions className={styles.actionSlot}>
         {confirmed ? (
-          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
+          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
         ) : (
-          <ScenePrimary testId="sky-pointing-lock" disabled={!over} onClick={() => over && setConfirmed({ instrument, id: over.id })}>
-            {over ? view.lockLabel : 'STEER TO A TARGET'}
+          <ScenePrimary testId="sky-pointing-lock" onClick={lockHere}>
+            {freeSky ? (alreadyMapped ? 'POINT HERE AGAIN' : 'MAP THIS FIELD') : view.lockLabel}
           </ScenePrimary>
         )}
       </SceneActions>

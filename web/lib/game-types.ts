@@ -376,7 +376,9 @@ export interface Player {
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
-  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn' }
+  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
+  /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
+  skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>
   /** Permanent regular fragments earned from completed weekly research paths. */
   researchFragments?: number
   /** Universal fragments converted from regular research fragments. */

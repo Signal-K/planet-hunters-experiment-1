@@ -32,6 +32,8 @@ type BaseDockProps = {
    * into compact edge plates instead of one centered navigation capsule. */
   locationLabel?: string
   locationNavigationDisabled?: boolean
+  /** Phones keep the Base still, so the location selector shows only its label. */
+  hideLocationArrows?: boolean
   showLocationBuild?: boolean
 }
 
@@ -192,6 +194,7 @@ export function BaseDock({
   onMission,
   locationLabel,
   locationNavigationDisabled = false,
+  hideLocationArrows = false,
   showLocationBuild = true,
 }: BaseDockProps) {
   const flight = variant === 'flight'
@@ -201,9 +204,9 @@ export function BaseDock({
     return (
       <nav aria-label="Location and scene actions" className="scene-location-dock" data-ui-zone={UI_ZONES.bottomNav} data-testid="base-dock">
         <div className="scene-location-selector" aria-label={`Selected location ${locationLabel}`}>
-          <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label={locationNavigationDisabled ? 'Previous location' : 'Scroll left'} disabled={locationNavigationDisabled} />
+          {!hideLocationArrows && <DockArrowButton direction="left" data-testid="hub-dock-prev" onClick={onPrev} aria-label={locationNavigationDisabled ? 'Previous location' : 'Scroll left'} disabled={locationNavigationDisabled} />}
           <span className="scene-location-label"><LocationIcon /><span>{locationLabel}</span></span>
-          <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />
+          {!hideLocationArrows && <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label={locationNavigationDisabled ? 'Next location' : 'Scroll right'} disabled={locationNavigationDisabled} />}
         </div>
         <div className="scene-location-actions" data-action-count={locationActionCount}>
           {showLocationBuild && <DockWordButton className="scene-location-action--build" data-testid={buildTestId} data-beacon={buildBeacon} onClick={onBuild}>

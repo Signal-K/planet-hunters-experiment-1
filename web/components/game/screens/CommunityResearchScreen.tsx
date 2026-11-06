@@ -15,6 +15,7 @@ import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import SkyPointing from './SkyPointing'
+import { TOTAL_FIELDS, mappedCount, type SkyAim } from '@/lib/research/sky-map'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
@@ -27,7 +28,7 @@ interface CommunityResearchScreenProps {
   communityResearch?: CommunityResearch | null
   onBack: () => void
   onChoosePath: (path: ResearchPathId) => void
-  onPoint: (pointing: InstrumentPointing) => void
+  onPoint: (pointing: InstrumentPointing, aim?: SkyAim) => void
   onClaimReward: (step: PathStep, progress: { have: number; need: number }) => void
   /** Jump into the flow that earns this stamp. */
   onGo: (kind: StampKind) => void
@@ -95,7 +96,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
-  const [pointingOpen, setPointingOpen] = useState(true)
+  // SSL-789: pointing never covers Community research on entry. It opens from its button, and right after choosing Explorer.
+  const [pointingOpen, setPointingOpen] = useState(false)
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
@@ -137,7 +139,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   }, [path, rewardSignature])
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
-      {needsPointing && pointingOpen && <SkyPointing onLock={onPoint} onCancel={() => setPointingOpen(false)} />}
+      {pointingOpen && !aimed && <SkyPointing mapped={player.skyMap} onLock={onPoint} onCancel={() => setPointingOpen(false)} />}
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
@@ -187,7 +189,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
                   description="Your path is locked until Monday, when it resets and you can pick again."
                   confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
-                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath); if (selectedPath === 'explorer') setPointingOpen(true) }}
                   onDismiss={() => setConfirmingPath(false)}
                 />
               )}
@@ -202,9 +204,10 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                     <span>{flagship.live ? `Live now · ${flagship.daysLeft} day${flagship.daysLeft === 1 ? '' : 's'} left` : `Starts in ${flagship.startsInDays} day${flagship.startsInDays === 1 ? '' : 's'}`}</span>
                   </div>
                 )}
+                <div className={styles.bar} data-testid="research-community-bar-main"><div className={styles.barLabel}><span>Community goal</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div><small>{bar.reached ? `Reached: ${COMMUNITY_REWARD_TEXT} until the month ends.` : `Everyone gets ${COMMUNITY_REWARD_TEXT} at ${bar.goal}.`}</small></div>
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
-                  <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete</span>
+                  <span>{pointedLabel ? `Pointed at ${pointedLabel} · ` : ''}{finished}/{steps.length} complete · Sky mapped {mappedCount(player.skyMap)}/{TOTAL_FIELDS}</span>
                   {needsPointing && !pointingOpen && <button type="button" className={board.contractTake} data-testid="community-research-point" onClick={() => setPointingOpen(true)}>POINT INSTRUMENTS</button>}
                 </div>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">

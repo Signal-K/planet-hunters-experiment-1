@@ -592,7 +592,7 @@ function ScreenBody({
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
-          onPoint={pointing => game.setPlayer(current => setPointing(current, pointing, Date.now()))}
+          onPoint={(pointing, aim) => game.setPlayer(current => setPointing(current, pointing, Date.now(), aim))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
           onFinishReview={() => setPendingReview(null)}
