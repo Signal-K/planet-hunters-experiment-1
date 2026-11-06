@@ -31,9 +31,15 @@ Decided by Liam, after the release plan.
 - Landnám already reports into it (SSL-763, `pocketbase/ledger_report.go`): batched, off the `game_states` save, last 7 days only, never blocks a save, kinds `classification`, `survey`, `discovery-mission`, `event` and the trader kinds. Landnám's own bar (`research.go`) never reads the ledger.
 - `classificationPoints` on `profiles` is the old client's per-profile score (leaderboards, hub top five). Only the client's `PostForm` raises it. Landnám classifications go to shared `subject_classifications`, `asteroid_classifications` and `ss_saturn_storm_classifications` but do not touch it.
 
+## Old classification points move to the ledger (2026-11-06, SSL-783)
+
+- Liam: take the old classification points and migrate them to the new ledger. The ledger is the one scorecard.
+- The ledger gains optional `points` (weight, default 1) and `project`. Each old profile becomes one row (game `garden`, kind `legacy-classification-points`, project `legacy`, `points` = old total, sentinel day `2000-01-01` so monthly counts never include it). Old profiles are never changed or deleted.
+- Built on branches, not run: tickets-please `ssl-783-ledger-points` (migration 110, ingest route) and client `cycle/ssl-783-classification-points` (dry-run script).
+
 ## Open
 
 - Weighting does not exist yet: every ledger row counts 1. If a classification is worth more in one project, the ledger needs a project field and a weight table (per project or game).
 - The ledger's `kind` is not a project. A rover classification and a transit classification look the same.
-- Whether the old `classificationPoints` and leaderboards stay, or the ledger replaces them.
+- Leaderboards and the hub top five still read `classificationPoints`; switching them to the ledger is not done.
 - The Garden spec's feature map is out of date: it sends rover to Landnám and Zoodex to Atlas; rover is now its own game (SSL-777).
