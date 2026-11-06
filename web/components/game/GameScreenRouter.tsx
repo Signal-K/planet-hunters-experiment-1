@@ -70,7 +70,7 @@ import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
-import { choosePath, setPointing, claimResearchReward } from '@/lib/research/paths'
+import { choosePath, claimResearchReward } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -592,7 +592,6 @@ function ScreenBody({
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
-          onPoint={(pointing, aim) => game.setPlayer(current => setPointing(current, pointing, Date.now(), aim))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
           onFinishReview={() => setPendingReview(null)}
