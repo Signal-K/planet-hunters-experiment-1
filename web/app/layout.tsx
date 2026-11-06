@@ -5,6 +5,7 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 import './loop-screens.css'
 import './base-scene.css'
+import splashLinks from '@/lib/splash-links.json'
 import { DevFollow } from '@/components/dev/DevFollow'
 
 const SITE_URL = 'https://playlandnam.space'
@@ -33,7 +34,16 @@ export const metadata: Metadata = {
   // iOS cannot hide the status bar for a Home Screen web app. black-translucent
   // makes it report env(safe-area-inset-top), so the body padding keeps every
   // screen below the clock and the strip in globals.css sits behind it.
-  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black-translucent', startupImage: splashLinks },
+  icons: {
+    icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
+    apple: [
+      { url: '/icons/apple-touch-icon-120.png', sizes: '120x120' },
+      { url: '/icons/apple-touch-icon-152.png', sizes: '152x152' },
+      { url: '/icons/apple-touch-icon-167.png', sizes: '167x167' },
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
+    ],
+  },
   formatDetection: { telephone: false },
 }
 
@@ -53,9 +63,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-      </head>
+      <head />
       <body suppressHydrationWarning>
         {children}
         {process.env.NODE_ENV === 'development' ? <DevFollow /> : null}
