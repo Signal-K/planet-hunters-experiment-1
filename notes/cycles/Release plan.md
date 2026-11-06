@@ -33,7 +33,7 @@ crew, treasury. These are separate games or stay planned in the Narrative Ledger
 | 8 | Nov 1–7 | Web scenes, Takeon landscapes, direction for separate games (SSL-764). Web only. |
 | 9 | Nov 7–14 | iOS parity catch-up (SSL-709, 715, 690, plus cycle 7–8 web work), minimal settlements, the one-time data import (SSL-781), "tapas" scenes. Start the Takeon Go core (SSL-778) in the takeon repo. |
 | 10 | Nov 14–21 | Release candidate: fix-only. Onboarding-to-settlement run on web, PWA and TestFlight. Release checklist below. Rover game scoped (SSL-777). |
-| 9–10 | | Design the ecosystem scorecard (Community research across all games) as part of the release candidate. |
+| 9–10 | | Audit how Landnám reports to the shared scorecard in signal-k/client (SSL-782). No new scorecard. |
 | 11 | Nov 21–28 | Public release and first players. Watch, do not build: read feedback, fix blockers only. Rover game starts on the Go core. |
 | 12+ | | Roughly one third Landnám fixes and events, two thirds the other games (rover first, then solar). |
 
@@ -61,5 +61,5 @@ Dates after cycle 9 are a plan, not a promise. Move them when a cycle's real out
 ## Open
 
 - Decided: the release is public (see `Community research is the ecosystem scorecard and release is public (2026-11-06)`).
-- Where the ecosystem scorecard lives and what each game contributes to it.
+- Per-project weights for classification points; how Landnám feeds the shared scorecard in signal-k/client (SSL-782).
 - A start date for the rover game if the Go core (SSL-778) runs longer than cycle 9.
