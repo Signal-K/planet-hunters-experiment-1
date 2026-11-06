@@ -210,8 +210,34 @@
   .progress { left: auto; right: 16px; transform: none; bottom: calc(124px + env(safe-area-inset-bottom)); max-width: calc(100% - 200px); }
 }
 /* Portrait: the order readout is one centred line above the pad and Fire, not a wrapped corner box, and the brief card sits in the sky clear of the ship. */
+/* Portrait cockpit: a solid bottom panel holds one thumb pad (2x2, left), the order readout
+   (centre) and Fire (right), so nothing floats over the ground and every control is in thumb reach. */
 @media (max-width: 600px) and (orientation: portrait) {
-  .progress { left: 50%; right: auto; transform: translateX(-50%); bottom: calc(176px + env(safe-area-inset-bottom)); max-width: calc(100% - 24px); white-space: nowrap; }
+  :global(.mining-viewport)::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: calc(156px + env(safe-area-inset-bottom));
+    z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(10, 20, 40, 0.94), rgba(6, 12, 26, 0.98));
+    border-top: 2px solid rgba(244, 239, 228, 0.55);
+    box-shadow: 0 -10px 24px rgba(2, 6, 14, 0.45);
+  }
+  .dpad { grid-template-columns: 52px 52px; grid-template-rows: 52px 52px; grid-template-areas: "left right" "up down"; bottom: calc(16px + env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left)); }
+  .center { display: none; }
+  .pad { background: rgba(244, 239, 228, 0.14); border-color: rgba(244, 239, 228, 0.75); box-shadow: none; }
+  .pad:active { background: rgba(88, 208, 234, 0.4); }
+  .fire { bottom: calc(26px + env(safe-area-inset-bottom)); right: max(16px, env(safe-area-inset-right)); }
+  .progress {
+    left: calc(50% + 8px); right: auto; transform: translateX(-50%);
+    bottom: calc(26px + env(safe-area-inset-bottom));
+    width: 156px; max-width: 156px; min-height: 88px;
+    padding: 6px 4px; align-content: center;
+    white-space: normal; text-align: center; letter-spacing: 0.03em;
+  }
+  .progressCue { letter-spacing: 0.02em; text-wrap: balance; }
+  .action { right: max(16px, env(safe-area-inset-right)); bottom: calc(172px + env(safe-area-inset-bottom)); }
 }
 @media (max-height: 520px) {
   .fire { width: 84px; height: 84px; bottom: calc(12px + env(safe-area-inset-bottom)); }
