@@ -430,8 +430,25 @@ function dropRetiredOnboardingRun(input: GameState): GameState {
   }
 }
 
+/**
+ * A save whose run is still in flight but whose mission and target ids were cleared (the load check used to do
+ * that for catalog-only missions) gets them back from the run: the mission id is the run's own id, and the
+ * target is the one the run label names ("Type → Target"). Without them Resume has nothing to open.
+ */
+function restoreInFlightRunIds(input: GameState): GameState {
+  const run = input.player.activeMission
+  if (!run || (input.missionId && input.targetId)) return input
+  const missionId = input.missionId ?? run.id
+  const targetName = run.label.split(' → ').pop()
+  const targetId = input.targetId
+    ?? TARGETS.find(t => t.name === targetName)?.id
+    ?? Object.values(input.player.discoveredExoplanetTargets ?? {}).find(t => t.name === targetName)?.id
+    ?? null
+  return { ...input, missionId, targetId }
+}
+
 function repairStateRoute(rawInput: GameState): GameState {
-  const input = dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput))
+  const input = restoreInFlightRunIds(dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput)))
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -448,10 +465,14 @@ function repairStateRoute(rawInput: GameState): GameState {
   // is not a lost mission context, so it must survive a cold load.
   const isBareFreeOpsBuild = input.screen === 'fab' && input.player.freeOperations
     && !input.missionId && !input.targetId
-  if (!isBareFreeOpsBuild && MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
+  // A run in flight is always valid. Its mission and target may come from the live catalog (PocketBase rows
+  // and the daily pool), which this static check cannot see on a cold load. Clearing them stranded the
+  // flight: Resume then opened a screen with no target and only ever showed "details loading".
+  const isRunInFlight = !!input.missionId && input.player.activeMission?.id === input.missionId
+  if (!isBareFreeOpsBuild && !isRunInFlight && MISSION_CONTEXT_SCREENS.has(input.screen) && !mission && !hasRuntimeMission) {
     return { ...input, screen: 'missions', missionId: null, targetId: null }
   }
-  if (!isBareFreeOpsBuild && TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
+  if (!isBareFreeOpsBuild && !isRunInFlight && TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
     return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
   }
   // A bare onboarding fab route is not a valid entry point. The Build tab is
