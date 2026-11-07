@@ -242,11 +242,15 @@ export function buildRuntimeCatalog({
     {},
   )
   const focusedCargo = Object.values(focusedMinerals).reduce((total, amount) => total + amount, 0)
-  const resourceFocusMissions: Mission[] = player?.resourceFocus && focusedCargo > 0
+  // A haul already in flight stays resolvable after its materials are covered or the focus is cleared
+  // (mining deposits into the stash mid-run), so a reload or resume never loses the run.
+  const hasActiveResourceFocusRun = missionId === RESOURCE_FOCUS_MISSION_ID
+  const resourceFocusLabel = player?.resourceFocus?.label ?? 'construction'
+  const resourceFocusMissions: Mission[] = (player?.resourceFocus && focusedCargo > 0) || hasActiveResourceFocusRun
     ? [{
         id: RESOURCE_FOCUS_MISSION_ID,
-        title: `Materials for ${player.resourceFocus.label}`,
-        brief: `A program mining run configured to recover the missing materials for ${player.resourceFocus.label}. The haul returns to Base storage for construction.`,
+        title: `Materials for ${resourceFocusLabel}`,
+        brief: `A program mining run configured to recover the missing materials for ${resourceFocusLabel}. The haul returns to Base storage for construction.`,
         tag: 'RESOURCE',
         difficulty: 'L1',
         locked: false,
