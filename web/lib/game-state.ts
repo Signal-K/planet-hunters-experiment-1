@@ -441,6 +441,7 @@ function restoreInFlightRunIds(input: GameState): GameState {
   const missionId = input.missionId ?? run.id
   const targetName = run.label.split(' → ').pop()
   const targetId = input.targetId
+    ?? run.target?.id
     ?? TARGETS.find(t => t.name === targetName)?.id
     ?? Object.values(input.player.discoveredExoplanetTargets ?? {}).find(t => t.name === targetName)?.id
     ?? null

@@ -73,6 +73,18 @@ describe('a flight in progress survives a reload', () => {
     })
   }
 
+  it('a run that carries its own mission and target restores them even when the catalog has rotated them away', () => {
+    const mission = { ...MISSIONS[0], id: 'pb-only-contract-1', targetId: 'pb-only-target-1' }
+    const target = { ...TARGETS[0], id: 'pb-only-target-1', name: 'Helios Depot' }
+    const saved = savedFlight(mission.id, target.id, 'transit', 'Contract → Helios Depot', true)
+    saved.player.activeMission = { id: mission.id, label: 'Contract → Helios Depot', mission, target }
+    const loaded = normalizeAndRepair(JSON.parse(JSON.stringify(saved)))
+    expect(loaded.missionId).toBe(mission.id)
+    expect(loaded.targetId).toBe(target.id)
+    expect(loaded.player.activeMission?.mission?.id).toBe(mission.id)
+    expect(loaded.player.activeMission?.target?.name).toBe('Helios Depot')
+  })
+
   it('a save that already lost its ids gets them back from the run', () => {
     const target = TARGETS[0]
     const loaded = normalizeAndRepair(savedFlight('pb-only-contract-1', 'x', 'mining', `Hauler → ${target.name}`, true))

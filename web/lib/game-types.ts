@@ -45,9 +45,20 @@ export interface CompletedMissionRecord {
  * prepared or flown. Global economy/progression stays on `Player`; only the
  * data required to resume this specific run lives here.
  */
+/**
+ * The run in flight. `mission` and `target` are a copy taken at launch, so a reload or Resume can still open the
+ * flight when the live catalog (PocketBase rows, the daily pool) has rotated the contract away or not loaded yet.
+ */
+export interface ActiveMissionRun {
+  id: string
+  label: string
+  mission?: Mission
+  target?: Target
+}
+
 export interface MissionRunSnapshot {
   key: string
-  activeMission: { id: string; label: string }
+  activeMission: ActiveMissionRun
   missionId: string
   targetId: string
   deliveryTargetId?: string | null
@@ -150,7 +161,7 @@ export interface PlayerLocation {
 export interface Player {
   skyEventLocation?: PlayerLocation | null
   francs: number
-  activeMission: { id: string; label: string } | null
+  activeMission: ActiveMissionRun | null
   /** Paused operational contexts. There is intentionally no artificial cap. */
   pausedMissionRuns?: MissionRunSnapshot[]
   // PocketBase mission_runs record for the current run. Kept in the save so a

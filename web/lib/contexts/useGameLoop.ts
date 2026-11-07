@@ -607,7 +607,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           missionStartedAt: at,
           missionPhase: 'transit',
           activeMission: mission && target
-            ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name }
+            ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name, mission, target }
             : null,
         },
         screen: 'transit',

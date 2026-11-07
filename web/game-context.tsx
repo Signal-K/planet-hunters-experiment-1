@@ -385,9 +385,14 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   const mission = state.missionId
     ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
        ?? state.player.dailyClientPool?.missions.find(m => m.id === state.missionId)
+       ?? (state.player.activeMission?.id === state.missionId ? state.player.activeMission.mission : undefined)
        ?? null)
     : null
-  const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
+  const target = state.targetId
+    ? runtimeCatalog.targets.find(t => t.id === state.targetId)
+      ?? (state.player.activeMission?.target?.id === state.targetId ? state.player.activeMission.target : undefined)
+      ?? null
+    : null
   // Launchpad's embedded contract view (KES-343) reads missionBoardScope the
   // same way the standalone Mission Dispatch screen does — it never gets its
   // own screen value to key off, since opening it no longer changes
