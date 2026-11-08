@@ -11,6 +11,7 @@ import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOp
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
+import BlankSceneDiagnostics from '@/components/game/BlankSceneDiagnostics'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
@@ -40,6 +41,8 @@ import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrom
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
+  // Opened directly on /game/intro: watch it even if state moves to another screen.
+  const [coldIntro] = useState(() => typeof window !== 'undefined' && window.location.pathname === '/game/intro')
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -387,6 +390,10 @@ function GameChrome({ children }: { children: ReactNode }) {
         <div className="game-stage-main">
           <OrionidsShowerChrome />
           <LandnamSyncStatus />
+          <BlankSceneDiagnostics
+            active={!game.authGateOpen && (game.screen === 'intro' || coldIntro)}
+            state={{ screen: game.screen, hydrated: game.hydrated, authGateOpen: game.authGateOpen, signedIn: !!game.authUserId, missionsDone: game.player.missionsDone, placed: game.player.placed.length }}
+          />
           <DevShortcuts />
           {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
           {currentScreen === 'launchpad' && !game.launchpadMissionMenuOpen && !game.subsurfaceView && !game.authGateOpen && (
