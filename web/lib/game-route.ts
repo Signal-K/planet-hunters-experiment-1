@@ -46,6 +46,8 @@ export function entryScreenForPath(pathname: string, placed: readonly string[], 
     if (explicit && VALID_SCREENS.has(explicit)) return explicit
   }
   if (pathname === '/game/hub') return 'hub'
+  // A returning player who opens the intro link sees it (as Resume operations) instead of the saved screen.
+  if (pathname === '/game/intro') return 'intro'
   if (pathname === '/game/launchpad' && placed.includes('launchpad')) return 'launchpad'
   return trayScreenFromPath(pathname)
 }

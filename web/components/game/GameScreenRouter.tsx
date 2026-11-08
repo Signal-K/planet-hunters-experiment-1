@@ -251,7 +251,8 @@ function ScreenBody({
         <IntroScreen
           onBegin={biome => {
             if (biome) game.setPlayer(current => ({ ...current, earthBiome: biome }))
-            game.go('build')
+            // Resume operations returns to the Base; only a new player places a launchpad.
+            game.go(game.player.missionsDone > 0 || game.player.placed.length > 0 ? 'hub' : 'build')
           }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}

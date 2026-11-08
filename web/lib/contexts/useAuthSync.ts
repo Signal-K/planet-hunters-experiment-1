@@ -802,6 +802,12 @@ export function useAuthSync({
     // adopted or confirmed missing, and never let a stale placeholder steer
     // the URL after a native/web save has already been protected.
     if (isSignInPlaceholder(current) && (remoteSaveProtected.current || backendLoadedFor.current !== authUserId)) return
+    // An explicit /game/intro stays on the intro: a returning player sees Resume operations
+    // there, and it takes them to the Base. The Orionids handoff has its own landing below.
+    if (window.location.pathname === '/game/intro' && window.sessionStorage.getItem('landnam-entry') !== 'orionids') {
+      if (current.screen !== 'intro') setState(s => ({ ...s, screen: 'intro' }))
+      return
+    }
     if (isResumableMissionScreen(current.screen, current.missionId, current.targetId)) return
     // Auth can complete while the route page is still rendering the old
     // deep-linked screen. Replace the URL here as well as the game state so

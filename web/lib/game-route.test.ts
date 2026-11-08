@@ -38,6 +38,10 @@ describe('trayScreenFromPath', () => {
 })
 
 describe('entryScreenForPath (SSL-476)', () => {
+  it('opens the intro on a cold load of /game/intro', () => {
+    expect(entryScreenForPath('/game/intro', ['launchpad'])).toBe('intro')
+  })
+
   it('a cold load of /game/launchpad opens the Launchpad, never the saved underground', () => {
     expect(entryScreenForPath('/game/launchpad', ['launchpad'])).toBe('launchpad')
   })
