@@ -10,7 +10,7 @@
 // restoring the network lets the existing save sync without a new mutation.
 // `make up` is development mode and unregisters this worker.
 
-const CACHE = 'landnam-shell-v6'
+const CACHE = 'landnam-shell-v7'
 
 const SHELL = [
   '/',
@@ -93,22 +93,40 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  // HTML pages — network-first, fall back to cache, then /offline.
+  // Next client-side navigation and prefetch fetch the page's RSC payload from
+  // the page URL (RSC header / _rsc param). That payload is not HTML. Serving
+  // a cached HTML shell for it (the old ignoreSearch fallback did) crashes the
+  // router, so flight requests are network-only. When offline we answer with a
+  // plain failure and Next falls back to a hard navigation, which the HTML
+  // branch below resolves to a shell.
+  if (request.headers.get('RSC') === '1' || url.searchParams.has('_rsc')) {
+    event.respondWith(
+      fetch(request).catch(() => new Response('', { status: 503, statusText: 'Offline' }))
+    )
+    return
+  }
+
+  const isNavigation = request.mode === 'navigate'
+
+  // HTML pages — network-first, fall back to cache, then a game shell, then /offline.
   event.respondWith(
     fetch(request)
       .then(res => {
-        if (res.ok) {
+        if (res.ok && isNavigation) {
           const toCache = res.clone()
           caches.open(CACHE).then(c => c.put(request, toCache))
         }
         return res
       })
       .catch(async () => {
+        // Only navigations may be answered with an HTML document; any other
+        // request (fetch/XHR for data) must fail cleanly instead of receiving HTML.
+        if (!isNavigation) return new Response('', { status: 503, statusText: 'Offline' })
         const cached = await caches.match(request, { ignoreSearch: url.pathname.startsWith('/game/') })
         if (cached) return cached
         // SSL-729: every game screen renders from the saved state, so any game
         // shell can open an unvisited /game/<screen> offline; the hub shell first.
-        if (request.mode === 'navigate' && url.pathname.startsWith('/game/')) {
+        if (url.pathname.startsWith('/game/') || url.pathname === '/game') {
           const shell = await caches.match('/game/hub') ?? await caches.match('/game')
           if (shell) return shell
         }
@@ -117,6 +135,26 @@ self.addEventListener('fetch', event => {
       })
   )
 })
+
+// Cache a page shell and the hashed chunks it references, so a screen that was
+// warmed while online also has the scripts it needs when the network drops.
+async function cacheShell(cache, path) {
+  if (await cache.match(path)) return
+  const response = await fetch(path, { credentials: 'same-origin' })
+  if (!response.ok) return
+  const html = await response.clone().text()
+  await cache.put(path, response)
+  const chunks = new Set(html.match(/\/_next\/static\/[^"'\\\s)]+\.(?:js|css)/g) ?? [])
+  await Promise.all([...chunks].slice(0, 64).map(async chunk => {
+    try {
+      if (await cache.match(chunk)) return
+      const asset = await fetch(chunk)
+      if (asset.ok) await cache.put(chunk, asset)
+    } catch {
+      // Optional warm-up.
+    }
+  }))
+}
 
 // The installed Landnam PWA warms TakeOn at idle. Next emits hashed chunk
 // names, so the client reports just-fetched same-origin static URLs here for
@@ -131,9 +169,7 @@ self.addEventListener('message', event => {
       .slice(0, 128)
     event.waitUntil(caches.open(CACHE).then(cache => Promise.all(paths.map(async path => {
       try {
-        if (await cache.match(path)) return
-        const response = await fetch(path, { credentials: 'same-origin' })
-        if (response.ok) await cache.put(path, response)
+        await cacheShell(cache, path)
       } catch {
         // Optional warm-up: a miss only means that screen falls back to the hub shell.
       }
@@ -144,7 +180,7 @@ self.addEventListener('message', event => {
 
   const urls = data.urls
     .filter(url => typeof url === 'string')
-    .slice(0, 64)
+    .slice(0, 256)
     .reduce((accepted, rawUrl) => {
       try {
         const url = new URL(rawUrl, self.location.origin)
