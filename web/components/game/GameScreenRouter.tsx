@@ -31,24 +31,44 @@ const ScreenLoading = () => (
 )
 
 const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
+const loadMissionOperationRoutes = () => import('@/components/game/MissionOperationRoutes')
+const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
+const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
+const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
+const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
+const loadRadioMeteorScreen = () => import('@/components/game/screens/RadioMeteorScreen')
+const loadSaturnStormSearchScreen = () => import('@/components/game/screens/SaturnStormSearchScreen')
+const loadAsteroidDiscoveryScreen = () => import('@/components/game/screens/AsteroidDiscoveryScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
+const loadCommunityResearchScreen = () => import('@/components/game/screens/CommunityResearchScreen')
+const loadNarrativeLedgerScreen = () => import('@/components/game/screens/NarrativeLedgerScreen')
+
+// Every lazy screen chunk. The hub imports all of them once while online so
+// the service worker can keep them; otherwise a screen first opened offline
+// has no script to load and renders blank.
+const ALL_SCREEN_LOADERS = [
+  loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
+  loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadRadioMeteorScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
+  loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
+]
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
-const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
-const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
+const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: ScreenLoading })
+const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
-const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
+const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
-const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
-const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
-const RadioMeteorScreen = dynamic(() => import('@/components/game/screens/RadioMeteorScreen'), { loading: ScreenLoading })
-const SaturnStormSearchScreen = dynamic(() => import('@/components/game/screens/SaturnStormSearchScreen'), { loading: ScreenLoading })
-const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
+const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
+const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
+const RadioMeteorScreen = dynamic(loadRadioMeteorScreen, { loading: ScreenLoading })
+const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
+const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
-const CommunityResearchScreen = dynamic(() => import('@/components/game/screens/CommunityResearchScreen'), { loading: ScreenLoading })
-const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
+const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
+const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
@@ -142,12 +162,16 @@ function ScreenBody({
   useEffect(() => {
     if (screen !== 'hub') return
     const warmCommonDestinations = () => {
-      void Promise.allSettled([
-        loadMissionSetupRoutes(),
-        loadLaunchpadScreen(),
-        loadMarketScreen(),
-        loadMissionHistoryScreen(),
-      ])
+      const seen = new Set(performance.getEntriesByType('resource').map(entry => entry.name))
+      void Promise.allSettled(ALL_SCREEN_LOADERS.map(load => load())).then(() => {
+        const controller = navigator.serviceWorker?.controller
+        if (!controller) return
+        const urls = performance.getEntriesByType('resource')
+          .map(entry => entry.name)
+          .filter(url => !seen.has(url))
+          .filter(url => { try { return new URL(url).pathname.startsWith('/_next/static/') } catch { return false } })
+        if (urls.length > 0) controller.postMessage({ type: 'CACHE_URLS', urls })
+      })
     }
     const idleWindow = window as Window & {
       requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number

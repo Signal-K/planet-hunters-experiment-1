@@ -180,7 +180,7 @@ self.addEventListener('message', event => {
 
   const urls = data.urls
     .filter(url => typeof url === 'string')
-    .slice(0, 64)
+    .slice(0, 256)
     .reduce((accepted, rawUrl) => {
       try {
         const url = new URL(rawUrl, self.location.origin)
