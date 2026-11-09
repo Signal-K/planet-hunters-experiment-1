@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { requestConsensus } from '@/lib/community/client'
 import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/lib/community/consensus'
@@ -83,6 +83,7 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { resolveRun } from '@/lib/systems/RunRecovery'
 import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
@@ -184,6 +185,40 @@ function ScreenBody({
     const timer = globalThis.setTimeout(warmCommonDestinations, 600)
     return () => globalThis.clearTimeout(timer)
   }, [screen])
+  // A saved run whose mission or target is gone shows as a craft in the sky that can never be
+  // resumed. Give the live catalog time to arrive, then clear it (no penalty). A run that can be
+  // resolved but lost its ids gets them back.
+  const gameRef = useRef(game)
+  gameRef.current = game
+  useEffect(() => {
+    if (screen !== 'hub' || !game.hydrated || !game.player.activeMission) return
+    const timer = window.setTimeout(() => {
+      const now = gameRef.current
+      if (!now.player.activeMission || !navigator.onLine) return
+      const found = resolveRun(now.player, { missionId: now.missionId, targetId: now.targetId }, now.catalog)
+      if (found?.mission && found.target) {
+        if (!now.missionId) now.setMissionId(found.missionId)
+        if (!now.targetId && found.targetId) now.setTargetId(found.targetId)
+        return
+      }
+      const details = {
+        source: 'hub',
+        missionId: now.missionId ?? null,
+        targetId: now.targetId ?? null,
+        runMissionId: now.player.activeMission.id,
+        runLabel: now.player.activeMission.label,
+        missionPhase: now.player.missionPhase ?? null,
+        missionFound: !!found?.mission,
+        targetFound: !!found?.target,
+        cargoKinds: Object.keys(now.player.miningCargoInProgress ?? {}).length,
+      }
+      console.warn('mission run unrecoverable, clearing', JSON.stringify(details))
+      captureGameEvent('mission_run_discarded', details)
+      now.abandonMission({ confirmed: true, waivePenalty: true })
+      now.addToast('A mission run that lost its data was cleared.', 'warn')
+    }, 12000)
+    return () => window.clearTimeout(timer)
+  }, [screen, game.hydrated, game.player.activeMission?.id, game.player.missionRunId])
   const handleLaunch = useCallback(() => setLaunchPending(true), [])
   const handleLaunchComplete = useCallback(() => {
     setLaunchPending(false)
