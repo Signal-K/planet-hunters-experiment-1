@@ -1,5 +1,6 @@
 'use client'
 
+import '@/lib/devClock'
 import { useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { ScreenContent } from '@/components/game/GameScreenRouter'

@@ -7,6 +7,7 @@ import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
 import { ROCKET_MODELS } from './rockets'
 import { isOrionidsWindow } from './sky-events'
+import { liveShowers, probeMission } from './showers'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
@@ -40,7 +41,9 @@ export function generateFreeOpsMissions(): Mission[] {
 // remains as the fixed M3-adjacent tutorial intro to it.
 export function generateSelfDirectedMiningPool(now: number = Date.now()): Mission[] {
   const pool = generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
-  return isOrionidsWindow(now) ? [...pool, orionidsNightRun()] : pool
+  const withRun = isOrionidsWindow(now) ? [...pool, orionidsNightRun()] : pool
+  // SSL-771: a probe drop for every declared shower that is running now.
+  return [...withRun, ...liveShowers(now).map(probeMission)]
 }
 
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.

@@ -20,7 +20,7 @@ type Groupable = Pick<Mission, 'construction' | 'payload' | 'survey' | 'tag'>
 export function contractGroup(mission: Groupable): ContractGroup {
   if (mission.construction) return 'construction'
   const payload = mission.payload?.type
-  if (payload === 'rover' || payload === 'satellite' || payload === 'deep-space-survey') return 'exploration'
+  if (payload === 'rover' || payload === 'satellite' || payload === 'deep-space-survey' || payload === 'probe') return 'exploration'
   if (mission.survey?.scanRequired || mission.tag === 'SCIENCE') return 'exploration'
   return 'mining'
 }

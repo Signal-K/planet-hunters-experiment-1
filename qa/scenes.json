@@ -595,6 +595,36 @@
    "web": "sandbox-transit",
    "native": "transit-live",
    "tickets": []
+  },
+  {
+   "id": "community-research-leonids",
+   "name": "Community research: Leonids",
+   "flow": "events",
+   "web": "ui-community-research-leonids",
+   "tickets": [
+    "SSL-774"
+   ],
+   "native": "community-research-phone"
+  },
+  {
+   "id": "community-research-geminids",
+   "name": "Community research: Geminids",
+   "flow": "events",
+   "web": "ui-community-research-geminids",
+   "tickets": [
+    "SSL-774"
+   ],
+   "native": "community-research-phone"
+  },
+  {
+   "id": "probe-deploy",
+   "name": "Probe drop: deploy",
+   "flow": "field",
+   "web": "ui-probe-deploy",
+   "tickets": [
+    "SSL-771"
+   ],
+   "native": "mining-shower-live"
   }
  ],
  "missions": [

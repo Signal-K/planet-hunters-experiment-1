@@ -21,3 +21,27 @@ describe('shower declarations (SSL-774)', () => {
     expect(getShower('nope')).toBeUndefined()
   })
 })
+
+describe('probe drop (SSL-771)', () => {
+  const LEONIDS_PEAK = Date.parse('2026-11-17T12:00:00Z')
+
+  it('is on the board only while a shower window is open, and never for the Orionids run', async () => {
+    const { liveShowers, probeMission } = await import('./showers')
+    expect(liveShowers(LEONIDS_PEAK).map(s => s.id)).toEqual(['leonids-2026'])
+    expect(liveShowers(Date.parse('2026-11-09T12:00:00Z'))).toEqual([])
+    expect(liveShowers(Date.parse('2026-10-29T12:00:00Z'))).toEqual([])
+    const { generateSelfDirectedMiningPool } = await import('./missions')
+    expect(generateSelfDirectedMiningPool(LEONIDS_PEAK).some(m => m.id === probeMission(getShower('leonids-2026')!).id)).toBe(true)
+    expect(generateSelfDirectedMiningPool(Date.parse('2026-11-09T12:00:00Z')).some(m => m.payload?.type === 'probe')).toBe(false)
+  })
+
+  it('reads as launch, deploy, return and groups as exploration', async () => {
+    const { probeMission } = await import('./showers')
+    const { missionTypePrimer } = await import('./mission-primers')
+    const { contractGroup } = await import('@/lib/contract-groups')
+    const mission = probeMission(getShower('leonids-2026')!)
+    expect(missionTypePrimer(mission).steps).toEqual(['Launch', 'Deploy', 'Return'])
+    expect(contractGroup(mission)).toBe('exploration')
+    expect(mission.targetId).toBe('eros')
+  })
+})

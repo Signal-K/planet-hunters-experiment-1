@@ -61,7 +61,7 @@ export function wswMissionTypeFor(mission: Mission | null | undefined, freeOpera
   if (mission?.construction) return 'construction-launch'
   const payload = mission?.payload?.type
   if (payload === 'rover') return 'rover-surface-ops'
-  if (payload === 'satellite' || payload === 'deep-space-survey') return 'satellite-survey'
+  if (payload === 'satellite' || payload === 'deep-space-survey' || payload === 'probe') return 'satellite-survey'
   return freeOperations ? 'mining-free-ops' : 'onboarding-relay'
 }
 

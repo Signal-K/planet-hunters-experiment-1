@@ -2,7 +2,9 @@
 // the probe mission, the probe field scene, community research and the badge all start here.
 // Window, rate, badge rule (`badgeAfterMissions`) and instrument come from sky-events.ts so they are written once.
 
+import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { DEBRIS_PRESETS, getSkyEvent, type DebrisEventPreset } from '@/lib/data/sky-events'
+import type { Mission } from '@/lib/data/types'
 
 export interface ShowerDeclaration {
   /** Sky event id, also the badge id. */
@@ -42,4 +44,33 @@ export function showerPreset(eventId: string): DebrisEventPreset | undefined {
 /** The instrument callsign community research listens on for this shower. */
 export function showerInstrument(eventId: string): { callsign: string; name: string } {
   return getSkyEvent(eventId)?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
+}
+
+export const PROBE_MISSION_PREFIX = 'self-directed-probe-'
+
+/** Showers whose window is open at `now`. The Orionids has its own fragment run, so it is never a probe drop here. */
+export function liveShowers(now: number): ShowerDeclaration[] {
+  return SHOWERS.filter(shower => {
+    if (shower.id === 'orionids-2026') return false
+    const event = getSkyEvent(shower.id)
+    return !!event && now >= Date.parse(event.startUtc) && now < Date.parse(event.endUtc)
+  })
+}
+
+/** The probe drop for a shower: launch, deploy at the shower body, return. The research it earns comes from the probe scene. */
+export function probeMission(shower: ShowerDeclaration): Mission {
+  return {
+    id: `${PROBE_MISSION_PREFIX}${shower.id}`,
+    title: `${shower.name} probe drop`,
+    brief: `No client. Carry a probe out and deploy it where the ${shower.name} fall. It watches the shower and what it sees counts as research.`,
+    tag: 'FREE OPS',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    unlockAt: 'Reach Free Operations',
+    targetId: shower.probeBody,
+    payload: { type: 'probe', name: `${shower.name} probe`, cargoCost: 0 },
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 0, max_orbit: 2 },
+    payout: { francs: 0, affinity: 0 },
+  }
 }

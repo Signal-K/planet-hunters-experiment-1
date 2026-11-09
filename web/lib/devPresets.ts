@@ -2,6 +2,7 @@ import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
+import { SHOWERS, probeMission } from '@/lib/data/showers'
 import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
@@ -171,6 +172,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week. Open the stage with &at=2026-11-17T12:00:00Z so the shower is live: the event step reads the Leonids declaration', stage: 'free-ops' },
+      { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
+      { key: 'ui-probe-deploy', label: 'Probe drop: deploy', hint: 'Leonids probe drop at its shower body with the probe aboard, at the deploy step. Open with &at=2026-11-17T12:00:00Z', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
@@ -875,6 +879,41 @@ function fixture(name: string): Partial<GameState> | null {
           transitSatelliteLevel: 1,
           telescopeAim: undefined,
         },
+      }
+    }
+
+    case 'ui-community-research-leonids':
+    case 'ui-community-research-geminids': {
+      // SSL-774: a declared shower with no saved stage yet. Same screen, its own event step.
+      const checkedAt = Date.now()
+      return {
+        ...fixture('ui-community-research')!,
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
+          researchStamps: {},
+        },
+      }
+    }
+
+    case 'ui-probe-deploy': {
+      // SSL-771: the probe drop at its shower body, deploy step.
+      const shower = SHOWERS.find(entry => entry.id === 'leonids-2026')!
+      const mission = probeMission(shower)
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: mission.id, label: mission.title },
+          missionPhase: 'mining',
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: mission.id,
+        targetId: shower.probeBody,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
       }
     }
 

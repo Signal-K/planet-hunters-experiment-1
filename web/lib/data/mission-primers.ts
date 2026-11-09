@@ -143,6 +143,15 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
     }
   }
 
+  if (mission.payload?.type === 'probe') {
+    return {
+      label: 'Meteor probe drop',
+      summary: 'Carry a probe out to the shower body and deploy it. It watches the shower for you and what it sees counts as research. No drilling on this run.',
+      steps: ['Launch', 'Deploy', 'Return'],
+      owner,
+    }
+  }
+
   if (mission.payload?.type === 'rover') {
     return {
       label: 'Rover drop',
