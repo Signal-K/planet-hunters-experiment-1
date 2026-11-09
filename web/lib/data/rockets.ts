@@ -89,6 +89,14 @@ export const ROCKET_MODELS: RocketModel[] = [
   },
 ]
 
+/** The smallest unlocked rocket whose hold fits `cargo` units, so a cargo hold can name its fix. */
+export function smallestRocketHolding(cargo: number, missionsDone: number): { name: string; cargo: number } | null {
+  const fit = ROCKET_MODELS
+    .filter(m => !m.locked && m.missionsRequired <= missionsDone && m.stats.cargo >= cargo)
+    .sort((a, b) => a.stats.cargo - b.stats.cargo)[0]
+  return fit ? { name: fit.name, cargo: fit.stats.cargo } : null
+}
+
 const ROCKET_MODEL_BY_CHASSIS: Record<string, string> = {
   'hull-mk1': ROCKET_IDS.explorer,
   'hull-mk2': ROCKET_IDS.prospector,

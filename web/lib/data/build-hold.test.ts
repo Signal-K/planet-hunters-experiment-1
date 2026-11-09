@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MISSIONS, TARGETS } from '@/lib/data'
 import { buildHoldLine, validateBuild } from '@/lib/data/parts'
+import { smallestRocketHolding } from '@/lib/data/rockets'
 
 // SSL-750: the launch review names what the flying rocket is short of, in one line.
 describe('build holds', () => {
@@ -14,6 +15,14 @@ describe('build holds', () => {
     const hold = check.holds!.find(h => h.kind === 'cargo')!
     expect(hold.need).toBe(99)
     expect(buildHoldLine(hold, 'Explorer')).toBe(`Explorer holds ${hold.have}U, this job needs 99U`)
+  })
+
+  it('names the smallest unlocked rocket that fits the job', () => {
+    const hold = { kind: 'cargo' as const, have: 6, need: 12 }
+    expect(smallestRocketHolding(12, 6)).toEqual({ name: 'Surveyor', cargo: 18 })
+    expect(smallestRocketHolding(8, 6)).toEqual({ name: 'Prospector', cargo: 10 })
+    expect(smallestRocketHolding(12, 1)).toBeNull()
+    expect(buildHoldLine(hold, null, { name: 'Surveyor', cargo: 18 })).toBe('This rocket holds 6U, this job needs 12U. Try the Surveyor (18U)')
   })
 
   it('has no holds when the rocket fits', () => {

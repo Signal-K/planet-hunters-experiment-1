@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, smallestRocketHolding, validateBuild } from '@/lib/data'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
@@ -87,7 +87,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const launchReady = check.ok
   const vehicleName = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId)?.name : null
   const hold = check.holds?.[0]
-  const blockedReason = launchReady ? null : hold ? buildHoldLine(hold, vehicleName) : (check.problems[0] ?? 'Mission requirements not met')
+  const blockedReason = launchReady ? null : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone) : null) : (check.problems[0] ?? 'Mission requirements not met')
   // Nothing is built or launched that cannot do the job (Liam, 02.11).
   const actionDisabled = !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
   const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'

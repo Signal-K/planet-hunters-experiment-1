@@ -108,9 +108,12 @@ export function validateBuild(opts: {
  * SSL-750: one short line for the launch review hold, naming the vehicle and what it is short of. Liam found the
  * old "Ship cargo (6U) below mission minimum (12U)" banner too long and unclear about what to change.
  */
-export function buildHoldLine(hold: BuildHold, vehicleName?: string | null): string {
+export function buildHoldLine(hold: BuildHold, vehicleName?: string | null, fix?: { name: string; cargo: number } | null): string {
   const who = vehicleName ?? 'This rocket'
-  if (hold.kind === 'cargo') return `${who} holds ${hold.have}U, this job needs ${hold.need}U`
+  if (hold.kind === 'cargo') {
+    const base = `${who} holds ${hold.have}U, this job needs ${hold.need}U`
+    return fix ? `${base}. Try the ${fix.name} (${fix.cargo}U)` : base
+  }
   if (hold.kind === 'orbit') return `${who} reaches orbit ${hold.have}, this job needs orbit ${hold.need}`
   return `${who} has a T${hold.have} drill, this job needs T${hold.need}`
 }
