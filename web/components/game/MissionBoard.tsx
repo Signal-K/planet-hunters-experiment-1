@@ -31,7 +31,7 @@ import {
 import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
-import { orionidsArchiveUnlocked } from '@/lib/orionids/access'
+import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
@@ -48,7 +48,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
-  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors') => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors' | 'market') => void
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
@@ -339,8 +339,8 @@ export default function MissionBoard({
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
-    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0),
-    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds],
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow)),
+    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
   )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(null)
@@ -455,6 +455,11 @@ export default function MissionBoard({
       // SSL-714: mission 2 (and listening on afterwards) happens on the community receiver, ORI-1.
       if (event.id === 'orionids-2026' && (player.orionidsEventStage ?? 0) >= 1) {
         onOpenEvent('radio-meteors')
+        return
+      }
+      // The event is over and this player cannot replay it: the archive is bought in the research marketplace.
+      if (event.id === 'orionids-2026' && event.status === 'ended' && !orionidsRunAvailable(player, orionidsNow)) {
+        onOpenEvent('market')
         return
       }
       // Orionids is its own event chain, not a filter over ordinary Free Run

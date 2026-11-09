@@ -248,12 +248,15 @@ export function eventsBoard(
   finds?: Record<string, OrionidsFind>,
   mastery = 0,
   orionidsEventStage = 0,
+  /** False once the Orionids have ended and this player cannot replay them: the card points to the research archive. */
+  orionidsReplayOpen = true,
 ): EventsBoard {
   const orionids = getSkyEvent('orionids-2026')
   const start = orionidsLocalStartMs()
   const end = orionids ? Date.parse(orionids.endUtc) : start
   const status = skyStatus(start, end, orionidsNow)
   const earned = badges?.['orionids-2026']?.tier ?? null
+  const archiveLocked = status === 'ended' && !orionidsReplayOpen && orionidsEventStage < 1
   const orionidsCard: SkyBoardCard = {
     id: 'orionids-2026',
     name: orionids?.name ?? 'Orionids',
@@ -262,8 +265,9 @@ export function eventsBoard(
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: "Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.",
     // The event is the shower run. After it, ORI-1 is open for listening.
-    actionLabel: orionidsEventStage >= 1 ? 'Listen on ORI-1' : eventActionLabel(status),
-    rewardLabel: orionidsEventStage >= 1 ? eventRewardLabel(status, earned)
+    actionLabel: orionidsEventStage >= 1 ? 'Listen on ORI-1' : archiveLocked ? 'OPEN ARCHIVE' : eventActionLabel(status),
+    rewardLabel: archiveLocked ? 'Archive · unlock it with research currency'
+      : orionidsEventStage >= 1 ? eventRewardLabel(status, earned)
       : status === 'live' ? 'Shower run · catch and contribute fragments' : eventRewardLabel(status, earned),
   }
   const order = [
