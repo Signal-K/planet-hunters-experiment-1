@@ -174,7 +174,7 @@ export default function RocketBuilderScene({
               <aside className={styles.payloadManifest} data-testid="launchpad-payload-manifest">
                 <span className={styles.payloadKicker}>PAYLOAD LOADED</span>
                 <strong>{missionPayload.name}</strong>
-                <span>{missionPayload.type === 'rover' ? 'Surface rover · deploy on target' : missionPayload.type === 'probe' ? 'Meteor probe · deploy on target' : 'Mission equipment'}</span>
+                <span>{missionPayload.type === 'rover' ? 'Surface rover · deploy on target' : 'Mission equipment'}</span>
               </aside>
             )}
             {phase === 'idle' && (
