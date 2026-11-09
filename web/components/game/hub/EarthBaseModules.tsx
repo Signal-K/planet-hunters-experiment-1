@@ -142,13 +142,48 @@ export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): n
   return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
 }
 
-const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy', 'surface-silo'])
+const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy'])
+
+/**
+ * The starter silo every player builds in onboarding, standing above ground on its own site beside the Exchange.
+ * Same white panels, blue trim and navy outline as the rest of the kit. Stand-in art until a Blender sprite ships.
+ */
+export function SurfaceSiloSprite() {
+  const ink = '#16293b'
+  return (
+    <svg data-pixel-structure="surface-silo" viewBox="0 0 34 52" width={units(34)} height={units(52)} shapeRendering="crispEdges" style={{ display: 'block', overflow: 'visible' }}>
+      <rect x="4" y="48" width="30" height="3" fill={ink} opacity="0.18" />
+      <rect x="3" y="14" width="26" height="36" fill="#e4dccb" stroke={ink} strokeWidth="1.5" />
+      <rect x="3" y="14" width="7" height="36" fill="#cfc6b3" />
+      <rect x="3" y="26" width="26" height="4" fill="#3a67b0" />
+      <rect x="3" y="38" width="26" height="2" fill="#3a67b0" />
+      <path d="M3 14 Q16 0 29 14 Z" fill="#f0eadb" stroke={ink} strokeWidth="1.5" />
+      <rect x="15" y="1" width="2" height="6" fill={ink} />
+      <rect x="12" y="42" width="8" height="8" fill="#2a3a52" stroke={ink} strokeWidth="1" />
+      <rect x="26" y="16" width="2" height="34" fill="#8895a8" />
+    </svg>
+  )
+}
 
 export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
-        if (building.kind === 'surface-silo' || HIDDEN_BASE_KINDS.has(building.kind)) return null
+        if (HIDDEN_BASE_KINDS.has(building.kind)) return null
+        if (building.kind === 'surface-silo') {
+          const shaft = homeSite('surface-silo')
+          const at = shaft ? displaySite(shaft) : null
+          return (
+            <span
+              key={`${building.kind}-${building.plotX}`}
+              className={`earth-base-structure earth-base-structure--${building.kind}`}
+              data-structure={building.kind}
+              style={{ left: at ? units(at.x) : `${structureCenterPercent(building.kind, building.plotX, structureWidthPct(building.kind, 1))}%`, bottom: aboveGround(4.5), width: 'auto', height: 'auto', opacity: building.dimmed ? 0.6 : 1 }}
+            >
+              <SurfaceSiloSprite />
+            </span>
+          )
+        }
         const kit = building.kind === 'launchpad' || building.kind === 'hangar' || building.kind === 'market' || building.kind === 'control-station'
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)

@@ -53,7 +53,7 @@ function hubQuery(): URLSearchParams {
   return new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
 }
 
-const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station'])
+const BASE_SCENE_KINDS = new Set(['launchpad', 'hangar', 'market', 'control-station', 'surface-silo'])
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -457,7 +457,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (!pickedBuild || !buildOptions.some(o => o.id === pickedBuild)) setPickedBuild(buildOptions.find(o => o.affordable)?.id ?? buildOptions[0]?.id ?? null)
   }, [editMode, buildOptions, pickedBuild])
 
-  const underground = pickedBuild === 'surface-silo'
+  // The starter silo stands above ground like every other build: it gets a site marker to place it on.
+  const underground = false
   // The one site the picked build may stand on, offered only while it is free.
   const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
   const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
@@ -606,10 +607,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                   : silo
                     ? { ...building, onClick: () => setSubsurface(true) }
                     : building
-                const siloStyle = silo ? { ...style, left: '50%' } : style
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
                 const pad = kind === 'launchpad'
-                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={siloStyle} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
               {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
                 <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
