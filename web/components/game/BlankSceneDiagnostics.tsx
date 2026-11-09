@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getLogs } from '@/lib/diagnostics-log'
 
 /**
  * A scene that mounts but paints nothing leaves the player on a black screen
@@ -9,36 +10,6 @@ import { useEffect, useState } from 'react'
  * the game state flags, what is in the DOM and every console error so far.
  * Nothing shows while the intro is healthy.
  */
-
-const MAX_LOGS = 60
-const logs: string[] = []
-let installed = false
-
-function record(kind: string, parts: unknown[]) {
-  const text = parts.map(part => {
-    if (part instanceof Error) return `${part.name}: ${part.message}`
-    if (typeof part === 'string') return part
-    try { return JSON.stringify(part) } catch { return String(part) }
-  }).join(' ').slice(0, 400)
-  logs.push(`${new Date().toISOString().slice(11, 23)} ${kind} ${text}`)
-  if (logs.length > MAX_LOGS) logs.shift()
-}
-
-// Installed when this module loads, so errors from before the intro mounts are kept too.
-function installLogCapture() {
-  if (installed || typeof window === 'undefined') return
-  installed = true
-  for (const kind of ['error', 'warn'] as const) {
-    const original = console[kind]
-    console[kind] = (...args: unknown[]) => {
-      record(`console.${kind}`, args)
-      original.apply(console, args as [])
-    }
-  }
-  window.addEventListener('error', event => record('window.error', [event.error ?? event.message]))
-  window.addEventListener('unhandledrejection', event => record('unhandledrejection', [event.reason]))
-}
-installLogCapture()
 
 function introVisible(): boolean {
   const title = document.querySelector('[data-testid="intro-title"]')
@@ -99,8 +70,8 @@ function collect(state: Record<string, unknown>): string {
   return [
     ...Object.entries(facts).map(([key, value]) => `${key}: ${String(value)}`),
     '',
-    logs.length ? 'LOG' : 'LOG (no console errors recorded)',
-    ...logs,
+    getLogs().length ? 'LOG' : 'LOG (no console errors recorded)',
+    ...getLogs(),
   ].join('\n')
 }
 
