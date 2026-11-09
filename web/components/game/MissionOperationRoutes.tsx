@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
@@ -60,7 +60,7 @@ interface MissionOperationRoutesProps {
 // How long a run may stay unresolvable while online before it is treated as lost. The runtime
 // catalog fetch has long settled by then, so a missing mission or target is not "still loading".
 const UNAVAILABLE_GRACE_MS = 4000
-const DISCARD_AFTER_MS = 12000
+const DISCARD_AFTER_MS = 6000
 
 /** What the page knows about a run whose mission or target cannot be found. */
 function describeMissingRun(game: Game) {
@@ -101,21 +101,29 @@ function MissionRunUnavailable({ game }: { game: Game }) {
   const { abandonMission } = game
   const detailsKey = JSON.stringify(details)
 
+  // The latest values, read by timers that must not restart on every game state change.
+  const latest = useRef({ abandonMission, detailsKey, unrecoverable })
+  latest.current = { abandonMission, detailsKey, unrecoverable }
+
   useEffect(() => {
     console.warn('mission run unavailable', detailsKey)
     captureGameEvent('mission_run_unavailable', JSON.parse(detailsKey))
+  }, [detailsKey])
+
+  useEffect(() => {
     const slowTimer = window.setTimeout(() => setSlow(true), UNAVAILABLE_GRACE_MS)
     const discardTimer = window.setTimeout(() => {
-      if (!navigator.onLine || !unrecoverable) return
-      console.warn('mission run unrecoverable, discarding', detailsKey)
-      captureGameEvent('mission_run_discarded', JSON.parse(detailsKey))
-      abandonMission({ confirmed: true, waivePenalty: true })
+      const { abandonMission: abandon, detailsKey: key, unrecoverable: lost } = latest.current
+      if (!navigator.onLine || !lost) return
+      console.warn('mission run unrecoverable, discarding', key)
+      captureGameEvent('mission_run_discarded', { ...JSON.parse(key), source: 'panel' })
+      abandon({ confirmed: true, waivePenalty: true })
     }, DISCARD_AFTER_MS)
     return () => {
       window.clearTimeout(slowTimer)
       window.clearTimeout(discardTimer)
     }
-  }, [detailsKey, unrecoverable, abandonMission])
+  }, [])
 
   const button = {
     minHeight: 44, padding: '10px 24px', background: 'transparent', color: 'var(--ln-cyan, #00e5ff)',
@@ -140,7 +148,11 @@ function MissionRunUnavailable({ game }: { game: Game }) {
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
             <button type="button" style={button} onClick={() => window.location.reload()}>TRY AGAIN</button>
-            <button type="button" style={button} onClick={() => game.go('hub')}>BACK TO BASE</button>
+            <button type="button" style={button} onClick={() => {
+              // A run that cannot be flown is cleared on the way out, or the Base keeps showing it as a craft.
+              if (unrecoverable && online) abandonMission({ confirmed: true, waivePenalty: true })
+              else game.go('hub')
+            }}>BACK TO BASE</button>
           </div>
         </>
       )}
