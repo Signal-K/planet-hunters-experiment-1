@@ -14,6 +14,7 @@ import MiningCanvas from './MiningCanvas'
 import { MiningActionButton, MiningBackButton, MiningDPad, MiningFireButton, MiningGuideMark as GuideMark } from './MiningControls'
 import { miningSecondaryAction, type MiningSecondaryAction } from '@/lib/mining/secondaryAction'
 import controlStyles from './MiningControls.module.css'
+import { ORIONIDS_DEBRIS_PRESET } from '@/lib/data/sky-events'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
@@ -118,7 +119,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   orionidsBadgeTier?: 'gold' | 'silver' | null
   skyEventLocation?: import('@/lib/game-types').PlayerLocation | null
 }) {
-  const debrisPreset = useDebrisEvent()
+  const liveDebrisPreset = useDebrisEvent()
+  // The finished Orionids run replays from the archive: its fragments fall even though the window has closed.
+  const debrisPreset = liveDebrisPreset ?? (mission.id === ORIONIDS_NIGHT_RUN_ID ? ORIONIDS_DEBRIS_PRESET : null)
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
   // minimum 80, so the player can never be softlocked by low charges regardless of coach state.

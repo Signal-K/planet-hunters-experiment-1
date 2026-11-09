@@ -16,6 +16,8 @@ interface Props {
   biome: EarthBiomeId
   /** Launches from other pads can be tapped to show whose rocket it is (the Base). */
   launchTags?: boolean
+  /** Cosmetic extras forced into the sky (the earned Orionids shower). */
+  extraSky?: readonly string[]
 }
 
 interface LaunchTag {
@@ -88,7 +90,9 @@ const reducedMotion = () => typeof window !== 'undefined' && typeof window.match
  * own objects (meteors, rain, lightning, a launch on the range, a weather balloon, satellites, aurora, comets).
  * Structures and controls stay in the DOM on top. Native draws the same world with SwiftUI Canvas.
  */
-export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }: Props) {
+export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false, extraSky }: Props) {
+  const extraSkyRef = useRef(extraSky)
+  extraSkyRef.current = extraSky
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [tags, setTags] = useState<LaunchTag[]>([])
   const [openTag, setOpenTag] = useState<string | null>(null)
@@ -133,7 +137,7 @@ export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }:
       const view = { w: w / p.px, h: (h * (1 - GROUND.lineFromBottom)) / p.px, camX: p.camera.x, px: p.px }
       skyAge += dt
       if (!sky || skyAge > 1) {
-        sky = skyAt(new Date(), p.time, p.biome, lockedSky())
+        sky = skyAt(new Date(), p.time, p.biome, [...lockedSky(), ...(['dusk', 'night', 'dawn'].includes(p.time) ? extraSkyRef.current ?? [] : [])])
         skyAge = 0
       }
       applySky(world, sky, view, still ? 0 : dt)

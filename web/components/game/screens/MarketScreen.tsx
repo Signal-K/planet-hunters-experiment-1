@@ -122,7 +122,7 @@ export default function MarketScreen({
       const item = researchPick
       const count = item ? researchItemPurchaseCount({ researchPurchases }, item.id) : 0
       const cost = item ? researchItemCost({ researchPurchases }, item) : 0
-      const owned = item?.kind === 'cosmetic' && count > 0
+      const owned = (item?.kind === 'cosmetic' || item?.kind === 'unlock') && count > 0
       return (
         <div className={styles.focus}>
           <div className={styles.fragments}>
@@ -223,7 +223,7 @@ export default function MarketScreen({
             <ul className={styles.rows} data-testid="research-marketplace-items">
               {RESEARCH_MARKETPLACE_ITEMS.map(item => {
                 const count = researchItemPurchaseCount({ researchPurchases }, item.id)
-                const owned = item.kind === 'cosmetic' && count > 0
+                const owned = (item.kind === 'cosmetic' || item.kind === 'unlock') && count > 0
                 return (
                   <li key={item.id}>
                     <button type="button" className={styles.row} data-selected={researchPick?.id === item.id} data-testid={`research-item-${item.id}`} onClick={() => pick(item.id)}>

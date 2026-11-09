@@ -7,6 +7,7 @@ import { DEV_GROUPS } from '@/lib/devPresets'
 import { canOfferFullscreen, enterFullscreen, readFullscreenEnv } from '@/lib/fullscreen'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { readStoredOrientation, storeOrientation, type OrientationPreference } from '@/lib/orientation'
+import { orionidsSkyEarned, orionidsSkyOn } from '@/lib/orionids/access'
 import PageSurface from '@/components/ui/PageSurface'
 import { PushOptIn } from '@/components/game/PushOptIn'
 import { TRAINING_REPLAY_REWARD, TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
@@ -260,6 +261,22 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                 </div>
               </div>
             </section>
+
+            {orionidsSkyEarned(game.player) && <section>
+              <h3 className="ops-settings__label">Sky</h3>
+              <div className="ops-settings__panel">
+                <Row>
+                  <div className="ops-settings__copy">
+                    <div className="ops-settings__name">Orionids in the sky</div>
+                    <p className="ops-settings__sub">The Orionids shower falls over your base at night. Cosmetic only.</p>
+                  </div>
+                  <button type="button" role="switch" aria-checked={orionidsSkyOn(game.player)} className="ops-settings__btn" data-testid="orionids-sky-toggle"
+                    onClick={() => game.setPlayer(player => ({ ...player, orionidsSkyEffect: !orionidsSkyOn(player) }))}>
+                    {orionidsSkyOn(game.player) ? 'On' : 'Off'}
+                  </button>
+                </Row>
+              </div>
+            </section>}
 
             {game.player.freeOperations && <section>
               <h3 className="ops-settings__label">Game</h3>

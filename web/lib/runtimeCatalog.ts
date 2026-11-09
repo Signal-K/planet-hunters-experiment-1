@@ -3,6 +3,7 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } 
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
+import { orionidsRunAvailable } from './orionids/access'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun } from './data/missions'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
@@ -100,7 +101,9 @@ export function buildRuntimeCatalog({
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const skyRead = player?.fireballSpotter?.passedAt != null
-  const shouldOfferOrionidsMission = freeOperations && player?.orionidsEventStage === 0 && skyRead
+  // The event is over: outside its window only participants and archive buyers are offered the run.
+  const orionidsOpen = orionidsRunAvailable(player as Parameters<typeof orionidsRunAvailable>[0], Date.now())
+  const shouldOfferOrionidsMission = freeOperations && player?.orionidsEventStage === 0 && skyRead && orionidsOpen
   const shouldIncludeOrionidsTarget = missionId === ORIONIDS_NIGHT_RUN_ID || shouldOfferOrionidsMission || player?.orionidsEventStage === 0
   const mergedTargets = [
     ...catalog.targets,

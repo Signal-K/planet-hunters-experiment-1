@@ -361,6 +361,8 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** Cosmetic: the Orionids shower falls in the base sky. Off unless the player turns it on, and only offered once earned. */
+  orionidsSkyEffect?: boolean
   /** Unix ms when the Atlas looked-up check-in was granted. */
   orionidsLookedUpAt?: number | null
   /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */

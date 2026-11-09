@@ -30,6 +30,7 @@ import {
 import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
+import { orionidsArchiveUnlocked } from '@/lib/orionids/access'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
@@ -700,7 +701,7 @@ export default function MissionBoard({
                 </article>)}
               </div>
             </section>)}
-            {(isOrionidsWindow(orionidsNow) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
+            {(isOrionidsWindow(orionidsNow) || orionidsArchiveUnlocked(player) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
               <div className={styles.fragmentBench} data-testid="orionids-fragments">
                 <p>HELD {heldFragments(player.stash)} · CAUGHT {player.orionidsFragments?.caught ?? 0} · REDEEMED {player.orionidsFragments?.redeemed ?? 0}</p>
                 {player.badges?.['orionids-looked-up'] && <p data-testid="orionids-looked-up">LOOKED UP · {player.badges['orionids-looked-up'].tier.toUpperCase()}</p>}
