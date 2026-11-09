@@ -91,7 +91,7 @@ export function useEconomyActions(
     setState(s => applyBuildSubsurfaceRoom(s, roomId))
   }, [setState])
 
-  const abandonMission = useCallback((opts?: { confirmed?: boolean }) => {
+  const abandonMission = useCallback((opts?: { confirmed?: boolean; waivePenalty?: boolean }) => {
     if (!opts?.confirmed && !confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     // mission_completed has no failure counterpart today — a player who
     // aborts mid-transit (cargo + progress lost, 10% payout penalty) would
@@ -114,7 +114,7 @@ export function useEconomyActions(
           ? { status: 'completed', phase: 'debrief', completed_at: new Date().toISOString() }
           : { status: 'abandoned', phase: s.player.missionPhase ?? 'transit', completed_at: new Date().toISOString() })
       }
-      return applyAbandonMission(s, getCatalogMissions())
+      return applyAbandonMission(s, getCatalogMissions(), { waivePenalty: opts?.waivePenalty })
     })
     if (abandonedMissionId) {
       captureGameEvent('mission_abandoned', {
