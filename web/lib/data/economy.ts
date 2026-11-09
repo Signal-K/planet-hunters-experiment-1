@@ -33,8 +33,8 @@
  * | Prospector | ₣13M | 72% |
  * | Starting balance | ₣9M | 50% |
  * | Refinery | ₣8M | 44% |
- * | Full hold of exotic ore | ₣11M | 61% |
- * | Full hold of common ore | ₣2.5M | 14% |
+ * | Full hold of exotic ore (Prospector, 10U) | ₣44M | 244% |
+ * | Full hold of common ore (Prospector, 10U) | ₣10M | 56% |
  * | Daily quest | ₣1.2–2M | 7–11% |
  *
  * The starting balance is deliberately *below* the Prospector's price: M1's fee
@@ -127,7 +127,8 @@ export const STRUCTURE_PRICES = {
 // structure in itself. Individual room builds sit near Refinery scale since
 // each one is a working facility.
 export const SUBSURFACE_EXCAVATION_COST = 2_000_000
-export const SUBSURFACE_EXCAVATION_MATERIALS = { aluminium: 10 } as const
+// 5 aluminium is ~₣5M of ore, about 2.5x the ₣2M fee, and fits one trip in the 6U starter rocket.
+export const SUBSURFACE_EXCAVATION_MATERIALS = { aluminium: 5 } as const
 export const SUBSURFACE_ROOM_PRICES = {
   'mineral-vault': 3_000_000,
   'parts-locker': 3_000_000,

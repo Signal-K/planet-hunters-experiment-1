@@ -36,7 +36,7 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   uranium:   { name: 'Uranium',   sym: 'U',  color: '#8fd16a', price: MINERAL_VALUE.rare, rarity: 'rare',     constructionUse: 'Compact power systems, shielding',        laserAccess: 2, shape: 'triangle' },
   // ── Sky-event debris (SSL-475/491) — only ever spawns during its event, sells at spot ─
   orionid_debris:  { name: 'Orionid Debris',  sym: 'Od', color: '#7fd8ff', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
-  draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: MINERAL_VALUE.uncommon, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle' },
+  draconid_debris: { name: 'Draconid Debris', sym: 'Dd', color: '#b1d8f4', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'triangle', cargoUnits: 0 },
   leonid_debris:   { name: 'Leonid Debris',   sym: 'Ld', color: '#9fd6e4', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'diamond', cargoUnits: 0 },
   geminid_debris:  { name: 'Geminid Debris',  sym: 'Gd', color: '#b7e3ff', price: ORIONID_FRAGMENT_BOOK, rarity: 'uncommon', constructionUse: 'Event debris; sell at market',  laserAccess: 1, shape: 'rect', cargoUnits: 0 },
   // One fragment per player on the Orionids peak, or combined from 15 fragments. 15× a fragment.

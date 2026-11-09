@@ -44,7 +44,7 @@ describe('economy scale', () => {
   it('prices every mineral from a rarity band, with no stragglers', () => {
     for (const [id, meta] of Object.entries(MINERAL_META)) {
       // Shower fragments are a modest bonus, off the ore bands. The fireball book is 15× a fragment.
-      if (id === 'fireball_fragment' || id === 'orionid_debris' || id === 'leonid_debris' || id === 'geminid_debris') {
+      if (id === 'fireball_fragment' || id === 'orionid_debris' || id === 'draconid_debris' || id === 'leonid_debris' || id === 'geminid_debris') {
         if (id === 'fireball_fragment') {
           expect(meta.price).toBe(FIREBALL_FRAGMENT_PRICE)
           expect(meta.price).toBe(ORIONID_FRAGMENT_BOOK * FIREBALL_EXCHANGE_MULTIPLE)
