@@ -566,7 +566,7 @@ export interface GameActions {
   sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
-  abandonMission: (opts?: { confirmed?: boolean }) => void
+  abandonMission: (opts?: { confirmed?: boolean; waivePenalty?: boolean }) => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void

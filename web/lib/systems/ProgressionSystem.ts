@@ -50,7 +50,7 @@ export function applyUnlockBlueprint(
 }
 
 
-export function applyAbandonMission(s: GameState, missions: Mission[]): GameState {
+export function applyAbandonMission(s: GameState, missions: Mission[], opts?: { waivePenalty?: boolean }): GameState {
   const mission = s.missionId
     ? (missions.find(m => m.id === s.missionId)
        ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
@@ -64,7 +64,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
     targetId: s.targetId,
     launchedAt: s.player.transitStartedAt,
   })
-  const penalty = mission && !alreadyCollected ? Math.round(mission.payout.francs * 0.1) : 0
+  const penalty = mission && !alreadyCollected && !opts?.waivePenalty ? Math.round(mission.payout.francs * 0.1) : 0
   const dailyClientPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
     ? { ...s.player.dailyClientPool, acceptedId: null }
     : s.player.dailyClientPool

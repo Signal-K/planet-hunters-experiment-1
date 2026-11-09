@@ -127,4 +127,21 @@ describe('research progression', () => {
     expect(next.player.returningToEarth).toBe(false)
     expect(next.deliveredCargo).toBeNull()
   })
+
+  it('charges the abort penalty normally, but waives it when a broken run is discarded', () => {
+    const mission = MISSIONS[0]
+    const state = makeState({
+      screen: 'mining',
+      missionId: mission.id,
+      targetId: 'eros',
+      player: { francs: 1_000_000_000, activeMission: { id: mission.id, label: 'Run -> Eros' } },
+    })
+
+    expect(applyAbandonMission(state, MISSIONS).player.francs).toBe(1_000_000_000 - Math.round(mission.payout.francs * 0.1))
+    const discarded = applyAbandonMission(state, MISSIONS, { waivePenalty: true })
+    expect(discarded.player.francs).toBe(1_000_000_000)
+    expect(discarded.player.activeMission).toBeNull()
+    expect(discarded.missionId).toBeNull()
+    expect(discarded.screen).toBe('hub')
+  })
 })

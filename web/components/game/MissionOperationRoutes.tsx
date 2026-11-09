@@ -57,17 +57,66 @@ interface MissionOperationRoutesProps {
   rocketDisplay: RocketDisplay
 }
 
+// How long a run may stay unresolvable while online before it is treated as lost. The runtime
+// catalog fetch has long settled by then, so a missing mission or target is not "still loading".
+const UNAVAILABLE_GRACE_MS = 4000
+const DISCARD_AFTER_MS = 12000
+
+/** What the page knows about a run whose mission or target cannot be found. */
+function describeMissingRun(game: Game) {
+  const run = game.player.activeMission
+  return {
+    screen: game.screen,
+    missionId: game.missionId ?? null,
+    targetId: game.targetId ?? null,
+    deliveryTargetId: game.deliveryTargetId ?? null,
+    missionFound: !!game.mission,
+    targetFound: !!game.target,
+    runId: game.player.missionRunId ?? null,
+    runMissionId: run?.id ?? null,
+    runLabel: run?.label ?? null,
+    runHasMissionCopy: !!run?.mission,
+    runHasTargetCopy: !!run?.target,
+    missionPhase: game.player.missionPhase ?? null,
+    cargoKinds: Object.keys(game.player.miningCargoInProgress ?? {}).length,
+    pausedRuns: game.player.pausedMissionRuns?.length ?? 0,
+    catalogMissions: game.catalog.missions.length,
+    catalogTargets: game.catalog.targets.length,
+    online: navigator.onLine,
+  }
+}
+
 /**
- * A saved run whose mission or target cannot be found (a run saved before runs carried their own
- * copy, or a cold offline load before the catalog arrives) used to render nothing: a blank scene
- * with only the HUD. This says so, keeps the run, and offers a way out.
+ * A saved run whose mission or target cannot be found used to render nothing: a blank scene with
+ * only the HUD. This logs what is missing, and says so. A run that carries no copy of the missing
+ * piece and still cannot resolve while online is unrecoverable, so it is discarded (no payout
+ * penalty) and the player returns to the Base. Offline, the run is kept: the data may still arrive.
  */
-function MissionRunUnavailable({ onBack }: { onBack: () => void }) {
+function MissionRunUnavailable({ game }: { game: Game }) {
   const [slow, setSlow] = useState(false)
+  const details = describeMissingRun(game)
+  const unrecoverable = !(details.missionFound || details.runHasMissionCopy)
+    || !(details.targetFound || details.runHasTargetCopy)
+  const online = details.online
+  const { abandonMission } = game
+  const detailsKey = JSON.stringify(details)
+
   useEffect(() => {
-    const timer = window.setTimeout(() => setSlow(true), 4000)
-    return () => window.clearTimeout(timer)
-  }, [])
+    console.warn('mission run unavailable', detailsKey)
+    captureGameEvent('mission_run_unavailable', JSON.parse(detailsKey))
+    const slowTimer = window.setTimeout(() => setSlow(true), UNAVAILABLE_GRACE_MS)
+    const discardTimer = window.setTimeout(() => {
+      if (!navigator.onLine || !unrecoverable) return
+      console.warn('mission run unrecoverable, discarding', detailsKey)
+      captureGameEvent('mission_run_discarded', JSON.parse(detailsKey))
+      abandonMission({ confirmed: true, waivePenalty: true })
+    }, DISCARD_AFTER_MS)
+    return () => {
+      window.clearTimeout(slowTimer)
+      window.clearTimeout(discardTimer)
+    }
+  }, [detailsKey, unrecoverable, abandonMission])
+
   const button = {
     minHeight: 44, padding: '10px 24px', background: 'transparent', color: 'var(--ln-cyan, #00e5ff)',
     border: '1px solid rgba(0, 229, 255, 0.4)', borderRadius: 4, fontSize: 14, cursor: 'pointer',
@@ -83,12 +132,15 @@ function MissionRunUnavailable({ onBack }: { onBack: () => void }) {
       {slow && (
         <>
           <p style={{ fontSize: 14, margin: 0, maxWidth: 320, lineHeight: 1.5, opacity: 0.8 }}>
-            This run is saved, but its mission or target has not loaded. Check your connection and try again,
-            or return to the Base. Your run and cargo are kept.
+            {!online
+              ? 'This run is saved, but its mission has not loaded and you are offline. Your run and cargo are kept.'
+              : unrecoverable
+                ? 'This run has lost its mission data and cannot be resumed. It will be cleared and you will return to the Base.'
+                : 'This run is saved, but its mission has not loaded. Try again, or return to the Base. Your run and cargo are kept.'}
           </p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
             <button type="button" style={button} onClick={() => window.location.reload()}>TRY AGAIN</button>
-            <button type="button" style={button} onClick={onBack}>BACK TO BASE</button>
+            <button type="button" style={button} onClick={() => game.go('hub')}>BACK TO BASE</button>
           </div>
         </>
       )}
@@ -181,7 +233,7 @@ export default function MissionOperationRoutes({
       )
 
     case 'landing': {
-      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
+      if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       const mode = game.player.landingReturnStartedAt ? 'ascend' : 'descend'
       return (
         <LandingScreen
@@ -201,7 +253,7 @@ export default function MissionOperationRoutes({
     }
 
     case 'mining': {
-      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
+      if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
@@ -335,7 +387,7 @@ export default function MissionOperationRoutes({
     }
 
     case 'delivery':
-      if (!game.mission || !game.deliveryTargetId) return <MissionRunUnavailable onBack={() => game.go('hub')} />
+      if (!game.mission || !game.deliveryTargetId) return <MissionRunUnavailable game={game} />
       return (
         <DeliveryScreen
           target={transitTarget}
@@ -352,7 +404,7 @@ export default function MissionOperationRoutes({
       )
 
     case 'debrief':
-      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
+      if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       if (game.player.homeDeliveryPending && game.lastCargo) {
         return (
           <HomecomingScreen
