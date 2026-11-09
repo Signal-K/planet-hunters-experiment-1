@@ -12,6 +12,7 @@ import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import BlankSceneDiagnostics from '@/components/game/BlankSceneDiagnostics'
+import SceneErrorBoundary from '@/components/game/SceneErrorBoundary'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { notifyFiredAlert } from '@/lib/priceAlertNotify'
@@ -404,7 +405,9 @@ function GameChrome({ children }: { children: ReactNode }) {
               but the visible game tree belongs to this persistent layout. */}
           <div className="game-screen-area">
             {!game.authGateOpen && (
-              <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} coachVisible={!!coach} />
+              <SceneErrorBoundary game={game} resetKey={game.screen}>
+                <ScreenContent screen={game.screen} game={game} onboardingActive={onboardingActive} coachVisible={!!coach} />
+              </SceneErrorBoundary>
             )}
           </div>
         <BackendStatus />
