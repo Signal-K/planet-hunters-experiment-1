@@ -325,6 +325,9 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
   })
 }
 
+/** Cargo of the starter rocket (Explorer), the smallest hold a self-directed run may require. */
+const STARTER_HOLD_UNITS = 6
+
 // Renewable self-directed mining pool: same freeops template pool, rotation
 // cadence, and mineral-eligibility filtering as generateFreeOpsMissionsFromRules
 // above, but with no client assigned at all (not even a starter-role client) —
@@ -376,7 +379,7 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
       id: 'self-directed-freeops-aluminium-stock',
       survey: undefined,
       title: 'Aluminium stock run',
-      brief: `No client, no daily limit. Mine ${amount} units of aluminium. Keep it for Base builds or sell it yourself at market price.`,
+      brief: `No client, no daily limit. Mine ${amount} units of aluminium, in one trip or several. Keep it for Base builds or sell it yourself at market price.`,
       tag: 'FREE OPS',
       difficulty: 'L1',
       locked: false,
@@ -384,7 +387,9 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
       unlockAt: 'Reach Free Operations',
       requires: {
         minerals: { aluminium: amount },
-        cargo_min: amount,
+        // The goal is 12U but a free run can return any time, so the launch gate is the starter hold. A small rocket
+        // flies it in several trips and the ore keeps adding up in the stash, instead of forcing the biggest hull.
+        cargo_min: Math.min(amount, STARTER_HOLD_UNITS),
         drill_tier: requiredDrillTier(['aluminium'], 1, input.minerals),
         max_orbit: 5,
       },
