@@ -38,4 +38,18 @@ describe('LaunchSequenceCanvas', () => {
     expect(container.querySelector('[data-testid="base-world"]')).not.toBeNull()
     expect(container.querySelector('[data-testid="base-launchpad"]')).not.toBeNull()
   })
+
+  it('shows exhaust flames on the pad and in the air, and a sky once it lifts off', async () => {
+    await act(async () => {
+      root = createRoot(container)
+      root.render(<LaunchSequenceCanvas rocketName="Explorer" targetName="433 Eros" onComplete={vi.fn()} />)
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(container.querySelector('[data-testid="launch-flame"]')).toBeNull()
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_500) })
+    expect(container.querySelector('[data-testid="launch-ignition"]')).not.toBeNull()
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_500) })
+    expect(container.querySelectorAll('[data-testid="launch-flame"]').length).toBe(3)
+    expect(container.querySelector('[data-testid="launch-sky"]')).not.toBeNull()
+  })
 })

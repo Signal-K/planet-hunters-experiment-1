@@ -339,6 +339,7 @@ export default function MissionOperationRoutes({
           // back-to-hub pause on this same mission.
           isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
           hasEarthStorage={earthStorageBuilt(game.player)}
+          storageFree={Math.max(0, storageCapacity(game.player) - storedUnits(game.player.stash))}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
           fragmentCatches={showerRunCatches(game.player)}

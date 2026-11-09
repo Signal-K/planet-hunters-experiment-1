@@ -60,7 +60,7 @@ function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null)
 }
 
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, storageFree, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -99,6 +99,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   isFreeHaulEligible?: boolean
   /** Whether the player has a built Earth-side silo/vault to store into. */
   hasEarthStorage?: boolean
+  /** Units of silo room left. When 0, "Store on Earth" is offered as full instead of promising room the haul will not get. */
+  storageFree?: number
   /** Destination already chosen before a prior "Back to hub" pause on this
    *  same mission — resuming must not ask again. */
   initialEarthDisposition?: 'store' | 'sell'
@@ -171,6 +173,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // over via initialEarthDisposition so resuming never asks twice.
   const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
+  const siloFull = !!hasEarthStorage && storageFree !== undefined && storageFree <= 0
+  const canStore = !!hasEarthStorage && !siloFull
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const steerRef = useRef<((dir: number) => void) | null>(null)
@@ -558,10 +562,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 <b>Sell on Earth</b>
                 <small>At market price</small>
               </button>
-              <button type="button" className={gateStyles.choice} data-testid="mining-gate-store" onClick={() => hasEarthStorage && setEarthDisposition('store')} disabled={!hasEarthStorage}>
+              <button type="button" className={gateStyles.choice} data-testid="mining-gate-store" onClick={() => canStore && setEarthDisposition('store')} disabled={!canStore}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5z" /><path d="M4 9 12 4l8 5M9 13h6" /></svg>
                 <b>Store on Earth</b>
-                <small>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</small>
+                <small>{!hasEarthStorage ? 'Needs a silo or vault' : siloFull ? 'Silo full. Sell, or upgrade it' : 'Into the silo'}</small>
               </button>
             </div>
           </section>
@@ -579,15 +583,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
 
       {activeOverlay === 'success' && (
-        <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-          <Panel className="mining-success-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 14, width: '100%' }}>
+        <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-start', padding: '72px 16px 16px', pointerEvents: 'none' }}>
+          <Panel className="mining-success-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 14, width: '100%', maxWidth: 520, margin: '0 auto', pointerEvents: 'auto' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-text)', textTransform: 'uppercase', marginBottom: 6 }}>
-              First Free Ops Haul Secured
+              First Free Ops Haul Secured · {totalCollected}/{totalNeeded}
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               {earthDisposition === 'store'
                 ? 'This cargo is yours. Return to Earth and it goes into your silo instead of to a client.'
                 : 'This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.'}
+              {' '}The goal is {totalNeeded}. Keep mining, or return any time.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
               <button
