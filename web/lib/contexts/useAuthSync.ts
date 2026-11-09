@@ -569,6 +569,11 @@ export function useAuthSync({
           // onboarding mission, or a contract no longer in the catalog or the
           // player's daily pool) used to stay in_progress forever while the
           // save said activeMission = null. Close it instead of skipping it.
+          // A scrubbed run's receipt is closed, never reattached.
+          if ((stateRef.current.player.scrubbedRuns ?? []).includes(run.id)) {
+            queueUpdate('mission_runs', run.id, { status: 'abandoned', completed_at: new Date().toISOString() })
+            return
+          }
           const pooled = !!missionId && (stateRef.current.player.dailyClientPool?.missions ?? []).some(m => m.id === missionId)
           if (!missionId || !targetId || !target || (!mission && !pooled) || isRetiredOnboardingMission(missionId)) {
             queueUpdate('mission_runs', run.id, { status: 'abandoned', completed_at: new Date().toISOString() })

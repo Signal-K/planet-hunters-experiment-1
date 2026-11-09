@@ -20,7 +20,7 @@ import { wasAway, withWelcomeBack } from '@/lib/systems/WelcomeBack'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
-import { dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
+import { dropScrubbedRuns, dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS } from '@/lib/game-screens'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
@@ -449,7 +449,7 @@ function restoreInFlightRunIds(input: GameState): GameState {
 }
 
 function repairStateRoute(rawInput: GameState): GameState {
-  const input = restoreInFlightRunIds(dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput)))
+  const input = restoreInFlightRunIds(dropScrubbedRuns(dropSettledMissionRuns(dropRetiredOnboardingRun(rawInput))))
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -770,6 +770,12 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.pausedMissionRuns = Array.from(
     new Map(pausedMissionRuns.map(run => [run.key, run])).values(),
   )
+  // Scrubbed runs are a union too: a scrub on either device is final. normalizeAndRepair below
+  // drops any run on the list, including the one a stale remote save still carries.
+  merged.player.scrubbedRuns = Array.from(new Set([
+    ...(current.player.scrubbedRuns ?? []),
+    ...(remoteState.player?.scrubbedRuns ?? []),
+  ])).slice(-50)
 
   // A run is resumable state, not onboarding progress. If the current device
   // has no active run but PocketBase does, keep the remote run and its route

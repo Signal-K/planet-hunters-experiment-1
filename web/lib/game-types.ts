@@ -164,6 +164,8 @@ export interface Player {
   activeMission: ActiveMissionRun | null
   /** Paused operational contexts. There is intentionally no artificial cap. */
   pausedMissionRuns?: MissionRunSnapshot[]
+  /** Keys of runs the player scrubbed. A server copy of the same run must not bring it back. */
+  scrubbedRuns?: string[]
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
