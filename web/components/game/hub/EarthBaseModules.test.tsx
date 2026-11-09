@@ -68,9 +68,9 @@ describe('EarthBaseModules surface silo construction', () => {
     view.unmount()
   })
 
-  it('draws no above-ground body for the surface silo', () => {
-    const markup = renderToStaticMarkup(<EarthBaseModules buildings={[{ kind: 'surface-silo', plotX: 200, w: 48, level: 3 }]} />)
-    expect(markup).not.toContain('data-pixel-structure')
-    expect(markup).not.toContain('surface_silo_flat.png')
+  it('draws the starter silo above ground, on its own site', () => {
+    const markup = renderToStaticMarkup(<EarthBaseModules buildings={[{ kind: 'surface-silo', plotX: 200, w: 48, level: 1 }]} />)
+    expect(markup).toContain('data-pixel-structure="surface-silo"')
+    expect(markup).toContain('data-structure="surface-silo"')
   })
 })
