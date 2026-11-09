@@ -6,7 +6,7 @@ export type FlightPlanEvent = 'mining-debriefed' | 'tess-classified' | 'part-twe
 /** A replay is a paid practice operation, settled only after its matching
  * real action is completed again. */
 export const TRAINING_REPLAY_REWARD = {
-  francs: 120,
+  francs: 150_000,
   researchXP: 10,
   stash: { iron: 2 },
 } as const
