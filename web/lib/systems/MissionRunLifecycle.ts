@@ -64,6 +64,54 @@ function runIdentity(run: MissionRunSnapshot): MissionRunIdentity {
   }
 }
 
+const MAX_SCRUBBED = 50
+
+/** Keys that identify the active sortie, however much of its identity survived a sync. */
+export function activeRunKeys(player: Pick<Player, 'activeMission' | 'missionRunId' | 'transitStartedAt'>): string[] {
+  const run = player.activeMission
+  if (!run) return []
+  // The run id is unique to one sortie. Only a run that lost it falls back to mission id plus launch time,
+  // so a later flight of the same contract is never caught by an old scrub.
+  if (player.missionRunId) return [player.missionRunId]
+  return [`${run.id}:${player.transitStartedAt ?? 'current'}`]
+}
+
+function pausedRunKeys(run: MissionRunSnapshot): string[] {
+  return [run.missionRunId, run.key].filter((key): key is string => !!key)
+}
+
+/** Record that a run was scrubbed, so a stale server copy cannot resurrect it. */
+export function withScrubbedRun(player: Player, keys: string[]): Player {
+  const known = new Set(player.scrubbedRuns ?? [])
+  for (const key of keys) known.add(key)
+  return { ...player, scrubbedRuns: Array.from(known).slice(-MAX_SCRUBBED) }
+}
+
+/** Remove the active run and any paused run the player scrubbed, wherever the save came from. */
+export function dropScrubbedRuns(state: GameState): GameState {
+  const scrubbed = new Set(state.player.scrubbedRuns ?? [])
+  if (scrubbed.size === 0) return state
+  const paused = state.player.pausedMissionRuns ?? []
+  const keptPaused = paused.filter(run => !pausedRunKeys(run).some(key => scrubbed.has(key)))
+  const activeScrubbed = activeRunKeys(state.player).some(key => scrubbed.has(key))
+  if (!activeScrubbed && keptPaused.length === paused.length) return state
+  return {
+    ...state,
+    ...(activeScrubbed ? {
+      screen: RUN_SCREENS.has(state.screen) ? 'hub' as const : state.screen,
+      missionId: null,
+      targetId: null,
+      deliveryTargetId: null,
+      lastCargo: null,
+      deliveredCargo: null,
+    } : {}),
+    player: {
+      ...(activeScrubbed ? clearActiveRunPlayer(state.player) : state.player),
+      pausedMissionRuns: keptPaused,
+    },
+  }
+}
+
 /** Drop a collected active sortie and any paused copy of a collected sortie. */
 export function dropSettledMissionRuns(state: GameState): GameState {
   const paused = (state.player.pausedMissionRuns ?? []).filter(run => !isSettledMissionRun(state.player, runIdentity(run)))

@@ -2,7 +2,7 @@
 
 import type { GameState } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
-import { isSettledMissionRun } from './MissionRunLifecycle'
+import { activeRunKeys, isSettledMissionRun, withScrubbedRun } from './MissionRunLifecycle'
 
 export function applyGainResearchXP(s: GameState, amount: number): GameState {
   if (!Number.isFinite(amount) || amount <= 0) return s
@@ -72,10 +72,13 @@ export function applyAbandonMission(s: GameState, missions: Mission[], opts?: { 
   const scrubKey = scrubRunId ?? (s.player.activeMission
     ? `${s.player.activeMission.id}:${s.player.transitStartedAt ?? 'current'}`
     : null)
+  // Remember the scrubbed run: the server save still holds it until this device syncs, and a merge
+  // would otherwise hand it straight back.
+  const scrubbedKeys = [...activeRunKeys(s.player), ...(scrubKey ? [scrubKey] : [])]
   return {
     ...s,
     player: {
-      ...s.player,
+      ...withScrubbedRun(s.player, scrubbedKeys),
       francs: Math.max(0, s.player.francs - penalty),
       activeMission: null,
       missionRunId: undefined,
