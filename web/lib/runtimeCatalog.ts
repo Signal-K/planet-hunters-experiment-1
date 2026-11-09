@@ -53,17 +53,9 @@ export const SATURN_IMAGER_TARGET: Target = {
   minerals: [],
 }
 
-export const ORIONIDS_SHOWER_TARGET: Target = {
-  id: ORIONIDS_SHOWER_TARGET_ID,
-  name: 'Orionids shower field',
-  type: 'event-field',
-  orbit: 2,
-  difficulty: 'L1',
-  brief: "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids.",
-  minerals: Object.keys(catalogMineralIds()),
-}
+export const ORIONIDS_SHOWER_TARGET: Target = showerTarget(ORIONIDS_SHOWER_ID)
 
-/** SSL-658: the field a non-Orionid shower run flies to. */
+/** The field a shower run flies to (SSL-658, SSL-774). */
 export function showerTarget(showerId: string): Target {
   const shower = SHOWERS.find(item => item.id === showerId)!
   return {
@@ -72,7 +64,9 @@ export function showerTarget(showerId: string): Target {
     type: 'event-field',
     orbit: 2,
     difficulty: 'L1',
-    brief: `A moving meteor field for the ${shower.name}. These are anonymous shower points, not named asteroids.`,
+    brief: showerId === ORIONIDS_SHOWER_ID
+      ? "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids."
+      : `A moving meteor field for the ${shower.name}. These are anonymous shower points, not named asteroids.`,
     minerals: Object.keys(catalogMineralIds()),
   }
 }

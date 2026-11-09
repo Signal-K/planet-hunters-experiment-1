@@ -48,8 +48,9 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 }
 
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
-export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
-export const ORIONIDS_SHOWER_TARGET_ID = 'orionids-shower-field'
+// Read from the shower declaration (SSL-774), not written twice.
+export const ORIONIDS_NIGHT_RUN_ID = getShower(ORIONIDS_SHOWER_ID)!.runMissionId
+export const ORIONIDS_SHOWER_TARGET_ID = getShower(ORIONIDS_SHOWER_ID)!.targetId
 
 /** True for any shower's run mission (Orionids, Leonids, Geminids). */
 export function isShowerRunMission(missionId: string | null | undefined): boolean {

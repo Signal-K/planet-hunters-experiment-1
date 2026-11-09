@@ -2,7 +2,7 @@
 // community research and the badge start here.
 // Window, rate, badge rule (`badgeAfterMissions`) and instrument come from sky-events.ts so they are written once.
 
-import { DEBRIS_PRESETS, getSkyEvent, type DebrisEventPreset } from '@/lib/data/sky-events'
+import { DEBRIS_PRESETS, getSkyEvent, type DebrisEventPreset, type SkyEvent } from '@/lib/data/sky-events'
 
 export interface ShowerDeclaration {
   /** Sky event id, also the badge id. */
@@ -59,3 +59,23 @@ export function showerInstrument(eventId: string): { callsign: string; name: str
   return getSkyEvent(eventId)?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
 }
 
+
+export interface ResolvedShower extends ShowerDeclaration {
+  /** Window, peak, rate and speed of the debris. */
+  preset: DebrisEventPreset
+  /** The sky event the badge is graded from. */
+  event: SkyEvent
+  /** Community research instrument callsign and name. */
+  instrument: { callsign: string; name: string }
+  /** The badge comes after the run, not from the first fragment. */
+  badgeAfterMissions: boolean
+}
+
+/** Everything one shower needs, in one place: the declaration plus its window, rate, badge rule and instrument. */
+export function resolveShower(eventId: string): ResolvedShower | undefined {
+  const shower = getShower(eventId)
+  const preset = showerPreset(eventId)
+  const event = getSkyEvent(eventId)
+  if (!shower || !preset || !event) return undefined
+  return { ...shower, preset, event, instrument: showerInstrument(eventId), badgeAfterMissions: !!event.badgeAfterMissions }
+}
