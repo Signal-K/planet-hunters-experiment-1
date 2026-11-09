@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
@@ -54,6 +55,45 @@ interface MissionOperationRoutesProps {
   deliveryTargetName?: string
   originTargetName?: string
   rocketDisplay: RocketDisplay
+}
+
+/**
+ * A saved run whose mission or target cannot be found (a run saved before runs carried their own
+ * copy, or a cold offline load before the catalog arrives) used to render nothing: a blank scene
+ * with only the HUD. This says so, keeps the run, and offers a way out.
+ */
+function MissionRunUnavailable({ onBack }: { onBack: () => void }) {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), 4000)
+    return () => window.clearTimeout(timer)
+  }, [])
+  const button = {
+    minHeight: 44, padding: '10px 24px', background: 'transparent', color: 'var(--ln-cyan, #00e5ff)',
+    border: '1px solid rgba(0, 229, 255, 0.4)', borderRadius: 4, fontSize: 14, cursor: 'pointer',
+  } as const
+  return (
+    <div className="game-screen" role="status" style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: 16, padding: 24, textAlign: 'center', minHeight: '100%',
+    }}>
+      <h1 style={{ fontSize: 18, letterSpacing: '0.1em', margin: 0 }}>
+        {slow ? 'MISSION DETAILS UNAVAILABLE' : 'LOADING MISSION'}
+      </h1>
+      {slow && (
+        <>
+          <p style={{ fontSize: 14, margin: 0, maxWidth: 320, lineHeight: 1.5, opacity: 0.8 }}>
+            This run is saved, but its mission or target has not loaded. Check your connection and try again,
+            or return to the Base. Your run and cargo are kept.
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button type="button" style={button} onClick={() => window.location.reload()}>TRY AGAIN</button>
+            <button type="button" style={button} onClick={onBack}>BACK TO BASE</button>
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export default function MissionOperationRoutes({
@@ -141,7 +181,7 @@ export default function MissionOperationRoutes({
       )
 
     case 'landing': {
-      if (!game.mission || !game.target) return null
+      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
       const mode = game.player.landingReturnStartedAt ? 'ascend' : 'descend'
       return (
         <LandingScreen
@@ -161,7 +201,7 @@ export default function MissionOperationRoutes({
     }
 
     case 'mining': {
-      if (!game.mission || !game.target) return null
+      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
@@ -295,7 +335,7 @@ export default function MissionOperationRoutes({
     }
 
     case 'delivery':
-      if (!game.mission || !game.deliveryTargetId) return null
+      if (!game.mission || !game.deliveryTargetId) return <MissionRunUnavailable onBack={() => game.go('hub')} />
       return (
         <DeliveryScreen
           target={transitTarget}
@@ -312,7 +352,7 @@ export default function MissionOperationRoutes({
       )
 
     case 'debrief':
-      if (!game.mission || !game.target) return null
+      if (!game.mission || !game.target) return <MissionRunUnavailable onBack={() => game.go('hub')} />
       if (game.player.homeDeliveryPending && game.lastCargo) {
         return (
           <HomecomingScreen
