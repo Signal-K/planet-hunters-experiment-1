@@ -5,6 +5,7 @@
 // Shaped so a later shower can declare its own chain.
 
 import { badgeTierFor, getSkyEvent, grantBadge } from '@/lib/data/sky-events'
+import { getShower, showerInstrument } from '@/lib/data/showers'
 import type { Player } from '@/lib/game-types'
 
 export type OrionidsStage = 0 | 1 | 2 | 3
@@ -60,14 +61,13 @@ export function completeRadioMission<T extends ChainPlayer>(player: T, at: numbe
   return { player: badgeTierFor(chain.eventId, at) ? grantBadge(staged, chain.eventId, at) : staged, completed: true }
 }
 
-/** Community research's weekly event step, worded for where the player is in the chain. */
-export function orionidsResearchStep(stage: number | undefined): { title: string; brief: string } {
+/** Community research's weekly event step, worded for where the player is in the chain. Read from the shower's declaration. */
+export function orionidsResearchStep(stage: number | undefined, eventId: string = ORIONIDS_CHAIN.eventId): { title: string; brief: string } {
+  const shower = getShower(eventId)
+  if (!shower) return { title: 'Meteor shower', brief: 'Take part in the shower for the community record.' }
   // A non-breaking hyphen keeps ORI-1 on one line in the step title.
-  const callsign = chainInstrument().callsign.replace('-', '\u2011')
-  switch (stage ?? 0) {
-    case 0: return { title: 'Orionids: catch and contribute fragments', brief: 'Fly the shower run and bring the fragments home for the community record.' }
-    default: return { title: 'Orionids: fragments delivered', brief: `Your fragments are in the record. ${callsign} is still listening: every recording you check fills the shared bar.` }
-  }
+  const callsign = showerInstrument(eventId).callsign.replace('-', '\u2011')
+  return (stage ?? 0) >= 1 ? shower.step.done(callsign) : shower.step.open
 }
 
 /** The community instrument launched for the chain's shower. */

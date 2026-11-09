@@ -12,6 +12,7 @@ import { useBallots } from '@/lib/community/useBallots'
 import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
+import { getShower } from '@/lib/data/showers'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
@@ -95,7 +96,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
-  const eventStep = event?.id === 'orionids' ? orionidsResearchStep(player.orionidsEventStage) : undefined
+  // SSL-774: any declared shower words its own step; only the Orionids has a saved stage so far.
+  const showerId = event ? `${event.id}-2026` : undefined
+  const eventStep = showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
