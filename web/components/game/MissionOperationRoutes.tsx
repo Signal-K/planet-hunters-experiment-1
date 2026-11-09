@@ -20,7 +20,8 @@ import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-ev
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
 import { addStamp } from '@/lib/research/stamps'
-import { addCaughtFragments } from '@/lib/orionids/fragments'
+import { showerForRunMission, showerForResource } from '@/lib/data/showers'
+import { addShowerCatches } from '@/lib/orionids/shower-ledger'
 import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { queueEventBadge, queueOrionidsEventProof } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
@@ -173,8 +174,9 @@ export default function MissionOperationRoutes({
   const debriefCargo = game.deliveredCargo ?? game.lastCargo ?? {}
   const debriefIsFreeHaul = game.mission ? isFreeHaulMission(game.mission, debriefCargo) && !game.player.cargoSettledOffworld : false
   // SSL-651: a filled shower run pays its francs and keeps the fragments, so the debrief shows both and leaves them out of the sale.
-  const showerRun = game.mission?.id === ORIONIDS_NIGHT_RUN_ID && showerRunFilled(game.player)
-    ? { francs: showerRunPayout(game.player.missionsDone), fragments: showerRunCatches(game.player) }
+  const runShower = showerForRunMission(game.mission?.id)
+  const showerRun = runShower && showerRunFilled(game.player, runShower.id)
+    ? { francs: showerRunPayout(game.player.missionsDone, runShower.id), fragments: showerRunCatches(game.player, runShower.id) }
     : null
 
   switch (screen) {
@@ -268,7 +270,7 @@ export default function MissionOperationRoutes({
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
-      const nightHold = game.mission.id === ORIONIDS_NIGHT_RUN_ID && chassis
+      const nightHold = showerForRunMission(game.mission.id) && chassis
         ? (chassis.cargo ?? 0)
         : undefined
       return (
@@ -342,7 +344,7 @@ export default function MissionOperationRoutes({
           storageFree={Math.max(0, storageCapacity(game.player) - storedUnits(game.player.stash))}
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
-          fragmentCatches={showerRunCatches(game.player)}
+          fragmentCatches={showerRunCatches(game.player, showerForRunMission(game.mission.id)?.id)}
           cargoCapacity={nightHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
           skyEventLocation={game.player.skyEventLocation}
@@ -379,8 +381,10 @@ export default function MissionOperationRoutes({
             }
             game.setPlayer(player => {
               const mined = applyDebrisMined(player, preset, now).player
-              if (resourceId !== 'orionid_debris') return mined
-              return addStamp(addCaughtFragments(mined, 1, 'count'), 'event', now)
+              // SSL-658: a catch goes in its own shower's ledger, so another shower's run never counts it.
+              const caughtShower = showerForResource(resourceId)
+              if (!caughtShower) return mined
+              return addStamp(addShowerCatches(mined, caughtShower.id, 1), 'event', now)
             })
           }}
           onEventProof={screenshot => {
@@ -455,7 +459,7 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}
-          haulMarketValue={sellQuote(showerRun ? withoutShowerFragments(debriefCargo) : debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
+          haulMarketValue={sellQuote(showerRun && runShower ? withoutShowerFragments(debriefCargo, runShower.id) : debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
           showerRun={showerRun}
           initialDisposition={game.player.freeHaulDisposition}
         />

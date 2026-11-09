@@ -127,6 +127,16 @@
    ]
   },
   {
+   "id": "leonids-shower-mining",
+   "name": "Leonids shower run",
+   "flow": "core-loop",
+   "web": "ui-leonids-shower-mining-fresh",
+   "native": "mining-shower-live",
+   "tickets": [
+    "SSL-658"
+   ]
+  },
+ {
    "id": "orionids-shower-mining",
    "name": "Orionids shower run",
    "flow": "core-loop",

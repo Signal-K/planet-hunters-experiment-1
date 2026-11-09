@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
@@ -48,7 +48,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // auto-picked behind the scenes keeps the state valid; the map stays open until a body is tapped. Training keeps
   // its guided path, and the shower run has a fixed field.
   const mustChoose = !launched && game.destinationChosen === false && pastRocketTraining(player)
-    && !!mission && mission.id !== ORIONIDS_NIGHT_RUN_ID
+    && !!mission && !showerForRunMission(mission.id)
   useEffect(() => { if (mustChoose) setSheet('destination') }, [mustChoose, mission?.id])
   if (!mission || !target) return null
 
@@ -69,7 +69,8 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // Orionids fragments are event evidence rather than player cargo, and the
   // event supplies its own storage. Do not add a contradictory silo prompt.
   // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
-  const showerRun = mission?.id === ORIONIDS_NIGHT_RUN_ID
+  const runShower = showerForRunMission(mission?.id)
+  const showerRun = !!runShower
   const getting = showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
@@ -102,7 +103,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
       </ol>
       <div className={styles.slots}>
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
-          <span>Destination</span><strong>{showerRun ? 'Orionids field' : target.name}</strong><em>Change</em>
+          <span>Destination</span><strong>{runShower ? `${runShower.name} field` : target.name}</strong><em>Change</em>
         </button>
         <button type="button" className={styles.slot} data-testid="plan-vehicle" data-blocked={blockedFix === 'vehicle' || undefined} disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
@@ -124,7 +125,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
             <path d="M42 19 86 34 126 18 166 35 211 20M86 34 92 58 126 18 149 57 166 35 196 59" />
             {[[42, 19], [86, 34], [126, 18], [166, 35], [211, 20], [92, 58], [149, 57], [196, 59]].map(([cx, cy], index) => <circle key={index} cx={cx} cy={cy} r="5" />)}
           </svg>
-          <span><b>ORIONIDS SHOWER</b><small>Catch fragments. Mine other minerals.</small></span>
+          <span><b>{(runShower?.name ?? 'Orionids').toUpperCase()} SHOWER</b><small>Catch fragments. Mine other minerals.</small></span>
         </div>
       )}
       {noSilo && !launched && (

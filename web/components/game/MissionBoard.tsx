@@ -20,6 +20,7 @@ import {
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -594,8 +595,8 @@ export default function MissionBoard({
         {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {run.id === ORIONIDS_NIGHT_RUN_ID
-              ? `Catch ${ORIONIDS_FRAGMENT_GOAL} Orionid fragments`
+            {showerForRunMission(run.id)
+              ? `Catch ${ORIONIDS_FRAGMENT_GOAL} ${showerForRunMission(run.id)!.name} fragments`
               : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
           </button>)}
         </div>}

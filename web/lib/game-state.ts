@@ -9,6 +9,8 @@ import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionid
 import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-catches'
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
+import { mergeShowerLedgers } from '@/lib/orionids/shower-ledger'
+import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -33,8 +35,8 @@ export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partia
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
 // Runs built at runtime by buildRuntimeCatalog, so a saved flight to one is not a lost mission on reload.
-const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID])
-const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID])
+const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, ...SHOWERS.map(shower => shower.runMissionId), RESOURCE_FOCUS_MISSION_ID])
+const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID, ...SHOWERS.map(shower => shower.targetId)])
 
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',
@@ -731,6 +733,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
+  merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
   merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null

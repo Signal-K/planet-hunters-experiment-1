@@ -2,7 +2,7 @@ import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -165,6 +165,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base after 4+ hours away: market moves, a client level-up, telescope items, a finished build and a friend gift in one list', stage: 'free-ops' },
@@ -773,6 +774,30 @@ function fixture(name: string): Partial<GameState> | null {
         targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: home ? haul : null,
+        popup: null,
+      }
+    }
+
+    // SSL-658: a Leonids run for a player with 40 Orionid catches. Only Leonid fragments count: 0 of 20 at accept.
+    case 'ui-leonids-shower-mining-fresh': {
+      const runId = showerRunMission('leonids-2026').id
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: runId, label: 'Leonids shower run' },
+          missionPhase: 'mining',
+          orionidsFragments: { caught: 40, redeemed: 0 },
+          orionidsRunBaseline: 40,
+          showerFragments: { 'leonids-2026': { caught: 2, redeemed: 0 } },
+          showerRunBaselines: { 'leonids-2026': 2 },
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: runId,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
         popup: null,
       }
     }

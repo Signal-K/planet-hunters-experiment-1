@@ -26,7 +26,7 @@ const SCREENS = [
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
   ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],
-  ['leonids', 'ui-community-research-leonids'], ['geminids', 'ui-community-research-geminids'],
+  ['leonids', 'ui-community-research-leonids'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['geminids', 'ui-community-research-geminids'],
   ['build', 'ui-build'], ['intro', 'm1-intro'],
 ]
 

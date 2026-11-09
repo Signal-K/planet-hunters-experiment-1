@@ -45,7 +45,8 @@ import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward,
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/InstrumentFeedSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, showerRunMission } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
@@ -335,7 +336,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
-    const entryMission = id === ORIONIDS_NIGHT_RUN_ID ? orionidsNightRun() : null
+    const entryShower = showerForRunMission(id)
+    const entryMission = entryShower ? showerRunMission(entryShower.id) : null
     const pickedMission = catalog.missions.find(m => m.id === id)
       ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
       ?? entryMission
@@ -348,7 +350,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     setState(s => {
-      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID
+      const isOrionidsEntry = !!entryShower
       if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
@@ -377,7 +379,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           }
         : prepared.player
       // SSL-651: the shower run's 20 fragments count from this accept.
-      const runPlayer = id === ORIONIDS_NIGHT_RUN_ID ? startShowerRun(entryPlayer) : entryPlayer
+      const runPlayer = entryShower ? startShowerRun(entryPlayer, entryShower.id) : entryPlayer
       const base = {
         ...prepared,
         player: {
@@ -1142,8 +1144,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // SSL-714: each Orionids mission hands over to the next one on the Events board.
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) requestMissionBoardTab('events')
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) stampResearch('event')
+    const runShower = showerForRunMission(current.missionId)
+    if (runShower) requestMissionBoardTab('events')
+    if (runShower) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
     // market. Runs as its own state step before the payout/ledger update below
@@ -1153,11 +1156,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // SSL-651: a filled Orionids shower run pays its francs and keeps the
     // fragments as fragments. Read once up front, because settling resets the
     // count the haul step below would otherwise ask.
-    const showerFilled = current.missionId === ORIONIDS_NIGHT_RUN_ID && showerRunFilled(current.player)
+    const showerFilled = !!runShower && showerRunFilled(current.player, runShower.id)
     if (showerFilled) {
-      setState(s => s.screen !== 'debrief' || s.missionId !== ORIONIDS_NIGHT_RUN_ID
+      setState(s => s.screen !== 'debrief' || s.missionId !== current.missionId
         ? s
-        : { ...s, player: settleShowerRun(s.player, s.player.missionsDone) })
+        : { ...s, player: settleShowerRun(s.player, s.player.missionsDone, runShower.id) })
     }
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.lastCargo) return s
@@ -1166,7 +1169,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? null
       if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
       const effective = disposition ?? s.player.freeHaulDisposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
-      const haul = showerFilled ? withoutShowerFragments(s.lastCargo) : s.lastCargo
+      const haul = showerFilled ? withoutShowerFragments(s.lastCargo, runShower?.id) : s.lastCargo
       const settled = applyFreeHaulDisposition(s, haul, effective, Date.now())
       // Clear the pre-mining choice (KES-283) once it's been consumed here, so
       // it never carries over and silently pre-picks the next free haul.
@@ -1289,13 +1292,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         s.player.missionStartedAt,
       )
       // SSL-674: a survey flight to a world the player discovered is community research.
-      const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID
+      const completedShower = showerForRunMission(mission?.id)
+      const eventStampedPlayer = completedShower
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
-      const orionidsBadged = mission?.id === ORIONIDS_NIGHT_RUN_ID ? grantBadge(wswBadgedPlayer, 'orionids-2026', Date.now()) : wswBadgedPlayer
+      const orionidsBadged = completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
         : orionidsBadged.orionidsEventStage ?? 0
@@ -1364,7 +1368,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
-            : mission?.id === ORIONIDS_NIGHT_RUN_ID
+            : completedShower
               ? 'missions'
               : isProgramOperation
               ? 'launchpad'

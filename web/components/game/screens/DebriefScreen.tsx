@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -70,7 +71,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const disposition = initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   // A filled shower run keeps its fragments, so only the rest of the haul is sold or stored.
-  const settledCargo = shownRun ? withoutShowerFragments(cargo) : cargo
+  const settledCargo = shownRun ? withoutShowerFragments(cargo, showerForRunMission(mission.id)?.id) : cargo
   const settledUnits = Object.values(settledCargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : settledUnits
   const [scrapping, setScrapping] = useState(false)

@@ -6,7 +6,8 @@ import authoredDeclarations from './authored-missions.json'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
 import { ROCKET_MODELS } from './rockets'
-import { isOrionidsWindow } from './sky-events'
+import { DEBRIS_PRESETS, isDebrisEventActive, isOrionidsWindow } from './sky-events'
+import { ORIONIDS_SHOWER_ID, getShower, showerForRunMission } from './showers'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
@@ -40,29 +41,46 @@ export function generateFreeOpsMissions(): Mission[] {
 // remains as the fixed M3-adjacent tutorial intro to it.
 export function generateSelfDirectedMiningPool(now: number = Date.now()): Mission[] {
   const pool = generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
-  return isOrionidsWindow(now) ? [...pool, orionidsNightRun()] : pool
+  const live = DEBRIS_PRESETS
+    .filter(preset => preset.eventId !== ORIONIDS_SHOWER_ID && getShower(preset.eventId) && isDebrisEventActive(preset, now))
+    .map(preset => showerRunMission(preset.eventId))
+  return [...pool, ...(isOrionidsWindow(now) ? [orionidsNightRun()] : []), ...live]
 }
 
 // SSL-578: Orionids Free Ops run, on the board only during the shower window.
 export const ORIONIDS_NIGHT_RUN_ID = 'self-directed-orionids-night-run'
 export const ORIONIDS_SHOWER_TARGET_ID = 'orionids-shower-field'
 
+/** True for any shower's run mission (Orionids, Leonids, Geminids). */
+export function isShowerRunMission(missionId: string | null | undefined): boolean {
+  return !!showerForRunMission(missionId)
+}
+
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
 
 export function orionidsNightRun(): Mission {
+  return showerRunMission(ORIONIDS_SHOWER_ID)
+}
+
+/** The Free Ops run for one shower (SSL-658). It asks for that shower's own fragments, counted from accept. */
+export function showerRunMission(showerId: string): Mission {
+  const shower = getShower(showerId) ?? getShower(ORIONIDS_SHOWER_ID)!
+  const orionids = shower.id === ORIONIDS_SHOWER_ID
   const amount = ORIONIDS_FRAGMENT_GOAL
-  const debris = MINERAL_META.orionid_debris
+  const debris = MINERAL_META[shower.resourceId]
   return {
-    id: ORIONIDS_NIGHT_RUN_ID,
-    title: 'Orionids shower run',
-    brief: `No client. Fly into the Orionids shower field and catch ${amount} fragments. The meteor points follow Orion's pattern, not a catalogue of named rocks. Mine any minerals you want while you are there. Peak night pays double.`,
+    id: shower.runMissionId,
+    title: `${shower.name} shower run`,
+    brief: orionids
+      ? `No client. Fly into the Orionids shower field and catch ${amount} fragments. The meteor points follow Orion's pattern, not a catalogue of named rocks. Mine any minerals you want while you are there. Peak night pays double.`
+      : `No client. Fly into the ${shower.name} shower field and catch ${amount} ${shower.name} fragments. Fragments from other showers do not count. Mine any minerals you want while you are there.`,
     tag: 'FREE OPS',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
-    targetId: ORIONIDS_SHOWER_TARGET_ID,
+    targetId: shower.targetId,
     // Event evidence is the only required objective. Ordinary minerals are
     // optional discoveries in the shower field, never a named-rock order.
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 2 },
