@@ -694,6 +694,7 @@ function fixture(name: string): Partial<GameState> | null {
           transitSatelliteLevel: 1,
           deepSpaceTelescopeBuilt: true,
           saturnImagerLaunchedAt: Date.now() - 86_400_000,
+          telescopeAim: { saturn: { week: weekKey(Date.now()), sector: 'band' } },
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TOTAL_FIELDS, fieldCentre, fieldId, landmarkNear, mappedCount, markMapped, mergeSkyMaps, raDelta, wrapRa, type SkyMap } from './sky-map'
-import { pointTelescope, telescopesNeedingPointing, type TelescopeAim } from './paths'
+import { pointTelescope, saturnSectorName, telescopesNeedingPointing, type TelescopeAim } from './paths'
 
 describe('sky map', () => {
   it('cuts the whole sky into 288 fields and wraps right ascension', () => {
@@ -43,6 +43,15 @@ describe('sky map', () => {
     // Another telescope can still be pointed the same week, and the next Monday asks again.
     expect(pointTelescope(locked, 'deep-space', Date.parse('2026-11-05T12:00:00Z'), { ra: 5, dec: 5 })).not.toBe(locked)
     expect(pointTelescope(locked, 'transit', Date.parse('2026-11-10T12:00:00Z'), { ra: 5, dec: 5 })).not.toBe(locked)
+  })
+
+  it('a Saturn lock keeps the sector for the week and names it only that week', () => {
+    const now = Date.parse('2026-11-04T12:00:00Z')
+    const locked = pointTelescope<{ telescopeAim?: TelescopeAim }>({}, 'saturn', now, undefined, 'band')
+    expect(locked.telescopeAim?.saturn?.sector).toBe('band')
+    expect(saturnSectorName(locked, now)).toBe('Storm band')
+    expect(saturnSectorName(locked, Date.parse('2026-11-10T12:00:00Z'))).toBeNull()
+    expect(saturnSectorName({}, now)).toBeNull()
   })
 
   it('asks for a telescope to be pointed only when it is online and not yet pointed this week', () => {

@@ -85,7 +85,7 @@ interface Props {
   start?: InstrumentPointing
   /** Telescopes the player has online; only these can be picked. */
   online?: InstrumentPointing[]
-  onLock: (pointing: InstrumentPointing, aim?: SkyAim) => void
+  onLock: (pointing: InstrumentPointing, aim?: SkyAim, sector?: string) => void
   onCancel: () => void
   /** Fields the player's telescopes have already mapped. */
   mapped?: SkyMap
@@ -287,7 +287,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
 
       <SceneActions className={styles.actionSlot}>
         {confirmed ? (
-          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
+          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim, confirmed.instrument === 'saturn' ? confirmed.target.id : undefined)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
         ) : (
           <ScenePrimary testId="sky-pointing-lock" onClick={lockHere}>
             {freeSky ? (alreadyMapped ? 'POINT HERE AGAIN' : 'MAP THIS FIELD') : view.lockLabel}

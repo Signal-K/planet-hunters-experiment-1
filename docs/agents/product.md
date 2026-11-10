@@ -86,7 +86,7 @@ A mining run, catch or other scene objective should finish in about one minute o
 
 - Instrument consoles are flat and tactile: solid panels, hard shadows, chunky keys, no gradients or glass, blue and amber by default (notes/decisions/Instruments are flat and tactile (2026-11-10).md).
 
-- Data hub flow (hub marker, data hub with map, data view, readout) and weekly sky pointing at the start of community research: notes/decisions/Data hub flow and weekly pointing (2026-11-10).md. Reviews are the same flow, not a separate screen. Cycle 10: more scopes and upgrades.
+- Data hub flow (hub marker, data hub with map, data view, readout) and weekly sky pointing at the start of community research: notes/decisions/Data hub flow and weekly pointing (2026-11-10).md. Reviews are the same flow, not a separate screen. Saturn sector is kept and shown, not a frame filter. Cycle 10: more scopes and upgrades.
 - Instrument controls: the simple console is the default on every classify screen; ALL CONTROLS opens the rest. Control inventory and the cycle 11 goal (finalise tactile and visually fun controls) are in `notes/decisions/Instrument controls today and the cycle 11 goal (2026-11-10).md`. Add no new controls before then.
 
 - Portrait phone Base: kit scale 2, drag to pan from the pad, ground line 460p; persistent UI is screen-fixed, never in the pannable world (2026-11-10).

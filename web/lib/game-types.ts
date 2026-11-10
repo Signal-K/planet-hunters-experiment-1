@@ -401,7 +401,7 @@ export interface Player {
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
-  telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number } }>>
+  telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
   researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
   /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
   skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>

@@ -14,6 +14,7 @@ import {
   type SaturnVerdict,
 } from '@/lib/data'
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
+import { saturnSectorName } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
@@ -75,7 +76,7 @@ function SaturnFilters() {
 }
 
 /** Readout rows kept on the simple console: what you found, and how many squares are left. */
-const SIMPLE_READOUT = new Set(['Storms', 'Tally'])
+const SIMPLE_READOUT = new Set(['Sector', 'Storms', 'Tally'])
 
 type CellState = { answer: SaturnVerdict | null; storm: boolean }
 
@@ -246,12 +247,15 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const mark = (cell: CellState) => cell.answer ? `${cell.answer === 'yes' ? 'Y' : cell.answer === 'no' ? 'N' : 'M'}${cell.storm ? '★' : ''}` : '—'
   const tally = (answer: SaturnVerdict) => allCells.filter(cell => cell.answer === answer).length
   const storms = allCells.flatMap((cell, index) => cell.storm ? [`SQ ${index + 1}`] : [])
+  // Context only: the Cassini frames carry no region, so the week's sector labels the readout and does not filter frames.
+  const sectorName = saturnSectorName(player, Date.now())
   const readoutRows: InstrumentReadoutRow[] = [
     ...[0, 1, 2].map(row => ({
       label: `Row ${row + 1}`,
       value: [0, 1, 2].map(col => mark(allCells[row * 3 + col])).join('  ·  '),
       testId: `saturn-readout-row-${row + 1}`,
     })),
+    ...(sectorName ? [{ label: 'Sector', value: sectorName.toUpperCase(), testId: 'saturn-readout-sector' }] : []),
     { label: 'Storms', value: storms.length ? storms.join(' · ') : 'NONE MARKED', testId: 'saturn-readout-storms' },
     { label: 'Tally', value: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE · ${allCells.filter(cell => !cell.answer).length} LEFT`, testId: 'saturn-readout-tally' },
     { label: 'Imaging', value: `${SATURN_PALETTES[palette].name} · ${contrast.toFixed(1)}× · ${sharpen ? 'SHARP' : 'SOFT'}${loupe ? ' · LOUPE' : ''}` },
