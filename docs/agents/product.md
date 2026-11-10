@@ -85,3 +85,5 @@ A mining run, catch or other scene objective should finish in about one minute o
 - Friend gifts (2026-11-10): ore from the sender's stash, once per friend per day: 3 of a common or uncommon ore, 1 of a rare or exotic one. The sender earns a research stamp. Currency and blueprint gifts are retired. See notes/decisions "Friend gifts come from your stash".
 
 - Instrument consoles are flat and tactile: solid panels, hard shadows, chunky keys, no gradients or glass, blue and amber by default (notes/decisions/Instruments are flat and tactile (2026-11-10).md).
+
+- Data hub flow (hub marker, data hub with map, data view, readout) and weekly sky pointing at the start of community research: notes/decisions/Data hub flow and weekly pointing (2026-11-10).md. Reviews are the same flow, not a separate screen. Cycle 10: more scopes and upgrades.

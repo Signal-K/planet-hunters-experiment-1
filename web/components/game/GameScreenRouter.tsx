@@ -93,7 +93,7 @@ import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import SkyPointing from '@/components/game/screens/SkyPointing'
-import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, type InstrumentPointing } from '@/lib/research/paths'
+import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -666,7 +666,13 @@ function ScreenBody({
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
-          onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
+          onChoosePath={path => {
+            const now = Date.now()
+            game.setPlayer(current => choosePath(current, path, now))
+            // Liam, 10.11: starting the week's research includes choosing where to look: each online telescope is pointed first.
+            const unpointed = telescopesNeedingPointing(game.player, now)
+            if (unpointed.length) { setPointingTarget(unpointed[0]); game.go('sky-pointing') }
+          }}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
           onFinishReview={() => { game.setPlayer(current => addStamp(current, 'review', Date.now())); setPendingReview(null) }}

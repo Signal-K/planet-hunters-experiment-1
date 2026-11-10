@@ -871,6 +871,10 @@ function fixture(name: string): Partial<GameState> | null {
           // Existing-save acceptance fixture: the Orionids run has already
           // stamped today's event contribution for the community history view.
           researchStamps: { [new Date().toISOString().slice(0, 10)]: ['event'] },
+          // Two telescopes online, so choosing the week's path asks where to point them.
+          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+          transitSatelliteLevel: 1,
+          saturnImagerLaunchedAt: Date.now() - 86_400_000,
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
