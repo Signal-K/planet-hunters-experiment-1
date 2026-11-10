@@ -19,6 +19,6 @@
   Cache-Control: no-cache
 /martians/host.js
   Cache-Control: no-cache
-/martians/game-gz.wasm
-  Content-Type: application/wasm
-  Cache-Control: public, max-age=0, must-revalidate
+/martians/game.wasm.gz
+  Content-Type: application/octet-stream
+  Cache-Control: public, max-age=0, must-revalidate, no-transform

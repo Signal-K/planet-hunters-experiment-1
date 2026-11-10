@@ -63,10 +63,16 @@ const cfg = window.HM_CONFIG || {};
     let inst;
     if (cfg.wasmGzip) {
       // Hosts with a small per-file limit (or a git repo) ship the wasm gzipped
-      // under another name; it is unpacked here. Needs DecompressionStream.
-      const res = await fetch(cfg.wasm || 'game-gz.wasm');
+      // as game.wasm.gz (not *.wasm: Wrangler would try to compile it into the
+      // Worker); it is unpacked here. Needs DecompressionStream. If the host
+      // already decoded it (Content-Encoding), it arrives as plain wasm.
+      const res = await fetch(cfg.wasm || 'game.wasm.gz');
       if (!res.ok) throw new Error('download failed (' + res.status + ')');
-      const buf = await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      let buf = await res.arrayBuffer();
+      const b = new Uint8Array(buf, 0, 2);
+      if (b[0] === 0x1f && b[1] === 0x8b) {
+        buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      }
       inst = await WebAssembly.instantiate(buf, go.importObject);
     } else {
       const wasm = cfg.wasm || 'game.wasm';
