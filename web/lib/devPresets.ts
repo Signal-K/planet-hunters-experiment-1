@@ -226,6 +226,7 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
       transitSatelliteLevel: 1,
       deepSpaceTelescopeBuilt: true,
       saturnImagerLaunchedAt: Date.now() - 86_400_000,
+      scanFollowUp: { targetId: 'mars', project: 'asteroid', at: Date.now() - 60_000 },
       // SSL-730: a few past classifications so Explored and All have dots on the sky map.
       tessClassifications: {
         'tic-261136679': { subjectId: 'tic-261136679', verdict: 'planet', ranges: [], submittedAt: Date.now() - 3 * 3_600_000 },

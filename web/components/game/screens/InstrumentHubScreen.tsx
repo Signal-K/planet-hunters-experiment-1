@@ -31,7 +31,7 @@ interface InstrumentHubScreenProps {
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
-  onOpenScreen: (screen: 'radio-meteors') => void
+  onOpenScreen: (screen: 'radio-meteors' | 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search') => void
   /** Builds the ground telescope in place; false when it could not. */
   onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
@@ -101,6 +101,16 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           buildCost={formatCurrency(groundCost, { compact: true })}
           buildShortfall={buildShortfall}
           onLogbook={() => setLogbookOpen(true)}
+          notice={player.scanFollowUp ? (() => {
+            const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
+            const screen = ({ tess: 'galaxy', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]
+            return (
+              <button type="button" className={styles.followUp} data-testid="scan-follow-up" onClick={() => onOpenScreen(screen)}>
+                <span>Confirm {followTarget?.name ?? 'your scan'} by hand</span>
+                <strong>Bonus XP + fragment</strong>
+              </button>
+            )
+          })() : undefined}
           rail={(
             <nav className={consoleStyles.rail} aria-label="Control station">
               <button type="button" data-testid="control-station-back" aria-label="Back" onClick={onBack}>

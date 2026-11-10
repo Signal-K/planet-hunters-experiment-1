@@ -424,6 +424,8 @@ export interface Player {
   // and feeds site refinery/factory processing.
   /** SSL-512 survey scan in progress: an owned telescope pointed at a body. */
   activeScan?: { targetId: string; startedAt: number } | null
+  /** A finished scan the player is asked to confirm by hand in an instrument, for bonus research XP and a fragment (SSL-803). */
+  scanFollowUp?: { targetId: string; project: 'tess' | 'asteroid' | 'saturn'; at: number } | null
   /** SSL-512 bodies charted by a survey scan, with the research XP each paid. */
   chartedBodies?: Record<string, { chartedAt: number; researchXpAwarded: number }>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]

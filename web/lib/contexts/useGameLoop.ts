@@ -30,7 +30,7 @@ import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
-import { applyStartScan, applyResolveScan } from '@/lib/systems/SurveyScanSystem'
+import { applyStartScan, applyResolveScan, applyScanFollowUpBonus } from '@/lib/systems/SurveyScanSystem'
 import { applyGainResearchXP, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -785,12 +785,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     const scan = current.player.activeScan
     const at = Date.now()
-    if (!scan || applyResolveScan(current, at) === current) return
+    if (!scan || applyResolveScan(current, at, catalog.targets) === current) return
     stampResearch('survey')
     const target = catalog.targets.find(item => item.id === scan.targetId)
     let marked = false
     setState(s => {
-      const resolved = applyResolveScan(s, at)
+      const resolved = applyResolveScan(s, at, catalog.targets)
       if (resolved === s || target?.type !== 'planet') return resolved
       const found = grantOrionidsPlanetFind(resolved.player, {
         subjectId: target.id,
@@ -806,6 +806,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return found.player === resolved.player ? resolved : { ...resolved, player: found.player }
     })
     captureGameEvent('survey_scan_completed', { target_id: scan.targetId })
+    if (applyResolveScan(current, at, catalog.targets).player.scanFollowUp && !current.player.scanFollowUp) addToast('The scan needs a manual check. Open the Data hub to confirm it for a bonus.', 'ok')
     addToast(
       marked
         ? 'Scan complete. Planet charted. Orionids-found voucher owned. Redeem coming soon.'
@@ -837,9 +838,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [setState])
 
+  // SSL-803: any manual analysis in the instrument a scan asked about pays the follow-up bonus, once.
+  const payScanFollowUp = useCallback((project: 'tess' | 'asteroid' | 'saturn') => {
+    const pending = stateRef.current.player.scanFollowUp
+    if (!pending || pending.project !== project) return
+    setState(s => applyScanFollowUpBonus(s, project))
+    addToast('Scan confirmed. Bonus research XP and a fragment', 'ok')
+  }, [addToast, setState, stateRef])
+
   const submitTessClassification = useCallback((subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => {
     const submittedAt = Date.now()
     stampResearch('classification')
+    payScanFollowUp('tess')
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
       .sort((a, b) => a.x1 - b.x1)
@@ -961,7 +971,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // drafted but never created against a real project), so this is an
     // event only for now — wire a survey key here once that's created.
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
-  }, [addToast, setState, stateRef])
+  }, [addToast, payScanFollowUp, setState, stateRef])
 
   // Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
@@ -970,6 +980,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     stampResearch('classification')
+    payScanFollowUp('asteroid')
 
     if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
       addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
@@ -1003,7 +1014,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [addToast, setState, stateRef])
+  }, [addToast, payScanFollowUp, setState, stateRef])
 
   // Saturn imager (SSL-492): local record first (offline-safe), then a pool
   // classification (SSC-43) when the frame came from the shared pool. Badge
@@ -1011,6 +1022,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     stampResearch('classification')
+    payScanFollowUp('saturn')
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
       // Historic whole-frame records remain complete; a new 3x3 record only
@@ -1091,7 +1103,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [setState, stateRef])
+  }, [payScanFollowUp, setState, stateRef])
 
   // SSL-714: a boxed Radio Meteor Zoo spectrogram. Saved on the player and in Landnam's
   // radio_meteor_classifications; never posted to Zooniverse.

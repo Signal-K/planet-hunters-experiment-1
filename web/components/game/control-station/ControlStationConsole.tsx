@@ -37,6 +37,8 @@ interface ControlStationConsoleProps {
   buildShortfall?: string | null
   /** The back and help controls, top left. */
   rail: ReactNode
+  /** A pending ask above the instrument list (a scan waiting for a manual check). */
+  notice?: ReactNode
   /** Opens the logbook sheet (daily research, survey scan, charts, badges). */
   onLogbook: () => void
 }
@@ -163,6 +165,7 @@ export function ControlStationConsole({
   buildCost,
   buildShortfall = null,
   rail,
+  notice,
   onLogbook,
 }: ControlStationConsoleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
@@ -275,6 +278,7 @@ export function ControlStationConsole({
             <small className={styles.subtitle}>Pick an instrument, tap a target</small>
           </span>
         </header>
+        {notice}
         <ul className={styles.keys}>
           {telescopes.map(scope => (
             <li key={scope.id} className={styles.key} data-testid="control-station-telescope" data-telescope={scope.id} data-on={scope.id === telescopeId}>

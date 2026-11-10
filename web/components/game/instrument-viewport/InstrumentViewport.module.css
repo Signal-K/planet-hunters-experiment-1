@@ -1765,3 +1765,4 @@
 
 /* Data readout step: Back and Confirm side by side; after sending, Data hub and Ask community stack full width. */
 .screen .answers[data-testid$='-readout-actions'] { grid-template-columns: minmax(0, 1fr); }
+.screen .answers[data-testid$='-readout-confirm'] button { min-width: 0; padding-inline: 8px; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; }
