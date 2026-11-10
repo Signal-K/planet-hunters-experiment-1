@@ -1,7 +1,8 @@
 'use client'
 
 import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { scanInstrumentLaunched } from '@/lib/systems/SurveyScanSystem'
 import ScenePanel from '@/components/game/ScenePanel'
 import { ControlStationConsole } from '@/components/game/control-station/ControlStationConsole'
 import consoleStyles from '@/components/game/control-station/ControlStationConsole.module.css'
@@ -53,6 +54,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
   const [view, setView] = useState<SkyView>('all')
   const [telescopeId, setTelescopeId] = useState<string | null>(null)
   const [logbookOpen, setLogbookOpen] = useState(false)
+  const [scanOpen, setScanOpen] = useState(false)
   const help = useHelp('instrument-hub', { firstVisit: !onboardingMissionDone(player.flightPlan) })
   const [justBuilt, setJustBuilt] = useState(false)
   const groundCost = STRUCTURE_PRICES.groundTelescope
@@ -76,6 +78,14 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
     [player, signals, awaitingFeed, view, activeTelescope],
   )
   const history = useMemo(() => stationHistory(player), [player])
+  const canScan = !!(onStartScan && onResolveScan && player.freeOperations && scanInstrumentLaunched(player))
+  const scanning = !!player.activeScan
+  // The scan finishes even when the sheet is closed.
+  useEffect(() => {
+    if (!scanning || !onResolveScan) return
+    const timer = window.setInterval(onResolveScan, 500)
+    return () => window.clearInterval(timer)
+  }, [scanning, onResolveScan])
 
   return (
     <ScenePanel
@@ -101,6 +111,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           buildCost={formatCurrency(groundCost, { compact: true })}
           buildShortfall={buildShortfall}
           onLogbook={() => setLogbookOpen(true)}
+          scan={canScan ? { scanning, onOpen: () => setScanOpen(true) } : undefined}
           notice={player.scanFollowUp ? (() => {
             const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
             const screen = ({ tess: 'galaxy', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]
@@ -125,6 +136,19 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           Ground telescope built. It adds {GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate to your feed every day.
         </p>
       )}
+      {scanOpen && onStartScan && onResolveScan && (
+        <div className={styles.sheetBackdrop} aria-label="Scan a body" data-testid="control-station-scan-sheet" onClick={event => { if (event.target === event.currentTarget) setScanOpen(false) }}>
+          <section className={styles.sheet}>
+            <header className={styles.sheetHead}>
+              <h2>Scan a body</h2>
+              <button type="button" aria-label="Close scan" onClick={() => setScanOpen(false)}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+              </button>
+            </header>
+            <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
+          </section>
+        </div>
+      )}
       {logbookOpen && (
         <div className={styles.sheetBackdrop} aria-label="Logbook" data-testid="control-station-logbook-sheet" onClick={event => { if (event.target === event.currentTarget) setLogbookOpen(false) }}>
           <section className={styles.sheet}>
@@ -135,9 +159,6 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
               </button>
             </header>
             <ResearchCalendar stamps={player.researchStamps} now={now} community={communityResearch} hasDiscovery={Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0} />
-            {onStartScan && onResolveScan && player.freeOperations && (
-              <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
-            )}
             {player.moonSurveyCharts?.enceladus && (
               <section data-testid="control-station-survey-charts" aria-label="Survey charts" className={styles.chart}>
                 <div className="ln-section-label">Survey charts</div>

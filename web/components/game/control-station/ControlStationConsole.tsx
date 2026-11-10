@@ -41,6 +41,8 @@ interface ControlStationConsoleProps {
   notice?: ReactNode
   /** Opens the logbook sheet (daily research, survey scan, charts, badges). */
   onLogbook: () => void
+  /** Opens the scan sheet. Present once a telescope is launched (SSL-807). */
+  scan?: { scanning: boolean; onOpen: () => void }
 }
 
 const EMPTY: Record<SkyView, string> = {
@@ -167,6 +169,7 @@ export function ControlStationConsole({
   rail,
   notice,
   onLogbook,
+  scan,
 }: ControlStationConsoleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
@@ -324,7 +327,10 @@ export function ControlStationConsole({
             <b>{history.total}</b>
             <span>classified</span>
           </div>
-          <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
+          <div className={styles.historyKeys}>
+            {scan && <button type="button" className={`${styles.logbook} ${styles.scanKey}`} data-testid="control-station-scan" data-scanning={scan.scanning || undefined} onClick={scan.onOpen}>{scan.scanning ? 'Scanning…' : 'Scan a body'}</button>}
+            <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
+          </div>
         </div>
       </section>
     </article>

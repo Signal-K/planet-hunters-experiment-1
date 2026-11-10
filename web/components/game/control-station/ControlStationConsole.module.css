@@ -498,3 +498,8 @@
   .horizon { height: 120px; flex: none; }
   .desk { overflow: visible; padding-top: 18px; padding-bottom: 28px; }
 }
+
+/* SSL-807: scan and logbook keys side by side. */
+.historyKeys { display: flex; flex-wrap: wrap; gap: 8px; }
+.scanKey { border-color: #ffb454; color: #ffb454; }
+.scanKey[data-scanning] { background: rgba(255, 180, 84, 0.16); }
