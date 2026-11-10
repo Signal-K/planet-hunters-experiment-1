@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Haphazard Martians</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2a1a1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root { --bg:#2a1a1c; --fg:#faf0e6; --dim:#c8aa96; --accent:#ec783c; --panel:#42282a; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); overflow:hidden;
+    font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; touch-action:none; overscroll-behavior:none; }
+  #boot { position:fixed; inset:0; display:grid; place-items:center; text-align:center; letter-spacing:.15em; }
+  #boot small { display:block; margin-top:.5em; color:var(--dim); letter-spacing:0; }
+  #acct { position:fixed; top:max(8px,env(safe-area-inset-top)); right:max(8px,env(safe-area-inset-right)); z-index:10;
+    background:rgba(42,26,28,.85); color:var(--fg); border:1px solid var(--dim); border-radius:6px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; }
+  dialog { background:var(--panel); color:var(--fg); border:1px solid var(--dim); border-radius:10px; padding:20px; width:min(340px,90vw); }
+  dialog::backdrop { background:rgba(0,0,0,.6); }
+  dialog h2 { margin:0 0 4px; font-size:20px; }
+  dialog p { margin:0 0 12px; color:var(--dim); font-size:13px; }
+  dialog label { display:block; font-size:13px; color:var(--dim); margin-top:10px; }
+  dialog input { width:100%; box-sizing:border-box; margin-top:4px; padding:10px; font:inherit; border-radius:6px; border:1px solid var(--dim); background:#2a1a1c; color:var(--fg); }
+  .row { display:flex; gap:8px; margin-top:16px; }
+  .row button { flex:1; padding:10px; font:inherit; border-radius:6px; border:1px solid var(--dim); background:var(--bg); color:var(--fg); cursor:pointer; }
+  .row button.primary { background:var(--accent); border-color:var(--accent); color:#1a0f10; font-weight:600; }
+  [hidden] { display:none !important; }
+  #msg.note { color:var(--dim); }
+  #msg { min-height:1.2em; margin-top:10px; font-size:13px; color:#ff786e; }
+</style>
+</head>
+<body>
+<div id="boot">HAPHAZARD MARTIANS<small id="bootmsg">Loading…</small></div>
+<button id="acct" type="button">Sign in</button>
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h2 id="dlgtitle">Sign in</h2>
+    <p>Optional. Use your Star Sailors account (the one you use for Landnam). Signing in saves your labels and runs to the Mars survey.</p>
+    <label>Email<input id="email" type="email" autocomplete="username" required></label>
+    <label id="codewrap" hidden>Code from the email<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label>
+    <label id="pwlabel">Password<input id="pw" type="password" autocomplete="current-password" minlength="8" required></label>
+    <div id="clerk-captcha"></div>
+    <div id="msg" role="alert"></div>
+    <div class="row">
+      <button type="button" id="signup">Create account</button>
+      <button type="submit" class="primary" id="signin" value="signin">Sign in</button>
+    </div>
+    <div class="row"><button type="button" id="forgot">Forgot password?</button><button type="button" id="close">Close</button></div>
+  </form>
+</dialog>
+<script src="config.js"></script>
+<script src="host.js"></script>
+<script src="wasm_exec.js"></script>
+<script>
+const cfg = window.HM_CONFIG || {};
+(async () => {
+  const msg = document.getElementById('bootmsg');
+  try {
+    const go = new Go();
+    let inst;
+    if (cfg.wasmGzip) {
+      // Hosts with a small per-file limit (or a git repo) ship the wasm gzipped
+      // under another name; it is unpacked here. Needs DecompressionStream.
+      const res = await fetch(cfg.wasm || 'game-gz.wasm');
+      if (!res.ok) throw new Error('download failed (' + res.status + ')');
+      const buf = await new Response(res.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+      inst = await WebAssembly.instantiate(buf, go.importObject);
+    } else {
+      const wasm = cfg.wasm || 'game.wasm';
+      try {
+        inst = await WebAssembly.instantiateStreaming(fetch(wasm), go.importObject);
+      } catch (e) { // wrong MIME type or no streaming support
+        const buf = await (await fetch(wasm)).arrayBuffer();
+        inst = await WebAssembly.instantiate(buf, go.importObject);
+      }
+    }
+    document.getElementById('boot').remove();
+    await go.run(inst.instance);
+  } catch (e) {
+    msg.textContent = 'Could not start: ' + e.message;
+    console.error(e);
+  }
+})();
+// sw: false where the game shares an origin with another app (Landnam): its
+// cache cleanup would delete that app's caches.
+if (cfg.sw !== false && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
