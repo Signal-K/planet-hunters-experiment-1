@@ -20,7 +20,7 @@ export interface InstrumentFinish {
 }
 
 export const INSTRUMENT_FINISHES: readonly InstrumentFinish[] = [
-  { id: 'indigo', name: 'Indigo', unlockLevel: 1, a: '#74a8ff', b: '#b49bff', c: '#ff73d2', glassTop: '#1e1e48', glassBottom: '#0e102c' },
+  { id: 'indigo', name: 'Indigo', unlockLevel: 1, a: '#7ab8ff', b: '#4f8dff', c: '#ffb454', glassTop: '#1b2a4f', glassBottom: '#14203c' },
   { id: 'ember', name: 'Ember', unlockLevel: 2, a: '#ffb36b', b: '#ff7a59', c: '#ff4f8b', glassTop: '#3a1e2a', glassBottom: '#1a0e18' },
   { id: 'glacier', name: 'Glacier', unlockLevel: 3, a: '#a8e6ff', b: '#5f8dff', c: '#e4f4ff', glassTop: '#16284e', glassBottom: '#08122a' },
   { id: 'solar', name: 'Solar', unlockLevel: 4, a: '#ffe08a', b: '#ffb020', c: '#ff6a3d', glassTop: '#3a2a10', glassBottom: '#1a1206' },

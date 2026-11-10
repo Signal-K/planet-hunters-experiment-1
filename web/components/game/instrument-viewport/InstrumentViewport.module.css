@@ -9,12 +9,12 @@
   --iv-paper-2: #232c48;
   --iv-mute: #c0c4dc;
   /* Instrument finish (lib/instrument-finish.ts): defaults are Indigo; the component overrides inline. */
-  --hw-a: #74a8ff;
-  --hw-b: #b49bff;
-  --hw-c: #ff73d2;
-  --hw-a-rgb: 116, 168, 255;
-  --hw-b-rgb: 180, 155, 255;
-  --hw-c-rgb: 255, 115, 210;
+  --hw-a: #7ab8ff;
+  --hw-b: #4f8dff;
+  --hw-c: #ffb454;
+  --hw-a-rgb: 122, 184, 255;
+  --hw-b-rgb: 79, 141, 255;
+  --hw-c-rgb: 255, 180, 84;
   --hw-glass-top-rgb: 30, 30, 72;
   --hw-glass-bottom-rgb: 14, 16, 44;
   --hw-phosphor: color-mix(in srgb, var(--hw-b) 30%, #ffffff);
@@ -1668,3 +1668,97 @@
   }
 }
 .stage[data-simple="true"] .command { justify-content: flex-start; }
+
+
+/* ══ SSL-798 · Flat, tactile pass (Liam, 10.11: "colourful but not this massive gradient; tactile but not this complex").
+   The glass, iridescent rim, blobs and glow layers above are switched off. Panels are solid colour with a cream
+   edge and a hard drop shadow; keys are chunky and press down. Colour comes from the instrument finish alone:
+   a is the accent, b fills the main key, c is the one warm highlight. ══ */
+.screen .controls,
+.screen .command {
+  border: 2px solid var(--hw-cream);
+  border-radius: 16px;
+  background: rgb(var(--hw-glass-top-rgb));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 5px 0 rgba(4, 8, 20, .75);
+}
+.screen .command { gap: 14px; padding: 12px; }
+.screen .well { border-color: var(--hw-cream); box-shadow: 0 5px 0 rgba(4, 8, 20, .75); }
+.screen .plate,
+.screen .resultPlate,
+.screen .lcd {
+  background: rgb(var(--hw-glass-bottom-rgb));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 2px solid rgba(var(--hw-a-rgb), .55);
+  box-shadow: none;
+  text-shadow: none;
+}
+.screen .readout dd,
+.screen .glassReadout,
+.screen .plateName { text-shadow: none; }
+.screen .readout { background: rgb(var(--hw-glass-bottom-rgb)); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+.screen .resultPlate { padding: 4px 2px; border: 0; background: transparent; }
+.screen .plate { padding: 10px 12px; }
+.screen .resultPlate dl, .screen .resultPlate div { row-gap: 8px; }
+
+/* Keys: flat fill, hard edge, they sink when pressed. */
+.screen .answer,
+.screen .toolButton,
+.screen .aim,
+.screen .quickKey,
+.screen .finishKey {
+  min-height: 48px;
+  background: rgb(var(--hw-glass-bottom-rgb));
+  border: 2px solid rgba(var(--hw-a-rgb), .7);
+  border-radius: 12px;
+  color: var(--hw-cream);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 4px 0 rgba(4, 8, 20, .8);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.screen .answer::before,
+.screen .toolButton::before { display: none; }
+.screen .answer:active:not(:disabled),
+.screen .toolButton:active,
+.screen .aim:active,
+.screen .quickKey:active,
+.screen .finishKey:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(4, 8, 20, .8); }
+.screen .toolButton[aria-pressed="true"],
+.screen .answer[data-primary="true"]:not(:disabled) {
+  background: var(--hw-b);
+  border-color: var(--hw-cream);
+  color: #fff;
+  box-shadow: 0 4px 0 rgba(4, 8, 20, .8);
+}
+.screen .answer:disabled,
+.screen .answer[data-dim="true"] { background: rgb(var(--hw-glass-bottom-rgb)); border: 2px dashed rgba(244, 239, 228, .3); color: #b3bdd3; box-shadow: none; }
+
+/* Knobs and lamps: one solid accent, no sweep from blue through violet to magenta. */
+.knobBezel {
+  background:
+    conic-gradient(from -135deg, var(--hw-a) 0 var(--k-sweep), rgba(244, 239, 228, .18) var(--k-sweep) 270deg, transparent 270deg 360deg);
+}
+.screen .needle { background: var(--hw-cream); box-shadow: none; }
+.screen .knob:active .dial { box-shadow: 0 0 0 3px #0b1020; }
+.finishSwatch { background: var(--hw-a); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .35); }
+.led[data-on="true"] { box-shadow: 0 0 0 1px rgba(0, 0, 0, .5); }
+
+/* The "classification submitted" strip: flat and quiet, with the next step beside it. */
+.screen .saved { background: rgb(var(--hw-glass-bottom-rgb)); border: 2px solid var(--hw-a); color: var(--hw-cream); }
+
+/* Short landscape phone: drop the plate name (the header already says it), tighten rows, and keep the sticky answer
+   block a solid colour so it never shows a gradient over the steps beneath it. */
+.screen .command .answers,
+.screen .command .answerBlock { background: rgb(var(--hw-glass-top-rgb)); }
+@media (max-height: 520px) {
+  .screen .resultPlate .plate { display: none; }
+  .screen .command { gap: 8px; }
+  .screen .resultPlate dl, .screen .resultPlate div { row-gap: 4px; }
+  .screen .step { margin: 0; }
+  .screen .resultPlate dd { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .screen .resultPlate { padding: 0; }
+  .screen .command { padding: 10px 12px; }
+}
