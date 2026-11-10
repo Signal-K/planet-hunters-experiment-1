@@ -80,6 +80,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
   const [needsMark, setNeedsMark] = useState(false)
+  // The data readout step: a tapped answer waits here for Back or Confirm before it is sent.
+  const [pendingVerdict, setPendingVerdict] = useState<TessVerdict | null>(null)
   // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
   // SSL-745: photometry module — time zoom, scan, bin and phase fold act on the data itself.
@@ -262,9 +264,16 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     if (classification) return
     // A verdict that needs a marked dip explains itself instead of sitting disabled and looking dead.
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
+    setPendingVerdict(id)
+  }
+
+  const confirmVerdict = () => {
+    const id = pendingVerdict
+    if (!id || classification) return
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     help.reportAction('submit')
+    setPendingVerdict(null)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
@@ -295,7 +304,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     { label: 'Depth', value: meanDepth != null ? `${meanDepth.toFixed(2)}ppt · R/R★ ${Math.sqrt(Math.max(0, meanDepth) / 1000).toFixed(3)}` : '—' },
     { label: 'Fold', value: lc.fold ? `P ${lc.period.toFixed(2)}d` : 'OFF', testId: 'tess-readout-fold' },
     { label: 'View', value: `${display.folded ? 'ALL SECTORS' : `${(display.xDomain[1] - display.xDomain[0]).toFixed(1)}d`} · BIN ×${lc.bin}` },
-    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : 'PENDING', testId: 'tess-readout-verdict' },
+    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : pendingVerdict ? `${verdictLabel[pendingVerdict]} · CONFIRM?` : 'PENDING', testId: 'tess-readout-verdict' },
     ...(classification && candidate.periodDays ? [{ label: 'Catalogue P', value: `${candidate.periodDays.toFixed(2)}d`, testId: 'tess-readout-catalogue' }] : []),
   ]
 
@@ -319,13 +328,18 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     help.reportAction('fold')
   }
 
+  const shareResult = () => {
+    if (!classification || !onShareReadout) return
+    // The catalogue period is the answer key, so it never travels with a readout.
+    onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+  }
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
     if (head?.toUpperCase() === 'CONSENSUS' && classification && onShareReadout) {
-      // The catalogue period is the answer key, so it never travels with a readout.
-      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+      shareResult()
       return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
     }
     if (head?.toUpperCase() === 'HELP' || head === '?') {
@@ -419,9 +433,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           />
         </div>
       )}
-      done={!!classification}
+      done={!!classification || !!pendingVerdict}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Classification submitted</div>
+        <InstrumentAnswerRow
+          groupTestId="tess-readout-actions"
+          actions={[
+            { id: 'hub', label: 'DATA HUB', testId: 'tess-readout-hub', primary: true, onClick: onBack },
+            ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'tess-readout-ask', onClick: shareResult }] : []),
+          ]}
+        />
+      ) : pendingVerdict ? (
+        <InstrumentAnswerRow
+          groupTestId="tess-readout-confirm"
+          actions={[
+            { id: 'back', label: 'BACK', testId: 'tess-readout-back', onClick: () => setPendingVerdict(null) },
+            { id: 'confirm', label: 'CONFIRM', testId: 'tess-readout-confirm-btn', primary: true, onClick: confirmVerdict },
+          ]}
+        />
       ) : (
         <InstrumentAnswerRow
           coachTarget="tess-verdicts"

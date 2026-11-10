@@ -1762,3 +1762,6 @@
   .screen .resultPlate { padding: 0; }
   .screen .command { padding: 10px 12px; }
 }
+
+/* Data readout step: Back and Confirm side by side; after sending, Data hub and Ask community stack full width. */
+.screen .answers[data-testid$='-readout-actions'] { grid-template-columns: minmax(0, 1fr); }
