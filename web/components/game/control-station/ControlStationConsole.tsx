@@ -208,14 +208,6 @@ export function ControlStationConsole({
               <span className={styles.scan} />
               <span className={styles.scan} data-late="true" />
             </div>
-            <div className={styles.marks} aria-hidden="true">
-              <span>Field: {view}</span>
-              <span>Targets: {anomalies.length}</span>
-            </div>
-            <div className={styles.marks} data-at="bottom" aria-hidden="true">
-              <span>Online: {online}/{telescopes.length}</span>
-              <span>Status: {status}</span>
-            </div>
             {anomalies.map(anomaly => (
               <button
                 key={anomaly.id}
@@ -279,16 +271,10 @@ export function ControlStationConsole({
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>
           </span>
           <span>
-            <h1 className={styles.title}>Control station</h1>
-            <small className={styles.subtitle}>Observatory layout</small>
+            <h1 className={styles.title}>Data hub</h1>
+            <small className={styles.subtitle}>Pick an instrument, tap a target</small>
           </span>
         </header>
-        <dl className={styles.tiles} data-testid="control-station-tiles">
-          <div><dt>Targets</dt><dd>{anomalies.length}</dd></div>
-          <div data-hot={waiting > 0}><dt>To classify</dt><dd>{waiting}</dd></div>
-          <div><dt>Classified</dt><dd>{history.total}</dd></div>
-          <div><dt>Online</dt><dd>{online}/{telescopes.length}</dd></div>
-        </dl>
         <ul className={styles.keys}>
           {telescopes.map(scope => (
             <li key={scope.id} className={styles.key} data-testid="control-station-telescope" data-telescope={scope.id} data-on={scope.id === telescopeId}>
@@ -334,11 +320,6 @@ export function ControlStationConsole({
             <b>{history.total}</b>
             <span>classified</span>
           </div>
-          {history.recent.length > 0 && (
-            <ul className={styles.recent}>
-              {history.recent.map(item => <li key={item.id}><b>{item.label}</b><span>{item.detail}</span></li>)}
-            </ul>
-          )}
           <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
         </div>
       </section>
