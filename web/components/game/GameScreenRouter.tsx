@@ -511,7 +511,7 @@ function ScreenBody({
         <SaturnStormSearchScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => { const reviewing = reviewTarget?.project === 'saturn'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
           reviewing={reviewTarget?.project === 'saturn'}
