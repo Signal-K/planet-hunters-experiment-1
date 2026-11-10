@@ -511,12 +511,14 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
+  const dataChipShown = !subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && signals.length > 0
   const orbitalNetwork = (player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
     <OrbitalInstrumentNetwork
       transitOnline={!!player.transitSatelliteLaunchedAt}
       deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
       readyCount={signals.length}
       ping
+      hideStatus={dataChipShown}
       onOpen={() => onOpenScene('instrument-hub')}
       onOpenTransit={() => onOpenScene('instrument-hub')}
       onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
@@ -649,7 +651,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {/* ── End persistent Base world ── */}
 
       {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
-      {!subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && (
+      {dataChipShown && (
         <DataReadyChip count={signals.length} onOpen={() => onOpenScene('instrument-hub')} />
       )}
       {!subsurface && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}

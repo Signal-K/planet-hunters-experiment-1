@@ -10,6 +10,8 @@ interface OrbitalInstrumentNetworkProps {
   onOpenTransit?: () => void
   onOpenDeepSpace?: () => void
   ping?: boolean
+  /** Hide the "N DATA READY" button when another control already offers it (the Hub's screen-fixed chip). */
+  hideStatus?: boolean
 }
 
 export function OrbitalInstrumentNetwork({
@@ -20,6 +22,7 @@ export function OrbitalInstrumentNetwork({
   onOpenTransit,
   onOpenDeepSpace,
   ping = false,
+  hideStatus = false,
 }: OrbitalInstrumentNetworkProps) {
   const hasWork = readyCount > 0
   const primaryLabel = transitOnline ? 'TESS instrument data' : 'Deep space instrument data'
@@ -63,10 +66,12 @@ export function OrbitalInstrumentNetwork({
             <button type="button" className="hub-orbital-network__hit hub-orbital-network__hit--deep-space" data-testid="hub-sky-telescope-deep-space" aria-label="Deep space telescope: open asteroid discovery" onClick={onOpenDeepSpace} />
           )}
         </span>
-        <button type="button" className={`hub-orbital-network__status${hasWork ? ' hub-orbital-network__status--ready' : ''}`} data-testid="hub-sky-instrument-status" onClick={onOpen} disabled={!onOpen}>
-          <span className="hub-orbital-network__dot" />
-          {status}
-        </button>
+        {!hideStatus && (
+          <button type="button" className={`hub-orbital-network__status${hasWork ? ' hub-orbital-network__status--ready' : ''}`} data-testid="hub-sky-instrument-status" onClick={onOpen} disabled={!onOpen}>
+            <span className="hub-orbital-network__dot" />
+            {status}
+          </button>
+        )}
       </div>
     )
   }
