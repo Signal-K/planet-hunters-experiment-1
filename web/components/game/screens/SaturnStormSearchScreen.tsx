@@ -407,6 +407,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       )}
       toolStepLabels={{ find: simpleConsole ? 'Is there a storm in this square?' : 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
       singleStep={simpleConsole}
+      done={complete}
       tool={(
         <InstrumentToolButton
           testId="saturn-mark-storm"
@@ -417,7 +418,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           coachTarget="saturn-mark-storm"
         />
       )}
-      footer={simpleEligible ? (
+      footer={simpleEligible && !complete ? (
         <button type="button" className={viewportStyles.quickKey} data-testid="saturn-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
           {allControls ? 'Simple view' : 'All controls'}
         </button>

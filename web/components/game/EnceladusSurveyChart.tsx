@@ -44,7 +44,7 @@ export default function EnceladusSurveyChart({ chart, classification, testId = '
           )
         })}
       </svg>
-      <figcaption style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ln-text)', textAlign: 'center' }}>
+      <figcaption style={{ font: '800 14px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hw-cream, var(--ln-text))', textAlign: 'center' }}>
         Enceladus survey · {stormCount} storm square{stormCount === 1 ? '' : 's'} · {status}
       </figcaption>
     </figure>
