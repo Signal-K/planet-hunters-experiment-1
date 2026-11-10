@@ -132,6 +132,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const px = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
     ? Math.min(2, Math.max(1, Math.floor(((viewSize.w - 16) / builtSpan(standingKinds)) * 100) / 100))
     : fullPx
+  const portraitPhone = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
+  // Portrait phones are tall: the sky would take 70% of the screen, so the ground line (and everything standing on it) rises.
+  const groundLine = portraitPhone ? 0.46 : undefined
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
   const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView })
@@ -508,8 +511,20 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
+  const orbitalNetwork = (player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
+    <OrbitalInstrumentNetwork
+      transitOnline={!!player.transitSatelliteLaunchedAt}
+      deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
+      readyCount={signals.length}
+      ping
+      onOpen={() => onOpenScene('instrument-hub')}
+      onOpenTransit={() => onOpenScene('instrument-hub')}
+      onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
+    />
+  )
+
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
 
       {/* One continuous vertical world: surface above, soil and bedrock below.
           Subsurface moves this canvas down instead of replacing the Hub with
@@ -534,7 +549,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         >
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
-          <BaseWorldCanvas px={px} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} launchTags extraSky={orionidsSkyOn(player) ? ['meteors'] : undefined} />
+          <BaseWorldCanvas px={px} groundLine={groundLine} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} launchTags extraSky={orionidsSkyOn(player) ? ['meteors'] : undefined} />
           <BaseConstellations player={player} visible={skyGrade === 'night' || skyGrade === 'dusk' || skyGrade === 'dawn'} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
@@ -557,17 +572,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             </button>
           )}
 
-          {(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
-            <OrbitalInstrumentNetwork
-              transitOnline={!!player.transitSatelliteLaunchedAt}
-              deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
-              readyCount={signals.length}
-              ping
-              onOpen={() => onOpenScene('instrument-hub')}
-              onOpenTransit={() => onOpenScene('instrument-hub')}
-              onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
-            />
-          )}
+          {!portraitPhone && orbitalNetwork}
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
@@ -619,6 +624,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             </div>
           </div>
           </div>
+          {/* The pannable world is wider than a portrait phone, so the orbital tag would sit off-screen: pin it to the view. */}
+          {portraitPhone && orbitalNetwork}
         </div>
 
         <div className={layoutStyles.subsurfaceWorld} aria-hidden={!subsurface}>

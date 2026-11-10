@@ -23,6 +23,13 @@
 @media (orientation: landscape) and (max-height: 640px) {
   .hub-building-name { display: none; }
 }
+/* Phone portrait: four structures share ~390px, so the name pills would overlap. Tighter pills, and the two middle
+   ones step down a row so every name reads in full. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .hub-building-name { padding: 2px 7px; letter-spacing: 0.04em; }
+  [data-testid="building-launchpad-name"],
+  [data-testid="building-market-name"] { transform: translateY(58px); }
+}
 .hub-mission-status {
   display: flex;
   align-items: center;
