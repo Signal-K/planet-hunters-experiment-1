@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addStamp } from '@/lib/research/stamps'
+import { addStamp, type ResearchStamps } from '@/lib/research/stamps'
 import { giftAmount, giftableOres } from './giftRules'
 
 describe('friend gift rules (SSL-794)', () => {
@@ -24,8 +24,8 @@ describe('friend gift rules (SSL-794)', () => {
 
   it('a gift stamps the day once', () => {
     const at = Date.parse('2026-11-10T12:00:00Z')
-    const once = addStamp({ researchStamps: {} }, 'gift', at)
-    expect(once.researchStamps['2026-11-10']).toEqual(['gift'])
+    const once = addStamp<{ researchStamps?: ResearchStamps }>({ researchStamps: {} }, 'gift', at)
+    expect(once.researchStamps?.['2026-11-10']).toEqual(['gift'])
     expect(addStamp(once, 'gift', at)).toBe(once)
   })
 })
