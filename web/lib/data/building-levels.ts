@@ -18,13 +18,14 @@ export const BUILDING_UPGRADE_COSTS: Record<UpgradableBuildingId, readonly [numb
 
 /** One concrete effect per building and level, shown on the building sheet. */
 export const BUILDING_LEVEL_EFFECTS: Record<UpgradableBuildingId, readonly [string, string, string]> = {
-  launchpad: ['Base parts and targets', 'Unlocks the parts and targets of a flown mission', 'Unlocks the parts and targets of two flown missions'],
+  launchpad: ['Explorer and Prospector, structures build in 10 s', 'Heavy Surveyor hull (18U), structures build 25% faster, plus the parts of one flown mission', 'Bulk hauler hull (24U), structures build 50% faster, plus the parts of two flown missions'],
   'surface-silo': ['Holds 40 units of ore', 'Holds 80 units of ore', 'Holds 120 units of ore'],
   refinery: ['Standard refining time', 'Refining takes 25% less time', 'Refining takes 50% less time'],
 }
 
 const SILO_CAPACITY_MULTIPLIER = [1, 2, 3] as const
 const TIME_MULTIPLIER = [1, 0.75, 0.5] as const
+const PAD_BUILD_MULTIPLIER = [1, 0.75, 0.5] as const
 const LAUNCHPAD_MISSION_FLOOR = [0, 1, 2] as const
 
 export function isUpgradableBuilding(id: string): id is UpgradableBuildingId {
@@ -72,6 +73,7 @@ export function mergeBuildingLevels(a: BuildingLevels | undefined, b: BuildingLe
 
 export const siloCapacityMultiplier = (level: number) => SILO_CAPACITY_MULTIPLIER[clampLevel(level) - 1]
 export const buildingTimeMultiplier = (level: number) => TIME_MULTIPLIER[clampLevel(level) - 1]
+export const padBuildMultiplier = (level: number) => PAD_BUILD_MULTIPLIER[clampLevel(level) - 1]
 export const launchpadMissionFloor = (level: number) => LAUNCHPAD_MISSION_FLOOR[clampLevel(level) - 1]
 
 export const BUILDING_NAMES: Record<UpgradableBuildingId, string> = {

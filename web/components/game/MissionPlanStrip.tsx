@@ -40,7 +40,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   useEffect(() => {
     if (!freeStart || autoStaged.current || !mission || !target) return
     const free = ROCKET_MODELS.filter(model => !model.locked && rocketPrice(model, player) === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)
     if (free.length !== 1) return
     autoStaged.current = true
     game.onPurchaseRocket(free[0].id)
@@ -100,7 +100,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // Liam, 01.11: when nothing the player has can fly it, the sheet offers to research or buy one that can.
   const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && (rocketUnlocked(model, player) || rocketResearchXp(model) > 0)) : []
   const fits = (model: (typeof ROCKET_MODELS)[number]) => rocketCompatibleWithMission(model, mission)
-    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok
+    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok
   const roles = rocketJobRoles(rockets.filter(model => rocketUnlocked(model, player)), mission, fits)
   const nothingFits = sheet === 'vehicle' && ![...roles.values()].some(role => role.kind === 'use')
   const researchable = rockets.filter(model => !rocketUnlocked(model, player) && fits(model))

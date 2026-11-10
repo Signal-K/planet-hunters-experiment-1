@@ -22,6 +22,8 @@ export interface HubBuildingDef {
   active?: boolean
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
   buildStartedAt?: number
+  /** Launchpad level, which sets the build time (SSL-693). */
+  padLevel?: number
 }
 
 /** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
@@ -80,8 +82,8 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, level = 1, active, buildStartedAt, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
-  const buildMs = structureBuildMs(kind)
+function StructureSprite({ kind, level = 1, active, buildStartedAt, padLevel = 1, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; padLevel?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
+  const buildMs = structureBuildMs(kind, padLevel)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
   // scaffold stayed on top of the finished sprite. Re-render when the
@@ -208,7 +210,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false, arrangem
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.landmark ? 'agency' : building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
+            <StructureSprite kind={building.landmark ? 'agency' : building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} padLevel={building.padLevel} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
           </span>
         )
       })}

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ROCKET_IDS, ROCKET_MODELS } from '@/lib/data'
+import { rocketPadLevel } from '@/lib/data/rockets'
 import type { InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
@@ -15,6 +16,8 @@ import styles from './HangarScreen.module.css'
 interface HangarScreenProps {
   francs: number
   missionsDone: number
+  /** Launchpad level 1-3; bigger rockets need a bigger pad (SSL-693). Defaults to 1. */
+  launchpadLevel?: number
     shipCustomizerParts?: InstalledCustomizerPartsByKind
   landingResearched?: boolean
   pendingLaunch?: boolean
@@ -52,7 +55,7 @@ function RocketThumbnail({ rocketId, tier }: { rocketId?: string; tier: number }
 }
 
 export default function HangarScreen({
-  francs, missionsDone, shipCustomizerParts, landingResearched,
+  francs, missionsDone, launchpadLevel = 1, shipCustomizerParts, landingResearched,
   onConfirmShipCustomizerBuild, onBack,
   missionTitle = null, rocketRoles = null, stagedTier = null, selectedRocketId = null, onChooseMission, onBuildRocket, flightPlan,
 }: HangarScreenProps) {
@@ -152,12 +155,15 @@ export default function HangarScreen({
       <div className={styles.fleet} data-testid="hangar-fleet-grid" data-ui-zone={UI_ZONES.screenContent}>
         {VEHICLES.map(vehicle => {
           const rocket = ROCKET_MODELS.find(model => model.id === vehicle.rocketId)
-          const sealed = !!rocket && (rocket.locked || missionsDone < rocket.missionsRequired)
+          const padShort = !!rocket && rocketPadLevel(rocket) > launchpadLevel
+          const sealed = !!rocket && (rocket.locked || missionsDone < rocket.missionsRequired || padShort)
           const role = rocket && hasMission ? rocketRoles[rocket.id] : undefined
           const incompatible = !!rocket && hasMission && role?.kind !== 'use'
           const waiting = !hasMission
           const cost = rocket ? (rocketPrice(rocket, player) === 0 ? 'No cost' : formatCurrency(rocketPrice(rocket, player), { compact: true })) : ''
-          const note = sealed && rocket
+          const note = padShort && rocket
+            ? `Needs Launchpad level ${rocketPadLevel(rocket)}`
+            : sealed && rocket
             ? `Needs ${rocket.missionsRequired} ${rocket.missionsRequired === 1 ? 'mission' : 'missions'}`
             : incompatible ? (role && 'note' in role ? role.note : 'Cannot carry this mission') : waiting ? 'Choose a mission first' : null
           const disabled = sealed || incompatible || waiting

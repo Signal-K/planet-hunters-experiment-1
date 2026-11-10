@@ -8,8 +8,8 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
     { id: 'hull-mk1', name: 'Hull MK1', tier: 1, locked: false, img: '/parts/starter_rocket_t1.png', mass: 2, cargo: 6 },
     { id: 'hull-mk2', name: 'Prospector Unibody Frame', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, missionsRequired: 1 },
     { id: 'hull-cargo', name: 'Cargo Bay T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo: 14, missionsRequired: 1 },
-    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: false, img: '/parts/hull_mk3_heavy_t3.png', mass: 4, cargo: 18, missionsRequired: 6 },
-    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: false, img: '/parts/bulk_hauler_t3.png', mass: 3, cargo: 24, missionsRequired: 6 },
+    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: false, img: '/parts/hull_mk3_heavy_t3.png', mass: 4, cargo: 18, missionsRequired: 6, padLevel: 2 },
+    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: false, img: '/parts/bulk_hauler_t3.png', mass: 3, cargo: 24, missionsRequired: 6, padLevel: 3 },
   ],
   propulsion: [
     { id: 'ion-a1', name: 'Ion Drive A1', tier: 1, locked: false, img: '/parts/basic_thruster_t1.png', power: 40, max_orbit: 5 },
@@ -52,6 +52,7 @@ export function suggestBuild(opts: {
   const available = (p: Part) => {
     if (p.locked) return false
     if (p.missionsRequired && effectiveMissionsDone < p.missionsRequired) return false
+    if (opts.launchpadLevel && (p.padLevel ?? 1) > opts.launchpadLevel) return false
     return true
   }
   const bestAvail = <T extends Part>(arr: T[]) => [...arr].reverse().find(p => available(p)) ?? arr[0]
@@ -74,6 +75,8 @@ export function validateBuild(opts: {
   loadoutBonus?: { capacity: number; range: number }
   /** The monthly community goal's fuel efficiency as a fraction (0.07); adds orbit reach (SSL-685). */
   fuelFraction?: number
+  /** Launchpad level 1-3. When given, a chassis that needs a bigger pad fails the check (SSL-693). */
+  launchpadLevel?: number
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
   const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
@@ -82,6 +85,11 @@ export function validateBuild(opts: {
 
   const problems: string[] = []
   const holds: BuildHold[] = []
+  const padNeeded = chassis.padLevel ?? 1
+  if (opts.launchpadLevel && padNeeded > opts.launchpadLevel) {
+    problems.push(`${chassis.name} needs Launchpad level ${padNeeded}`)
+    holds.push({ kind: 'pad', have: opts.launchpadLevel, need: padNeeded })
+  }
   const fittedOrbit = (propulsion.max_orbit ?? 0) + (opts.loadoutBonus?.range ?? 0)
   const maxOrbit = fittedOrbit + (fittedOrbit > 0 && (opts.fuelFraction ?? 0) > 0 ? Math.max(1, Math.ceil(fittedOrbit * opts.fuelFraction!)) : 0)
   const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
@@ -114,6 +122,7 @@ export function buildHoldLine(hold: BuildHold, vehicleName?: string | null, fix?
     const base = `${who} holds ${hold.have}U, this job needs ${hold.need}U`
     return fix ? `${base}. Try the ${fix.name} (${fix.cargo}U)` : base
   }
+  if (hold.kind === 'pad') return `${who} needs Launchpad level ${hold.need}, yours is level ${hold.have}`
   if (hold.kind === 'orbit') return `${who} reaches orbit ${hold.have}, this job needs orbit ${hold.need}`
   return `${who} has a T${hold.have} drill, this job needs T${hold.need}`
 }

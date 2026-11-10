@@ -260,6 +260,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
     return false
   }
+  const padLevel = buildingLevel(player, 'launchpad')
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -270,7 +271,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       w: BUILDING_W[kind] ?? 78,
       level: isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
-      status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
+      status: isUnderConstruction(startedAt, kind, undefined, padLevel) ? ('building' as const) : ('ok' as const),
+      padLevel,
       dimmed: isDimmedBuildingKind(kind),
       landmark: kind === 'control-station' && agencyLandmark,
       active: activeBuilding === kind,
@@ -613,8 +615,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) return null
                 const startedAt = player.underConstruction?.[kind]
-                const building = isUnderConstruction(startedAt, kind)
-                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
+                const building = isUnderConstruction(startedAt, kind, undefined, padLevel)
+                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt, padLevel }
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
@@ -622,10 +624,10 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                 const xFrac = (authoredSite ? displaySite(authoredSite).x : STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 const silo = kind === 'surface-silo'
-                const arrangeable = arrangeMode && (MOVABLE_KINDS as readonly string[]).includes(kind) && !isUnderConstruction(startedAt, kind)
+                const arrangeable = arrangeMode && (MOVABLE_KINDS as readonly string[]).includes(kind) && !isUnderConstruction(startedAt, kind, undefined, padLevel)
                 const editable = arrangeable
                   ? { ...building, onClick: () => setArrangeKind(kind) }
-                  : editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
+                  : editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind, undefined, padLevel)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
                   : silo
                     ? { ...building, onClick: () => setSubsurface(true) }

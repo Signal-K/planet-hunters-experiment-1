@@ -109,6 +109,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     parts: catalog.parts,
     loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
     fuelFraction: communityBonusRate(state.player).fuel,
+    launchpadLevel: buildingLevel(state.player, 'launchpad'),
   }).ok
 }
 

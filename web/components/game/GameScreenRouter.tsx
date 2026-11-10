@@ -1,5 +1,6 @@
 'use client'
 
+import { buildingLevel } from '@/lib/data/building-levels'
 import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -638,6 +639,7 @@ function ScreenBody({
         <HangarScreen
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
+          launchpadLevel={buildingLevel(game.player, 'launchpad')}
           flightPlan={game.player.flightPlan}
           shipCustomizerParts={game.player.shipCustomizerParts}
           landingResearched={game.player.landingResearched}

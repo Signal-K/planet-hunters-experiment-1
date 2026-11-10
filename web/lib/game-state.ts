@@ -2,7 +2,7 @@ import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
-import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
+import { buildingLevel, mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
@@ -302,12 +302,12 @@ export function normalizeState(input: PartialSave): GameState {
   // else gets normalized, so `underConstruction` never grows unbounded with
   // stale finished records.
   const underConstruction = Object.fromEntries(
-    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
+    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind, undefined, buildingLevel(player, 'launchpad')))
   )
   // Structures that finished since the player's last visit feed the welcome-back
   // card (SSL-702) before the finished records are dropped for good.
   const finishedAway = Object.entries(player.underConstruction ?? {})
-    .filter(([kind, startedAt]) => !isUnderConstruction(startedAt, kind) && typeof player.lastVisitAt === 'number' && startedAt + structureBuildMs(kind) > player.lastVisitAt)
+    .filter(([kind, startedAt]) => !isUnderConstruction(startedAt, kind, undefined, buildingLevel(player, 'launchpad')) && typeof player.lastVisitAt === 'number' && startedAt + structureBuildMs(kind, buildingLevel(player, 'launchpad')) > player.lastVisitAt)
     .map(([kind]) => kind)
   const welcomeBack = finishedAway.length > 0 && wasAway(player.lastVisitAt)
     ? withWelcomeBack(player.welcomeBack, player.lastVisitAt as number, { built: finishedAway })
