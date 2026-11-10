@@ -652,11 +652,19 @@ function ScreenBody({
     case 'sky-pointing':
       return (
         <SkyPointing
+          key={pointingTarget}
           start={pointingTarget}
           online={onlineTelescopes(game.player)}
           mapped={game.player.skyMap}
           onCancel={() => game.goBack('hub')}
-          onLock={(instrument, aim) => { game.setPlayer(current => pointTelescope(current, instrument, Date.now(), aim)); game.goBack('hub') }}
+          onLock={(instrument, aim) => {
+            const now = Date.now()
+            game.setPlayer(current => pointTelescope(current, instrument, now, aim))
+            // Each online telescope is aimed in turn: carry straight on to the next unpointed one.
+            const rest = telescopesNeedingPointing(pointTelescope(game.player, instrument, now, aim), now)
+            if (rest.length) setPointingTarget(rest[0])
+            else game.goBack('hub')
+          }}
         />
       )
 
