@@ -1,7 +1,7 @@
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
-import { MISSIONS } from '@/lib/data'
+import { MISSIONS, ROCKET_IDS } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
@@ -179,6 +179,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
+      { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
       { key: 'hub-first-run', label: 'Base: first run', hint: 'Only the launchpad is built: the line-art Agency building stands where the Data hub will go (SSL-785)', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
       { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
@@ -319,6 +321,17 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
     }
+
+    case 'hub-pad-l2':
+    case 'hub-pad-l3':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, buildingLevels: { launchpad: name === 'hub-pad-l3' ? 3 : 2 }, launchpadUpgraded: true, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
 
     case 'hub-first-run':
       return {

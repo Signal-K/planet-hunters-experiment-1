@@ -21,4 +21,4 @@ Decided by Liam for SSL-693 and SSL-792. Two upgrades above the base level (leve
 - Wear and maintenance: a bigger pad takes less wear per launch and needs repair less often. There is no wear mechanic yet, so this is the next slice. Costs of repair are francs.
 - The structure-build multiplier applies to every Base structure, since structures are the only timed construction today (rockets assemble instantly).
 - Numbers live in `web/lib/data/building-levels.ts` (multiplier, effects) and `rocketPadLevel` in `web/lib/data/rockets.ts`; chassis carry `padLevel`. iOS parity is parked (effect text mirrored in `BuildingLevels.swift`, not built or run).
-- Art: `docs/art/structures/launchpad/` has level 1 to 3 drawings, not wired in yet.
+- Art: level 2 and 3 are the line drawings in `docs/art/structures/launchpad/`, live as `launchpad-l2.png` and `launchpad-l3.png` (site map `levels` in `shared/layout/base-site.json`, each with its own height and rocket mount). Level 1 is still the painted kit sprite, so the styles differ until level 1 is redrawn. Preview: `/game/stage?preset=hub-pad-l2` and `hub-pad-l3`.

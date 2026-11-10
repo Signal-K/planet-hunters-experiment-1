@@ -18,7 +18,9 @@ export const aboveGround = (n: number) => `calc(var(--hub-ground) + ${n} * var(-
 export type SiteId = 'hall' | 'pad' | 'ops' | 'exchange' | 'shaft'
 export interface BaseSite { id: SiteId; x: number; half: number; plot: number | null; label: string }
 /** `body` is the structure's own width; the sprite (`left`, `width`) is wider by the shadow it casts to the right. */
-export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
+export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number }
+  /** Per-level overrides (src, size, foot, rocket mount) for upgradable structures, keyed by level. Level 1 is the entry itself. */
+  levels?: Record<string, Pick<StructureSprite, 'src' | 'height' | 'foot' | 'mount'>> }
 export interface ApronProp { id: string; src: string; x: number; width: number; height: number; lift: number }
 export interface SkyGrade {
   top: string
@@ -74,8 +76,10 @@ export function builtSpan(kinds: readonly string[], order?: readonly string[] | 
   return Math.max(...sites.map(s => s.x + s.half)) - Math.min(...sites.map(s => s.x - s.half))
 }
 
-export function structureSprite(kind: string): StructureSprite | null {
-  return STRUCTURES[kind === 'garage' ? 'hangar' : kind] ?? null
+export function structureSprite(kind: string, level = 1): StructureSprite | null {
+  const base = STRUCTURES[kind === 'garage' ? 'hangar' : kind] ?? null
+  const over = base?.levels?.[String(level)]
+  return base && over ? { ...base, ...over } : base
 }
 
 /** Structures the player may reorder along the strip. The silo stays on its shaft. */
