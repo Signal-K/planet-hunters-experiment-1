@@ -129,15 +129,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     ? [...(player.placed ?? []), 'control-station']
     : (player.placed ?? [])
   const fullPx = kitScale(viewSize)
-  const px = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
-    ? Math.min(2, Math.max(1, Math.floor(((viewSize.w - 16) / builtSpan(standingKinds)) * 100) / 100))
-    : fullPx
   const portraitPhone = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
+  // Portrait phones draw the Base at the full phone kit scale (2), so the structures stand tall, and the camera pans
+  // along the strip (drag), starting on the pad. Four structures no longer fit across 390pt at that size.
+  const px = portraitPhone ? 2 : fullPx
   // Portrait phones are tall: the sky would take 70% of the screen, so the ground line (and everything standing on it) rises.
   const groundLine = portraitPhone ? 0.46 : undefined
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView })
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
