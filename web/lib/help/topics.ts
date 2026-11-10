@@ -151,7 +151,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     cards: [
       DATA_ANALYSIS_CARD,
       { title: 'Nine squares', body: 'Each frame is a real Cassini photo of Saturn\'s clouds, cut into nine squares. Tap a square to pick it. The white box shows which one you are on.' },
-      { title: 'Mark a storm or move on', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands? Tap No storm · Next. All controls adds a Maybe answer for squares you cannot tell.' },
+      { title: 'Mark a storm or move on', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands? Tap No storm · Next. Cannot tell? Tap Maybe · Next.' },
       { title: 'Finish the frame', body: 'Each answer is saved straight away. Answer all nine squares to finish the frame and record it in your moon atlas.' },
     ],
     coach: [

@@ -278,14 +278,15 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     onSubmit(candidate.id, selected, answer, storm)
     if (simpleConsole) advanceFrom(selected)
   }
-  const skipSquare = () => {
+  const answerSquare = (answer: 'no' | 'maybe') => {
     if (savedCells[selected] || complete) return
     setPendingAnswer(null)
-    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer: 'no', storm: false } : cell))
+    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer, storm: false } : cell))
     help.reportAction('submit')
-    onSubmit(candidate.id, selected, 'no', false)
+    onSubmit(candidate.id, selected, answer, false)
     advanceFrom(selected)
   }
+  const skipSquare = () => answerSquare('no')
 
   return (
     <InstrumentViewport
@@ -384,7 +385,10 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
       ) : simpleConsole ? (
         <InstrumentAnswerRow
           coachTarget="saturn-verdicts"
-          actions={[{ id: 'skip', label: 'NO STORM · NEXT', testId: 'saturn-skip', onClick: skipSquare }]}
+          actions={[
+            { id: 'skip', label: 'NO STORM · NEXT', testId: 'saturn-skip', onClick: skipSquare },
+            { id: 'maybe', label: 'MAYBE · NEXT', testId: 'saturn-maybe', onClick: () => answerSquare('maybe') },
+          ]}
         />
       ) : pendingAnswer ? (
         <InstrumentAnswerRow
