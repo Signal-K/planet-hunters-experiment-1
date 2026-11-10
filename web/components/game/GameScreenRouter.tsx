@@ -139,6 +139,15 @@ function ScreenBody({
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
   const [pointingTarget, setPointingTarget] = useState<InstrumentPointing>('transit')
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
+  // One way out of every instrument screen: reviews go back to where they started, everything else to the Data hub.
+  // The inspected subject is dropped with it so the next door does not open on a stale one.
+  const leaveInstrument = (project: ConsensusQueueItem['project']) => {
+    const reviewing = reviewTarget?.project === project
+    setReviewTarget(null)
+    setInspectSignal(null)
+    if (reviewing) game.goBack()
+    else game.go('instrument-hub')
+  }
 
   /** SSL-746: a finished readout either asks for consensus, or (in review mode) answers the review. */
   const shareReadout = (project: ConsensusProject, subjectId: string, readout: ConsensusReadout) => {
@@ -481,7 +490,7 @@ function ScreenBody({
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
-          onBack={() => { const reviewing = reviewTarget?.project === 'tess'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
+          onBack={() => leaveInstrument('tess')}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
@@ -498,7 +507,7 @@ function ScreenBody({
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => { const reviewing = reviewTarget?.project === 'asteroid'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
+          onBack={() => leaveInstrument('asteroid')}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
           reviewing={reviewTarget?.project === 'asteroid'}
@@ -511,7 +520,7 @@ function ScreenBody({
         <SaturnStormSearchScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
-          onBack={() => { const reviewing = reviewTarget?.project === 'saturn'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
+          onBack={() => leaveInstrument('saturn')}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
           reviewing={reviewTarget?.project === 'saturn'}

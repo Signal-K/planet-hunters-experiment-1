@@ -87,3 +87,5 @@ Done:
 Not done, on purpose:
 - Renaming the router screens `galaxy` and `transit`. Screen ids are saved in player state and used in deep links, so a rename needs a migration. Worth doing with the router session-object refactor, not before.
 - Changing where missions end. Satellite launches land on the Data hub, shower runs on the Mission Board (to chain runs) and other program operations on the launchpad. Each is deliberate; the inconsistency is that the debrief does not say so. A "what next" row on the debrief would fix that and needs Liam's call on the three destinations.
+
+Later (SSL-801, 809, 810): Base shows a fixed "N data ready" chip that opens the Data hub; pointing walks every online telescope in turn; the three instrument back buttons share one `leaveInstrument` in the router and clear the inspected subject. Still open: folding `inspectSignal`, `reviewTarget` and `pendingReview` into one session object, and the `galaxy`/`transit` renames.
