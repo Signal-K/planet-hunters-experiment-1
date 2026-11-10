@@ -419,6 +419,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           />
         </div>
       )}
+      done={!!classification}
       answers={classification ? (
         <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (

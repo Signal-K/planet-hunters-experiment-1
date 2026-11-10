@@ -50,6 +50,8 @@ interface InstrumentViewportProps {
   tool?: ReactNode
   /** The two numbered steps beside a tool. Say what to do, not what the system records. */
   toolStepLabels?: { find: string; answer: string }
+  /** The answer is in: show only the result, never the how-to steps. */
+  done?: boolean
   /** Dashed slot when this project has no annotate tool. */
   emptyToolLabel?: string
   /** Under the answers, outside the numbered steps (the All controls toggle on a console with no tool). */
@@ -342,6 +344,7 @@ export default function InstrumentViewport({
   answers,
   tool,
   toolStepLabels,
+  done,
   emptyToolLabel,
   footer,
   onCommand,
@@ -470,7 +473,6 @@ export default function InstrumentViewport({
           <div className={styles.wellSlot}>
           <div className={styles.well} data-testid="instrument-viewport" data-ui-zone={UI_ZONES.screenContent}>
             <div className={styles.titleBar} data-testid="instrument-title-bar">
-              <span className={styles.titleStation}>{eyebrow}</span>
               <b className={styles.titleName}>{title}</b>
               <span className={styles.titleStatus} data-testid="instrument-title-status">{status}</span>
             </div>
@@ -579,7 +581,7 @@ export default function InstrumentViewport({
             )}
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
-            {tool ? <>
+            {done ? answers : tool ? <>
               <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> {toolStepLabels?.find ?? 'Mark it on the picture'}</p>
               {tool}
               <div className={styles.answerBlock}>

@@ -285,6 +285,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         />
         </div>
       )}
+      done={!!classification}
       answers={classification ? (
         <div className={viewportStyles.saved}>Classification submitted</div>
       ) : (
