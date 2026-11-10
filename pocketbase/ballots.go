@@ -218,6 +218,12 @@ func mustTime(s string) time.Time {
 	return t
 }
 
+// ballotEndOverrides extends voting on ballots that are already in the database.
+// 10 Nov 2026: the astronomy ballot closed on 9 Nov with few votes; it now runs a week.
+var ballotEndOverrides = map[string]time.Time{
+	"astronomy-2026-11": mustTime("2026-11-17T00:00:00Z"),
+}
+
 // seedBallots inserts the launch ballots that ship with the app. A ballot that already
 // exists is left alone, so edits made in the admin are never overwritten.
 func seedBallots(app core.App) {
@@ -227,6 +233,17 @@ func seedBallots(app core.App) {
 	}
 	for _, b := range initialBallots() {
 		if existing, _ := app.FindFirstRecordByFilter("community_ballots", "key = {:k}", dbx.Params{"k": b.Key}); existing != nil {
+			// Voting time only ever moves later here, so an admin who extends it further
+			// is never cut back, and a ballot Liam extended after it closed reopens.
+			if end := ballotEndOverrides[b.Key]; !end.IsZero() && existing.GetDateTime("closes_at").Time().Before(end) {
+				existing.Set("closes_at", end)
+				if existing.GetString("status") == ballotStatusClosed {
+					existing.Set("status", ballotStatusOpen)
+				}
+				if err := app.Save(existing); err != nil {
+					log.Printf("failed to extend ballot %s: %v", b.Key, err)
+				}
+			}
 			continue
 		}
 		rec := core.NewRecord(col)
@@ -264,7 +281,7 @@ func initialBallots() []ballotRow {
 			Disclaimer: astroDisclaimer,
 			Status:     ballotStatusOpen,
 			OpensAt:    mustTime("2026-11-04T00:00:00Z"),
-			ClosesAt:   mustTime("2026-11-09T00:00:00Z"),
+			ClosesAt:   mustTime("2026-11-17T00:00:00Z"),
 			Options: []ballotOption{
 				{
 					ID: "geminids-2026", Label: "Geminids meteor shower",
