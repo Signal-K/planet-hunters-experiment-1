@@ -7,3 +7,18 @@
   Content-Type: application/javascript; charset=utf-8
   Cache-Control: no-cache, no-store, must-revalidate
   Content-Security-Policy: default-src 'self'; script-src 'self'
+
+# Haphazard Martians at /martians/ (scripts/martians-config.mjs). The shell and
+# config change with every copy-in; the 5 MB wasm revalidates instead of
+# re-downloading.
+/martians/
+  Cache-Control: no-cache
+/martians/index.html
+  Cache-Control: no-cache
+/martians/config.js
+  Cache-Control: no-cache
+/martians/host.js
+  Cache-Control: no-cache
+/martians/game-gz.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=0, must-revalidate

@@ -45,6 +45,7 @@ jobs:
       - name: Build (OpenNext/Cloudflare)
         run: |
           node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          node scripts/martians-config.mjs
           npm run build:cf
           node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
@@ -95,6 +96,7 @@ jobs:
       - name: Build (OpenNext/Cloudflare staging)
         run: |
           node -e "console.log('PB urls', process.env.NEXT_PUBLIC_SHARED_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_PB_URL, process.env.NEXT_PUBLIC_LANDNAM_ENV)"
+          node scripts/martians-config.mjs
           npm run build:cf
           node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
