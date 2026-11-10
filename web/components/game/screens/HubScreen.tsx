@@ -46,6 +46,7 @@ import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
 import DataReadyChip from '../DataReadyChip'
+import PanHint from '../PanHint'
 import CommunityGoalChip from '@/components/game/CommunityGoalChip'
 import type { CommunityResearch } from '@/lib/research/stamps'
 import { orionidsSkyOn } from '@/lib/orionids/access'
@@ -628,6 +629,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           </div>
           {/* The pannable world is wider than a portrait phone, so the orbital tag would sit off-screen: pin it to the view. */}
           {portraitPhone && orbitalNetwork}
+          {portraitPhone && !subsurface && !editMode && cameraTravel > 0 && (
+            <PanHint canLeft={camera.cam.x < -8} canRight={camera.cam.x > -cameraTravel + 8} onLeft={() => moveBase(-0.4)} onRight={() => moveBase(0.4)} />
+          )}
         </div>
 
         <div className={layoutStyles.subsurfaceWorld} aria-hidden={!subsurface}>
