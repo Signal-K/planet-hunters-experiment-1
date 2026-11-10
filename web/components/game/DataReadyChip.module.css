@@ -1,0 +1,36 @@
+.chip {
+  position: absolute;
+  top: 72px;
+  left: 12px;
+  z-index: 30;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  box-shadow: var(--ln-shadow-panel);
+  font: 800 14px/1 var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ln-cyan, #58d0ea);
+  animation: ready-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ready-pulse {
+  50% { opacity: .35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip i { animation: none; }
+}

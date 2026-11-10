@@ -45,6 +45,7 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import DataReadyChip from '../DataReadyChip'
 import CommunityGoalChip from '@/components/game/CommunityGoalChip'
 import type { CommunityResearch } from '@/lib/research/stamps'
 import { orionidsSkyOn } from '@/lib/orionids/access'
@@ -641,6 +642,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {/* ── End persistent Base world ── */}
 
       {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
+      {!subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && (
+        <DataReadyChip count={signals.length} onOpen={() => onOpenScene('instrument-hub')} />
+      )}
       {!subsurface && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
