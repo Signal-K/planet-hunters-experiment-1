@@ -9,4 +9,5 @@
 ## Stages (Liam 2026-11-10: line art, progressively more detail)
 
 - Stage 1: `agency-stage1.svg` / `.png` is the drawing with no background, used as the sprite (`web/public/game/assets/base/v7/structures/agency.png`, site map entry `agency`). Preview: `/game/stage?preset=hub-first-run`.
+- Stage 2: `agency-stage2.svg` / `.png` (now the live `agency.png`) adds cream wall fills, pale blue glass and dome, cornice and dentils, pilasters, door glass and a ground shadow line. Still outlined.
 - Next stages edit the SVG, re-render with Chromium (transparent) and overwrite `agency.png`.
