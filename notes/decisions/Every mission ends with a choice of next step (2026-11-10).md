@@ -1,5 +1,10 @@
-# Every mission ends with a choice of next step (2026-11-10)
-
+---
+type: decision
+title: Every mission ends with a choice of next step
+project: Landnam
+status: decided
+created: 2026-11-10
+---
 Liam: each mission type exits to explore further, comment and share, do another, reposition telescope, or back to the hub.
 
 - The debrief offers **Explore further** (Data hub), **Do another** (Mission Board for contracts and shower runs, launchpad for the player's own program operations) and **Reposition telescope** (sky pointing, program operations only). The existing "Complete mission · return to Base" button stays as the default way back to the hub.
