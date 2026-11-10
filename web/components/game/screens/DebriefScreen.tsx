@@ -18,15 +18,16 @@ import DestinationLandscape from '@/components/game/screens/DestinationLandscape
 import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import type { HomeSettlement } from '@/lib/game-types'
+import type { DebriefExit, DebriefExitId } from '@/lib/debrief-exits'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { chainInstrument, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
-  onDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
+  onDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: DebriefExitId) => void
   minerals: Record<string, MineralMeta>
   clients: Record<string, Client>
   clientMissions?: Record<string, number>
@@ -51,6 +52,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   showerRun?: { francs: number; fragments: number } | null
   /** SSL-751: the Homecoming sheet's split, already settled for market and silo. The debrief shows it and closes the run. */
   homeSettlement?: HomeSettlement | null
+  /** SSL-818: the other places this run can end. The primary button still returns to the default. */
+  exits?: DebriefExit[]
 }) {
   const settled = homeSettlement ?? null
   // A haul settled on the delivery sheet has no store/sell choice left to make here.
@@ -107,6 +110,19 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     : isOrbitalInstrumentDeployment
       ? 'Commissioned · instrument online'
       : 'Docked · mission complete'
+
+  const collect = (next?: DebriefExitId) => {
+    if (collectingRef.current) return
+    collectingRef.current = true
+    setCollecting(true)
+    if (settled) {
+      onDone(settled.payout, settled.affinity, settled.consumed, undefined, next)
+    } else if (isFreeHaul) {
+      onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell', next)
+    } else {
+      onDone(total, affinityEarned, delivered ? requiredMaterials : {}, undefined, next)
+    }
+  }
 
   return (
     <div className={`game-screen debrief-game ${styles.screen}`}>
@@ -280,6 +296,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
         </section>
+        {exits.length > 0 && (
+          <nav className={styles.exits} aria-label="What next" data-testid="debrief-exits">
+            <p className={styles.exitsLabel}>Collect, then go to</p>
+            {exits.map(exit => (
+              <button key={exit.id} type="button" className={styles.exit} data-testid={`debrief-exit-${exit.id}`} disabled={collecting} onClick={() => collect(exit.id)}>{exit.label}</button>
+            ))}
+          </nav>
+        )}
         <div className={styles.dock} data-ui-zone={UI_ZONES.bottomActions}>
         {!isOrbitalInstrumentDeployment && (
           <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
@@ -291,18 +315,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           full={false}
           testId="collect-reward-btn"
           disabled={collecting}
-          onClick={() => {
-            if (collectingRef.current) return
-            collectingRef.current = true
-            setCollecting(true)
-            if (settled) {
-              onDone(settled.payout, settled.affinity, settled.consumed)
-            } else if (isFreeHaul) {
-              onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
-            } else {
-              onDone(total, affinityEarned, delivered ? requiredMaterials : {})
-            }
-          }}
+          onClick={() => collect()}
         >
           {storyStep
             ? 'Complete mission · continue research'

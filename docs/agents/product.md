@@ -91,3 +91,4 @@ A mining run, catch or other scene objective should finish in about one minute o
 
 - Portrait phone Base: kit scale 2, drag to pan from the pad, ground line 460p; persistent UI is screen-fixed, never in the pannable world (2026-11-10).
 - Base structures can be rearranged (Menu > Rearrange): the player saves a left-to-right order of hangar, launchpad, control station and exchange (`player.baseArrangement`); the strip keeps its span and shares the leftover room as equal gaps. The silo stays on its shaft (2026-11-10).
+- Every mission ends with a choice of next step: Explore further, Do another, Reposition telescope, or back to the hub; Comment and share waits for the cycle 10 message board, where votes and comments will also add community research points (2026-11-10).

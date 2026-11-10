@@ -301,3 +301,29 @@
   /* The way out stays in reach while the cards scroll under it. */
   .dock { position: sticky; z-index: 2; bottom: 0; padding: 10px 16px 14px; background: rgba(22, 82, 118, .96); box-shadow: 0 -6px 18px rgba(8, 16, 34, .35); }
 }
+
+/* SSL-818: where else the run can end. Same collect as the main button, different next stop. */
+.exits {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 max(clamp(16px, 4vw, 48px), calc((100% - 480px) / 2)) 10px;
+  background: rgba(22, 104, 148, .58);
+}
+.exitsLabel { flex: 1 0 100%; margin: 0; color: var(--db-paper); font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+.exit {
+  flex: 1 1 0;
+  min-width: 120px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid rgba(244, 239, 228, .7);
+  border-radius: 4px;
+  background: rgba(8, 16, 34, .25);
+  color: var(--db-paper);
+  font: 800 14px/1.15 var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.exit:disabled { opacity: .5; cursor: default; }

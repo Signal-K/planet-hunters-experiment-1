@@ -553,7 +553,7 @@ export interface GameActions {
   onReturnArrived: () => void
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
-  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: import('@/lib/debrief-exits').DebriefExitId) => void
   /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
   onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
   startFlightPlan: () => void

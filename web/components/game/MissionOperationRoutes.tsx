@@ -21,6 +21,8 @@ import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { FIREBALL_2026_BADGE, FIREBALL_SUBJECT_ID, grantFireballCatch } from '@/lib/orionids/fireball'
 import { addStamp } from '@/lib/research/stamps'
 import { showerForRunMission, showerForResource } from '@/lib/data/showers'
+import { debriefExits } from '@/lib/debrief-exits'
+import { onlineTelescopes } from '@/lib/research/paths'
 import { addShowerCatches } from '@/lib/orionids/shower-ledger'
 import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { queueEventBadge, queueOrionidsEventProof } from '@/lib/orionids/persist'
@@ -462,6 +464,12 @@ export default function MissionOperationRoutes({
           haulMarketValue={sellQuote(showerRun && runShower ? withoutShowerFragments(debriefCargo, runShower.id) : debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
           showerRun={showerRun}
           initialDisposition={game.player.freeHaulDisposition}
+          exits={debriefExits({
+            showerRun: !!showerRun,
+            programOperation: isOwnProgramMission(game.mission),
+            hasInstrument: onlineTelescopes(game.player).length > 0,
+            guided: !game.player.freeOperations || game.tutorial,
+          })}
         />
       )
   }

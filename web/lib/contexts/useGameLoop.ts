@@ -48,6 +48,8 @@ import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/Instrum
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, showerRunMission } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
+import { onlineTelescopes } from '@/lib/research/paths'
+import { debriefExitScreen, type DebriefExitId } from '@/lib/debrief-exits'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
@@ -1153,7 +1155,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyBuyLaserCapacitor(s, expectedLevel, reservedUnits))
   }, [setState])
 
-  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
+  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell', exitId?: DebriefExitId) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // SSL-714: each Orionids mission hands over to the next one on the Events board.
@@ -1379,13 +1381,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-          screen: mission?.payload?.type === 'satellite'
-            ? 'instrument-hub'
-            : completedShower
-              ? 'missions'
-              : isProgramOperation
-              ? 'launchpad'
-              : 'hub',
+          screen: debriefExitScreen(exitId, { showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
+            ?? (mission?.payload?.type === 'satellite'
+              ? 'instrument-hub'
+              : completedShower
+                ? 'missions'
+                : isProgramOperation
+                ? 'launchpad'
+                : 'hub'),
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })
