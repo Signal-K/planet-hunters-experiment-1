@@ -179,6 +179,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
+      { key: 'hub-first-run', label: 'Base: first run', hint: 'Only the launchpad is built: the line-art Agency building stands where the Data hub will go (SSL-785)', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
       { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
@@ -318,6 +319,16 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
     }
+
+    case 'hub-first-run':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad'], placementPlots: { launchpad: 0 } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
 
     case 'hub-orionids-complete':
       return {

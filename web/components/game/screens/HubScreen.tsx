@@ -191,7 +191,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
       // SSL-675: the agency's control station stands on the Base from the first launchpad as a landmark, so the
       // Base is not an empty plain. It is display-only: nothing is placed or unlocked until the player builds
-      // their own on this same site. Stand-in art until the dedicated agency building sprite ships.
+      // their own on this same site. Drawn as the line-art agency building (SSL-785).
       ...(agencyLandmark ? { 'control-station': homeSite('control-station')?.plot ?? 3 } : {}),
     })
       .map(([kind, plot]): [string, number] => [kind, homeSite(kind)?.plot ?? plot])
@@ -272,6 +272,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
       status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
+      landmark: kind === 'control-station' && agencyLandmark,
       active: activeBuilding === kind,
       buildStartedAt: startedAt,
     }]

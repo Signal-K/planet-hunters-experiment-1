@@ -16,6 +16,8 @@ export interface HubBuildingDef {
   hot?: boolean
   status?: 'ok' | 'info' | 'warn' | 'locked' | 'building'
   dimmed?: boolean
+  /** SSL-785: the first-run Agency landmark draws the line-art agency building in the Control Station's place. */
+  landmark?: boolean
   rocketVariant?: 'explorer' | 'prospector'
   active?: boolean
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
@@ -190,7 +192,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false, arrangem
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
         const authoredSite = kit ? homeSite(building.kind, arrangement) : null
         const site = authoredSite ? displaySite(authoredSite) : null
-        const sprite = kit ? structureSprite(building.kind) : null
+        const sprite = kit ? structureSprite(building.landmark ? 'agency' : building.kind) : null
         const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span
@@ -206,7 +208,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false, arrangem
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
+            <StructureSprite kind={building.landmark ? 'agency' : building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
           </span>
         )
       })}

@@ -54,6 +54,15 @@
       "height": 46.555,
       "foot": 4.5
     },
+    "agency": {
+      "site": "ops",
+      "src": "base/v7/structures/agency.png",
+      "body": 60,
+      "left": -3,
+      "width": 74,
+      "height": 55.9,
+      "foot": 4.5
+    },
     "market": {
       "site": "exchange",
       "src": "base/v7/structures/exchange.png",

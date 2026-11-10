@@ -72,7 +72,7 @@ export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket 
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
   const sprite = structureSprite(kind)
-  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station')) return null
+  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station' && kind !== 'agency')) return null
   return (
     <img
       src={`${ASSET_ROOT}${sprite.src}`}

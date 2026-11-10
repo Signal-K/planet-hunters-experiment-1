@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1 3 94 71" width="564" height="426" shape-rendering="crispEdges">
+  <g fill="none" stroke="#1b2a49" stroke-width=".8" stroke-linejoin="miter" stroke-linecap="square">
+    <!-- ground and plinth -->
+    <path d="M2 72H94"/>
+    <!-- wings -->
+    <rect x="8" y="48" width="24" height="24"/><rect x="64" y="48" width="24" height="24"/>
+    <rect x="6" y="46" width="26" height="2"/><rect x="64" y="46" width="26" height="2"/>
+    <!-- glazed bands -->
+    <g stroke="#2f5fd0">
+      <rect x="10" y="54" width="3" height="10"/><rect x="15" y="54" width="3" height="10"/><rect x="20" y="54" width="3" height="10"/><rect x="25" y="54" width="3" height="10"/>
+      <rect x="68" y="54" width="3" height="10"/><rect x="73" y="54" width="3" height="10"/><rect x="78" y="54" width="3" height="10"/><rect x="83" y="54" width="3" height="10"/>
+    </g>
+    <!-- central block and parapet -->
+    <rect x="32" y="32" width="32" height="40"/><rect x="30" y="30" width="36" height="2"/>
+    <!-- upper windows and emblem -->
+    <g stroke="#2f5fd0"><rect x="37" y="34" width="4" height="6"/><rect x="55" y="34" width="4" height="6"/></g>
+    <circle cx="48" cy="37" r="3.2"/><path d="M45.6 38.6A3.2 3.2 0 0 1 50.4 38.6"/>
+    <!-- portico -->
+    <rect x="34" y="42" width="28" height="2"/>
+    <path d="M36 44V64M42 44V64M54 44V64M60 44V64"/>
+    <rect x="45" y="50" width="6" height="14"/><path d="M48 50V64"/>
+    <!-- steps -->
+    <path d="M34 64H62M32 66H64M30 68H66M28 70H68"/>
+    <!-- dome with ribs and lantern -->
+    <path d="M36 30A12 12 0 0 1 60 30"/>
+    <path d="M42 30A9 12 0 0 1 48 18M54 30A9 12 0 0 0 48 18M48 30V18" stroke-width=".5"/>
+    <rect x="46" y="14" width="4" height="4"/>
+    <!-- flagpole and flag -->
+    <path d="M48 4V14"/><path d="M48 4H56V9H48" stroke="#2f5fd0"/><path d="M48 4L56 9" stroke="#2f5fd0" stroke-width=".5"/>
+    <!-- lamp posts -->
+    <path d="M3 72V62M3 62H5M93 72V62M93 62H91"/>
+  </g>
+</svg>
