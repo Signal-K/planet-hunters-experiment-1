@@ -94,6 +94,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const [sharpen, setSharpen] = useState(false)
   const [loupe, setLoupe] = useState(false)
   const [allControls, setAllControls] = useState(false)
+  const [pendingAnswer, setPendingAnswer] = useState<SaturnVerdict | null>(null)
   // SSL-754: the first frame opens on a simple console and plays the walkthrough.
   const firstClassification = Object.keys(classifications).length === 0
   const help = useHelp('saturn-storm-search', { firstVisit: firstClassification, firstVisitCoach: true })
@@ -196,8 +197,15 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const pieces = Object.keys(savedCells).length
   const chart = player.moonSurveyCharts?.enceladus as MoonSurveyChart | undefined
 
+  // Pick an answer, then BACK or CONFIRM: nothing is sent until the player confirms the square.
   const paint = (answer: SaturnVerdict) => {
     if (savedCells[selected] || complete) return
+    setPendingAnswer(answer)
+  }
+  const confirmAnswer = () => {
+    const answer = pendingAnswer
+    if (!answer || savedCells[selected] || complete) return
+    setPendingAnswer(null)
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer } : cell))
     help.reportAction('submit')
     onSubmit(candidate.id, selected, answer, cells[selected]?.storm ?? false)
@@ -335,7 +343,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
               aria-pressed={selected === index}
               aria-label={`Square ${index + 1}${value.storm ? ', storm marked' : ''}${value.answer ? `, ${value.answer}` : ''}`}
               disabled={!!saved || complete}
-              onClick={() => { setSelected(index); help.reportAction('select') }}
+              onClick={() => { setSelected(index); setPendingAnswer(null); help.reportAction('select') }}
             >
               {value.answer && <span className={viewportStyles.cellTag}>{VERDICT_ACTIONS.find(action => action.id === value.answer)?.mark}</span>}
               {value.storm && <span className={viewportStyles.stormMark} data-testid={`saturn-storm-${index}`} />}
@@ -348,7 +356,22 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
         <div className={viewportStyles.saved} data-testid="saturn-frame-complete" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
           {chart && <EnceladusSurveyChart chart={chart} classification={classification} />}
           {chart?.tier === 'gold' ? 'GOLD ATLAS RECORDED · RESEARCH XP AWARDED' : 'MOON ATLAS RECORDED · RESEARCH XP AWARDED'}
+          <InstrumentAnswerRow
+            groupTestId="saturn-readout-actions"
+            actions={[
+              { id: 'hub', label: 'DATA HUB', testId: 'saturn-readout-hub', primary: true, onClick: onBack },
+              ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'saturn-readout-ask', onClick: () => onShareReadout(candidate.id, { verdict: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE`, rows: readoutRows.map(({ label, value }) => ({ label, value })) }) }] : []),
+            ]}
+          />
         </div>
+      ) : pendingAnswer ? (
+        <InstrumentAnswerRow
+          groupTestId="saturn-readout-confirm"
+          actions={[
+            { id: 'back', label: 'BACK', testId: 'saturn-readout-back', onClick: () => setPendingAnswer(null) },
+            { id: 'confirm', label: `CONFIRM ${pendingAnswer.toUpperCase()}`, testId: 'saturn-readout-confirm-btn', primary: true, onClick: confirmAnswer },
+          ]}
+        />
       ) : (
         <InstrumentAnswerRow
           coachTarget="saturn-verdicts"
