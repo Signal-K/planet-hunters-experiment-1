@@ -89,3 +89,6 @@ Not done, on purpose:
 - Changing where missions end. Satellite launches land on the Data hub, shower runs on the Mission Board (to chain runs) and other program operations on the launchpad. Each is deliberate; the inconsistency is that the debrief does not say so. A "what next" row on the debrief would fix that and needs Liam's call on the three destinations.
 
 Later (SSL-801, 809, 810): Base shows a fixed "N data ready" chip that opens the Data hub; pointing walks every online telescope in turn; the three instrument back buttons share one `leaveInstrument` in the router and clear the inspected subject. Still open: folding `inspectSignal`, `reviewTarget` and `pendingReview` into one session object, and the `galaxy`/`transit` renames.
+
+
+SSL-817: renamed the router screens `galaxy` to `tess-discovery` and `transit` (the rocket flight) to `flight`. The `transit` mission phase and the transit telescope keep their names. Saved state and old links migrate through `migrateScreenId` / `LEGACY_SCREEN_IDS` in `web/lib/game-screens.ts`; `/game/galaxy` and `/game/transit` redirect. iOS keeps its Swift case names but now reads and writes the new raw values and still decodes the old ones.

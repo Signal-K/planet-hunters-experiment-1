@@ -481,7 +481,7 @@ function ScreenBody({
         />
       )
 
-    case 'galaxy':
+    case 'tess-discovery':
       // Legacy inspector. Telescope tab and post-launch landing use instrument-hub.
       // Inspect still arrives here until the plate owns real TESS verdicts.
       return (
@@ -555,7 +555,7 @@ function ScreenBody({
         />
       )
 
-    case 'transit':
+    case 'flight':
     case 'landing':
     case 'mining':
     case 'delivery':
@@ -697,7 +697,7 @@ function ScreenBody({
           onStartReview={item => {
             // Each kind opens on its own instrument, on the requester's subject, for the player's own run first.
             const route = {
-              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'galaxy' },
+              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'tess-discovery' },
               asteroid: { kind: 'deep-space', instrumentId: 'deep-space-telescope', inspectorScreen: 'asteroid-discovery' },
               saturn: { kind: 'saturn', instrumentId: 'saturn-imager', inspectorScreen: 'saturn-storm-search' },
             }[item.project] as { kind: InstrumentSignal['kind']; instrumentId: InstrumentSignal['instrumentId']; inspectorScreen: InstrumentSignal['inspectorScreen'] }

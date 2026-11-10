@@ -10,7 +10,7 @@ const signal = (partial: Pick<InstrumentSignal, 'id' | 'kind'> & Partial<Instrum
   instrumentId: partial.kind,
   title: partial.id,
   subtitle: '',
-  inspectorScreen: partial.kind === 'transit' ? 'galaxy' : partial.kind === 'saturn' ? 'saturn-storm-search' : 'asteroid-discovery',
+  inspectorScreen: partial.kind === 'transit' ? 'tess-discovery' : partial.kind === 'saturn' ? 'saturn-storm-search' : 'asteroid-discovery',
   ...partial,
 })
 
@@ -53,7 +53,7 @@ describe('control station registry', () => {
     expect(deep?.readyCount).toBe(2)
     expect(ground?.openSignal?.id).toBe('neo-1')
     expect(deep?.openSignal?.inspectorScreen).toBe('asteroid-discovery')
-    expect(row(launched, 'transit-telescope')?.openSignal).toMatchObject({ id: 'toi-1', inspectorScreen: 'galaxy' })
+    expect(row(launched, 'transit-telescope')?.openSignal).toMatchObject({ id: 'toi-1', inspectorScreen: 'tess-discovery' })
     expect(row(launched, 'saturn-imager')).toMatchObject({ status: 'Frame ready', readyCount: 1 })
     expect(row(launched, 'saturn-imager')?.openSignal?.inspectorScreen).toBe('saturn-storm-search')
   })

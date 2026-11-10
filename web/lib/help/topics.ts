@@ -71,7 +71,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     ],
   },
   // The TESS transit review screen.
-  galaxy: {
+  'tess-discovery': {
     id: 'tess',
     title: 'Reading the light curve',
     cards: [
@@ -236,7 +236,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },
     ],
   },
-  transit: {
+  flight: {
     id: 'transit',
     title: 'In flight',
     cards: [

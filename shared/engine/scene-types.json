@@ -10,7 +10,7 @@
     "stages": [
       { "id": "plan", "name": "Plan", "routes": ["missions", "targets", "rocket-buy"], "policy": "One Plan for contracts and Free Ops. Suggest a ship; changing it is optional." },
       { "id": "launch", "name": "Launch", "routes": ["fab", "launchpad"], "policy": "Assembly and launch are one scene. Preserve old routes as deep links." },
-      { "id": "flight", "name": "Flight", "routes": ["transit", "landing"], "policy": "A faster multi-scene animated sequence with zero required confirmation taps." },
+      { "id": "flight", "name": "Flight", "routes": ["flight", "landing"], "policy": "A faster multi-scene animated sequence with zero required confirmation taps." },
       { "id": "work", "name": "Work", "routes": ["mining", "surface-ops"], "policy": "Perform mining, survey or field work with the appropriate engine adapter." },
       { "id": "result", "name": "Result", "routes": ["delivery", "debrief"], "policy": "Combine delivery and result presentation, preserving exactly-once cargo and reward settlement, then return to Base." }
     ]
@@ -32,7 +32,7 @@
     "travel": {
       "description": "Launch, transit, landing, delivery, return and debrief views.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["fab", "transit", "landing", "delivery", "debrief"]
+      "routes": ["fab", "flight", "landing", "delivery", "debrief"]
     },
     "field": {
       "description": "Direct-control mining, rover and surface operations.",
@@ -47,7 +47,7 @@
     "exchange-lab": {
       "description": "In-world instruments, trading and processing surfaces.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["academy", "asteroid-discovery", "galaxy", "instrument-hub", "market", "refinery", "saturn-storm-search", "radio-meteors"]
+      "routes": ["academy", "asteroid-discovery", "tess-discovery", "instrument-hub", "market", "refinery", "saturn-storm-search", "radio-meteors"]
     },
     "menu": {
       "description": "Reference, selection and record surfaces; cards are allowed here.",

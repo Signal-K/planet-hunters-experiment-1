@@ -32,7 +32,7 @@ interface InstrumentHubScreenProps {
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
-  onOpenScreen: (screen: 'radio-meteors' | 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onOpenScreen: (screen: 'radio-meteors' | 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search') => void
   /** Builds the ground telescope in place; false when it could not. */
   onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
@@ -114,7 +114,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           scan={canScan ? { scanning, onOpen: () => setScanOpen(true) } : undefined}
           notice={player.scanFollowUp ? (() => {
             const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
-            const screen = ({ tess: 'galaxy', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]
+            const screen = ({ tess: 'tess-discovery', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]
             return (
               <button type="button" className={styles.followUp} data-testid="scan-follow-up" onClick={() => onOpenScreen(screen)}>
                 <span>Confirm {followTarget?.name ?? 'your scan'} by hand</span>
@@ -179,4 +179,4 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
   )
 }
 
-export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search'>
+export type InstrumentHubInspectScreen = Extract<import('@/lib/game-types').Screen, 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search'>

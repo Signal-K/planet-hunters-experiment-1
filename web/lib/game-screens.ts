@@ -11,10 +11,10 @@ const SCREEN_LIST = {
   hub: true,
   'hub-subsurface': true,
   missions: true,
-  galaxy: true,
+  'tess-discovery': true,
   targets: true,
   fab: true,
-  transit: true,
+  flight: true,
   landing: true,
   mining: true,
   delivery: true,
@@ -35,6 +35,18 @@ const SCREEN_LIST = {
 } as const satisfies Record<Screen, true>
 
 export const GAME_SCREENS: readonly Screen[] = Object.keys(SCREEN_LIST) as Screen[]
+
+/**
+ * Screens renamed in SSL-817. Saved state and old deep links still carry the
+ * old ids, so every place that reads a stored or typed screen id goes through
+ * `migrateScreenId`. `galaxy` was TESS classification; `transit` was the rocket
+ * flight (the transit telescope is a different thing).
+ */
+export const LEGACY_SCREEN_IDS: Readonly<Record<string, Screen>> = { galaxy: 'tess-discovery', transit: 'flight' }
+
+export function migrateScreenId<T>(screen: T): T | Screen {
+  return typeof screen === 'string' && Object.prototype.hasOwnProperty.call(LEGACY_SCREEN_IDS, screen) ? LEGACY_SCREEN_IDS[screen] : screen
+}
 
 export const VALID_SCREENS = new Set<Screen>(GAME_SCREENS)
 

@@ -86,7 +86,7 @@ export const GAME_ROUTES = [
   { path: '/game/targets', screen: 'targets', surface: 'map' },
 
   // Orbit
-  { path: '/game/transit', screen: 'transit', surface: 'orbit' },
+  { path: '/game/flight', screen: 'flight', surface: 'orbit' },
 
   // Mining / hovering
   { path: '/game/landing', screen: 'landing', surface: 'mining' },
@@ -100,7 +100,7 @@ export const GAME_ROUTES = [
 
   // Instrument
   { path: '/game/instrument-hub', screen: 'instrument-hub', surface: 'instrument' },
-  { path: '/game/galaxy', screen: 'galaxy', surface: 'instrument' },
+  { path: '/game/tess-discovery', screen: 'tess-discovery', surface: 'instrument' },
   { path: '/game/asteroid-discovery', screen: 'asteroid-discovery', surface: 'instrument' },
   { path: '/game/saturn-storm-search', screen: 'saturn-storm-search', surface: 'instrument' },
   { path: '/game/radio-meteors', screen: 'radio-meteors', surface: 'instrument' },

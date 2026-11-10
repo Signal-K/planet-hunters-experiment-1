@@ -33,7 +33,7 @@ enum AuthoredSceneDeclarations {
         "id": "flight",
         "name": "Flight",
         "routes": [
-          "transit",
+          "flight",
           "landing"
         ],
         "policy": "A faster multi-scene animated sequence with zero required confirmation taps."
@@ -827,7 +827,7 @@ enum AuthoredSceneDeclarations {
     {
       "id": "galaxy",
       "type": "exchange-lab",
-      "route": "galaxy",
+      "route": "tess-discovery",
       "surface": "dom",
       "runtime": {
         "surface": "dom",
@@ -2394,7 +2394,7 @@ enum AuthoredSceneDeclarations {
     {
       "id": "transit",
       "type": "travel",
-      "route": "transit",
+      "route": "flight",
       "surface": "dom",
       "runtime": {
         "surface": "dom",

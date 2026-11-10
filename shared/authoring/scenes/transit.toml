@@ -14,7 +14,7 @@ web = ["web/components/game/screens/TransitScreen.tsx", "web/components/game/Mis
 native = ["native/App/Screens/FlightScreens.swift"]
 
 [preview]
-route = "transit"
+route = "flight"
 state = "sandbox-transit"
 
 # ---------------------------------------------------------------------------------------------------------------

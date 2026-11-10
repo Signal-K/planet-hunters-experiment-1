@@ -91,10 +91,10 @@ export type Screen =
   | 'hub'
   | 'hub-subsurface'
   | 'missions'
-  | 'galaxy'
+  | 'tess-discovery'
   | 'targets'
   | 'fab'
-  | 'transit'
+  | 'flight'
   | 'landing'
   | 'mining'
   | 'delivery'
@@ -128,13 +128,13 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
   'hub-subsurface',
   'launchpad',
-  'transit',
+  'flight',
   'landing',
   'mining',
   'delivery',
   'refinery',
   'hangar',
-  'galaxy',
+  'tess-discovery',
   'asteroid-discovery',
   'saturn-storm-search',
   'instrument-hub',

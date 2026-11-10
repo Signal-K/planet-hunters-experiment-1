@@ -5,7 +5,7 @@ import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
 const NOW = Date.UTC(2026, 10, 1, 12)
 const signals: InstrumentSignal[] = [
-  { id: 'toi-1', kind: 'transit', instrumentId: 'transit-telescope', title: 'TOI 1', subtitle: '', inspectorScreen: 'galaxy' },
+  { id: 'toi-1', kind: 'transit', instrumentId: 'transit-telescope', title: 'TOI 1', subtitle: '', inspectorScreen: 'tess-discovery' },
   { id: 'frame-1', kind: 'saturn', instrumentId: 'saturn-imager', title: 'F1', subtitle: '', inspectorScreen: 'saturn-storm-search' },
 ]
 const player = {

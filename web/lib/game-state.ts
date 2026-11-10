@@ -24,7 +24,7 @@ import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropScrubbedRuns, dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
-import { GAME_SCREENS } from '@/lib/game-screens'
+import { GAME_SCREENS, migrateScreenId } from '@/lib/game-screens'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 import { mergeSkyMaps } from '@/lib/research/sky-map'
@@ -33,8 +33,8 @@ import { mergeSkyMaps } from '@/lib/research/sky-map'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
 // Runs built at runtime by buildRuntimeCatalog, so a saved flight to one is not a lost mission on reload.
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, ...SHOWERS.map(shower => shower.runMissionId), RESOURCE_FOCUS_MISSION_ID])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID, ...SHOWERS.map(shower => shower.targetId)])
@@ -175,7 +175,8 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
 }
 
 export function normalizeState(input: PartialSave): GameState {
-  const screen = input.screen && GAME_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const savedScreen = migrateScreenId(input.screen)
+  const screen = savedScreen && GAME_SCREENS.includes(savedScreen) ? savedScreen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
   const savedScope = input.missionBoardScope
@@ -495,7 +496,7 @@ function repairStateRoute(rawInput: GameState): GameState {
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }
-  if (input.screen === 'galaxy' && !input.player.freeOperations && currentTrainingTry(input.player.flightPlan) !== 'scan') {
+  if (input.screen === 'tess-discovery' && !input.player.freeOperations && currentTrainingTry(input.player.flightPlan) !== 'scan') {
     return { ...input, screen: 'missions' }
   }
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {

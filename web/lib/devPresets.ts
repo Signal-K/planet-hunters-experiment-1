@@ -270,7 +270,7 @@ function fixture(name: string): Partial<GameState> | null {
       // Outbound to Eros, an hour long, 20 minutes in. The scene's things move the destination, the ship and the progress.
       const transitStartedAt = Date.now() - 20 * 60_000
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: {
           ...BASE_PLAYER, missionsDone: 3, freeOperations: true,
           activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'transit',
@@ -369,7 +369,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'm1-return':
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, returningToEarth: true, debriefPending: true, missionPhase: 'transit', transitStartedAt: Date.now(), arrivalAt: null },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
         missionId: FIRST_MISSION.id, targetId: 'eros',
@@ -500,7 +500,7 @@ function fixture(name: string): Partial<GameState> | null {
       {
         const transitStartedAt = Date.now() - 30_000
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Space Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
@@ -632,7 +632,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-tess-training':
       return {
-        screen: 'galaxy',
+        screen: 'tess-discovery',
         player: {
           ...POST_ONBOARDING_PLAYER,
           flightPlan: { completed: { mining: true }, hidden: false },
@@ -648,7 +648,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-tess-discovery':
       return {
-        screen: 'galaxy',
+        screen: 'tess-discovery',
         visualFixture: 'tess',
         player: {
           ...POST_ONBOARDING_PLAYER,

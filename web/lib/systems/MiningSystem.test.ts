@@ -63,7 +63,7 @@ describe('applyMiningDone', () => {
     const s = makeState({ screen: 'mining' })
     const next = applyMiningDone(s, { nickel: 2 }, 1_000)
 
-    expect(next.screen).toBe('transit')
+    expect(next.screen).toBe('flight')
     expect(next.lastCargo).toEqual({ nickel: 2 })
     expect(next.player.returningToEarth).toBe(true)
     expect(next.player.headingToDelivery).toBe(false)
@@ -75,7 +75,7 @@ describe('applyMiningDone', () => {
     const s = makeState({ screen: 'mining', deliveryTargetId: 'ceres' })
     const next = applyMiningDone(s, { nickel: 2, cobalt: 2 }, 1_000)
 
-    expect(next.screen).toBe('transit')
+    expect(next.screen).toBe('flight')
     expect(next.player.headingToDelivery).toBe(true)
     expect(next.player.returningToEarth).toBe(false)
     expect(next.player.debriefPending).toBe(false)

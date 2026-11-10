@@ -69,7 +69,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
   // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
   const firstClassification = Object.keys(classifications).length === 0
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
+  const help = useHelp('tess-discovery', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
   const [allControls, setAllControls] = useState(false)
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])

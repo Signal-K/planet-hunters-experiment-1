@@ -359,7 +359,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     if (padLanding || homecoming) return null
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
-      const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
+      const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'flight'
       const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
       return {
         state,

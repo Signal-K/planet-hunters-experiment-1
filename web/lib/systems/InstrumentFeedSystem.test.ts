@@ -201,7 +201,7 @@ describe('InstrumentFeedSystem', () => {
 
     expect(signals).toHaveLength(2)
     expect(signals.map(signal => signal.kind).sort()).toEqual(['deep-space', 'transit'])
-    expect(signals.every(signal => signal.inspectorScreen === 'galaxy' || signal.inspectorScreen === 'asteroid-discovery')).toBe(true)
+    expect(signals.every(signal => signal.inspectorScreen === 'tess-discovery' || signal.inspectorScreen === 'asteroid-discovery')).toBe(true)
   })
 
   it('opens the selected digest item in the inspector, then falls back to the first unresolved', () => {

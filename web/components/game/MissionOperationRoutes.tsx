@@ -45,7 +45,7 @@ function stepFlightDock(game: Game, dir: -1 | 1) {
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'>
+export type MissionOperationRoute = Extract<Screen, 'flight' | 'landing' | 'mining' | 'delivery' | 'debrief'>
 
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
@@ -180,7 +180,7 @@ export default function MissionOperationRoutes({
     : null
 
   switch (screen) {
-    case 'transit':
+    case 'flight':
       return (
         <TransitScreen
           target={transitTarget}

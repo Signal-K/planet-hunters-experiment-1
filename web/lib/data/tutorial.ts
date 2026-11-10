@@ -33,7 +33,7 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
   { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Data hub', radio: 'Your telescope sends its signals to the Data hub. Open it from the hub.', doneOn: 'tess-classified' },
-  { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
+  { id: 'scan-classify', try: 'scan', screen: 'tess-discovery', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
   { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'The Hangar is where ship modules are fitted.', doneOn: 'part-tweaked' },
   { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
 ]

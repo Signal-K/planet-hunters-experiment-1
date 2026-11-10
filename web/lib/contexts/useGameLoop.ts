@@ -23,6 +23,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { queueRadioMeteorClassification, type RadioMeteorClassification } from '@/lib/radio-meteors'
 import type { Catalog } from '@/lib/catalog'
+import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 import { grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
@@ -225,7 +226,7 @@ function parkOrDropActiveRun(state: GameState): GameState {
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
   return {
     ...state,
-    screen: (snapshot.missionPhase as string) === 'survey' ? 'mining' : (snapshot.missionPhase ?? 'transit'),
+    screen: (snapshot.missionPhase as string) === 'survey' ? 'mining' : missionPhaseScreen(snapshot.missionPhase),
     missionId: snapshot.missionId,
     targetId: snapshot.targetId,
     deliveryTargetId: snapshot.deliveryTargetId,
@@ -612,7 +613,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name, mission, target }
             : null,
         },
-        screen: 'transit',
+        screen: 'flight',
         doneSteps: { ...s.doneSteps, 5: true },
       }
     })
