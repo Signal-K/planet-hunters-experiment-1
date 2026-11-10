@@ -1111,7 +1111,12 @@ export function useAuthSync({
   return {
     authUserId, backendReady,
     landnamSynced,
-    awaitingRemoteState,
+    // Signed in but the account's save is not loaded (or confirmed missing)
+    // yet. The effect-driven flag alone is set one render after hydration and
+    // only when a shared session already existed at that moment, so a fresh
+    // device briefly looked like a brand-new player and the Hub sent it to the
+    // "Choose where to build" intro over a save with missions on it.
+    awaitingRemoteState: awaitingRemoteState || (!isPreview && !!authUserId && !backendReady),
     authGateOpen, authGateError, signInFromGate, requestPasswordResetFromGate, confirmPasswordResetFromGate, createAccountFromGate, verifyAccountFromGate,
     resetGame, signOut,
   }
