@@ -90,3 +90,4 @@ A mining run, catch or other scene objective should finish in about one minute o
 - Instrument controls: the simple console is the default on every classify screen; ALL CONTROLS opens the rest. Control inventory and the cycle 11 goal (finalise tactile and visually fun controls) are in `notes/decisions/Instrument controls today and the cycle 11 goal (2026-11-10).md`. Add no new controls before then.
 
 - Portrait phone Base: kit scale 2, drag to pan from the pad, ground line 460p; persistent UI is screen-fixed, never in the pannable world (2026-11-10).
+- Base structures can be rearranged (Menu > Rearrange): the player saves a left-to-right order of hangar, launchpad, control station and exchange (`player.baseArrangement`); the strip keeps its span and shares the leftover room as equal gaps. The silo stays on its shaft (2026-11-10).

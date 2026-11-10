@@ -365,6 +365,7 @@ function ScreenBody({
           }}
           onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
+          onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')

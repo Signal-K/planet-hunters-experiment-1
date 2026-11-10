@@ -26,7 +26,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
@@ -47,6 +47,7 @@ import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
 import DataReadyChip from '../DataReadyChip'
 import PanHint from '../PanHint'
+import RearrangeBar from '../RearrangeBar'
 import CommunityGoalChip from '@/components/game/CommunityGoalChip'
 import type { CommunityResearch } from '@/lib/research/stamps'
 import { orionidsSkyOn } from '@/lib/orionids/access'
@@ -84,6 +85,8 @@ const TELESCOPE_NAMES: Record<InstrumentPointing, string> = { transit: 'space te
 interface HubScreenProps {
   player: Player
   onBuild?: () => void
+  /** Saves a new left-to-right order of the movable structures. */
+  onArrange?: (order: string[]) => void
   /** Open straight into placement (the Build screen is this scene in placement mode). */
   placementMode?: boolean
   /** Unlocked, not yet placed structures offered while placing. */
@@ -117,7 +120,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -126,6 +129,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // Phones keep the Base still (SSL-787): no pan, pinch or overview slider. Portrait picks the kit scale (1 to 2) that
   // fills the width with everything built; landscape already fits (kitScale caps it at width / 460).
   const phoneView = viewSize.w < 600 || viewSize.h < 500
+  const arrangement = player.baseArrangement ?? null
   const standingKinds = (player.placed ?? []).includes('launchpad') && !(player.placed ?? []).includes('control-station')
     ? [...(player.placed ?? []), 'control-station']
     : (player.placed ?? [])
@@ -138,11 +142,13 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const groundLine = portraitPhone ? 0.46 : undefined
   const worldW = STRIP_W * px
   const builtKinds = player.placed ?? []
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
   const [editMode, setEditMode] = useState(placementMode)
+  const [arrangeMode, setArrangeMode] = useState(false)
+  const [arrangeKind, setArrangeKind] = useState<string | null>(null)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
@@ -209,7 +215,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const authoredSite = kind ? homeSite(kind) : null
+      const authoredSite = kind ? homeSite(kind, arrangement) : null
       const site = authoredSite ? displaySite(authoredSite) : null
       const sprite = kind ? structureSprite(kind) : null
       if (!site) {
@@ -382,7 +388,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: menuOpen || editMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
+        callout: menuOpen || editMode || arrangeMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
         onClick: () => onFocusBuilding('launchpad'),
       }
     }
@@ -392,7 +398,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
-        callout: menuOpen || editMode || agencyLandmark ? undefined : stationCallout,
+        callout: menuOpen || editMode || arrangeMode || agencyLandmark ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
       }
@@ -403,7 +409,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         sub: 'SELL ORE',
         status: 'ok' as const,
         w: 150,
-        callout: menuOpen || editMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
+        callout: menuOpen || editMode || arrangeMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
         onClick: () => onFocusBuilding('market'),
       }
     }
@@ -466,7 +472,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // The starter silo stands above ground like every other build: it gets a site marker to place it on.
   const underground = false
   // The one site the picked build may stand on, offered only while it is free.
-  const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild, arrangement) : null
   const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
   const pickedOption = buildOptions.find(o => o.id === pickedBuild)
   const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !placed.some(kind => homeSite(kind)?.id === pickedSite.id)
@@ -497,6 +503,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures and launch support', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
+    ...(onArrange && standingKinds.filter(kind => (MOVABLE_KINDS as readonly string[]).includes(kind)).length > 1
+      ? [{ id: 'rearrange', icon: 'build' as const, label: 'Rearrange', detail: 'Swap structures along the Base', onSelect: () => { setArrangeKind(null); setArrangeMode(true) } }]
+      : []),
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
@@ -579,7 +588,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
+          <EarthBaseModules arrangement={arrangement} buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
           {rollingOut && <RocketRollout onDone={finishRollout} />}
 
           {/* Surface buildings — hit areas + labels.
@@ -608,18 +617,21 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
-                const authoredSite = homeSite(kind)
+                const authoredSite = homeSite(kind, arrangement)
                 const xFrac = (authoredSite ? displaySite(authoredSite).x : STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 const silo = kind === 'surface-silo'
-                const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
+                const arrangeable = arrangeMode && (MOVABLE_KINDS as readonly string[]).includes(kind) && !isUnderConstruction(startedAt, kind)
+                const editable = arrangeable
+                  ? { ...building, onClick: () => setArrangeKind(kind) }
+                  : editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
                   : silo
                     ? { ...building, onClick: () => setSubsurface(true) }
                     : building
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
                 const pad = kind === 'launchpad'
-                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={arrangeMode ? arrangeKind === kind : activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
               {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
                 <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
@@ -705,6 +717,33 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         )
       })()}
 
+      {arrangeMode && !subsurface && (() => {
+        const order = [...(arrangement ?? MOVABLE_KINDS)]
+        const standing = order.filter(kind => standingKinds.includes(kind))
+        const at = arrangeKind ? standing.indexOf(arrangeKind) : -1
+        const move = (dir: -1 | 1) => {
+          const swapWith = standing[at + dir]
+          if (!arrangeKind || !swapWith || !onArrange) return
+          const next = [...order]
+          const a = next.indexOf(arrangeKind)
+          const b = next.indexOf(swapWith)
+          ;[next[a], next[b]] = [next[b], next[a]]
+          onArrange(next)
+          const nextX = homeSite(arrangeKind, next)
+          if (nextX) camera.focusX(displaySite(nextX).x * px)
+        }
+        return (
+          <RearrangeBar
+            name={arrangeKind ? (arrangeKind === 'market' ? 'Exchange' : arrangeKind === 'control-station' ? 'Data hub' : arrangeKind[0].toUpperCase() + arrangeKind.slice(1)) : null}
+            canLeft={at > 0}
+            canRight={at >= 0 && at < standing.length - 1}
+            onLeft={() => move(-1)}
+            onRight={() => move(1)}
+            onDone={() => { setArrangeMode(false); setArrangeKind(null) }}
+          />
+        )
+      })()}
+
       {editMode && onPlaceStructure && (
         <div className={layoutStyles.buildPicker} data-testid="build-picker">
           {placeNote && <span data-testid="hub-place-note" style={{ pointerEvents: 'auto', padding: '6px 12px', borderRadius: 999, border: '2px solid var(--ln-world-outline)', background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>{placeNote}</span>}
@@ -750,7 +789,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
               type="button"
               className="base-overview-toggle"
               data-testid="base-overview-toggle"
-              onClick={() => (camera.cam.zoom < 1 ? camera.focusX(homeCenter(builtKinds, viewSize.w / px) * px) : camera.overview())}
+              onClick={() => (camera.cam.zoom < 1 ? camera.focusX(homeCenter(builtKinds, viewSize.w / px, arrangement) * px) : camera.overview())}
             >
               {camera.cam.zoom < 1 ? 'Back' : 'Overview'}
             </button>

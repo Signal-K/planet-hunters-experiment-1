@@ -165,7 +165,7 @@ export function SurfaceSiloSprite() {
   )
 }
 
-export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
+export function EarthBaseModules({ buildings, parts, padRocket = false, arrangement }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core'; arrangement?: readonly string[] | null }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
@@ -188,7 +188,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
-        const authoredSite = kit ? homeSite(building.kind) : null
+        const authoredSite = kit ? homeSite(building.kind, arrangement) : null
         const site = authoredSite ? displaySite(authoredSite) : null
         const sprite = kit ? structureSprite(building.kind) : null
         const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
