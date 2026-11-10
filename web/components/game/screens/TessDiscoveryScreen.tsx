@@ -280,7 +280,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const activeRanges = classification?.ranges ?? ranges
   const markCount = activeRanges.length
   // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
   // SSL-747: a full readout of the player's result: their marks, what they measured from them,
@@ -390,13 +391,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           {display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
+      footer={simpleEligible ? (
+        <button type="button" className={viewportStyles.quickKey} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
+          {allControls ? 'Simple view' : 'All controls'}
+        </button>
+      ) : undefined}
       viewportChrome={(
         <div className={viewportStyles.viewportChrome}>
-          {simpleEligible && (
-            <button type="button" className={viewportStyles.chip} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
-              {allControls ? 'Simple view' : 'All controls'}
-            </button>
-          )}
           {!classification && !simpleConsole && sectors.length > 1 && sectors.map((sector, index) => (
             <button
               key={sector.label}

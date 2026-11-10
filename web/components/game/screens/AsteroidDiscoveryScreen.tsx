@@ -237,7 +237,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     onSubmit(candidate.id, id)
   }
 
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
   return (

@@ -258,7 +258,8 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   ]
 
   // The simple console lasts through the whole first frame, so the lesson does not end in a wall of panels.
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
   const markStorm = () => {
