@@ -262,13 +262,29 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
+  // Simple console: one step per square. Mark a storm, or skip it; either commits the square and moves to the next open one.
+  const advanceFrom = (from: number) => {
+    for (let step = 1; step < 9; step += 1) {
+      const next = (from + step) % 9
+      if (!savedCells[next] && !cells[next]?.answer) { setSelected(next); return }
+    }
+  }
   const markStorm = () => {
     if (savedCells[selected] || complete) return
-    const storm = !cells[selected]?.storm
+    const storm = simpleConsole ? true : !cells[selected]?.storm
     const answer = cells[selected]?.answer ?? 'yes'
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, storm, answer } : cell))
     help.reportAction('submit')
     onSubmit(candidate.id, selected, answer, storm)
+    if (simpleConsole) advanceFrom(selected)
+  }
+  const skipSquare = () => {
+    if (savedCells[selected] || complete) return
+    setPendingAnswer(null)
+    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer: 'no', storm: false } : cell))
+    help.reportAction('submit')
+    onSubmit(candidate.id, selected, 'no', false)
+    advanceFrom(selected)
   }
 
   return (
@@ -365,6 +381,11 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
             ]}
           />
         </div>
+      ) : simpleConsole ? (
+        <InstrumentAnswerRow
+          coachTarget="saturn-verdicts"
+          actions={[{ id: 'skip', label: 'NO STORM · NEXT', testId: 'saturn-skip', onClick: skipSquare }]}
+        />
       ) : pendingAnswer ? (
         <InstrumentAnswerRow
           groupTestId="saturn-readout-confirm"
@@ -384,7 +405,8 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           }))}
         />
       )}
-      toolStepLabels={{ find: 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
+      toolStepLabels={{ find: simpleConsole ? 'Is there a storm in this square?' : 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
+      singleStep={simpleConsole}
       tool={(
         <InstrumentToolButton
           testId="saturn-mark-storm"

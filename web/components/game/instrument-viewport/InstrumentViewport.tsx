@@ -50,6 +50,8 @@ interface InstrumentViewportProps {
   tool?: ReactNode
   /** The two numbered steps beside a tool. Say what to do, not what the system records. */
   toolStepLabels?: { find: string; answer: string }
+  /** One step, not two: the tool and the answers sit under a single heading (`toolStepLabels.find`), unnumbered. */
+  singleStep?: boolean
   /** The answer is in: show only the result, never the how-to steps. */
   done?: boolean
   /** Dashed slot when this project has no annotate tool. */
@@ -344,6 +346,7 @@ export default function InstrumentViewport({
   answers,
   tool,
   toolStepLabels,
+  singleStep,
   done,
   emptyToolLabel,
   footer,
@@ -581,7 +584,11 @@ export default function InstrumentViewport({
             )}
             {!tool && <p className={styles.status} data-testid="instrument-status">{status}</p>}
             {/* Liam, 31.10: say which step submits. With a tool: 1 mark, 2 submit the classification (it is sent and the screen moves on). */}
-            {done ? answers : tool ? <>
+            {done ? answers : tool && singleStep ? <>
+              <p className={styles.step} data-testid="instrument-step-mark">{toolStepLabels?.find ?? 'Mark it on the picture'}</p>
+              {tool}
+              {answers}
+            </> : tool ? <>
               <p className={styles.step} data-testid="instrument-step-mark"><b>1</b> {toolStepLabels?.find ?? 'Mark it on the picture'}</p>
               {tool}
               <div className={styles.answerBlock}>
