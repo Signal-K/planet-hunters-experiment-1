@@ -1,6 +1,6 @@
 import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
-import { buildingLevel } from '@/lib/data/building-levels'
+import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
@@ -447,6 +447,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       addToast(refusal, 'warn')
       return
     }
+    if (padNeedsService(current.player)) {
+      addToast('The launchpad needs service. Tap it on the Base to service it.', 'warn')
+      return
+    }
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
@@ -577,6 +581,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
+      if (padNeedsService(s.player)) return s
       const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
@@ -598,6 +603,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...s,
         player: {
           ...ascended,
+          padLaunches: (s.player.padLaunches ?? 0) + 1,
           pendingLaunch: remainingStagedRockets.length > 0,
           pendingRocketId: nextStagedRocket?.rocketId,
           pendingRocketLocation: nextStagedRocket?.location,

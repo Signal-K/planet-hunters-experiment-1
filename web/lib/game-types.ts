@@ -287,6 +287,8 @@ export interface Player {
   remoteStorage?: Record<string, Record<string, number>>
   /** Mirrors buildingLevels.launchpad >= 2; kept so older saves and clients keep working. */
   launchpadUpgraded: boolean
+  /** Launches since the pad was last serviced (SSL-693). Absent means 0. */
+  padLaunches?: number
   /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
   buildingLevels?: BuildingLevels
   /** Earth Base landscape. Missing saves read as mountains. */
@@ -567,6 +569,7 @@ export interface GameActions {
   signOut: () => void
   upgradeLaunchpad: () => void
   upgradeBuilding: (id: string) => void
+  serviceLaunchpad: () => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
   /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */

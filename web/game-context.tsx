@@ -525,6 +525,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
       upgradeBuilding: economy.upgradeBuilding,
+      serviceLaunchpad: economy.serviceLaunchpad,
       excavateSubsurface: economy.excavateSubsurface,
       buildGroundTelescope: economy.buildGroundTelescope,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,

@@ -30,6 +30,7 @@ import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, k
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
+import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padNeedsService } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
@@ -102,6 +103,7 @@ interface HubScreenProps {
   onPointTelescope?: (instrument: InstrumentPointing) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
   onUpgradeBuilding?: (id: string) => void
+  onServiceLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -120,7 +122,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -172,6 +174,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
+  const [servicingPad, setServicingPad] = useState(false)
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
@@ -261,6 +264,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     return false
   }
   const padLevel = buildingLevel(player, 'launchpad')
+  const padWorn = padNeedsService(player)
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -384,15 +388,15 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     if (kind === 'launchpad') {
       return {
         kind, label: 'Launchpad',
-        sub: player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
-        status: (player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
+        sub: padWorn ? 'NEEDS SERVICE' : player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
+        status: (padWorn || player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: stagedRocketOnPad,
         // Match the rendered mobile footprint of the authored sprite. The
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
         callout: menuOpen || editMode || arrangeMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
-        onClick: () => onFocusBuilding('launchpad'),
+        onClick: () => padWorn && onServiceLaunchpad ? setServicingPad(true) : onFocusBuilding('launchpad'),
       }
     }
     if (kind === 'control-station') {
@@ -698,6 +702,18 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           {!subsurface && <div id="hub-top-right" className={layoutStyles.topRight} />}
         </div>
       </div>
+
+      {servicingPad && onServiceLaunchpad && (
+        <ActionConfirmBar
+          eyebrow={`Level ${padLevel} launchpad`}
+          title="Service the launchpad"
+          description={`It has flown ${PAD_LAUNCHES_BETWEEN_SERVICE[padLevel - 1]} launches since its last service and holds new ones until it is serviced. ${player.francs < PAD_SERVICE_COST ? `Needs ${formatCurrency(PAD_SERVICE_COST - player.francs)} more. ` : ''}A bigger pad wears less: ${PAD_LAUNCHES_BETWEEN_SERVICE.join(', ')} launches at levels 1 to 3.`}
+          confirmLabel={`Service (${formatCurrency(PAD_SERVICE_COST, { compact: true })})`}
+          confirmDisabled={player.francs < PAD_SERVICE_COST}
+          onConfirm={() => { onServiceLaunchpad(); setServicingPad(false) }}
+          onDismiss={() => setServicingPad(false)}
+        />
+      )}
 
       {upgradingBuilding && onUpgradeBuilding && (() => {
         const level = buildingLevel(player, upgradingBuilding)

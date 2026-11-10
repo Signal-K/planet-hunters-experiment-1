@@ -14,7 +14,7 @@ public enum BuildingLevels {
 
     /// One concrete effect per building and level.
     public static let effects: [String: [String]] = [
-        "launchpad": ["Explorer and Prospector, structures build in 10 s", "Heavy Surveyor hull (18U), structures build 25% faster, plus the parts of one flown mission", "Bulk hauler hull (24U), structures build 50% faster, plus the parts of two flown missions"],
+        "launchpad": ["Explorer and Prospector, structures build in 10 s, service every 10 launches", "Heavy Surveyor hull (18U), structures build 25% faster, service every 14 launches, plus the parts of one flown mission", "Bulk hauler hull (24U), structures build 50% faster, service every 20 launches, plus the parts of two flown missions"],
         "surface-silo": ["Holds 40 units of ore", "Holds 80 units of ore", "Holds 120 units of ore"],
     ]
 

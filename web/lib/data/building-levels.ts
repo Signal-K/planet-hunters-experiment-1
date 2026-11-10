@@ -18,13 +18,18 @@ export const BUILDING_UPGRADE_COSTS: Record<UpgradableBuildingId, readonly [numb
 
 /** One concrete effect per building and level, shown on the building sheet. */
 export const BUILDING_LEVEL_EFFECTS: Record<UpgradableBuildingId, readonly [string, string, string]> = {
-  launchpad: ['Explorer and Prospector, structures build in 10 s', 'Heavy Surveyor hull (18U), structures build 25% faster, plus the parts of one flown mission', 'Bulk hauler hull (24U), structures build 50% faster, plus the parts of two flown missions'],
+  launchpad: ['Explorer and Prospector, structures build in 10 s, service every 10 launches', 'Heavy Surveyor hull (18U), structures build 25% faster, service every 14 launches, plus the parts of one flown mission', 'Bulk hauler hull (24U), structures build 50% faster, service every 20 launches, plus the parts of two flown missions'],
   'surface-silo': ['Holds 40 units of ore', 'Holds 80 units of ore', 'Holds 120 units of ore'],
   refinery: ['Standard refining time', 'Refining takes 25% less time', 'Refining takes 50% less time'],
 }
 
 const SILO_CAPACITY_MULTIPLIER = [1, 2, 3] as const
 const TIME_MULTIPLIER = [1, 0.75, 0.5] as const
+/** Launches a pad takes before it needs service, by level: a bigger pad wears less (SSL-693). */
+export const PAD_LAUNCHES_BETWEEN_SERVICE = [10, 14, 20] as const
+/** Francs for one service, which resets the count. Flat at every level; the upgrade pays off in how rarely it is due. */
+export const PAD_SERVICE_COST = 1_000_000
+
 const PAD_BUILD_MULTIPLIER = [1, 0.75, 0.5] as const
 const LAUNCHPAD_MISSION_FLOOR = [0, 1, 2] as const
 
@@ -73,6 +78,19 @@ export function mergeBuildingLevels(a: BuildingLevels | undefined, b: BuildingLe
 
 export const siloCapacityMultiplier = (level: number) => SILO_CAPACITY_MULTIPLIER[clampLevel(level) - 1]
 export const buildingTimeMultiplier = (level: number) => TIME_MULTIPLIER[clampLevel(level) - 1]
+type PadWearPlayer = { padLaunches?: number; buildingLevels?: BuildingLevels; launchpadUpgraded?: boolean }
+
+/** Launches left before the pad needs service. Every launch counts; the three training launches stay well under the first limit of 10. */
+export function padLaunchesLeft(player: PadWearPlayer): number {
+  const used = Math.max(0, Math.floor(player.padLaunches ?? 0))
+  return Math.max(0, PAD_LAUNCHES_BETWEEN_SERVICE[buildingLevel(player, 'launchpad') - 1] - used)
+}
+
+/** A worn pad holds launches until it is serviced. */
+export function padNeedsService(player: PadWearPlayer): boolean {
+  return padLaunchesLeft(player) <= 0
+}
+
 export const padBuildMultiplier = (level: number) => PAD_BUILD_MULTIPLIER[clampLevel(level) - 1]
 export const launchpadMissionFloor = (level: number) => LAUNCHPAD_MISSION_FLOOR[clampLevel(level) - 1]
 

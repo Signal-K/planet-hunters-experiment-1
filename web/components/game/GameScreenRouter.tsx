@@ -398,6 +398,7 @@ function ScreenBody({
             }
           }}
           onUpgradeBuilding={id => game.upgradeBuilding(id)}
+          onServiceLaunchpad={game.serviceLaunchpad}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onExcavateSubsurfaceUnavailable={() => {
             const cost = SUBSURFACE_EXCAVATE_COST
