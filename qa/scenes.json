@@ -71,7 +71,8 @@
    "native": "launchpad-ops-phone",
    "tickets": [
     "SSL-425"
-   ]
+   ],
+   "aliasOf": "missions"
   },
   {
    "id": "launch-review",
@@ -136,7 +137,7 @@
     "SSL-658"
    ]
   },
- {
+  {
    "id": "orionids-shower-mining",
    "name": "Orionids shower run",
    "flow": "core-loop",
@@ -202,18 +203,20 @@
    "native": "hangar-workshop-phone",
    "tickets": [
     "SSL-427"
-   ]
+   ],
+   "aliasOf": "hangar"
   },
   {
    "id": "control-station",
-   "name": "Control station",
+   "name": "Data hub",
    "flow": "instruments",
    "web": "ui-instrument-hub",
    "native": "control-station-phone",
    "tickets": [
     "SSL-496",
     "SSL-730"
-   ]
+   ],
+   "aliasOf": "instrument-hub"
   },
   {
    "id": "tess-training",
@@ -233,7 +236,8 @@
    "native": "tess-discovery-phone",
    "tickets": [
     "SSL-497"
-   ]
+   ],
+   "aliasOf": "galaxy"
   },
   {
    "id": "tess-pointing",
@@ -253,7 +257,8 @@
    "native": "asteroid-discovery-phone",
    "tickets": [
     "SSL-497"
-   ]
+   ],
+   "aliasOf": "asteroid-discovery"
   },
   {
    "id": "saturn",
@@ -263,7 +268,8 @@
    "native": "saturn-imager-phone",
    "tickets": [
     "SSL-492"
-   ]
+   ],
+   "aliasOf": "saturn-storm-search"
   },
   {
    "id": "refinery",
@@ -279,7 +285,8 @@
    "flow": "records",
    "web": "ui-mission-log",
    "native": "mission-log-phone",
-   "tickets": []
+   "tickets": [],
+   "aliasOf": "mission-history"
   },
   {
    "id": "narrative-ledger",
@@ -560,7 +567,7 @@
   },
   {
    "id": "instrument-hub",
-   "name": "Control Station",
+   "name": "Data hub",
    "flow": "instruments",
    "web": "ui-instrument-hub",
    "native": "control-station-phone",

@@ -118,8 +118,8 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
-  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept as the Control Station handoff for exoplanet review. Player nav uses instrument-hub.' },
-  { id: 'instrument-hub', name: 'Control Station', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'One hub for investigative equipment (SSL-496), grouped by location. Same route as the old instrument hub. Not the retired job-board building on player.controlBuilt. Open hands a ready item to the existing classify screen.' },
+  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept as the Data hub handoff for exoplanet review. Player nav uses instrument-hub.' },
+  { id: 'instrument-hub', name: 'Data hub', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'One hub for investigative equipment (SSL-496), grouped by location. Same route as the old instrument hub. Not the retired job-board building on player.controlBuilt. Open hands a ready item to the existing classify screen.' },
 ]
 
 const BY_ID = new Map(SCENES.map(s => [s.id, s]))

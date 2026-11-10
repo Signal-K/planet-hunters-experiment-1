@@ -76,3 +76,14 @@ Mission run screens (the same five for every flight): `transit, landing, mining,
 3. Collapse router instrument state into one session object, then unify the six doors.
 4. Rename `galaxy` and `transit`, alias the duplicate scene ids.
 5. Replace targets/rocket-buy/fab with the single review screen only if Liam wants it; it touches the tutorial.
+
+## Cleanup status (SSL-808)
+
+Done:
+- Players see **Data hub** everywhere (Base menu, Agency landmark, tutorial objective, toasts, mission briefs, pointing copy). Code ids stay `instrument-hub` and `control-*`.
+- `qa/scenes.json` marks the 7 duplicate pairs with `aliasOf`, so the registry says which id is the real one.
+- Instruments always go back to the Data hub (reviews go back to where they started). That is the rule, whichever door opened them.
+
+Not done, on purpose:
+- Renaming the router screens `galaxy` and `transit`. Screen ids are saved in player state and used in deep links, so a rename needs a migration. Worth doing with the router session-object refactor, not before.
+- Changing where missions end. Satellite launches land on the Data hub, shower runs on the Mission Board (to chain runs) and other program operations on the launchpad. Each is deliberate; the inconsistency is that the debrief does not say so. A "what next" row on the debrief would fix that and needs Liam's call on the three destinations.

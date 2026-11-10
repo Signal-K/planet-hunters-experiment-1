@@ -81,14 +81,14 @@ const INSTRUMENTS: Array<{ id: string; title: string; brief: string; detail: str
   {
     id: TRANSIT_TELESCOPE_MISSION_ID,
     title: 'Launch Space Telescope',
-    brief: 'Build a dedicated launch vehicle and deploy the telescope into Earth orbit. Once commissioned, it provides a daily asteroid-candidate feed in the Control Station.',
+    brief: 'Build a dedicated launch vehicle and deploy the telescope into Earth orbit. Once commissioned, it provides a daily asteroid-candidate feed in the Data hub.',
     detail: 'Space telescope online · daily instrument feed unlocked',
     unlockAt: 'Reach Free Operations',
   },
   {
     id: SATURN_IMAGER_MISSION_ID,
     title: 'Launch Saturn satellite',
-    brief: 'Prepare and launch the Saturn imager, then review Cassini storm-cloud frames from its daily downlink in the Control Station.',
+    brief: 'Prepare and launch the Saturn imager, then review Cassini storm-cloud frames from its daily downlink in the Data hub.',
     detail: 'Saturn satellite online · Cassini storm-cloud feed unlocked',
     unlockAt: 'Reach Free Operations',
   },

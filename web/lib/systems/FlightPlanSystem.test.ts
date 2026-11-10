@@ -92,7 +92,7 @@ describe('FlightPlanSystem', () => {
     }
     expect(TRAINING_TRIES.filter(step => step.try === 'mining').length).toBeLessThanOrEqual(7)
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
-    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Control Station')
+    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Data hub')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
     expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')

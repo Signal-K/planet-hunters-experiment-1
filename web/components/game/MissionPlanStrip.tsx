@@ -108,7 +108,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
     const xp = rocketResearchXp(model)
     const have = Math.floor(player.researchXP ?? 0)
     if (have < xp) {
-      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Control Station to earn it.`, 'warn')
+      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Data hub to earn it.`, 'warn')
       return
     }
     game.unlockBlueprint(rocketResearchId(model.id), 0, xp, {})

@@ -383,7 +383,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     }
     if (kind === 'control-station') {
       return {
-        kind, label: agencyLandmark ? 'Agency' : 'Control station',
+        kind, label: agencyLandmark ? 'Agency' : 'Data hub',
         sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
@@ -497,7 +497,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
     ...(
       hasControlStation || ownsOrbitalInstrument
-        ? [{ id: 'instruments', icon: 'station' as const, label: 'Instruments', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
+        ? [{ id: 'instruments', icon: 'station' as const, label: 'Data hub', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
         : []
     ),
     { id: 'community-research', icon: 'research', label: 'Community research', detail: liveSkyEvent ? `${liveSkyEvent.name} week, shared with every player` : 'Daily stamps and the shared monthly goal', onSelect: () => onOpenScene('community-research') },

@@ -31,7 +31,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     blurb: 'A wide-field camera above the air. Steer it anywhere on the sky and stare: planets show up as tiny dips in starlight.',
     sight: 'frame',
     lockLabel: 'POINT HERE',
-    lockedCopy: t => `Staring at the ${t.name.toLowerCase()}. Starlight is measured nonstop; dips reach your Control Station through the week.`,
+    lockedCopy: t => `Staring at the ${t.name.toLowerCase()}. Starlight is measured nonstop; dips reach your Data hub through the week.`,
   },
   'deep-space': {
     short: 'Ground telescope',
@@ -40,7 +40,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     blurb: 'A dome on the hill. Swing the slit anywhere on the sky; asteroids drift past the stars.',
     sight: 'cross',
     lockLabel: 'POINT HERE',
-    lockedCopy: t => `Dome open on the ${t.name.toLowerCase()}. Frames are taken all week; moving dots land in your Control Station.`,
+    lockedCopy: t => `Dome open on the ${t.name.toLowerCase()}. Frames are taken all week; moving dots land in your Data hub.`,
   },
   saturn: {
     short: 'Saturn orbiter',
