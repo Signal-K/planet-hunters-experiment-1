@@ -10,7 +10,7 @@ const config = {
   api: process.env.NEXT_PUBLIC_SHARED_PB_URL?.trim() || 'https://signal-k-starsailors.fly.dev',
   clerk: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || '',
   shareAuth: 'pocketbase_auth', // Landnam's pocketbase-js auth: signed in there is signed in here
-  wasm: 'game-gz.wasm',
+  wasm: 'game.wasm.gz',
   wasmGzip: true,
   sw: false, // the game's service worker would delete Landnam's caches
 }
