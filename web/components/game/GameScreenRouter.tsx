@@ -480,7 +480,7 @@ function ScreenBody({
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => { const reviewing = reviewTarget?.project === 'tess'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
@@ -497,7 +497,7 @@ function ScreenBody({
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => { const reviewing = reviewTarget?.project === 'asteroid'; setReviewTarget(null); if (reviewing) game.goBack(); else game.go('instrument-hub') }}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
           reviewing={reviewTarget?.project === 'asteroid'}
