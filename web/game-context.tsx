@@ -3,7 +3,7 @@
 import { stampLedger } from '@/lib/sync/ledger'
 import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, BASE_LASER_CHARGES } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
@@ -27,6 +27,7 @@ import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeed
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
 import { claimFriendGift as claimFriendGiftRequest, sendFriendGift as sendFriendGiftRequest } from '@/lib/friends/client'
 import { giftAmount } from '@/lib/friends/giftRules'
+import { applyFreeRunGoal } from '@/lib/freeRunGoal'
 import { addStamp } from '@/lib/research/stamps'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
@@ -396,12 +397,17 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const mission = state.missionId
+  const baseMission = state.missionId
     ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
        ?? state.player.dailyClientPool?.missions.find(m => m.id === state.missionId)
        ?? (state.player.activeMission?.id === state.missionId ? state.player.activeMission.mission : undefined)
        ?? null)
     : null
+  // Free mining: the player's own ore and amount replace the authored placeholder (nickel x1).
+  const mission = useMemo(
+    () => baseMission ? applyFreeRunGoal(baseMission, state.player.freeRunGoal, runtimeCatalog.minerals) : null,
+    [baseMission, state.player.freeRunGoal, runtimeCatalog.minerals],
+  )
   const target = state.targetId
     ? runtimeCatalog.targets.find(t => t.id === state.targetId)
       ?? (state.player.activeMission?.target?.id === state.targetId ? state.player.activeMission.target : undefined)

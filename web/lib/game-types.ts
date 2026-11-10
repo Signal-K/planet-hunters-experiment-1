@@ -202,6 +202,8 @@ export interface Player {
   stagedRockets?: StagedRocket[]
   /** The prepared vehicle currently being inspected in mission setup. */
   selectedStagedRocketId?: string
+  /** The ore and amount chosen for the free mining run (applied to the authored run in game-context). */
+  freeRunGoal?: import('@/lib/freeRunGoal').FreeRunGoal
   /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string
   /** Physical position of the staged vehicle. New vehicles begin in the Hangar. */
