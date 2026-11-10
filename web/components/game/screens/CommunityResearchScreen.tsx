@@ -73,7 +73,7 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
 
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
-  'Finish its five steps in any order. Missing a day costs nothing.',
+  'Finish its steps in any order. Missing a day costs nothing.',
   'Every step is a stamp that also fills the shared community bar.',
 ]
 
@@ -156,7 +156,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, review other players\u2019 findings, scan worlds and chase the sky. The research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>

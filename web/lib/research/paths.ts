@@ -98,6 +98,9 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
     { id: 'watch', kind: 'classification', days: 3, icon: 'signal', color: '#58d0ea', title: 'Keep watching: 3 days',
       brief: 'Classify a signal on three different days this week.',
       why: 'Signals repeat. Coming back is how a real discovery gets confirmed.' },
+    { id: 'review', kind: 'review', days: 1, icon: 'signal', color: '#f2c24c', title: 'Review a finding',
+      brief: 'Open Community research, check another player’s finding with your own look, then Support, Dispute or Unsure.',
+      why: 'A finding is only verified when other players agree. Consensus is the community’s goal.' },
     opts.hasDiscovery
       ? { id: 'world', kind: 'discovery-mission', days: 1, icon: 'world', color: '#c9a7f0', title: 'Survey your discovery',
           brief: 'Fly a survey to a world you found yourself.', why: 'Your own find, checked up close. Nobody else can do this one for you.' }

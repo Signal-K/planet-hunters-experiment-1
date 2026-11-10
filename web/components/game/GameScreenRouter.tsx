@@ -1,5 +1,6 @@
 'use client'
 
+import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { requestConsensus } from '@/lib/community/client'
@@ -668,7 +669,7 @@ function ScreenBody({
           onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
-          onFinishReview={() => setPendingReview(null)}
+          onFinishReview={() => { game.setPlayer(current => addStamp(current, 'review', Date.now())); setPendingReview(null) }}
           onStartReview={item => {
             // Each kind opens on its own instrument, on the requester's subject, for the player's own run first.
             const route = {

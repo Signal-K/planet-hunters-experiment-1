@@ -396,7 +396,7 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
   telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number } }>>
