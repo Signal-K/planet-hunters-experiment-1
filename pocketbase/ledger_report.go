@@ -46,7 +46,7 @@ const (
 // four toward the community bar; the ledger takes all of them.
 var ledgerStampKinds = map[string]bool{
 	"classification": true, "survey": true, "discovery-mission": true, "event": true,
-	"exchange-sale": true, "contract-run": true, "price-alert": true,
+	"exchange-sale": true, "contract-run": true, "price-alert": true, "gift": true,
 }
 
 type ledgerRow struct {

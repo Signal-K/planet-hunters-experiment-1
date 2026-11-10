@@ -25,7 +25,9 @@ import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useWelcomeBack } from '@/lib/contexts/useWelcomeBack'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
-import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
+import { claimFriendGift as claimFriendGiftRequest, sendFriendGift as sendFriendGiftRequest } from '@/lib/friends/client'
+import { giftAmount } from '@/lib/friends/giftRules'
+import { addStamp } from '@/lib/research/stamps'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
@@ -292,6 +294,18 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loop.unlockBlueprint])
+  // SSL-794: a gift comes out of the sender's stash and earns a research stamp.
+  // The server checks the rule; the stash is taken here once it accepts.
+  const sendFriendGift = useCallback(async (recipientId: string, mineral: string) => {
+    const amount = giftAmount(mineral)
+    if (amount <= 0 || (state.player.stash?.[mineral] ?? 0) < amount) throw new Error('Not enough in your stash')
+    await sendFriendGiftRequest(recipientId, mineral)
+    setState(s => {
+      const have = s.player.stash?.[mineral] ?? 0
+      const stash = { ...(s.player.stash ?? {}), [mineral]: Math.max(0, have - amount) }
+      return { ...s, player: addStamp({ ...s.player, stash }, 'gift', Date.now()) }
+    })
+  }, [state.player.stash])
   useInstrumentFeedNotifications({
     // Instrument feeds are shared-backend data. Do not start a background
     // request while the auth restore is still pending (or after logout),
@@ -475,6 +489,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       unlockBlueprint: loop.unlockBlueprint,
       researchLanding,
       claimFriendGift,
+      sendFriendGift,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,

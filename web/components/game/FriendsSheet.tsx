@@ -9,6 +9,7 @@ import FriendAvatar from '@/components/game/FriendAvatar'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import styles from './FriendsSheet.module.css'
+import { giftableOres, type GiftChoice } from '@/lib/friends/giftRules'
 import { generateDefaultUsername, isValidUsername } from '@/lib/friends/username'
 import {
   FriendsApiError,
@@ -18,13 +19,11 @@ import {
   removeFriendship,
   respondToFriendRequest,
   searchFriendCandidates,
-  sendFriendGift,
   sendFriendRequest,
   setFriendUsername,
   viewFriendBase,
   type FriendEntry,
   type FriendGiftInboxEntry,
-  type FriendGiftKind,
   type FriendPublicUser,
   type FriendsListResponse,
   type FriendBaseSnapshot,
@@ -36,12 +35,6 @@ interface FriendsSheetProps {
 }
 
 type Tab = 'friends' | 'requests' | 'find'
-
-const GIFT_KINDS: { kind: FriendGiftKind; label: string }[] = [
-  { kind: 'currency', label: 'Francs' },
-  { kind: 'resource', label: 'Resource' },
-  { kind: 'blueprint', label: 'Blueprint' },
-]
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -95,15 +88,16 @@ function SmallButton({
 }
 
 function FriendRow({
-  entry, onViewBase, onVisitWorld, onSendGift, onRemove, sendingGiftKind, removable,
+  entry, onViewBase, onVisitWorld, onSendGift, onRemove, sendingGiftKind, removable, giftChoices,
 }: {
   entry: FriendEntry
   onViewBase?: () => void
   onVisitWorld?: () => void
-  onSendGift?: (kind: FriendGiftKind) => void
+  onSendGift?: (mineral: string) => void
   onRemove: () => void
-  sendingGiftKind?: FriendGiftKind | null
+  sendingGiftKind?: string | null
   removable: boolean
+  giftChoices: GiftChoice[]
 }) {
   const [pickingGift, setPickingGift] = useState(false)
   return (
@@ -130,12 +124,17 @@ function FriendRow({
       </div>
       {pickingGift && (
         <div style={{ display: 'flex', gap: 8, paddingLeft: 46 }}>
-          {GIFT_KINDS.map(g => (
+          {giftChoices.length === 0 && (
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)' }}>
+              Nothing to give yet. A gift is 3 of a common ore or 1 of a rare one, taken from your stash.
+            </div>
+          )}
+          {giftChoices.map(g => (
             <SmallButton
-              key={g.kind}
-              label={sendingGiftKind === g.kind ? 'Sending…' : g.label}
+              key={g.id}
+              label={sendingGiftKind === g.id ? 'Sending…' : `${g.name} ×${g.amount}`}
               disabled={!!sendingGiftKind}
-              onClick={() => { onSendGift?.(g.kind); setPickingGift(false) }}
+              onClick={() => { onSendGift?.(g.id); setPickingGift(false) }}
             />
           ))}
         </div>
@@ -146,6 +145,7 @@ function FriendRow({
 
 export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const game = useGame()
+  const giftChoices = giftableOres(game.player.stash)
   const [tab, setTab] = useState<Tab>('find')
   const [data, setData] = useState<FriendsListResponse | null>(null)
   const [inbox, setInbox] = useState<FriendGiftInboxEntry[]>([])
@@ -154,7 +154,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const [query, setQuery] = useState('')
   const [searched, setSearched] = useState(false)
   const [results, setResults] = useState<FriendPublicUser[]>([])
-  const [sendingGiftFor, setSendingGiftFor] = useState<{ id: string; kind: FriendGiftKind } | null>(null)
+  const [sendingGiftFor, setSendingGiftFor] = useState<{ id: string; kind: string } | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [baseView, setBaseView] = useState<{ id: string; snapshot: FriendBaseSnapshot } | null>(null)
   const [worldView, setWorldView] = useState<FriendWorldSnapshot | null>(null)
@@ -257,11 +257,11 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
     }
   }
 
-  async function handleSendGift(recipientId: string, kind: FriendGiftKind) {
-    setSendingGiftFor({ id: recipientId, kind })
+  async function handleSendGift(recipientId: string, mineral: string) {
+    setSendingGiftFor({ id: recipientId, kind: mineral })
     try {
-      await sendFriendGift(recipientId, kind)
-      game.addToast('Gift sent', 'ok')
+      await game.sendFriendGift(recipientId, mineral)
+      game.addToast('Gift sent. It counts as research.', 'ok')
       void load()
     } catch (err) {
       game.addToast(err instanceof FriendsApiError ? err.message : 'Could not send gift', 'warn')
@@ -457,7 +457,8 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
                   removable
                   onViewBase={() => handleViewBase(f.id)}
                   onVisitWorld={() => handleVisitWorld(f.id)}
-                  onSendGift={kind => handleSendGift(f.id, kind)}
+                  giftChoices={giftChoices}
+                  onSendGift={mineral => handleSendGift(f.id, mineral)}
                   sendingGiftKind={sendingGiftFor?.id === f.id ? sendingGiftFor.kind : null}
                   onRemove={() => handleRemove(f.friendshipId)}
                 />

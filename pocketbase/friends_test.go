@@ -45,57 +45,41 @@ func TestIsValidUsernameFormat(t *testing.T) {
 	}
 }
 
-func TestRollGiftPayloadCurrency(t *testing.T) {
-	for i := 0; i < 50; i++ {
-		payload, err := rollGiftPayload("currency")
+func TestGiftPayloadCommonIsThree(t *testing.T) {
+	for _, m := range []string{"iron", "aluminium", "nickel", "ice", "hydrogen"} {
+		payload, err := giftPayload("resource", m)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("%s: unexpected error: %v", m, err)
 		}
-		amount, ok := payload["amount"].(int)
-		if !ok || amount < 50 || amount > 150 {
-			t.Fatalf("currency amount out of bounds: %#v", payload["amount"])
+		if payload["mineral"] != m || payload["amount"] != 3 {
+			t.Fatalf("%s: payload = %#v, want 3", m, payload)
 		}
 	}
 }
 
-func TestRollGiftPayloadResource(t *testing.T) {
-	validMinerals := map[string]bool{}
-	for _, m := range friendGiftMinerals {
-		validMinerals[m] = true
-	}
-	for i := 0; i < 50; i++ {
-		payload, err := rollGiftPayload("resource")
+func TestGiftPayloadRareIsOne(t *testing.T) {
+	for _, m := range []string{"platinum", "gold", "uranium", "rhodium", "rare"} {
+		payload, err := giftPayload("resource", m)
 		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
+			t.Fatalf("%s: unexpected error: %v", m, err)
 		}
-		mineral, _ := payload["mineral"].(string)
-		if !validMinerals[mineral] {
-			t.Fatalf("resource mineral %q not in friendGiftMinerals", mineral)
-		}
-		amount, ok := payload["amount"].(int)
-		if !ok || amount < 3 || amount > 8 {
-			t.Fatalf("resource amount out of bounds: %#v", payload["amount"])
+		if payload["amount"] != 1 {
+			t.Fatalf("%s: amount = %#v, want 1", m, payload["amount"])
 		}
 	}
 }
 
-func TestRollGiftPayloadBlueprint(t *testing.T) {
-	validSlugs := map[string]bool{}
-	for _, s := range friendGiftBlueprints {
-		validSlugs[s] = true
+func TestGiftPayloadRejectsRetiredAndUnknown(t *testing.T) {
+	if _, err := giftPayload("currency", ""); err == nil {
+		t.Fatal("currency gifts are retired")
 	}
-	payload, err := rollGiftPayload("blueprint")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if _, err := giftPayload("blueprint", ""); err == nil {
+		t.Fatal("blueprint gifts are retired")
 	}
-	slug, _ := payload["slug"].(string)
-	if !validSlugs[slug] {
-		t.Fatalf("blueprint slug %q not in friendGiftBlueprints", slug)
+	if _, err := giftPayload("resource", "leonid_debris"); err == nil {
+		t.Fatal("shower debris must not be giftable")
 	}
-}
-
-func TestRollGiftPayloadRejectsUnknownKind(t *testing.T) {
-	if _, err := rollGiftPayload("trade"); err == nil {
-		t.Fatal("expected error for unsupported gift kind, got nil")
+	if _, err := giftPayload("resource", ""); err == nil {
+		t.Fatal("a gift needs an ore")
 	}
 }
