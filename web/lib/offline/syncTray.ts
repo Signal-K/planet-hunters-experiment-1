@@ -37,6 +37,7 @@ export function syncTrayCopy(state: SyncState, waiting: number): { title: string
 export function describeChange(item: OutboxItem): string {
   const op = item.op
   if (op.type === 'http') return op.path.includes('community') ? 'Community research' : 'Shared record'
+  if (op.type === 'shared-create') return op.collection === 'platform_classification_captures' ? 'Classification and images' : 'Shared record'
   switch (op.collection) {
     case 'game_states': return 'Base and progress'
     case 'mission_runs': return op.type === 'create' ? 'Mission started' : 'Mission record'

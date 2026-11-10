@@ -8,6 +8,7 @@ import type { Player } from '@/lib/game-types'
 import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './RadioMeteorScreen.module.css'
+import { queueClassificationCapture } from '@/lib/capture/classificationCapture'
 
 interface RadioMeteorScreenProps {
   player: Player
@@ -197,6 +198,15 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   }
   const submit = (list: RadioMeteorBox[]) => {
     if (!subject || !size) return
+    // The spectrogram and its echo boxes, drawn server-side (no CORS on Zooniverse images).
+    void queueClassificationCapture({
+      kind: 'radio-meteor',
+      subject: subject.id,
+      recordCollection: 'radio_meteor_classifications',
+      sourceUrl: subject.imageUrl,
+      annotations: { boxes: list, echoCount: list.length, subject, imageWidth: size.w, imageHeight: size.h },
+      overlay: { width: size.w, height: size.h, boxes: list.map(box => ({ ...box, color: '#ffd60a' })) },
+    })
     onSubmit({
       subjectId: subject.id,
       workflowId: subject.workflowId,

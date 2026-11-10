@@ -15,6 +15,7 @@ import type { Player } from '@/lib/game-types'
 import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
+import { queueClassificationCapture, renderLightcurveCapture } from '@/lib/capture/classificationCapture'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
@@ -265,6 +266,20 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     help.reportAction('submit')
+    if (!candidate.id.startsWith(TRAINING_ID_PREFIX)) {
+      // The full answer (every range at full width) with the light curve and the marked copy.
+      const target = candidate
+      const marked = ranges
+      const title = `${/^TIC/i.test(target.ticId) ? target.ticId : `TIC ${target.ticId}`}${target.toi ? ` · TOI ${target.toi}` : ''} · ${target.host} · sector ${target.sector}`
+      void renderLightcurveCapture(points, marked, title, id).then(({ image, annotated }) => queueClassificationCapture({
+        kind: 'tess',
+        subject: target.id,
+        recordCollection: 'subject_classifications',
+        annotations: { verdict: id, ranges: marked, measuredPeriodDays: measuredPeriod, dips: measured, candidate: target, lightcurvePoints: points },
+        image,
+        annotatedImage: annotated,
+      }))
+    }
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 

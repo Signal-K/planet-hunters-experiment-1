@@ -13,6 +13,13 @@ export type OutboxOp =
   | { type: 'upsert'; collection: string; id: string; filter: string; data: Record<string, unknown> }
   /** A Landnam custom-route call (community API). `body.id` is the client-generated idempotency key. */
   | { type: 'http'; path: string; method: 'POST'; body: Record<string, unknown> }
+  /**
+   * A create on the shared Star Sailors backend (pbShared), e.g. a full
+   * classification capture. `files` maps a file field to a key in the capture
+   * blob store (lib/capture/blobStore.ts): images are too large for the
+   * localStorage mirror, so the queue item only names them.
+   */
+  | { type: 'shared-create'; collection: string; id: string; data: Record<string, unknown>; files?: Record<string, string> }
 
 export interface OutboxItem {
   id: string

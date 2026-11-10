@@ -17,6 +17,10 @@ import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import type { Player } from '@/lib/game-types'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { queueClassificationCapture } from '@/lib/capture/classificationCapture'
+
+/** Square tints on the stored marked-up frame. */
+const SATURN_CAPTURE_COLORS: Record<'yes' | 'no' | 'maybe' | 'storm', string> = { yes: '#ec783c', no: '#3cc8ff', maybe: '#ffd60a', storm: '#c060ff' }
 
 interface SaturnStormSearchScreenProps {
   player: Player
@@ -196,10 +200,38 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const pieces = Object.keys(savedCells).length
   const chart = player.moonSurveyCharts?.enceladus as MoonSurveyChart | undefined
 
+  // The ninth square completes the frame: keep the whole frame, every square's
+  // answer and the imaging used. The server fetches the Cassini image and draws
+  // the 3x3 answers onto it (Zooniverse images cannot be read by the browser).
+  const captureFrame = (index: number, answer: SaturnVerdict, storm: boolean) => {
+    if (savedCells[index] || Object.keys(savedCells).length !== 8) return
+    const answers = Array.from({ length: 9 }, (_, i) => i === index
+      ? { index: i, verdict: answer, storm }
+      : { index: i, verdict: savedCells[i]?.verdict ?? null, storm: savedCells[i]?.storm ?? false })
+    void queueClassificationCapture({
+      kind: 'saturn',
+      subject: candidate.id,
+      recordCollection: 'ss_saturn_storm_classifications',
+      sourceUrl: candidate.imageUrl,
+      annotations: {
+        verdict: answer,
+        cells: answers,
+        candidate,
+        imaging: { palette: SATURN_PALETTES[palette].name, contrast, sharpen, loupe },
+      },
+      overlay: {
+        width: 3,
+        height: 3,
+        grid: { cols: 3, rows: 3, cells: answers.map(cell => ({ index: cell.index, color: SATURN_CAPTURE_COLORS[cell.storm ? 'storm' : cell.verdict ?? 'maybe'] })) },
+      },
+    })
+  }
+
   const paint = (answer: SaturnVerdict) => {
     if (savedCells[selected] || complete) return
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer } : cell))
     help.reportAction('submit')
+    captureFrame(selected, answer, cells[selected]?.storm ?? false)
     onSubmit(candidate.id, selected, answer, cells[selected]?.storm ?? false)
   }
 
@@ -259,6 +291,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     const answer = cells[selected]?.answer ?? 'yes'
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, storm, answer } : cell))
     help.reportAction('submit')
+    captureFrame(selected, answer, storm)
     onSubmit(candidate.id, selected, answer, storm)
   }
 

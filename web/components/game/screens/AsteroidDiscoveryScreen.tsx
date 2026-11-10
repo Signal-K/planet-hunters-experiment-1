@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { useHelp } from '@/components/ui/useHelp'
 import AsteroidSkyPlot, { SKY_FIELD_LIMITS, eclipticLatitude } from '@/components/game/AsteroidSkyPlot'
@@ -12,6 +12,7 @@ import type { Player } from '@/lib/game-types'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
+import { queueClassificationCapture, snapshotSvg } from '@/lib/capture/classificationCapture'
 import { asteroidFeedOnline, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface AsteroidDiscoveryScreenProps {
@@ -53,6 +54,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   // SSL-747: the player reads the object's offset from the ecliptic off the chart and dials it in.
   // Nothing computes it for them before they submit; the readout shows the true value afterwards.
   const [offsetRead, setOffsetRead] = useState<number | null>(null)
+  const skyRef = useRef<HTMLDivElement>(null)
   const [showGrid, setShowGrid] = useState(true)
   const [showEcliptic, setShowEcliptic] = useState(true)
   useEffect(() => { setField(1); setOffsetRead(null) }, [candidate?.id])
@@ -221,6 +223,16 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   const castVerdict = (id: AsteroidVerdict) => {
     if (classification) return
     help.reportAction('submit')
+    // Snapshot the sky plot before the verdict re-renders it.
+    const plot = skyRef.current?.querySelector('svg') ?? null
+    const target = candidate
+    void snapshotSvg(plot).then(image => queueClassificationCapture({
+      kind: 'neocp',
+      subject: target.id,
+      recordCollection: 'asteroid_classifications',
+      annotations: { verdict: id, candidate: target, eclipticOffsetRead: offsetRead, eclipticLatitude: beta, field, fieldDeg, showGrid, showEcliptic },
+      annotatedImage: image,
+    }))
     onSubmit(candidate.id, id)
   }
 
@@ -271,7 +283,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         </dl>
       </>)}
       viewport={(
-        <div data-coach-target="neocp-sky" style={{ position: 'absolute', inset: 0 }}>
+        <div ref={skyRef} data-coach-target="neocp-sky" style={{ position: 'absolute', inset: 0 }}>
         <AsteroidSkyPlot
           tempDesig={candidate.tempDesig}
           ra={candidate.ra}
