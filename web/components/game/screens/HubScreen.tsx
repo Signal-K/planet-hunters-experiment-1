@@ -24,6 +24,7 @@ import { RocketRollout } from '@/components/game/hub/RocketRollout'
 import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
+import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
 import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
@@ -173,6 +174,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
   const [servicingPad, setServicingPad] = useState(false)
+  const [siloOpen, setSiloOpen] = useState(false)
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
@@ -431,10 +433,12 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
       return {
         kind, label: 'Surface Silo',
-        sub: `${Math.min(used, 40)} / 40 U`,
+        sub: `${Math.min(used, surfaceSiloCapacity(player.buildingLevels))} / ${surfaceSiloCapacity(player.buildingLevels)} U`,
         status: 'ok' as const,
         w: 62,
-        onClick: () => onFocusBuilding('build'),
+        // The Surface Silo stands above ground: it opens its own contents
+        // here. The Mineral Vault underground is a separate building.
+        onClick: () => setSiloOpen(true),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -631,9 +635,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                   ? { ...building, onClick: () => setArrangeKind(kind) }
                   : editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind, undefined, padLevel)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
-                  : silo
-                    ? { ...building, onClick: () => setSubsurface(true) }
-                    : building
+                  : building
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
                 const pad = kind === 'launchpad'
                 return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={arrangeMode ? arrangeKind === kind : activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
@@ -699,6 +701,16 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           {!subsurface && <div id="hub-top-right" className={layoutStyles.topRight} />}
         </div>
       </div>
+
+      {siloOpen && !subsurface && (
+        <SurfaceSiloPanel
+          stash={player.stash}
+          buildingLevels={player.buildingLevels}
+          subsurfaceBuilt={player.subsurfaceBuilt}
+          onSell={player.placed?.includes('market') && onOpenMarket ? () => { setSiloOpen(false); onOpenMarket() } : undefined}
+          onClose={() => setSiloOpen(false)}
+        />
+      )}
 
       {servicingPad && onServiceLaunchpad && (
         <ActionConfirmBar
