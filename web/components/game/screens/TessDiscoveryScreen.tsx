@@ -1,7 +1,7 @@
 'use client'
 
 import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
@@ -85,6 +85,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
   // SSL-745: photometry module — time zoom, scan, bin and phase fold act on the data itself.
   const [lc, setLc] = useState<LightcurveControls>(DEFAULT_LIGHTCURVE_CONTROLS)
+  const chartCaptureRef = useRef<(() => Promise<Blob | null>) | null>(null)
   useEffect(() => { setLc(DEFAULT_LIGHTCURVE_CONTROLS) }, [candidate?.id])
 
   useEffect(() => {
@@ -271,11 +272,14 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       const target = candidate
       const marked = ranges
       const title = `${/^TIC/i.test(target.ticId) ? target.ticId : `TIC ${target.ticId}`}${target.toi ? ` · TOI ${target.toi}` : ''} · ${target.host} · sector ${target.sector}`
-      void renderLightcurveCapture(points, marked, title, id).then(({ image, annotated }) => queueClassificationCapture({
+      // The marked copy is the chart exactly as the player had it (view, bin,
+      // marks); the plain copy is the whole light curve without marks.
+      const onScreen = chartCaptureRef.current?.() ?? Promise.resolve(null)
+      void Promise.all([renderLightcurveCapture(points, marked, title, id), onScreen]).then(([{ image, annotated: drawn }, shot]) => ({ image, annotated: shot ?? drawn })).then(({ image, annotated }) => queueClassificationCapture({
         kind: 'tess',
         subject: target.id,
         recordCollection: 'subject_classifications',
-        annotations: { verdict: id, ranges: marked, measuredPeriodDays: measuredPeriod, dips: measured, candidate: target, lightcurvePoints: points },
+        annotations: { verdict: id, view: { span: lc.span, scan: lc.scan, bin: lc.bin, fold: lc.fold, xDomain: display.xDomain }, ranges: marked, measuredPeriodDays: measuredPeriod, dips: measured, candidate: target, lightcurvePoints: points },
         image,
         annotatedImage: annotated,
       }))
@@ -431,6 +435,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
             locked={display.folded}
             yDomain={yDomain}
+            captureRef={chartCaptureRef}
           />
         </div>
       )}

@@ -19,7 +19,7 @@ import { useEffect, useRef } from 'react'
 import { useInstrumentFinish } from './instrument-viewport/InstrumentViewport'
 import { hexNumber, type InstrumentFinish } from '@/lib/instrument-finish'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
+import { Application, Container, Graphics, Rectangle, Text, TextStyle } from 'pixi.js'
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
 import type { TransitRange } from '@/lib/data'
 
@@ -106,9 +106,11 @@ export interface ObservatoryChartProps {
   xDomain?:      [number, number]
   /** Phase-folded: x is days from the trial transit, drawn as a stacked scatter with a T0 line. */
   folded?:       boolean
+  /** Filled with a function that returns the chart as drawn now, as a PNG. */
+  captureRef?:   { current: (() => Promise<Blob | null>) | null }
 }
 
-export default function ObservatoryChart({ points, ranges, onRange, onRemoveRange, locked = false, height, yDomain, xDomain, folded = false }: ObservatoryChartProps) {
+export default function ObservatoryChart({ points, ranges, onRange, onRemoveRange, locked = false, height, yDomain, xDomain, folded = false, captureRef }: ObservatoryChartProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const pointsRef = useRef(points); pointsRef.current = points
   const yDomainRef = useRef(yDomain); yDomainRef.current = yDomain
@@ -135,6 +137,17 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
     let rafId = 0
     let W = 0, H = 0
     let resizeObserver: ResizeObserver | null = null
+    const capture = async (): Promise<Blob | null> => {
+      if (destroyed || !app.renderer) return null
+      try {
+        const out = app.renderer.extract.canvas({ target: app.stage, frame: new Rectangle(0, 0, W, H), resolution: app.renderer.resolution, clearColor: '#0b1220' }) as HTMLCanvasElement
+        if (typeof out.toBlob !== 'function') return null
+        return await new Promise<Blob | null>(resolve => out.toBlob(blob => resolve(blob), 'image/png'))
+      } catch {
+        return null
+      }
+    }
+    if (captureRef) captureRef.current = capture
 
     const bgG = new Graphics()
     const gridG = new Graphics()
@@ -383,6 +396,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
     return () => {
       cancelAnimationFrame(rafId)
       destroyed = true
+      if (captureRef?.current === capture) captureRef.current = null
       resizeObserver?.disconnect()
       canvas.removeEventListener('pointerdown', handleDown)
       canvas.removeEventListener('pointermove', handleMove)

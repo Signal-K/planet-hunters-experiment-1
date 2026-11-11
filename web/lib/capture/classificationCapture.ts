@@ -3,10 +3,12 @@
 // looked at, and that image with their markings. The per-game collections stay
 // the consensus feeds. Writes go through the offline outbox.
 //
-// Zooniverse images (Saturn, radio meteors) cannot be read by the browser (no
-// CORS), so those send source_url plus an `overlay` and the server draws the
-// marked-up copy. Plots the game draws itself (TESS light curves, the NEOCP
-// sky plot) are rendered here.
+// Every image is made in the browser from what the player saw: the Zooniverse
+// frame or spectrogram with the screen's filters and their marks
+// (composeImageCapture; Zooniverse allows CORS reads), the TESS chart as drawn
+// on screen, the NEOCP sky plot. Zooniverse captures also send source_url plus
+// an `overlay`, so the server can draw the marked-up copy if the browser could
+// not read the image.
 
 import { pbShared } from '@/lib/pb'
 import { getOutbox } from '@/lib/offline/pbOutbox'
@@ -68,6 +70,60 @@ export async function queueClassificationCapture(input: CaptureInput): Promise<s
 
 function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'))
+}
+
+function loadCorsImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.decoding = 'async'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('image load'))
+    // A copy cached from a non-CORS load would taint the canvas; the marker
+    // makes the browser fetch a CORS copy instead.
+    img.src = url + (url.includes('?') ? '&' : '?') + 'capture=1'
+  })
+}
+
+/**
+ * The image as the player saw it (with the same CSS filter the screen used)
+ * and a copy with their markings drawn on top, both at the image's natural
+ * size. `mark` draws in image pixels. Zooniverse serves
+ * Access-Control-Allow-Origin: *, so the canvas stays readable. Returns nulls
+ * when the image cannot be read; the server then draws from source_url and
+ * the overlay instead.
+ */
+export async function composeImageCapture(
+  url: string,
+  mark: (ctx: CanvasRenderingContext2D, width: number, height: number) => void,
+  filter?: string,
+): Promise<{ image: Blob | null; annotated: Blob | null }> {
+  if (typeof document === 'undefined' || !url) return { image: null, annotated: null }
+  try {
+    const img = await loadCorsImage(url)
+    const w = img.naturalWidth
+    const h = img.naturalHeight
+    if (!w || !h) return { image: null, annotated: null }
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return { image: null, annotated: null }
+    if (filter && 'filter' in ctx) ctx.filter = filter
+    ctx.drawImage(img, 0, 0, w, h)
+    ctx.filter = 'none'
+    const image = await canvasBlob(canvas)
+    mark(ctx, w, h)
+    const annotated = await canvasBlob(canvas)
+    return { image, annotated }
+  } catch {
+    return { image: null, annotated: null }
+  }
+}
+
+/** Line width that reads at the image's size the way 2-3 CSS pixels read on screen. */
+export function captureStroke(width: number): number {
+  return Math.max(2, Math.round(width / 300))
 }
 
 const PLOT = { w: 1600, h: 700, left: 110, right: 30, top: 70, bottom: 80 }
