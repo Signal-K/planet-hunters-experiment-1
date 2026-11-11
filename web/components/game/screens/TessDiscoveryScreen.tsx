@@ -1,7 +1,7 @@
 'use client'
 
 import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
@@ -15,6 +15,7 @@ import type { Player } from '@/lib/game-types'
 import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
+import { queueClassificationCapture, renderLightcurveCapture } from '@/lib/capture/classificationCapture'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION, instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
@@ -84,6 +85,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
   // SSL-745: photometry module — time zoom, scan, bin and phase fold act on the data itself.
   const [lc, setLc] = useState<LightcurveControls>(DEFAULT_LIGHTCURVE_CONTROLS)
+  const chartCaptureRef = useRef<(() => Promise<Blob | null>) | null>(null)
   useEffect(() => { setLc(DEFAULT_LIGHTCURVE_CONTROLS) }, [candidate?.id])
 
   useEffect(() => {
@@ -265,6 +267,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     help.reportAction('submit')
+    if (!candidate.id.startsWith(TRAINING_ID_PREFIX)) {
+      // The full answer (every range at full width) with the light curve and the marked copy.
+      const target = candidate
+      const marked = ranges
+      const title = `${/^TIC/i.test(target.ticId) ? target.ticId : `TIC ${target.ticId}`}${target.toi ? ` · TOI ${target.toi}` : ''} · ${target.host} · sector ${target.sector}`
+      // The marked copy is the chart exactly as the player had it (view, bin,
+      // marks); the plain copy is the whole light curve without marks.
+      const onScreen = chartCaptureRef.current?.() ?? Promise.resolve(null)
+      void Promise.all([renderLightcurveCapture(points, marked, title, id), onScreen]).then(([{ image, annotated: drawn }, shot]) => ({ image, annotated: shot ?? drawn })).then(({ image, annotated }) => queueClassificationCapture({
+        kind: 'tess',
+        subject: target.id,
+        recordCollection: 'subject_classifications',
+        annotations: { verdict: id, view: { span: lc.span, scan: lc.scan, bin: lc.bin, fold: lc.fold, xDomain: display.xDomain }, ranges: marked, measuredPeriodDays: measuredPeriod, dips: measured, candidate: target, lightcurvePoints: points },
+        image,
+        annotatedImage: annotated,
+      }))
+    }
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
@@ -416,6 +435,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
             locked={display.folded}
             yDomain={yDomain}
+            captureRef={chartCaptureRef}
           />
         </div>
       )}

@@ -54,6 +54,70 @@
     } finally { flushing = false; }
   }
 
+  // ---- review captures ----
+  // Sending a review keeps it in full on the shared backend
+  // (platform_classification_captures): every label, plus two photos of the
+  // navcam strip, plain and labelled. The game hands the photos over just
+  // before the "review" event. Images are too big for localStorage, so these
+  // wait in IndexedDB until the player is signed in and online.
+  const shots = {}; // stamp -> { source, marked }
+  function capDb() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('hm-captures', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('queue', { keyPath: 'id' });
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function capTx(mode, fn) {
+    const db = await capDb();
+    try {
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction('queue', mode);
+        const req = fn(tx.objectStore('queue'));
+        let out;
+        if (req) req.onsuccess = () => { out = req.result; };
+        tx.oncomplete = () => resolve(out);
+        tx.onerror = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  }
+  const newId = () => Array.from({ length: 15 }, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]).join('');
+  async function queueReview(p) {
+    const got = shots[p.stamp] || {};
+    delete shots[p.stamp];
+    const item = {
+      id: newId(),
+      data: { game: 'haphazard-martians', kind: 'ai4mars', subject: 'level-' + p.level, record_collection: 'hm_labels', annotations: p },
+      image: got.source || null,
+      annotated: got.marked || null,
+    };
+    try { await capTx('readwrite', (st) => { st.put(item); }); } catch { return; } // no IndexedDB: the labels still went to hm_labels
+    flushCaptures();
+  }
+  let capFlushing = false;
+  async function flushCaptures() {
+    if (capFlushing || DEMO || !auth || typeof indexedDB === 'undefined') return;
+    capFlushing = true;
+    try {
+      const items = (await capTx('readonly', (st) => st.getAll())) || [];
+      for (const it of items) {
+        const fd = new FormData();
+        fd.append('id', it.id);
+        fd.append('user', auth.record.id);
+        for (const [k, v] of Object.entries(it.data)) fd.append(k, typeof v === 'string' ? v : JSON.stringify(v));
+        if (it.image) fd.append('image', new File([it.image], 'source.png', { type: 'image/png' }));
+        if (it.annotated) fd.append('annotated_image', new File([it.annotated], 'annotated.png', { type: 'image/png' }));
+        let res;
+        try { res = await fetch(API + '/api/collections/platform_classification_captures/records', { method: 'POST', headers: { Authorization: auth.token }, body: fd }); }
+        catch { return; } // offline: try again later
+        if (res.status === 401 || res.status === 403 || res.status === 429 || res.status >= 500) return;
+        // Saved, a replay of a saved one, or a backend without the collection: done with it.
+        await capTx('readwrite', (st) => { st.delete(it.id); });
+      }
+    } catch { /* storage unavailable */ } finally { capFlushing = false; }
+  }
+
   // ---- account UI ----
   // Two sign-in modes. With a Clerk key in config.js (the deployed game) the
   // player signs in with their Star Sailors account through Landnam's Clerk
@@ -73,7 +137,7 @@
     if (CLERK_KEY || (cfg && cfg.shareAuth)) LS.set('hm.signedOut', '1');
     render();
   }
-  async function setAuth(r) { auth = { token: r.token, record: r.record }; LS.set('hm.auth', JSON.stringify(auth)); LS.del('hm.signedOut'); render(); flush(); }
+  async function setAuth(r) { auth = { token: r.token, record: r.record }; LS.set('hm.auth', JSON.stringify(auth)); LS.del('hm.signedOut'); render(); flush(); flushCaptures(); }
   async function login(email, password) {
     await setAuth(await pb('/api/collections/users/auth-with-password', { method: 'POST', body: JSON.stringify({ identity: email, password }) }));
   }
@@ -234,10 +298,17 @@
     loadClerk().then((clerk) => clerk.session && exchange(clerk)).catch(() => {});
   }
   addEventListener('online', flush);
+  addEventListener('online', flushCaptures);
+  if (auth) setTimeout(flushCaptures, 3000);
 
   // A rover photo from the game: the share sheet where there is one (phones),
   // otherwise a download.
   async function photo(name, bytes) {
+    const m = /^hm-review-(source|marked)-(.+)\.png$/.exec(name);
+    if (m) { // a review photo: kept with the review, not shared
+      (shots[m[2]] = shots[m[2]] || {})[m[1]] = new Blob([bytes], { type: 'image/png' });
+      return;
+    }
     const file = new File([bytes], name, { type: 'image/png' });
     try {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -291,6 +362,7 @@
       if (ev === 'scene') { btn.hidden = DEMO || p.name !== 'menu'; return; } // keep the HTML chrome off the in-game HUD
       if (ev === 'prompt') { setTimeout(() => askText(p), 0); return; } // a text field in the game
       if (DEMO) return; // nothing to send to: progress is already saved locally
+      if (ev === 'review') { queueReview(p); return; }
       const rec = toRecord(ev, p);
       if (!rec) return;
       queue.push(rec); saveQueue(); flush();

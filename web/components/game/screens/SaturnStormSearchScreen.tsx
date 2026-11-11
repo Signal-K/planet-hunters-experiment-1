@@ -17,6 +17,10 @@ import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
 import type { Player } from '@/lib/game-types'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { captureStroke, composeImageCapture, queueClassificationCapture } from '@/lib/capture/classificationCapture'
+
+/** Square tints on the stored marked-up frame. */
+const SATURN_CAPTURE_COLORS: Record<'yes' | 'no' | 'maybe' | 'storm', string> = { yes: '#ec783c', no: '#3cc8ff', maybe: '#ffd60a', storm: '#c060ff' }
 
 interface SaturnStormSearchScreenProps {
   player: Player
@@ -196,10 +200,71 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const pieces = Object.keys(savedCells).length
   const chart = player.moonSurveyCharts?.enceladus as MoonSurveyChart | undefined
 
+  // The ninth square completes the frame: keep the whole frame as the player
+  // imaged it (palette, sharpen, contrast), that frame with every square's
+  // answer drawn on it, and the answers themselves. The overlay is the
+  // fallback the server draws from if the browser cannot read the image.
+  const captureFrame = (index: number, answer: SaturnVerdict, storm: boolean) => {
+    if (savedCells[index] || Object.keys(savedCells).length !== 8) return
+    const answers = Array.from({ length: 9 }, (_, i) => i === index
+      ? { index: i, verdict: answer, storm }
+      : { index: i, verdict: savedCells[i]?.verdict ?? null, storm: savedCells[i]?.storm ?? false })
+    const shot = composeImageCapture(candidate.imageUrl, (ctx, w, h) => {
+      const t = captureStroke(w)
+      const cw = w / 3
+      const ch = h / 3
+      for (const cell of answers) {
+        const color = SATURN_CAPTURE_COLORS[cell.storm ? 'storm' : cell.verdict ?? 'maybe']
+        const x = (cell.index % 3) * cw
+        const y = Math.floor(cell.index / 3) * ch
+        ctx.globalAlpha = 0.12
+        ctx.fillStyle = color
+        ctx.fillRect(x, y, cw, ch)
+        ctx.globalAlpha = 1
+        ctx.strokeStyle = color
+        ctx.lineWidth = t
+        ctx.strokeRect(x + t * 1.5, y + t * 1.5, cw - t * 3, ch - t * 3)
+        ctx.font = `600 ${Math.round(ch / 9)}px system-ui, sans-serif`
+        ctx.textBaseline = 'top'
+        const label = `${cell.index + 1} ${cell.storm ? 'STORM' : (cell.verdict ?? '—').toUpperCase()}`
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'
+        ctx.fillRect(x + t * 3, y + t * 3, ctx.measureText(label).width + t * 3, Math.round(ch / 9) + t * 2)
+        ctx.fillStyle = color
+        ctx.fillText(label, x + t * 4, y + t * 4)
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.65)'
+      ctx.lineWidth = Math.max(1, t / 2)
+      for (let i = 1; i < 3; i++) {
+        ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, h); ctx.stroke()
+        ctx.beginPath(); ctx.moveTo(0, i * ch); ctx.lineTo(w, i * ch); ctx.stroke()
+      }
+    }, imageFilter)
+    void shot.then(({ image, annotated }) => queueClassificationCapture({
+      kind: 'saturn',
+      subject: candidate.id,
+      recordCollection: 'ss_saturn_storm_classifications',
+      sourceUrl: candidate.imageUrl,
+      annotations: {
+        verdict: answer,
+        cells: answers,
+        candidate,
+        imaging: { palette: SATURN_PALETTES[palette].name, contrast, sharpen, loupe },
+      },
+      overlay: {
+        width: 3,
+        height: 3,
+        grid: { cols: 3, rows: 3, cells: answers.map(cell => ({ index: cell.index, color: SATURN_CAPTURE_COLORS[cell.storm ? 'storm' : cell.verdict ?? 'maybe'] })) },
+      },
+      image,
+      annotatedImage: annotated,
+    }))
+  }
+
   const paint = (answer: SaturnVerdict) => {
     if (savedCells[selected] || complete) return
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer } : cell))
     help.reportAction('submit')
+    captureFrame(selected, answer, cells[selected]?.storm ?? false)
     onSubmit(candidate.id, selected, answer, cells[selected]?.storm ?? false)
   }
 
@@ -259,6 +324,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     const answer = cells[selected]?.answer ?? 'yes'
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, storm, answer } : cell))
     help.reportAction('submit')
+    captureFrame(selected, answer, storm)
     onSubmit(candidate.id, selected, answer, storm)
   }
 

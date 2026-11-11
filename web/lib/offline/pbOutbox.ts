@@ -5,6 +5,8 @@
 import { ClientResponseError } from 'pocketbase'
 import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam, refreshLandnamAuthOnce } from '@/lib/pb-landnam'
+import { pbShared } from '@/lib/pb'
+import { deleteCaptureBlobs, readCaptureBlob } from '@/lib/capture/blobStore'
 import { casUpdateGameState } from '@/lib/sync/casSave'
 import type { GameState } from '@/lib/game-types'
 import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
@@ -76,12 +78,35 @@ async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> 
     else await collection.create({ id: op.id, ...op.data })
     return null
   }
+  if (op.type === 'shared-create') return executeSharedCreate(op)
   if (op.type === 'create') await pbLandnam.collection(op.collection).create({ id: op.id, ...op.data })
   else await pbLandnam.collection(op.collection).update(op.id, op.data)
   return null
 }
 
+async function executeSharedCreate(op: Extract<OutboxOp, { type: 'shared-create' }>): Promise<OutboxFailure | null> {
+  // Not signed in to the shared backend yet: wait rather than lose it.
+  if (!pbShared.authStore.token) return { kind: 'offline' }
+  const body: Record<string, unknown> = { id: op.id, ...op.data }
+  const keys = Object.values(op.files ?? {})
+  for (const [field, key] of Object.entries(op.files ?? {})) {
+    // A blob missing from the store (private window, cleared data) is sent
+    // without: the server still fetches the source image from source_url.
+    const blob = await readCaptureBlob(key)
+    if (blob) body[field] = new File([blob], `${field}.${blob.type === 'image/svg+xml' ? 'svg' : 'png'}`, { type: blob.type || 'image/png' })
+  }
+  try {
+    await pbShared.collection(op.collection).create(body)
+  } catch (error) {
+    const failure = classifyPbError({ type: 'create', collection: op.collection, id: op.id, data: op.data }, error)
+    if (failure.kind !== 'already-applied' && failure.kind !== 'invalid') return failure
+  }
+  await deleteCaptureBlobs(keys)
+  return null
+}
+
 export async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure | null> {
+  if (op.type === 'shared-create') return executeSharedCreate(op)
   // No Landnam session yet (shared-to-Landnam exchange pending). PocketBase
   // answers an unauthenticated create with 400 "create rule failure", which
   // would be classed as invalid and dropped, losing the write. Wait instead.

@@ -8,6 +8,7 @@ import type { Player } from '@/lib/game-types'
 import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './RadioMeteorScreen.module.css'
+import { captureStroke, composeImageCapture, queueClassificationCapture } from '@/lib/capture/classificationCapture'
 
 interface RadioMeteorScreenProps {
   player: Player
@@ -197,6 +198,34 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   }
   const submit = (list: RadioMeteorBox[]) => {
     if (!subject || !size) return
+    // The spectrogram at the gain the player used, that spectrogram with their
+    // echo boxes, and the boxes. The overlay is the server's fallback.
+    const target = subject
+    const sx = size.w
+    const sy = size.h
+    void composeImageCapture(target.imageUrl, (ctx, w, h) => {
+      const t = captureStroke(w)
+      ctx.strokeStyle = '#ffd60a'
+      ctx.lineWidth = t
+      ctx.font = `600 ${Math.max(14, Math.round(h / 28))}px system-ui, sans-serif`
+      ctx.fillStyle = '#ffd60a'
+      ctx.textBaseline = 'bottom'
+      list.forEach((box, i) => {
+        const x = (box.x / sx) * w
+        const y = (box.y / sy) * h
+        ctx.strokeRect(x, y, Math.max(t, (box.width / sx) * w), Math.max(t, (box.height / sy) * h))
+        ctx.fillText(String(i + 1), x, Math.max(y - t, 16))
+      })
+    }, `brightness(${0.75 + gain * 0.25}) contrast(${gain}) saturate(${0.8 + gain * 0.2})`).then(({ image, annotated }) => queueClassificationCapture({
+      kind: 'radio-meteor',
+      subject: target.id,
+      recordCollection: 'radio_meteor_classifications',
+      sourceUrl: target.imageUrl,
+      annotations: { boxes: list, echoCount: list.length, subject: target, imageWidth: sx, imageHeight: sy, gain },
+      overlay: { width: sx, height: sy, boxes: list.map(box => ({ ...box, color: '#ffd60a' })) },
+      image,
+      annotatedImage: annotated,
+    }))
     onSubmit({
       subjectId: subject.id,
       workflowId: subject.workflowId,
