@@ -86,6 +86,8 @@ interface Props {
   /** Telescopes the player has online; only these can be picked. */
   online?: InstrumentPointing[]
   onLock: (pointing: InstrumentPointing, aim?: SkyAim, sector?: string) => void
+  /** Saves the aim the moment the player locks on, so leaving by Back keeps it. */
+  onAim?: (pointing: InstrumentPointing, aim?: SkyAim, sector?: string) => void
   onCancel: () => void
   /** Fields the player's telescopes have already mapped. */
   mapped?: SkyMap
@@ -95,7 +97,7 @@ interface Props {
  * The weekly pointing step, as one full-screen viewport. Pick the instrument you are driving; each has its
  * own scene, sight and lock-on. Steer with the joystick, lock on, and the signal comes in over the week.
  */
-export default function SkyPointing({ start = 'transit', online, onLock, onCancel, mapped }: Props) {
+export default function SkyPointing({ start = 'transit', online, onLock, onAim, onCancel, mapped }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 926, h: 428 })
   const [instrument, setInstrument] = useState<InstrumentPointing>(start)
@@ -209,9 +211,11 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
     if (freeSky) {
       const name = near?.name ?? 'Open sky'
       setConfirmed({ instrument, aim, target: sightTarget('aim', name, near?.note ?? 'A patch of sky nobody has pointed at yet.', formatAim(aim), sightCentre(g).x, sightCentre(g).y, instrument === 'transit' ? sightSize.w / 2 : 9, instrument === 'transit' ? sightSize.h / 2 : 9) })
+      onAim?.(instrument, aim)
     } else {
       const t = over ?? sightTarget('free', 'Open view', 'Zoomed on the spot you chose.', 'FREE POINTING', at.x, at.y, 5.5, 5.5)
       setConfirmed({ instrument, aim, target: t })
+      onAim?.(instrument, undefined, t.id)
     }
   }
   const pct = (x: number, y: number) => ({ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%` })

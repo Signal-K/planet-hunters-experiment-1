@@ -35,7 +35,7 @@ import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padNeedsService } from 
 import { formatCurrency } from '@/lib/format'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
-import { telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
+import { pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
@@ -318,12 +318,16 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   // The sky speaks for the citizen science tools: a telescope that needs positioning, or one with data ready to
   // classify. It opens the tool. Pointing comes first because a pointed telescope is what brings the data.
   const needsPointing = telescopesNeedingPointing(player, Date.now())
+  const alreadyPointed = pointedThisWeek(player.telescopeAim, Date.now())
+  const pointedNames = alreadyPointed.map(id => TELESCOPE_NAMES[id])
   const stationQuiet = !onboardingActive && !coachVisible && !player.activeMission
   const stationCallout: BuildingCallout | undefined = !stationQuiet ? undefined
     : needsPointing.length > 0 && onPointTelescope
     ? {
       title: `Point the ${TELESCOPE_NAMES[needsPointing[0]]}`,
-      body: 'It has no target this week. Aim it at any part of the sky and map it.',
+      body: pointedNames.length
+        ? `Your ${pointedNames.join(' and ')} ${pointedNames.length === 1 ? 'is' : 'are'} pointed. This one has no target this week yet.`
+        : 'It has no target this week. Aim it at any part of the sky and map it.',
       cta: 'Point',
       placement: 'viewport-clear',
       onCta: () => onPointTelescope(needsPointing[0]),

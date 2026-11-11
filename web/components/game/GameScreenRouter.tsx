@@ -670,6 +670,10 @@ function ScreenBody({
           online={onlineTelescopes(game.player)}
           mapped={game.player.skyMap}
           onCancel={() => game.goBack('hub')}
+          onAim={(instrument, aim, sector) => {
+            const now = Date.now()
+            game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
+          }}
           onLock={(instrument, aim, sector) => {
             const now = Date.now()
             game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
