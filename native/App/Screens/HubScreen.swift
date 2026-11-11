@@ -98,7 +98,6 @@ struct HubScreen: View {
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
-            if store.screen != .hubSubsurface { overviewRow(size: size, insets: insets) }
             if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
             else if siloOpen && !placing && store.screen != .hubSubsurface { siloPanel(insets: insets) }
             else if placing { picker(width: size.width, insets: insets) }
@@ -321,42 +320,6 @@ struct HubScreen: View {
         case "surface-silo": siloOpen = true
         default: break
         }
-    }
-
-    /// SSL-692: whole-strip Overview toggle and a position slider (same row as web `.base-overview`).
-    private func overviewRow(size: CGSize, insets: EdgeInsets) -> some View {
-        let world = BaseWorld(w: size.width, h: size.height)
-        let zoomedOut = camera.zoom < 1
-        let position = Binding<Double>(
-            get: { zoomedOut || world.maxX <= 0 ? 0 : Double(camera.x / world.maxX) },
-            set: { camera.setPosition(CGFloat($0), world) }
-        )
-        return HStack(spacing: 10) {
-            Button {
-                if zoomedOut {
-                    withAnimation(.easeInOut(duration: 0.35)) { camera.zoom = 1 }
-                } else {
-                    camera.overview(world)
-                }
-            } label: {
-                Text(zoomedOut ? "Back" : "Overview")
-                    .font(.system(size: 14, weight: .heavy))
-                    .foregroundStyle(Theme.panel)
-                    .frame(minWidth: 96, minHeight: 44)
-            }
-            .accessibilityIdentifier("base-overview-toggle")
-            Slider(value: position, in: 0...1)
-                .disabled(zoomedOut)
-                .frame(minHeight: 44)
-                .accessibilityLabel("Position along the Base")
-                .accessibilityIdentifier("base-overview-slider")
-        }
-        .padding(.trailing, 12)
-        .frame(maxWidth: 420)
-        .background(Color.black.opacity(0.62), in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 12)
-        .padding(.top, max(insets.top, 0) + 64)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
