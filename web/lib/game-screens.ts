@@ -27,6 +27,7 @@ const SCREEN_LIST = {
   'asteroid-discovery': true,
   'saturn-storm-search': true,
   'radio-meteors': true,
+  'probe-scan': true,
   'instrument-hub': true,
   'mission-history': true,
   'narrative-ledger': true,

@@ -107,6 +107,7 @@ export type Screen =
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'radio-meteors'
+  | 'probe-scan'
   | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
@@ -367,6 +368,8 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** SSL-773: survey probes left in orbit, keyed by body id, with the surface readings logged from each. */
+  probes?: Record<string, import('@/lib/probes/survey-probe').ProbeRecord>
   /** SSL-831: where the player is in each later shower's mission chain (Leonids), keyed by shower id. `at` is when that stage was reached. */
   showerChains?: Record<string, { stage: number; at: number }>
   /** SSL-658: fragment ledgers for the other showers, keyed by shower id. Orionids keep orionidsFragments. */
@@ -402,7 +405,7 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
   telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
@@ -592,6 +595,8 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
+  /** SSL-773: log one survey-probe reading. */
+  logProbeReading: (targetId: string, sectorId: string, marked: string[]) => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

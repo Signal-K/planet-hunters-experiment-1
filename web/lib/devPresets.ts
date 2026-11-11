@@ -1,7 +1,8 @@
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
-import { MISSIONS, ROCKET_IDS } from '@/lib/data'
+import { MISSIONS, ROCKET_IDS, TARGETS } from '@/lib/data'
+import { sectorDeposits } from '@/lib/probes/survey-probe'
 import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
@@ -178,6 +179,10 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
       { key: 'ui-radio-meteors-leo1', label: 'Meteor radio: LEO-1 last check', hint: 'SSL-831: Leonids mission 2 on LEO-1 with 2 of 3 recordings checked since the run (and older ORI-1 checks that do not count). The next send grades the badge', stage: 'free-ops' },
       { key: 'ui-community-research-leonids-leo1', label: 'Community research: Leonids LEO-1', hint: 'SSL-831: Explorer path in the Leonids week, run done, 1 of 3 LEO-1 recordings: the event step names LEO-1 and the history shows the fragment sample', stage: 'free-ops' },
+      { key: 'ui-probe-launch', label: 'Survey probe: launch', hint: 'SSL-773: control station built, Free Ops. The Program tab offers survey probes to the two nearest bodies without one', stage: 'free-ops' },
+      { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and sends readings to the data hub', stage: 'free-ops' },
+      { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: probes at Eros (two sectors read yesterday) and Vesta. Pull a reading, sweep BAND, mark the dips and log it', stage: 'free-ops' },
+      { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with readings waiting', stage: 'free-ops' },
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
@@ -259,6 +264,17 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
     rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
     lastCargo: null,
     popup: null,
+  }
+}
+
+/** SSL-773: a probe at Eros with two sectors read yesterday, and one just arrived at Vesta. */
+function probeFixture(): NonNullable<Player['probes']> {
+  const eros = TARGETS.find(target => target.id === 'eros')!
+  const yesterday = Date.now() - 86_400_000
+  const read = (id: string) => ({ at: yesterday, marked: sectorDeposits(eros, id), deposits: sectorDeposits(eros, id) })
+  return {
+    eros: { launchedAt: yesterday - 3_600_000, readings: { '0_0': read('0_0'), '1_0': read('1_0') } },
+    vesta: { launchedAt: Date.now() - 600_000, readings: {} },
   }
 }
 
@@ -729,6 +745,58 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-instrument-hub':
       return instrumentHubFixture()
+
+    // SSL-773: survey probes. Two sectors of Eros were read yesterday; Vesta's probe has just arrived.
+    case 'ui-probe-hub': {
+      const hub = instrumentHubFixture()
+      return { ...hub, player: { ...hub.player!, probes: probeFixture() } }
+    }
+
+    case 'ui-probe-scan':
+      return {
+        screen: 'probe-scan',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 }, probes: probeFixture() },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-probe-launch':
+      return {
+        screen: 'missions',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 } },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-probe-debrief':
+      return {
+        screen: 'debrief',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: ['launchpad', 'control-station'],
+          placementPlots: { launchpad: 0, 'control-station': 1 },
+          activeMission: { id: 'probe-launch-eros', label: 'Survey probe to Eros' },
+          missionPhase: 'debrief',
+          probes: { eros: { launchedAt: Date.now(), readings: {} } },
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: 'probe-launch-eros',
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: {},
+        popup: null,
+      }
 
     case 'ui-saturn-storm-search':
       return {

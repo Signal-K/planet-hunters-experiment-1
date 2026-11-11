@@ -39,6 +39,7 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   'asteroid-discovery': 'extension',
   'saturn-storm-search': 'extension',
   'radio-meteors': 'extension',
+  'probe-scan': 'extension',
 }
 
 export const SPINE: readonly NarrativeRole[] = ['plan', 'launch', 'flight', 'work', 'result']

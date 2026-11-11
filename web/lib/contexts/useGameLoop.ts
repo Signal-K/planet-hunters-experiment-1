@@ -25,6 +25,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
+import { logProbeReading as logProbeReadingFor, placeProbe } from '@/lib/probes/survey-probe'
 import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
 import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
@@ -1152,6 +1153,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
   }, [setState, stateRef])
 
+  // SSL-773: a survey-probe reading logged in the data hub. One probe observation stamp per day, like every stamp;
+  // the sector's deposits go on the body's map. Synced in game_states; the ledger reports the stamp.
+  const logProbeReading = useCallback((targetId: string, sectorId: string, marked: string[]) => {
+    const target = catalog.targets.find(item => item.id === targetId)
+    if (!target) return
+    const at = Date.now()
+    const before = stateRef.current.player
+    const after = logProbeReadingFor(before, target, sectorId, marked, at)
+    if (after === before) return
+    setState(s => ({ ...s, player: logProbeReadingFor(s.player, target, sectorId, marked, at) }))
+    const reading = after.probes?.[targetId]?.readings[sectorId]
+    captureGameEvent('probe_reading_logged', { target_id: targetId, sector_id: sectorId, marked: marked.length, deposits: reading?.deposits.length ?? 0 })
+  }, [catalog.targets, setState, stateRef])
+
   // Player picks where the satellite points for the *next* daily downlink
   // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
   // candidate, just what dailyTessCandidates prefers once today's is done.
@@ -1329,8 +1344,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
       // SSL-831: a shower with a mission chain (Leonids) finishes mission 1 here; the badge waits for its receiver step.
       const completedChain = getShowerChain(completedShower?.id)
-      const orionidsBadged = completedChain ? completeChainRun(wswBadgedPlayer, completedChain, Date.now())
+      const chainedPlayer = completedChain ? completeChainRun(wswBadgedPlayer, completedChain, Date.now())
         : completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
+      // SSL-773: a survey probe stays in orbit at its body (set on arrival; kept here for a run that skipped it).
+      const orionidsBadged = mission?.payload?.instrumentId === 'survey-probe' && mission.targetId
+        ? placeProbe(chainedPlayer, mission.targetId, Date.now()) : chainedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
         : orionidsBadged.orionidsEventStage ?? 0
@@ -1532,6 +1550,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, logProbeReading,
   }
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
+import { PROBE_READINGS_PER_DAY } from '@/lib/probes/survey-probe'
 import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -159,7 +160,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <h2 className="debrief-result-panel__title">{mission.title}</h2>
             <p className="debrief-result-panel__kicker">Program Outcome</p>
             <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
-            <p className="debrief-result-panel__note">{mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at {target.name}.</p>
+            <p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
+              ? `The probe stays in orbit at ${target.name} and does not come home. Its surface readings arrive in your data hub, ${PROBE_READINGS_PER_DAY} a day.`
+              : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p>
           </section>
         ) : (
           <section className={styles.card} aria-label="Mission result" data-surface="cream">
@@ -228,7 +231,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           <p className={styles.note} data-testid="mission-next-handoff">
             {storyItem
               ? storyItem.unlocks
-              : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
+              : mission.payload?.instrumentId === 'survey-probe'
+                ? 'Probe released. Open the data hub to pull its first reading and find where the deposits are.'
+                : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
           </p>
         </section>
 

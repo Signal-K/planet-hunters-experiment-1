@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 26,
+    "webRoutes": 27,
     "nativeScreenCases": 24,
-    "qaScenes": 72,
+    "qaScenes": 76,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 26,
-    "authoringSources": 60,
-    "authoredObjectNodes": 151,
-    "authoredGameObjects": 76,
-    "authoredUiElements": 75,
+    "authoredSceneScripts": 27,
+    "authoringSources": 62,
+    "authoredObjectNodes": 155,
+    "authoredGameObjects": 79,
+    "authoredUiElements": 76,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 26,
-    "compiledObjectNodes": 151,
+    "compiledScenes": 27,
+    "compiledObjectNodes": 155,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 146,
-    "webGameComponents": 114,
+    "hostLayoutObjects": 150,
+    "webGameComponents": 115,
     "nativeAppComponents": 57
   },
   "scenes": {
@@ -107,6 +107,10 @@
       {
         "route": "narrative-ledger",
         "type": "menu"
+      },
+      {
+        "route": "probe-scan",
+        "type": "exchange-lab"
       },
       {
         "route": "radio-meteors",
@@ -912,6 +916,46 @@
         "native": "community-research-phone"
       },
       {
+        "id": "probe-launch",
+        "name": "Survey probe: launch",
+        "flow": "core-loop",
+        "web": "ui-probe-launch",
+        "tickets": [
+          "SSL-773"
+        ],
+        "native": "mission-board-live"
+      },
+      {
+        "id": "probe-debrief",
+        "name": "Survey probe: debrief",
+        "flow": "core-loop",
+        "web": "ui-probe-debrief",
+        "tickets": [
+          "SSL-773"
+        ],
+        "native": "telescope-debrief-live"
+      },
+      {
+        "id": "probe-scan",
+        "name": "Survey probe: readings",
+        "flow": "instruments",
+        "web": "ui-probe-scan",
+        "tickets": [
+          "SSL-773"
+        ],
+        "native": "radio-meteors"
+      },
+      {
+        "id": "probe-hub",
+        "name": "Survey probe: data hub",
+        "flow": "instruments",
+        "web": "ui-probe-hub",
+        "tickets": [
+          "SSL-773"
+        ],
+        "native": "control-station-phone"
+      },
+      {
         "id": "community-research-geminids",
         "name": "Community research: Geminids",
         "flow": "events",
@@ -1379,6 +1423,24 @@
         ]
       },
       {
+        "id": "probe-scan",
+        "path": "shared/authoring/scenes/probe-scan.toml",
+        "objects": 4,
+        "gameObjects": 3,
+        "uiElements": 1,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 4,
+        "mechanics": [
+          "community-research",
+          "instruments"
+        ],
+        "web": [
+          "web/components/game/screens/ProbeScanScreen.tsx"
+        ],
+        "native": []
+      },
+      {
         "id": "radio-meteors",
         "path": "shared/authoring/scenes/radio-meteors.toml",
         "objects": 4,
@@ -1586,6 +1648,10 @@
       {
         "id": "narrative-ledger",
         "objects": 3
+      },
+      {
+        "id": "probe-scan",
+        "objects": 4
       },
       {
         "id": "radio-meteors",
@@ -1877,7 +1943,8 @@
       "components": [],
       "scenes": [
         "hub",
-        "instrument-hub"
+        "instrument-hub",
+        "probe-scan"
       ]
     },
     {
@@ -1975,7 +2042,8 @@
       "components": [],
       "note": "Classifications, surveys, discovery-led missions and qualifying events are eligible per the 22 Oct Craft direction. Current bar is a local placeholder, not a server aggregate. Fragment conversion and the fragment-based weekly revenue bonus are not implemented by the calendar; retain contribution history when they are added.",
       "scenes": [
-        "instrument-hub"
+        "instrument-hub",
+        "probe-scan"
       ]
     },
     {
@@ -2154,6 +2222,7 @@
       "web/components/game/screens/MiningScreen.tsx",
       "web/components/game/screens/MissionHistoryScreen.tsx",
       "web/components/game/screens/NarrativeLedgerScreen.tsx",
+      "web/components/game/screens/ProbeScanScreen.tsx",
       "web/components/game/screens/RadioMeteorScreen.tsx",
       "web/components/game/screens/RefineryScreen.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
@@ -2260,6 +2329,7 @@
       "shared/authoring/fixtures/mission-history.toml",
       "shared/authoring/fixtures/missions.toml",
       "shared/authoring/fixtures/narrative-ledger.toml",
+      "shared/authoring/fixtures/probe-scan.toml",
       "shared/authoring/fixtures/radio-meteors.toml",
       "shared/authoring/fixtures/refinery.toml",
       "shared/authoring/fixtures/rocket-buy.toml",
@@ -2291,6 +2361,7 @@
       "shared/authoring/scenes/mission-history.toml",
       "shared/authoring/scenes/missions.toml",
       "shared/authoring/scenes/narrative-ledger.toml",
+      "shared/authoring/scenes/probe-scan.toml",
       "shared/authoring/scenes/radio-meteors.toml",
       "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
@@ -2315,6 +2386,7 @@
     "qaWithoutNativeScene": [],
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
+      "probe-scan",
       "radio-meteors",
       "refinery",
       "sky-pointing"
@@ -2343,6 +2415,7 @@
       "mission-history",
       "missions",
       "narrative-ledger",
+      "probe-scan",
       "radio-meteors",
       "refinery",
       "rocket-buy",

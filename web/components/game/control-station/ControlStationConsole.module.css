@@ -352,7 +352,7 @@
 .anomaly { z-index: 2; }
 .anomaly svg { width: 18px; height: 18px; fill: currentColor; fill-opacity: 0.35; stroke: currentColor; stroke-width: 1.6; overflow: visible; filter: drop-shadow(0 0 4px rgba(88, 208, 234, 0.7)); }
 .anomaly[data-state='catalogue'] { color: var(--cream); }
-.anomaly[data-shape='echo'] svg { fill: none; }
+.anomaly[data-shape='echo'] svg, .anomaly[data-shape='probe'] svg { fill: none; }
 .anomaly[data-state='catalogue'] svg { fill: none; width: 20px; height: 20px; }
 .anomaly[data-state='unexplored'] { color: var(--gold); }
 .anomaly[data-state='unexplored'] svg { fill-opacity: 0.85; filter: drop-shadow(0 0 4px rgba(242, 194, 76, 0.8)); }

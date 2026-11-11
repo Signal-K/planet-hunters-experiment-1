@@ -12,6 +12,7 @@ import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
 import { mergeShowerLedgers } from '@/lib/orionids/shower-ledger'
 import { mergeShowerChains } from '@/lib/orionids/chain'
+import { mergeProbes, probeTargetForMission } from '@/lib/probes/survey-probe'
 import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
@@ -463,7 +464,9 @@ function repairStateRoute(rawInput: GameState): GameState {
   // SSL-674: a survey flight to a discovered world is built at runtime from the save, so a reload mid-run keeps it.
   const discovered = input.player.discoveredExoplanetTargets ?? {}
   const hasRuntimeMission = !!input.missionId && (RUNTIME_MISSION_IDS.has(input.missionId)
-    || Object.keys(discovered).some(id => input.missionId === `exo-survey-${id}`))
+    || Object.keys(discovered).some(id => input.missionId === `exo-survey-${id}`)
+    // SSL-773: a survey probe launch is built at runtime per body.
+    || !!probeTargetForMission(input.missionId))
   const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
   const hasRuntimeTarget = !!input.targetId && (RUNTIME_TARGET_IDS.has(input.targetId) || input.targetId in discovered)
   // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
@@ -738,6 +741,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
   merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
   merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
+  merged.player.probes = mergeProbes(current.player.probes, remoteState.player?.probes)
   merged.player.showerChains = mergeShowerChains(current.player.showerChains, remoteState.player?.showerChains)
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null

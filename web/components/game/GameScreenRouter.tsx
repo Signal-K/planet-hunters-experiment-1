@@ -41,6 +41,7 @@ const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScr
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
 const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
 const loadRadioMeteorScreen = () => import('@/components/game/screens/RadioMeteorScreen')
+const loadProbeScanScreen = () => import('@/components/game/screens/ProbeScanScreen')
 const loadSaturnStormSearchScreen = () => import('@/components/game/screens/SaturnStormSearchScreen')
 const loadAsteroidDiscoveryScreen = () => import('@/components/game/screens/AsteroidDiscoveryScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
@@ -53,7 +54,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
   loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
-  loadRadioMeteorScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
+  loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
 ]
 
@@ -66,6 +67,7 @@ const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
 const RadioMeteorScreen = dynamic(loadRadioMeteorScreen, { loading: ScreenLoading })
+const ProbeScanScreen = dynamic(loadProbeScanScreen, { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
@@ -543,6 +545,17 @@ function ScreenBody({
         />
       )
 
+    case 'probe-scan':
+      // SSL-773: the survey probes' readings, in the data hub.
+      return (
+        <ProbeScanScreen
+          player={game.player}
+          targets={game.catalog.targets}
+          onBack={() => game.goBack()}
+          onLog={game.logProbeReading}
+        />
+      )
+
     case 'missions':
     case 'targets':
     case 'rocket-buy':
@@ -724,6 +737,7 @@ function ScreenBody({
             if (kind === 'event' && chain) requestMissionBoardEvent(chain.eventId)
             else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
             else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
+            else if (kind === 'probe-observation') return game.go('probe-scan')
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')

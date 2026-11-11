@@ -31,7 +31,7 @@ interface ControlStationConsoleProps {
   onTelescope: (id: string | null) => void
   onOpen: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
-  onOpenScreen: (screen: 'radio-meteors') => void
+  onOpenScreen: (screen: 'radio-meteors' | 'probe-scan') => void
   history: StationHistory
   /** True while the first feed answer is still out. */
   acquiring: boolean
@@ -62,6 +62,10 @@ function AnomalyGlyph({ anomaly }: { anomaly: SkyAnomaly }) {
     // A radio echo: a short spike over a baseline.
     return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 13h5l2-8 2 12 2-4h5" /></svg>
   }
+  if (anomaly.shape === 'probe') {
+    // SSL-773: a probe's sector grid over a body.
+    return <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" /><path d="M3 10h14M10 3v14M5 6h10M5 14h10" /></svg>
+  }
   if (anomaly.shape === 'ringed') {
     return <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5" /><ellipse cx="10" cy="10" rx="9" ry="3" transform="rotate(-18 10 10)" /></svg>
   }
@@ -77,6 +81,10 @@ function TelescopeIcon({ place }: { place: StationTelescope['place'] }) {
     // A receiver mast with its signal arcs.
     return <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 14v14M11 28h10M16 14l-5 8M16 14l5 8" /><circle cx="16" cy="12" r="2" /><path d="M10 7a8 8 0 0 1 12 0M7 4a12 12 0 0 1 18 0" /></svg>
   }
+  if (place === 'probe') {
+    // SSL-773: a survey probe: a box with a dish and one solar wing.
+    return <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="13" width="8" height="8" rx="1" /><path d="M20 17h9M24 14v6M12 15l-4-4M6 9a4 4 0 0 0 5 5" /></svg>
+  }
   if (place === 'orbit') {
     // Tube with solar wings.
     return <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="9" width="8" height="14" rx="2" /><path d="M12 14H4v5h8M20 14h8v5h-8M16 9V5" /></svg>
@@ -90,6 +98,7 @@ const HORIZON_SPOT: Record<StationTelescope['place'], { left: number; top: numbe
   orbit: { left: 58, top: 24 },
   offworld: { left: 88, top: 18 },
   relay: { left: 10, top: 30 },
+  probe: { left: 74, top: 44 },
 }
 
 /** SSL-748: where each telescope stands, shown on its desk card next to the same icon as on the horizon. */
@@ -98,6 +107,7 @@ const PLACE_TEXT: Record<StationTelescope['place'], string> = {
   orbit: 'Earth orbit',
   offworld: 'Saturn orbit',
   relay: 'Radio mast',
+  probe: 'In orbit at its body',
 }
 
 /** Short horizon label: the kind of instrument without the noun the icon already shows. */

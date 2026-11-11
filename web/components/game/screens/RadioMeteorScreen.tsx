@@ -52,7 +52,7 @@ function clock(recordedAt: string | null, seconds: number): string {
 }
 
 /** A physical rotary control: drag (any direction), scroll, or arrow keys turn it through 270°. */
-function Dial({ label, readout, value, min, max, step, disabled, testId, onChange }: {
+export function Dial({ label, readout, value, min, max, step, disabled, testId, onChange }: {
   label: string
   readout: string
   value: number

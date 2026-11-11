@@ -116,6 +116,16 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
 
   // Your own orbital assets first — a satellite/telescope launch is never a
   // client job even when it is filed under Mission Control.
+  // SSL-773: a survey probe is left at the body; it sends readings home instead of coming back.
+  if (mission.payload?.instrumentId === 'survey-probe') {
+    return {
+      label: 'Survey probe',
+      summary: 'Carry your probe out and release it into orbit. It stays there and sends surface readings to your data hub. The ship flies home empty.',
+      steps: ['Launch', 'Release', 'Return'],
+      owner,
+    }
+  }
+
   if (mission.payload?.type === 'satellite') {
     return {
       label: 'Satellite launch',

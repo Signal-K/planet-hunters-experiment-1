@@ -2,6 +2,7 @@ import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/Instr
 import type { ControlStationModel, ControlStationRow } from '@/lib/control-station'
 import { parseRadioFilename } from '@/lib/radio-meteors'
 import { chainRecordings, chainStage, LEONIDS_CHAIN } from '@/lib/orionids/chain'
+import { probeReadingsLeft, probesInOrbit } from '@/lib/probes/survey-probe'
 
 /**
  * Control station sky (SSL-730, Liam's drawing of 2026-11-01).
@@ -21,11 +22,11 @@ import { chainRecordings, chainStage, LEONIDS_CHAIN } from '@/lib/orionids/chain
  */
 
 /** What an anomaly is: one of the instrument feeds, or a community radio recording. */
-export type SkyKind = InstrumentSignalKind | 'radio'
+export type SkyKind = InstrumentSignalKind | 'radio' | 'probe'
 
 export type SkyView = 'explored' | 'unexplored' | 'all'
 export type AnomalyState = 'unexplored' | 'explored' | 'catalogue'
-export type AnomalyShape = 'planet' | 'asteroid' | 'ringed' | 'body' | 'echo'
+export type AnomalyShape = 'planet' | 'asteroid' | 'ringed' | 'body' | 'echo' | 'probe'
 
 export const SKY_VIEWS: readonly { id: SkyView; label: string }[] = [
   { id: 'explored', label: 'Explored' },
@@ -37,7 +38,7 @@ export interface StationTelescopeDef {
   id: string
   name: string
   /** Where it sits in the horizon strip under the map. */
-  place: 'surface' | 'orbit' | 'offworld' | 'relay'
+  place: 'surface' | 'orbit' | 'offworld' | 'relay' | 'probe'
   /** Equipment records (control-station.ts) this telescope stands for. */
   equipmentIds: readonly string[]
   /** What it finds, in the player's words. */
@@ -121,7 +122,7 @@ export interface SkyAnomaly {
   /** Set for unexplored anomalies: opening it brings up the classify tool. */
   signal: InstrumentSignal | null
   /** Set for a community instrument's live queue: opening it goes to that screen. */
-  screen: CommunityInstrumentDef['screen'] | null
+  screen: CommunityInstrumentDef['screen'] | 'probe-scan' | null
 }
 
 export interface SkyPlayer {
@@ -132,6 +133,7 @@ export interface SkyPlayer {
   saturnImagerLaunchedAt?: number | null
   orionidsEventStage?: number
   showerChains?: Record<string, { stage: number; at: number }>
+  probes?: Record<string, import('@/lib/probes/survey-probe').ProbeRecord>
   radioMeteorClassifications?: Record<string, { filename?: string; boxes?: readonly unknown[]; submittedAt?: number }>
 }
 
@@ -269,6 +271,41 @@ export function communityTelescopes(player: SkyPlayer): StationTelescope[] {
   })
 }
 
+/** SSL-773: every survey probe in orbit, as one instrument. Its readings waiting today are the ready count. */
+export function probeTelescopes(player: SkyPlayer, now: number): StationTelescope[] {
+  const bodies = probesInOrbit(player)
+  if (!bodies.length) return []
+  const left = probeReadingsLeft(player, now)
+  return [{
+    id: 'probes',
+    name: bodies.length === 1 ? 'Survey probe' : `${bodies.length} survey probes`,
+    place: 'probe',
+    finds: 'Deposits',
+    built: true,
+    live: true,
+    status: left > 0 ? `${left} reading${left === 1 ? '' : 's'} today` : 'All read today',
+    readyCount: left,
+    kinds: ['probe'],
+    community: false,
+  }]
+}
+
+/** The probes' waiting readings, as one unexplored anomaly that opens the probe console. */
+function probeQueue(player: SkyPlayer, now: number): SkyAnomaly[] {
+  if (probeReadingsLeft(player, now) <= 0) return []
+  return [{
+    id: 'queue:probes',
+    label: 'Probe readings',
+    detail: 'Surface readings · ready to read',
+    state: 'unexplored',
+    shape: 'probe',
+    kind: 'probe',
+    ...skySpot('queue:probes'),
+    signal: null,
+    screen: 'probe-scan',
+  }]
+}
+
 /** The live queue of each launched community instrument, as one unexplored anomaly that opens its screen. */
 function communityQueues(player: SkyPlayer): SkyAnomaly[] {
   return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player)).map(def => ({
@@ -290,6 +327,8 @@ export function buildStationSky(input: {
   view: SkyView
   /** Only what this telescope finds; null for every telescope. */
   telescope: StationTelescope | null
+  /** For the probes' daily downlink. */
+  now?: number
 }): SkyAnomaly[] {
   const open: SkyAnomaly[] = input.signals.map(signal => ({
     id: `${signal.kind}:${signal.id}`,
@@ -302,7 +341,7 @@ export function buildStationSky(input: {
     signal,
     screen: null,
   }))
-  open.push(...communityQueues(input.player))
+  open.push(...communityQueues(input.player), ...probeQueue(input.player, input.now ?? Date.now()))
   const done = explored(input.player).slice(0, EXPLORED_CAP).map(({ at: _at, ...rest }) => rest)
   const known = catalogue(input.player)
   const shown = input.view === 'unexplored' ? open : input.view === 'explored' ? done : [...known, ...done, ...open]

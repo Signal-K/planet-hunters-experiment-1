@@ -7,7 +7,7 @@ import ScenePanel from '@/components/game/ScenePanel'
 import { ControlStationConsole } from '@/components/game/control-station/ControlStationConsole'
 import consoleStyles from '@/components/game/control-station/ControlStationConsole.module.css'
 import { WorldSpaceWeekBanner, WorldSpaceWeekChips } from '@/components/game/WorldSpaceWeek'
-import { buildStationSky, communityTelescopes, stationHistory, stationTelescopes, type SkyView } from '@/lib/control-station-sky'
+import { buildStationSky, communityTelescopes, probeTelescopes, stationHistory, stationTelescopes, type SkyView } from '@/lib/control-station-sky'
 import { useHelp } from '@/components/ui/useHelp'
 import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
@@ -32,7 +32,7 @@ interface InstrumentHubScreenProps {
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
-  onOpenScreen: (screen: 'radio-meteors' | 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onOpenScreen: (screen: 'radio-meteors' | 'probe-scan' | 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search') => void
   /** Builds the ground telescope in place; false when it could not. */
   onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
@@ -71,11 +71,11 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
     }),
     [player, signals, awaitingFeed, now],
   )
-  const telescopes = useMemo(() => [...stationTelescopes(model), ...communityTelescopes(player)], [model, player])
+  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player)], [model, player, now])
   const activeTelescope = telescopes.find(scope => scope.id === telescopeId && scope.built) ?? null
   const anomalies = useMemo(
-    () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope }),
-    [player, signals, awaitingFeed, view, activeTelescope],
+    () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope, now }),
+    [player, signals, awaitingFeed, view, activeTelescope, now],
   )
   const history = useMemo(() => stationHistory(player), [player])
   const canScan = !!(onStartScan && onResolveScan && player.freeOperations && scanInstrumentLaunched(player))

@@ -674,6 +674,46 @@
    "native": "community-research-phone"
   },
   {
+   "id": "probe-launch",
+   "name": "Survey probe: launch",
+   "flow": "core-loop",
+   "web": "ui-probe-launch",
+   "tickets": [
+    "SSL-773"
+   ],
+   "native": "mission-board-live"
+  },
+  {
+   "id": "probe-debrief",
+   "name": "Survey probe: debrief",
+   "flow": "core-loop",
+   "web": "ui-probe-debrief",
+   "tickets": [
+    "SSL-773"
+   ],
+   "native": "telescope-debrief-live"
+  },
+  {
+   "id": "probe-scan",
+   "name": "Survey probe: readings",
+   "flow": "instruments",
+   "web": "ui-probe-scan",
+   "tickets": [
+    "SSL-773"
+   ],
+   "native": "radio-meteors"
+  },
+  {
+   "id": "probe-hub",
+   "name": "Survey probe: data hub",
+   "flow": "instruments",
+   "web": "ui-probe-hub",
+   "tickets": [
+    "SSL-773"
+   ],
+   "native": "control-station-phone"
+  },
+  {
    "id": "community-research-geminids",
    "name": "Community research: Geminids",
    "flow": "events",

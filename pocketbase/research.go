@@ -37,7 +37,7 @@ const (
 	researchKindsLimit = 4
 )
 
-var researchStampKinds = map[string]bool{"classification": true, "survey": true, "discovery-mission": true, "event": true, "review": true}
+var researchStampKinds = map[string]bool{"classification": true, "survey": true, "discovery-mission": true, "event": true, "review": true, "probe-observation": true}
 var researchDayKey = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 // researchMonthCounts counts one stamp per known kind per day within month

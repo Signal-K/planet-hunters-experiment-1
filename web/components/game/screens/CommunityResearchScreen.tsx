@@ -114,13 +114,15 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
   // SSL-774: any declared shower words its own step; only the Orionids has a saved stage so far.
   const showerId = event ? `${event.id}-2026` : undefined
+  // SSL-773: a survey probe in orbit adds a probe-reading step.
+  const hasProbe = Object.keys(player.probes ?? {}).length > 0
   // SSL-831: a shower with its own mission chain (Leonids) names the player's next mission in it.
   const chain = getShowerChain(showerId)
   const eventStep = chain ? chainResearchStep(player, chain)
     : showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
   const steps = (path ?? selectedPath) === 'trader'
-    ? traderSteps({ eventName: event?.name ?? null, eventStep })
-    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
+    ? traderSteps({ eventName: event?.name ?? null, eventStep, hasProbe })
+    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep, hasProbe })
   const stamps = player.researchStamps ?? {}
   // SSL-831: a chained shower's step counts its missions (1/2 after the run, done after LEO-1), not the day's stamp.
   const progress = steps.map(st => chain && st.id === 'event' ? { have: chainStage(player, chain.eventId), need: 2 } : stepProgress(st, stamps, week, now))

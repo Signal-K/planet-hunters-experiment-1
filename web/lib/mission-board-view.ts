@@ -22,6 +22,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from '@/lib/orionids/finds'
 import { chainInstrument, chainRecordings, chainStage, getShowerChain, type TwoStepChain } from '@/lib/orionids/chain'
 import { showerPreset } from '@/lib/data/showers'
+import { probeTargetForMission } from '@/lib/probes/survey-probe'
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
@@ -144,6 +145,19 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       kind: 'instrument',
     }
   })
+
+  // SSL-773: survey probes to the nearest bodies without one, after the telescopes.
+  for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
+    steps.push({
+      id: mission.id,
+      title: mission.title,
+      detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
+      lockLine: free ? null : (mission.unlockAt ?? 'Reach Free Operations'),
+      state: free ? 'available' : 'locked',
+      kind: 'instrument',
+    })
+  }
 
   const mining = missionById(catalog, SELF_DIRECTED_MINING_MISSION_ID)
   steps.push({

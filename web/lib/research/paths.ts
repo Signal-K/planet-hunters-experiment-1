@@ -95,7 +95,20 @@ export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title:
 /** SSL-714: a shower with a mission chain words its event step for where the player is in it. */
 export type EventStepCopy = { title: string; brief: string }
 
-export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string | null; eventStep?: EventStepCopy }): PathStep[] {
+/** SSL-773: with a survey probe in orbit, logging one of its readings is a step on either path, just before the Breakthrough. */
+const PROBE_STEP: PathStep = {
+  id: 'probe', kind: 'probe-observation', days: 1, icon: 'world', color: '#c9a7f0', title: 'Log a probe reading',
+  brief: 'Open your survey probe in the data hub, read one sector and log the deposits you find.',
+  why: 'Up-close readings show where the deposits really are, for everyone planning a mine.',
+}
+
+function withProbeStep(steps: PathStep[], hasProbe: boolean | undefined): PathStep[] {
+  if (!hasProbe) return steps
+  const at = steps.findIndex(step => step.id === 'breakthrough')
+  return [...steps.slice(0, at), PROBE_STEP, ...steps.slice(at)]
+}
+
+export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string | null; eventStep?: EventStepCopy; hasProbe?: boolean }): PathStep[] {
   const steps: PathStep[] = [
     { id: 'classify', kind: 'classification', days: 1, icon: 'signal', color: '#58d0ea', title: 'Classify a signal',
       brief: 'Open your instruments, pick something your telescopes found and say what it is.',
@@ -123,10 +136,10 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
     brief: opts.eventStep?.brief ?? 'Everyone is out there this week. Fly the shower run and bring a stamp home for the whole community.',
     why: 'Event weeks are shared research. Every player who joins fills the same bar.',
   })
-  return steps
+  return withProbeStep(steps, opts.hasProbe)
 }
 
-export function traderSteps(opts: { eventName: string | null; eventStep?: EventStepCopy }): PathStep[] {
+export function traderSteps(opts: { eventName: string | null; eventStep?: EventStepCopy; hasProbe?: boolean }): PathStep[] {
   const steps: PathStep[] = [
     { id: 'sale', kind: 'exchange-sale', days: 1, icon: 'signal', color: '#58d0ea', title: 'Make an Exchange sale',
       brief: 'Sell one eligible mineral or refined good at the Exchange.',
@@ -149,7 +162,7 @@ export function traderSteps(opts: { eventName: string | null; eventStep?: EventS
     brief: opts.eventStep?.brief ?? 'Join the shared event run and bring a stamp home for the whole community.',
     why: 'Trader weeks can still contribute to shared sky research.'
   })
-  return steps
+  return withProbeStep(steps, opts.hasProbe)
 }
 
 export function weeklyRewardKey(step: PathStep): keyof typeof WEEKLY_RESEARCH_REWARDS | null {
