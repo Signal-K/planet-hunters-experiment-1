@@ -21,13 +21,22 @@ private enum Tone {
 
 /// The scope dressing (web .stars/.reticle): a seeded twinkling star field, a graduated ring (fine ticks every 5°,
 /// long ones every 30°) with a cyan inner rim, crosshairs, corner brackets and the centre bead, in the house palette.
-private struct ScopeDressing: View {
+private struct ScopeDressing: View, Animatable {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let stars: [(x: Double, y: Double, r: Double, warm: Bool, phase: Double)] = {
         var seed: UInt64 = 7
         func next() -> Double { seed = (seed * 16807) % 2147483647; return Double(seed) / 2147483647 }
-        return (0..<70).map { _ in (next(), next(), 1 + (next() * 2).rounded(), next() > 0.8, next() * 6.28) }
+        return (0..<220).map { _ in (next(), next(), 1 + (next() * 2).rounded(), next() > 0.8, next() * 6.28) }
     }()
+    /// How far the sky has swung, in fractions of the field (SSL-826).
+    var pan: (x: Double, y: Double) = (0, 0)
+    /// Hides the centre bead while a body fills the reticle.
+    var focused = false
+    /// Lets SwiftUI ease the pan between telescopes rather than jump.
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(pan.x, pan.y) }
+        set { pan = (newValue.first, newValue.second) }
+    }
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 15, paused: reduceMotion)) { tl in
             Canvas { ctx, size in
@@ -36,9 +45,12 @@ private struct ScopeDressing: View {
                 for i in 1..<8 { let x = size.width * Double(i) / 8; grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
                 for i in 1..<4 { let y = size.height * Double(i) / 4; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
                 ctx.stroke(grid, with: .color(Tone.cyanSoft.opacity(0.06)), lineWidth: 1)
+                // SSL-826: the stars are drawn over a sky 1.8 times the field, offset by `pan`, so the view can swing.
                 for s in Self.stars {
                     let a = reduceMotion ? 0.7 : 0.25 + 0.75 * (0.5 + 0.5 * sin(t * 1.4 + s.phase))
-                    ctx.fill(Path(ellipseIn: CGRect(x: s.x * size.width, y: s.y * size.height, width: s.r, height: s.r)), with: .color((s.warm ? Theme.hex(0xFFE9B8) : Tone.cream).opacity(a)))
+                    let x = (s.x * 1.8 - 0.4 + pan.x) * size.width, y = (s.y * 1.8 - 0.4 + pan.y) * size.height
+                    guard x > -4, x < size.width + 4, y > -4, y < size.height + 4 else { continue }
+                    ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: s.r, height: s.r)), with: .color((s.warm ? Theme.hex(0xFFE9B8) : Tone.cream).opacity(a)))
                 }
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
                 let r = min(size.width, size.height) * 0.46
@@ -66,8 +78,10 @@ private struct ScopeDressing: View {
                     corners.move(to: CGPoint(x: cx, y: cy + sy * k)); corners.addLine(to: CGPoint(x: cx, y: cy)); corners.addLine(to: CGPoint(x: cx + sx * k, y: cy))
                 }
                 ctx.stroke(corners, with: .color(Tone.cream.opacity(0.6)), lineWidth: 2)
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 13, y: c.y - 13, width: 26, height: 26)), with: .color(Tone.cream.opacity(0.7)), lineWidth: 1.5)
-                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(Tone.cyan))
+                if !focused {
+                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 13, y: c.y - 13, width: 26, height: 26)), with: .color(Tone.cream.opacity(0.7)), lineWidth: 1.5)
+                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(Tone.cyan))
+                }
             }
         }
         .allowsHitTesting(false)
@@ -86,6 +100,7 @@ struct ControlStationScreen: View {
     @State private var view: StationSky.SkyView = .all
     @State private var telescopeId: String?
     @State private var pickedId: String?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var logbook = false
     var signals: [InstrumentSignal] = []
 
@@ -150,6 +165,12 @@ struct ControlStationScreen: View {
         .coachTarget("station-filters")
     }
 
+    /// SSL-826: with the Saturn satellite on, the sky swings by the distance from Saturn's usual spot to the reticle.
+    private func skyPan(_ active: StationSky.Telescope?) -> (x: Double, y: Double) {
+        guard active?.id == "saturn" else { return (0, 0) }
+        return (StationSky.saturnFocus.x - StationSky.saturnSpot.x, StationSky.saturnFocus.y - StationSky.saturnSpot.y)
+    }
+
     private func scope(_ anomalies: [StationSky.Anomaly], _ active: StationSky.Telescope?) -> some View {
         let waiting = anomalies.filter { $0.state == .unexplored }.count
         let picked = anomalies.first { $0.id == pickedId }
@@ -171,7 +192,8 @@ struct ControlStationScreen: View {
             .overlay(alignment: .bottom) { Rectangle().fill(Tone.cyanSoft.opacity(0.16)).frame(height: 1) }
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
-                    ScopeDressing()
+                    ScopeDressing(pan: skyPan(active), focused: active?.id == "saturn")
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.9), value: active?.id)
                     VStack {
                         HStack { Text("FIELD: \(view.label.uppercased())"); Spacer(); Text("TARGETS: \(anomalies.count)") }
                             .foregroundStyle(Tone.cyanSoft)
@@ -189,9 +211,13 @@ struct ControlStationScreen: View {
                     ForEach(anomalies) { a in
                         Button {
                             if let s = a.signal { open(s) } else { pickedId = pickedId == a.id ? nil : a.id }
-                        } label: { AnomalyMark(anomaly: a, picked: a.id == pickedId).frame(width: 44, height: 44).contentShape(Circle()) }
+                        } label: {
+                            let big = active?.id == "saturn" && a.id == "body:saturn"
+                            AnomalyMark(anomaly: a, picked: a.id == pickedId, focus: big).frame(width: big ? 80 : 44, height: big ? 80 : 44).contentShape(Circle())
+                        }
                         .buttonStyle(.plain)
                         .position(x: a.x * geo.size.width, y: a.y * geo.size.height)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.9), value: active?.id)
                         .accessibilityLabel("\(a.label), \(a.detail)")
                         .accessibilityIdentifier("control-station-anomaly")
                     }
@@ -422,10 +448,12 @@ struct ControlStationScreen: View {
 private struct AnomalyMark: View {
     let anomaly: StationSky.Anomaly
     let picked: Bool
+    /// Saturn filling the reticle (SSL-826): drawn gold and two and a half times the size.
+    var focus = false
     @State private var ping = false
 
     var body: some View {
-        let color = anomaly.state == .unexplored ? Tone.gold : anomaly.state == .explored ? Tone.cyan : Tone.cream
+        let color = focus || anomaly.state == .unexplored ? Tone.gold : anomaly.state == .explored ? Tone.cyan : Tone.cream
         ZStack {
             if anomaly.state == .unexplored {
                 Circle().stroke(Tone.gold, lineWidth: 1.5).frame(width: 28, height: 28)
@@ -453,7 +481,8 @@ private struct AnomalyMark: View {
                 }
             }
             .frame(width: 22, height: 22)
-            .shadow(color: anomaly.state == .unexplored ? Tone.gold.opacity(0.8) : .clear, radius: 4)
+            .scaleEffect(focus ? 2.5 : 1)
+            .shadow(color: anomaly.state == .unexplored || focus ? Tone.gold.opacity(focus ? 0.55 : 0.8) : .clear, radius: focus ? 10 : 4)
             if picked { Circle().stroke(Tone.cream, lineWidth: 2).frame(width: 32, height: 32) }
         }
     }

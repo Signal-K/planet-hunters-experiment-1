@@ -3,6 +3,8 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
+  SATURN_FOCUS,
+  SATURN_SPOT,
   SKY_VIEWS,
   type SkyAnomaly,
   type SkyView,
@@ -176,7 +178,10 @@ export function ControlStationConsole({
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
-  const stars = useMemo(() => starField(150), [])
+  const stars = useMemo(() => starField(320), [])
+  // SSL-826: with the Saturn satellite on, the sky swings so Saturn sits in the reticle.
+  const focused = active?.id === 'saturn'
+  const pan = focused ? { x: (SATURN_FOCUS.x - SATURN_SPOT.x) * 100, y: (SATURN_FOCUS.y - SATURN_SPOT.y) * 100 } : { x: 0, y: 0 }
   const online = telescopes.filter(item => item.live).length
   const status = acquiring ? 'Acquiring' : waiting > 0 ? 'Scanning' : 'Standby'
 
@@ -191,9 +196,10 @@ export function ControlStationConsole({
             <b>{active ? active.name : 'All telescopes'}</b>
             <span>{acquiring ? 'Acquiring' : `${waiting} to classify`}</span>
           </div>
-          <div className={styles.field}>
-            <div className={styles.galaxy} aria-hidden="true" />
-            <div className={styles.stars} aria-hidden="true">
+          <div className={styles.field} data-focus={focused ? 'saturn' : undefined}>
+            <div className={styles.pan} aria-hidden="true" data-testid="control-station-pan" style={{ transform: `translate(${pan.x / 1.8}%, ${pan.y / 1.8}%)` }}>
+            <div className={styles.galaxy} />
+            <div className={styles.stars}>
               {stars.map((star, i) => (
                 <i
                   key={i}
@@ -201,6 +207,7 @@ export function ControlStationConsole({
                   style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: `${star.delay}s`, animationDuration: `${star.speed}s` }}
                 />
               ))}
+            </div>
             </div>
             <div className={styles.reticle} aria-hidden="true">
               <span className={styles.ring} />
@@ -222,6 +229,7 @@ export function ControlStationConsole({
                 data-state={anomaly.state}
                 data-shape={anomaly.shape}
                 data-picked={anomaly.id === pickedId}
+                data-focus={focused && anomaly.id === 'body:saturn' ? 'true' : undefined}
                 data-testid="control-station-anomaly"
                 style={{ left: `${anomaly.x * 100}%`, top: `${anomaly.y * 100}%` }}
                 aria-label={`${anomaly.label}, ${anomaly.detail}`}

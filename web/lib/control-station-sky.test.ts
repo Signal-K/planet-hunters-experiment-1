@@ -74,4 +74,13 @@ describe('control station sky', () => {
     expect(out[3]).toBe(items[3])
     expect(spreadSpots(items)).toEqual(out)
   })
+
+  it('swings the map to Saturn when the Saturn satellite is on (SSL-826)', () => {
+    const saturn = { id: 'saturn', name: 'Saturn satellite', place: 'offworld' as const, finds: 'Storms', built: true, live: true, status: '', readyCount: 1, kinds: ['saturn' as const], community: false }
+    for (const view of ['unexplored', 'explored', 'all'] as const) {
+      const sky = buildStationSky({ player, signals, view, telescope: saturn })
+      expect(sky[0]).toMatchObject({ id: 'body:saturn', x: 0.5, y: 0.5 })
+      for (const item of sky.slice(1)) expect(Math.hypot((item.x - 0.5) * 1.35, item.y - 0.5)).toBeGreaterThan(0.15)
+    }
+  })
 })

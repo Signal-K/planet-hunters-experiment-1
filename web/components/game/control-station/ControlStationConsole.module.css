@@ -293,6 +293,10 @@
 
 /* ── Instrument dressing (from the v0 mockup), drawn in the house palette ── */
 .stars, .reticle, .galaxy { position: absolute; inset: 0; pointer-events: none; }
+/* SSL-826: the sky behind the reticle is larger than the field, so it can swing to Saturn without showing an edge. */
+.pan { position: absolute; inset: -40%; pointer-events: none; transition: transform 900ms cubic-bezier(0.3, 0.7, 0.2, 1); }
+.anomaly { transition: left 900ms cubic-bezier(0.3, 0.7, 0.2, 1), top 900ms cubic-bezier(0.3, 0.7, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .pan, .anomaly { transition: none; } }
 /* SSL-748: texture for the sky: a soft Milky Way band, dust lanes and two nebula tints under the stars. */
 .galaxy {
   background:
@@ -503,3 +507,8 @@
 .historyKeys { display: flex; flex-wrap: wrap; gap: 8px; }
 .scanKey { border-color: #ffb454; color: #ffb454; }
 .scanKey[data-scanning] { background: rgba(255, 180, 84, 0.16); }
+
+/* SSL-826: Saturn in the reticle, drawn large, once the Saturn satellite is on. */
+.anomaly[data-focus='true'] { width: 80px; height: 80px; color: var(--gold); }
+.anomaly[data-focus='true'] svg { width: 56px; height: 56px; stroke-width: 1; fill: currentColor; fill-opacity: 0.25; filter: drop-shadow(0 0 10px rgba(242, 194, 76, 0.55)); }
+.field[data-focus='saturn'] .bead { opacity: 0; }
