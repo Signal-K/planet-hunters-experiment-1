@@ -116,9 +116,10 @@ function useChipSlot(active: boolean): HTMLElement | null {
     const place = () => {
       frame = 0
       const visible = (el: HTMLElement) => el.offsetParent !== null
-      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip')).find(visible)
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip:not(.sync-chip)')).find(visible)
       // SSL-748: screens with no francs chip (control station, launch pad, consoles) keep their own controls in the
       // top-right corner, so a fixed floating chip covered them. Join the screen's own top row beside its help button.
+      // SSL-828: never anchor inside the slot itself (the chip it holds would become its own anchor).
       const anchor = francs ?? Array.from(document.querySelectorAll<HTMLElement>('[data-sync-anchor], [data-testid="help-button"]')).find(visible)
       let slot = document.querySelector<HTMLElement>('[data-sync-slot]')
       if (!anchor) { slot?.remove(); setHost(null); return }
@@ -149,7 +150,7 @@ function useTopChipInset() {
     let frame = 0
     const measure = () => {
       frame = 0
-      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip'))
+      const francs = Array.from(document.querySelectorAll<HTMLElement>('[data-testid$="-francs-chip"], .top-bar .scene-chip:not(.sync-chip)'))
         .find(el => el.offsetParent !== null)
       publishRowInset(francs?.parentElement ?? null, sizes)
     }

@@ -143,7 +143,8 @@ struct SaturnStormSearchScreen: View {
     }
 
     @ViewBuilder private func frameImage(_ c: SaturnCandidate) -> some View {
-        AsyncImage(url: c.imageURL) { phase in
+        // SSL-828: frames load from the on-device store first (downloaded ahead of time), so they show offline.
+        CachedFrame(url: c.imageURL) { phase in
             switch phase {
             case .success(let image):
                 let tint = Self.palettes[palette].tint
@@ -191,5 +192,24 @@ struct SaturnStormSearchScreen: View {
                 }
             }
         }
+    }
+}
+
+/// AsyncImage over SaturnFrameStore: the frame from disk when it was downloaded ahead of time, else from the network.
+private struct CachedFrame<Content: View>: View {
+    let url: URL?
+    @ViewBuilder let content: (AsyncImagePhase) -> Content
+    @State private var phase: AsyncImagePhase = .empty
+
+    var body: some View {
+        content(phase)
+            .task(id: url) {
+                phase = .empty
+                guard let url, let data = await SaturnFrameStore.load(url), let image = UIImage(data: data) else {
+                    if url != nil { phase = .failure(URLError(.notConnectedToInternet)) }
+                    return
+                }
+                phase = .success(Image(uiImage: image))
+            }
     }
 }

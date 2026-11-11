@@ -138,6 +138,9 @@ export default function TopBar({ onBack, right, solid, glass, scene, levelBadge,
       </div>
       <div style={{ flex: 1, pointerEvents: 'none' }} />
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* SSL-828: the sync chip joins this row (LandnamSyncStatus inserts it in front of this mark) instead of
+            floating over the screen, where it sat on top of tutorials and panels. */}
+        <span data-sync-anchor="" aria-hidden="true" style={{ display: 'inline-block', width: 0, height: 0 }} />
         {francs !== undefined && (
           <span className="scene-chip">{formatFrancs(francs, { compact: true })}</span>
         )}

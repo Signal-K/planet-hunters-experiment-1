@@ -39,9 +39,11 @@ import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
+import { useSaturnFramePrefetch } from '@/lib/offline/scienceImages'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
+  useSaturnFramePrefetch(game.player)
   // Opened directly on /game/intro: watch it even if state moves to another screen.
   const [coldIntro] = useState(() => typeof window !== 'undefined' && window.location.pathname === '/game/intro')
   const arrivalScheduledFor = useRef<number | null>(null)
