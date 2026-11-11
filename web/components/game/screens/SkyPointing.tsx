@@ -152,7 +152,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
       const vy = stick.current.y + keys.current.y
       if (vx || vy) {
         if (live.current.freeSky) {
-          setAim(a => ({ ra: wrapRa(a.ra + (vx * SKY_SPEED * dt) / Math.max(0.35, Math.cos((a.dec * Math.PI) / 180))), dec: clampDec(a.dec - vy * SKY_SPEED * dt) }))
+          setAim(a => ({ ra: wrapRa(a.ra - (vx * SKY_SPEED * dt) / Math.max(0.35, Math.cos((a.dec * Math.PI) / 180))), dec: clampDec(a.dec - vy * SKY_SPEED * dt) }))
         } else {
           setPos(p => {
             const { W: w, H: h } = live.current
@@ -255,7 +255,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
       })}
 
       <SceneTop onBack={onCancel} testId="sky-pointing-back">
-        <ScenePill align="end" testId="sky-station">{view.station}</ScenePill>
+        <ScenePill align="end" testId="sky-station" syncAnchor>{view.station}</ScenePill>
       </SceneTop>
 
       <div className={styles.caption}>

@@ -105,9 +105,6 @@ export function SkyChart({ g, aim, mapped, current }: Props) {
     return out
   }, [aim, g, raSpan, decSpan, mapped, current])
 
-  const poleTop = project(aim, g, 0, 90).y
-  const poleBottom = project(aim, g, 0, -90).y
-
   return (
     <g data-testid="sky-chart" shapeRendering="crispEdges">
       {stars.map((s, i) => (
@@ -121,8 +118,6 @@ export function SkyChart({ g, aim, mapped, current }: Props) {
           <rect key={f.id} x={f.x} y={f.y} width={f.w} height={f.h} className={styles.field} data-mapped={f.mapped || undefined} data-current={f.current || undefined} />
         ))}
       </g>
-      {poleTop > 0 && <rect x="0" y="0" width={W} height={poleTop} fill="#02040b" opacity="0.9" />}
-      {poleBottom < H && <rect x="0" y={poleBottom} width={W} height={H - poleBottom} fill="#02040b" opacity="0.9" />}
       {LANDMARKS.map(l => {
         const p = project(aim, g, l.ra, l.dec)
         if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) return null
