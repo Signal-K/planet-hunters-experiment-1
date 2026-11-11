@@ -208,7 +208,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'debrief',
     title: 'After the haul',
     cards: [
-      { title: 'The haul is home', body: 'Debrief pays the run and puts ore in your stash, or sells it if that was the plan.' },
+      { title: 'The haul is home', body: 'Debrief pays the run and puts ore in your Surface Silo, or sells it if that was the plan.' },
       { title: 'Next is the ground', body: 'Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional.' },
     ],
   },
@@ -264,8 +264,8 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'refinery',
     title: 'Refinery',
     cards: [
-      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your stash and runs for a set time. Check the inputs and the output value before you start.' },
-      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
+      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your Surface Silo and runs for a set time. Check the inputs and the output value before you start.' },
+      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to your Surface Silo. Nothing is lost while you are away.' },
     ],
   },
 }

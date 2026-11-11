@@ -25,7 +25,6 @@ import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 const SANDBOX_CSS = `
 [data-stage-sandbox="true"] [data-testid="hub-clock-widget"],
 [data-stage-sandbox="true"] [data-testid="hub-francs-chip"],
-[data-stage-sandbox="true"] [data-testid="hub-cargo-chip"] { display: none !important; }
 `
 
 interface StageMode {
