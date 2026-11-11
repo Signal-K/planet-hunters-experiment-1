@@ -7,7 +7,7 @@ import { missionResumeScreen } from '@/lib/mission-resume'
 // would be redundant (or would float over live mining/transit UI) if shown
 // on any of these, so it only surfaces once the player has actually
 // navigated away to Base/Missions/Atlas/Build/Market.
-const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'delivery', 'debrief']
+const MISSION_FLOW_SCREENS: Screen[] = ['flight', 'mining', 'delivery', 'debrief']
 
 interface MissionTickerProps {
   player: Player

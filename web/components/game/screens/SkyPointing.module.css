@@ -1,20 +1,23 @@
 /* Weekly pointing: one full-screen viewport. The scene fills the screen; the controls float on top of it. */
 
-.root { position: absolute; inset: 0; z-index: 30; overflow: hidden; background: var(--ln-world-night-top, #0b0a2e); color: #e8f1ff; }
+.root { position: absolute; inset: 0; z-index: 30; overflow: hidden; background: #050a16; color: #e8f1ff; }
 .svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.bands { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; image-rendering: pixelated; }
-.starTile { position: absolute; inset: 0; background-repeat: repeat; image-rendering: pixelated; }
-.starTile[data-layer='far'] { background-image: url('/game/assets/base/kit/stars-far.png'); background-size: 256px 256px; }
-.starTile[data-layer='mid'] { background-image: url('/game/assets/base/kit/stars-mid.png'); background-size: 256px 256px; background-position: 90px 40px; }
-.starTile[data-layer='near'] { background-image: url('/game/assets/base/kit/stars-near.png'); background-size: 384px 384px; background-position: 30px 120px; }
+.mapline { margin: 0; color: #58d0ea; font: 700 14px/1.2 var(--ln-font-mono, ui-monospace, monospace); letter-spacing: 0.04em; }
 
-/* the whole-sky chart (SSL-788) */
-.field { fill: none; stroke: rgba(159, 214, 228, 0.16); stroke-width: 0.15; }
-.field[data-mapped='true'] { fill: rgba(127, 255, 212, 0.13); stroke: rgba(127, 255, 212, 0.4); }
-.field[data-current='true'] { stroke: #ffd678; stroke-width: 0.35; }
-.landmark { fill: none; stroke: rgba(255, 255, 255, 0.75); stroke-width: 0.3; }
-.mapline { margin: 0; color: #7fffd4; font: 700 14px/1.2 var(--ln-font-mono, ui-monospace, monospace); letter-spacing: 0.04em; }
+/* SSL-830: the whole-sky overview: every field, the mapped ones lit, the box on what is on screen. Tap to steer. */
+.overviewSlot { position: absolute; left: 14px; top: 76px; width: clamp(220px, 24vw, 320px); pointer-events: auto; }
+.overview { display: grid; gap: 6px; padding: 8px 10px 10px; border: 1px solid rgba(244, 239, 228, 0.28); border-radius: 14px; background: rgba(5, 10, 22, 0.86); box-shadow: 0 0 0 4px rgba(8, 16, 34, 0.45); pointer-events: auto; }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono, ui-monospace, monospace); letter-spacing: 0.06em; text-transform: uppercase; text-shadow: none; }
+.head b { color: #58d0ea; }
+.map { display: block; width: 100%; aspect-ratio: 2 / 1; min-height: 44px; border-radius: 8px; background: #050a16; box-shadow: inset 0 0 0 1px rgba(157, 231, 239, 0.14); cursor: crosshair; touch-action: none; }
+.plane { fill: none; stroke: rgba(244, 239, 228, 0.22); stroke-width: 0.6; vector-effect: non-scaling-stroke; stroke-width: 6px; stroke-linecap: round; }
+.cell { fill: rgba(157, 231, 239, 0.05); stroke: none; }
+.cell[data-mapped='true'] { fill: rgba(88, 208, 234, 0.75); }
+.cell[data-here='true'] { fill: #f2c24c; }
+.box { fill: none; stroke: #f4efe4; vector-effect: non-scaling-stroke; stroke-width: 1.5px; }
+.root[data-portrait='true'] .overview { margin-top: 6px; padding: 6px 0 0; border: 0; border-top: 1px solid rgba(157, 231, 239, 0.18); border-radius: 0; background: none; box-shadow: none; }
+.root[data-portrait='true'] .map { aspect-ratio: 5 / 1; }
+.root[data-portrait='true'] .mapline { display: none; }
 
 /* scene bits */
 .twinkle { animation: twinkle 4.5s ease-in-out infinite; }

@@ -151,12 +151,12 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          <button type="button" className={styles.target} data-testid="rocket-builder-target" onClick={onChooseMission}>
+          <button type="button" className={styles.target} data-testid="rocket-builder-target" data-sync-anchor="" onClick={onChooseMission}>
             <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>
           {!guided && hasLaunchPlan && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
-          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" data-sync-anchor="" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
+          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 
         {guided && (

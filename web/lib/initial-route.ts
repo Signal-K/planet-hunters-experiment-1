@@ -1,15 +1,16 @@
 import type { Screen } from '@/lib/game-types'
+import { migrateScreenId } from '@/lib/game-screens'
 
 const VALID_SCREENS = new Set<Screen>([
-  'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market',
+  'intro', 'build', 'hub', 'missions', 'tess-discovery', 'targets', 'fab',
+  'flight', 'mining', 'delivery', 'debrief', 'refinery', 'market',
   'hangar', 'rocket-buy',
   'launchpad',
   'mission-history',
 ])
 
 const RESUMABLE_MISSION_SCREENS = new Set<Screen>([
-  'targets', 'rocket-buy', 'fab', 'transit', 'mining',
+  'targets', 'rocket-buy', 'fab', 'flight', 'mining',
   'delivery', 'debrief',
 ])
 
@@ -50,7 +51,7 @@ export function returningScreen(raw: string | null): Screen {
 
   try {
     const parsed = JSON.parse(raw) as SavedStateShape
-    const screen = parsed.screen
+    const screen = migrateScreenId(parsed.screen)
     if (typeof screen !== 'string' || !VALID_SCREENS.has(screen as Screen)) return 'hub'
 
     if (isResumableMissionScreen(screen, parsed.missionId as string | undefined, parsed.targetId as string | undefined)) {

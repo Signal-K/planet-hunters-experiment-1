@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1 3 94 71" width="564" height="426" shape-rendering="crispEdges">
+  <g fill="none" stroke="#1b2a49" stroke-width=".8" stroke-linejoin="miter" stroke-linecap="square">
+    <!-- ground and plinth -->
+    <path d="M2 72H94"/>
+    <!-- wings -->
+    <rect x="8" y="48" width="24" height="24" fill="#efe6d2"/><rect x="64" y="48" width="24" height="24" fill="#efe6d2"/>
+    <rect x="6" y="46" width="26" height="2" fill="#dccfb0"/><rect x="64" y="46" width="26" height="2" fill="#dccfb0"/>
+    <!-- glazed bands -->
+    <g stroke="#2f5fd0">
+      <rect x="10" y="54" width="3" height="10" fill="#ffe9a8"/><rect x="15" y="54" width="3" height="10" fill="#a9c1f2"/><rect x="20" y="54" width="3" height="10" fill="#ffe9a8"/><rect x="25" y="54" width="3" height="10" fill="#a9c1f2"/>
+      <rect x="68" y="54" width="3" height="10" fill="#ffe9a8"/><rect x="73" y="54" width="3" height="10" fill="#a9c1f2"/><rect x="78" y="54" width="3" height="10" fill="#ffe9a8"/><rect x="83" y="54" width="3" height="10" fill="#a9c1f2"/>
+    </g>
+    <!-- central block and parapet -->
+    <rect x="32" y="32" width="32" height="40" fill="#efe6d2"/><rect x="30" y="30" width="36" height="2" fill="#dccfb0"/>
+    <!-- upper windows and emblem -->
+    <g stroke="#2f5fd0"><rect x="37" y="34" width="4" height="6" fill="#ffe9a8"/><rect x="55" y="34" width="4" height="6" fill="#ffe9a8"/></g>
+    <circle cx="48" cy="37" r="3.2"/><path d="M45.6 38.6A3.2 3.2 0 0 1 50.4 38.6"/>
+    <!-- portico -->
+    <rect x="34" y="42" width="28" height="2" fill="#dccfb0"/>
+    <path d="M36 44V64M42 44V64M54 44V64M60 44V64"/>
+    <rect x="45" y="50" width="6" height="14" fill="#2f5fd0" fill-opacity=".35"/><path d="M48 50V64"/>
+    <!-- steps -->
+    <path d="M34 64H62M32 66H64M30 68H66M28 70H68"/>
+    <!-- dome with ribs and lantern -->
+    <path d="M36 30A12 12 0 0 1 60 30Z" fill="#a9c1f2"/>
+    <path d="M42 30A9 12 0 0 1 48 18M54 30A9 12 0 0 0 48 18M48 30V18" stroke-width=".5"/>
+    <rect x="46" y="14" width="4" height="4" fill="#efe6d2"/>
+    <!-- flagpole and flag -->
+    <path d="M48 4V14"/><path d="M48 4H56V9H48" stroke="#2f5fd0"/><path d="M48 4L56 9" stroke="#2f5fd0" stroke-width=".5"/>
+
+    <!-- stage 2 detail -->
+    <path d="M8 66H32M64 66H88" stroke-width=".4"/>
+    <path d="M9 48V72M31 48V72M65 48V72M87 48V72" stroke-width=".4"/>
+    <path d="M31 31H35M37 31H41M43 31H47M49 31H53M55 31H59M61 31H65" stroke-width=".5"/>
+    <path d="M45 54H51" stroke-width=".4"/>
+    <path d="M40 22.5L48 17M56 22.5L48 17" stroke-width=".3" stroke="#2f5fd0"/>
+    <path d="M2 72.8H94" stroke="#7f8fb0" stroke-width=".5"/>
+    <!-- lamp posts -->
+    <path d="M3 72V62M3 62H5M93 72V62M93 62H91"/>
+
+    <!-- stage 3: depth, light, colour -->
+    <g stroke="none">
+      <rect x="28.5" y="48.6" width="3" height="23.4" fill="#1b2a49" fill-opacity=".14"/>
+      <rect x="84.5" y="48.6" width="3" height="23.4" fill="#1b2a49" fill-opacity=".14"/>
+      <rect x="61" y="32.6" width="3" height="39.4" fill="#1b2a49" fill-opacity=".14"/>
+      <path d="M54 30A12 12 0 0 0 60 30L56 24Z" fill="#1b2a49" fill-opacity=".16"/>
+      <rect x="49" y="4.6" width="7" height="4.4" fill="#2f5fd0" fill-opacity=".55"/>
+      <rect x="45.2" y="50.6" width="2.4" height="13.4" fill="#fff" fill-opacity=".35"/>
+      <rect x="10" y="64" width="22" height="2" fill="#1b2a49" fill-opacity=".1"/>
+      <rect x="64" y="64" width="22" height="2" fill="#1b2a49" fill-opacity=".1"/>
+      <circle cx="5" cy="61" r="1.6" fill="#ffe9a8"/><circle cx="91" cy="61" r="1.6" fill="#ffe9a8"/>
+      <circle cx="48" cy="37" r="2.6" fill="#2f5fd0" fill-opacity=".4"/>
+      <rect x="46.3" y="14.6" width="3.4" height="3" fill="#ffe9a8"/>
+    </g>
+    <path d="M44 24.5A5 6 0 0 1 46 20" stroke="#fff" stroke-width=".6"/>
+
+    <!-- stage 4: level-2 look, roof rails, planters, banner, solar, dish -->
+    <path d="M6 44V46M10 44V46M14 44V46M18 44V46M22 44V46M26 44V46M30 44V46M6 44H32" stroke-width=".4"/>
+    <path d="M64 44V46M68 44V46M72 44V46M76 44V46M80 44V46M84 44V46M88 44V46M64 44H90" stroke-width=".4"/>
+    <g fill="#2f5fd0" stroke="#1b2a49" stroke-width=".4">
+      <path d="M10 40L16 40L18 44L8 44Z" fill-opacity=".8"/><path d="M20 40L26 40L28 44L18 44Z" fill-opacity=".55"/>
+      <path d="M70 40L76 40L78 44L68 44Z" fill-opacity=".8"/><path d="M80 40L86 40L88 44L78 44Z" fill-opacity=".55"/>
+    </g>
+    <g fill="#3f7a52" stroke="#1b2a49" stroke-width=".4">
+      <rect x="25" y="68" width="3" height="4" fill="#dccfb0"/><circle cx="26.5" cy="66.6" r="2" fill="#3f7a52"/>
+      <rect x="68" y="68" width="3" height="4" fill="#dccfb0"/><circle cx="69.5" cy="66.6" r="2" fill="#3f7a52"/>
+    </g>
+    <path d="M38 44V50M58 44V50" stroke-width=".4"/>
+    <path d="M37 50H41V58L39 56L37 58Z" fill="#2f5fd0" stroke-width=".4"/><path d="M55 50H59V58L57 56L55 58Z" fill="#2f5fd0" stroke-width=".4"/>
+    <path d="M48 14V10M45 10H51" stroke-width=".5"/><path d="M45 10A3 3 0 0 0 51 10" fill="#efe6d2" stroke-width=".4"/>
+    <path d="M12 57H30M12 60H30" stroke="#2f5fd0" stroke-width=".25"/>
+  </g>
+</svg>

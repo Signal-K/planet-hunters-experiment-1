@@ -23,7 +23,7 @@ const PORTRAIT_HOME_ZOOM = 1.5
  * Pan (drag/swipe with inertia and soft edges) and zoom (pinch, wheel) for the base scene (SSL-503).
  * Attach `ref` to the viewport element and apply `transform` to the world element inside it.
  */
-export function useBaseCamera({ worldWidth, homeX, locked = false }: { worldWidth?: number; homeX?: number; locked?: boolean } = {}) {
+export function useBaseCamera({ worldWidth, homeX, locked = false, portraitZoom = true }: { worldWidth?: number; homeX?: number; locked?: boolean; portraitZoom?: boolean } = {}) {
   const ref = useRef<HTMLDivElement | null>(null)
   const [cam, setCam] = useState<BaseCameraState>(BASE_CAMERA_HOME)
   const camRef = useRef(cam)
@@ -49,9 +49,9 @@ export function useBaseCamera({ worldWidth, homeX, locked = false }: { worldWidt
     if (homeX == null || !ref.current) return
     const v = view()
     // Upright phones: start zoomed in on the ground (SSL-716), so the launchpad is the subject, not a speck under empty sky.
-    const zoom = !locked && v.h > v.w * 1.3 ? PORTRAIT_HOME_ZOOM : 1
+    const zoom = !locked && portraitZoom && v.h > v.w * 1.3 ? PORTRAIT_HOME_ZOOM : 1
     commit(clampCamera({ zoom, x: v.w / 2 - homeX * zoom, y: v.h * (1 - zoom) }, v))
-  }, [commit, homeX, locked, view, worldWidth])
+  }, [commit, homeX, locked, portraitZoom, view, worldWidth])
 
   const stop = useCallback(() => { cancelAnimationFrame(raf.current) }, [])
 

@@ -64,6 +64,7 @@ struct RootView: View {
         .tint(Theme.accent)
         // Someone confirmed a planet: flag a re-point on the exoplanet target flow (web useConfirmedDiscoveryPoll).
         .task { await feed.pollConfirmed(store: store) }
+        .task(id: store.player.saturnImagerLaunchedAt != nil) { await feed.prefetchSaturn(player: store.player, nowMs: store.now) }
         .onChange(of: store.state) { old, new in surveys.observe(old: old, new: new) }
         .sheet(item: Binding(get: { surveys.current.map(SurveyItem.init) }, set: { if $0 == nil, surveys.current != nil { surveys.dismiss() } })) { item in
             SurveySheet(def: item.def, submit: { surveys.submit($0) }, dismiss: { surveys.dismiss() })

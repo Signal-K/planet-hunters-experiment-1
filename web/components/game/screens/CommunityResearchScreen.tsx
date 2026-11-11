@@ -12,6 +12,7 @@ import { useBallots } from '@/lib/community/useBallots'
 import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
+import { getShower } from '@/lib/data/showers'
 import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
@@ -72,7 +73,7 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
 
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
-  'Finish its five steps in any order. Missing a day costs nothing.',
+  'Finish its steps in any order. Missing a day costs nothing.',
   'Every step is a stamp that also fills the shared community bar.',
 ]
 
@@ -95,7 +96,9 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // The path is locked for the week, so starting one asks first.
   const [confirmingPath, setConfirmingPath] = useState(false)
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
-  const eventStep = event?.id === 'orionids' ? orionidsResearchStep(player.orionidsEventStage) : undefined
+  // SSL-774: any declared shower words its own step; only the Orionids has a saved stage so far.
+  const showerId = event ? `${event.id}-2026` : undefined
+  const eventStep = showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
@@ -153,7 +156,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
                   <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, scan worlds and chase the sky. Five steps, and the research helps everyone.'}</p>
+                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, review other players\u2019 findings, scan worlds and chase the sky. The research helps everyone.'}</p>
                 </div>
               </section>
               <section className={styles.right}>

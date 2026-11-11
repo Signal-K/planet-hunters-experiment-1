@@ -12,7 +12,7 @@ import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
-import { buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
+import { PAD_SERVICE_COST, buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
 import { permanentResearchSaleRate } from '@/lib/research/marketplace'
@@ -558,6 +558,12 @@ export function applyUpgradeBuilding(s: GameState, id: string): GameState {
       launchpadUpgraded: s.player.launchpadUpgraded || (id === 'launchpad' && next >= 2),
     },
   }
+}
+
+/** Pay to service the launchpad: resets the launch count. No-op if the pad is not placed, unworn or unaffordable. */
+export function applyServiceLaunchpad(s: GameState): GameState {
+  if (!s.player.placed.includes('launchpad') || (s.player.padLaunches ?? 0) <= 0 || s.player.francs < PAD_SERVICE_COST) return s
+  return { ...s, player: { ...s.player, francs: s.player.francs - PAD_SERVICE_COST, padLaunches: 0 } }
 }
 
 /** Launchpad level 1 to 2: the original one-off upgrade. */

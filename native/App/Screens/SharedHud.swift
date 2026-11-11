@@ -93,7 +93,6 @@ struct HudChips: View {
     var stash: Cargo? = nil
     var onSell: (() -> Void)? = nil
     var compact = false
-    @State private var stashOpen = false
     @State private var syncTrayOpen = false
     @Environment(Services.self) private var services: Services?
     @Environment(\.helpButtonReserve) private var helpReserve
@@ -113,51 +112,12 @@ struct HudChips: View {
                 .lineLimit(1).fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, compact ? 6 : 8).frame(minWidth: 44, minHeight: compact ? 34 : 40)
                 .accessibilityLabel("Francs")
-            stashChip
         }
         .padding(compact ? 3 : 4)
         .background(Capsule().fill(Theme.hex(0x07111D, 0.84)))
         .overlay(Capsule().stroke(Glass.ink.opacity(0.75), lineWidth: 1.25))
         .shadow(color: .black.opacity(0.22), radius: 8, y: 3)
         .padding(.trailing, helpReserve)
-    }
-}
-
-extension HudChips {
-    @ViewBuilder fileprivate var stashChip: some View {
-        let icon = Image(systemName: "cube.fill").font(.system(size: compact ? 14 : 16, weight: .bold)).foregroundStyle(Glass.ink)
-        if let stash {
-            let entries = stash.filter { $0.value > 0 }.sorted { $0.key < $1.key }
-            let units = entries.reduce(0) { $0 + $1.value }
-            Button { stashOpen.toggle() } label: {
-                HStack(spacing: 6) {
-                    icon
-                    if units > 0 { Text("\(units)").font(AppFont.mono(13)).foregroundStyle(Glass.ink) }
-                }
-                .padding(.horizontal, compact ? 6 : 8).frame(minWidth: compact ? 38 : 44, minHeight: compact ? 34 : 40).contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Stash \(units) units. Open stash")
-            .popover(isPresented: $stashOpen) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("STASH · \(units)").font(AppFont.mono(14))
-                    if entries.isEmpty { Text("Empty. Mine something first.").font(AppFont.mono(14)) }
-                    ForEach(entries, id: \.key) { entry in
-                        Text("\(Minerals.byId[entry.key]?.name ?? entry.key) ×\(entry.value)").font(AppFont.mono(14))
-                    }
-                    if !entries.isEmpty, let onSell {
-                        Button("Sell at Marketplace") { stashOpen = false; onSell() }
-                            .frame(minHeight: 44)
-                    }
-                }
-                .padding(16).presentationCompactAdaptation(.popover)
-            }
-        } else {
-            icon.frame(width: 36, height: 36)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Theme.hudPanel))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.hudInk, lineWidth: 1))
-                .accessibilityLabel("Cargo")
-        }
     }
 }
 

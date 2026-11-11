@@ -15,7 +15,7 @@ web = ["web/components/game/screens/TessDiscoveryScreen.tsx"]
 native = ["native/App/Screens/TessDiscoveryScreen.swift"]
 
 [preview]
-route = "galaxy"
+route = "tess-discovery"
 state = "ui-tess-discovery"
 
 # ---------------------------------------------------------------------------------------------------------------

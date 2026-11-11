@@ -560,8 +560,8 @@
   .optionText span { -webkit-line-clamp: 1; }
 }
 
-/* Once a mission is chosen the plan strip already names the destination, so the Target card only shows on the idle pad. */
-.root:not([data-assembly='idle']) .target { display: none; }
+/* SSL-829: the mission button stays in every phase (Liam: "where's the button to select a mission?"). Once a mission is
+   chosen it reads Change mission and names it. */
 
 /* The mission plan strip (contract, plan, launch and the destination cards) sits over the scene: the stage starts or ends clear of it. */
 .root:not([data-assembly='idle']) .actions > :last-child { margin-left: auto; }
@@ -601,4 +601,12 @@
 @media (max-width: 599px) and (min-height: 521px) {
   :global(body:has([data-testid='mission-launch-review'])) .stage { bottom: 206px; }
   :global(body:has([data-testid='plan-clearance'])) .stage { bottom: 268px; }
+}
+
+/* SSL-829: the sync chip joins the action row just before the mission button, instead of floating over it. */
+.actions [data-sync-slot] > :global(.sync-chip) { margin-left: auto; }
+.actions [data-sync-slot]:has(:global(.sync-chip)) + .target { margin-left: 0; }
+@media not (orientation: portrait) {
+  /* Chip, mission and Customize sit together on the right; only the first of them takes the free space. */
+  .root:not([data-assembly='idle']) .actions > .target ~ :last-child { margin-left: 0; }
 }

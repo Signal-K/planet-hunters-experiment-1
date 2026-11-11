@@ -70,7 +70,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
   // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
   const firstClassification = Object.keys(classifications).length === 0
-  const help = useHelp('galaxy', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
+  const help = useHelp('tess-discovery', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
   const [allControls, setAllControls] = useState(false)
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
@@ -81,6 +81,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [retryToken, setRetryToken] = useState(0)
   const [needsMark, setNeedsMark] = useState(false)
+  // The data readout step: a tapped answer waits here for Back or Confirm before it is sent.
+  const [pendingVerdict, setPendingVerdict] = useState<TessVerdict | null>(null)
   // Training verdict just cast: show what it earned before moving on (Liam, 31.10: Confirm Transit had no reward or feedback).
   const [trainingVerdict, setTrainingVerdict] = useState<TessVerdict | null>(null)
   // SSL-745: photometry module — time zoom, scan, bin and phase fold act on the data itself.
@@ -264,6 +266,12 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     if (classification) return
     // A verdict that needs a marked dip explains itself instead of sitting disabled and looking dead.
     if (VERDICT_ACTIONS.find(action => action.id === id)?.requiresMark && ranges.length === 0) { setNeedsMark(true); return }
+    setPendingVerdict(id)
+  }
+
+  const confirmVerdict = () => {
+    const id = pendingVerdict
+    if (!id || classification) return
     const measuredPeriod = periodFromRanges(ranges)
     if (candidate.id.startsWith(TRAINING_ID_PREFIX)) setTrainingVerdict(id)
     help.reportAction('submit')
@@ -284,13 +292,15 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         annotatedImage: annotated,
       }))
     }
+    setPendingVerdict(null)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
   const activeRanges = classification?.ranges ?? ranges
   const markCount = activeRanges.length
   // The simple console lasts through the first result too, so the lesson does not end in a wall of panels.
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
   // SSL-747: a full readout of the player's result: their marks, what they measured from them,
@@ -314,7 +324,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     { label: 'Depth', value: meanDepth != null ? `${meanDepth.toFixed(2)}ppt · R/R★ ${Math.sqrt(Math.max(0, meanDepth) / 1000).toFixed(3)}` : '—' },
     { label: 'Fold', value: lc.fold ? `P ${lc.period.toFixed(2)}d` : 'OFF', testId: 'tess-readout-fold' },
     { label: 'View', value: `${display.folded ? 'ALL SECTORS' : `${(display.xDomain[1] - display.xDomain[0]).toFixed(1)}d`} · BIN ×${lc.bin}` },
-    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : 'PENDING', testId: 'tess-readout-verdict' },
+    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : pendingVerdict ? `${verdictLabel[pendingVerdict]} · CONFIRM?` : 'PENDING', testId: 'tess-readout-verdict' },
     ...(classification && candidate.periodDays ? [{ label: 'Catalogue P', value: `${candidate.periodDays.toFixed(2)}d`, testId: 'tess-readout-catalogue' }] : []),
   ]
 
@@ -338,13 +348,18 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     help.reportAction('fold')
   }
 
+  const shareResult = () => {
+    if (!classification || !onShareReadout) return
+    // The catalogue period is the answer key, so it never travels with a readout.
+    onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+  }
+
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const photometry = applyLightcurveCommand(lc, line)
     if (photometry) { setLc(photometry.controls); return { view, lines: photometry.lines } }
     const [head, arg] = line.trim().split(/\s+/)
     if (head?.toUpperCase() === 'CONSENSUS' && classification && onShareReadout) {
-      // The catalogue period is the answer key, so it never travels with a readout.
-      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'Catalogue P').map(({ label, value }) => ({ label, value })) })
+      shareResult()
       return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
     }
     if (head?.toUpperCase() === 'HELP' || head === '?') {
@@ -395,13 +410,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           {display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
+      footer={simpleEligible ? (
+        <button type="button" className={viewportStyles.quickKey} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
+          {allControls ? 'Simple view' : 'All controls'}
+        </button>
+      ) : undefined}
       viewportChrome={(
         <div className={viewportStyles.viewportChrome}>
-          {simpleEligible && (
-            <button type="button" className={viewportStyles.chip} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
-              {allControls ? 'Simple view' : 'All controls'}
-            </button>
-          )}
           {!classification && !simpleConsole && sectors.length > 1 && sectors.map((sector, index) => (
             <button
               key={sector.label}
@@ -439,8 +454,23 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           />
         </div>
       )}
+      done={!!classification || !!pendingVerdict}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Classification submitted</div>
+        <InstrumentAnswerRow
+          groupTestId="tess-readout-actions"
+          actions={[
+            { id: 'hub', label: 'DATA HUB', testId: 'tess-readout-hub', primary: true, onClick: onBack },
+            ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'tess-readout-ask', onClick: shareResult }] : []),
+          ]}
+        />
+      ) : pendingVerdict ? (
+        <InstrumentAnswerRow
+          groupTestId="tess-readout-confirm"
+          actions={[
+            { id: 'back', label: 'BACK', testId: 'tess-readout-back', onClick: () => setPendingVerdict(null) },
+            { id: 'confirm', label: 'CONFIRM', testId: 'tess-readout-confirm-btn', primary: true, onClick: confirmVerdict },
+          ]}
+        />
       ) : (
         <InstrumentAnswerRow
           coachTarget="tess-verdicts"

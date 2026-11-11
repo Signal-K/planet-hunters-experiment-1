@@ -91,10 +91,10 @@ export type Screen =
   | 'hub'
   | 'hub-subsurface'
   | 'missions'
-  | 'galaxy'
+  | 'tess-discovery'
   | 'targets'
   | 'fab'
-  | 'transit'
+  | 'flight'
   | 'landing'
   | 'mining'
   | 'delivery'
@@ -128,13 +128,13 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
   'hub-subsurface',
   'launchpad',
-  'transit',
+  'flight',
   'landing',
   'mining',
   'delivery',
   'refinery',
   'hangar',
-  'galaxy',
+  'tess-discovery',
   'asteroid-discovery',
   'saturn-storm-search',
   'instrument-hub',
@@ -202,6 +202,8 @@ export interface Player {
   stagedRockets?: StagedRocket[]
   /** The prepared vehicle currently being inspected in mission setup. */
   selectedStagedRocketId?: string
+  /** The ore and amount chosen for the free mining run (applied to the authored run in game-context). */
+  freeRunGoal?: import('@/lib/freeRunGoal').FreeRunGoal
   /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string
   /** Physical position of the staged vehicle. New vehicles begin in the Hangar. */
@@ -213,6 +215,8 @@ export interface Player {
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
+  /** Left-to-right order of the movable structures along the Base (hangar, launchpad, control-station, market). Absent: authored order. */
+  baseArrangement?: string[]
   /** kind -> startedAt ms. Absence means the structure is fully built. */
   underConstruction?: Record<string, number>
   controlBuilt: boolean
@@ -283,6 +287,8 @@ export interface Player {
   remoteStorage?: Record<string, Record<string, number>>
   /** Mirrors buildingLevels.launchpad >= 2; kept so older saves and clients keep working. */
   launchpadUpgraded: boolean
+  /** Launches since the pad was last serviced (SSL-693). Absent means 0. */
+  padLaunches?: number
   /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
   buildingLevels?: BuildingLevels
   /** Earth Base landscape. Missing saves read as mountains. */
@@ -361,6 +367,12 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** SSL-658: fragment ledgers for the other showers, keyed by shower id. Orionids keep orionidsFragments. */
+  showerFragments?: Record<string, { caught: number; redeemed: number }>
+  /** SSL-658: each non-Orionid shower's `caught` count when its run was accepted. */
+  showerRunBaselines?: Record<string, number>
+  /** Cosmetic: the Orionids shower falls in the base sky. Off unless the player turns it on, and only offered once earned. */
+  orionidsSkyEffect?: boolean
   /** Unix ms when the Atlas looked-up check-in was granted. */
   orionidsLookedUpAt?: number | null
   /** Unix ms when this player caught the 22 Oct 02:00 fireball fragment. */
@@ -388,10 +400,10 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
-  telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number } }>>
+  telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
   researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
   /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
   skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>
@@ -416,6 +428,8 @@ export interface Player {
   // and feeds site refinery/factory processing.
   /** SSL-512 survey scan in progress: an owned telescope pointed at a body. */
   activeScan?: { targetId: string; startedAt: number } | null
+  /** A finished scan the player is asked to confirm by hand in an instrument, for bonus research XP and a fragment (SSL-803). */
+  scanFollowUp?: { targetId: string; project: 'tess' | 'asteroid' | 'saturn'; at: number } | null
   /** SSL-512 bodies charted by a survey scan, with the research XP each paid. */
   chartedBodies?: Record<string, { chartedAt: number; researchXpAwarded: number }>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
@@ -541,7 +555,7 @@ export interface GameActions {
   onReturnArrived: () => void
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
-  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: import('@/lib/debrief-exits').DebriefExitId) => void
   /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
   onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
   startFlightPlan: () => void
@@ -555,6 +569,7 @@ export interface GameActions {
   signOut: () => void
   upgradeLaunchpad: () => void
   upgradeBuilding: (id: string) => void
+  serviceLaunchpad: () => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
   /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
@@ -584,6 +599,8 @@ export interface GameActions {
   /** SSL-512: finish a scan whose time is up. */
   resolveSurveyScan: () => void
   claimFriendGift: (giftId: string) => Promise<void>
+  /** SSL-794: gives a friend this ore out of the stash (3 common, 1 rare) and stamps research. */
+  sendFriendGift: (recipientId: string, mineral: string) => Promise<void>
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   researchLanding: () => void
   toasts: Toast[]

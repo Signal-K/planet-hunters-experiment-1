@@ -1,5 +1,7 @@
 'use client'
 
+import { buildingLevel } from '@/lib/data/building-levels'
+import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { requestConsensus } from '@/lib/community/client'
@@ -91,8 +93,8 @@ import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
-import SkyPointing from '@/components/game/screens/SkyPointing'
-import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, type InstrumentPointing } from '@/lib/research/paths'
+import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
+import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
 // Shared per-screen render map — the single source of truth for "which
@@ -138,6 +140,15 @@ function ScreenBody({
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
   const [pointingTarget, setPointingTarget] = useState<InstrumentPointing>('transit')
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
+  // One way out of every instrument screen: reviews go back to where they started, everything else to the Data hub.
+  // The inspected subject is dropped with it so the next door does not open on a stale one.
+  const leaveInstrument = (project: ConsensusQueueItem['project']) => {
+    const reviewing = reviewTarget?.project === project
+    setReviewTarget(null)
+    setInspectSignal(null)
+    if (reviewing) game.goBack()
+    else game.go('instrument-hub')
+  }
 
   /** SSL-746: a finished readout either asks for consensus, or (in review mode) answers the review. */
   const shareReadout = (project: ConsensusProject, subjectId: string, readout: ConsensusReadout) => {
@@ -355,6 +366,7 @@ function ScreenBody({
           }}
           onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
+          onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
@@ -386,6 +398,7 @@ function ScreenBody({
             }
           }}
           onUpgradeBuilding={id => game.upgradeBuilding(id)}
+          onServiceLaunchpad={game.serviceLaunchpad}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onExcavateSubsurfaceUnavailable={() => {
             const cost = SUBSURFACE_EXCAVATE_COST
@@ -470,7 +483,7 @@ function ScreenBody({
         />
       )
 
-    case 'galaxy':
+    case 'tess-discovery':
       // Legacy inspector. Telescope tab and post-launch landing use instrument-hub.
       // Inspect still arrives here until the plate owns real TESS verdicts.
       return (
@@ -480,7 +493,7 @@ function ScreenBody({
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => leaveInstrument('tess')}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
@@ -497,7 +510,7 @@ function ScreenBody({
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => leaveInstrument('asteroid')}
           onLaunchTelescope={() => game.go('launchpad')}
           onSubmit={game.submitAsteroidClassification}
           reviewing={reviewTarget?.project === 'asteroid'}
@@ -510,7 +523,7 @@ function ScreenBody({
         <SaturnStormSearchScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
-          onBack={() => { setReviewTarget(null); game.goBack() }}
+          onBack={() => leaveInstrument('saturn')}
           onLaunchImager={() => game.go('launchpad')}
           onSubmit={game.submitSaturnClassification}
           reviewing={reviewTarget?.project === 'saturn'}
@@ -544,7 +557,7 @@ function ScreenBody({
         />
       )
 
-    case 'transit':
+    case 'flight':
     case 'landing':
     case 'mining':
     case 'delivery':
@@ -627,6 +640,7 @@ function ScreenBody({
         <HangarScreen
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
+          launchpadLevel={buildingLevel(game.player, 'launchpad')}
           flightPlan={game.player.flightPlan}
           shipCustomizerParts={game.player.shipCustomizerParts}
           landingResearched={game.player.landingResearched}
@@ -650,12 +664,26 @@ function ScreenBody({
 
     case 'sky-pointing':
       return (
-        <SkyPointing
+        <SkyPointingScreen
+          key={pointingTarget}
+          player={game.player}
+          onOpenData={() => game.go('instrument-hub')}
           start={pointingTarget}
           online={onlineTelescopes(game.player)}
           mapped={game.player.skyMap}
           onCancel={() => game.goBack('hub')}
-          onLock={(instrument, aim) => { game.setPlayer(current => pointTelescope(current, instrument, Date.now(), aim)); game.goBack('hub') }}
+          onAim={(instrument, aim, sector) => {
+            const now = Date.now()
+            game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
+          }}
+          onLock={(instrument, aim, sector) => {
+            const now = Date.now()
+            game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
+            // Each online telescope is aimed in turn: carry straight on to the next unpointed one.
+            const rest = telescopesNeedingPointing(pointTelescope(game.player, instrument, now, aim, sector), now)
+            if (rest.length) setPointingTarget(rest[0])
+            else game.goBack('hub')
+          }}
         />
       )
 
@@ -665,14 +693,20 @@ function ScreenBody({
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
-          onChoosePath={path => game.setPlayer(current => choosePath(current, path, Date.now()))}
+          onChoosePath={path => {
+            const now = Date.now()
+            game.setPlayer(current => choosePath(current, path, now))
+            // Liam, 10.11: starting the week's research includes choosing where to look: each online telescope is pointed first.
+            const unpointed = telescopesNeedingPointing(game.player, now)
+            if (unpointed.length) { setPointingTarget(unpointed[0]); game.go('sky-pointing') }
+          }}
           onClaimReward={(step, progress) => game.setPlayer(current => claimResearchReward(current, step, progress, Date.now()))}
           pendingReview={pendingReview}
-          onFinishReview={() => setPendingReview(null)}
+          onFinishReview={() => { game.setPlayer(current => addStamp(current, 'review', Date.now())); setPendingReview(null) }}
           onStartReview={item => {
             // Each kind opens on its own instrument, on the requester's subject, for the player's own run first.
             const route = {
-              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'galaxy' },
+              tess: { kind: 'transit', instrumentId: 'transit-telescope', inspectorScreen: 'tess-discovery' },
               asteroid: { kind: 'deep-space', instrumentId: 'deep-space-telescope', inspectorScreen: 'asteroid-discovery' },
               saturn: { kind: 'saturn', instrumentId: 'saturn-imager', inspectorScreen: 'saturn-storm-search' },
             }[item.project] as { kind: InstrumentSignal['kind']; instrumentId: InstrumentSignal['instrumentId']; inspectorScreen: InstrumentSignal['inspectorScreen'] }

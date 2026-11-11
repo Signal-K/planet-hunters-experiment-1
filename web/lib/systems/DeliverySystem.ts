@@ -17,7 +17,7 @@ export function applyDeliveryArrived(
   startedAt: number = Date.now(),
 ): GameState {
   if (
-    state.screen !== 'transit'
+    state.screen !== 'flight'
     || !state.player.headingToDelivery
     || !state.deliveryTargetId
     || !state.lastCargo
@@ -62,7 +62,7 @@ export function applyDeliveryUnloadComplete(
     ...state,
     lastCargo: {},
     deliveredCargo: { ...state.lastCargo },
-    screen: 'transit',
+    screen: 'flight',
     player: {
       ...state.player,
       arrivalAt,

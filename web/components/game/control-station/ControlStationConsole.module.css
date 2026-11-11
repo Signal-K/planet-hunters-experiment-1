@@ -283,40 +283,14 @@
   overflow: hidden;
   container-type: size;
   box-shadow: inset 0 0 0 1px rgba(157, 231, 239, 0.14), inset 0 0 24px rgba(0, 0, 0, 0.7);
-  background:
-    linear-gradient(rgba(157, 231, 239, 0.06) 1px, transparent 1px) 0 0 / 100% 25%,
-    linear-gradient(90deg, rgba(157, 231, 239, 0.06) 1px, transparent 1px) 0 0 / 12.5% 100%,
-    radial-gradient(ellipse 55% 40% at 24% 28%, rgba(88, 208, 234, 0.08), transparent 70%),
-    radial-gradient(ellipse 45% 35% at 78% 72%, rgba(0, 80, 102, 0.22), transparent 70%),
-    #050a16;
+  /* SSL-830: the sky itself is the shared SkyMapBase. */
+  background: #050a16;
 }
 
 /* ── Instrument dressing (from the v0 mockup), drawn in the house palette ── */
-.stars, .reticle, .galaxy { position: absolute; inset: 0; pointer-events: none; }
-/* SSL-748: texture for the sky: a soft Milky Way band, dust lanes and two nebula tints under the stars. */
-.galaxy {
-  background:
-    radial-gradient(ellipse 18% 12% at 30% 64%, rgba(196, 140, 255, 0.10), transparent 70%),
-    radial-gradient(ellipse 16% 10% at 72% 30%, rgba(255, 170, 120, 0.08), transparent 70%),
-    linear-gradient(152deg, transparent 30%, rgba(157, 231, 239, 0.05) 40%, rgba(244, 239, 228, 0.10) 47%, rgba(5, 10, 22, 0.35) 49%, rgba(244, 239, 228, 0.08) 51%, rgba(157, 231, 239, 0.05) 58%, transparent 70%);
-  filter: blur(2px);
-  mix-blend-mode: screen;
-}
-.galaxy::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(244, 239, 228, 0.5) 0 0.6px, transparent 1px),
-    radial-gradient(circle at 70% 60%, rgba(157, 231, 239, 0.45) 0 0.6px, transparent 1px);
-  background-size: 23px 19px, 31px 27px;
-  -webkit-mask-image: linear-gradient(152deg, transparent 34%, #000 46%, #000 54%, transparent 66%);
-  mask-image: linear-gradient(152deg, transparent 34%, #000 46%, #000 54%, transparent 66%);
-}
-.stars i { position: absolute; border-radius: 50%; background: var(--cream); box-shadow: 0 0 3px rgba(157, 231, 239, 0.8); animation: twinkle 3s ease-in-out infinite alternate; }
-.stars i[data-warm='true'] { background: #ffe9b8; box-shadow: 0 0 3px var(--gold); }
-@keyframes twinkle { from { opacity: 0.25; } to { opacity: 1; } }
+.reticle { position: absolute; inset: 0; pointer-events: none; }
+.anomaly { transition: left 900ms cubic-bezier(0.3, 0.7, 0.2, 1), top 900ms cubic-bezier(0.3, 0.7, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) { .anomaly { transition: none; } }
 
 /* The scope ring: a dark bezel with a graduated scale (fine ticks every 5°, long ones every 30°) and a cyan inner rim. */
 .ring {
@@ -357,7 +331,7 @@
 .marks { position: absolute; z-index: 1; top: 16px; left: 40px; right: 40px; display: flex; justify-content: space-between; gap: 12px; pointer-events: none; color: var(--cyan-soft); font: 600 14px/1.2 var(--ln-font-mono); text-transform: uppercase; letter-spacing: 0.04em; text-shadow: 0 1px 2px #000; }
 .marks span:last-child { text-align: right; }
 .marks[data-at='bottom'] { top: auto; bottom: 16px; color: var(--mute); }
-@media (prefers-reduced-motion: reduce) { .stars i, .scan, .scopeName::before { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .scan, .scopeName::before { animation: none !important; } }
 .fieldEmpty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 0 24px; color: var(--mute); font: 600 15px/1.35 var(--ln-font-body); text-align: center; }
 
 /* Each anomaly is a 44px tap target around a small glyph. */
@@ -498,3 +472,13 @@
   .horizon { height: 120px; flex: none; }
   .desk { overflow: visible; padding-top: 18px; padding-bottom: 28px; }
 }
+
+/* SSL-807: scan and logbook keys side by side. */
+.historyKeys { display: flex; flex-wrap: wrap; gap: 8px; }
+.scanKey { border-color: #ffb454; color: #ffb454; }
+.scanKey[data-scanning] { background: rgba(255, 180, 84, 0.16); }
+
+/* SSL-826: Saturn in the reticle, drawn large, once the Saturn satellite is on. */
+.anomaly[data-focus='true'] { width: 80px; height: 80px; color: var(--gold); }
+.anomaly[data-focus='true'] svg { width: 56px; height: 56px; stroke-width: 1; fill: currentColor; fill-opacity: 0.25; filter: drop-shadow(0 0 10px rgba(242, 194, 76, 0.55)); }
+.field[data-focus='saturn'] .bead { opacity: 0; }

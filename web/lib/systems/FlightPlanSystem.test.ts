@@ -86,13 +86,13 @@ describe('FlightPlanSystem', () => {
     }
     // SSL-675: launch prep shares the launch step; flight and landing carry no step.
     for (const screen of ['targets', 'rocket-buy']) expect(trainingTryStep('mining', screen)?.id, screen).toBe('mine-launch')
-    for (const screen of ['transit', 'landing', 'delivery']) {
+    for (const screen of ['flight', 'landing', 'delivery']) {
       expect(trainingTryStep('mining', screen), screen).toBeUndefined()
       expect(trainingTryStep('scan', screen), screen).toBeUndefined()
     }
     expect(TRAINING_TRIES.filter(step => step.try === 'mining').length).toBeLessThanOrEqual(7)
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
-    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Control Station')
+    expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Data hub')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
     expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')
@@ -115,7 +115,7 @@ describe('FlightPlanSystem', () => {
     expect(trainingPatchProgress('mining', 'debrief', false, true)).toEqual({ stitched: 4, total: 5 })
     expect(trainingPatchProgress('mining', 'debrief', true, false)).toEqual({ stitched: 5, total: 5 })
     expect(trainingPatchProgress('scan', 'hub', false, true)).toEqual({ stitched: 0, total: 2 })
-    expect(trainingPatchProgress('scan', 'galaxy', false, true)).toEqual({ stitched: 1, total: 2 })
+    expect(trainingPatchProgress('scan', 'tess-discovery', false, true)).toEqual({ stitched: 1, total: 2 })
     expect(trainingPatchProgress('part', 'hangar', true, false)).toEqual({ stitched: 2, total: 2 })
   })
 

@@ -10,7 +10,12 @@
 // restoring the network lets the existing save sync without a new mutation.
 // `make up` is development mode and unregisters this worker.
 
-const CACHE = 'landnam-shell-v7'
+const CACHE = 'landnam-shell-v8'
+// SSL-828: science images (Cassini frames) live on Zooniverse's upload host. The game asks for the coming week's
+// frames ahead of time (CACHE_SCIENCE) and they are served cache-first, so the Saturn satellite works offline.
+const SCIENCE_CACHE = 'landnam-science-v1'
+const SCIENCE_HOST = 'panoptes-uploads.zooniverse.org'
+const SCIENCE_MAX = 120
 
 const SHELL = [
   '/',
@@ -31,7 +36,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+        keys.filter(k => k !== CACHE && k !== SCIENCE_CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   )
@@ -42,6 +47,23 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return
 
   const url = new URL(request.url)
+
+  if (url.hostname === SCIENCE_HOST) {
+    event.respondWith(
+      caches.open(SCIENCE_CACHE).then(async cache => {
+        const cached = await cache.match(request.url)
+        if (cached) return cached
+        try {
+          const res = await fetch(request)
+          if (res.ok || res.type === 'opaque') cache.put(request.url, res.clone()).then(() => trimScience(cache))
+          return res
+        } catch {
+          return new Response('', { status: 504 })
+        }
+      })
+    )
+    return
+  }
 
   // PocketBase API calls go straight to the network — the game already
   // handles cold-start failures and retries internally. Caching PB responses
@@ -176,6 +198,25 @@ self.addEventListener('message', event => {
     }))))
     return
   }
+  if (data?.type === 'CACHE_SCIENCE' && Array.isArray(data.urls)) {
+    const urls = data.urls.filter(raw => {
+      try { return new URL(raw).hostname === SCIENCE_HOST } catch { return false }
+    }).slice(0, 48)
+    event.waitUntil(caches.open(SCIENCE_CACHE).then(async cache => {
+      await Promise.all(urls.map(async url => {
+        if (await cache.match(url)) return
+        try {
+          // The upload host may not send CORS headers; an opaque response still renders in <img>.
+          const res = await fetch(url, { mode: 'no-cors' })
+          if (res.ok || res.type === 'opaque') await cache.put(url, res)
+        } catch {
+          // Optional warm-up: the next online visit tries again.
+        }
+      }))
+      await trimScience(cache)
+    }))
+    return
+  }
   if (data?.type !== 'CACHE_URLS' || !Array.isArray(data.urls)) return
 
   const urls = data.urls
@@ -206,6 +247,12 @@ self.addEventListener('message', event => {
   })
   event.waitUntil(cacheUrls)
 })
+
+/** Keeps the science cache to the newest SCIENCE_MAX images (oldest entries first out). */
+async function trimScience(cache) {
+  const keys = await cache.keys()
+  await Promise.all(keys.slice(0, Math.max(0, keys.length - SCIENCE_MAX)).map(key => cache.delete(key)))
+}
 
 self.addEventListener('push', event => {
   let data = { title: 'Landnam', body: 'Something happened in your space program.' }

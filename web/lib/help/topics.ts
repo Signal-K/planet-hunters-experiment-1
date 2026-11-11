@@ -71,7 +71,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     ],
   },
   // The TESS transit review screen.
-  galaxy: {
+  'tess-discovery': {
     id: 'tess',
     title: 'Reading the light curve',
     cards: [
@@ -151,7 +151,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     cards: [
       DATA_ANALYSIS_CARD,
       { title: 'Nine squares', body: 'Each frame is a real Cassini photo of Saturn\'s clouds, cut into nine squares. Tap a square to pick it. The white box shows which one you are on.' },
-      { title: 'Mark storm or answer', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands are No. If you cannot tell, answer Maybe.' },
+      { title: 'Mark a storm or move on', body: 'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap Mark storm. Smooth bands? Tap No storm · Next. Cannot tell? Tap Maybe · Next.' },
       { title: 'Finish the frame', body: 'Each answer is saved straight away. Answer all nine squares to finish the frame and record it in your moon atlas.' },
     ],
     coach: [
@@ -159,7 +159,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { id: 'pick', targets: ['saturn-frame'], anchor: 'saturn-frame', hint: 'Tap any square to look at it.', completeOn: 'select' },
       // Its own step: the verdict step dims the frame, so the player looks at the square first.
       { id: 'look', targets: ['saturn-square'], anchor: 'saturn-square', hint: 'Look closely at your square. Is there a bright, round knot?' },
-      { id: 'verdict', targets: ['saturn-mark-storm', 'saturn-verdicts'], anchor: 'saturn-verdicts', hint: 'A knot? Tap Mark storm. Smooth bands? No. Not sure? Maybe.', completeOn: 'submit' },
+      { id: 'verdict', targets: ['saturn-mark-storm', 'saturn-verdicts'], anchor: 'saturn-verdicts', hint: 'A knot? Tap Mark storm. Smooth bands? Tap No storm · Next.', completeOn: 'submit' },
     ],
   },
   hub: {
@@ -208,7 +208,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'debrief',
     title: 'After the haul',
     cards: [
-      { title: 'The haul is home', body: 'Debrief pays the run and puts ore in your stash, or sells it if that was the plan.' },
+      { title: 'The haul is home', body: 'Debrief pays the run and puts ore in your Surface Silo, or sells it if that was the plan.' },
       { title: 'Next is the ground', body: 'Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional.' },
     ],
   },
@@ -236,7 +236,7 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },
     ],
   },
-  transit: {
+  flight: {
     id: 'transit',
     title: 'In flight',
     cards: [
@@ -264,8 +264,8 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'refinery',
     title: 'Refinery',
     cards: [
-      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your stash and runs for a set time. Check the inputs and the output value before you start.' },
-      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to the stash. Nothing is lost while you are away.' },
+      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your Surface Silo and runs for a set time. Check the inputs and the output value before you start.' },
+      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to your Surface Silo. Nothing is lost while you are away.' },
     ],
   },
 }

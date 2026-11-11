@@ -6,7 +6,7 @@ export type ResearchMarketplaceScope = 'location' | 'account'
 
 export interface ResearchMarketplaceItem {
   id: string
-  kind: 'cosmetic' | 'bonus'
+  kind: 'cosmetic' | 'bonus' | 'unlock'
   name: string
   description: string
   scope: string
@@ -23,6 +23,15 @@ export const RESEARCH_MARKETPLACE_ITEMS: readonly ResearchMarketplaceItem[] = [
     description: 'Permanent badge mark.',
     scope: 'Cosmetic',
     baseCost: 8,
+    costStep: 0,
+  },
+  {
+    id: 'orionids-archive',
+    kind: 'unlock',
+    name: 'Orionids archive',
+    description: 'Reopens the finished Orionids shower run, and its sky.',
+    scope: 'Event archive',
+    baseCost: 20,
     costStep: 0,
   },
   {
@@ -78,6 +87,8 @@ export function buyResearchItem<T extends ResearchPlayer>(player: T, itemId: str
   const cost = researchItemCost(player, item)
   const universal = Math.max(0, Math.floor(player.researchUniversalFragments ?? 0))
   if (universal < cost) return player
+  // An unlock is bought once.
+  if (item.kind === 'unlock' && researchItemPurchaseCount(player, itemId) > 0) return player
   const count = researchItemPurchaseCount(player, itemId) + 1
   const next = {
     ...player,
@@ -89,6 +100,7 @@ export function buyResearchItem<T extends ResearchPlayer>(player: T, itemId: str
     cosmetics.add(itemId)
     return { ...next, researchCosmetics: [...cosmetics] }
   }
+  if (item.kind === 'unlock') return next
   return {
     ...next,
     researchPermanentBonuses: {

@@ -16,6 +16,10 @@ interface Props {
   biome: EarthBiomeId
   /** Launches from other pads can be tapped to show whose rocket it is (the Base). */
   launchTags?: boolean
+  /** Ground line as a fraction of the height above the bottom edge. Defaults to the shared site value. */
+  groundLine?: number
+  /** Cosmetic extras forced into the sky (the earned Orionids shower). */
+  extraSky?: readonly string[]
 }
 
 interface LaunchTag {
@@ -88,7 +92,9 @@ const reducedMotion = () => typeof window !== 'undefined' && typeof window.match
  * own objects (meteors, rain, lightning, a launch on the range, a weather balloon, satellites, aurora, comets).
  * Structures and controls stay in the DOM on top. Native draws the same world with SwiftUI Canvas.
  */
-export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }: Props) {
+export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false, extraSky, groundLine = GROUND.lineFromBottom }: Props) {
+  const extraSkyRef = useRef(extraSky)
+  extraSkyRef.current = extraSky
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [tags, setTags] = useState<LaunchTag[]>([])
   const [openTag, setOpenTag] = useState<string | null>(null)
@@ -96,8 +102,8 @@ export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }:
   const tagsOn = useRef(launchTags)
   tagsOn.current = launchTags
   const worldRef = useRef<World | null>(null)
-  const propsRef = useRef({ px, camera, time, biome })
-  propsRef.current = { px, camera, time, biome }
+  const propsRef = useRef({ px, camera, time, biome, groundLine })
+  propsRef.current = { px, camera, time, biome, groundLine }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -130,10 +136,10 @@ export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }:
         canvas.width = Math.round(w * dpr)
         canvas.height = Math.round(h * dpr)
       }
-      const view = { w: w / p.px, h: (h * (1 - GROUND.lineFromBottom)) / p.px, camX: p.camera.x, px: p.px }
+      const view = { w: w / p.px, h: (h * (1 - p.groundLine)) / p.px, camX: p.camera.x, px: p.px }
       skyAge += dt
       if (!sky || skyAge > 1) {
-        sky = skyAt(new Date(), p.time, p.biome, lockedSky())
+        sky = skyAt(new Date(), p.time, p.biome, [...lockedSky(), ...(['dusk', 'night', 'dawn'].includes(p.time) ? extraSkyRef.current ?? [] : [])])
         skyAge = 0
       }
       applySky(world, sky, view, still ? 0 : dt)
@@ -191,7 +197,7 @@ export function BaseWorldCanvas({ px, camera, time, biome, launchTags = false }:
 /** Keeps each launch's tap target on its rocket (the middle of the sprite, along its heading). */
 function placeTags(world: World, p: Props, h: number, reveal: number, els: Map<string, HTMLButtonElement>) {
   if (els.size === 0) return
-  const groundY = h * (1 - GROUND.lineFromBottom)
+  const groundY = h * (1 - (p.groundLine ?? GROUND.lineFromBottom))
   const { x: camX, y: camY, zoom } = p.camera
   const seen = new Set<string>()
   for (const e of world.entities) {
@@ -213,7 +219,7 @@ function placeTags(world: World, p: Props, h: number, reveal: number, els: Map<s
 
 function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Props, w: number, h: number, t: number, reveal: number) {
   const { grade, gloom } = weatherGrade(skyGrade(p.time), sky.weather.kind)
-  const groundY = h * (1 - GROUND.lineFromBottom)
+  const groundY = h * (1 - (p.groundLine ?? GROUND.lineFromBottom))
   const { x: camX, y: camY, zoom } = p.camera
   const px = p.px
   // Sky gradient, top to horizon.

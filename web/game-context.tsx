@@ -3,7 +3,7 @@
 import { stampLedger } from '@/lib/sync/ledger'
 import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, BASE_LASER_CHARGES } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
@@ -25,7 +25,10 @@ import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useWelcomeBack } from '@/lib/contexts/useWelcomeBack'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
-import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
+import { claimFriendGift as claimFriendGiftRequest, sendFriendGift as sendFriendGiftRequest } from '@/lib/friends/client'
+import { giftAmount } from '@/lib/friends/giftRules'
+import { applyFreeRunGoal } from '@/lib/freeRunGoal'
+import { addStamp } from '@/lib/research/stamps'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
@@ -292,6 +295,18 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loop.unlockBlueprint])
+  // SSL-794: a gift comes out of the sender's stash and earns a research stamp.
+  // The server checks the rule; the stash is taken here once it accepts.
+  const sendFriendGift = useCallback(async (recipientId: string, mineral: string) => {
+    const amount = giftAmount(mineral)
+    if (amount <= 0 || (state.player.stash?.[mineral] ?? 0) < amount) throw new Error('Not enough in your stash')
+    await sendFriendGiftRequest(recipientId, mineral)
+    setState(s => {
+      const have = s.player.stash?.[mineral] ?? 0
+      const stash = { ...(s.player.stash ?? {}), [mineral]: Math.max(0, have - amount) }
+      return { ...s, player: addStamp({ ...s.player, stash }, 'gift', Date.now()) }
+    })
+  }, [state.player.stash])
   useInstrumentFeedNotifications({
     // Instrument feeds are shared-backend data. Do not start a background
     // request while the auth restore is still pending (or after logout),
@@ -382,12 +397,17 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
 
   // ── Derived values ─────────────────────────────────────────────────────────
-  const mission = state.missionId
+  const baseMission = state.missionId
     ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
        ?? state.player.dailyClientPool?.missions.find(m => m.id === state.missionId)
        ?? (state.player.activeMission?.id === state.missionId ? state.player.activeMission.mission : undefined)
        ?? null)
     : null
+  // Free mining: the player's own ore and amount replace the authored placeholder (nickel x1).
+  const mission = useMemo(
+    () => baseMission ? applyFreeRunGoal(baseMission, state.player.freeRunGoal, runtimeCatalog.minerals) : null,
+    [baseMission, state.player.freeRunGoal, runtimeCatalog.minerals],
+  )
   const target = state.targetId
     ? runtimeCatalog.targets.find(t => t.id === state.targetId)
       ?? (state.player.activeMission?.target?.id === state.targetId ? state.player.activeMission.target : undefined)
@@ -475,6 +495,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       unlockBlueprint: loop.unlockBlueprint,
       researchLanding,
       claimFriendGift,
+      sendFriendGift,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
@@ -504,6 +525,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
       upgradeBuilding: economy.upgradeBuilding,
+      serviceLaunchpad: economy.serviceLaunchpad,
       excavateSubsurface: economy.excavateSubsurface,
       buildGroundTelescope: economy.buildGroundTelescope,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,

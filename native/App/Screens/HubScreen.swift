@@ -6,6 +6,7 @@ import LandnamCore
 /// HUD positions come from `HUDZones` (shared/layout/base-hud-zones.json), measured from the safe area.
 struct HubScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(Services.self) private var services: Services?
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
@@ -21,6 +22,8 @@ struct HubScreen: View {
     @State private var placeNote: String?
     /// Build mode: tapping a placed Launchpad or Silo opens its upgrade bar (web `ActionConfirmBar`).
     @State private var upgrading: String?
+    /// Tapping the Surface Silo opens its contents above ground (web `SurfaceSiloPanel`). The Mineral Vault underground is a separate building.
+    @State private var siloOpen = false
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
     @State private var dockHeight: CGFloat = 112
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
@@ -93,11 +96,12 @@ struct HubScreen: View {
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
             )
+            if store.screen != .hubSubsurface { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
-            if store.screen != .hubSubsurface { overviewRow(size: size, insets: insets) }
             if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
+            else if siloOpen && !placing && store.screen != .hubSubsurface { siloPanel(insets: insets) }
             else if placing { picker(width: size.width, insets: insets) }
             BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
@@ -246,6 +250,67 @@ struct HubScreen: View {
         .accessibilityIdentifier("action-confirm-bar")
     }
 
+    /// The Surface Silo's contents. Ore fills this silo first; anything past its capacity is in the Mineral Vault underground.
+    private func siloPanel(insets: EdgeInsets) -> some View {
+        let level = BuildingLevels.level(store.player, "surface-silo")
+        let capacity = Economy.surfaceSiloCapacity * BuildingLevels.siloCapacityMultiplier(level)
+        let stored = store.player.stash.filter { $0.value > 0 }
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+        let total = stored.reduce(0) { $0 + $1.value }
+        // Fill the silo largest ore first; whatever is left lies past it.
+        var room = capacity
+        let minerals: [(key: String, value: Int)] = stored.compactMap { entry in
+            let amount = min(entry.value, room)
+            room -= amount
+            return amount > 0 ? (key: entry.key, value: amount) : nil
+        }
+        let held = capacity - room
+        let vault = store.player.subsurfaceBuilt.contains("mineral-vault")
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("LEVEL \(level) · ABOVE GROUND\(held >= capacity ? " · FULL" : "")").font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.textMuted)
+            Text("Surface Silo · \(held) / \(capacity) U").font(AppFont.display(18)).foregroundStyle(Theme.hudInk)
+            if minerals.isEmpty {
+                Text("Empty. Ore you bring home from a mission is stored here.").font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            } else {
+                ForEach(minerals, id: \.key) { entry in
+                    let meta = Minerals.byId[entry.key]
+                    HStack(spacing: 8) {
+                        Rectangle().fill(Color(hex: meta?.colorHex) ?? Theme.paper2).frame(width: 12, height: 12)
+                        Text((meta?.name ?? entry.key).capitalized).font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+                        Spacer(minLength: 8)
+                        Text("\(entry.value) U").font(AppFont.body(14)).monospacedDigit().foregroundStyle(Theme.textMuted)
+                    }
+                }
+            }
+            if total > held {
+                Text(vault ? "\(total - held) U more is in the Mineral Vault underground."
+                     : "Full. \(total - held) U more is waiting with nowhere to go: sell it, or build a Mineral Vault underground.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk).fixedSize(horizontal: false, vertical: true)
+            }
+            HStack(spacing: 8) {
+                Button("CLOSE") { siloOpen = false }
+                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
+                    .frame(minWidth: 88, minHeight: 44)
+                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("surface-silo-close")
+                if total > 0 && store.player.placed.contains("market") {
+                    PrimaryButton(title: "Sell at Exchange", enabled: true) { siloOpen = false; store.go(.market) }
+                        .accessibilityIdentifier("surface-silo-sell")
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: 440, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
+        .padding(.horizontal, 16)
+        .padding(.top, insets.top < 10 ? 124 : insets.top + 68)
+        .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
+        .accessibilityIdentifier("surface-silo-panel")
+    }
+
     private func openStructure(_ kind: String) {
         if offerUpgrade(kind) { return }
         switch kind {
@@ -254,44 +319,9 @@ struct HubScreen: View {
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "market": store.go(.market)
         case "control-station": store.go(.instrumentHub)
+        case "surface-silo": siloOpen = true
         default: break
         }
-    }
-
-    /// SSL-692: whole-strip Overview toggle and a position slider (same row as web `.base-overview`).
-    private func overviewRow(size: CGSize, insets: EdgeInsets) -> some View {
-        let world = BaseWorld(w: size.width, h: size.height)
-        let zoomedOut = camera.zoom < 1
-        let position = Binding<Double>(
-            get: { zoomedOut || world.maxX <= 0 ? 0 : Double(camera.x / world.maxX) },
-            set: { camera.setPosition(CGFloat($0), world) }
-        )
-        return HStack(spacing: 10) {
-            Button {
-                if zoomedOut {
-                    withAnimation(.easeInOut(duration: 0.35)) { camera.zoom = 1 }
-                } else {
-                    camera.overview(world)
-                }
-            } label: {
-                Text(zoomedOut ? "Back" : "Overview")
-                    .font(.system(size: 14, weight: .heavy))
-                    .foregroundStyle(Theme.panel)
-                    .frame(minWidth: 96, minHeight: 44)
-            }
-            .accessibilityIdentifier("base-overview-toggle")
-            Slider(value: position, in: 0...1)
-                .disabled(zoomedOut)
-                .frame(minHeight: 44)
-                .accessibilityLabel("Position along the Base")
-                .accessibilityIdentifier("base-overview-slider")
-        }
-        .padding(.trailing, 12)
-        .frame(maxWidth: 420)
-        .background(Color.black.opacity(0.62), in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 12)
-        .padding(.top, max(insets.top, 0) + 64)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private func topLeftHud(insets: EdgeInsets, portrait: Bool) -> some View {
@@ -343,6 +373,30 @@ struct HubScreen: View {
                 .position(x: width * 0.5, y: height * 0.34)
             }
         }
+    }
+
+    /// SSL-827 (web SkyCraft): the telescopes in Earth orbit fly across the Base sky, each on its own lane and pace.
+    /// iOS has no pointing screen, so a tap opens the Instruments hub, where the telescopes are run.
+    private func orbitingTelescopes(width: CGFloat, height: CGFloat) -> some View {
+        var lanes: [CraftLane] = []
+        if store.player.transitSatelliteLaunchedAt != nil { lanes.append(CraftLane(id: "transit", name: "Space telescope", top: 0.18, period: 46, phase: 0.3, reverse: false)) }
+        if store.player.deepSpaceTelescopeBuilt { lanes.append(CraftLane(id: "deep-space", name: "Deep space telescope", top: 0.28, period: 64, phase: 0.62, reverse: true)) }
+        return TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            ZStack(alignment: .topLeading) {
+                ForEach(lanes, id: \.id) { (lane: CraftLane) in
+                    let f = reduceMotion ? (lane.reverse ? 0.2 : 0.72) : (t / lane.period + lane.phase).truncatingRemainder(dividingBy: 1)
+                    let x = (lane.reverse ? 1 - f : f) * (width + 112) - 56
+                    let bob = reduceMotion ? 0 : sin(t * 2 * .pi / 6 + lane.phase * 6) * 5
+                    Button { store.go(.instrumentHub) } label: { OrbitingCraft(deepSpace: lane.id == "deep-space").frame(width: 56, height: 56).contentShape(Circle()) }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(lane.name): open instruments")
+                        .position(x: x, y: height * lane.top + bob)
+                }
+            }
+            .frame(width: width, height: height, alignment: .topLeading)
+        }
+        .allowsHitTesting(!lanes.isEmpty)
     }
 
     private func refreshNotifications() async {
@@ -823,5 +877,36 @@ struct SettingsPatchNotes: View {
                 }.settingsCard(padding: 24)
             }
         }.padding(24)
+    }
+}
+
+/// One craft's path across the Base sky: its height (fraction of the screen), seconds per crossing and start point.
+private struct CraftLane {
+    let id, name: String
+    let top, period, phase: Double
+    let reverse: Bool
+}
+
+/// A small craft in the Base sky (web SkyCraft.module.css): the space telescope is a white body with blue wings, the
+/// deep space telescope a long tilted tube with an aperture.
+private struct OrbitingCraft: View {
+    let deepSpace: Bool
+    var body: some View {
+        if deepSpace {
+            ZStack {
+                Rectangle().fill(Theme.paper).frame(width: 22, height: 8).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.blue).frame(width: 3, height: 18).offset(x: -6)
+                Rectangle().fill(Theme.paper).frame(width: 6, height: 4).offset(x: 14)
+            }
+            .rotationEffect(.degrees(-16))
+            .shadow(color: .white.opacity(0.6), radius: 5)
+        } else {
+            HStack(spacing: 1) {
+                Rectangle().fill(Theme.blue).frame(width: 14, height: 5).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.paper).frame(width: 12, height: 12).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.blue).frame(width: 14, height: 5).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+            }
+            .shadow(color: .white.opacity(0.6), radius: 5)
+        }
     }
 }

@@ -1,4 +1,5 @@
 import type { Mission } from './types'
+import { SHOWERS } from './showers'
 
 /**
  * Short "what kind of job is this" primer, shown on the Mission Board below
@@ -31,9 +32,8 @@ export interface MissionTypePrimer {
  */
 export const OWN_PROGRAM_CLIENT_ID = 'mission-control'
 
-const ORIONIDS_EVENT_MISSION_IDS = new Set([
-  'self-directed-orionids-night-run',
-])
+// Every shower run (Orionids, Leonids, Geminids): its fragments are protected event evidence.
+const ORIONIDS_EVENT_MISSION_IDS = new Set(SHOWERS.map(shower => shower.runMissionId))
 
 /** Event evidence is not an ordinary player-owned haul. It is protected research data. */
 export function isOrionidsEventMission(mission: Mission): boolean {

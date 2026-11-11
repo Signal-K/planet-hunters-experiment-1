@@ -20,7 +20,7 @@ interface SceneScopeInput {
 }
 
 const TARGET_SURFACE_SCREENS = new Set<Screen>([
-  'transit',
+  'flight',
   'landing',
   'mining',
   'delivery',

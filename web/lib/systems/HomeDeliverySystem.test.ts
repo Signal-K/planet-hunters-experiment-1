@@ -27,7 +27,7 @@ describe('HomeDeliverySystem (SSL-553)', () => {
   })
 
   it('return arrival opens the delivery sheet; settling sells the market share and marks the haul settled', () => {
-    const base = { ...DEFAULT_STATE, screen: 'transit' as const, missionId: 'm', targetId: 't', lastCargo: cargo,
+    const base = { ...DEFAULT_STATE, screen: 'flight' as const, missionId: 'm', targetId: 't', lastCargo: cargo,
       player: { ...DEFAULT_STATE.player, debriefPending: true, returningToEarth: true, stash: {} } }
     const home = applyReturnArrived(base)
     expect(home.screen).toBe('debrief')

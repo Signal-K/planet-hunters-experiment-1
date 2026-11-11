@@ -4,7 +4,7 @@ import { markMapped, type SkyAim, type SkyMap } from './sky-map'
 
 export type ResearchPathId = 'explorer' | 'trader'
 export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
-export type TelescopeAim = Partial<Record<InstrumentPointing, { week: string; aim?: SkyAim }>>
+export type TelescopeAim = Partial<Record<InstrumentPointing, { week: string; aim?: SkyAim; /** Saturn only: the sector the orbiter was steered to (SkyTarget id). */ sector?: string }>>
 export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing; /** Where in the sky the week's instrument was locked (SSL-788). */ aim?: SkyAim }
 
 /** What an Explorer can aim their instruments at for the week. */
@@ -33,14 +33,22 @@ export function choosePath<T extends { researchPath?: ResearchPathChoice }>(play
 }
 
 /** A launched telescope is pointed once a week. The lock marks the sky field it falls in on the player's sky map. */
-export function pointTelescope<T extends { telescopeAim?: TelescopeAim; skyMap?: SkyMap }>(player: T, instrument: InstrumentPointing, now: number, aim?: SkyAim): T {
+export function pointTelescope<T extends { telescopeAim?: TelescopeAim; skyMap?: SkyMap }>(player: T, instrument: InstrumentPointing, now: number, aim?: SkyAim, sector?: string): T {
   const week = weekKey(now)
   if (player.telescopeAim?.[instrument]?.week === week) return player
   return {
     ...player,
-    telescopeAim: { ...(player.telescopeAim ?? {}), [instrument]: { week, ...(aim ? { aim } : {}) } },
+    telescopeAim: { ...(player.telescopeAim ?? {}), [instrument]: { week, ...(aim ? { aim } : {}), ...(sector ? { sector } : {}) } },
     ...(aim && instrument !== 'saturn' ? { skyMap: markMapped(player.skyMap, aim, week, instrument) } : {}),
   }
+}
+
+const SATURN_SECTOR_NAMES: Record<string, string> = { pole: 'North polar hexagon', band: 'Storm band', ring: 'Encke gap', free: 'Open view' }
+
+/** The sector of Saturn the player steered the orbiter to this week, or null (context only: frames are not filtered by it). */
+export function saturnSectorName(player: { telescopeAim?: TelescopeAim }, now: number): string | null {
+  const aim = player.telescopeAim?.saturn
+  return aim && aim.week === weekKey(now) && aim.sector ? (SATURN_SECTOR_NAMES[aim.sector] ?? null) : null
 }
 
 export interface TelescopeOwner { freeOperations?: boolean; transitSatelliteLaunchedAt?: number | null; saturnImagerLaunchedAt?: number | null; deepSpaceTelescopeBuilt?: boolean; placed?: readonly string[]; telescopeAim?: TelescopeAim }
@@ -98,6 +106,9 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
     { id: 'watch', kind: 'classification', days: 3, icon: 'signal', color: '#58d0ea', title: 'Keep watching: 3 days',
       brief: 'Classify a signal on three different days this week.',
       why: 'Signals repeat. Coming back is how a real discovery gets confirmed.' },
+    { id: 'review', kind: 'review', days: 1, icon: 'signal', color: '#f2c24c', title: 'Review a finding',
+      brief: 'Open Community research, check another player’s finding with your own look, then Support, Dispute or Unsure.',
+      why: 'A finding is only verified when other players agree. Consensus is the community’s goal.' },
     opts.hasDiscovery
       ? { id: 'world', kind: 'discovery-mission', days: 1, icon: 'world', color: '#c9a7f0', title: 'Survey your discovery',
           brief: 'Fly a survey to a world you found yourself.', why: 'Your own find, checked up close. Nobody else can do this one for you.' }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PixelImage, PixelStar, useEarthImage, useGroundImage, useProbeImage, useSaturnImage, useTelescopeImage } from './SkyPixels'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import styles from './SkyPointing.module.css'
@@ -22,10 +22,11 @@ function rng(seed0: number) {
 
 /** Space telescope: Earth's limb below, three real star fields above (each target sits on what it names). */
 export function transitGeom({ W, H, portrait }: Geom) {
-  const earthR = portrait ? W * 1.7 : W * 0.95
-  const limbY = H * (portrait ? 0.7 : 0.6)
+  // A small curve of Earth along the bottom, so the sky is the scene (SSL-825).
+  const earthR = portrait ? W * 1.05 : W * 0.5
+  const limbY = H * (portrait ? 0.8 : 0.76)
   const earth = { cx: W / 2, cy: limbY + earthR, r: earthR }
-  const craft = { x: portrait ? W * 0.72 : W * 0.74, y: limbY - (portrait ? 8 : 3) }
+  const craft = orbitPoint(earth, W, H, 0.6)
   const tw = portrait ? 34 : 38
   const th = portrait ? 22 : 24
   const spots = portrait
@@ -36,7 +37,47 @@ export function transitGeom({ W, H, portrait }: Geom) {
     { id: 'plane', name: 'Galactic plane', note: 'The Milky Way crowds the frame with stars.', coord: 'RA 18h 05m · DEC −20°' },
     { id: 'south', name: 'Southern field', note: 'A quiet field of bright, nearby stars.', coord: 'RA 06h 10m · DEC −64°' },
   ].map((t, i) => ({ ...t, x: spots[i][0] * W, y: spots[i][1] * H, hw: tw / 2, hh: th / 2 }))
-  return { earth, craft, targets, limbY, dish: { x: W * 0.28, y: limbY + 4 } }
+  const dishX = W * (portrait ? 0.28 : 0.36)
+  const dish = { x: dishX, y: earth.cy - Math.sqrt(Math.max(0, earthR ** 2 - (dishX - earth.cx) ** 2)) + 3 }
+  return { earth, craft, targets, limbY, dish }
+}
+
+/** Height of the telescope's orbit above Earth's limb, in view units. */
+const ORBIT_GAP = 18
+/** Seconds for the telescope to cross the view once. */
+const ORBIT_SECONDS = 48
+
+/**
+ * Where the telescope is on its orbit at `phase` (0 to 1): it rises from behind the left of the view, crosses
+ * above the limb and sets off the right, so it never pops in or out on screen.
+ */
+export function orbitPoint(earth: { cx: number; cy: number; r: number }, W: number, H: number, phase: number) {
+  const R = earth.r + ORBIT_GAP
+  const lowest = H + 20
+  const byHeight = earth.cy - lowest < R ? Math.acos(Math.max(-1, (earth.cy - lowest) / R)) : Math.PI / 2
+  const byWidth = Math.asin(Math.min(1, (W / 2 + 20) / R))
+  const max = Math.min(byHeight, byWidth)
+  const theta = -max + 2 * max * (((phase % 1) + 1) % 1)
+  return { x: earth.cx + R * Math.sin(theta), y: earth.cy - R * Math.cos(theta) }
+}
+
+/** The telescope's place on its orbit, moving all the time (slower when the player asks for less motion). */
+function useOrbitPhase(start: number) {
+  const [phase, setPhase] = useState(start)
+  useEffect(() => {
+    const slow = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const period = (slow ? 4 : 1) * ORBIT_SECONDS * 1000
+    const began = performance.now() - start * period
+    let frame = 0
+    let last = 0
+    const step = (now: number) => {
+      if (now - last > 33) { last = now; setPhase(((now - began) / period) % 1) }
+      frame = requestAnimationFrame(step)
+    }
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [start])
+  return phase
 }
 
 const g_ts = (portrait: boolean) => (portrait ? [0.2, 0.5, 0.8] : [0.16, 0.44, 0.72])
@@ -185,6 +226,9 @@ function StarField({ target: t, active, portrait }: { target: SkyTarget; active:
  * The space telescope: four wide-field cameras on the front of a bus with two solar wings, lit from the sun's side.
  * The whole spacecraft slews so the cameras face wherever the sight is, and a faint sightline joins lens and sight.
  */
+/** The telescope sprite is drawn a little under full size so it reads as a craft in orbit, not a giant. */
+const CRAFT_SCALE = 0.75
+
 function TelescopeCraft({ x, y, aim, sighting }: { x: number; y: number; aim: { x: number; y: number }; sighting: boolean }) {
   const dx = aim.x - x
   const dy = aim.y - y
@@ -192,11 +236,11 @@ function TelescopeCraft({ x, y, aim, sighting }: { x: number; y: number; aim: { 
   const angle = Math.max(-75, Math.min(75, raw))
   const len = Math.hypot(dx, dy)
   const sprite = useTelescopeImage(angle)
-  const tip = { x: x + Math.sin(rad(sprite.step)) * 11, y: y - Math.cos(rad(sprite.step)) * 11 }
+  const tip = { x: x + Math.sin(rad(sprite.step)) * 11 * CRAFT_SCALE, y: y - Math.cos(rad(sprite.step)) * 11 * CRAFT_SCALE }
   return (
     <g data-testid="sky-craft" data-angle={Math.round(angle)}>
       {sighting && len > 16 && <line x1={tip.x} y1={tip.y} x2={aim.x} y2={aim.y} stroke="#9fd6e4" strokeWidth="0.4" strokeDasharray="1 2" opacity="0.7" />}
-      <PixelImage href={sprite.src} x={Math.round(x - sprite.px)} y={Math.round(y - sprite.py)} w={sprite.size} h={sprite.size} />
+      <PixelImage href={sprite.src} x={x - sprite.px * CRAFT_SCALE} y={y - sprite.py * CRAFT_SCALE} w={sprite.size * CRAFT_SCALE} h={sprite.size * CRAFT_SCALE} />
     </g>
   )
 }
@@ -205,7 +249,8 @@ function TelescopeCraft({ x, y, aim, sighting }: { x: number; y: number; aim: { 
 
 export function TransitScene({ g, target, aim, bare = false }: { g: Geom; target: SkyTarget | null; aim: { x: number; y: number }; bare?: boolean }) {
   const { W, H } = g
-  const { earth, craft, targets, dish } = transitGeom(g)
+  const { earth, targets, dish } = transitGeom(g)
+  const craft = orbitPoint(earth, W, H, useOrbitPhase(0.6))
   const earthImg = useEarthImage(W, H, earth)
   const detections = target
     ? (() => { const r = rng(91); return Array.from({ length: 7 }, () => ({ x: target.x + (r() - 0.5) * target.hw * 1.7, y: target.y + (r() - 0.5) * target.hh * 1.7 })) })()

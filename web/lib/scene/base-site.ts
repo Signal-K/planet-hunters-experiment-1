@@ -18,7 +18,9 @@ export const aboveGround = (n: number) => `calc(var(--hub-ground) + ${n} * var(-
 export type SiteId = 'hall' | 'pad' | 'ops' | 'exchange' | 'shaft'
 export interface BaseSite { id: SiteId; x: number; half: number; plot: number | null; label: string }
 /** `body` is the structure's own width; the sprite (`left`, `width`) is wider by the shadow it casts to the right. */
-export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number } }
+export interface StructureSprite { site: SiteId; src?: string; body?: number; left?: number; width?: number; height?: number; foot?: number; mount?: { x: number; z: number }
+  /** Per-level overrides (src, size, foot, rocket mount) for upgradable structures, keyed by level. Level 1 is the entry itself. */
+  levels?: Record<string, Pick<StructureSprite, 'src' | 'height' | 'foot' | 'mount'>> }
 export interface ApronProp { id: string; src: string; x: number; width: number; height: number; lift: number }
 export interface SkyGrade {
   top: string
@@ -58,9 +60,9 @@ export function kitScale(view: { w: number; h: number }): number {
 
 /** Strip x (kit units) the camera starts centred on: the middle of everything built, or the pad site on a fresh
  *  base. When the built span is wider than the view, the pad stays in frame. */
-export function homeCenter(kinds: readonly string[], viewUnits: number): number {
-  const sites = kinds.map(homeSite).filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
-  const pad = displaySite(siteById('pad'))
+export function homeCenter(kinds: readonly string[], viewUnits: number, order?: readonly string[] | null): number {
+  const sites = kinds.map(k => homeSite(k, order)).filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+  const pad = displaySite(homeSite('launchpad', order) ?? siteById('pad'))
   if (!sites.length) return pad.x
   const l = Math.min(...sites.map(s => s.x - s.half))
   const r = Math.max(...sites.map(s => s.x + s.half))
@@ -69,19 +71,55 @@ export function homeCenter(kinds: readonly string[], viewUnits: number): number 
 }
 
 /** Width in kit units of the stretch of the Base the given kinds stand on (at least the pad site), for fitting a fixed phone view. */
-export function builtSpan(kinds: readonly string[]): number {
-  const sites = [...kinds.map(homeSite), siteById('pad')].filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+export function builtSpan(kinds: readonly string[], order?: readonly string[] | null): number {
+  const sites = [...kinds.map(k => homeSite(k, order)), homeSite('launchpad', order) ?? siteById('pad')].filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
   return Math.max(...sites.map(s => s.x + s.half)) - Math.min(...sites.map(s => s.x - s.half))
 }
 
-export function structureSprite(kind: string): StructureSprite | null {
-  return STRUCTURES[kind === 'garage' ? 'hangar' : kind] ?? null
+export function structureSprite(kind: string, level = 1): StructureSprite | null {
+  const base = STRUCTURES[kind === 'garage' ? 'hangar' : kind] ?? null
+  const over = base?.levels?.[String(level)]
+  return base && over ? { ...base, ...over } : base
 }
 
-/** The one site a kind may stand on, or null for kinds that are not drawn on the base. */
-export function homeSite(kind: string): BaseSite | null {
+/** Structures the player may reorder along the strip. The silo stays on its shaft. */
+export const MOVABLE_KINDS = ['hangar', 'launchpad', 'control-station', 'market'] as const
+
+/** A saved left-to-right order, or undefined when it is not a permutation of the movable kinds (then the authored order stands). */
+export function sanitizeArrangement(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw) || raw.length !== MOVABLE_KINDS.length) return undefined
+  const ok = MOVABLE_KINDS.every(kind => raw.includes(kind)) && new Set(raw).size === raw.length
+  return ok ? (raw as string[]) : undefined
+}
+
+const isAuthoredOrder = (order: readonly string[]) => MOVABLE_KINDS.every((kind, i) => order[i] === kind)
+
+/** Authored strip x for a movable kind in a rearranged order. The structures keep the span the authored Base covers
+ *  (in the web's compressed display space) and share the leftover room as equal gaps, so no order can overlap. */
+function arrangedX(kind: string, order: readonly string[]): number | null {
+  const index = order.indexOf(kind)
+  if (index < 0) return null
+  const centre = STRIP_W / 2
+  const toDisplay = (x: number) => centre + (x - centre) * WEB_SITE_COMPRESSION
+  const bodyOf = (k: string) => structureSprite(k)?.body ?? (homeSite(k)?.half ?? 0) * 2
+  const authored = MOVABLE_KINDS.map(k => { const h = homeSite(k)!; return { left: toDisplay(h.x) - bodyOf(k) / 2, right: toDisplay(h.x) + bodyOf(k) / 2 } })
+  const left = Math.min(...authored.map(a => a.left))
+  const right = Math.max(...authored.map(a => a.right))
+  const gap = (right - left - order.reduce((sum, k) => sum + bodyOf(k), 0)) / (order.length - 1)
+  let cursor = left
+  for (let i = 0; i < index; i += 1) cursor += bodyOf(order[i]) + gap
+  const displayX = cursor + bodyOf(kind) / 2
+  return centre + (displayX - centre) / WEB_SITE_COMPRESSION
+}
+
+/** The one site a kind may stand on, or null for kinds that are not drawn on the base. With a saved `order`, a movable
+ *  kind stands where that order puts it (same footprint, new x). */
+export function homeSite(kind: string, order?: readonly string[] | null): BaseSite | null {
   const sprite = structureSprite(kind)
-  return sprite ? SITES.find(s => s.id === sprite.site) ?? null : null
+  const home = sprite ? SITES.find(s => s.id === sprite.site) ?? null : null
+  if (!home || !order || isAuthoredOrder(order) || !(MOVABLE_KINDS as readonly string[]).includes(kind)) return home
+  const x = arrangedX(kind, order)
+  return x == null ? home : { ...home, x }
 }
 
 export function siteById(id: SiteId): BaseSite {

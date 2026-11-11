@@ -32,7 +32,7 @@ const CASES = [
   { label: 'live catalog contract', missionId: 'pb-only-contract-1', targetId: 'pb-only-target-1' },
 ]
 
-const SCREENS: Screen[] = ['transit', 'landing', 'mining', 'delivery', 'debrief']
+const SCREENS: Screen[] = ['flight', 'landing', 'mining', 'delivery', 'debrief']
 
 function savedFlight(missionId: string, targetId: string, screen: Screen, label: string, clearIds = false): GameState {
   return {
@@ -76,7 +76,7 @@ describe('a flight in progress survives a reload', () => {
   it('a run that carries its own mission and target restores them even when the catalog has rotated them away', () => {
     const mission = { ...MISSIONS[0], id: 'pb-only-contract-1', targetId: 'pb-only-target-1' }
     const target = { ...TARGETS[0], id: 'pb-only-target-1', name: 'Helios Depot' }
-    const saved = savedFlight(mission.id, target.id, 'transit', 'Contract → Helios Depot', true)
+    const saved = savedFlight(mission.id, target.id, 'flight', 'Contract → Helios Depot', true)
     saved.player.activeMission = { id: mission.id, label: 'Contract → Helios Depot', mission, target }
     const loaded = normalizeAndRepair(JSON.parse(JSON.stringify(saved)))
     expect(loaded.missionId).toBe(mission.id)

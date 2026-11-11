@@ -45,7 +45,7 @@ export function useTutorialActions(
   const openTrainingTry = useCallback((tryId: TrainingTryId) => {
     setState(s => ({
       ...s,
-      screen: tryId === 'scan' ? 'galaxy' : tryId === 'part' ? 'hangar' : 'launchpad',
+      screen: tryId === 'scan' ? 'tess-discovery' : tryId === 'part' ? 'hangar' : 'launchpad',
       player: { ...s.player, flightPlan: replayFlightPlanTry(s.player.flightPlan, tryId) },
     }))
   }, [setState])

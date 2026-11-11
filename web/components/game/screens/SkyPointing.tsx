@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import { LANDMARKS, TOTAL_FIELDS, clampDec, fieldId, formatAim, landmarkNear, mappedCount, mappedPercent, wrapRa, type SkyAim, type SkyMap } from '@/lib/research/sky-map'
-import { SkyChart, project, sightCentre } from './SkyChart'
+import { CHART_K, SkyChart, SkyOverview, project, sightCentre } from './SkyChart'
+import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
-import { SceneActions, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
+import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
+import type { Player } from '@/lib/game-types'
+import { SceneActions, SceneGhost, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './SkyPointing.module.css'
 
 const SPEED = 46 // view units per second at full stick (Saturn's view)
@@ -31,7 +34,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     blurb: 'A wide-field camera above the air. Steer it anywhere on the sky and stare: planets show up as tiny dips in starlight.',
     sight: 'frame',
     lockLabel: 'POINT HERE',
-    lockedCopy: t => `Staring at the ${t.name.toLowerCase()}. Starlight is measured nonstop; dips reach your Control Station through the week.`,
+    lockedCopy: t => `Staring at the ${t.name.toLowerCase()}. Starlight is measured nonstop; dips reach your Data hub through the week.`,
   },
   'deep-space': {
     short: 'Ground telescope',
@@ -40,7 +43,7 @@ const INSTRUMENTS: Record<InstrumentPointing, Instrument> = {
     blurb: 'A dome on the hill. Swing the slit anywhere on the sky; asteroids drift past the stars.',
     sight: 'cross',
     lockLabel: 'POINT HERE',
-    lockedCopy: t => `Dome open on the ${t.name.toLowerCase()}. Frames are taken all week; moving dots land in your Control Station.`,
+    lockedCopy: t => `Dome open on the ${t.name.toLowerCase()}. Frames are taken all week; moving dots land in your Data hub.`,
   },
   saturn: {
     short: 'Saturn orbiter',
@@ -85,17 +88,21 @@ interface Props {
   start?: InstrumentPointing
   /** Telescopes the player has online; only these can be picked. */
   online?: InstrumentPointing[]
-  onLock: (pointing: InstrumentPointing, aim?: SkyAim) => void
+  onLock: (pointing: InstrumentPointing, aim?: SkyAim, sector?: string) => void
+  /** Saves the aim the moment the player locks on, so leaving by Back keeps it. */
+  onAim?: (pointing: InstrumentPointing, aim?: SkyAim, sector?: string) => void
   onCancel: () => void
   /** Fields the player's telescopes have already mapped. */
   mapped?: SkyMap
+  /** SSL-827: signals waiting at the Data hub. The Base sends every telescope tap here, so the data stays one tap away. */
+  ready?: { count: number; onOpen: () => void }
 }
 
 /**
  * The weekly pointing step, as one full-screen viewport. Pick the instrument you are driving; each has its
  * own scene, sight and lock-on. Steer with the joystick, lock on, and the signal comes in over the week.
  */
-export default function SkyPointing({ start = 'transit', online, onLock, onCancel, mapped }: Props) {
+export default function SkyPointing({ start = 'transit', online, onLock, onAim, onCancel, mapped, ready }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 926, h: 428 })
   const [instrument, setInstrument] = useState<InstrumentPointing>(start)
@@ -150,7 +157,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
       const vy = stick.current.y + keys.current.y
       if (vx || vy) {
         if (live.current.freeSky) {
-          setAim(a => ({ ra: wrapRa(a.ra + (vx * SKY_SPEED * dt) / Math.max(0.35, Math.cos((a.dec * Math.PI) / 180))), dec: clampDec(a.dec - vy * SKY_SPEED * dt) }))
+          setAim(a => ({ ra: wrapRa(a.ra - (vx * SKY_SPEED * dt) / Math.max(0.35, Math.cos((a.dec * Math.PI) / 180))), dec: clampDec(a.dec - vy * SKY_SPEED * dt) }))
         } else {
           setPos(p => {
             const { W: w, H: h } = live.current
@@ -209,25 +216,24 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
     if (freeSky) {
       const name = near?.name ?? 'Open sky'
       setConfirmed({ instrument, aim, target: sightTarget('aim', name, near?.note ?? 'A patch of sky nobody has pointed at yet.', formatAim(aim), sightCentre(g).x, sightCentre(g).y, instrument === 'transit' ? sightSize.w / 2 : 9, instrument === 'transit' ? sightSize.h / 2 : 9) })
+      onAim?.(instrument, aim)
     } else {
       const t = over ?? sightTarget('free', 'Open view', 'Zoomed on the spot you chose.', 'FREE POINTING', at.x, at.y, 5.5, 5.5)
       setConfirmed({ instrument, aim, target: t })
+      onAim?.(instrument, undefined, t.id)
     }
   }
   const pct = (x: number, y: number) => ({ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%` })
   const readout = showing ?? over
   const lockedNow = confirmed && showing ? { instrument: confirmed.instrument, target: showing } : null
   const skyTitle = near?.name ?? 'Open sky'
+  const overview = freeSky && !confirmed ? <SkyOverview aim={aim} mapped={mapped} viewDeg={{ ra: W / CHART_K, dec: H / CHART_K }} onJump={setAim} /> : null
   const skyNote = near ? near.note : alreadyMapped ? 'You have already mapped this field. Lock on to look again, or steer somewhere new.' : 'Not mapped yet. Lock on to add this field to your sky map.'
 
   return (
     <div ref={rootRef} className={styles.root} data-testid="sky-pointing" data-instrument={instrument} data-portrait={portrait} aria-label="Point your instruments">
-      <div className={styles.sky} aria-hidden="true">
-        <img src="/game/assets/base/kit/space-bands.png" alt="" draggable={false} className={styles.bands} />
-        <div className={styles.starTile} data-layer="far" />
-        <div className={styles.starTile} data-layer="mid" />
-        <div className={styles.starTile} data-layer="near" />
-      </div>
+      {/* SSL-830: the same dark sky map as the Control Station; the chart draws its own moving stars and real field grid. */}
+      <SkyMapBase stars={!freeSky} grid={false} testId="sky-pointing-base" />
       <svg className={styles.svg} shapeRendering="crispEdges" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         {freeSky && <SkyChart g={g} aim={aim} mapped={mapped} current={field} />}
         {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : sightCentre(g)} bare />}
@@ -251,7 +257,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
       })}
 
       <SceneTop onBack={onCancel} testId="sky-pointing-back">
-        <ScenePill align="end" testId="sky-station">{view.station}</ScenePill>
+        <ScenePill align="end" testId="sky-station" syncAnchor>{view.station}</ScenePill>
       </SceneTop>
 
       <div className={styles.caption}>
@@ -259,7 +265,9 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
         <p className={styles.note}>{lockedNow ? INSTRUMENTS[lockedNow.instrument].lockedCopy(lockedNow.target) : freeSky ? skyNote : readout ? readout.note : view.blurb}</p>
         {freeSky ? <p className={styles.coord} data-testid="sky-coord">{formatAim(confirmed?.aim ?? aim)}</p> : (readout || lockedNow) && <p className={styles.coord}>{(lockedNow?.target ?? readout)!.coord}</p>}
         {freeSky && <p className={styles.mapline} data-testid="sky-mapped">{mappedLine}</p>}
+        {overview && portrait && overview}
       </div>
+      {overview && !portrait && <div className={styles.overviewSlot}>{overview}</div>}
 
       {!confirmed && (
         <>
@@ -286,8 +294,11 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
       )}
 
       <SceneActions className={styles.actionSlot}>
+        {ready && ready.count > 0 && !confirmed && (
+          <SceneGhost testId="sky-pointing-ready" onClick={ready.onOpen}>{ready.count} DATA READY · CLASSIFY</SceneGhost>
+        )}
         {confirmed ? (
-          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
+          <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim, confirmed.instrument === 'saturn' ? confirmed.target.id : undefined)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
         ) : (
           <ScenePrimary testId="sky-pointing-lock" onClick={lockHere}>
             {freeSky ? (alreadyMapped ? 'POINT HERE AGAIN' : 'MAP THIS FIELD') : view.lockLabel}
@@ -297,4 +308,10 @@ export default function SkyPointing({ start = 'transit', online, onLock, onCance
       <span hidden>{unitsPerPx}</span>
     </div>
   )
+}
+
+/** SSL-827: the routed screen, with the Data hub's waiting signals counted for the classify link. */
+export function SkyPointingScreen({ player, onOpenData, ...props }: Omit<Props, 'ready'> & { player: Player; onOpenData: () => void }) {
+  const { signals } = useInstrumentSignals(player)
+  return <SkyPointing {...props} ready={{ count: signals.length, onOpen: onOpenData }} />
 }

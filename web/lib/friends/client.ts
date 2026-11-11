@@ -110,8 +110,9 @@ export function viewFriendBase(friendId: string): Promise<{ base: FriendBaseSnap
   return friendsFetch(`/base/${friendId}`)
 }
 
-export function sendFriendGift(recipientId: string, kind: FriendGiftKind) {
-  return friendsFetch('/gift/send', { method: 'POST', body: JSON.stringify({ recipientId, kind }) })
+/** Gifts are ore the sender chose (SSL-794). Currency and blueprint gifts are retired; old ones can still be claimed. */
+export function sendFriendGift(recipientId: string, mineral: string) {
+  return friendsFetch('/gift/send', { method: 'POST', body: JSON.stringify({ recipientId, kind: 'resource', mineral }) })
 }
 
 export function friendGiftInbox(): Promise<{ gifts: FriendGiftInboxEntry[] }> {

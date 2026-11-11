@@ -1,6 +1,6 @@
 import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
-import { buildingLevel } from '@/lib/data/building-levels'
+import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
@@ -23,6 +23,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { queueRadioMeteorClassification, type RadioMeteorClassification } from '@/lib/radio-meteors'
 import type { Catalog } from '@/lib/catalog'
+import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 import { grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
@@ -30,7 +31,7 @@ import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
-import { applyStartScan, applyResolveScan } from '@/lib/systems/SurveyScanSystem'
+import { applyStartScan, applyResolveScan, applyScanFollowUpBonus } from '@/lib/systems/SurveyScanSystem'
 import { applyGainResearchXP, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -45,7 +46,10 @@ import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward,
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/InstrumentFeedSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, showerRunMission } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
+import { onlineTelescopes } from '@/lib/research/paths'
+import { debriefExitScreen, type DebriefExitId } from '@/lib/debrief-exits'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 
@@ -105,6 +109,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     parts: catalog.parts,
     loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
     fuelFraction: communityBonusRate(state.player).fuel,
+    launchpadLevel: buildingLevel(state.player, 'launchpad'),
   }).ok
 }
 
@@ -224,7 +229,7 @@ function parkOrDropActiveRun(state: GameState): GameState {
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
   return {
     ...state,
-    screen: (snapshot.missionPhase as string) === 'survey' ? 'mining' : (snapshot.missionPhase ?? 'transit'),
+    screen: (snapshot.missionPhase as string) === 'survey' ? 'mining' : missionPhaseScreen(snapshot.missionPhase),
     missionId: snapshot.missionId,
     targetId: snapshot.targetId,
     deliveryTargetId: snapshot.deliveryTargetId,
@@ -335,7 +340,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Counterpart to mission_completed — without a started event, Trends/
     // Funnels can't tell "never picked a mission" apart from "picked one and
     // dropped off before finishing it".
-    const entryMission = id === ORIONIDS_NIGHT_RUN_ID ? orionidsNightRun() : null
+    const entryShower = showerForRunMission(id)
+    const entryMission = entryShower ? showerRunMission(entryShower.id) : null
     const pickedMission = catalog.missions.find(m => m.id === id)
       ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
       ?? entryMission
@@ -348,7 +354,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       })
     }
     setState(s => {
-      const isOrionidsEntry = id === ORIONIDS_NIGHT_RUN_ID
+      const isOrionidsEntry = !!entryShower
       if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
@@ -377,7 +383,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           }
         : prepared.player
       // SSL-651: the shower run's 20 fragments count from this accept.
-      const runPlayer = id === ORIONIDS_NIGHT_RUN_ID ? startShowerRun(entryPlayer) : entryPlayer
+      const runPlayer = entryShower ? startShowerRun(entryPlayer, entryShower.id) : entryPlayer
       const base = {
         ...prepared,
         player: {
@@ -439,6 +445,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const refusal = rocketPurchaseRefusal(current, rocket)
     if (refusal) {
       addToast(refusal, 'warn')
+      return
+    }
+    if (padNeedsService(current.player)) {
+      addToast('The launchpad needs service. Tap it on the Base to service it.', 'warn')
       return
     }
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
@@ -571,6 +581,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
+      if (padNeedsService(s.player)) return s
       const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
@@ -592,6 +603,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...s,
         player: {
           ...ascended,
+          padLaunches: (s.player.padLaunches ?? 0) + 1,
           pendingLaunch: remainingStagedRockets.length > 0,
           pendingRocketId: nextStagedRocket?.rocketId,
           pendingRocketLocation: nextStagedRocket?.location,
@@ -610,7 +622,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name, mission, target }
             : null,
         },
-        screen: 'transit',
+        screen: 'flight',
         doneSteps: { ...s.doneSteps, 5: true },
       }
     })
@@ -783,12 +795,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     const scan = current.player.activeScan
     const at = Date.now()
-    if (!scan || applyResolveScan(current, at) === current) return
+    if (!scan || applyResolveScan(current, at, catalog.targets) === current) return
     stampResearch('survey')
     const target = catalog.targets.find(item => item.id === scan.targetId)
     let marked = false
     setState(s => {
-      const resolved = applyResolveScan(s, at)
+      const resolved = applyResolveScan(s, at, catalog.targets)
       if (resolved === s || target?.type !== 'planet') return resolved
       const found = grantOrionidsPlanetFind(resolved.player, {
         subjectId: target.id,
@@ -804,6 +816,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return found.player === resolved.player ? resolved : { ...resolved, player: found.player }
     })
     captureGameEvent('survey_scan_completed', { target_id: scan.targetId })
+    if (applyResolveScan(current, at, catalog.targets).player.scanFollowUp && !current.player.scanFollowUp) addToast('The scan needs a manual check. Open the Data hub to confirm it for a bonus.', 'ok')
     addToast(
       marked
         ? 'Scan complete. Planet charted. Orionids-found voucher owned. Redeem coming soon.'
@@ -835,9 +848,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [setState])
 
+  // SSL-803: any manual analysis in the instrument a scan asked about pays the follow-up bonus, once.
+  const payScanFollowUp = useCallback((project: 'tess' | 'asteroid' | 'saturn') => {
+    const pending = stateRef.current.player.scanFollowUp
+    if (!pending || pending.project !== project) return
+    setState(s => applyScanFollowUpBonus(s, project))
+    addToast('Scan confirmed. Bonus research XP and a fragment', 'ok')
+  }, [addToast, setState, stateRef])
+
   const submitTessClassification = useCallback((subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => {
     const submittedAt = Date.now()
     stampResearch('classification')
+    payScanFollowUp('tess')
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
       .sort((a, b) => a.x1 - b.x1)
@@ -959,7 +981,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // drafted but never created against a real project), so this is an
     // event only for now — wire a survey key here once that's created.
     captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
-  }, [addToast, setState, stateRef])
+  }, [addToast, payScanFollowUp, setState, stateRef])
 
   // Space Telescope's asteroid-discovery classification (STS-622) — a
   // passive digest, so unlike submitTessClassification there's no
@@ -968,6 +990,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     stampResearch('classification')
+    payScanFollowUp('asteroid')
 
     if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
       addToast(`Asteroid candidate classified. +${RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION} research XP`, 'ok')
@@ -1001,7 +1024,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [addToast, setState, stateRef])
+  }, [addToast, payScanFollowUp, setState, stateRef])
 
   // Saturn imager (SSL-492): local record first (offline-safe), then a pool
   // classification (SSC-43) when the frame came from the shared pool. Badge
@@ -1009,6 +1032,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
     stampResearch('classification')
+    payScanFollowUp('saturn')
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
       // Historic whole-frame records remain complete; a new 3x3 record only
@@ -1089,7 +1113,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
-  }, [setState, stateRef])
+  }, [payScanFollowUp, setState, stateRef])
 
   // SSL-714: a boxed Radio Meteor Zoo spectrogram. Saved on the player and in Landnam's
   // radio_meteor_classifications; never posted to Zooniverse.
@@ -1138,12 +1162,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyBuyLaserCapacitor(s, expectedLevel, reservedUnits))
   }, [setState])
 
-  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
+  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell', exitId?: DebriefExitId) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // SSL-714: each Orionids mission hands over to the next one on the Events board.
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) requestMissionBoardTab('events')
-    if (current.missionId === ORIONIDS_NIGHT_RUN_ID) stampResearch('event')
+    const runShower = showerForRunMission(current.missionId)
+    if (runShower) requestMissionBoardTab('events')
+    if (runShower) stampResearch('event')
     // A self-directed ("free") haul lands in the stash on return; here the
     // player's Debrief choice decides whether it stays on Earth or is sold at
     // market. Runs as its own state step before the payout/ledger update below
@@ -1153,11 +1178,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // SSL-651: a filled Orionids shower run pays its francs and keeps the
     // fragments as fragments. Read once up front, because settling resets the
     // count the haul step below would otherwise ask.
-    const showerFilled = current.missionId === ORIONIDS_NIGHT_RUN_ID && showerRunFilled(current.player)
+    const showerFilled = !!runShower && showerRunFilled(current.player, runShower.id)
     if (showerFilled) {
-      setState(s => s.screen !== 'debrief' || s.missionId !== ORIONIDS_NIGHT_RUN_ID
+      setState(s => s.screen !== 'debrief' || s.missionId !== current.missionId
         ? s
-        : { ...s, player: settleShowerRun(s.player, s.player.missionsDone) })
+        : { ...s, player: settleShowerRun(s.player, s.player.missionsDone, runShower.id) })
     }
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.lastCargo) return s
@@ -1166,7 +1191,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? null
       if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
       const effective = disposition ?? s.player.freeHaulDisposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
-      const haul = showerFilled ? withoutShowerFragments(s.lastCargo) : s.lastCargo
+      const haul = showerFilled ? withoutShowerFragments(s.lastCargo, runShower?.id) : s.lastCargo
       const settled = applyFreeHaulDisposition(s, haul, effective, Date.now())
       // Clear the pre-mining choice (KES-283) once it's been consumed here, so
       // it never carries over and silently pre-picks the next free haul.
@@ -1289,13 +1314,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         s.player.missionStartedAt,
       )
       // SSL-674: a survey flight to a world the player discovered is community research.
-      const eventStampedPlayer = mission?.id === ORIONIDS_NIGHT_RUN_ID
+      const completedShower = showerForRunMission(mission?.id)
+      const eventStampedPlayer = completedShower
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
-      const orionidsBadged = mission?.id === ORIONIDS_NIGHT_RUN_ID ? grantBadge(wswBadgedPlayer, 'orionids-2026', Date.now()) : wswBadgedPlayer
+      const orionidsBadged = completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
         : orionidsBadged.orionidsEventStage ?? 0
@@ -1362,13 +1388,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-          screen: mission?.payload?.type === 'satellite'
-            ? 'instrument-hub'
-            : mission?.id === ORIONIDS_NIGHT_RUN_ID
-              ? 'missions'
-              : isProgramOperation
-              ? 'launchpad'
-              : 'hub',
+          screen: debriefExitScreen(exitId, { showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
+            ?? (mission?.payload?.type === 'satellite'
+              ? 'instrument-hub'
+              : completedShower
+                ? 'missions'
+                : isProgramOperation
+                ? 'launchpad'
+                : 'hub'),
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })

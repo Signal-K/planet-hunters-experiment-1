@@ -89,7 +89,7 @@ public enum StationSky {
     static func catalogue(_ p: Player) -> [Anomaly] {
         var out: [Anomaly] = []
         if (p.saturnImagerLaunchedAt ?? 0) > 0 {
-            out.append(Anomaly(id: "body:saturn", label: "Saturn", detail: "Watched by your Saturn satellite", state: .catalogue, shape: .ringed, kind: .saturn, x: 0.86, y: 0.24, signal: nil))
+            out.append(Anomaly(id: "body:saturn", label: "Saturn", detail: "Watched by your Saturn satellite", state: .catalogue, shape: .ringed, kind: .saturn, x: saturnSpot.x, y: saturnSpot.y, signal: nil))
         }
         for t in p.discoveredExoplanetTargets.values.sorted(by: { $0.id < $1.id }) {
             let s = spot("exo:\(t.id)")
@@ -132,7 +132,26 @@ public enum StationSky {
         case .all: shown = catalogue(p) + done + open
         }
         guard let kinds = telescope?.kinds else { return shown }
-        return shown.filter { $0.kind.map(kinds.contains) ?? false }
+        let filtered = shown.filter { $0.kind.map(kinds.contains) ?? false }
+        return telescope?.id == "saturn" ? focusSaturn(filtered, known: catalogue(p)) : filtered
+    }
+
+    /// Saturn's place on the map when no telescope is singled out, and where it moves with the Saturn satellite on.
+    public static let saturnSpot = (x: 0.86, y: 0.24)
+    public static let saturnFocus = (x: 0.5, y: 0.5)
+
+    /// SSL-826 (web focusSaturn): with the Saturn satellite on, the map swings to Saturn. Saturn sits in the middle of
+    /// the reticle in every view and the satellite's storm frames sit in rings of six around it.
+    static func focusSaturn(_ items: [Anomaly], known: [Anomaly]) -> [Anomaly] {
+        let rest = items.filter { $0.id != "body:saturn" }
+        let ring = rest.enumerated().map { i, a -> Anomaly in
+            let band = Double(i / 6)
+            let angle = -Double.pi / 2 + (Double(i % 6) + band / 2) * (Double.pi / 3)
+            let r = 0.17 + 0.09 * band
+            return Anomaly(id: a.id, label: a.label, detail: a.detail, state: a.state, shape: a.shape, kind: a.kind, x: saturnFocus.x + cos(angle) * r / 1.35, y: saturnFocus.y + sin(angle) * r, signal: a.signal)
+        }
+        guard let body = known.first(where: { $0.id == "body:saturn" }) else { return ring }
+        return [Anomaly(id: body.id, label: body.label, detail: body.detail, state: body.state, shape: body.shape, kind: body.kind, x: saturnFocus.x, y: saturnFocus.y, signal: nil)] + ring
     }
 
     public static func history(_ p: Player) -> History {

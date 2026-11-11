@@ -63,6 +63,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   const firstClassification = Object.keys(classifications).length === 0
   const help = useHelp('asteroid-discovery', { firstVisit: firstClassification, firstVisitCoach: true })
   const [allControls, setAllControls] = useState(false)
+  // The data readout step: a tapped answer waits here for Back or Confirm before it is sent.
+  const [pendingVerdict, setPendingVerdict] = useState<AsteroidVerdict | null>(null)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -184,6 +186,11 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   const beta = eclipticLatitude(candidate.ra, candidate.decl)
   const fieldDeg = 180 / field
+  const shareResult = () => {
+    if (!classification || !onShareReadout) return
+    // The true ecliptic offset is the answer key, so it never travels with a readout.
+    onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'True ecl offset').map(({ label, value }) => ({ label, value })) })
+  }
   const onCommand = (line: string, view: InstrumentView): InstrumentCommandResult | null => {
     const [verb, arg] = line.trim().toUpperCase().split(/\s+/)
     if (verb === 'FIELD') {
@@ -203,8 +210,7 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       return { view, lines: [`> OFFSET  ${signed(next)} LOGGED`] }
     }
     if (verb === 'CONSENSUS' && classification && onShareReadout) {
-      // The true ecliptic offset is the answer key, so it never travels with a readout.
-      onShareReadout(candidate.id, { verdict: verdictLabel[classification.verdict], rows: readoutRows.filter(row => row.label !== 'True ecl offset').map(({ label, value }) => ({ label, value })) })
+      shareResult()
       return { view, lines: [reviewing ? '> REVIEW  SENT' : '> CONSENSUS  REQUESTED'] }
     }
     return null
@@ -216,13 +222,19 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     { label: 'Position', value: `${candidate.ra.toFixed(2)}h ${candidate.decl >= 0 ? '+' : ''}${candidate.decl.toFixed(2)}°` },
     { label: 'Your ecl offset', value: offsetRead == null ? 'NOT READ' : signed(offsetRead), testId: 'neocp-readout-offset' },
     { label: 'Field used', value: `×${field.toFixed(1)} · ${fieldDeg < 20 ? fieldDeg.toFixed(1) : fieldDeg.toFixed(0)}°` },
-    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : 'PENDING', testId: 'neocp-readout-verdict' },
+    { label: 'Verdict', value: classification ? verdictLabel[classification.verdict] : pendingVerdict ? `${verdictLabel[pendingVerdict]} · CONFIRM?` : 'PENDING', testId: 'neocp-readout-verdict' },
     ...(classification ? [{ label: 'True ecl offset', value: `${signed(beta, 1)}`, testId: 'neocp-readout-beta' }] : []),
   ]
 
   const castVerdict = (id: AsteroidVerdict) => {
     if (classification) return
+    setPendingVerdict(id)
+  }
+
+  const confirmVerdict = () => {
+    if (!pendingVerdict || classification) return
     help.reportAction('submit')
+    const id = pendingVerdict
     // Snapshot the sky plot before the verdict re-renders it.
     const plot = skyRef.current?.querySelector('svg') ?? null
     const target = candidate
@@ -233,10 +245,12 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       annotations: { verdict: id, candidate: target, eclipticOffsetRead: offsetRead, eclipticLatitude: beta, field, fieldDeg, showGrid, showEcliptic },
       annotatedImage: image,
     }))
+    setPendingVerdict(null)
     onSubmit(candidate.id, id)
   }
 
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
   return (
@@ -297,8 +311,23 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
         />
         </div>
       )}
+      done={!!classification || !!pendingVerdict}
       answers={classification ? (
-        <div className={viewportStyles.saved}>Classification submitted</div>
+        <InstrumentAnswerRow
+          groupTestId="neocp-readout-actions"
+          actions={[
+            { id: 'hub', label: 'DATA HUB', testId: 'neocp-readout-hub', primary: true, onClick: onBack },
+            ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'neocp-readout-ask', onClick: shareResult }] : []),
+          ]}
+        />
+      ) : pendingVerdict ? (
+        <InstrumentAnswerRow
+          groupTestId="neocp-readout-confirm"
+          actions={[
+            { id: 'back', label: 'BACK', testId: 'neocp-readout-back', onClick: () => setPendingVerdict(null) },
+            { id: 'confirm', label: 'CONFIRM', testId: 'neocp-readout-confirm-btn', primary: true, onClick: confirmVerdict },
+          ]}
+        />
       ) : (
         <InstrumentAnswerRow
           coachTarget="neocp-verdicts"

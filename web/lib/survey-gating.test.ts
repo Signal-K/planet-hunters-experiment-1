@@ -3,7 +3,7 @@ import { holdSurveys, isSurveyHeld, isSurveySafeScreen, subscribeSurveyHold, SUR
 
 describe('survey gating allowlist', () => {
   it('allows surveys only on resting screens', () => {
-    for (const screen of ['hub', 'missions', 'market', 'hangar', 'galaxy', 'refinery', 'instrument-hub']) {
+    for (const screen of ['hub', 'missions', 'market', 'hangar', 'tess-discovery', 'refinery', 'instrument-hub']) {
       expect(isSurveySafeScreen(screen)).toBe(true)
     }
   })
@@ -12,7 +12,7 @@ describe('survey gating allowlist', () => {
     // KES-146: a survey popped up over the mining laser button because the
     // gate this allowlist replaced had no screen check at all. These are the
     // screens where a full-screen survey sheet would cover live gameplay.
-    for (const screen of ['mining', 'transit', 'targets', 'fab', 'debrief', 'intro']) {
+    for (const screen of ['mining', 'flight', 'targets', 'fab', 'debrief', 'intro']) {
       expect(isSurveySafeScreen(screen)).toBe(false)
     }
   })
