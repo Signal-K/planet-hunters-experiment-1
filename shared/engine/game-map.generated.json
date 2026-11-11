@@ -27,8 +27,8 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 146,
-    "webGameComponents": 113,
-    "nativeAppComponents": 56
+    "webGameComponents": 114,
+    "nativeAppComponents": 57
   },
   "scenes": {
     "routed": [
@@ -2114,7 +2114,8 @@
       "web/components/game/screens/SkyPointing.tsx",
       "web/components/game/screens/SkyScenes.tsx",
       "web/components/game/screens/TessDiscoveryScreen.tsx",
-      "web/components/game/screens/TransitScreen.tsx"
+      "web/components/game/screens/TransitScreen.tsx",
+      "web/components/game/sky/SkyMapBase.tsx"
     ],
     "native": [
       "native/App/Mining/Landscape.swift",
@@ -2169,6 +2170,7 @@
       "native/App/Screens/SharedHud.swift",
       "native/App/Screens/SignInScreen.swift",
       "native/App/Screens/SkyEventChip.swift",
+      "native/App/Screens/SkyMapBase.swift",
       "native/App/Screens/TakeonIsoRenderer.swift",
       "native/App/Screens/TakeonSceneScreen.swift",
       "native/App/Screens/TessDiscoveryScreen.swift",

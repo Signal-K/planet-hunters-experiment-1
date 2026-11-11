@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import { LANDMARKS, TOTAL_FIELDS, clampDec, fieldId, formatAim, landmarkNear, mappedCount, mappedPercent, wrapRa, type SkyAim, type SkyMap } from '@/lib/research/sky-map'
-import { SkyChart, project, sightCentre } from './SkyChart'
+import { CHART_K, SkyChart, SkyOverview, project, sightCentre } from './SkyChart'
+import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import type { Player } from '@/lib/game-types'
@@ -226,16 +227,13 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
   const readout = showing ?? over
   const lockedNow = confirmed && showing ? { instrument: confirmed.instrument, target: showing } : null
   const skyTitle = near?.name ?? 'Open sky'
+  const overview = freeSky && !confirmed ? <SkyOverview aim={aim} mapped={mapped} viewDeg={{ ra: W / CHART_K, dec: H / CHART_K }} onJump={setAim} /> : null
   const skyNote = near ? near.note : alreadyMapped ? 'You have already mapped this field. Lock on to look again, or steer somewhere new.' : 'Not mapped yet. Lock on to add this field to your sky map.'
 
   return (
     <div ref={rootRef} className={styles.root} data-testid="sky-pointing" data-instrument={instrument} data-portrait={portrait} aria-label="Point your instruments">
-      <div className={styles.sky} aria-hidden="true">
-        <img src="/game/assets/base/kit/space-bands.png" alt="" draggable={false} className={styles.bands} />
-        <div className={styles.starTile} data-layer="far" />
-        <div className={styles.starTile} data-layer="mid" />
-        <div className={styles.starTile} data-layer="near" />
-      </div>
+      {/* SSL-830: the same dark sky map as the Control Station; the chart draws its own moving stars and real field grid. */}
+      <SkyMapBase stars={!freeSky} grid={false} testId="sky-pointing-base" />
       <svg className={styles.svg} shapeRendering="crispEdges" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         {freeSky && <SkyChart g={g} aim={aim} mapped={mapped} current={field} />}
         {instrument === 'transit' && <TransitScene g={g} target={showing} aim={showing ? { x: showing.x, y: showing.y } : sightCentre(g)} bare />}
@@ -267,7 +265,9 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
         <p className={styles.note}>{lockedNow ? INSTRUMENTS[lockedNow.instrument].lockedCopy(lockedNow.target) : freeSky ? skyNote : readout ? readout.note : view.blurb}</p>
         {freeSky ? <p className={styles.coord} data-testid="sky-coord">{formatAim(confirmed?.aim ?? aim)}</p> : (readout || lockedNow) && <p className={styles.coord}>{(lockedNow?.target ?? readout)!.coord}</p>}
         {freeSky && <p className={styles.mapline} data-testid="sky-mapped">{mappedLine}</p>}
+        {overview && portrait && overview}
       </div>
+      {overview && !portrait && <div className={styles.overviewSlot}>{overview}</div>}
 
       {!confirmed && (
         <>

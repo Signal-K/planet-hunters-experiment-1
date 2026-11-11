@@ -926,7 +926,11 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'sky-pointing',
         popup: null,
-        player: { ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now() - 86_400_000, transitSatelliteLevel: 1, saturnImagerLaunchedAt: Date.now() - 86_400_000 },
+        player: {
+          ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now() - 86_400_000, transitSatelliteLevel: 1, saturnImagerLaunchedAt: Date.now() - 86_400_000,
+          // SSL-830: a few weeks of mapping, so the chart and the whole-sky overview show progress.
+          skyMap: Object.fromEntries(['18_8', '20_8', '19_7', '17_9', '5_6', '6_6', '12_3', '0_10'].map((id, i) => [id, { week: `2026-W${40 + i}`, instrument: i % 3 === 2 ? 'deep-space' as const : 'transit' as const }])),
+        },
       }
 
     case 'ui-sky-dialogue': {

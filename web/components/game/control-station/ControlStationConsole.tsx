@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
   SATURN_FOCUS,
@@ -12,6 +12,7 @@ import {
   type StationTelescope,
 } from '@/lib/control-station-sky'
 import styles from './ControlStationConsole.module.css'
+import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 
 /**
  * Control station console (SSL-730). Two tones: the telescopes on the left, the sky map and Earth's horizon on the
@@ -81,20 +82,6 @@ function TelescopeIcon({ place }: { place: StationTelescope['place'] }) {
     return <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="9" width="8" height="14" rx="2" /><path d="M12 14H4v5h8M20 14h8v5h-8M16 9V5" /></svg>
   }
   return <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6" /><ellipse cx="16" cy="16" rx="13" ry="4" transform="rotate(-18 16 16)" /></svg>
-}
-
-/** A fixed star field for the scope (seeded, so it never jumps between renders). */
-function starField(count: number) {
-  let seed = 7
-  const next = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
-  return Array.from({ length: count }, () => ({
-    x: next() * 100,
-    y: next() * 100,
-    size: 1 + Math.round(next() * 2),
-    delay: next() * 4,
-    speed: 2 + next() * 3,
-    warm: next() > 0.8,
-  }))
 }
 
 /** Where each place sits on the horizon strip, in percent of the strip. */
@@ -178,7 +165,6 @@ export function ControlStationConsole({
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
-  const stars = useMemo(() => starField(320), [])
   // SSL-826: with the Saturn satellite on, the sky swings so Saturn sits in the reticle.
   const focused = active?.id === 'saturn'
   const pan = focused ? { x: (SATURN_FOCUS.x - SATURN_SPOT.x) * 100, y: (SATURN_FOCUS.y - SATURN_SPOT.y) * 100 } : { x: 0, y: 0 }
@@ -197,18 +183,7 @@ export function ControlStationConsole({
             <span>{acquiring ? 'Acquiring' : `${waiting} to classify`}</span>
           </div>
           <div className={styles.field} data-focus={focused ? 'saturn' : undefined}>
-            <div className={styles.pan} aria-hidden="true" data-testid="control-station-pan" style={{ transform: `translate(${pan.x / 1.8}%, ${pan.y / 1.8}%)` }}>
-            <div className={styles.galaxy} />
-            <div className={styles.stars}>
-              {stars.map((star, i) => (
-                <i
-                  key={i}
-                  data-warm={star.warm}
-                  style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: `${star.delay}s`, animationDuration: `${star.speed}s` }}
-                />
-              ))}
-            </div>
-            </div>
+            <SkyMapBase pan={pan} />
             <div className={styles.reticle} aria-hidden="true">
               <span className={styles.ring} />
               <span className={styles.crossH} />

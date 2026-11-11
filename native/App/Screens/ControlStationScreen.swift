@@ -23,11 +23,6 @@ private enum Tone {
 /// long ones every 30°) with a cyan inner rim, crosshairs, corner brackets and the centre bead, in the house palette.
 private struct ScopeDressing: View, Animatable {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private static let stars: [(x: Double, y: Double, r: Double, warm: Bool, phase: Double)] = {
-        var seed: UInt64 = 7
-        func next() -> Double { seed = (seed * 16807) % 2147483647; return Double(seed) / 2147483647 }
-        return (0..<220).map { _ in (next(), next(), 1 + (next() * 2).rounded(), next() > 0.8, next() * 6.28) }
-    }()
     /// How far the sky has swung, in fractions of the field (SSL-826).
     var pan: (x: Double, y: Double) = (0, 0)
     /// Hides the centre bead while a body fills the reticle.
@@ -41,17 +36,8 @@ private struct ScopeDressing: View, Animatable {
         TimelineView(.animation(minimumInterval: 1 / 15, paused: reduceMotion)) { tl in
             Canvas { ctx, size in
                 let t = tl.date.timeIntervalSinceReferenceDate
-                var grid = Path()
-                for i in 1..<8 { let x = size.width * Double(i) / 8; grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height)) }
-                for i in 1..<4 { let y = size.height * Double(i) / 4; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-                ctx.stroke(grid, with: .color(Tone.cyanSoft.opacity(0.06)), lineWidth: 1)
-                // SSL-826: the stars are drawn over a sky 1.8 times the field, offset by `pan`, so the view can swing.
-                for s in Self.stars {
-                    let a = reduceMotion ? 0.7 : 0.25 + 0.75 * (0.5 + 0.5 * sin(t * 1.4 + s.phase))
-                    let x = (s.x * 1.8 - 0.4 + pan.x) * size.width, y = (s.y * 1.8 - 0.4 + pan.y) * size.height
-                    guard x > -4, x < size.width + 4, y > -4, y < size.height + 4 else { continue }
-                    ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: s.r, height: s.r)), with: .color((s.warm ? Theme.hex(0xFFE9B8) : Tone.cream).opacity(a)))
-                }
+                // SSL-830: the sky itself is the shared base map; the scope draws its ring and reticle on it.
+                SkyMapBase.draw(ctx, size: size, time: t, pan: pan, still: reduceMotion)
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
                 let r = min(size.width, size.height) * 0.46
                 ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: .color(Tone.cream.opacity(0.28)), lineWidth: 2)
