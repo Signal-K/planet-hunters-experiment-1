@@ -166,6 +166,8 @@ export interface Part {
   // drill
   rate?: number
   missionsRequired?: number
+  /** Launchpad level that can host this chassis (1 when absent). Larger hulls need a bigger pad (SSL-693). */
+  padLevel?: number
 }
 
 export interface MineralMeta {
@@ -324,7 +326,7 @@ export interface BuildCheck {
 }
 
 export interface BuildHold {
-  kind: 'cargo' | 'orbit' | 'drill'
+  kind: 'cargo' | 'orbit' | 'drill' | 'pad'
   have: number
   need: number
 }

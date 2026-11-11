@@ -3,7 +3,10 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } 
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun } from './data/missions'
+import { orionidsRunAvailable } from './orionids/access'
+import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun, showerRunMission } from './data/missions'
+import { SHOWERS, ORIONIDS_SHOWER_ID, showerForRunMission } from './data/showers'
+import { DEBRIS_PRESETS, isDebrisEventActive } from './data/sky-events'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -50,14 +53,22 @@ export const SATURN_IMAGER_TARGET: Target = {
   minerals: [],
 }
 
-export const ORIONIDS_SHOWER_TARGET: Target = {
-  id: ORIONIDS_SHOWER_TARGET_ID,
-  name: 'Orionids shower field',
-  type: 'event-field',
-  orbit: 2,
-  difficulty: 'L1',
-  brief: "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids.",
-  minerals: Object.keys(catalogMineralIds()),
+export const ORIONIDS_SHOWER_TARGET: Target = showerTarget(ORIONIDS_SHOWER_ID)
+
+/** The field a shower run flies to (SSL-658, SSL-774). */
+export function showerTarget(showerId: string): Target {
+  const shower = SHOWERS.find(item => item.id === showerId)!
+  return {
+    id: shower.targetId,
+    name: `${shower.name} shower field`,
+    type: 'event-field',
+    orbit: 2,
+    difficulty: 'L1',
+    brief: showerId === ORIONIDS_SHOWER_ID
+      ? "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids."
+      : `A moving meteor field for the ${shower.name}. These are anonymous shower points, not named asteroids.`,
+    minerals: Object.keys(catalogMineralIds()),
+  }
 }
 
 function catalogMineralIds(): Record<string, true> {
@@ -100,10 +111,18 @@ export function buildRuntimeCatalog({
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const skyRead = player?.fireballSpotter?.passedAt != null
-  const shouldOfferOrionidsMission = freeOperations && player?.orionidsEventStage === 0 && skyRead
+  // The event is over: outside its window only participants and archive buyers are offered the run.
+  const orionidsOpen = orionidsRunAvailable(player as Parameters<typeof orionidsRunAvailable>[0], Date.now())
+  const shouldOfferOrionidsMission = freeOperations && player?.orionidsEventStage === 0 && skyRead && orionidsOpen
   const shouldIncludeOrionidsTarget = missionId === ORIONIDS_NIGHT_RUN_ID || shouldOfferOrionidsMission || player?.orionidsEventStage === 0
+  // A Leonid or Geminid run is offered only while that shower's window is open (or when it is the run in flight).
+  const liveShowers = DEBRIS_PRESETS
+    .filter(preset => preset.eventId !== ORIONIDS_SHOWER_ID && SHOWERS.some(shower => shower.id === preset.eventId))
+    .filter(preset => freeOperations && skyRead && isDebrisEventActive(preset, Date.now()) || showerForRunMission(missionId)?.id === preset.eventId)
+    .map(preset => preset.eventId)
   const mergedTargets = [
     ...catalog.targets,
+    ...liveShowers.filter(id => !existingTargetIds.has(showerTarget(id).id)).map(showerTarget),
     ...(shouldIncludeOrionidsTarget && !existingTargetIds.has(ORIONIDS_SHOWER_TARGET.id) ? [ORIONIDS_SHOWER_TARGET] : []),
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...(shouldIncludeSaturnImagerMission && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
@@ -141,6 +160,10 @@ export function buildRuntimeCatalog({
   }
   if (shouldOfferOrionidsMission && !relationshipMissions.some(mission => mission.id === ORIONIDS_NIGHT_RUN_ID)) {
     relationshipMissions = [...relationshipMissions, orionidsNightRun()]
+  }
+  for (const showerId of liveShowers) {
+    const run = showerRunMission(showerId)
+    if (!relationshipMissions.some(mission => mission.id === run.id)) relationshipMissions = [...relationshipMissions, run]
   }
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)

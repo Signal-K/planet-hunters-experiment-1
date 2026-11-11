@@ -9,7 +9,7 @@ import {
 
 function state(overrides: Partial<GameState> = {}): GameState {
   const base = {
-    screen: 'transit',
+    screen: 'flight',
     missionId: 'lnm_m3_relay_bennu_vesta',
     targetId: 'bennu',
     deliveryTargetId: 'vesta',
@@ -73,7 +73,7 @@ describe('DeliverySystem', () => {
     const unloading = applyDeliveryArrived(state(), 2_000)
     const next = applyDeliveryUnloadComplete(unloading, 9_000, 3_000)
 
-    expect(next.screen).toBe('transit')
+    expect(next.screen).toBe('flight')
     expect(next.lastCargo).toEqual({})
     expect(next.deliveredCargo).toEqual({ iron: 3, carbon: 2 })
     expect(next.player.deliveryUnloadStartedAt).toBeUndefined()

@@ -32,7 +32,7 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
       returningToEarth: !hasDelivery,
       shipDestroyed: false,
     },
-    screen: 'transit',
+    screen: 'flight',
   }
 }
 

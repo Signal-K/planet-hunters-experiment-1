@@ -80,7 +80,7 @@ describe('applyRedockComplete', () => {
       { screen: 'landing', missionId: 'm1', targetId: 't1', deliveryTargetId: null },
     )
     const result = applyRedockComplete(state, { iron: 3 }, null, null)
-    expect(result.screen).toBe('transit')
+    expect(result.screen).toBe('flight')
     expect(result.lastCargo).toEqual({ iron: 3 })
     expect(result.player.landingReturnStartedAt).toBeUndefined()
     expect(result.player.returningToEarth).toBe(true)

@@ -31,13 +31,13 @@ const SKY_PURPLE = 0x3d3a9a
 const SKY_VIOLET = 0x2c3070
 const SKY_RUST   = 0x8a2a6a
 const SKY_AMBER  = 0x3a5ab8
-const MARK_COLOR = 0xff73d2
+const MARK_COLOR = 0xffb454
 const GRID_COLOR = 0x8c7fa0
 const TICK_COLOR = 0xc9d3e6
 const LINE_COLOR = 0xbcc4f0
 const DOT_LO     = 0xc8d4ff  // shallow dip — pale periwinkle
 const DOT_MID    = 0xa48cff  // mid dip — violet
-const DOT_HI     = 0xff73d2  // deep dip — magenta
+const DOT_HI     = 0xffb454  // deep dip: warm amber
 
 /**
  * SSL-301: a fixed 3-decimal formatter on an auto Y domain produced runs of

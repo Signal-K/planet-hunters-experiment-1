@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, isFreeHaulEligibleMission, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
+import { applyFreeRunGoal, clampGoalAmount, maxGoalAmount } from '@/lib/freeRunGoal'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
 import styles from './MissionPlanStrip.module.css'
 
@@ -16,7 +17,7 @@ import styles from './MissionPlanStrip.module.css'
 const PixiGalaxyMap = dynamic(() => import('@/components/TargetPicker/PixiGalaxyMap'), { ssr: false })
 
 type Game = ReturnType<typeof useGame>
-type Sheet = 'destination' | 'vehicle' | null
+type Sheet = 'destination' | 'vehicle' | 'goal' | null
 
 const STEPS = ['Contract', 'Plan', 'Launch'] as const
 
@@ -39,7 +40,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   useEffect(() => {
     if (!freeStart || autoStaged.current || !mission || !target) return
     const free = ROCKET_MODELS.filter(model => !model.locked && rocketPrice(model, player) === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok)
+      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)
     if (free.length !== 1) return
     autoStaged.current = true
     game.onPurchaseRocket(free[0].id)
@@ -48,7 +49,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // auto-picked behind the scenes keeps the state valid; the map stays open until a body is tapped. Training keeps
   // its guided path, and the shower run has a fixed field.
   const mustChoose = !launched && game.destinationChosen === false && pastRocketTraining(player)
-    && !!mission && mission.id !== ORIONIDS_NIGHT_RUN_ID
+    && !!mission && !showerForRunMission(mission.id)
   useEffect(() => { if (mustChoose) setSheet('destination') }, [mustChoose, mission?.id])
   if (!mission || !target) return null
 
@@ -69,10 +70,29 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // Orionids fragments are event evidence rather than player cargo, and the
   // event supplies its own storage. Do not add a contradictory silo prompt.
   // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
-  const showerRun = mission?.id === ORIONIDS_NIGHT_RUN_ID
+  const runShower = showerForRunMission(mission?.id)
+  const showerRun = !!runShower
   const getting = showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
+  // Liam, 10.11: a free mining run lets the player choose the ore and how much, up to what the rocket's hold carries.
+  const goalEditable = !launched && !showerRun && isFreeHaulEligibleMission(mission)
+  const holdUnits = selectedRocket?.stats.cargo ?? 6
+  const drillTier = drill?.tier ?? 1
+  const goalMineralId = Object.keys(mission.requires.minerals)[0]
+  const goalAmount = mission.requires.minerals[goalMineralId] ?? 1
+  const setGoal = (mineral: string, amount: number) => {
+    const meta = game.catalog.minerals[mineral]
+    const next = { missionId: mission.id, mineral, amount: clampGoalAmount(amount, meta, holdUnits) }
+    game.setPlayer(p => ({ ...p, freeRunGoal: next }))
+    // A body without this ore cannot be flown to for it: move the destination to one that has it.
+    const suited = feasibleTargetsFor(applyFreeRunGoal(mission, next, game.catalog.minerals), game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
+    if (suited.length && !suited.some(t => t.id === target.id)) game.onPickTarget(suited[0].id)
+  }
+  const goalOptions = sheet === 'goal'
+    ? Object.entries(game.catalog.minerals).filter(([id, meta]) => meta.cargoUnits !== 0 && (meta.laserAccess ?? 1) <= drillTier && maxGoalAmount(meta, holdUnits) > 0
+      && feasibleTargetsFor(applyFreeRunGoal(mission, { missionId: mission.id, mineral: id, amount: 1 }, game.catalog.minerals), game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad')).length > 0)
+    : []
   const targets = sheet === 'destination'
     ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
     : []
@@ -80,7 +100,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // Liam, 01.11: when nothing the player has can fly it, the sheet offers to research or buy one that can.
   const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && (rocketUnlocked(model, player) || rocketResearchXp(model) > 0)) : []
   const fits = (model: (typeof ROCKET_MODELS)[number]) => rocketCompatibleWithMission(model, mission)
-    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts }).ok
+    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok
   const roles = rocketJobRoles(rockets.filter(model => rocketUnlocked(model, player)), mission, fits)
   const nothingFits = sheet === 'vehicle' && ![...roles.values()].some(role => role.kind === 'use')
   const researchable = rockets.filter(model => !rocketUnlocked(model, player) && fits(model))
@@ -88,7 +108,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
     const xp = rocketResearchXp(model)
     const have = Math.floor(player.researchXP ?? 0)
     if (have < xp) {
-      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Control Station to earn it.`, 'warn')
+      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Data hub to earn it.`, 'warn')
       return
     }
     game.unlockBlueprint(rocketResearchId(model.id), 0, xp, {})
@@ -102,18 +122,26 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
       </ol>
       <div className={styles.slots}>
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
-          <span>Destination</span><strong>{showerRun ? 'Orionids field' : target.name}</strong><em>Change</em>
+          <span>Destination</span><strong>{runShower ? `${runShower.name} field` : target.name}</strong><em>Change</em>
         </button>
         <button type="button" className={styles.slot} data-testid="plan-vehicle" data-blocked={blockedFix === 'vehicle' || undefined} disabled={launched} onClick={() => setSheet('vehicle')}>
           <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
         </button>
-        <div className={`${styles.slot} ${styles.cargoSlot}`} data-testid="plan-cargo">
-          <span>Cargo</span>
-          <span className={styles.cargoRows}>
-            <span className={styles.cargoRow} data-testid="plan-cargo-getting"><b>Getting</b>{getting}</span>
-            {payloadName && <span className={styles.cargoRow} data-testid="plan-cargo-payload"><b>Payload</b>{payloadName}</span>}
-          </span>
-        </div>
+        {(() => {
+          const rows = (
+            <>
+              <span>Cargo</span>
+              <span className={styles.cargoRows}>
+                <span className={styles.cargoRow} data-testid="plan-cargo-getting"><b>Getting</b>{getting}</span>
+                {payloadName && <span className={styles.cargoRow} data-testid="plan-cargo-payload"><b>Payload</b>{payloadName}</span>}
+              </span>
+              {goalEditable && <em>Change</em>}
+            </>
+          )
+          return goalEditable
+            ? <button type="button" className={`${styles.slot} ${styles.cargoSlot}`} data-testid="plan-cargo" onClick={() => setSheet('goal')}>{rows}</button>
+            : <div className={`${styles.slot} ${styles.cargoSlot}`} data-testid="plan-cargo">{rows}</div>
+        })()}
       </div>
       {primaryAction && primaryLabel && (
         <button type="button" className={styles.primary} data-testid="plan-launch-btn" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
@@ -124,7 +152,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
             <path d="M42 19 86 34 126 18 166 35 211 20M86 34 92 58 126 18 149 57 166 35 196 59" />
             {[[42, 19], [86, 34], [126, 18], [166, 35], [211, 20], [92, 58], [149, 57], [196, 59]].map(([cx, cy], index) => <circle key={index} cx={cx} cy={cy} r="5" />)}
           </svg>
-          <span><b>ORIONIDS SHOWER</b><small>Catch fragments. Mine other minerals.</small></span>
+          <span><b>{(runShower?.name ?? 'Orionids').toUpperCase()} SHOWER</b><small>Catch fragments. Mine other minerals.</small></span>
         </div>
       )}
       {noSilo && !launched && (
@@ -167,6 +195,28 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
               </button></li>
             ))}
             {!targets.length && <li><p>Nothing in range has what this mission needs.</p></li>}
+          </ul>
+        </div>
+      )}
+
+      {sheet === 'goal' && (
+        <div className={styles.sheet} role="group" aria-label="Choose what to mine" data-testid="plan-sheet-goal">
+          <div className={styles.sheetHead}>
+            <strong>What to mine</strong>
+            <button type="button" onClick={() => setSheet(null)}>Done</button>
+          </div>
+          <p className={styles.sheetLead}>Pick the ore and how much. {selectedRocket?.name ?? 'The rocket'} holds {holdUnits} units a trip.</p>
+          <div className={styles.goalAmount} data-testid="plan-goal-amount">
+            <button type="button" aria-label="Less" disabled={goalAmount <= 1} onClick={() => setGoal(goalMineralId, goalAmount - 1)}>−</button>
+            <strong>{goalAmount} × {game.catalog.minerals[goalMineralId]?.name ?? goalMineralId}</strong>
+            <button type="button" aria-label="More" disabled={goalAmount >= maxGoalAmount(game.catalog.minerals[goalMineralId], holdUnits)} onClick={() => setGoal(goalMineralId, goalAmount + 1)}>+</button>
+          </div>
+          <ul className={styles.goalGrid}>
+            {goalOptions.map(([id, meta]) => (
+              <li key={id}><button type="button" data-current={id === goalMineralId || undefined} data-testid={`plan-goal-${id}`} onClick={() => setGoal(id, goalAmount)}>
+                <strong>{meta.name}</strong><small>{meta.rarity}</small>
+              </button></li>
+            ))}
           </ul>
         </div>
       )}

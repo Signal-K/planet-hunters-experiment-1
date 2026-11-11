@@ -5,7 +5,10 @@ import Foundation
 public enum Screen: String, CaseIterable, Sendable {
     case intro, build, hub
     case hubSubsurface = "hub-subsurface"
-    case missions, galaxy, targets, fab, transit, landing, mining, delivery, debrief
+    case missions, targets, fab, landing, mining, delivery, debrief
+    /// Web ids since SSL-817: the TESS screen is `tess-discovery`, the rocket flight is `flight`. Older saves say `galaxy` / `transit`.
+    case galaxy = "tess-discovery"
+    case transit = "flight"
     case market, hangar
     case rocketBuy = "rocket-buy"
     case roverSurvey = "rover-survey"
@@ -45,6 +48,8 @@ extension Screen: Codable {
     /// Web renamed the surface from `rover-mining` to `rover-survey`. Older saves still decode.
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
+        if raw == "galaxy" { self = .galaxy; return }
+        if raw == "transit" { self = .transit; return }
         if raw == "rover-mining" || raw == "rover-survey" {
             self = .roverSurvey
             return

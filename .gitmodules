@@ -1,0 +1,3 @@
+[submodule "games/haphazard-martians"]
+	path = games/haphazard-martians
+	url = https://github.com/Signal-K/Bad-Martians.git

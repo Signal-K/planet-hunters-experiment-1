@@ -6,7 +6,7 @@ describe('core loop analytics', () => {
     ['hub', 'base'],
     ['missions', 'contract'],
     ['fab', 'launch'],
-    ['transit', 'launch'],
+    ['flight', 'launch'],
     ['mining', 'mine'],
     ['debrief', 'debrief'],
     ['build', 'build'],
@@ -15,7 +15,7 @@ describe('core loop analytics', () => {
   })
 
   it('does not treat screens outside the six-step loop as funnel steps', () => {
-    expect(coreLoopStepForScreen('galaxy')).toBeNull()
+    expect(coreLoopStepForScreen('tess-discovery')).toBeNull()
     expect(coreLoopStepForScreen('hangar')).toBeNull()
     expect(coreLoopStepForScreen('market')).toBeNull()
   })
@@ -35,7 +35,7 @@ describe('core loop analytics', () => {
     expect(retry.capture).toBeNull()
     const preflight = advanceLoopVisit('fab', retry, 'loop-b')
     expect(preflight.capture).toEqual({ step: 'launch', loopId: 'loop-a' })
-    const flight = advanceLoopVisit('transit', preflight, 'loop-b')
+    const flight = advanceLoopVisit('flight', preflight, 'loop-b')
     expect(flight.capture).toBeNull()
     const debrief = advanceLoopVisit('debrief', flight, 'loop-b')
     expect(debrief.capture).toEqual({ step: 'debrief', loopId: 'loop-a' })

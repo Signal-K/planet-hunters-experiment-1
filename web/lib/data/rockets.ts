@@ -89,10 +89,23 @@ export const ROCKET_MODELS: RocketModel[] = [
   },
 ]
 
+/** Launchpad level that can host each rocket: the bigger hulls need a bigger pad (SSL-693). Unannounced tiers 4 and 5 wait for level 3. */
+const ROCKET_PAD_LEVEL: Record<string, number> = {
+  [ROCKET_IDS.explorer]: 1,
+  [ROCKET_IDS.prospector]: 1,
+  [ROCKET_IDS.surveyor]: 2,
+  [ROCKET_IDS.unannounced4]: 3,
+  [ROCKET_IDS.unannounced5]: 3,
+}
+
+export function rocketPadLevel(rocket: Pick<RocketModel, 'id'>): number {
+  return ROCKET_PAD_LEVEL[rocket.id] ?? 1
+}
+
 /** The smallest unlocked rocket whose hold fits `cargo` units, so a cargo hold can name its fix. */
-export function smallestRocketHolding(cargo: number, missionsDone: number): { name: string; cargo: number } | null {
+export function smallestRocketHolding(cargo: number, missionsDone: number, launchpadLevel = 3): { name: string; cargo: number } | null {
   const fit = ROCKET_MODELS
-    .filter(m => !m.locked && m.missionsRequired <= missionsDone && m.stats.cargo >= cargo)
+    .filter(m => !m.locked && m.missionsRequired <= missionsDone && rocketPadLevel(m) <= launchpadLevel && m.stats.cargo >= cargo)
     .sort((a, b) => a.stats.cargo - b.stats.cargo)[0]
   return fit ? { name: fit.name, cargo: fit.stats.cargo } : null
 }

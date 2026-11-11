@@ -43,6 +43,20 @@
       "mount": {
         "x": 60,
         "z": 15
+      },
+      "levels": {
+        "2": {
+          "src": "base/v7/structures/launchpad-l2.png",
+          "height": 111,
+          "foot": 4,
+          "mount": { "x": 74, "z": 21 }
+        },
+        "3": {
+          "src": "base/v7/structures/launchpad-l3.png",
+          "height": 111,
+          "foot": 4,
+          "mount": { "x": 68, "z": 21 }
+        }
       }
     },
     "control-station": {
@@ -52,6 +66,15 @@
       "left": -3,
       "width": 74,
       "height": 46.555,
+      "foot": 4.5
+    },
+    "agency": {
+      "site": "ops",
+      "src": "base/v7/structures/agency.png",
+      "body": 60,
+      "left": -3,
+      "width": 74,
+      "height": 55.9,
       "foot": 4.5
     },
     "market": {

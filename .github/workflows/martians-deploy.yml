@@ -1,0 +1,84 @@
+name: Deploy Haphazard Martians
+
+# Haphazard Martians (Signal-K/Bad-Martians) is a separate game, vendored here as
+# the submodule games/haphazard-martians so it can use this repository's
+# Cloudflare secrets for now. It deploys as its own static Worker
+# (haphazard-martians, martians.playlandnam.space, set in the game's
+# wrangler.jsonc) and does not touch the landnam-web Worker.
+#
+# To ship a new game build: bump the submodule pointer and push to main
+#   git -C games/haphazard-martians fetch && git -C games/haphazard-martians checkout <sha>
+#   git add games/haphazard-martians
+# or run this workflow by hand (Actions > Deploy Haphazard Martians).
+on:
+  push:
+    branches: [main]
+    paths:
+      - games/haphazard-martians
+      - .github/workflows/martians-deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: martians-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: games/haphazard-martians
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: games/haphazard-martians/go.mod
+          cache-dependency-path: games/haphazard-martians/go.sum
+
+      - name: Test game logic
+        run: go test ./engine ./physics ./game
+
+      # dist/ for a static host: the wasm, the shell, a stamped service worker,
+      # _headers and config.js. Both values below are public, not secrets.
+      - name: Build dist
+        run: scripts/build-dist.sh
+        env:
+          HM_API_URL: https://signal-k-starsailors.fly.dev
+          # Landnam's Clerk production instance accepts playlandnam.space subdomains.
+          HM_CLERK_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Deploy
+        run: |
+          # Cloudflare's API returns transient 503/504; retry the upload.
+          for attempt in 1 2 3 4; do
+            npx --yes wrangler@4.123.0 deploy && exit 0
+            echo "wrangler deploy failed (attempt $attempt of 4)"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 20))
+          done
+          exit 1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # A first deploy creates the DNS record, which can take a few minutes.
+      - name: Smoke check
+        run: |
+          for attempt in $(seq 1 12); do
+            if curl -fsS -o /dev/null https://martians.playlandnam.space/ &&
+               curl -fsS -o /dev/null -w 'game.wasm %{http_code} %{content_type} %{size_download}\n' https://martians.playlandnam.space/game.wasm; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "martians.playlandnam.space is not answering yet" >&2; exit 1

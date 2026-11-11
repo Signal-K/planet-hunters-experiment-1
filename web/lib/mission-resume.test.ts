@@ -3,7 +3,7 @@ import { missionResumeScreen } from './mission-resume'
 
 describe('missionResumeScreen', () => {
   it('keeps a genuinely travelling run in transit', () => {
-    expect(missionResumeScreen({ missionPhase: 'transit', arrivalAt: 2_000 }, 1_000)).toBe('transit')
+    expect(missionResumeScreen({ missionPhase: 'transit', arrivalAt: 2_000 }, 1_000)).toBe('flight')
   })
 
   it('opens the destination instead of flashing completed transit', () => {

@@ -1,8 +1,8 @@
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
-import { MISSIONS } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data/missions'
+import { MISSIONS, ROCKET_IDS } from '@/lib/data'
+import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -165,17 +165,24 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base after 4+ hours away: market moves, a client level-up, telescope items, a finished build and a friend gift in one list', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week. Open the stage with &at=2026-11-17T12:00:00Z so the shower is live: the event step reads the Leonids declaration', stage: 'free-ops' },
+      { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
+      { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-pad-worn', label: 'Base: launchpad needs service', hint: 'Level 1 pad after 10 launches: tap it to service for F1M, or launches stay held (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-first-run', label: 'Base: first run', hint: 'Only the launchpad is built: the line-art Agency building stands where the Data hub will go (SSL-785)', stage: 'free-ops' },
       { key: 'hub-biome-mountains', label: 'Base: steppe', hint: 'Base location fixture: Baikonur steppe', stage: 'free-ops' },
       { key: 'hub-biome-desert', label: 'Base: desert', hint: 'Base location fixture: desert terrain', stage: 'free-ops' },
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
@@ -223,6 +230,7 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
       transitSatelliteLevel: 1,
       deepSpaceTelescopeBuilt: true,
       saturnImagerLaunchedAt: Date.now() - 86_400_000,
+      scanFollowUp: { targetId: 'mars', project: 'asteroid', at: Date.now() - 60_000 },
       // SSL-730: a few past classifications so Explored and All have dots on the sky map.
       tessClassifications: {
         'tic-261136679': { subjectId: 'tic-261136679', verdict: 'planet', ranges: [], submittedAt: Date.now() - 3 * 3_600_000 },
@@ -266,7 +274,7 @@ function fixture(name: string): Partial<GameState> | null {
       // Outbound to Eros, an hour long, 20 minutes in. The scene's things move the destination, the ship and the progress.
       const transitStartedAt = Date.now() - 20 * 60_000
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: {
           ...BASE_PLAYER, missionsDone: 3, freeOperations: true,
           activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, missionPhase: 'transit',
@@ -314,6 +322,37 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
     }
+
+    case 'hub-pad-worn':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, padLaunches: 10 },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'hub-pad-l2':
+    case 'hub-pad-l3':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, buildingLevels: { launchpad: name === 'hub-pad-l3' ? 3 : 2 }, launchpadUpgraded: true, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'hub-first-run':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad'], placementPlots: { launchpad: 0 } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
 
     case 'hub-orionids-complete':
       return {
@@ -365,7 +404,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'm1-return':
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` }, returningToEarth: true, debriefPending: true, missionPhase: 'transit', transitStartedAt: Date.now(), arrivalAt: null },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
         missionId: FIRST_MISSION.id, targetId: 'eros',
@@ -496,7 +535,7 @@ function fixture(name: string): Partial<GameState> | null {
       {
         const transitStartedAt = Date.now() - 30_000
       return {
-        screen: 'transit',
+        screen: 'flight',
         player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Space Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
@@ -628,7 +667,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-tess-training':
       return {
-        screen: 'galaxy',
+        screen: 'tess-discovery',
         player: {
           ...POST_ONBOARDING_PLAYER,
           flightPlan: { completed: { mining: true }, hidden: false },
@@ -644,7 +683,7 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-tess-discovery':
       return {
-        screen: 'galaxy',
+        screen: 'tess-discovery',
         visualFixture: 'tess',
         player: {
           ...POST_ONBOARDING_PLAYER,
@@ -690,6 +729,7 @@ function fixture(name: string): Partial<GameState> | null {
           transitSatelliteLevel: 1,
           deepSpaceTelescopeBuilt: true,
           saturnImagerLaunchedAt: Date.now() - 86_400_000,
+          telescopeAim: { saturn: { week: weekKey(Date.now()), sector: 'band' } },
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
@@ -775,6 +815,30 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    // SSL-658: a Leonids run for a player with 40 Orionid catches. Only Leonid fragments count: 0 of 20 at accept.
+    case 'ui-leonids-shower-mining-fresh': {
+      const runId = showerRunMission('leonids-2026').id
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: runId, label: 'Leonids shower run' },
+          missionPhase: 'mining',
+          orionidsFragments: { caught: 40, redeemed: 0 },
+          orionidsRunBaseline: 40,
+          showerFragments: { 'leonids-2026': { caught: 2, redeemed: 0 } },
+          showerRunBaselines: { 'leonids-2026': 2 },
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: runId,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+    }
+
     case 'ui-free-mining':
       return {
         screen: 'mining',
@@ -844,6 +908,10 @@ function fixture(name: string): Partial<GameState> | null {
           // Existing-save acceptance fixture: the Orionids run has already
           // stamped today's event contribution for the community history view.
           researchStamps: { [new Date().toISOString().slice(0, 10)]: ['event'] },
+          // Two telescopes online, so choosing the week's path asks where to point them.
+          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+          transitSatelliteLevel: 1,
+          saturnImagerLaunchedAt: Date.now() - 86_400_000,
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
@@ -858,7 +926,11 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'sky-pointing',
         popup: null,
-        player: { ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now() - 86_400_000, transitSatelliteLevel: 1, saturnImagerLaunchedAt: Date.now() - 86_400_000 },
+        player: {
+          ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now() - 86_400_000, transitSatelliteLevel: 1, saturnImagerLaunchedAt: Date.now() - 86_400_000,
+          // SSL-830: a few weeks of mapping, so the chart and the whole-sky overview show progress.
+          skyMap: Object.fromEntries(['18_8', '20_8', '19_7', '17_9', '5_6', '6_6', '12_3', '0_10'].map((id, i) => [id, { week: `2026-W${40 + i}`, instrument: i % 3 === 2 ? 'deep-space' as const : 'transit' as const }])),
+        },
       }
 
     case 'ui-sky-dialogue': {
@@ -874,6 +946,20 @@ function fixture(name: string): Partial<GameState> | null {
           transitSatelliteLaunchedAt: Date.now() - 86_400_000,
           transitSatelliteLevel: 1,
           telescopeAim: undefined,
+        },
+      }
+    }
+
+    case 'ui-community-research-leonids':
+    case 'ui-community-research-geminids': {
+      // SSL-774: a declared shower with no saved stage yet. Same screen, its own event step.
+      const checkedAt = Date.now()
+      return {
+        ...fixture('ui-community-research')!,
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
+          researchStamps: {},
         },
       }
     }

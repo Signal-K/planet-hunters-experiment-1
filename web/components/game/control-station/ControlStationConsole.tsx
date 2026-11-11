@@ -1,8 +1,10 @@
 'use client'
 
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
+  SATURN_FOCUS,
+  SATURN_SPOT,
   SKY_VIEWS,
   type SkyAnomaly,
   type SkyView,
@@ -10,6 +12,7 @@ import {
   type StationTelescope,
 } from '@/lib/control-station-sky'
 import styles from './ControlStationConsole.module.css'
+import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 
 /**
  * Control station console (SSL-730). Two tones: the telescopes on the left, the sky map and Earth's horizon on the
@@ -37,8 +40,12 @@ interface ControlStationConsoleProps {
   buildShortfall?: string | null
   /** The back and help controls, top left. */
   rail: ReactNode
+  /** A pending ask above the instrument list (a scan waiting for a manual check). */
+  notice?: ReactNode
   /** Opens the logbook sheet (daily research, survey scan, charts, badges). */
   onLogbook: () => void
+  /** Opens the scan sheet. Present once a telescope is launched (SSL-807). */
+  scan?: { scanning: boolean; onOpen: () => void }
 }
 
 const EMPTY: Record<SkyView, string> = {
@@ -75,20 +82,6 @@ function TelescopeIcon({ place }: { place: StationTelescope['place'] }) {
     return <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="12" y="9" width="8" height="14" rx="2" /><path d="M12 14H4v5h8M20 14h8v5h-8M16 9V5" /></svg>
   }
   return <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="6" /><ellipse cx="16" cy="16" rx="13" ry="4" transform="rotate(-18 16 16)" /></svg>
-}
-
-/** A fixed star field for the scope (seeded, so it never jumps between renders). */
-function starField(count: number) {
-  let seed = 7
-  const next = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 }
-  return Array.from({ length: count }, () => ({
-    x: next() * 100,
-    y: next() * 100,
-    size: 1 + Math.round(next() * 2),
-    delay: next() * 4,
-    speed: 2 + next() * 3,
-    warm: next() > 0.8,
-  }))
 }
 
 /** Where each place sits on the horizon strip, in percent of the strip. */
@@ -163,14 +156,18 @@ export function ControlStationConsole({
   buildCost,
   buildShortfall = null,
   rail,
+  notice,
   onLogbook,
+  scan,
 }: ControlStationConsoleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
-  const stars = useMemo(() => starField(150), [])
+  // SSL-826: with the Saturn satellite on, the sky swings so Saturn sits in the reticle.
+  const focused = active?.id === 'saturn'
+  const pan = focused ? { x: (SATURN_FOCUS.x - SATURN_SPOT.x) * 100, y: (SATURN_FOCUS.y - SATURN_SPOT.y) * 100 } : { x: 0, y: 0 }
   const online = telescopes.filter(item => item.live).length
   const status = acquiring ? 'Acquiring' : waiting > 0 ? 'Scanning' : 'Standby'
 
@@ -185,17 +182,8 @@ export function ControlStationConsole({
             <b>{active ? active.name : 'All telescopes'}</b>
             <span>{acquiring ? 'Acquiring' : `${waiting} to classify`}</span>
           </div>
-          <div className={styles.field}>
-            <div className={styles.galaxy} aria-hidden="true" />
-            <div className={styles.stars} aria-hidden="true">
-              {stars.map((star, i) => (
-                <i
-                  key={i}
-                  data-warm={star.warm}
-                  style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: `${star.delay}s`, animationDuration: `${star.speed}s` }}
-                />
-              ))}
-            </div>
+          <div className={styles.field} data-focus={focused ? 'saturn' : undefined}>
+            <SkyMapBase pan={pan} />
             <div className={styles.reticle} aria-hidden="true">
               <span className={styles.ring} />
               <span className={styles.crossH} />
@@ -208,14 +196,6 @@ export function ControlStationConsole({
               <span className={styles.scan} />
               <span className={styles.scan} data-late="true" />
             </div>
-            <div className={styles.marks} aria-hidden="true">
-              <span>Field: {view}</span>
-              <span>Targets: {anomalies.length}</span>
-            </div>
-            <div className={styles.marks} data-at="bottom" aria-hidden="true">
-              <span>Online: {online}/{telescopes.length}</span>
-              <span>Status: {status}</span>
-            </div>
             {anomalies.map(anomaly => (
               <button
                 key={anomaly.id}
@@ -224,6 +204,7 @@ export function ControlStationConsole({
                 data-state={anomaly.state}
                 data-shape={anomaly.shape}
                 data-picked={anomaly.id === pickedId}
+                data-focus={focused && anomaly.id === 'body:saturn' ? 'true' : undefined}
                 data-testid="control-station-anomaly"
                 style={{ left: `${anomaly.x * 100}%`, top: `${anomaly.y * 100}%` }}
                 aria-label={`${anomaly.label}, ${anomaly.detail}`}
@@ -279,16 +260,11 @@ export function ControlStationConsole({
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>
           </span>
           <span>
-            <h1 className={styles.title}>Control station</h1>
-            <small className={styles.subtitle}>Observatory layout</small>
+            <h1 className={styles.title}>Data hub</h1>
+            <small className={styles.subtitle}>Pick an instrument, tap a target</small>
           </span>
         </header>
-        <dl className={styles.tiles} data-testid="control-station-tiles">
-          <div><dt>Targets</dt><dd>{anomalies.length}</dd></div>
-          <div data-hot={waiting > 0}><dt>To classify</dt><dd>{waiting}</dd></div>
-          <div><dt>Classified</dt><dd>{history.total}</dd></div>
-          <div><dt>Online</dt><dd>{online}/{telescopes.length}</dd></div>
-        </dl>
+        {notice}
         <ul className={styles.keys}>
           {telescopes.map(scope => (
             <li key={scope.id} className={styles.key} data-testid="control-station-telescope" data-telescope={scope.id} data-on={scope.id === telescopeId}>
@@ -334,12 +310,10 @@ export function ControlStationConsole({
             <b>{history.total}</b>
             <span>classified</span>
           </div>
-          {history.recent.length > 0 && (
-            <ul className={styles.recent}>
-              {history.recent.map(item => <li key={item.id}><b>{item.label}</b><span>{item.detail}</span></li>)}
-            </ul>
-          )}
-          <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
+          <div className={styles.historyKeys}>
+            {scan && <button type="button" className={`${styles.logbook} ${styles.scanKey}`} data-testid="control-station-scan" data-scanning={scan.scanning || undefined} onClick={scan.onOpen}>{scan.scanning ? 'Scanning…' : 'Scan a body'}</button>}
+            <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
+          </div>
         </div>
       </section>
     </article>

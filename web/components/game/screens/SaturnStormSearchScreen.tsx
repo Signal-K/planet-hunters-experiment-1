@@ -14,6 +14,7 @@ import {
   type SaturnVerdict,
 } from '@/lib/data'
 import { fetchReviewableSaturnCandidates } from '@/lib/saturn-subjects'
+import { saturnSectorName } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
 import type { ConsensusReadout } from '@/lib/community/consensus'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedSaturnInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
@@ -79,7 +80,7 @@ function SaturnFilters() {
 }
 
 /** Readout rows kept on the simple console: what you found, and how many squares are left. */
-const SIMPLE_READOUT = new Set(['Storms', 'Tally'])
+const SIMPLE_READOUT = new Set(['Sector', 'Storms', 'Tally'])
 
 type CellState = { answer: SaturnVerdict | null; storm: boolean }
 
@@ -98,6 +99,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const [sharpen, setSharpen] = useState(false)
   const [loupe, setLoupe] = useState(false)
   const [allControls, setAllControls] = useState(false)
+  const [pendingAnswer, setPendingAnswer] = useState<SaturnVerdict | null>(null)
   // SSL-754: the first frame opens on a simple console and plays the walkthrough.
   const firstClassification = Object.keys(classifications).length === 0
   const help = useHelp('saturn-storm-search', { firstVisit: firstClassification, firstVisitCoach: true })
@@ -260,8 +262,15 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     }))
   }
 
+  // Pick an answer, then BACK or CONFIRM: nothing is sent until the player confirms the square.
   const paint = (answer: SaturnVerdict) => {
     if (savedCells[selected] || complete) return
+    setPendingAnswer(answer)
+  }
+  const confirmAnswer = () => {
+    const answer = pendingAnswer
+    if (!answer || savedCells[selected] || complete) return
+    setPendingAnswer(null)
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer } : cell))
     help.reportAction('submit')
     captureFrame(selected, answer, cells[selected]?.storm ?? false)
@@ -303,30 +312,52 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
   const mark = (cell: CellState) => cell.answer ? `${cell.answer === 'yes' ? 'Y' : cell.answer === 'no' ? 'N' : 'M'}${cell.storm ? '★' : ''}` : '—'
   const tally = (answer: SaturnVerdict) => allCells.filter(cell => cell.answer === answer).length
   const storms = allCells.flatMap((cell, index) => cell.storm ? [`SQ ${index + 1}`] : [])
+  // Context only: the Cassini frames carry no region, so the week's sector labels the readout and does not filter frames.
+  const sectorName = saturnSectorName(player, Date.now())
   const readoutRows: InstrumentReadoutRow[] = [
     ...[0, 1, 2].map(row => ({
       label: `Row ${row + 1}`,
       value: [0, 1, 2].map(col => mark(allCells[row * 3 + col])).join('  ·  '),
       testId: `saturn-readout-row-${row + 1}`,
     })),
+    ...(sectorName ? [{ label: 'Sector', value: sectorName.toUpperCase(), testId: 'saturn-readout-sector' }] : []),
     { label: 'Storms', value: storms.length ? storms.join(' · ') : 'NONE MARKED', testId: 'saturn-readout-storms' },
     { label: 'Tally', value: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE · ${allCells.filter(cell => !cell.answer).length} LEFT`, testId: 'saturn-readout-tally' },
     { label: 'Imaging', value: `${SATURN_PALETTES[palette].name} · ${contrast.toFixed(1)}× · ${sharpen ? 'SHARP' : 'SOFT'}${loupe ? ' · LOUPE' : ''}` },
   ]
 
   // The simple console lasts through the whole first frame, so the lesson does not end in a wall of panels.
-  const simpleEligible = firstClassification || (Object.keys(classifications).length === 1 && classification != null)
+  // SSL-805: the simple console is the default for everyone; ALL CONTROLS is one tap away.
+  const simpleEligible = true
   const simpleConsole = simpleEligible && !allControls
 
+  // Simple console: one step per square. Mark a storm, or skip it; either commits the square and moves to the next open one.
+  const advanceFrom = (from: number) => {
+    for (let step = 1; step < 9; step += 1) {
+      const next = (from + step) % 9
+      if (!savedCells[next] && !cells[next]?.answer) { setSelected(next); return }
+    }
+  }
   const markStorm = () => {
     if (savedCells[selected] || complete) return
-    const storm = !cells[selected]?.storm
+    const storm = simpleConsole ? true : !cells[selected]?.storm
     const answer = cells[selected]?.answer ?? 'yes'
     setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, storm, answer } : cell))
     help.reportAction('submit')
     captureFrame(selected, answer, storm)
     onSubmit(candidate.id, selected, answer, storm)
+    if (simpleConsole) advanceFrom(selected)
   }
+  const answerSquare = (answer: 'no' | 'maybe') => {
+    if (savedCells[selected] || complete) return
+    setPendingAnswer(null)
+    setCells(prev => prev.map((cell, index) => index === selected ? { ...cell, answer, storm: false } : cell))
+    help.reportAction('submit')
+    captureFrame(selected, answer, false)
+    onSubmit(candidate.id, selected, answer, false)
+    advanceFrom(selected)
+  }
+  const skipSquare = () => answerSquare('no')
 
   return (
     <InstrumentViewport
@@ -401,7 +432,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
               aria-pressed={selected === index}
               aria-label={`Square ${index + 1}${value.storm ? ', storm marked' : ''}${value.answer ? `, ${value.answer}` : ''}`}
               disabled={!!saved || complete}
-              onClick={() => { setSelected(index); help.reportAction('select') }}
+              onClick={() => { setSelected(index); setPendingAnswer(null); help.reportAction('select') }}
             >
               {value.answer && <span className={viewportStyles.cellTag}>{VERDICT_ACTIONS.find(action => action.id === value.answer)?.mark}</span>}
               {value.storm && <span className={viewportStyles.stormMark} data-testid={`saturn-storm-${index}`} />}
@@ -414,7 +445,30 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
         <div className={viewportStyles.saved} data-testid="saturn-frame-complete" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
           {chart && <EnceladusSurveyChart chart={chart} classification={classification} />}
           {chart?.tier === 'gold' ? 'GOLD ATLAS RECORDED · RESEARCH XP AWARDED' : 'MOON ATLAS RECORDED · RESEARCH XP AWARDED'}
+          <InstrumentAnswerRow
+            groupTestId="saturn-readout-actions"
+            actions={[
+              { id: 'hub', label: 'DATA HUB', testId: 'saturn-readout-hub', primary: true, onClick: onBack },
+              ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'saturn-readout-ask', onClick: () => onShareReadout(candidate.id, { verdict: `${tally('yes')} YES · ${tally('no')} NO · ${tally('maybe')} MAYBE`, rows: readoutRows.map(({ label, value }) => ({ label, value })) }) }] : []),
+            ]}
+          />
         </div>
+      ) : simpleConsole ? (
+        <InstrumentAnswerRow
+          coachTarget="saturn-verdicts"
+          actions={[
+            { id: 'skip', label: 'NO STORM · NEXT', testId: 'saturn-skip', onClick: skipSquare },
+            { id: 'maybe', label: 'MAYBE · NEXT', testId: 'saturn-maybe', onClick: () => answerSquare('maybe') },
+          ]}
+        />
+      ) : pendingAnswer ? (
+        <InstrumentAnswerRow
+          groupTestId="saturn-readout-confirm"
+          actions={[
+            { id: 'back', label: 'BACK', testId: 'saturn-readout-back', onClick: () => setPendingAnswer(null) },
+            { id: 'confirm', label: `CONFIRM ${pendingAnswer.toUpperCase()}`, testId: 'saturn-readout-confirm-btn', primary: true, onClick: confirmAnswer },
+          ]}
+        />
       ) : (
         <InstrumentAnswerRow
           coachTarget="saturn-verdicts"
@@ -426,7 +480,9 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           }))}
         />
       )}
-      toolStepLabels={{ find: 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
+      toolStepLabels={{ find: simpleConsole ? 'Is there a storm in this square?' : 'Spot a storm in the clouds', answer: 'Is there a storm here?' }}
+      singleStep={simpleConsole}
+      done={complete}
       tool={(
         <InstrumentToolButton
           testId="saturn-mark-storm"
@@ -437,7 +493,7 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
           coachTarget="saturn-mark-storm"
         />
       )}
-      footer={simpleEligible ? (
+      footer={simpleEligible && !complete ? (
         <button type="button" className={viewportStyles.quickKey} data-testid="saturn-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
           {allControls ? 'Simple view' : 'All controls'}
         </button>

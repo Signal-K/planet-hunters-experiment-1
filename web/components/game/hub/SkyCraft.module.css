@@ -1,0 +1,80 @@
+/* SSL-827: craft crossing the Base sky. The layer covers the sky above the ridge and passes taps through. */
+.sky {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 46%;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+}
+
+/* Each lane drifts across the whole width and bobs on a gentle arc. */
+.lane {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 56px;
+  animation: cross var(--cross, 46s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+.lane[data-craft='transit'] { top: 30%; --cross: 46s; --delay: -14s; }
+.lane[data-craft='deep-space'] { top: 52%; --cross: 64s; --delay: -40s; animation-direction: reverse; }
+
+.craft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: bob 6s ease-in-out infinite;
+}
+.craft:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: -4px; }
+
+/* Space telescope: a white tube with blue solar wings. */
+.body { position: relative; display: block; width: 12px; height: 12px; background: var(--hub-chalk); border: 1px solid var(--hub-void); box-shadow: 0 0 10px color-mix(in srgb, var(--hub-chalk) 60%, transparent); }
+.body::before, .body::after { position: absolute; top: 3px; width: 14px; height: 5px; content: ''; background: var(--hub-cyan); border: 1px solid var(--hub-void); }
+.body::before { right: 13px; }
+.body::after { left: 13px; }
+
+/* Deep space telescope: a long tube with an open aperture, tilted. */
+.craft[data-craft='deep-space'] .body { width: 22px; height: 8px; transform: rotate(-16deg); }
+.craft[data-craft='deep-space'] .body::before { top: -6px; right: 6px; width: 3px; height: 18px; }
+.craft[data-craft='deep-space'] .body::after { top: 1px; left: 22px; width: 6px; height: 4px; background: var(--hub-chalk); }
+
+.ping {
+  position: absolute;
+  inset: 8px;
+  border: 1.5px solid var(--hub-chalk);
+  border-radius: 50%;
+  animation: ping 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes cross {
+  from { transform: translateX(-64px); }
+  to { transform: translateX(calc(100cqw + 8px)); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes ping {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  70%, 100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Reduced motion: the craft hold still in open sky. */
+@media (prefers-reduced-motion: reduce) {
+  .lane, .craft, .ping { animation: none; }
+  .lane[data-craft='transit'] { transform: translateX(72cqw); }
+  .lane[data-craft='deep-space'] { transform: translateX(18cqw); }
+}

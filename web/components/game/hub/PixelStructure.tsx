@@ -44,7 +44,7 @@ function SpriteLoop({ frames, intervalMs, className, testId }: { frames: string[
  *  launch mount only while a mission is in progress. Sizes are kit units times --px, from the shared site map. */
 function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean | 'core' }) {
   const launching = phase === 'launch'
-  const pad = structureSprite('launchpad')!
+  const pad = structureSprite('launchpad', tier)!
   return (
     <span
       data-pixel-structure="launchpad"
@@ -55,7 +55,7 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
       style={{ width: units(pad.width!), height: units(pad.height!) }}
     >
       <img src={`${ASSET_ROOT}${pad.src}`} alt="" draggable={false} className={styles.padArt} />
-      <span className={styles.padBeacon} style={{ left: units(34.5), bottom: units(130.5) }} />
+      {tier === 1 && <span className={styles.padBeacon} style={{ left: units(34.5), bottom: units(130.5) }} />}
       {rocket && (
         <span className={styles.padFlight} style={{ left: units(pad.mount!.x - 22), bottom: units(pad.mount!.z + 2) }}>
           <KitRocket parts={parts} space={rocket === 'core'} className={styles.padRocket} testId="pad-rocket" />
@@ -72,7 +72,7 @@ export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket 
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
   const sprite = structureSprite(kind)
-  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station')) return null
+  if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station' && kind !== 'agency')) return null
   return (
     <img
       src={`${ASSET_ROOT}${sprite.src}`}

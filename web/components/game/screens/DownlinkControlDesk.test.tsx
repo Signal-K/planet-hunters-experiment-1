@@ -10,7 +10,7 @@ const signal: InstrumentSignal = {
   instrumentId: 'transit-telescope',
   title: 'TOI 1124.01',
   subtitle: 'TOI-1124 · TESS FIELD · S/N 8.7',
-  inspectorScreen: 'galaxy',
+  inspectorScreen: 'tess-discovery',
 }
 
 describe('DownlinkControlDesk', () => {

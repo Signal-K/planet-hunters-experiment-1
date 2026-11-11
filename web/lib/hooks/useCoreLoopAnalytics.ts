@@ -14,7 +14,7 @@ const CORE_LOOP_SCREEN_STEPS: Partial<Record<Screen, CoreLoopStep>> = {
   // Preflight and the flight itself are one Launch step. The first of the two
   // wins so a retry of either does not add a second launch (SSL-465).
   fab: 'launch',
-  transit: 'launch',
+  flight: 'launch',
   mining: 'mine',
   debrief: 'debrief',
   build: 'build',

@@ -22,12 +22,31 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
     expect(catalog.targets.find(target => target.id === 'orionids-shower-field')?.type).toBe('event-field')
   })
-  it('offers the Orionids shower mission after the field guide is complete', () => {
-    const ready = buildRuntimeCatalog({
+  it('does not offer the finished Orionids shower mission to a player who never took part', () => {
+    const closed = buildRuntimeCatalog({
       catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
       freeOperations: true,
       missionsDone: 3,
       player: { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 0, fireballSpotter: { readAt: 1, passedAt: 1 } },
+    })
+    expect(closed.missions.find(mission => mission.id === 'self-directed-orionids-night-run')).toBeUndefined()
+  })
+  it('offers the Orionids shower mission to a player who took part, or bought the archive', () => {
+    const base = { ...DEFAULT_STATE.player, freeOperations: true, orionidsEventStage: 0 as const, fireballSpotter: { readAt: 1, passedAt: 1 } }
+    for (const extra of [{ orionidsFragments: { caught: 3, redeemed: 0 } }, { researchPurchases: { 'orionids-archive': 1 } }]) {
+      const ready = buildRuntimeCatalog({
+        catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
+        freeOperations: true,
+        missionsDone: 3,
+        player: { ...base, ...extra },
+      })
+      expect(ready.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
+    }
+    const ready = buildRuntimeCatalog({
+      catalog: { ...STATIC_CATALOG, missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'self-directed-orionids-night-run') },
+      freeOperations: true,
+      missionsDone: 3,
+      player: { ...base, orionidsFragments: { caught: 3, redeemed: 0 } },
     })
     expect(ready.missions.find(mission => mission.id === 'self-directed-orionids-night-run')?.targetId).toBe('orionids-shower-field')
     expect(ready.targets.find(target => target.id === 'orionids-shower-field')?.name).toBe('Orionids shower field')

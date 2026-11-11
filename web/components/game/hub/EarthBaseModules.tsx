@@ -16,10 +16,14 @@ export interface HubBuildingDef {
   hot?: boolean
   status?: 'ok' | 'info' | 'warn' | 'locked' | 'building'
   dimmed?: boolean
+  /** SSL-785: the first-run Agency landmark draws the line-art agency building in the Control Station's place. */
+  landmark?: boolean
   rocketVariant?: 'explorer' | 'prospector'
   active?: boolean
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
   buildStartedAt?: number
+  /** Launchpad level, which sets the build time (SSL-693). */
+  padLevel?: number
 }
 
 /** Level-3 footprints. Level 1 and 2 render the same silhouette smaller via `structureTierScale`.
@@ -78,8 +82,8 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
   )
 }
 
-function StructureSprite({ kind, level = 1, active, buildStartedAt, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
-  const buildMs = structureBuildMs(kind)
+function StructureSprite({ kind, level = 1, active, buildStartedAt, padLevel = 1, parts, rocket }: { kind: string; level?: number; active?: boolean; buildStartedAt?: number; padLevel?: number; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
+  const buildMs = structureBuildMs(kind, padLevel)
   // `buildStartedAt` does not change when the build finishes, so a value
   // captured once at mount left `isBuilding` true forever and the cyan
   // scaffold stayed on top of the finished sprite. Re-render when the
@@ -165,7 +169,7 @@ export function SurfaceSiloSprite() {
   )
 }
 
-export function EarthBaseModules({ buildings, parts, padRocket = false }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core' }) {
+export function EarthBaseModules({ buildings, parts, padRocket = false, arrangement }: { buildings: HubBuildingDef[]; parts?: InstalledCustomizerPartsByKind | null; padRocket?: boolean | 'core'; arrangement?: readonly string[] | null }) {
   return (
     <div aria-hidden="true" className="earth-base-modules-layer" style={{ '--hub-fit': '1' } as React.CSSProperties}>
       {buildings.map(building => {
@@ -188,9 +192,9 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.launchpad
         const widthPct = structureWidthPct(building.kind, building.level ?? 1)
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
-        const authoredSite = kit ? homeSite(building.kind) : null
+        const authoredSite = kit ? homeSite(building.kind, arrangement) : null
         const site = authoredSite ? displaySite(authoredSite) : null
-        const sprite = kit ? structureSprite(building.kind) : null
+        const sprite = kit ? structureSprite(building.landmark ? 'agency' : building.kind) : null
         const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span
@@ -206,7 +210,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false }: { buil
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
+            <StructureSprite kind={building.landmark ? 'agency' : building.kind} level={building.level ?? (building.kind === 'market' ? 2 : 1)} active={building.active} buildStartedAt={building.buildStartedAt} padLevel={building.padLevel} parts={parts} rocket={building.kind === 'launchpad' ? padRocket : true} />
           </span>
         )
       })}

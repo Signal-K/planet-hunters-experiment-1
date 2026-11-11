@@ -77,3 +77,20 @@
 .sheetHead svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 
 .chart { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: rgba(8, 16, 34, 0.35); }
+
+/* SSL-803: a finished scan asking for a manual check. Sits in the desk, under the title. */
+.followUp {
+  min-height: 44px;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: 8px 14px;
+  border: 2px solid #ffb454;
+  border-radius: 12px;
+  background: rgba(255, 180, 84, 0.14);
+  color: #f4efe4;
+  font: 700 14px/1.2 var(--ln-font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.followUp strong { color: #ffb454; font: 800 14px/1.2 var(--ln-font-mono); letter-spacing: 0.06em; text-transform: uppercase; }

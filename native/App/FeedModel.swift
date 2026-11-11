@@ -33,6 +33,13 @@ final class FeedModel {
         saturn = await feed.saturn(); saturnPhase = .ready
     }
 
+    /// SSL-828: a Saturn player's week of frames is downloaded at launch, so the satellite works offline.
+    func prefetchSaturn(player: Player, nowMs: Double) async {
+        guard player.saturnImagerLaunchedAt != nil else { return }
+        await loadSaturn()
+        await SaturnFrameStore.prefetch(SaturnFrameStore.upcoming(saturn, player: player, nowMs: nowMs))
+    }
+
     /// Polls the global last-confirmed signal while signed in; cancelled with the owning view's task.
     /// A failed poll is silent and retried next interval.
     func pollConfirmed(store: GameStore) async {

@@ -199,6 +199,6 @@ export function feasibleTargetsFor(
       launchpadLevel,
       parts,
     })
-    return validateBuild({ mission, target, rocket, parts }).ok
+    return validateBuild({ mission, target, rocket, parts, launchpadLevel }).ok
   })
 }

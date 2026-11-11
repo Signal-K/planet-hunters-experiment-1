@@ -192,7 +192,7 @@ describe('resolvePreset — recent UI surfaces', () => {
 
   it('opens the TESS discovery console with the satellite built and launched', () => {
     const p = resolvePreset('ui-tess-discovery')!
-    expect(p.screen).toBe('galaxy')
+    expect(p.screen).toBe('tess-discovery')
     expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
   })
 })

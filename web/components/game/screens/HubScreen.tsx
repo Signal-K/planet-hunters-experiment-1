@@ -24,17 +24,18 @@ import { RocketRollout } from '@/components/game/hub/RocketRollout'
 import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
+import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
+import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padNeedsService } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
-import { StashChip } from '@/components/game/hub/StashChip'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
-import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
-import { telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
+import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
+import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
@@ -45,8 +46,12 @@ import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
+import DataReadyChip from '../DataReadyChip'
+import PanHint from '../PanHint'
+import RearrangeBar from '../RearrangeBar'
 import CommunityGoalChip from '@/components/game/CommunityGoalChip'
 import type { CommunityResearch } from '@/lib/research/stamps'
+import { orionidsSkyOn } from '@/lib/orionids/access'
 import { BaseConstellations } from '@/components/game/hub/BaseConstellations'
 
 function hubQuery(): URLSearchParams {
@@ -81,6 +86,8 @@ const TELESCOPE_NAMES: Record<InstrumentPointing, string> = { transit: 'space te
 interface HubScreenProps {
   player: Player
   onBuild?: () => void
+  /** Saves a new left-to-right order of the movable structures. */
+  onArrange?: (order: string[]) => void
   /** Open straight into placement (the Build screen is this scene in placement mode). */
   placementMode?: boolean
   /** Unlocked, not yet placed structures offered while placing. */
@@ -96,6 +103,7 @@ interface HubScreenProps {
   onPointTelescope?: (instrument: InstrumentPointing) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
   onUpgradeBuilding?: (id: string) => void
+  onServiceLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onExcavateSubsurfaceUnavailable?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -114,7 +122,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -123,20 +131,25 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // Phones keep the Base still (SSL-787): no pan, pinch or overview slider. Portrait picks the kit scale (1 to 2) that
   // fills the width with everything built; landscape already fits (kitScale caps it at width / 460).
   const phoneView = viewSize.w < 600 || viewSize.h < 500
+  const arrangement = player.baseArrangement ?? null
   const standingKinds = (player.placed ?? []).includes('launchpad') && !(player.placed ?? []).includes('control-station')
     ? [...(player.placed ?? []), 'control-station']
     : (player.placed ?? [])
   const fullPx = kitScale(viewSize)
-  const px = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
-    ? Math.min(2, Math.max(1, Math.floor(((viewSize.w - 16) / builtSpan(standingKinds)) * 100) / 100))
-    : fullPx
+  const portraitPhone = phoneView && viewSize.w < 600 && viewSize.h > viewSize.w
+  // Portrait phones draw the Base at the full phone kit scale (2), so the structures stand tall, and the camera pans
+  // along the strip (drag), starting on the pad. Four structures no longer fit across 390pt at that size.
+  const px = portraitPhone ? 2 : fullPx
+  // Portrait phones are tall: the sky would take 70% of the screen, so the ground line (and everything standing on it) rises.
+  const groundLine = portraitPhone ? 0.46 : undefined
   const worldW = STRIP_W * px
-  const builtKinds = player.placed ?? []
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px) * px, locked: phoneView })
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
   const [editMode, setEditMode] = useState(placementMode)
+  const [arrangeMode, setArrangeMode] = useState(false)
+  const [arrangeKind, setArrangeKind] = useState<string | null>(null)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
@@ -160,6 +173,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
+  const [servicingPad, setServicingPad] = useState(false)
+  const [siloOpen, setSiloOpen] = useState(false)
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
@@ -179,7 +194,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
       // SSL-675: the agency's control station stands on the Base from the first launchpad as a landmark, so the
       // Base is not an empty plain. It is display-only: nothing is placed or unlocked until the player builds
-      // their own on this same site. Stand-in art until the dedicated agency building sprite ships.
+      // their own on this same site. Drawn as the line-art agency building (SSL-785).
       ...(agencyLandmark ? { 'control-station': homeSite('control-station')?.plot ?? 3 } : {}),
     })
       .map(([kind, plot]): [string, number] => [kind, homeSite(kind)?.plot ?? plot])
@@ -203,7 +218,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
-      const authoredSite = kind ? homeSite(kind) : null
+      const authoredSite = kind ? homeSite(kind, arrangement) : null
       const site = authoredSite ? displaySite(authoredSite) : null
       const sprite = kind ? structureSprite(kind) : null
       if (!site) {
@@ -248,6 +263,8 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
     return false
   }
+  const padLevel = buildingLevel(player, 'launchpad')
+  const padWorn = padNeedsService(player)
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -258,8 +275,10 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       w: BUILDING_W[kind] ?? 78,
       level: isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
-      status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
+      status: isUnderConstruction(startedAt, kind, undefined, padLevel) ? ('building' as const) : ('ok' as const),
+      padLevel,
       dimmed: isDimmedBuildingKind(kind),
+      landmark: kind === 'control-station' && agencyLandmark,
       active: activeBuilding === kind,
       buildStartedAt: startedAt,
     }]
@@ -299,12 +318,16 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // The sky speaks for the citizen science tools: a telescope that needs positioning, or one with data ready to
   // classify. It opens the tool. Pointing comes first because a pointed telescope is what brings the data.
   const needsPointing = telescopesNeedingPointing(player, Date.now())
+  const alreadyPointed = pointedThisWeek(player.telescopeAim, Date.now())
+  const pointedNames = alreadyPointed.map(id => TELESCOPE_NAMES[id])
   const stationQuiet = !onboardingActive && !coachVisible && !player.activeMission
   const stationCallout: BuildingCallout | undefined = !stationQuiet ? undefined
     : needsPointing.length > 0 && onPointTelescope
     ? {
       title: `Point the ${TELESCOPE_NAMES[needsPointing[0]]}`,
-      body: 'It has no target this week. Aim it at any part of the sky and map it.',
+      body: pointedNames.length
+        ? `Your ${pointedNames.join(' and ')} ${pointedNames.length === 1 ? 'is' : 'are'} pointed. This one has no target this week yet.`
+        : 'It has no target this week. Aim it at any part of the sky and map it.',
       cta: 'Point',
       placement: 'viewport-clear',
       onCta: () => onPointTelescope(needsPointing[0]),
@@ -347,7 +370,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (padLanding || homecoming) return null
     if (player.activeMission) {
       const resume = missionResumeScreen(player)
-      const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
+      const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'flight'
       const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
       return {
         state,
@@ -369,24 +392,24 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     if (kind === 'launchpad') {
       return {
         kind, label: 'Launchpad',
-        sub: player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
-        status: (player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
+        sub: padWorn ? 'NEEDS SERVICE' : player.activeMission ? 'IN FLIGHT' : stagedRocketInHangar ? 'VEHICLE IN HANGAR' : stagedRocketOnPad ? 'CRAFT ON PAD' : 'READY',
+        status: (padWorn || player.activeMission || stagedRocketInHangar ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: stagedRocketOnPad,
         // Match the rendered mobile footprint of the authored sprite. The
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: menuOpen || editMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
-        onClick: () => onFocusBuilding('launchpad'),
+        callout: menuOpen || editMode || arrangeMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
+        onClick: () => padWorn && onServiceLaunchpad ? setServicingPad(true) : onFocusBuilding('launchpad'),
       }
     }
     if (kind === 'control-station') {
       return {
-        kind, label: agencyLandmark ? 'Agency' : 'Control station',
+        kind, label: agencyLandmark ? 'Agency' : 'Data hub',
         sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
         status: 'ok' as const,
         w: 60,
-        callout: menuOpen || editMode || agencyLandmark ? undefined : stationCallout,
+        callout: menuOpen || editMode || arrangeMode || agencyLandmark ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
       }
@@ -397,7 +420,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         sub: 'SELL ORE',
         status: 'ok' as const,
         w: 150,
-        callout: menuOpen || editMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
+        callout: menuOpen || editMode || arrangeMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
         onClick: () => onFocusBuilding('market'),
       }
     }
@@ -414,10 +437,12 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
       return {
         kind, label: 'Surface Silo',
-        sub: `${Math.min(used, 40)} / 40 U`,
+        sub: `${Math.min(used, surfaceSiloCapacity(player.buildingLevels))} / ${surfaceSiloCapacity(player.buildingLevels)} U`,
         status: 'ok' as const,
         w: 62,
-        onClick: () => onFocusBuilding('build'),
+        // The Surface Silo stands above ground: it opens its own contents
+        // here. The Mineral Vault underground is a separate building.
+        onClick: () => setSiloOpen(true),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -460,7 +485,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   // The starter silo stands above ground like every other build: it gets a site marker to place it on.
   const underground = false
   // The one site the picked build may stand on, offered only while it is free.
-  const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild) : null
+  const authoredPickedSite = editMode && pickedBuild ? homeSite(pickedBuild, arrangement) : null
   const pickedSite = authoredPickedSite ? displaySite(authoredPickedSite) : null
   const pickedOption = buildOptions.find(o => o.id === pickedBuild)
   const pickedSiteFree = !!pickedSite && pickedSite.plot != null && !placed.includes(pickedBuild ?? '') && !placed.some(kind => homeSite(kind)?.id === pickedSite.id)
@@ -491,12 +516,15 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
   const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures and launch support', onSelect: () => { setPlaceNote(null); setEditMode(true) } },
+    ...(onArrange && standingKinds.filter(kind => (MOVABLE_KINDS as readonly string[]).includes(kind)).length > 1
+      ? [{ id: 'rearrange', icon: 'build' as const, label: 'Rearrange', detail: 'Swap structures along the Base', onSelect: () => { setArrangeKind(null); setArrangeMode(true) } }]
+      : []),
     { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
     ...(
       hasControlStation || ownsOrbitalInstrument
-        ? [{ id: 'instruments', icon: 'station' as const, label: 'Instruments', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
+        ? [{ id: 'instruments', icon: 'station' as const, label: 'Data hub', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
         : []
     ),
     { id: 'community-research', icon: 'research', label: 'Community research', detail: liveSkyEvent ? `${liveSkyEvent.name} week, shared with every player` : 'Daily stamps and the shared monthly goal', onSelect: () => onOpenScene('community-research') },
@@ -506,8 +534,23 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
+  const dataChipShown = !subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && signals.length > 0
+  // SSL-827: the Point prompt, the data-ready chip and the craft in the sky all open the same pointing screen, on the
+  // telescope that still needs a target (or the one tapped). Without a pointable telescope they fall back to the Data hub.
+  const pointable = onlineTelescopes(player)
+  const openPointing = (preferred?: InstrumentPointing) => {
+    const next = preferred && pointable.includes(preferred) ? preferred : needsPointing[0] ?? pointable[0]
+    if (next && onPointTelescope) onPointTelescope(next)
+    else onOpenScene('instrument-hub')
+  }
+  const skyCraftItems: SkyCraftItem[] = [
+    ...(player.transitSatelliteLaunchedAt ? [{ id: 'transit' as const, name: 'Space telescope', needsPointing: needsPointing.includes('transit') }] : []),
+    ...(player.deepSpaceTelescopeBuilt ? [{ id: 'deep-space' as const, name: 'Deep space telescope', needsPointing: needsPointing.includes('deep-space') }] : []),
+  ]
+  const orbitalNetwork = !subsurface && <SkyCraft craft={skyCraftItems} onPoint={openPointing} />
+
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px` } as React.CSSProperties}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
 
       {/* One continuous vertical world: surface above, soil and bedrock below.
           Subsurface moves this canvas down instead of replacing the Hub with
@@ -532,7 +575,7 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         >
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
-          <BaseWorldCanvas px={px} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} launchTags />
+          <BaseWorldCanvas px={px} groundLine={groundLine} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} launchTags extraSky={orionidsSkyOn(player) ? ['meteors'] : undefined} />
           <BaseConstellations player={player} visible={skyGrade === 'night' || skyGrade === 'dusk' || skyGrade === 'dawn'} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
@@ -555,21 +598,10 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             </button>
           )}
 
-          {(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
-            <OrbitalInstrumentNetwork
-              transitOnline={!!player.transitSatelliteLaunchedAt}
-              deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
-              readyCount={signals.length}
-              ping
-              onOpen={() => onOpenScene('instrument-hub')}
-              onOpenTransit={() => onOpenScene('instrument-hub')}
-              onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
-            />
-          )}
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <EarthBaseModules buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
+          <EarthBaseModules arrangement={arrangement} buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
           {rollingOut && <RocketRollout onDone={finishRollout} />}
 
           {/* Surface buildings — hit areas + labels.
@@ -593,23 +625,24 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) return null
                 const startedAt = player.underConstruction?.[kind]
-                const building = isUnderConstruction(startedAt, kind)
-                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
+                const building = isUnderConstruction(startedAt, kind, undefined, padLevel)
+                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt, padLevel }
                   : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
-                const authoredSite = homeSite(kind)
+                const authoredSite = homeSite(kind, arrangement)
                 const xFrac = (authoredSite ? displaySite(authoredSite).x : STRIP_W / 2) / STRIP_W
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
                 const silo = kind === 'surface-silo'
-                const editable = editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind)
+                const arrangeable = arrangeMode && (MOVABLE_KINDS as readonly string[]).includes(kind) && !isUnderConstruction(startedAt, kind, undefined, padLevel)
+                const editable = arrangeable
+                  ? { ...building, onClick: () => setArrangeKind(kind) }
+                  : editMode && isUpgradableBuilding(kind) && !isUnderConstruction(startedAt, kind, undefined, padLevel)
                   ? { ...building, onClick: () => setUpgradingBuilding(kind) }
-                  : silo
-                    ? { ...building, onClick: () => setSubsurface(true) }
-                    : building
+                  : building
                 const aspect = EARTH_BASE_STRUCTURE_SIZES[kind]
                 const pad = kind === 'launchpad'
-                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...editable} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={arrangeMode ? arrangeKind === kind : activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
               {pickedSite && pickedSiteFree && !underground && onPlaceStructure && (
                 <SiteMarker site={pickedSite} label={pickedOption?.name ?? pickedSite.label} onPlace={() => placeOnPlot(pickedSite.plot ?? 0)} />
@@ -617,6 +650,11 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             </div>
           </div>
           </div>
+          {/* The craft fly across the view, not the pannable world, so they cross the screen on every layout. */}
+          {orbitalNetwork}
+          {portraitPhone && !subsurface && !editMode && cameraTravel > 0 && (
+            <PanHint canLeft={camera.cam.x < -8} canRight={camera.cam.x > -cameraTravel + 8} onLeft={() => moveBase(-0.4)} onRight={() => moveBase(0.4)} />
+          )}
         </div>
 
         <div className={layoutStyles.subsurfaceWorld} aria-hidden={!subsurface}>
@@ -640,6 +678,9 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
       {/* ── End persistent Base world ── */}
 
       {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
+      {dataChipShown && (
+        <DataReadyChip count={signals.length} onOpen={() => openPointing()} />
+      )}
       {!subsurface && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
@@ -658,13 +699,34 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
           {!subsurface && (
             <div className={layoutStyles.chips}>
               <span className="scene-chip" data-testid="hub-francs-chip">{formatCurrency(player.francs, { compact: true })}</span>
-              <StashChip testId="hub-cargo-chip" />
             </div>
           )}
           {/* The signed-in inbox bell portals here so it shares the row's padding at every breakpoint (SSL-740). */}
           {!subsurface && <div id="hub-top-right" className={layoutStyles.topRight} />}
         </div>
       </div>
+
+      {siloOpen && !subsurface && (
+        <SurfaceSiloPanel
+          stash={player.stash}
+          buildingLevels={player.buildingLevels}
+          subsurfaceBuilt={player.subsurfaceBuilt}
+          onSell={player.placed?.includes('market') && onOpenMarket ? () => { setSiloOpen(false); onOpenMarket() } : undefined}
+          onClose={() => setSiloOpen(false)}
+        />
+      )}
+
+      {servicingPad && onServiceLaunchpad && (
+        <ActionConfirmBar
+          eyebrow={`Level ${padLevel} launchpad`}
+          title="Service the launchpad"
+          description={`It has flown ${PAD_LAUNCHES_BETWEEN_SERVICE[padLevel - 1]} launches since its last service and holds new ones until it is serviced. ${player.francs < PAD_SERVICE_COST ? `Needs ${formatCurrency(PAD_SERVICE_COST - player.francs)} more. ` : ''}A bigger pad wears less: ${PAD_LAUNCHES_BETWEEN_SERVICE.join(', ')} launches at levels 1 to 3.`}
+          confirmLabel={`Service (${formatCurrency(PAD_SERVICE_COST, { compact: true })})`}
+          confirmDisabled={player.francs < PAD_SERVICE_COST}
+          onConfirm={() => { onServiceLaunchpad(); setServicingPad(false) }}
+          onDismiss={() => setServicingPad(false)}
+        />
+      )}
 
       {upgradingBuilding && onUpgradeBuilding && (() => {
         const level = buildingLevel(player, upgradingBuilding)
@@ -683,6 +745,33 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
             confirmDisabled={maxed || player.francs < cost}
             onConfirm={() => { onUpgradeBuilding(upgradingBuilding); setUpgradingBuilding(null) }}
             onDismiss={() => setUpgradingBuilding(null)}
+          />
+        )
+      })()}
+
+      {arrangeMode && !subsurface && (() => {
+        const order = [...(arrangement ?? MOVABLE_KINDS)]
+        const standing = order.filter(kind => standingKinds.includes(kind))
+        const at = arrangeKind ? standing.indexOf(arrangeKind) : -1
+        const move = (dir: -1 | 1) => {
+          const swapWith = standing[at + dir]
+          if (!arrangeKind || !swapWith || !onArrange) return
+          const next = [...order]
+          const a = next.indexOf(arrangeKind)
+          const b = next.indexOf(swapWith)
+          ;[next[a], next[b]] = [next[b], next[a]]
+          onArrange(next)
+          const nextX = homeSite(arrangeKind, next)
+          if (nextX) camera.focusX(displaySite(nextX).x * px)
+        }
+        return (
+          <RearrangeBar
+            name={arrangeKind ? (arrangeKind === 'market' ? 'Exchange' : arrangeKind === 'control-station' ? 'Data hub' : arrangeKind[0].toUpperCase() + arrangeKind.slice(1)) : null}
+            canLeft={at > 0}
+            canRight={at >= 0 && at < standing.length - 1}
+            onLeft={() => move(-1)}
+            onRight={() => move(1)}
+            onDone={() => { setArrangeMode(false); setArrangeKind(null) }}
           />
         )
       })()}
@@ -726,30 +815,6 @@ export default function HubScreen({ player, onBuild, placementMode = false, buil
         </div>
       )}
 
-        {!subsurface && !phoneView && (
-          <div className="base-overview" data-testid="base-overview">
-            <button
-              type="button"
-              className="base-overview-toggle"
-              data-testid="base-overview-toggle"
-              onClick={() => (camera.cam.zoom < 1 ? camera.focusX(homeCenter(builtKinds, viewSize.w / px) * px) : camera.overview())}
-            >
-              {camera.cam.zoom < 1 ? 'Back' : 'Overview'}
-            </button>
-            <input
-              type="range"
-              className="base-overview-slider"
-              data-testid="base-overview-slider"
-              aria-label="Position along the Base"
-              min={0}
-              max={1}
-              step={0.01}
-              value={camera.cam.zoom < 1 ? 0 : overviewPosition}
-              disabled={camera.cam.zoom < 1}
-              onChange={event => camera.setPosition(Number(event.target.value))}
-            />
-          </div>
-        )}
       {/* The surface dock is reserved for all-scene navigation only. Base-only
           actions remain on their physical buildings or in their own surfaces. */}
       {/* The delivery sheet of a homecoming covers the dock, so it is not drawn under it (it would only be an inert, overlapped control). */}

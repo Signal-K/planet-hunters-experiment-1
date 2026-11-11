@@ -36,6 +36,8 @@ export interface BuildingProps {
   status: 'ok' | 'warn' | 'info' | 'building'
   /** When `status` is 'building', the timestamp construction started — drives the countdown label. */
   buildStartedAt?: number
+  /** Launchpad level, which sets how fast structures build (SSL-693). */
+  padLevel?: number
   hot?: boolean
   w: number
   /**
@@ -112,13 +114,13 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
+export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
   const now = useSharedSecond()
   const buildRemainingS = status === 'building'
-    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind, now || undefined)) / 1000))
+    ? Math.max(0, Math.ceil(structureBuildMs(kind, padLevel) * (1 - hubConstructionProgress(buildStartedAt, kind, now || undefined, padLevel)) / 1000))
     : 0
   const displaySub = status === 'building' ? `BUILDING · ${buildRemainingS}S` : sub
   // Hover (desktop) and press (mobile — there's no real :hover on touch) both

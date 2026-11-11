@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"log"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -24,8 +23,14 @@ import (
 // the Landnam "users" record ID are already the shared-backend user ID
 // (see landnam_auth.go's doc comment).
 
-var friendGiftMinerals = []string{"iron", "silicon", "carbon", "copper", "aluminium", "nickel", "cobalt", "ice"}
-var friendGiftBlueprints = []string{"scan-station", "deep-space-telescope", "astronaut-academy", "garage"}
+// SSL-794: a gift is ore out of the sender's stash, once per friend per day.
+// 3 of any common or uncommon ore, or 1 of any rare or exotic ore. Mirrors
+// web/lib/friends/giftRules.ts. Shower debris and fireball fragments are not giftable.
+var friendGiftAmounts = map[string]int{
+	"iron": 3, "silicon": 3, "carbon": 3, "copper": 3, "aluminium": 3,
+	"ice": 3, "nickel": 3, "cobalt": 3, "hydrogen": 3,
+	"platinum": 1, "palladium": 1, "iridium": 1, "gold": 1, "uranium": 1, "rhodium": 1, "rare": 1,
+}
 
 func registerFriendsRoutes(app core.App) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
@@ -381,19 +386,17 @@ func friendsBaseHandler(app core.App) func(e *core.RequestEvent) error {
 	}
 }
 
-func rollGiftPayload(kind string) (map[string]any, error) {
-	switch kind {
-	case "currency":
-		return map[string]any{"amount": 50 + rand.Intn(101)}, nil // 50-150 francs
-	case "resource":
-		mineral := friendGiftMinerals[rand.Intn(len(friendGiftMinerals))]
-		return map[string]any{"mineral": mineral, "amount": 3 + rand.Intn(6)}, nil // 3-8 units
-	case "blueprint":
-		slug := friendGiftBlueprints[rand.Intn(len(friendGiftBlueprints))]
-		return map[string]any{"slug": slug}, nil
-	default:
-		return nil, errors.New("unknown gift kind")
+// giftPayload builds the one gift kind that exists now: ore the sender chose.
+// Currency and blueprint gifts are retired (SSL-794); old ones can still be claimed.
+func giftPayload(kind, mineral string) (map[string]any, error) {
+	if kind != "resource" {
+		return nil, errors.New("gifts are ore only")
 	}
+	amount, ok := friendGiftAmounts[mineral]
+	if !ok {
+		return nil, errors.New("that ore cannot be gifted")
+	}
+	return map[string]any{"mineral": mineral, "amount": amount}, nil
 }
 
 func friendsGiftSendHandler(app core.App) func(e *core.RequestEvent) error {
@@ -401,6 +404,7 @@ func friendsGiftSendHandler(app core.App) func(e *core.RequestEvent) error {
 		var body struct {
 			RecipientID string `json:"recipientId"`
 			Kind        string `json:"kind"`
+			Mineral     string `json:"mineral"`
 		}
 		if err := e.BindBody(&body); err != nil {
 			return apis.NewBadRequestError("invalid body", err)
@@ -417,7 +421,7 @@ func friendsGiftSendHandler(app core.App) func(e *core.RequestEvent) error {
 			return apis.NewApiError(http.StatusConflict, "you already sent this friend a gift today", nil)
 		}
 
-		payload, err := rollGiftPayload(body.Kind)
+		payload, err := giftPayload(body.Kind, body.Mineral)
 		if err != nil {
 			return apis.NewBadRequestError(err.Error(), nil)
 		}

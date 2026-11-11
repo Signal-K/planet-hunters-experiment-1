@@ -16,8 +16,9 @@ export function SceneTop({ onBack, children, testId }: { onBack: () => void; chi
   )
 }
 
-export function ScenePill({ children, align, testId, tone }: { children: ReactNode; align?: 'end'; testId?: string; tone?: 'cyan' | 'white' }) {
-  return <span className={styles.pill} data-align={align} data-tone={tone ?? 'cyan'} data-testid={testId}>{children}</span>
+/** `syncAnchor` puts the sync chip in the row just before this pill, on screens with no francs chip or help button. */
+export function ScenePill({ children, align, testId, tone, syncAnchor }: { children: ReactNode; align?: 'end'; testId?: string; tone?: 'cyan' | 'white'; syncAnchor?: boolean }) {
+  return <span className={styles.pill} data-align={align} data-tone={tone ?? 'cyan'} data-testid={testId} data-sync-anchor={syncAnchor ? '' : undefined}>{children}</span>
 }
 
 export function SceneCard({ children, label, solo }: { children: ReactNode; label: string; solo?: boolean }) {
@@ -45,8 +46,8 @@ export function ScenePrimary({ children, disabled, onClick, testId }: { children
   return <button type="button" className={styles.primary} data-testid={testId} disabled={disabled} onClick={onClick}>{children}</button>
 }
 
-export function SceneGhost({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
-  return <button type="button" className={styles.ghost} onClick={onClick}>{children}</button>
+export function SceneGhost({ children, onClick, testId }: { children: ReactNode; onClick?: () => void; testId?: string }) {
+  return <button type="button" className={styles.ghost} data-testid={testId} onClick={onClick}>{children}</button>
 }
 
 /** Dark edge shading shared by every full-bleed scene. */

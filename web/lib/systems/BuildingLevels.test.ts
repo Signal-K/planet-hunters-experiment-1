@@ -5,8 +5,11 @@ import { DEFAULT_STATE, mergeRemoteState, normalizeState } from '@/lib/game-stat
 import type { GameState } from '@/lib/game-types'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_UPGRADE_COSTS, SURFACE_SILO_CAPACITY, buildingLevel, sanitizeBuildingLevels } from '@/lib/data'
 import { REFINERY_RECIPES } from '@/lib/data/structures'
-import { suggestBuild } from '@/lib/data/parts'
-import { applyUpgradeBuilding, applyUpgradeLaunchpad, applyStartRefine, storageCapacity } from './EconomySystem'
+import { PARTS, suggestBuild, validateBuild } from '@/lib/data/parts'
+import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padBuildMultiplier, padLaunchesLeft, padNeedsService } from '@/lib/data/building-levels'
+import { rocketPadLevel, ROCKET_IDS } from '@/lib/data/rockets'
+import { structureBuildMs, isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
+import { applyServiceLaunchpad, applyUpgradeBuilding, applyUpgradeLaunchpad, applyStartRefine, storageCapacity } from './EconomySystem'
 
 function state(player: Partial<GameState['player']> = {}): GameState {
   return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery',], ...player } }
@@ -86,6 +89,68 @@ describe('building levels', () => {
     expect(chassisAt({})).toBe('c1')
     expect(chassisAt({ launchpadUpgraded: true, launchpadLevel: 2 })).toBe('c1')
     expect(chassisAt({ launchpadUpgraded: true, launchpadLevel: 3 })).toBe('c2')
+  })
+
+  it('larger hulls need a bigger launchpad (SSL-693)', () => {
+    const mission = { requires: { cargo_min: 6, drill_tier: 1 } } as Parameters<typeof validateBuild>[0]['mission']
+    const target = { orbit: 1 } as Parameters<typeof validateBuild>[0]['target']
+    const flyWith = (chassis: string, launchpadLevel?: number) =>
+      validateBuild({ mission, target, rocket: { chassis, propulsion: 'ion-a1', drill: 'hand-drill' }, launchpadLevel })
+    expect(flyWith('hull-mk2', 1).ok).toBe(true)
+    const heavy = flyWith('hull-mk3', 1)
+    expect(heavy.ok).toBe(false)
+    expect(heavy.holds).toEqual([{ kind: 'pad', have: 1, need: 2 }])
+    expect(flyWith('hull-mk3', 2).ok).toBe(true)
+    expect(flyWith('hull-hauler', 2).ok).toBe(false)
+    expect(flyWith('hull-hauler', 3).ok).toBe(true)
+    expect(flyWith('hull-hauler').ok).toBe(true)
+    expect(rocketPadLevel({ id: ROCKET_IDS.surveyor })).toBe(2)
+  })
+
+  it('suggested builds stay on hulls the pad can host', () => {
+    const mission = { requires: { cargo_min: 16, drill_tier: 1 } } as Parameters<typeof suggestBuild>[0]['mission']
+    const at = (launchpadLevel: number) => suggestBuild({ mission, target: null, missionsDone: 6, launchpadLevel, parts: PARTS }).chassis
+    expect(at(1)).toBe('hull-cargo')
+    expect(at(2)).toBe('hull-mk3')
+  })
+
+  it('structures build faster on a bigger launchpad', () => {
+    expect([1, 2, 3].map(padBuildMultiplier)).toEqual([1, 0.75, 0.5])
+    expect(structureBuildMs('refinery')).toBe(10_000)
+    expect(structureBuildMs('refinery', 2)).toBe(7_500)
+    expect(structureBuildMs('refinery', 3)).toBe(5_000)
+    const started = 1_000_000
+    expect(isUnderConstruction(started, 'refinery', started + 6_000, 1)).toBe(true)
+    expect(isUnderConstruction(started, 'refinery', started + 6_000, 3)).toBe(false)
+  })
+
+  it('a bigger launchpad wears less and needs service less often (SSL-693)', () => {
+    expect([...PAD_LAUNCHES_BETWEEN_SERVICE]).toEqual([10, 14, 20])
+    expect(padLaunchesLeft({ padLaunches: 4 })).toBe(6)
+    expect(padLaunchesLeft({ padLaunches: 4, buildingLevels: { launchpad: 3 } })).toBe(16)
+    expect(padNeedsService({ padLaunches: 10 })).toBe(true)
+    expect(padNeedsService({ padLaunches: 10, buildingLevels: { launchpad: 2 } })).toBe(false)
+    expect(padNeedsService({ padLaunches: 14, buildingLevels: { launchpad: 2 } })).toBe(true)
+    expect(padNeedsService({})).toBe(false)
+  })
+
+  it('servicing costs francs, resets the count and does nothing when unworn or unaffordable', () => {
+    const worn = state({ padLaunches: 10, francs: PAD_SERVICE_COST * 3 })
+    const done = applyServiceLaunchpad(worn)
+    expect(done.player.padLaunches).toBe(0)
+    expect(done.player.francs).toBe(PAD_SERVICE_COST * 2)
+    expect(applyServiceLaunchpad(done)).toBe(done)
+    const broke = state({ padLaunches: 10, francs: PAD_SERVICE_COST - 1 })
+    expect(applyServiceLaunchpad(broke)).toBe(broke)
+    expect(applyServiceLaunchpad(state({ padLaunches: 10, placed: [] }))).toEqual(expect.objectContaining({ player: expect.objectContaining({ padLaunches: 10 }) }))
+  })
+
+  it('keeps the local wear count on merge and cleans a bad saved value', () => {
+    const local = state({ padLaunches: 0 })
+    const merged = mergeRemoteState(local, { player: { ...state().player, padLaunches: 9, missionsDone: local.player.missionsDone + 1 } })
+    expect(merged.player.padLaunches).toBe(0)
+    expect(normalizeState({ player: { padLaunches: -3 } as unknown as GameState['player'] }).player.padLaunches).toBe(0)
+    expect(normalizeState({ player: { padLaunches: 7.9 } as unknown as GameState['player'] }).player.padLaunches).toBe(7)
   })
 
   it('merge never lowers a level from either side', () => {

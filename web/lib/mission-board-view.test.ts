@@ -95,4 +95,13 @@ describe('mission board view', () => {
     expect(mark?.label).toBe('WSW 1/4')
     expect(mark?.title.length).toBeGreaterThan(0)
   })
+
+  it('points the ended Orionids card to the archive when the player cannot replay it', () => {
+    const after = Date.parse('2026-11-09T12:00:00Z')
+    const locked = eventsBoard(after, {}, after, {}, 0, 0, false)
+    expect(locked.orionids.status).toBe('ended')
+    expect(locked.orionids.actionLabel).toBe('OPEN ARCHIVE')
+    const open = eventsBoard(after, {}, after, {}, 0, 0, true)
+    expect(open.orionids.actionLabel).toBe('PLAY FOR SILVER')
+  })
 })

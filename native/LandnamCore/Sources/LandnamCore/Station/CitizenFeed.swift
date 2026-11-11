@@ -79,12 +79,18 @@ public struct SharedFeed: Sendable {
     }
     /// Pool frames, or the static seed when the pool is unreachable or empty so the imager works offline.
     public func saturn() async -> [SaturnCandidate] {
-        guard let rows = try? await records("ss_saturn_storm_frames", filter: Self.saturnFilter, sort: "subject_id") else { return Saturn.fallback }
+        // SSL-828: offline, the last pool this device saw keeps the player's own frame (downloaded by SaturnFrameStore).
+        guard let rows = try? await records("ss_saturn_storm_frames", filter: Self.saturnFilter, sort: "subject_id") else {
+            let saved = SaturnFrameStore.savedPool()
+            return saved.isEmpty ? Saturn.fallback : saved
+        }
         let frames = rows.map { r -> SaturnCandidate in
             let subject = r.string("subject_id") ?? r.string("id") ?? ""
             return SaturnCandidate(id: r.string("id") ?? "saturn-\(subject)", subjectId: subject,
                                    opusId: r.string("opus_id") ?? "", imageURL: r.string("image_url").flatMap(URL.init(string:)))
         }.filter { !$0.subjectId.isEmpty && $0.imageURL != nil }
-        return frames.isEmpty ? Saturn.fallback : frames
+        if frames.isEmpty { return Saturn.fallback }
+        SaturnFrameStore.savePool(frames)
+        return frames
     }
 }

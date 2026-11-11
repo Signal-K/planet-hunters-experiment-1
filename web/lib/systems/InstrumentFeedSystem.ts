@@ -39,7 +39,7 @@ export interface InstrumentSignal {
   instrumentId: string
   title: string
   subtitle: string
-  inspectorScreen: 'galaxy' | 'asteroid-discovery' | 'saturn-storm-search'
+  inspectorScreen: 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search'
 }
 
 type InstrumentFeedPlayer = Pick<
@@ -221,7 +221,7 @@ export function collectInstrumentSignals(opts: {
         instrumentId: TRANSIT_TELESCOPE_INSTRUMENT_ID,
         title: item.toi,
         subtitle: `${item.host} · ${item.constellation} · S/N ${item.signalToNoise.toFixed(1)}`,
-        inspectorScreen: 'galaxy',
+        inspectorScreen: 'tess-discovery',
       })
     }
   }

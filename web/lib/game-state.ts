@@ -1,7 +1,8 @@
+import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
-import { mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
+import { buildingLevel, mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
@@ -9,6 +10,8 @@ import { sanitizeFireballCaughtAt, sanitizeFireballSpotter } from '@/lib/orionid
 import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-catches'
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
+import { mergeShowerLedgers } from '@/lib/orionids/shower-ledger'
+import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -21,7 +24,7 @@ import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropScrubbedRuns, dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
-import { GAME_SCREENS } from '@/lib/game-screens'
+import { GAME_SCREENS, migrateScreenId } from '@/lib/game-screens'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 import { mergeSkyMaps } from '@/lib/research/sky-map'
@@ -30,11 +33,11 @@ import { mergeSkyMaps } from '@/lib/research/sky-map'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
 // Runs built at runtime by buildRuntimeCatalog, so a saved flight to one is not a lost mission on reload.
-const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID])
-const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID])
+const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, ...SHOWERS.map(shower => shower.runMissionId), RESOURCE_FOCUS_MISSION_ID])
+const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID, ...SHOWERS.map(shower => shower.targetId)])
 
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',
@@ -172,7 +175,8 @@ function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
 }
 
 export function normalizeState(input: PartialSave): GameState {
-  const screen = input.screen && GAME_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const savedScreen = migrateScreenId(input.screen)
+  const screen = savedScreen && GAME_SCREENS.includes(savedScreen) ? savedScreen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
   const savedScope = input.missionBoardScope
@@ -298,12 +302,12 @@ export function normalizeState(input: PartialSave): GameState {
   // else gets normalized, so `underConstruction` never grows unbounded with
   // stale finished records.
   const underConstruction = Object.fromEntries(
-    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
+    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind, undefined, buildingLevel(player, 'launchpad')))
   )
   // Structures that finished since the player's last visit feed the welcome-back
   // card (SSL-702) before the finished records are dropped for good.
   const finishedAway = Object.entries(player.underConstruction ?? {})
-    .filter(([kind, startedAt]) => !isUnderConstruction(startedAt, kind) && typeof player.lastVisitAt === 'number' && startedAt + structureBuildMs(kind) > player.lastVisitAt)
+    .filter(([kind, startedAt]) => !isUnderConstruction(startedAt, kind, undefined, buildingLevel(player, 'launchpad')) && typeof player.lastVisitAt === 'number' && startedAt + structureBuildMs(kind, buildingLevel(player, 'launchpad')) > player.lastVisitAt)
     .map(([kind]) => kind)
   const welcomeBack = finishedAway.length > 0 && wasAway(player.lastVisitAt)
     ? withWelcomeBack(player.welcomeBack, player.lastVisitAt as number, { built: finishedAway })
@@ -347,7 +351,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, welcomeBack, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, baseArrangement: sanitizeArrangement(player.baseArrangement), welcomeBack, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -492,7 +496,7 @@ function repairStateRoute(rawInput: GameState): GameState {
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }
-  if (input.screen === 'galaxy' && !input.player.freeOperations && currentTrainingTry(input.player.flightPlan) !== 'scan') {
+  if (input.screen === 'tess-discovery' && !input.player.freeOperations && currentTrainingTry(input.player.flightPlan) !== 'scan') {
     return { ...input, screen: 'missions' }
   }
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {
@@ -731,6 +735,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFinds = mergeOrionidsFinds(current.player.orionidsFinds, remoteState.player?.orionidsFinds)
   merged.player.meteoriteMastery = Math.max(current.player.meteoriteMastery ?? 0, remoteState.player?.meteoriteMastery ?? 0)
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
+  merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
+  merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)
@@ -760,6 +766,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     sanitizeBuildingLevels(remoteState.player?.buildingLevels, remoteState.player?.launchpadUpgraded),
   )
   merged.player.launchpadUpgraded = !!current.player.launchpadUpgraded || !!remoteState.player?.launchpadUpgraded
+  // Wear is this device's running count; a service resets it, so a stale remote value must not bring it back.
+  merged.player.padLaunches = current.player.padLaunches ?? 0
   // Paused missions are independent runs, not a last-write-wins preference.
   // Keep the union so a device that launched another vehicle cannot erase a
   // run parked on the other device between syncs.

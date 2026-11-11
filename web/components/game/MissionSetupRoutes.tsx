@@ -1,5 +1,6 @@
 'use client'
 
+import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
@@ -83,11 +84,12 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   // SSL-750: check the rocket that would actually fly. A vehicle left on the pad from another contract keeps its own
   // parts, so the job is checked against it, not against the design the builder would make for this job.
   const flyingRocket = selectedVehicle?.rocket ?? game.rocket
-  const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)), fuelFraction: communityBonusRate(game.player).fuel })
-  const launchReady = check.ok
+  const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)), fuelFraction: communityBonusRate(game.player).fuel, launchpadLevel: buildingLevel(game.player, 'launchpad') })
+  const padWorn = padNeedsService(game.player)
+  const launchReady = check.ok && !padWorn
   const vehicleName = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId)?.name : null
   const hold = check.holds?.[0]
-  const blockedReason = launchReady ? null : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone) : null) : (check.problems[0] ?? 'Mission requirements not met')
+  const blockedReason = launchReady ? null : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone, buildingLevel(game.player, 'launchpad')) : null) : (check.problems[0] ?? 'Mission requirements not met')
   // Nothing is built or launched that cannot do the job (Liam, 02.11).
   const actionDisabled = !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
   const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'

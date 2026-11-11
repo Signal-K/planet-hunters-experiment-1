@@ -1,4 +1,4 @@
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { showerForRunMission } from '@/lib/data/showers'
 
 /**
  * SSL-711: the second action button in a mining run, beside FIRE. FIRE always
@@ -24,7 +24,7 @@ const CATCH: Omit<MiningSecondaryAction, 'brief' | 'howTo'> = { kind: 'catch', l
 
 /** The run's second action, or null when FIRE is the only one. */
 export function miningSecondaryAction(missionId: string): MiningSecondaryAction | null {
-  if (missionId === ORIONIDS_NIGHT_RUN_ID) {
+  if (showerForRunMission(missionId)) {
     return {
       ...CATCH,
       brief: 'Steer a fragment into the beam above the ship, then press Catch.',

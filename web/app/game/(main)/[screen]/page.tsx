@@ -1,6 +1,6 @@
 import ScreenPageClient from './ScreenPageClient'
-import { notFound } from 'next/navigation'
-import { gameScreenParams, VALID_SCREENS } from '@/lib/game-screens'
+import { notFound, redirect } from 'next/navigation'
+import { gameScreenParams, LEGACY_SCREEN_IDS, VALID_SCREENS } from '@/lib/game-screens'
 import type { Screen } from '@/lib/game-types'
 
 // Prebuild a loading shell for every gameplay route, including hub and
@@ -19,6 +19,8 @@ export const dynamicParams = true
 
 export default async function ScreenPage({ params }: { params: Promise<{ screen: string }> }) {
   const { screen } = await params
+  // Old deep links (SSL-817 renames) land on the new route.
+  if (Object.prototype.hasOwnProperty.call(LEGACY_SCREEN_IDS, screen)) redirect(`/game/${LEGACY_SCREEN_IDS[screen]}`)
   if (!VALID_SCREENS.has(screen as Screen)) notFound()
 
   return <ScreenPageClient params={params} />

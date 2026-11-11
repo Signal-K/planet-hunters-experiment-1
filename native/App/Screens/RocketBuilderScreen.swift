@@ -145,10 +145,14 @@ struct RocketBuilderScreen: View {
     }
 
     private var actions: some View {
-        // Back and the primary button always fit; the Target card only shows on the idle pad (the plan strip names the destination once a mission is chosen).
+        // SSL-829 (web RocketBuilderScene): the mission button is always on screen. When the row is too narrow it drops
+        // to a full-width second row instead of disappearing.
         ViewThatFits(in: .horizontal) {
             actionsRow(showTarget: true)
-            actionsRow(showTarget: false)
+            VStack(alignment: .leading, spacing: 8) {
+                actionsRow(showTarget: false)
+                targetButton.frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 
@@ -158,6 +162,20 @@ struct RocketBuilderScreen: View {
         case .building: "BUILDING"
         default: "LAUNCH"
         }
+    }
+
+    /// Select mission on the idle pad, Change mission (naming it) once one is chosen.
+    private var targetButton: some View {
+        Button(action: onChooseMission) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(phase == .idle ? "SELECT MISSION" : "CHANGE MISSION").font(AppFont.display(14, "Bold")).tracking(1.4)
+                    Text(phase == .idle ? "Choose a mission" : "\(store.mission?.title ?? "Mission") · \(store.target?.name ?? "Target")").font(AppFont.body(14, "Bold")).lineLimit(1)
+                }
+                .foregroundStyle(Theme.ink)
+                .frame(minWidth: 110, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
+                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
+            }.buttonStyle(.plain).accessibilityIdentifier("rocket-builder-target")
     }
 
     private func actionsRow(showTarget: Bool) -> some View {
@@ -175,16 +193,7 @@ struct RocketBuilderScreen: View {
                         .background(Theme.paper, in: Capsule()).overlay(Capsule().stroke(Theme.ink, lineWidth: 2))
                 }.buttonStyle(.plain).accessibilityIdentifier("builder-customize")
             }
-            if showTarget { Button(action: onChooseMission) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(phase == .idle ? "SELECT MISSION" : "CHANGE MISSION").font(AppFont.display(14, "Bold")).tracking(1.4)
-                    Text(phase == .idle ? "Choose a mission" : "\(store.mission?.title ?? "Mission") · \(store.target?.name ?? "Target")").font(AppFont.body(14, "Bold")).lineLimit(1)
-                }
-                .foregroundStyle(Theme.ink)
-                .frame(minWidth: 110, minHeight: 44, alignment: .leading).padding(.horizontal, 12)
-                .background(Theme.paper, in: RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.ink, lineWidth: 2))
-            }.buttonStyle(.plain).accessibilityIdentifier("rocket-builder-target") }
+            if showTarget { targetButton }
             if hasStagedRocket {
                 Button { confirmingDismantle = true } label: {
                     Text("DISMANTLE").font(AppFont.display(14, "Bold")).tracking(1.2)

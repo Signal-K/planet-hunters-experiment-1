@@ -104,6 +104,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     startUtc: '2026-11-17T00:00:00Z',
     endUtc: '2026-11-18T00:00:00Z',
     communityInstrument: { callsign: 'LEO-1', name: 'Leonids receiver' },
+    badgeAfterMissions: true,
     activities: ['debris-mining'],
   },
   {
@@ -112,6 +113,7 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
     startUtc: '2026-12-13T00:00:00Z',
     endUtc: '2026-12-15T00:00:00Z',
     communityInstrument: { callsign: 'GEM-1', name: 'Geminids receiver' },
+    badgeAfterMissions: true,
     activities: ['debris-mining'],
   },
   {

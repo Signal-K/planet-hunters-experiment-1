@@ -112,14 +112,14 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'missions', name: 'Mission Board', surface: 'dom', location: 'earth-base', screen: 'missions', entityTypes: [], description: 'Live client contract list.' },
   { id: 'rocket-buy', name: 'Rocket Purchase', surface: 'dom', location: 'earth-base', screen: 'rocket-buy', entityTypes: [], description: 'Buy the rocket model for this run.' },
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
-  { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'transit', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
+  { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'flight', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
-  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept as the Control Station handoff for exoplanet review. Player nav uses instrument-hub.' },
-  { id: 'instrument-hub', name: 'Control Station', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'One hub for investigative equipment (SSL-496), grouped by location. Same route as the old instrument hub. Not the retired job-board building on player.controlBuilt. Open hands a ready item to the existing classify screen.' },
+  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'tess-discovery', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept as the Data hub handoff for exoplanet review. Player nav uses instrument-hub.' },
+  { id: 'instrument-hub', name: 'Data hub', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'One hub for investigative equipment (SSL-496), grouped by location. Same route as the old instrument hub. Not the retired job-board building on player.controlBuilt. Open hands a ready item to the existing classify screen.' },
 ]
 
 const BY_ID = new Map(SCENES.map(s => [s.id, s]))

@@ -212,10 +212,13 @@ function explored(player: SkyPlayer): (SkyAnomaly & { at: number })[] {
   return out.sort((a, b) => b.at - a.at)
 }
 
+/** Saturn's place on the map when no telescope is singled out. */
+export const SATURN_SPOT = { x: 0.86, y: 0.24 }
+
 function catalogue(player: SkyPlayer): SkyAnomaly[] {
   const out: SkyAnomaly[] = []
   if (player.saturnImagerLaunchedAt) {
-    out.push({ id: 'body:saturn', label: 'Saturn', detail: 'Watched by your Saturn satellite', state: 'catalogue', shape: 'ringed', kind: 'saturn', x: 0.86, y: 0.24, signal: null, screen: null })
+    out.push({ id: 'body:saturn', label: 'Saturn', detail: 'Watched by your Saturn satellite', state: 'catalogue', shape: 'ringed', kind: 'saturn', ...SATURN_SPOT, signal: null, screen: null })
   }
   for (const target of Object.values(player.discoveredExoplanetTargets ?? {})) {
     out.push({ id: `exo:${target.id}`, label: target.name, detail: 'Exoplanet you discovered', state: 'catalogue', shape: 'body', kind: 'transit', ...skySpot(`exo:${target.id}`), signal: null, screen: null })
@@ -293,7 +296,27 @@ export function buildStationSky(input: {
   const known = catalogue(input.player)
   const shown = input.view === 'unexplored' ? open : input.view === 'explored' ? done : [...known, ...done, ...open]
   const kinds = input.telescope?.kinds
-  return spreadSpots(kinds ? shown.filter(item => item.kind !== null && kinds.includes(item.kind)) : shown)
+  const filtered = spreadSpots(kinds ? shown.filter(item => item.kind !== null && kinds.includes(item.kind)) : shown)
+  return input.telescope?.id === 'saturn' ? focusSaturn(filtered, known) : filtered
+}
+
+/** Where Saturn sits on the map when the Saturn satellite is on: the middle of the reticle. */
+export const SATURN_FOCUS = { x: 0.5, y: 0.5 }
+
+/**
+ * SSL-826: switching the Saturn satellite on swings the map to Saturn. Saturn sits in the middle of the reticle in
+ * every view, and the storm frames the satellite took sit in a ring around it, so the map shows where it is looking.
+ */
+export function focusSaturn(items: readonly SkyAnomaly[], known: readonly SkyAnomaly[]): SkyAnomaly[] {
+  const body = known.find(item => item.id === 'body:saturn')
+  const rest = items.filter(item => item.id !== 'body:saturn')
+  const ring = rest.map((item, i) => {
+    const band = Math.floor(i / 6)
+    const angle = -Math.PI / 2 + ((i % 6) + band / 2) * (Math.PI / 3)
+    const r = 0.17 + 0.09 * band
+    return { ...item, x: SATURN_FOCUS.x + (Math.cos(angle) * r) / FIELD_ASPECT, y: SATURN_FOCUS.y + Math.sin(angle) * r }
+  })
+  return body ? [{ ...body, ...SATURN_FOCUS }, ...ring] : ring
 }
 
 /** The sky field is about this much wider than tall, so a gap across reads shorter than the same gap down. */

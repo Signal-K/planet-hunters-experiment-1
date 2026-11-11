@@ -18,7 +18,7 @@
  *   node scripts/scene-drive.mjs type "<text>"        type into the focused field (click it first); sign in with this
  *   node scripts/scene-drive.mjs signout              forget the signed-in player (local save, session, offline queue), then reopen /
  *   node scripts/scene-drive.mjs wait <ms>
- *   node scripts/scene-drive.mjs shot [--all]         screenshot now; --all = three viewports
+ *   node scripts/scene-drive.mjs shot [--all]         screenshot now; --all = phone, phone landscape, iPad both ways, desktop
  *   node scripts/scene-drive.mjs size <w>x<h>
  *   node scripts/scene-drive.mjs offline on|off       cut or restore the browser's network (airplane mode)
  *   node scripts/scene-drive.mjs close
@@ -37,7 +37,7 @@ const profileDir = join(root, '.scene-shots', '.browser')
 const offlineFile = join(root, '.scene-shots', '.offline')
 const PORT = Number(process.env.SCENE_DRIVE_PORT ?? 9333)
 const WEB = `http://localhost:${process.env.LANDNAM_WEB_PORT ?? 4320}`
-const VIEWPORTS = { phone: [390, 844], landscape: [926, 428], desktop: [1440, 900] }
+const VIEWPORTS = { phone: [390, 844], landscape: [926, 428], ipad: [1180, 820], 'ipad-portrait': [820, 1180], desktop: [1440, 900] }
 
 const require = createRequire(join(execFileSync('npm', ['root', '-g']).toString().trim(), 'noop.js'))
 const { chromium } = require('playwright')

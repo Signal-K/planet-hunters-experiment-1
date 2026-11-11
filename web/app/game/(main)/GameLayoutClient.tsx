@@ -39,9 +39,11 @@ import { useCoreLoopAnalytics } from '@/lib/hooks/useCoreLoopAnalytics'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
+import { useSaturnFramePrefetch } from '@/lib/offline/scienceImages'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
+  useSaturnFramePrefetch(game.player)
   // Opened directly on /game/intro: watch it even if state moves to another screen.
   const [coldIntro] = useState(() => typeof window !== 'undefined' && window.location.pathname === '/game/intro')
   const arrivalScheduledFor = useRef<number | null>(null)
@@ -181,7 +183,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   // Schedule push notification when transit starts
   useEffect(() => {
     const arrivalAt = game.player.arrivalAt
-    if (game.screen !== 'transit' || !arrivalAt) return
+    if (game.screen !== 'flight' || !arrivalAt) return
     if (arrivalScheduledFor.current === arrivalAt) return
     arrivalScheduledFor.current = arrivalAt
 
@@ -311,7 +313,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const resumeOperations = () => {
     if (game.player.activeMission) {
       const phase = game.player.missionPhase
-      game.go(phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'transit')
+      game.go(phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'flight')
       return
     }
     game.goToMissions()
@@ -319,7 +321,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : 'hub'
+    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'tess-discovery' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : 'hub'
   // Price alerts fire when a spot price reaches the target, including as supply pressure recovers over time.
   const hasPriceAlerts = (game.player.priceAlerts ?? []).some(a => a.firedAt == null)
   const checkPriceAlerts = game.checkPriceAlerts
@@ -426,7 +428,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}
             go={'try' in coach && coach.screen === '*' && game.screen === 'hub'
               ? (coach.try === 'part' ? { label: 'Open Hangar', run: () => game.go('hangar') }
-                : coach.try === 'scan' ? { label: 'Open Galaxy', run: () => game.go('galaxy') } : undefined)
+                : coach.try === 'scan' ? { label: 'Open Galaxy', run: () => game.go('tess-discovery') } : undefined)
               : undefined}
             onSkip={() => {
               captureGameEvent('tutorial_skipped', {
