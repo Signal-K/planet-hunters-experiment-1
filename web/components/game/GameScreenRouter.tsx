@@ -94,6 +94,7 @@ import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
+import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -420,7 +421,7 @@ function ScreenBody({
             // Completing the sky reading should reveal the event brief first.
             // Accepting the focused event is the explicit step that starts
             // mission setup and lets the player choose a ship.
-            requestMissionBoardEvent('orionids-2026')
+            requestMissionBoardEvent(liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
             game.goToMissions()
           }}
           onFocusResources={(label, minerals) => {
@@ -536,6 +537,7 @@ function ScreenBody({
       return (
         <RadioMeteorScreen
           player={game.player}
+          eventId={receiverEventId(game.player)}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
         />
@@ -716,8 +718,12 @@ function ScreenBody({
           }}
           onGo={kind => {
             // SSL-714: from mission 3 on, the Orionids step happens on ORI-1, not the mission board.
-            if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
-            if (kind === 'event') requestMissionBoardEvent('orionids-2026')
+            // SSL-831: during the Leonids the step opens the run, or LEO-1 once the run is home.
+            const chain = liveShowerChain(Date.now())
+            if (kind === 'event' && chain && chainNextScreen(game.player, chain) === 'radio-meteors') return game.go('radio-meteors')
+            if (kind === 'event' && chain) requestMissionBoardEvent(chain.eventId)
+            else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
+            else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')

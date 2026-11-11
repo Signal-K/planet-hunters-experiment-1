@@ -80,7 +80,7 @@ describe('shower run missions', () => {
 
   it('offers a shower run only while that shower is open', () => {
     const during = Date.parse('2026-11-17T12:00:00Z')
-    const before = Date.parse('2026-11-10T12:00:00Z')
+    const before = Date.parse('2026-11-05T12:00:00Z')
     expect(generateSelfDirectedMiningPool(during).some(m => m.id === 'self-directed-leonids-shower-run')).toBe(true)
     expect(generateSelfDirectedMiningPool(before).some(m => m.id === 'self-directed-leonids-shower-run')).toBe(false)
     expect(generateSelfDirectedMiningPool(during).some(m => m.id === 'self-directed-geminids-shower-run')).toBe(false)

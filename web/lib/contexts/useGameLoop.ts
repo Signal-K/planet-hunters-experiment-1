@@ -25,8 +25,8 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
-import { grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
+import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
+import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
@@ -1127,22 +1127,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...stateRef.current.player,
       radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
     }
-    // Orionids mission 3: enough recordings checked on ORI-1 completes the chain and grades the badge.
-    const preview = completeRadioMission(classified, at)
+    // The receiver the desk is tuned to: LEO-1 once the Leonids run is home (SSL-831), else ORI-1.
+    const receiver = receiverEventId(stateRef.current.player)
+    const chain = getShowerChain(receiver)
+    // Checking LEO-1 recordings during the Leonids is the community's event research too.
+    if (chain && !isOrionidsWindow(at) && badgeTierFor(chain.eventId, at) === 'gold') stampResearch('event')
+    // Orionids mission 3, or Leonids mission 2: enough recordings checked completes the chain and grades the badge.
+    const finish = <T extends Player>(player: T) => chain ? completeChainRadio(player, chain, at) : completeRadioMission(player, at)
+    const preview = finish(classified)
     setState(s => {
       const player = {
         ...s.player,
         radioMeteorClassifications: { ...(s.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
       }
-      const done = completeRadioMission(player, at)
+      const done = finish(player)
       return { ...s, player: done.completed ? addStamp(done.player, 'event', Date.now()) : done.player }
     })
-    queueRadioMeteorClassification(classification, ORIONIDS_CHAIN.eventId)
-    captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length })
+    queueRadioMeteorClassification(classification, receiver)
+    captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length, event_id: receiver })
     if (preview.completed) {
-      const badge = preview.player.badges?.[ORIONIDS_CHAIN.eventId]
-      captureGameEvent('orionids_chain_completed', { tier: badge?.tier ?? null })
-      if (badge) captureGameEvent('badge_earned', { event_id: ORIONIDS_CHAIN.eventId, tier: badge.tier, activity: 'radio-confirmation' })
+      const badge = preview.player.badges?.[receiver]
+      captureGameEvent(chain ? 'shower_chain_completed' : 'orionids_chain_completed', { event_id: receiver, tier: badge?.tier ?? null })
+      if (badge) captureGameEvent('badge_earned', { event_id: receiver, tier: badge.tier, activity: 'radio-confirmation' })
     }
   }, [setState, stateRef])
 
@@ -1321,7 +1327,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
-      const orionidsBadged = completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
+      // SSL-831: a shower with a mission chain (Leonids) finishes mission 1 here; the badge waits for its receiver step.
+      const completedChain = getShowerChain(completedShower?.id)
+      const orionidsBadged = completedChain ? completeChainRun(wswBadgedPlayer, completedChain, Date.now())
+        : completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
         : orionidsBadged.orionidsEventStage ?? 0

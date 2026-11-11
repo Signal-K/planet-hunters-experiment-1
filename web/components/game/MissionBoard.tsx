@@ -20,7 +20,8 @@ import {
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { showerForRunMission } from '@/lib/data/showers'
+import { getShower, showerForRunMission } from '@/lib/data/showers'
+import { chainNextScreen, getShowerChain } from '@/lib/orionids/chain'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -339,7 +340,7 @@ export default function MissionBoard({
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
-    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow)),
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
     [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
   )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
@@ -450,6 +451,13 @@ export default function MissionBoard({
   const openEvent = (event: SkyBoardCard) => {
     if (event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       if (event.status === 'upcoming') return
+    }
+    // SSL-831: a chained shower (Leonids) starts its run directly, then opens its receiver.
+    const chain = getShowerChain(event.id)
+    if (chain) {
+      if (chainNextScreen(player, chain) === 'radio-meteors') { onOpenEvent('radio-meteors'); return }
+      const runId = getShower(chain.eventId)?.runMissionId
+      if (runId && catalog.missions.some(mission => mission.id === runId)) { onAccept(runId); return }
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       // SSL-714: mission 2 (and listening on afterwards) happens on the community receiver, ORI-1.
@@ -701,6 +709,12 @@ export default function MissionBoard({
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
+                    {event.steps && <>
+                      <p className={styles.eventBlurb} data-testid={`event-blurb-${event.id}`}>{event.blurb}</p>
+                      <ol className={styles.eventSteps} data-testid={`event-steps-${event.id}`}>
+                        {event.steps.map(step => <li key={step.label} data-state={step.state}>{step.label}</li>)}
+                      </ol>
+                    </>}
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
                     <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>

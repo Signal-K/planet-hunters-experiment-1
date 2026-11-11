@@ -13,7 +13,7 @@ import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensu
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { getShower } from '@/lib/data/showers'
-import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
+import { ORIONIDS_CHAIN, chainInstrument, chainItems, chainRecordings, chainResearchStep, chainStage, getShowerChain, orionidsResearchStep, radioChecked, showerItems, type TwoStepChain } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
@@ -71,6 +71,22 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
   )
 }
 
+/** SSL-831: a chained shower (Leonids) in the research history: its two story items and what its receiver has heard. */
+function ChainRecord({ player, chain }: { player: Player; chain: TwoStepChain }) {
+  const stage = chainStage(player, chain.eventId)
+  if (!stage) return null
+  const name = getShower(chain.eventId)?.name ?? 'Shower'
+  const held = chainItems(player, chain).length
+  const recordings = chainRecordings(player, chain)
+  return (
+    <section className={styles.record} data-testid="community-research-history" data-event={chain.eventId} aria-label={`${name} record`}>
+      <b>{stage >= 2 ? `${name} record complete` : `${name} · mission ${stage + 1} of 2`}</b>
+      <ol>{chain.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
+      {stage === 1 && <em>{chainInstrument(chain).callsign} · {Math.min(recordings, chain.radioTarget)} of {chain.radioTarget} recordings checked</em>}
+    </section>
+  )
+}
+
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
   'Finish its steps in any order. Missing a day costs nothing.',
@@ -98,12 +114,16 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
   // SSL-774: any declared shower words its own step; only the Orionids has a saved stage so far.
   const showerId = event ? `${event.id}-2026` : undefined
-  const eventStep = showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
+  // SSL-831: a shower with its own mission chain (Leonids) names the player's next mission in it.
+  const chain = getShowerChain(showerId)
+  const eventStep = chain ? chainResearchStep(player, chain)
+    : showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
   const steps = (path ?? selectedPath) === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
   const stamps = player.researchStamps ?? {}
-  const progress = steps.map(st => stepProgress(st, stamps, week, now))
+  // SSL-831: a chained shower's step counts its missions (1/2 after the run, done after LEO-1), not the day's stamp.
+  const progress = steps.map(st => chain && st.id === 'event' ? { have: chainStage(player, chain.eventId), need: 2 } : stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
   const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
@@ -167,7 +187,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
                 <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                {chain ? <ChainRecord player={player} chain={chain} /> : <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />}
               </section>
               {confirmingPath && (
                 <ActionConfirmBar
@@ -229,7 +249,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
                   <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
-                  <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                  {chain ? <ChainRecord player={player} chain={chain} /> : <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />}
                 </>}
               </section>
             </>

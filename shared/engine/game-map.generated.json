@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 26,
     "nativeScreenCases": 24,
-    "qaScenes": 67,
+    "qaScenes": 72,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 26,
     "authoringSources": 60,
@@ -858,6 +858,56 @@
         "web": "ui-community-research-leonids",
         "tickets": [
           "SSL-774"
+        ],
+        "native": "community-research-phone"
+      },
+      {
+        "id": "leonids-events",
+        "name": "Leonids: events board",
+        "flow": "events",
+        "web": "ui-leonids-events",
+        "tickets": [
+          "SSL-831"
+        ],
+        "native": "mission-board-live"
+      },
+      {
+        "id": "leonids-shower-debrief",
+        "name": "Leonids run: debrief",
+        "flow": "events",
+        "web": "ui-leonids-shower-debrief",
+        "tickets": [
+          "SSL-831"
+        ],
+        "native": "debrief-phone"
+      },
+      {
+        "id": "leonids-events-leo1",
+        "name": "Leonids: LEO-1 step",
+        "flow": "events",
+        "web": "ui-leonids-events-leo1",
+        "tickets": [
+          "SSL-831"
+        ],
+        "native": "mission-board-live"
+      },
+      {
+        "id": "radio-meteors-leo1",
+        "name": "Meteor radio: LEO-1",
+        "flow": "events",
+        "web": "ui-radio-meteors-leo1",
+        "tickets": [
+          "SSL-831"
+        ],
+        "native": "radio-meteors"
+      },
+      {
+        "id": "community-research-leonids-leo1",
+        "name": "Community research: Leonids LEO-1",
+        "flow": "events",
+        "web": "ui-community-research-leonids-leo1",
+        "tickets": [
+          "SSL-831"
         ],
         "native": "community-research-phone"
       },

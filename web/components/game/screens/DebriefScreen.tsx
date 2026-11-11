@@ -21,7 +21,7 @@ import type { HomeSettlement } from '@/lib/game-types'
 import type { DebriefExit, DebriefExitId } from '@/lib/debrief-exits'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
-import { chainInstrument, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
+import { chainInstrument, getShowerChain, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
 export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
   mission: Mission
@@ -64,9 +64,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const shownRun = shownRunRef.current
   const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID
   // SSL-714: each Orionids mission hands over the story item that lets the next one start.
-  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID ? 1 : 0
-  const storyItem = storyStep ? ORIONIDS_CHAIN.items[storyStep - 1] : null
-  const instrument = chainInstrument()
+  // SSL-831: a chained shower's run (Leonids) hands over its own fragment sample and launches its receiver.
+  const runShower = showerForRunMission(mission.id)
+  const runChain = getShowerChain(runShower?.id)
+  const showerName = runShower?.name ?? 'Orionids'
+  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID || runChain ? 1 : 0
+  const storyItem = storyStep ? (runChain ?? ORIONIDS_CHAIN).items[storyStep - 1] : null
+  const instrument = chainInstrument(runChain ?? ORIONIDS_CHAIN)
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
@@ -169,7 +173,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
         {storyItem && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-story-item" data-item={storyItem.id}>
-            <p className={styles.kicker}>Orionids · fragments delivered</p>
+            <p className={styles.kicker}>{showerName} · fragments delivered</p>
             <div className={styles.storyItem}>
               <span className={styles.storyIcon} aria-hidden="true">{storyStep === 1
                 ? <svg viewBox="0 0 24 24"><path d="M12 3 5 9l2 9h10l2-9Z" /><path d="m9 11 3-2 3 2-1 4h-4Z" /></svg>
@@ -193,14 +197,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </svg>
               <div>
                 <strong>{instrument.callsign} is up</strong>
-                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz for the echoes your shower run lit up.</p>
+                <p className={styles.note}>Launched by everyone flying the {showerName}. It listens on 49.97 MHz for the echoes your shower run lit up.</p>
               </div>
             </div>
           </section>
         )}
         {shownRun && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-shower-run">
-            <p className={styles.kicker}>Orionids shower run</p>
+            <p className={styles.kicker}>{showerName} shower run</p>
             <PayRow testId="debrief-shower-payout" label="Run payout" value={shownRun.francs} />
             <div className={styles.row} data-testid="debrief-shower-fragments">
               <span>Fragments kept</span>

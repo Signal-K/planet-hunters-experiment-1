@@ -59,7 +59,10 @@ describe('SSL-578 Orionids event', () => {
   it('keeps Leonids and Geminids queued until their dates', () => {
     expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, local(10, 20, 12))).toBe(false)
     expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-17T12:00:00Z'))).toBe(true)
-    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-18T00:00:00Z'))).toBe(false)
+    // SSL-831: the Leonids run on their real activity window, 6 to 30 Nov.
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-06T00:00:00Z'))).toBe(true)
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-11-30T23:00:00Z'))).toBe(true)
+    expect(isDebrisEventActive(LEONIDS_DEBRIS_PRESET, Date.parse('2026-12-01T00:00:00Z'))).toBe(false)
     expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, local(11, 17, 12))).toBe(false)
     expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, Date.parse('2026-12-13T12:00:00Z'))).toBe(true)
     expect(isDebrisEventActive(GEMINIDS_DEBRIS_PRESET, Date.parse('2026-12-14T18:00:00Z'))).toBe(true)

@@ -173,6 +173,11 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week. Open the stage with &at=2026-11-17T12:00:00Z so the shower is live: the event step reads the Leonids declaration', stage: 'free-ops' },
+      { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
+      { key: 'ui-leonids-shower-debrief', label: 'Leonids run: debrief', hint: 'SSL-831: filled Leonids run back home: the Leonid fragment sample and LEO-1 is up', stage: 'free-ops' },
+      { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
+      { key: 'ui-radio-meteors-leo1', label: 'Meteor radio: LEO-1 last check', hint: 'SSL-831: Leonids mission 2 on LEO-1 with 2 of 3 recordings checked since the run (and older ORI-1 checks that do not count). The next send grades the badge', stage: 'free-ops' },
+      { key: 'ui-community-research-leonids-leo1', label: 'Community research: Leonids LEO-1', hint: 'SSL-831: Explorer path in the Leonids week, run done, 1 of 3 LEO-1 recordings: the event step names LEO-1 and the history shows the fragment sample', stage: 'free-ops' },
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
@@ -255,6 +260,11 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
     lastCargo: null,
     popup: null,
   }
+}
+
+/** SSL-831: checked radio recordings for the LEO-1 fixtures. */
+function leonidRecordings(ids: string[], submittedAt: number): NonNullable<Player['radioMeteorClassifications']> {
+  return Object.fromEntries(ids.map(id => [id, { subjectId: id, workflowId: '33017', imageUrl: '', filename: '', imageWidth: 949, imageHeight: 543, boxes: [], submittedAt }]))
 }
 
 function fixture(name: string): Partial<GameState> | null {
@@ -839,6 +849,80 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    // SSL-831: the Leonids event set. The run comes home with 20 caught since accept (22 in the ledger).
+    case 'ui-leonids-shower-debrief': {
+      const runId = showerRunMission('leonids-2026').id
+      const haul = { leonid_debris: 20, iron: 2 }
+      return {
+        screen: 'debrief',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          fireballSpotter: { readAt: 1, passedAt: 1 },
+          activeMission: { id: runId, label: 'Leonids shower run' },
+          missionPhase: 'debrief',
+          showerFragments: { 'leonids-2026': { caught: 22, redeemed: 0 } },
+          showerRunBaselines: { 'leonids-2026': 2 },
+          stash: haul,
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: runId,
+        targetId: showerRunMission('leonids-2026').targetId,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: haul,
+        popup: null,
+      }
+    }
+
+    case 'ui-leonids-events':
+    case 'ui-leonids-events-leo1': {
+      const runAt = Date.now() - 3_600_000
+      const leo1 = name === 'ui-leonids-events-leo1'
+      return {
+        screen: 'missions',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          fireballSpotter: { readAt: 1, passedAt: 1 },
+          orionidsEventStage: 3,
+          ...(leo1 ? {
+            showerChains: { 'leonids-2026': { stage: 1, at: runAt } },
+            showerFragments: { 'leonids-2026': { caught: 20, redeemed: 0 } },
+            showerRunBaselines: { 'leonids-2026': 20 },
+            radioMeteorClassifications: leonidRecordings(['leo-a'], runAt + 60_000),
+          } : {}),
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+    }
+
+    case 'ui-radio-meteors-leo1': {
+      const runAt = Date.now() - 3_600_000
+      return {
+        screen: 'radio-meteors',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          orionidsEventStage: 3,
+          showerChains: { 'leonids-2026': { stage: 1, at: runAt } },
+          showerFragments: { 'leonids-2026': { caught: 20, redeemed: 0 } },
+          // Two ORI-1 checks from October do not count toward LEO-1; two since the Leonids run do.
+          radioMeteorClassifications: { ...leonidRecordings(['ori-a', 'ori-b'], Date.UTC(2026, 9, 29)), ...leonidRecordings(['leo-a', 'leo-b'], runAt + 60_000) },
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+    }
+
     case 'ui-free-mining':
       return {
         screen: 'mining',
@@ -960,6 +1044,22 @@ function fixture(name: string): Partial<GameState> | null {
           ...POST_ONBOARDING_PLAYER,
           researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
           researchStamps: {},
+        },
+      }
+    }
+
+    case 'ui-community-research-leonids-leo1': {
+      const checkedAt = Date.now()
+      const runAt = checkedAt - 3_600_000
+      return {
+        ...fixture('ui-community-research')!,
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
+          researchStamps: { [new Date(checkedAt).toISOString().slice(0, 10)]: ['classification', 'event'] },
+          showerChains: { 'leonids-2026': { stage: 1, at: runAt } },
+          showerFragments: { 'leonids-2026': { caught: 20, redeemed: 0 } },
+          radioMeteorClassifications: leonidRecordings(['leo-a'], runAt + 60_000),
         },
       }
     }

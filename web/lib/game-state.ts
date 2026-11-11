@@ -11,6 +11,7 @@ import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-ca
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
 import { mergeShowerLedgers } from '@/lib/orionids/shower-ledger'
+import { mergeShowerChains } from '@/lib/orionids/chain'
 import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
@@ -737,6 +738,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
   merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
   merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
+  merged.player.showerChains = mergeShowerChains(current.player.showerChains, remoteState.player?.showerChains)
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)

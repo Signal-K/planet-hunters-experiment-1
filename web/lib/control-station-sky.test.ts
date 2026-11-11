@@ -84,3 +84,17 @@ describe('control station sky', () => {
     }
   })
 })
+
+describe('LEO-1 (SSL-831)', () => {
+  it('joins the station when the Leonids run is home, owing 3 recordings counted from the run', () => {
+    expect(communityTelescopes({}).some(t => t.id === 'leo-1')).toBe(false)
+    const at = Date.UTC(2026, 10, 17, 10)
+    const leo = communityTelescopes({
+      showerChains: { 'leonids-2026': { stage: 1, at } },
+      radioMeteorClassifications: { old: { submittedAt: at - 1 }, a: { submittedAt: at + 1 } },
+    }).find(t => t.id === 'leo-1')
+    expect(leo?.name).toBe('LEO-1')
+    expect(leo?.status).toBe('2 to check')
+    expect(communityTelescopes({ showerChains: { 'leonids-2026': { stage: 2, at } } }).find(t => t.id === 'leo-1')?.status).toBe('Listening')
+  })
+})

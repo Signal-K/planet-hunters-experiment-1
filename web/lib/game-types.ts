@@ -367,6 +367,8 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** SSL-831: where the player is in each later shower's mission chain (Leonids), keyed by shower id. `at` is when that stage was reached. */
+  showerChains?: Record<string, { stage: number; at: number }>
   /** SSL-658: fragment ledgers for the other showers, keyed by shower id. Orionids keep orionidsFragments. */
   showerFragments?: Record<string, { caught: number; redeemed: number }>
   /** SSL-658: each non-Orionid shower's `caught` count when its run was accepted. */

@@ -1,6 +1,7 @@
 import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/InstrumentFeedSystem'
 import type { ControlStationModel, ControlStationRow } from '@/lib/control-station'
 import { parseRadioFilename } from '@/lib/radio-meteors'
+import { chainRecordings, chainStage, LEONIDS_CHAIN } from '@/lib/orionids/chain'
 
 /**
  * Control station sky (SSL-730, Liam's drawing of 2026-11-01).
@@ -73,6 +74,15 @@ export const COMMUNITY_INSTRUMENTS: readonly CommunityInstrumentDef[] = [
     launched: player => (player.orionidsEventStage ?? 0) >= 2,
     owed: player => (player.orionidsEventStage === 2 ? Math.max(0, ORI1_MISSION_CHECKS - Object.keys(player.radioMeteorClassifications ?? {}).length) : 0),
   },
+  {
+    // SSL-831: the community launches LEO-1 when the player's Leonids shower run comes home.
+    id: 'leo-1',
+    callsign: 'LEO-1',
+    finds: 'Meteor echoes',
+    screen: 'radio-meteors',
+    launched: player => chainStage(player, LEONIDS_CHAIN.eventId) >= 1,
+    owed: player => (chainStage(player, LEONIDS_CHAIN.eventId) === 1 ? Math.max(0, LEONIDS_CHAIN.radioTarget - chainRecordings(player, LEONIDS_CHAIN)) : 0),
+  },
 ]
 
 /** Which signal kinds each piece of equipment can see. Asteroids are seen from the ground and from orbit. */
@@ -121,6 +131,7 @@ export interface SkyPlayer {
   discoveredExoplanetTargets?: Record<string, { id: string; name: string }>
   saturnImagerLaunchedAt?: number | null
   orionidsEventStage?: number
+  showerChains?: Record<string, { stage: number; at: number }>
   radioMeteorClassifications?: Record<string, { filename?: string; boxes?: readonly unknown[]; submittedAt?: number }>
 }
 
