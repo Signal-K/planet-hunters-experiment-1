@@ -46,8 +46,8 @@ export function ScenePrimary({ children, disabled, onClick, testId }: { children
   return <button type="button" className={styles.primary} data-testid={testId} disabled={disabled} onClick={onClick}>{children}</button>
 }
 
-export function SceneGhost({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
-  return <button type="button" className={styles.ghost} onClick={onClick}>{children}</button>
+export function SceneGhost({ children, onClick, testId }: { children: ReactNode; onClick?: () => void; testId?: string }) {
+  return <button type="button" className={styles.ghost} data-testid={testId} onClick={onClick}>{children}</button>
 }
 
 /** Dark edge shading shared by every full-bleed scene. */

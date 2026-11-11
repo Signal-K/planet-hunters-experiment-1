@@ -93,7 +93,7 @@ import SceneTransition from '@/components/game/SceneTransition'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
-import SkyPointing from '@/components/game/screens/SkyPointing'
+import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -664,8 +664,10 @@ function ScreenBody({
 
     case 'sky-pointing':
       return (
-        <SkyPointing
+        <SkyPointingScreen
           key={pointingTarget}
+          player={game.player}
+          onOpenData={() => game.go('instrument-hub')}
           start={pointingTarget}
           online={onlineTelescopes(game.player)}
           mapped={game.player.skyMap}

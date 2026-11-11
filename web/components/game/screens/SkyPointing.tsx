@@ -5,7 +5,9 @@ import type { InstrumentPointing } from '@/lib/research/paths'
 import { LANDMARKS, TOTAL_FIELDS, clampDec, fieldId, formatAim, landmarkNear, mappedCount, mappedPercent, wrapRa, type SkyAim, type SkyMap } from '@/lib/research/sky-map'
 import { SkyChart, project, sightCentre } from './SkyChart'
 import { GroundScene, SaturnScene, Sight, TransitScene, groundGeom, saturnGeom, transitGeom, type Geom, type SkyTarget } from './SkyScenes'
-import { SceneActions, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
+import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
+import type { Player } from '@/lib/game-types'
+import { SceneActions, SceneGhost, ScenePill, ScenePrimary, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './SkyPointing.module.css'
 
 const SPEED = 46 // view units per second at full stick (Saturn's view)
@@ -91,13 +93,15 @@ interface Props {
   onCancel: () => void
   /** Fields the player's telescopes have already mapped. */
   mapped?: SkyMap
+  /** SSL-827: signals waiting at the Data hub. The Base sends every telescope tap here, so the data stays one tap away. */
+  ready?: { count: number; onOpen: () => void }
 }
 
 /**
  * The weekly pointing step, as one full-screen viewport. Pick the instrument you are driving; each has its
  * own scene, sight and lock-on. Steer with the joystick, lock on, and the signal comes in over the week.
  */
-export default function SkyPointing({ start = 'transit', online, onLock, onAim, onCancel, mapped }: Props) {
+export default function SkyPointing({ start = 'transit', online, onLock, onAim, onCancel, mapped, ready }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 926, h: 428 })
   const [instrument, setInstrument] = useState<InstrumentPointing>(start)
@@ -290,6 +294,9 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
       )}
 
       <SceneActions className={styles.actionSlot}>
+        {ready && ready.count > 0 && !confirmed && (
+          <SceneGhost testId="sky-pointing-ready" onClick={ready.onOpen}>{ready.count} DATA READY · CLASSIFY</SceneGhost>
+        )}
         {confirmed ? (
           <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim, confirmed.instrument === 'saturn' ? confirmed.target.id : undefined)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>
         ) : (
@@ -301,4 +308,10 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
       <span hidden>{unitsPerPx}</span>
     </div>
   )
+}
+
+/** SSL-827: the routed screen, with the Data hub's waiting signals counted for the classify link. */
+export function SkyPointingScreen({ player, onOpenData, ...props }: Omit<Props, 'ready'> & { player: Player; onOpenData: () => void }) {
+  const { signals } = useInstrumentSignals(player)
+  return <SkyPointing {...props} ready={{ count: signals.length, onOpen: onOpenData }} />
 }

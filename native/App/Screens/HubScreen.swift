@@ -6,6 +6,7 @@ import LandnamCore
 /// HUD positions come from `HUDZones` (shared/layout/base-hud-zones.json), measured from the safe area.
 struct HubScreen: View {
     @Environment(GameStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(Services.self) private var services: Services?
     /// Snapshots have no real safe area; fixtures pass the device insets they want to show.
     var safeAreaOverride: EdgeInsets?
@@ -95,6 +96,7 @@ struct HubScreen: View {
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
             )
+            if store.screen != .hubSubsurface { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
             topLeftHud(insets: insets, portrait: portrait)
             topRightHud(insets: insets)
@@ -371,6 +373,30 @@ struct HubScreen: View {
                 .position(x: width * 0.5, y: height * 0.34)
             }
         }
+    }
+
+    /// SSL-827 (web SkyCraft): the telescopes in Earth orbit fly across the Base sky, each on its own lane and pace.
+    /// iOS has no pointing screen, so a tap opens the Instruments hub, where the telescopes are run.
+    private func orbitingTelescopes(width: CGFloat, height: CGFloat) -> some View {
+        var lanes: [CraftLane] = []
+        if store.player.transitSatelliteLaunchedAt != nil { lanes.append(CraftLane(id: "transit", name: "Space telescope", top: 0.18, period: 46, phase: 0.3, reverse: false)) }
+        if store.player.deepSpaceTelescopeBuilt { lanes.append(CraftLane(id: "deep-space", name: "Deep space telescope", top: 0.28, period: 64, phase: 0.62, reverse: true)) }
+        return TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            ZStack(alignment: .topLeading) {
+                ForEach(lanes, id: \.id) { (lane: CraftLane) in
+                    let f = reduceMotion ? (lane.reverse ? 0.2 : 0.72) : (t / lane.period + lane.phase).truncatingRemainder(dividingBy: 1)
+                    let x = (lane.reverse ? 1 - f : f) * (width + 112) - 56
+                    let bob = reduceMotion ? 0 : sin(t * 2 * .pi / 6 + lane.phase * 6) * 5
+                    Button { store.go(.instrumentHub) } label: { OrbitingCraft(deepSpace: lane.id == "deep-space").frame(width: 56, height: 56).contentShape(Circle()) }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(lane.name): open instruments")
+                        .position(x: x, y: height * lane.top + bob)
+                }
+            }
+            .frame(width: width, height: height, alignment: .topLeading)
+        }
+        .allowsHitTesting(!lanes.isEmpty)
     }
 
     private func refreshNotifications() async {
@@ -851,5 +877,36 @@ struct SettingsPatchNotes: View {
                 }.settingsCard(padding: 24)
             }
         }.padding(24)
+    }
+}
+
+/// One craft's path across the Base sky: its height (fraction of the screen), seconds per crossing and start point.
+private struct CraftLane {
+    let id, name: String
+    let top, period, phase: Double
+    let reverse: Bool
+}
+
+/// A small craft in the Base sky (web SkyCraft.module.css): the space telescope is a white body with blue wings, the
+/// deep space telescope a long tilted tube with an aperture.
+private struct OrbitingCraft: View {
+    let deepSpace: Bool
+    var body: some View {
+        if deepSpace {
+            ZStack {
+                Rectangle().fill(Theme.paper).frame(width: 22, height: 8).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.blue).frame(width: 3, height: 18).offset(x: -6)
+                Rectangle().fill(Theme.paper).frame(width: 6, height: 4).offset(x: 14)
+            }
+            .rotationEffect(.degrees(-16))
+            .shadow(color: .white.opacity(0.6), radius: 5)
+        } else {
+            HStack(spacing: 1) {
+                Rectangle().fill(Theme.blue).frame(width: 14, height: 5).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.paper).frame(width: 12, height: 12).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+                Rectangle().fill(Theme.blue).frame(width: 14, height: 5).overlay(Rectangle().stroke(Theme.ink, lineWidth: 1))
+            }
+            .shadow(color: .white.opacity(0.6), radius: 5)
+        }
     }
 }

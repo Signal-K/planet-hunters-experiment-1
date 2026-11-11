@@ -34,8 +34,8 @@ import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type Subsur
 import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padNeedsService } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
-import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
-import { pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
+import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
+import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
@@ -535,18 +535,19 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   ]
 
   const dataChipShown = !subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && signals.length > 0
-  const orbitalNetwork = (player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
-    <OrbitalInstrumentNetwork
-      transitOnline={!!player.transitSatelliteLaunchedAt}
-      deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
-      readyCount={signals.length}
-      ping
-      hideStatus={dataChipShown}
-      onOpen={() => onOpenScene('instrument-hub')}
-      onOpenTransit={() => onOpenScene('instrument-hub')}
-      onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
-    />
-  )
+  // SSL-827: the Point prompt, the data-ready chip and the craft in the sky all open the same pointing screen, on the
+  // telescope that still needs a target (or the one tapped). Without a pointable telescope they fall back to the Data hub.
+  const pointable = onlineTelescopes(player)
+  const openPointing = (preferred?: InstrumentPointing) => {
+    const next = preferred && pointable.includes(preferred) ? preferred : needsPointing[0] ?? pointable[0]
+    if (next && onPointTelescope) onPointTelescope(next)
+    else onOpenScene('instrument-hub')
+  }
+  const skyCraftItems: SkyCraftItem[] = [
+    ...(player.transitSatelliteLaunchedAt ? [{ id: 'transit' as const, name: 'Space telescope', needsPointing: needsPointing.includes('transit') }] : []),
+    ...(player.deepSpaceTelescopeBuilt ? [{ id: 'deep-space' as const, name: 'Deep space telescope', needsPointing: needsPointing.includes('deep-space') }] : []),
+  ]
+  const orbitalNetwork = !subsurface && <SkyCraft craft={skyCraftItems} onPoint={openPointing} />
 
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
@@ -597,7 +598,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
             </button>
           )}
 
-          {!portraitPhone && orbitalNetwork}
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
@@ -650,8 +650,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
             </div>
           </div>
           </div>
-          {/* The pannable world is wider than a portrait phone, so the orbital tag would sit off-screen: pin it to the view. */}
-          {portraitPhone && orbitalNetwork}
+          {/* The craft fly across the view, not the pannable world, so they cross the screen on every layout. */}
+          {orbitalNetwork}
           {portraitPhone && !subsurface && !editMode && cameraTravel > 0 && (
             <PanHint canLeft={camera.cam.x < -8} canRight={camera.cam.x > -cameraTravel + 8} onLeft={() => moveBase(-0.4)} onRight={() => moveBase(0.4)} />
           )}
@@ -679,7 +679,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
 
       {!subsurface && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
       {dataChipShown && (
-        <DataReadyChip count={signals.length} onOpen={() => onOpenScene('instrument-hub')} />
+        <DataReadyChip count={signals.length} onOpen={() => openPointing()} />
       )}
       {!subsurface && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}
 

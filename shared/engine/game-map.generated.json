@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 26,
     "nativeScreenCases": 24,
-    "qaScenes": 64,
+    "qaScenes": 67,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 26,
     "authoringSources": 60,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 146,
-    "webGameComponents": 108,
+    "webGameComponents": 113,
     "nativeAppComponents": 56
   },
   "scenes": {
@@ -57,8 +57,8 @@
         "type": "travel"
       },
       {
-        "route": "galaxy",
-        "type": "exchange-lab"
+        "route": "flight",
+        "type": "travel"
       },
       {
         "route": "hangar",
@@ -133,8 +133,8 @@
         "type": "menu"
       },
       {
-        "route": "transit",
-        "type": "travel"
+        "route": "tess-discovery",
+        "type": "exchange-lab"
       }
     ],
     "nativeCases": [
@@ -189,8 +189,8 @@
         "route": "fab"
       },
       {
-        "name": "galaxy",
-        "route": "galaxy"
+        "name": "transit",
+        "route": "flight"
       },
       {
         "name": "hangar",
@@ -257,8 +257,8 @@
         "route": "targets"
       },
       {
-        "name": "transit",
-        "route": "transit"
+        "name": "galaxy",
+        "route": "tess-discovery"
       }
     ],
     "qa": [
@@ -309,7 +309,8 @@
         "native": "launchpad-ops-phone",
         "tickets": [
           "SSL-425"
-        ]
+        ],
+        "aliasOf": "missions"
       },
       {
         "id": "launch-review",
@@ -362,6 +363,16 @@
         "native": "radio-meteors",
         "tickets": [
           "SSL-714"
+        ]
+      },
+      {
+        "id": "leonids-shower-mining",
+        "name": "Leonids shower run",
+        "flow": "core-loop",
+        "web": "ui-leonids-shower-mining-fresh",
+        "native": "mining-shower-live",
+        "tickets": [
+          "SSL-658"
         ]
       },
       {
@@ -430,18 +441,20 @@
         "native": "hangar-workshop-phone",
         "tickets": [
           "SSL-427"
-        ]
+        ],
+        "aliasOf": "hangar"
       },
       {
         "id": "control-station",
-        "name": "Control station",
+        "name": "Data hub",
         "flow": "instruments",
         "web": "ui-instrument-hub",
         "native": "control-station-phone",
         "tickets": [
           "SSL-496",
           "SSL-730"
-        ]
+        ],
+        "aliasOf": "instrument-hub"
       },
       {
         "id": "tess-training",
@@ -461,7 +474,8 @@
         "native": "tess-discovery-phone",
         "tickets": [
           "SSL-497"
-        ]
+        ],
+        "aliasOf": "galaxy"
       },
       {
         "id": "tess-pointing",
@@ -481,7 +495,8 @@
         "native": "asteroid-discovery-phone",
         "tickets": [
           "SSL-497"
-        ]
+        ],
+        "aliasOf": "asteroid-discovery"
       },
       {
         "id": "saturn",
@@ -491,7 +506,8 @@
         "native": "saturn-imager-phone",
         "tickets": [
           "SSL-492"
-        ]
+        ],
+        "aliasOf": "saturn-storm-search"
       },
       {
         "id": "refinery",
@@ -507,7 +523,8 @@
         "flow": "records",
         "web": "ui-mission-log",
         "native": "mission-log-phone",
-        "tickets": []
+        "tickets": [],
+        "aliasOf": "mission-history"
       },
       {
         "id": "narrative-ledger",
@@ -788,7 +805,7 @@
       },
       {
         "id": "instrument-hub",
-        "name": "Control Station",
+        "name": "Data hub",
         "flow": "instruments",
         "web": "ui-instrument-hub",
         "native": "control-station-phone",
@@ -833,6 +850,26 @@
         "web": "sandbox-transit",
         "native": "transit-live",
         "tickets": []
+      },
+      {
+        "id": "community-research-leonids",
+        "name": "Community research: Leonids",
+        "flow": "events",
+        "web": "ui-community-research-leonids",
+        "tickets": [
+          "SSL-774"
+        ],
+        "native": "community-research-phone"
+      },
+      {
+        "id": "community-research-geminids",
+        "name": "Community research: Geminids",
+        "flow": "events",
+        "web": "ui-community-research-geminids",
+        "tickets": [
+          "SSL-774"
+        ],
+        "native": "community-research-phone"
       }
     ],
     "authored": [
@@ -1938,7 +1975,7 @@
         "id": "flight",
         "name": "Flight",
         "routes": [
-          "transit",
+          "flight",
           "landing"
         ],
         "policy": "A faster multi-scene animated sequence with zero required confirmation taps."
@@ -1969,8 +2006,10 @@
       "web/components/game/AsteroidSkyPlot.tsx",
       "web/components/game/AuthGateSheet.tsx",
       "web/components/game/BackendStatus.tsx",
+      "web/components/game/BlankSceneDiagnostics.tsx",
       "web/components/game/ClerkGate.tsx",
       "web/components/game/CommunityGoalChip.tsx",
+      "web/components/game/DataReadyChip.tsx",
       "web/components/game/EnceladusSurveyChart.tsx",
       "web/components/game/FlightPlan.tsx",
       "web/components/game/FriendAvatar.tsx",
@@ -1989,8 +2028,11 @@
       "web/components/game/NotificationBell.tsx",
       "web/components/game/ObservatoryChart.tsx",
       "web/components/game/OrionidsTeaser.tsx",
+      "web/components/game/PanHint.tsx",
       "web/components/game/PixiGalaxyStarMap.tsx",
       "web/components/game/PushOptIn.tsx",
+      "web/components/game/RearrangeBar.tsx",
+      "web/components/game/SceneErrorBoundary.tsx",
       "web/components/game/ScenePanel.tsx",
       "web/components/game/SceneTransition.tsx",
       "web/components/game/ScrapSequenceCanvas.tsx",
@@ -2019,12 +2061,12 @@
       "web/components/game/hub/HubWorldBackground.tsx",
       "web/components/game/hub/KitRocket.tsx",
       "web/components/game/hub/MeteorShowerWeather.tsx",
-      "web/components/game/hub/OrbitalInstrumentNetwork.tsx",
       "web/components/game/hub/PixelStructure.tsx",
       "web/components/game/hub/RoadRover.tsx",
       "web/components/game/hub/RocketRollout.tsx",
       "web/components/game/hub/SiteMarker.tsx",
-      "web/components/game/hub/StashChip.tsx",
+      "web/components/game/hub/SkyCraft.tsx",
+      "web/components/game/hub/SurfaceSiloPanel.tsx",
       "web/components/game/hub/TerrainScene.tsx",
       "web/components/game/hub/WorldBackdrop.tsx",
       "web/components/game/hud/SceneChrome.tsx",
@@ -2227,7 +2269,9 @@
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
-    "unownedDomainFiles": [],
+    "unownedDomainFiles": [
+      "web/lib/systems/RunRecovery.ts"
+    ],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
       "build",
