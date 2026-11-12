@@ -131,7 +131,8 @@ export function explorerSteps(opts: { hasDiscovery: boolean; eventName: string |
       brief: 'Stamp research on five different days this week to finish the path.',
       why: 'A full week of steady research is what turns scattered reports into a result.' },
   ]
-  if (opts.eventName) steps.splice(4, 0, {
+  // SSL-775: while a shower is live its step leads the path.
+  if (opts.eventName) steps.unshift({
     id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: opts.eventStep?.title ?? `Catch debris in the ${opts.eventName}`,
     brief: opts.eventStep?.brief ?? 'Everyone is out there this week. Fly the shower run and bring a stamp home for the whole community.',
     why: 'Event weeks are shared research. Every player who joins fills the same bar.',
@@ -157,7 +158,8 @@ export function traderSteps(opts: { eventName: string | null; eventStep?: EventS
       brief: 'Complete the Trader chain to finish the path.',
       why: 'The full chain connects contracts, prices and player decisions into one market picture.' },
   ]
-  if (opts.eventName) steps.splice(4, 0, {
+  // SSL-775: while a shower is live its step leads the path.
+  if (opts.eventName) steps.unshift({
     id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: opts.eventStep?.title ?? `Catch debris in the ${opts.eventName}`,
     brief: opts.eventStep?.brief ?? 'Join the shared event run and bring a stamp home for the whole community.',
     why: 'Trader weeks can still contribute to shared sky research.'

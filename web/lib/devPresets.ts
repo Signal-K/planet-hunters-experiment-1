@@ -173,7 +173,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week. Open the stage with &at=2026-11-17T12:00:00Z so the shower is live: the event step reads the Leonids declaration', stage: 'free-ops' },
+      { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
       { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
       { key: 'ui-leonids-shower-debrief', label: 'Leonids run: debrief', hint: 'SSL-831: filled Leonids run back home: the Leonid fragment sample and LEO-1 is up', stage: 'free-ops' },
       { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
@@ -183,6 +183,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
+      { key: 'ui-community-research-event-before', label: 'Community research: before a shower', hint: 'SSL-775: pinned to 20 Sep. The event panel previews the Orionids: when they start, what to do, the badge tiers', stage: 'free-ops' },
+      { key: 'ui-community-research-event-after', label: 'Community research: after a shower', hint: 'SSL-775: pinned to 3 Dec. The Leonids ended on 30 Nov; the panel keeps the finished record and names the Geminids next', stage: 'free-ops' },
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
@@ -1102,6 +1104,22 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-community-research-event-after': {
+      const checkedAt = Date.now()
+      const runAt = checkedAt - 5 * 86_400_000
+      return {
+        ...fixture('ui-community-research')!,
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          researchPath: { week: weekKey(checkedAt), path: 'explorer', pointing: 'transit' },
+          researchStamps: {},
+          showerChains: { 'leonids-2026': { stage: 2, at: runAt } },
+          showerFragments: { 'leonids-2026': { caught: 20, redeemed: 0 } },
+          badges: { 'leonids-2026': { eventId: 'leonids-2026', tier: 'gold', earnedAt: runAt } },
+        },
+      }
+    }
+    case 'ui-community-research-event-before':
     case 'ui-community-research-leonids':
     case 'ui-community-research-geminids': {
       // SSL-774: a declared shower with no saved stage yet. Same screen, its own event step.

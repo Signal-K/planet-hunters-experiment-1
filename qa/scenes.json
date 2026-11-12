@@ -614,12 +614,33 @@
    "tickets": []
   },
   {
+   "id": "community-research-event-before",
+   "name": "Community research: before a shower",
+   "flow": "events",
+   "web": "ui-community-research-event-before",
+   "tickets": [
+    "SSL-775"
+   ],
+   "native": "community-research-phone"
+  },
+  {
    "id": "community-research-leonids",
    "name": "Community research: Leonids",
    "flow": "events",
    "web": "ui-community-research-leonids",
    "tickets": [
-    "SSL-774"
+    "SSL-774",
+    "SSL-775"
+   ],
+   "native": "community-research-phone"
+  },
+  {
+   "id": "community-research-event-after",
+   "name": "Community research: after a shower",
+   "flow": "events",
+   "web": "ui-community-research-event-after",
+   "tickets": [
+    "SSL-775"
    ],
    "native": "community-research-phone"
   },

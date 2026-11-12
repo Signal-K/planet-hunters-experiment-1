@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
-import { liveEventWeek } from '@/lib/research/event-week'
+import { countdown, eventPanel, liveEventWeek, type EventPanel } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
@@ -13,7 +13,8 @@ import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensu
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { getShower } from '@/lib/data/showers'
-import { ORIONIDS_CHAIN, chainInstrument, chainItems, chainRecordings, chainResearchStep, chainStage, getShowerChain, orionidsResearchStep, radioChecked, showerItems, type TwoStepChain } from '@/lib/orionids/chain'
+import { getSkyEvent } from '@/lib/data/sky-events'
+import { ORIONIDS_CHAIN, chainInstrument, chainItems, chainRecordings, chainResearchStep, chainStage, getShowerChain, SHOWER_CHAINS, orionidsResearchStep, radioChecked, showerItems, type TwoStepChain } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
@@ -87,6 +88,64 @@ function ChainRecord({ player, chain }: { player: Player; chain: TwoStepChain })
   )
 }
 
+/** SSL-775: past events stay in the record: every chained shower the player joined, then the Orionids. */
+function EventRecords({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
+  return <>
+    {SHOWER_CHAINS.map(chain => <ChainRecord key={chain.eventId} player={player} chain={chain} />)}
+    <OrionidsRecord player={player} recordedOn={recordedOn} />
+  </>
+}
+
+const shortDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+
+/**
+ * SSL-775: the flagship event, first thing on Community research. Before the window it previews what is coming and
+ * when; during it, a countdown to the peak, what to do next, the player's part and the badge tiers; for a week after
+ * it, the record and the next shower.
+ */
+function EventPanelCard({ panel, now, player, step }: { panel: EventPanel; now: number; player: Player; step?: { title: string; brief: string } }) {
+  const chain = getShowerChain(`${panel.id}-2026`)
+  const missions = chain ? 2 : 1
+  const stamps = player.researchStamps ?? {}
+  const eventDays = Object.entries(stamps).filter(([day, kinds]) => kinds.includes('event') && day >= stampDayKey(panel.startAt) && day < stampDayKey(panel.endAt)).length
+  const done = Math.min(missions, chain ? chainStage(player, chain.eventId) : eventDays)
+  const peak = panel.peakAt - now
+  // The gold window is the badge rule (sky-events.ts), which can be narrower than the sky calendar's shower.
+  const badgeEvent = getSkyEvent(`${panel.id}-2026`)
+  const goldFrom = badgeEvent ? Date.parse(badgeEvent.startUtc) : panel.startAt
+  const goldTo = badgeEvent ? Date.parse(badgeEvent.endUtc) : panel.endAt
+  const earned = player.badges?.[`${panel.id}-2026`]?.tier
+  const peakTime = new Date(panel.peakAt).toISOString().slice(11, 16)
+  const status = panel.phase === 'live' ? `Live · ends in ${countdown(panel.endAt - now)}`
+    : panel.phase === 'upcoming' ? `Starts in ${countdown(panel.startAt - now)} · ${shortDate(panel.startAt)}`
+      : `Ended ${shortDate(panel.endAt - 1)}`
+  const peakLine = panel.phase === 'ended' ? (panel.next ? `Next: ${panel.next.name} in ${panel.next.startsInDays} day${panel.next.startsInDays === 1 ? '' : 's'}` : null)
+    : peak > 0 ? `Peak in ${countdown(peak)} · ${shortDate(panel.peakAt)} ${peakTime} UTC` : 'Past the peak · still falling'
+  const what = panel.phase === 'live' ? (step?.title ?? `Fly the ${panel.name} shower run`)
+    : panel.phase === 'upcoming' ? `Fly the shower run${chain ? `, then confirm it on ${chainInstrument(chain).callsign}` : ''}. Every player fills the same bar.`
+      : done >= missions ? 'Your record is complete.' : 'Replay it from the Events board for silver.'
+  return (
+    <section className={styles.event} data-phase={panel.phase} data-testid="community-research-event" aria-label={`${panel.name} event`}>
+      <div className={styles.eventHead}>
+        <span className={styles.eventStatus}><i aria-hidden="true" />{status}</span>
+        <h3>{panel.name}</h3>
+      </div>
+      {peakLine && <p className={styles.eventPeak} data-testid="community-research-event-peak">{peakLine}</p>}
+      <p className={styles.eventWhat}>{what}</p>
+      <div className={styles.eventBar} role="progressbar" aria-valuemin={0} aria-valuemax={missions} aria-valuenow={done} aria-label="Your part in the event">
+        {Array.from({ length: missions }, (_, i) => <i key={i} data-done={i < done || undefined} />)}
+        <span>{done} of {missions} mission{missions === 1 ? '' : 's'}</span>
+      </div>
+      <div className={styles.eventTiers}>
+        {earned ? <span data-tier={earned} data-active data-testid="community-research-event-badge">{earned} badge earned</span> : <>
+          <span data-tier="gold" data-active={(now >= goldFrom && now < goldTo) || undefined}>Gold · {shortDate(goldFrom)} to {shortDate(goldTo - 1)}</span>
+          <span data-tier="silver" data-active={now >= goldTo || undefined}>Silver after</span>
+        </>}
+      </div>
+    </section>
+  )
+}
+
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
   'Finish its steps in any order. Missing a day costs nothing.',
@@ -106,6 +165,7 @@ function contributionTimes(player: Player): number[] {
 export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
+  const panel = eventPanel(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
@@ -141,6 +201,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const bar = communityBar(ownThisMonth, communityResearch)
   const monthHistory = researchMonthHistory(stamps, now, 6, historicalContributionMonths(stamps, contributionTimes(player), now))
   const finished = progress.filter(p => p.have >= p.need).length
+  // The reward shelf reads its steps by id: the event and probe steps move the others around.
+  const doneById = (...ids: string[]) => steps.some((st, i) => ids.includes(st.id) && progress[i].have >= progress[i].need)
   const eventHistory = Object.entries(stamps)
     .filter(([, kinds]) => kinds.includes('event'))
     .sort(([a], [b]) => b.localeCompare(a))
@@ -170,6 +232,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
+                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -189,7 +252,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
                 <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                {chain ? <ChainRecord player={player} chain={chain} /> : <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />}
+                <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
               {confirmingPath && (
                 <ActionConfirmBar
@@ -205,6 +268,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
+                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
                   <span>{finished}/{steps.length} complete</span>
@@ -243,15 +307,15 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
-                    <div className={styles.rewardCard} data-earned={progress[1]?.have >= progress[1]?.need}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={progress[3]?.have >= progress[3]?.need}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={progress[4]?.have >= progress[4]?.need}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
                   <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
-                  {chain ? <ChainRecord player={player} chain={chain} /> : <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />}
+                  <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}
               </section>
             </>
