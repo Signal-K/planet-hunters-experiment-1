@@ -10,6 +10,8 @@ import type { Player } from '@/lib/game-types'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
 import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
+import { useSite } from '@/lib/community/useSite'
+import { SITE_RULES, type SiteView } from '@/lib/community/site'
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { getShower } from '@/lib/data/showers'
@@ -84,6 +86,30 @@ function ChainRecord({ player, chain }: { player: Player; chain: TwoStepChain })
       <b>{stage >= 2 ? `${name} record complete` : `${name} · mission ${stage + 1} of 2`}</b>
       <ol>{chain.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
       {stage === 1 && <em>{chainInstrument(chain).callsign} · {Math.min(recordings, chain.radioTarget)} of {chain.radioTarget} recordings checked</em>}
+    </section>
+  )
+}
+
+/**
+ * SSL-758: the Community Site: one shared construction bar, the stage reached, each part and what fills it, and
+ * the player's own share. A late joiner sees the same bar; nothing is ever deducted from the player.
+ */
+function CommunitySite({ site, archived }: { site: SiteView; archived: SiteView | null }) {
+  return (
+    <section className={styles.site} data-testid="community-site" aria-label={site.name}>
+      <div className={styles.barLabel}><span>{site.name}</span><span data-testid="community-site-stage">{site.stage} · {Math.round(site.fill * 100)}%</span></div>
+      <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(site.fill * 100)} aria-label="Community Site construction"><div className={styles.siteFill} style={{ width: `${site.fill * 100}%` }} /></div>
+      <ul className={styles.siteParts}>
+        {site.components.map(part => {
+          const meta = SITE_RULES.components.find(c => c.id === part.id)
+          return <li key={part.id} data-full={part.total >= part.target || undefined}>
+            <b>{meta?.label}</b><small>{meta?.feed}</small>
+            <span>{Math.min(part.total, part.target)} / {part.target}</span>
+          </li>
+        })}
+      </ul>
+      <p className={styles.siteMine} data-testid="community-site-mine">{site.mineTotal > 0 ? `Your share: ${site.mineTotal}. You keep everything you mine and earn.` : 'Finish missions to add your share. You keep everything you mine and earn.'}</p>
+      {archived && <p className={styles.siteArchived} data-testid="community-site-archived">Last month: {archived.name} reached {archived.stage} ({Math.round(archived.fill * 100)}%).</p>}
     </section>
   )
 }
@@ -192,6 +218,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
   const consensus = useConsensus(true)
+  const { site, archived } = useSite(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -250,6 +277,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
+                {site && <CommunitySite site={site} archived={archived} />}
                 <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
@@ -287,7 +315,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
               <section className={styles.right}>
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
                   <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
-                  <button type="button" role="tab" aria-selected={readout === 'rewards'} onClick={() => setReadout('rewards')}>Rewards</button>
+                  <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
                   <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
                 {readout === 'mission' ? <>
@@ -313,6 +341,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  {site && <CommunitySite site={site} archived={archived} />}
                   <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
                   <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />

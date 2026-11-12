@@ -135,3 +135,15 @@
 .eventTiers span[data-tier='gold'][data-active] { border-color: #f2c24c; color: #f2c24c; }
 .eventTiers span[data-tier='silver'][data-active] { border-color: #dfe4ea; color: #dfe4ea; }
 @media (prefers-reduced-motion: reduce) { .event[data-phase='live'] .eventStatus i { animation: none; } }
+
+/* SSL-758: the Community Site: one bar, the stage, each part and your share. */
+.site { width: min(100%, 420px); display: grid; gap: 8px; padding: 12px 14px; border: 1px solid rgba(244, 239, 228, .35); border-radius: 16px; background: rgba(8, 16, 34, .28); color: #f4efe4; }
+.site .barLabel { font: 800 14px/1.2 var(--ln-font-body); }
+.siteFill { height: 100%; background: linear-gradient(90deg, #f2c24c, #e8a24a); }
+.siteParts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.siteParts li { display: grid; gap: 2px; padding: 6px 8px; border-radius: 10px; background: rgba(8, 16, 34, .3); }
+.siteParts li b { font: 800 14px/1.1 var(--ln-font-display); }
+.siteParts li small { color: #c9d0c2; font: 600 14px/1.15 var(--ln-font-body); }
+.siteParts li span { font: 700 14px/1 var(--ln-font-mono); }
+.siteParts li[data-full] span { color: #6fe39a; }
+.siteMine, .siteArchived { margin: 0; color: #c9d0c2; font: 600 14px/1.35 var(--ln-font-body); }

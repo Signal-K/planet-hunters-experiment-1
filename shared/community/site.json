@@ -1,0 +1,24 @@
+{
+  "about": "SSL-758: the Community Site ledger. Ordinary play fills one shared construction bar; nothing is deducted from the player. Read by web/lib/community/site.ts and mirrored (and checked by go test) in pocketbase/site.go.",
+  "components": [
+    { "id": "structure", "label": "Structure", "feed": "Mining hauls" },
+    { "id": "systems", "label": "Systems", "feed": "Contract runs" },
+    { "id": "instrument", "label": "Instrument", "feed": "Payload launches" },
+    { "id": "data", "label": "Data", "feed": "Classifications and surveys" }
+  ],
+  "templates": {
+    "spaceport-launch-site": { "name": "Community Spaceport", "targets": { "structure": 2400, "systems": 600, "instrument": 300, "data": 600 } },
+    "observatory-instrument": { "name": "Community Observatory", "targets": { "structure": 1200, "systems": 400, "instrument": 600, "data": 1200 } }
+  },
+  "defaultTemplate": "spaceport-launch-site",
+  "stages": [
+    { "at": 0, "label": "Planning" },
+    { "at": 0.25, "label": "Foundations" },
+    { "at": 0.5, "label": "Frame" },
+    { "at": 0.75, "label": "Fit-out" },
+    { "at": 1, "label": "Complete" }
+  ],
+  "perRun": { "structure": 40, "systems": 10, "instrument": 25, "data": 5 },
+  "perUserCap": { "structure": 400, "systems": 100, "instrument": 100, "data": 150 },
+  "structureMinerals": ["iron", "nickel", "cobalt", "copper", "aluminium", "silicon", "carbon"]
+}

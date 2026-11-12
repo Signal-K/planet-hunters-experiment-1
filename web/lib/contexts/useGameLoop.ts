@@ -1,4 +1,4 @@
-import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
+import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
@@ -39,6 +39,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
+import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -786,6 +787,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // SSL-663: one stamp per research task kind per UTC day, for the calendar in the Control Station.
   const stampResearch = useCallback((kind: StampKind) => {
+    // SSL-758: a classification or survey day feeds the Community Site's data, once per kind per day.
+    if (kind === 'classification' || kind === 'survey') queueSiteContribution(`data:${kind}:${stampDayKey(Date.now())}`, dataSiteCredit())
     setState(s => {
       const player = addStamp(s.player, kind, Date.now())
       return player === s.player ? s : { ...s, player }
@@ -1453,6 +1456,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         .then(runs => runs.forEach(run => queueUpdate('mission_runs', run.id, completedRun)))
         .catch(() => {})
     }
+    // SSL-758: the run also adds to the shared Community Site. Credit from the mined cargo; the player keeps it all.
+    const siteMission = catalog.missions.find(item => item.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(item => item.id === current.missionId) ?? null
+    const siteCredit = missionSiteCredit(siteMission, current.lastCargo)
+    if (siteCredit) queueSiteContribution(runId ?? `${current.missionId}:${current.player.missionStartedAt ?? 0}`, siteCredit)
     missionRunIdRef.current = null
     // Unconditional analytics event — separate from the (now sampled)
     // survey queue below, so mission-completion volume and drop-off stay

@@ -50,6 +50,7 @@ func main() {
 	registerFriendsRoutes(app)
 	registerNotificationRoutes(app)
 	registerCommunityRoutes(app)
+	registerSiteLedger(app)
 	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {

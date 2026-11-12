@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { SITE_RULES, missionSiteCredit } from '@/lib/community/site'
 import { showerForRunMission } from '@/lib/data/showers'
 import { PROBE_SECTOR_HOURS } from '@/lib/probes/survey-probe'
 import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
@@ -56,6 +57,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   /** SSL-818: the other places this run can end. The primary button still returns to the default. */
   exits?: DebriefExit[]
 }) {
+  // SSL-758: what this run adds to the shared Community Site (the player keeps the haul).
+  const siteCredit = missionSiteCredit(mission, cargo)
   const settled = homeSettlement ?? null
   // A haul settled on the delivery sheet has no store/sell choice left to make here.
   const isFreeHaul = !settled && isFreeHaulMission(mission, cargo)
@@ -213,6 +216,17 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <span>Fragments kept</span>
               <span>{shownRun.fragments}</span>
             </div>
+          </section>
+        )}
+
+        {siteCredit && !shipDestroyed && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-community-site">
+            <p className={styles.kicker}>Community Site</p>
+            <div className={styles.row}>
+              <span>{SITE_RULES.components.find(c => c.id === siteCredit.component)?.label} · {SITE_RULES.components.find(c => c.id === siteCredit.component)?.feed.toLowerCase()}</span>
+              <span>+{siteCredit.units}</span>
+            </div>
+            <p className={styles.note}>+{siteCredit.units} to the Community Site. You keep everything; this only records your share.</p>
           </section>
         )}
 

@@ -18,6 +18,7 @@ describe('sync tray (SSL-729)', () => {
     expect(describeChange(item({ type: 'upsert', collection: 'game_states', id: 'a', filter: '', data: {} }))).toBe('Base and progress')
     expect(describeChange(item({ type: 'create', collection: 'mission_runs', id: 'a', data: {} }))).toBe('Mission started')
     expect(describeChange(item({ type: 'http', path: '/api/landnam/community/research', method: 'POST', body: {} }))).toBe('Community research')
+    expect(describeChange(item({ type: 'create', collection: 'community_contributions', id: 'abc', data: {} }))).toBe('Community Site')
     expect(ageLabel(0, 30_000)).toBe('just now')
     expect(ageLabel(0, 5 * 60_000)).toBe('5 min ago')
   })

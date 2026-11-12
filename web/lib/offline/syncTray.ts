@@ -42,6 +42,7 @@ export function describeChange(item: OutboxItem): string {
     case 'mission_runs': return op.type === 'create' ? 'Mission started' : 'Mission record'
     case 'voxel_worlds': return 'Rover terrain'
     case 'onboarding_feedback': return 'Feedback'
+    case 'community_contributions': return 'Community Site'
     default: return 'Game change'
   }
 }

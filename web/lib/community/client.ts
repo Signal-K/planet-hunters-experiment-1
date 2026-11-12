@@ -5,6 +5,7 @@ import { landnamPbUrl } from '@/lib/pb-config'
 import { pbLandnam } from '@/lib/pb-landnam'
 import type { CommunityResearch } from '@/lib/research/stamps'
 import type { Ballot, BallotsResponse } from './ballots'
+import type { SiteView } from './site'
 import type { ConsensusOverview, ConsensusProject, ConsensusReadout, ConsensusRequest, ConsensusVerdict } from './consensus'
 import { queueCommunityPost } from '@/lib/offline/pbOutbox'
 
@@ -48,6 +49,11 @@ export function fetchCommunityResearch(): Promise<CommunityResearch> {
 }
 
 /** SSL-757: the open, pending and closed ballots with the caller's own vote. */
+/** SSL-758: the month's Community Site and last month's, archived. */
+export function fetchSite(): Promise<{ site: SiteView; archived?: SiteView; now: number }> {
+  return communityFetch('/site')
+}
+
 export function fetchBallots(): Promise<BallotsResponse> {
   return communityFetch('/ballots')
 }

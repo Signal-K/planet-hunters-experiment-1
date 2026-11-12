@@ -614,6 +614,16 @@
    "tickets": []
   },
   {
+   "id": "community-research-site",
+   "name": "Community research: Community Site",
+   "flow": "events",
+   "web": "ui-community-research-site",
+   "tickets": [
+    "SSL-758"
+   ],
+   "native": "community-research-phone"
+  },
+  {
    "id": "community-research-event-before",
    "name": "Community research: before a shower",
    "flow": "events",

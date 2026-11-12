@@ -185,6 +185,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
+      { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
       { key: 'ui-community-research-event-before', label: 'Community research: before a shower', hint: 'SSL-775: pinned to 20 Sep. The event panel previews the Orionids: when they start, what to do, the badge tiers', stage: 'free-ops' },
       { key: 'ui-community-research-event-after', label: 'Community research: after a shower', hint: 'SSL-775: pinned to 3 Dec. The Leonids ended on 30 Nov; the panel keeps the finished record and names the Geminids next', stage: 'free-ops' },
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
@@ -1142,6 +1143,7 @@ function fixture(name: string): Partial<GameState> | null {
         },
       }
     }
+    case 'ui-community-research-site':
     case 'ui-community-research-event-before':
     case 'ui-community-research-leonids':
     case 'ui-community-research-geminids': {
