@@ -38,6 +38,9 @@
 }
 .sector {
   position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   min-height: 44px;
   aspect-ratio: 5 / 3;
   display: grid;
@@ -84,8 +87,18 @@
 .mark[aria-pressed='true'] { border-color: #f2c24c; background: rgba(242, 194, 76, .18); }
 .mark:disabled { opacity: .6; cursor: default; }
 
-.actions { display: grid; }
+.actions { display: grid; gap: 10px; }
 .actions > button { width: 100%; }
+.actions > .back { justify-self: center; width: auto; }
+
+/* The step strip: which page of the console this is. */
+.readout { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
+.steps { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.steps li { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px 0 4px; border-radius: 999px; color: #b8c8c0; font: 800 14px/1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.steps b { display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid currentColor; border-radius: 50%; font-size: 14px; }
+.steps li[aria-current='step'] { background: #f4efe4; color: #142840; }
+.steps li[data-done] { color: #6fe39a; }
+.sector:disabled { cursor: default; }
 
 @media (orientation: portrait) and (max-width: 700px) {
   .panel { width: 100%; }
