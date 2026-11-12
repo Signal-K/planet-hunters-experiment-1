@@ -4,7 +4,7 @@ format = 1
 id = "probe-scan"
 type = "exchange-lab"
 name = "Survey probe"
-summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the map filling in and every deposit found with its tonnes. Opening it downloads the new sectors, which is a probe observation."
+summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
 tickets = ["SSL-773"]
 qa = ["probe-scan"]
 
@@ -18,15 +18,15 @@ route = "probe-scan"
 state = "ui-probe-scan"
 
 [[objects]]
-id = "probe-map"
+id = "probe-orbit"
 kind = "instrument"
 layout = "host"
 mechanics = ["instruments", "community-research"]
-note = "The body's map in 6 by 4 sectors. Mapped sectors show their deposits as mineral-coloured dots; the sector being mapped now has a gold sweep; sectors new since the last visit are outlined green; unmapped sectors are dark. Tap a mapped sector to see its deposits and tonnes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
+note = "The body with its 6 by 4 sector map drawn on the disc and the probe on a tilted orbit, passing behind and in front. Mapped sectors show their deposits as mineral-coloured dots, the sector being mapped now glows gold, sectors new since the last visit are outlined green, unmapped ones are dark. A scan flash (beam and burst) goes off every few seconds, and on each sector during playback. The progress bar under it counts sectors and fills the next one as time passes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
 
 [[objects]]
-id = "probe-desk"
+id = "probe-readout"
 kind = "panel"
 layout = "host"
-mechanics = ["instruments", "community-research"]
-note = "Two-tone right half. The probe desk says what is new, when the next sector is done, or what a tapped sector holds. Under it, every mineral found so far with its total tonnes. Opening the console downloads new sectors: a probe-observation stamp once per day (ledger: platform_contributions)."
+mechanics = ["instruments", "community-research", "mission-planning"]
+note = "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted), then three ways on: Targeted run (free; opens the Free run tab on this body with the probe's run picked), Contracts (opens the Contracts tab on this body's offers; probe contracts come from clients who want what was found, web/lib/probes/probe-offers.ts) and Back to hub. Skip ends the playback early."

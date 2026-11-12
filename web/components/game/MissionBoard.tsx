@@ -29,7 +29,8 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { PROBE_CONTRACT_PREFIX, PROBE_RUN_PREFIX } from '@/lib/probes/probe-offers'
+import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardSite, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
@@ -332,6 +333,7 @@ export default function MissionBoard({
   onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
+  const [requestedSite] = useState(() => pendingMissionBoardSite())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? lastMissionBoardTab() ?? 'contracts')
@@ -344,7 +346,7 @@ export default function MissionBoard({
     [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
   )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
-  const [contractTargetId, setContractTargetId] = useState<string | null>(null)
+  const [contractTargetId, setContractTargetId] = useState<string | null>(() => tab === 'contracts' ? requestedSite?.targetId ?? null : null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
   const [clientFocusId, setClientFocusId] = useState<string | null>(null)
   const roster = useMemo(
@@ -373,15 +375,19 @@ export default function MissionBoard({
   const offerWindow = tab === 'contracts' && count > 0
     ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
     : []
-  const [view, setView] = useState<MapView>('system')
+  const [view, setView] = useState<MapView>(() => {
+    const site = requestedSite ? catalog.targets.find(target => target.id === requestedSite.targetId) : null
+    return !site ? 'system' : site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer'
+  })
   const mineralSources = useMemo(() => sourceMineral
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && t.minerals.includes(sourceMineral)).sort((a, b) => a.orbit - b.orbit)
     : [], [catalog.targets, sourceMineral])
-  const [pickedId, setPickedId] = useState<string | null>(() => mineralSources[0]?.id ?? null)
-  const [runId, setRunId] = useState<string | null>(null)
+  const [pickedId, setPickedId] = useState<string | null>(() => (tab === 'free' ? requestedSite?.targetId : null) ?? mineralSources[0]?.id ?? null)
+  const [runId, setRunId] = useState<string | null>(() => tab === 'free' ? requestedSite?.runId ?? null : null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
-  const pickedRuns = picked ? freeRuns.filter(run =>
+  // A run tied to one body (a probe's targeted run) is offered only there.
+  const pickedRuns = picked ? freeRuns.filter(run => (!run.targetId || run.targetId === picked.id) &&
     (sourceMineral
       ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
       : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
@@ -404,6 +410,15 @@ export default function MissionBoard({
     ?? steps[0]
 
   useEffect(() => clearMissionBoardTab(), [])
+
+  // From the probe readout: open on the first contract its survey opened at that body.
+  useEffect(() => {
+    if (tab !== 'contracts' || !requestedSite) return
+    const first = cards.find(item => item.mission.id.startsWith(`${PROBE_CONTRACT_PREFIX}${requestedSite.targetId}-`))
+    if (first) onSelectMission(first.mission.id)
+    // Only on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const first = mineralSources[0]
@@ -601,10 +616,13 @@ export default function MissionBoard({
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
-            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : 'Free run'}</span>
+            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : pickedRun?.id.startsWith(PROBE_RUN_PREFIX) ? 'Free run · targeted' : 'Free run'}</span>
             <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
           </div>
         </header>
+        {picked && pickedRun?.id.startsWith(PROBE_RUN_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-probe">
+          Targeted run from your probe survey · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · no client, no fee
+        </p>}
         {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>

@@ -220,8 +220,18 @@ export interface SurveyTotal { mineral: string; tonnes: number; sectors: number 
 
 /** What the probe has found on a body so far: each mineral, its tonnes and how many sectors hold it. */
 export function bodySurvey(target: Pick<Target, 'id' | 'minerals'>, record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number, rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
+  return surveyOf(target, sectorsMapped(record, now), rarity)
+}
+
+/** What has been downloaded to the console: the survey that clients and the free run are offered on. */
+export function downloadedSurvey(target: Pick<Target, 'id' | 'minerals'>, record: Pick<ProbeRecord, 'readings'> | undefined, rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
+  return surveyOf(target, Object.keys(record?.readings ?? {}), rarity)
+}
+
+/** Each mineral found in these sectors, its tonnes and how many sectors hold it, in the body's mineral order. */
+export function surveyOf(target: Pick<Target, 'id' | 'minerals'>, sectors: readonly string[], rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
   const totals = new Map<string, SurveyTotal>()
-  for (const sector of sectorsMapped(record, now)) {
+  for (const sector of sectors) {
     for (const mineral of sectorDeposits(target, sector)) {
       const row = totals.get(mineral) ?? { mineral, tonnes: 0, sectors: 0 }
       row.tonnes += depositTonnes(target, sector, mineral, rarity(mineral))

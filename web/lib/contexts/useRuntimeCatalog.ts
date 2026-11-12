@@ -9,12 +9,12 @@ export function useRuntimeCatalog(catalog: Catalog, state: GameState): Catalog {
   const {
     discoveredExoplanetTargets, freeOperations, transitSatelliteLaunchedAt, missionsDone,
     deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt,
-    resourceFocus, stash, orionidsEventStage,
+    resourceFocus, stash, orionidsEventStage, probes, completedMissions,
   } = player
   const catalogPlayer = useMemo(() => ({
     deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt,
-    resourceFocus, stash, orionidsEventStage,
-  }), [deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt, resourceFocus, stash, orionidsEventStage])
+    resourceFocus, stash, orionidsEventStage, probes, completedMissions,
+  }), [deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt, resourceFocus, stash, orionidsEventStage, probes, completedMissions])
   return useMemo(() => buildRuntimeCatalog({
     catalog, discoveredTargets: discoveredExoplanetTargets, freeOperations,
     transitSatelliteLaunchedAt, missionId, targetId, missionsDone, player: catalogPlayer,

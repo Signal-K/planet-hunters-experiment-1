@@ -2045,24 +2045,25 @@ enum AuthoredSceneDeclarations {
       },
       "objects": [
         {
-          "id": "probe-map",
+          "id": "probe-orbit",
           "kind": "instrument",
           "layout": "host",
           "mechanics": [
             "instruments",
             "community-research"
           ],
-          "note": "The body's map in 6 by 4 sectors. Mapped sectors show their deposits as mineral-coloured dots; the sector being mapped now has a gold sweep; sectors new since the last visit are outlined green; unmapped sectors are dark. Tap a mapped sector to see its deposits and tonnes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
+          "note": "The body with its 6 by 4 sector map drawn on the disc and the probe on a tilted orbit, passing behind and in front. Mapped sectors show their deposits as mineral-coloured dots, the sector being mapped now glows gold, sectors new since the last visit are outlined green, unmapped ones are dark. A scan flash (beam and burst) goes off every few seconds, and on each sector during playback. The progress bar under it counts sectors and fills the next one as time passes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
         },
         {
-          "id": "probe-desk",
+          "id": "probe-readout",
           "kind": "panel",
           "layout": "host",
           "mechanics": [
             "instruments",
-            "community-research"
+            "community-research",
+            "mission-planning"
           ],
-          "note": "Two-tone right half. The probe desk says what is new, when the next sector is done, or what a tapped sector holds. Under it, every mineral found so far with its total tonnes. Opening the console downloads new sectors: a probe-observation stamp once per day (ledger: platform_contributions)."
+          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted), then three ways on: Targeted run (free; opens the Free run tab on this body with the probe's run picked), Contracts (opens the Contracts tab on this body's offers; probe contracts come from clients who want what was found, web/lib/probes/probe-offers.ts) and Back to hub. Skip ends the playback early."
         }
       ]
     },

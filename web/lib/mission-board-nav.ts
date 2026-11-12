@@ -3,6 +3,7 @@ export type MissionBoardTab = 'contracts' | 'program' | 'clients' | 'events' | '
 let pending: MissionBoardTab | null = null
 let pendingEvent: string | null = null
 let pendingMineral: string | null = null
+let pendingSite: { targetId: string; runId: string | null } | null = null
 let lastTab: MissionBoardTab | null = null
 
 /** The tab the player last used. Coming back to the board (Back from a launch review, a remount) keeps it instead of snapping to Contracts. */
@@ -25,10 +26,26 @@ export function pendingMissionBoardMineral(): string | null {
   return pendingMineral
 }
 
+/**
+ * Open the board on one body: the Free run tab with that site and run picked, or the Contracts tab showing only the
+ * offers there (the probe readout's "Targeted run" and "Contracts" buttons).
+ */
+export function requestMissionBoardSite(tab: 'free' | 'contracts', targetId: string, runId: string | null = null): void {
+  pending = tab
+  pendingEvent = null
+  pendingMineral = null
+  pendingSite = { targetId, runId }
+}
+
+export function pendingMissionBoardSite(): { targetId: string; runId: string | null } | null {
+  return pendingSite
+}
+
 /** Next Mission Board open lands on this tab (Program from the telescope prompt, for example). */
 export function requestMissionBoardTab(tab: MissionBoardTab): void {
   pending = tab
   pendingMineral = null
+  pendingSite = null
   if (tab !== 'events') pendingEvent = null
 }
 
@@ -51,6 +68,7 @@ export function pendingMissionBoardEvent(): string | null {
 /** Consume only after the visible board has committed. */
 export function clearMissionBoardTab(): void {
   pending = null
+  pendingSite = null
   pendingEvent = null
   pendingMineral = null
 }

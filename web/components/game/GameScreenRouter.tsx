@@ -74,7 +74,7 @@ const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: Screen
 const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -553,6 +553,9 @@ function ScreenBody({
           targets={game.catalog.targets}
           onBack={() => game.goBack()}
           onCollect={game.collectProbeData}
+          onHub={() => game.go('hub')}
+          onPlanRun={(targetId, runId) => { requestMissionBoardSite('free', targetId, runId); game.goToMissions() }}
+          onViewContracts={targetId => { requestMissionBoardSite('contracts', targetId); game.goToMissions() }}
         />
       )
 

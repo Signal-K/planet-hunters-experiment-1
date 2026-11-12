@@ -1,4 +1,6 @@
-import { probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
+import { downloadedSurvey, probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
+import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
+import { MINERAL_META } from '@/lib/data/minerals'
 import type { Catalog } from './catalog'
 import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
@@ -237,6 +239,18 @@ export function buildRuntimeCatalog({
   const probeMissions: Mission[] = [...new Map(probeTargets.map(target => [target.id, target])).values()]
     .map(target => probeMission(target, missionsDone + 1))
     .filter(mission => !existingMissionIds.has(mission.id))
+  // What each probe's downloaded survey opens: a free targeted run to the body and client contracts for its deposits.
+  // A contract already flown is not offered again; the one in flight stays so the run can finish.
+  const flown = new Set((player?.completedMissions ?? []).map(record => record.id).filter(id => id !== missionId))
+  const probeFollowUps: Mission[] = freeOperations
+    ? Object.entries(player?.probes ?? {}).flatMap(([id, record]) => {
+        const target = mergedTargets.find(item => item.id === id)
+        if (!target) return []
+        const survey = downloadedSurvey(target, record, mineral => MINERAL_META[mineral]?.rarity)
+        const run = probeRunMission(target, survey)
+        return [...(run ? [run] : []), ...probeContracts(target, survey, flown)]
+      }).filter(mission => !existingMissionIds.has(mission.id))
+    : []
   const surveyMissions: Mission[] = discoveredTargetList
     .map(target => ({
       id: `exo-survey-${target.id}`,
@@ -298,6 +312,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
   }
 }

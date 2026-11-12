@@ -1,86 +1,104 @@
-/* SSL-773: the survey probe console. Built on the radio desk's two-tone layout (RadioMeteorScreen.module.css). */
-.console { min-height: 0; display: grid; place-items: center; overflow: auto; }
-.panel {
-  position: relative;
-  box-sizing: border-box;
-  width: min(100%, 720px);
-  display: grid;
-  gap: 10px;
-  padding: 0 14px 14px;
-  border: 2px solid #0a1022;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e);
-  box-shadow: 0 0 0 1px rgba(244, 239, 228, .18), 6px 8px 0 rgba(8, 16, 34, .45), inset 0 1px 0 rgba(255, 255, 255, .14);
-}
-.panel > :first-child { margin: 0 -14px; }
+/* SSL-773: the survey probe console. The probe at work on the left (top on a phone), the readout on the right. Same
+   two-tone desk as the radio console (RadioMeteorScreen.module.css). */
+.workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .55); }
+.stage { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; min-width: 0; min-height: 0; padding: 12px clamp(16px, 3vw, 40px) 18px; background: rgba(26, 66, 168, .58); }
+.desk { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-width: 0; min-height: 0; padding: 72px clamp(16px, 3vw, 40px) 20px; background: rgba(168, 34, 52, .56); }
+.desk > * { width: 100%; max-width: 480px; align-self: center; }
+
+/* Clears the back button in the top-left corner. */
+.head { min-height: 44px; margin-left: 60px; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
+.head h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 clamp(18px, 2.4vw, 26px)/1.1 var(--ln-font-display); }
+.eyebrow { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 
 .bodies { display: flex; gap: 6px; flex-wrap: wrap; }
 .bodyTab { min-height: 44px; padding: 0 14px; border: 2px solid rgba(244, 239, 228, .4); border-radius: 999px; background: transparent; color: #c9d0c2; font: 800 14px/1 var(--ln-font-display); letter-spacing: .06em; cursor: pointer; }
 .bodyTab[aria-selected='true'] { border-color: #f4efe4; background: #f4efe4; color: #142840; }
 
-.views { display: grid; gap: 8px; }
+/* The orbit: the body, its sector map and the probe circling it. */
+.view { min-height: 0; display: grid; place-items: center; }
+.orbit { display: block; width: 100%; height: 100%; max-height: 100%; overflow: visible; }
+.track { fill: none; stroke: rgba(157, 231, 239, .45); stroke-width: 1.5; stroke-dasharray: 3 5; }
+.track[data-half='back'] { stroke: rgba(157, 231, 239, .22); }
+.crater { fill: rgba(0, 0, 0, .16); stroke: rgba(255, 255, 255, .08); stroke-width: 1.5; }
+.rim { fill: none; stroke: rgba(244, 239, 228, .3); stroke-width: 1.5; }
+.cell { fill: rgba(5, 10, 26, .62); stroke: rgba(5, 10, 26, .5); stroke-width: 1; transition: fill .5s ease; }
+[data-read] > .cell { fill: rgba(157, 231, 239, .06); stroke: rgba(157, 231, 239, .4); }
+[data-new] > .cell { stroke: #6fe39a; stroke-width: 1.5; }
+[data-scanning] > .cell { fill: rgba(242, 194, 76, .16); stroke: #f2c24c; stroke-width: 2; animation: probe-cell 1.6s ease-in-out infinite; }
+.deposit { stroke: #070b18; stroke-width: 1; }
+@keyframes probe-cell { 50% { fill: rgba(242, 194, 76, .32); } }
 
-/* The body's map: sectors over a lit disc of rock. */
-.map {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  gap: 2px;
-  padding: 2px;
-  overflow: hidden;
-  border: 3px solid #070b18;
-  border-radius: 8px;
-  background:
-    radial-gradient(ellipse 70% 90% at 35% 30%, rgba(244, 239, 228, .2), transparent 60%),
-    radial-gradient(ellipse 40% 30% at 70% 70%, rgba(0, 0, 0, .25), transparent 70%),
-    linear-gradient(160deg, #7a6a58, #4a3f36 60%, #2c2622);
-  box-shadow: inset 0 0 24px rgba(0, 0, 0, .5);
-}
-.sector {
-  position: relative;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  aspect-ratio: 5 / 3;
-  display: grid;
-  align-content: space-between;
-  justify-items: start;
-  padding: 4px;
-  border: 1px solid rgba(244, 239, 228, .18);
-  border-radius: 3px;
-  background: rgba(8, 16, 34, .42);
-  color: #c9d0c2;
-  cursor: pointer;
-}
-.sector[data-read] { background: rgba(8, 16, 34, .08); border-color: rgba(157, 231, 239, .45); }
-.sector[data-selected] { outline: 3px solid #f2c24c; outline-offset: -3px; }
-.sectorName { font: 700 14px/1 var(--ln-font-mono); }
-.dots { display: flex; gap: 3px; flex-wrap: wrap; }
-.dots i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #070b18; }
+.sat { filter: drop-shadow(0 0 4px rgba(157, 231, 239, .5)); }
+.panelWing { fill: #3a6fd8; stroke: #9de7ef; stroke-width: 1; }
+.bus { fill: #e8e2d4; stroke: #070b18; stroke-width: 1.2; }
+.lens { fill: #f2c24c; }
 
-.sector:disabled { cursor: default; background: rgba(8, 16, 34, .62); color: rgba(201, 208, 194, .55); }
-.sector[data-scanning] { background: rgba(8, 16, 34, .5); color: #f2c24c; overflow: hidden; }
-.sector[data-scanning]::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(242, 194, 76, .35), transparent); animation: probe-sweep 2.4s linear infinite; }
-.sector[data-new] { box-shadow: inset 0 0 0 2px #6fe39a; }
-@keyframes probe-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-@media (prefers-reduced-motion: reduce) { .sector[data-scanning]::after { animation: none; } }
+/* A scan: a beam from the probe, a burst on the surface and, when a sector lands, a flash over it. */
+.flash { pointer-events: none; }
+.beam { stroke: #fff6c8; stroke-width: 3; filter: drop-shadow(0 0 4px #f2c24c); stroke-linecap: round; animation: probe-beam .7s ease-out forwards; }
+.burst { fill: #fff6c8; transform-box: fill-box; transform-origin: center; animation: probe-burst .8s ease-out forwards; }
+.land { fill: #6fe39a; animation: probe-land .9s ease-out forwards; }
+@keyframes probe-beam { from { opacity: .95; } to { opacity: 0; } }
+@keyframes probe-burst { from { opacity: 1; transform: scale(.4); } to { opacity: 0; transform: scale(3.2); } }
+@keyframes probe-land { from { opacity: .7; } to { opacity: 0; } }
 
-/* What the probe has found: each mineral and its tonnes. */
-.found { display: grid; gap: 8px; padding: 10px 14px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
+/* The progress bar: sectors mapped, and how far the probe is into the next one. */
+.progress { display: grid; gap: 6px; }
+.progressHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.progressHead span { display: inline-flex; align-items: center; gap: 8px; }
+.progressHead b { font: 700 14px/1 var(--ln-font-mono); letter-spacing: 0; }
+.led { width: 10px; height: 10px; border-radius: 50%; background: #6fe39a; box-shadow: 0 0 8px #6fe39a; animation: probe-led 1.6s ease-in-out infinite; }
+.led[data-state='rx'] { background: #f2c24c; box-shadow: 0 0 8px #f2c24c; animation-duration: .5s; }
+.led[data-state='done'] { animation: none; }
+@keyframes probe-led { 50% { opacity: .4; } }
+.bar { position: relative; height: 16px; overflow: hidden; border: 2px solid #070b18; border-radius: 999px; background: rgba(5, 10, 26, .6); }
+.bar > i { position: absolute; top: 0; bottom: 0; left: 0; background: linear-gradient(180deg, #9de7ef, #4fb6c8); transition: width .45s ease; }
+.bar > .barNext { background: linear-gradient(90deg, rgba(242, 194, 76, .9) calc(var(--part) * 100%), transparent calc(var(--part) * 100%)); transition: none; }
+.progress small { color: #c9d0c2; font: 700 14px/1.2 var(--ln-font-body); }
+
+/* The readout. */
+.readout { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.readout > p { margin: 0; min-height: calc(2 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }
+.found { display: grid; gap: 8px; }
 .found > span { color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .found > p { margin: 0; color: #c9d0c2; font: 600 15px/1.35 var(--ln-font-body); }
 .found ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; margin: 0; padding: 0; list-style: none; }
-.found li { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; padding: 0 4px; border-radius: 8px; }
-.found li[data-picked] { background: rgba(242, 194, 76, .18); }
+.found li { position: relative; display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; padding: 0 4px; border-radius: 8px; animation: probe-row .4s ease-out; }
+.found li[data-new] { background: rgba(111, 227, 154, .16); }
 .found li i { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #070b18; }
 .found li b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 14px/1 var(--ln-font-body); }
 .found li small { margin-left: auto; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); white-space: nowrap; }
+@keyframes probe-row { from { opacity: 0; transform: translateY(4px); } }
 
+/* The way on: a free targeted run, the contracts the finds opened, or back to the hub. */
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 14px; border: 2px solid #f4efe4; border-radius: 999px; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.actions button:disabled { opacity: .5; cursor: default; }
+.actions em { padding: 3px 7px; border-radius: 999px; font: 800 12px/1 var(--ln-font-display); font-style: normal; letter-spacing: .06em; }
+.primary { grid-column: 1 / -1; background: #f2c24c; border-color: #f2c24c !important; color: #142840; }
+.primary em { background: #142840; color: #f2c24c; }
+.secondary { background: #f4efe4; color: #142840; }
+.secondary em { background: #6fe39a; color: #0b2a18; }
+.ghost { background: transparent; color: #f4efe4; }
+.actions > .ghost:only-child { grid-column: 1 / -1; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-scanning] > .cell, .led, .found li { animation: none; }
+}
+
+/* Phone portrait: the probe on top, the readout under it. */
 @media (orientation: portrait) and (max-width: 700px) {
-  .panel { width: 100%; }
+  .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .stage { padding-bottom: 12px; }
+  .desk { justify-content: flex-start; gap: 10px; padding: 12px 16px 16px; }
+  .readout { padding: 12px 14px; gap: 8px; }
+  .readout > p { font-size: 16px; }
 }
 @media (max-height: 520px) {
-  .sector { aspect-ratio: auto; }
+  .stage { gap: 6px; padding-bottom: 10px; }
+  .desk { padding-top: 60px; gap: 10px; }
   .found li { min-height: 24px; }
+  .actions button { min-height: 44px; }
 }

@@ -1433,7 +1433,8 @@
         "hostLayoutObjects": 2,
         "mechanics": [
           "community-research",
-          "instruments"
+          "instruments",
+          "mission-planning"
         ],
         "web": [
           "web/components/game/screens/ProbeScanScreen.tsx"
@@ -1756,6 +1757,7 @@
         "launchpad",
         "mining",
         "missions",
+        "probe-scan",
         "rocket-buy",
         "targets"
       ]
