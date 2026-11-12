@@ -8,7 +8,7 @@ import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import {
   PROBE_COLS,
   PROBE_ROWS,
-  PROBE_SECTOR_HOURS,
+  sectorMsOf,
   newSectors,
   nextSector,
   scanOrder,
@@ -271,7 +271,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                 </div>
                 <div className={styles.bar} role="progressbar" aria-label="Sectors mapped" aria-valuemin={0} aria-valuemax={total} aria-valuenow={shown}>
                   <i style={{ width: `${(shown / total) * 100}%` }} />
-                  {next && !playing && <i className={styles.barNext} style={{ left: `${(shown / total) * 100}%`, width: `${(1 / total) * 100}%`, ['--part' as string]: 1 - (next.at - now) / (PROBE_SECTOR_HOURS * 3_600_000) }} />}
+                  {next && !playing && <i className={styles.barNext} style={{ left: `${(shown / total) * 100}%`, width: `${(1 / total) * 100}%`, ['--part' as string]: 1 - (next.at - now) / sectorMsOf(record) }} />}
                 </div>
                 <small>{playing ? `Sector ${sectorName(scanOrder()[shown])}` : next ? `Next sector ${sectorName(next.sector)} in ${inTime(next.at - now)}` : 'Every sector mapped'}</small>
               </div>

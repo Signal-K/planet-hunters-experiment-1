@@ -5,6 +5,7 @@
 // stamp, once a day, and a ledger row). Scan levels where the player does an activity come in cycle 11; the
 // spectrum below is kept for them. Pure over the player, like the other systems.
 
+import { buildingLevel, probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
@@ -35,6 +36,8 @@ export interface ProbeRecord {
   launchedAt: number
   /** Sectors downloaded to the console, keyed by sector id (`c_r`). */
   readings: Record<string, ProbeReading>
+  /** SSL-792: ms per sector when launched from an upgraded control station; absent means PROBE_SECTOR_HOURS. */
+  sectorMs?: number
 }
 
 export type ProbePlayer = Pick<Player, 'probes' | 'researchStamps'>
@@ -83,8 +86,15 @@ export function probeMission(target: Target, sequence: number): Mission {
 /** The probe arrived: it is in orbit for good. Returns the same player when it already was. */
 export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number): T {
   if (player.probes?.[targetId]) return player
-  return { ...player, probes: { ...(player.probes ?? {}), [targetId]: { launchedAt: at, readings: {} } } }
+  // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
+  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed'>>
+  const hours = withLevels.placed?.includes('control-station') ? probeSectorHours(buildingLevel(withLevels, 'control-station')) : PROBE_SECTOR_HOURS
+  const record = hours === PROBE_SECTOR_HOURS ? { launchedAt: at, readings: {} } : { launchedAt: at, readings: {}, sectorMs: hours * 3_600_000 }
+  return { ...player, probes: { ...(player.probes ?? {}), [targetId]: record } }
 }
+
+/** How long this probe takes per sector. */
+export const sectorMsOf = (record: Pick<ProbeRecord, 'sectorMs'> | undefined) => record?.sectorMs ?? SECTOR_MS
 
 export function probesInOrbit(player: Pick<Player, 'probes'>): string[] {
   return Object.keys(player.probes ?? {})
@@ -173,18 +183,18 @@ export function scanOrder(): string[] {
 }
 
 /** Sectors the probe has mapped by `now`: one every PROBE_SECTOR_HOURS since it arrived. */
-export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number): string[] {
+export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs'> | undefined, now: number): string[] {
   if (!record) return []
-  const count = Math.max(0, Math.min(sectorIds().length, Math.floor((now - record.launchedAt) / SECTOR_MS)))
+  const count = Math.max(0, Math.min(sectorIds().length, Math.floor((now - record.launchedAt) / sectorMsOf(record))))
   return scanOrder().slice(0, count)
 }
 
 /** The sector being mapped now and when it is done, or null once the whole body is mapped. */
-export function nextSector(record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number): { sector: string; at: number } | null {
+export function nextSector(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs'> | undefined, now: number): { sector: string; at: number } | null {
   if (!record) return null
   const done = sectorsMapped(record, now).length
   if (done >= sectorIds().length) return null
-  return { sector: scanOrder()[done], at: record.launchedAt + (done + 1) * SECTOR_MS }
+  return { sector: scanOrder()[done], at: record.launchedAt + (done + 1) * sectorMsOf(record) }
 }
 
 /** Mapped sectors not yet downloaded to the console. */
@@ -250,6 +260,7 @@ export function mergeProbes(current: Player['probes'], remote: Player['probes'])
     const a = current?.[id]
     const b = remote?.[id]
     if (!a || !b) return [id, (a ?? b)!]
-    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), readings: { ...b.readings, ...a.readings } }]
+    const sectorMs = a.sectorMs && b.sectorMs ? Math.min(a.sectorMs, b.sectorMs) : a.sectorMs ?? b.sectorMs
+    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), readings: { ...b.readings, ...a.readings }, ...(sectorMs ? { sectorMs } : {}) }]
   }))
 }

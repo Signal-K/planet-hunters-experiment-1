@@ -783,6 +783,26 @@
     "SSL-774"
    ],
    "native": "community-research-phone"
+  },
+  {
+   "id": "hub-buildings-l2",
+   "name": "Base: buildings at level 2",
+   "flow": "core-loop",
+   "web": "hub-buildings-l2",
+   "tickets": [
+    "SSL-792"
+   ],
+   "native": "hub-structures-phone"
+  },
+  {
+   "id": "hub-buildings-l3",
+   "name": "Base: buildings at level 3",
+   "flow": "core-loop",
+   "web": "hub-buildings-l3",
+   "tickets": [
+    "SSL-792"
+   ],
+   "native": "hub-structures-phone"
   }
  ],
  "missions": [

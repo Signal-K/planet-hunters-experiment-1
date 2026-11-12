@@ -30,7 +30,17 @@
       "left": -3,
       "width": 68,
       "height": 55.165,
-      "foot": 4.5
+      "foot": 4.5,
+      "levels": {
+        "2": {
+          "src": "base/v7/structures/hangar-l2.png",
+          "height": 65.167
+        },
+        "3": {
+          "src": "base/v7/structures/hangar-l3.png",
+          "height": 73.5
+        }
+      }
     },
     "launchpad": {
       "site": "pad",
@@ -72,7 +82,17 @@
       "left": -3,
       "width": 74,
       "height": 46.555,
-      "foot": 4.5
+      "foot": 4.5,
+      "levels": {
+        "2": {
+          "src": "base/v7/structures/control-station-l2.png",
+          "height": 54.833
+        },
+        "3": {
+          "src": "base/v7/structures/control-station-l3.png",
+          "height": 64.833
+        }
+      }
     },
     "agency": {
       "site": "ops",
@@ -90,7 +110,17 @@
       "left": -3,
       "width": 124,
       "height": 49.059,
-      "foot": 4.5
+      "foot": 4.5,
+      "levels": {
+        "2": {
+          "src": "base/v7/structures/exchange-l2.png",
+          "height": 57.333
+        },
+        "3": {
+          "src": "base/v7/structures/exchange-l3.png",
+          "height": 65.667
+        }
+      }
     },
     "surface-silo": {
       "site": "shaft"

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="744" height="344" viewBox="0 0 744 344">
+  <image href="../../../web/public/game/assets/base/v7/structures/exchange.png" x="0" y="50" width="744" height="294"/>
+  <g transform="translate(0 50)">
+        <!-- a flag over the warehouse and a second price board -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><line x1="560" y1="56" x2="560" y2="-36" stroke-width="5"/><path d="M562 -36 L610 -24 L562 -12 Z" fill="#2f6db0"/></g>
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><rect x="160" y="40" width="80" height="50" fill="#2f6db0"/><line x1="200" y1="90" x2="200" y2="148" stroke-width="6"/></g>
+        <path d="M172 72 L184 54 L196 72 Z" fill="#2a9d9b"/><rect x="204" y="58" width="28" height="7" fill="#9fd3e6"/><rect x="204" y="72" width="20" height="7" fill="#9fd3e6"/></g>
+</svg>

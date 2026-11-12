@@ -196,6 +196,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
+      { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
       { key: 'hub-pad-worn', label: 'Base: launchpad needs service', hint: 'Level 1 pad after 10 launches: tap it to service for F1M, or launches stay held (SSL-693)', stage: 'free-ops' },
       { key: 'hub-first-run', label: 'Base: first run', hint: 'Only the launchpad is built: the line-art Agency building stands where the Data hub will go (SSL-785)', stage: 'free-ops' },
@@ -366,6 +368,21 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'hub-pad-l2':
+    case 'hub-buildings-l2':
+    case 'hub-buildings-l3': {
+      const level = name === 'hub-buildings-l3' ? 3 : 2
+      return {
+        screen: 'hub',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          francs: 80_000_000,
+          placed: ['launchpad', 'market', 'hangar', 'control-station'],
+          placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
+          buildingLevels: { launchpad: level, market: level, hangar: level, 'control-station': level },
+          launchpadUpgraded: true,
+        },
+      }
+    }
     case 'hub-pad-l3':
       return {
         screen: 'hub',

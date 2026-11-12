@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="408" height="441" viewBox="0 0 408 441">
+  <image href="../../../web/public/game/assets/base/v7/structures/hangar.png" x="0" y="110" width="408" height="331"/>
+  <g transform="translate(0 110)">
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><rect x="44" y="-42" width="12" height="62" fill="#5f6f86"/><rect x="196" y="-42" width="12" height="62" fill="#5f6f86"/><rect x="36" y="-54" width="180" height="16" fill="#efe6d2"/><line x1="36" y1="-46" x2="216" y2="-46" stroke="#2f6db0" stroke-width="5"/></g>
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><line x1="128" y1="-38" x2="128" y2="-8"/><rect x="118" y="-8" width="20" height="10" fill="#2a9d9b"/></g>
+        <!-- solar on the annex roof -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><path d="M222 126 L240 104 L290 104 L272 126 Z" fill="#2f6db0"/><path d="M230 116 L280 116 M256 104 L246 126" stroke-width="2"/></g>
+        <!-- a taller beacon tower on the annex -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><rect x="300" y="-70" width="12" height="166" fill="#5f6f86"/><rect x="292" y="-86" width="28" height="18" fill="#efe6d2"/></g>
+        <circle cx="306" cy="-96" r="8" fill="#ffd979" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"/>
+        <!-- lit bay lights -->
+        <rect x="52" y="140" width="160" height="6" fill="#ffd979" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" stroke-width="2"/></g>
+</svg>

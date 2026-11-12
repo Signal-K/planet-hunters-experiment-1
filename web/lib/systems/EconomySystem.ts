@@ -12,7 +12,7 @@ import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { nextLaserCapacitorTier, spendOreUnits } from '@/lib/data/mining-upgrades'
-import { PAD_SERVICE_COST, buildingLevel, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
+import { PAD_SERVICE_COST, buildingLevel, exchangeSaleBonus, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
 import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
 import { permanentResearchSaleRate } from '@/lib/research/marketplace'
@@ -65,7 +65,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'> & Partial<Pick<GameState['player'], 'buildingLevels' | 'launchpadUpgraded'>>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -83,7 +83,9 @@ export function sellUnitPrice(
   const base = snapshotQuote?.price ?? Math.round(meta.price * (exchangeBuilt ? 1 : OPEN_MARKET_SELL_RATE) * supplyDipMultiplier(unitsSold))
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
-  const quoted = premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base
+  // SSL-792: an upgraded Exchange pays a little more on every sale.
+  const exchangeBonus = exchangeBuilt ? exchangeSaleBonus(buildingLevel(player, 'market')) : 0
+  const quoted = Math.round((premiumApplied ? base * (1 + client!.payoutPremium) : base) * (1 + exchangeBonus))
   const permanentRate = permanentResearchSaleRate(player, now)
   const bonusApplied = permanentRate > 0
   return {
