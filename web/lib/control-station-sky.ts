@@ -2,7 +2,7 @@ import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/Instr
 import type { ControlStationModel, ControlStationRow } from '@/lib/control-station'
 import { parseRadioFilename } from '@/lib/radio-meteors'
 import { chainRecordings, chainStage, LEONIDS_CHAIN } from '@/lib/orionids/chain'
-import { probeReadingsLeft, probesInOrbit } from '@/lib/probes/survey-probe'
+import { probeSectorsWaiting, probesInOrbit } from '@/lib/probes/survey-probe'
 
 /**
  * Control station sky (SSL-730, Liam's drawing of 2026-11-01).
@@ -275,7 +275,7 @@ export function communityTelescopes(player: SkyPlayer): StationTelescope[] {
 export function probeTelescopes(player: SkyPlayer, now: number): StationTelescope[] {
   const bodies = probesInOrbit(player)
   if (!bodies.length) return []
-  const left = probeReadingsLeft(player, now)
+  const left = probeSectorsWaiting(player, now)
   return [{
     id: 'probes',
     name: bodies.length === 1 ? 'Survey probe' : `${bodies.length} survey probes`,
@@ -283,7 +283,7 @@ export function probeTelescopes(player: SkyPlayer, now: number): StationTelescop
     finds: 'Deposits',
     built: true,
     live: true,
-    status: left > 0 ? `${left} reading${left === 1 ? '' : 's'} today` : 'All read today',
+    status: left > 0 ? `${left} new sector${left === 1 ? '' : 's'} mapped` : 'Mapping',
     readyCount: left,
     kinds: ['probe'],
     community: false,
@@ -292,11 +292,11 @@ export function probeTelescopes(player: SkyPlayer, now: number): StationTelescop
 
 /** The probes' waiting readings, as one unexplored anomaly that opens the probe console. */
 function probeQueue(player: SkyPlayer, now: number): SkyAnomaly[] {
-  if (probeReadingsLeft(player, now) <= 0) return []
+  if (probeSectorsWaiting(player, now) <= 0) return []
   return [{
     id: 'queue:probes',
-    label: 'Probe readings',
-    detail: 'Surface readings · ready to read',
+    label: 'Probe survey',
+    detail: 'New sectors mapped · deposits found',
     state: 'unexplored',
     shape: 'probe',
     kind: 'probe',

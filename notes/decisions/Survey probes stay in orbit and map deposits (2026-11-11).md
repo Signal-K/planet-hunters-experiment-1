@@ -8,6 +8,8 @@ created: 2026-11-11
 
 # Survey probes stay in orbit and map deposits (2026-11-11)
 
+> 2026-11-12: the reading, marking and 3-a-day parts are replaced by `Basic probe scan is automatic; scan levels in cycle 11 (2026-11-12).md`. The probe now maps on its own.
+
 Decided by Liam on SSL-773 (the probe that produces probe observations is the deposit-scanning probe; the
 shower-watching probe stays parked). Builds on his 9 Nov direction on SSL-771.
 

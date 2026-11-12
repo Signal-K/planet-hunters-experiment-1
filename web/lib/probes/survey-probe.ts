@@ -1,8 +1,9 @@
 // Survey probes (SSL-773). A probe is flown to a planet or asteroid and left in orbit; it does not come home
-// (Liam, 9 Nov). It sends reflectance readings of the body's surface, one sector at a time, to the data hub.
-// The player reads each spectrum and marks the deposits they see in it; logging the reading is a probe
-// observation: a research stamp, a ledger row, and the sector's deposits marked on the body's map.
-// Pure over the player, like the other systems.
+// (Liam, 9 Nov). The basic scan is automatic (Liam, 12 Nov): the probe maps one sector of the body every
+// PROBE_SECTOR_HOURS on its own, finding each deposit and how many tonnes it holds. It just takes time.
+// Opening the probe console downloads the newly mapped sectors; that download is a probe observation (a research
+// stamp, once a day, and a ledger row). Scan levels where the player does an activity come in cycle 11; the
+// spectrum below is kept for them. Pure over the player, like the other systems.
 
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
@@ -12,8 +13,9 @@ export const SURVEY_PROBE_INSTRUMENT_ID = 'survey-probe'
 /** Sectors across and down a body's map. */
 export const PROBE_COLS = 6
 export const PROBE_ROWS = 4
-/** Readings a probe sends per UTC day. A launched probe is a daily feed, like the telescopes. */
-export const PROBE_READINGS_PER_DAY = 3
+/** Hours the probe takes to map one sector. 24 sectors: the whole body in two days. */
+export const PROBE_SECTOR_HOURS = 2
+const SECTOR_MS = PROBE_SECTOR_HOURS * 3_600_000
 /** Probe launch missions offered at once: the nearest bodies without one. */
 const PROBE_OFFERS = 2
 /** Spectrum span in nanometres: visible to short-wave infrared, as on a real reflectance spectrometer. */
@@ -21,16 +23,17 @@ export const BAND_MIN_NM = 400
 export const BAND_MAX_NM = 2500
 
 export interface ProbeReading {
+  /** When the player's console downloaded this sector. */
   at: number
-  /** What the player marked in the spectrum. */
+  /** Unused by the basic scan; cycle 11's scan levels record what the player marked. */
   marked: string[]
-  /** What was really there, so the map and the readout can show it. */
+  /** What the sector holds. */
   deposits: string[]
 }
 
 export interface ProbeRecord {
   launchedAt: number
-  /** Logged readings, keyed by sector id (`c_r`). */
+  /** Sectors downloaded to the console, keyed by sector id (`c_r`). */
   readings: Record<string, ProbeReading>
 }
 
@@ -63,7 +66,7 @@ export function probeMission(target: Target, sequence: number): Mission {
   return {
     id: probeMissionId(target.id),
     title: `Survey probe to ${target.name}`,
-    brief: `Fly a survey probe to ${target.name} and leave it in orbit. It stays there and sends ${PROBE_READINGS_PER_DAY} surface readings a day to your data hub, so you can find where the deposits are.`,
+    brief: `Fly a survey probe to ${target.name} and leave it in orbit. It stays there and maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and sends every deposit it finds to your data hub.`,
     tag: 'STORY',
     difficulty: target.difficulty,
     locked: false,
@@ -72,7 +75,7 @@ export function probeMission(target: Target, sequence: number): Mission {
     targetId: target.id,
     payload: { type: 'satellite', name: 'Survey probe', cargoCost: 0, instrumentId: SURVEY_PROBE_INSTRUMENT_ID },
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: target.orbit },
-    programReward: { researchXP: 0, outcome: `Probe in orbit at ${target.name} · surface readings in the data hub` },
+    programReward: { researchXP: 0, outcome: `Probe in orbit at ${target.name} · mapping its deposits for the data hub` },
     payout: { francs: 0, affinity: 0 },
   }
 }
@@ -155,49 +158,78 @@ export function sectorSpectrum(target: Pick<Target, 'id' | 'minerals'>, sectorId
   })
 }
 
-const dayKey = (at: number) => new Date(at).toISOString().slice(0, 10)
-
-/** Readings logged today across one probe. */
-export function readingsToday(record: ProbeRecord | undefined, now: number): number {
-  const today = dayKey(now)
-  return Object.values(record?.readings ?? {}).filter(reading => dayKey(reading.at) === today).length
+/** How many tonnes of a mineral a sector holds. Fixed per body and sector; scarcer minerals come in smaller seams. */
+const TONNES: Record<string, [number, number]> = { common: [400, 1400], uncommon: [150, 600], rare: [20, 140], exotic: [5, 45] }
+export function depositTonnes(target: Pick<Target, 'id'>, sectorId: string, mineral: string, rarity = 'common'): number {
+  const [lo, hi] = TONNES[rarity] ?? TONNES.common
+  const r = seeded(`tonnes:${target.id}:${sectorId}:${mineral}`)
+  const raw = lo + r() * (hi - lo)
+  return Math.round(raw / (hi > 200 ? 10 : 1)) * (hi > 200 ? 10 : 1)
 }
 
-/** Readings still waiting today: the probe's daily downlink, less what is logged, and never more than unread sectors. */
-export function readingsLeft(record: ProbeRecord | undefined, now: number): number {
-  if (!record) return 0
-  const unread = sectorIds().filter(id => !record.readings[id]).length
-  return Math.max(0, Math.min(unread, PROBE_READINGS_PER_DAY - readingsToday(record, now)))
+/** The order the probe maps sectors in: row by row, the way the orbit tracks across the body. */
+export function scanOrder(): string[] {
+  return sectorIds()
 }
 
-/** Readings waiting across every probe. */
-export function probeReadingsLeft(player: Pick<Player, 'probes'>, now: number): number {
-  return Object.values(player.probes ?? {}).reduce((sum, record) => sum + readingsLeft(record, now), 0)
+/** Sectors the probe has mapped by `now`: one every PROBE_SECTOR_HOURS since it arrived. */
+export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number): string[] {
+  if (!record) return []
+  const count = Math.max(0, Math.min(sectorIds().length, Math.floor((now - record.launchedAt) / SECTOR_MS)))
+  return scanOrder().slice(0, count)
 }
 
-/** How a marked reading compares with what is there. */
-export function readingScore(marked: readonly string[], deposits: readonly string[]): { found: number; missed: number; wrong: number } {
-  const there = new Set(deposits)
-  const found = marked.filter(mineral => there.has(mineral)).length
-  return { found, missed: deposits.length - found, wrong: marked.length - found }
+/** The sector being mapped now and when it is done, or null once the whole body is mapped. */
+export function nextSector(record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number): { sector: string; at: number } | null {
+  if (!record) return null
+  const done = sectorsMapped(record, now).length
+  if (done >= sectorIds().length) return null
+  return { sector: scanOrder()[done], at: record.launchedAt + (done + 1) * SECTOR_MS }
+}
+
+/** Mapped sectors not yet downloaded to the console. */
+export function newSectors(record: ProbeRecord | undefined, now: number): string[] {
+  return sectorsMapped(record, now).filter(id => !record?.readings[id])
+}
+
+/** New sectors waiting across every probe. */
+export function probeSectorsWaiting(player: Pick<Player, 'probes'>, now: number): number {
+  return Object.values(player.probes ?? {}).reduce((sum, record) => sum + newSectors(record, now).length, 0)
 }
 
 /**
- * Log one reading: the sector's deposits go on the map and the day gets a probe-observation stamp (one per day,
- * like every stamp). Returns the same player when the sector is already read or today's downlink is used up.
+ * Download every newly mapped sector of every probe: the sectors go into the save and the day gets a
+ * probe-observation stamp (one per day, like every stamp). Returns the same player when nothing is new.
  */
-export function logProbeReading<T extends ProbePlayer>(player: T, target: Pick<Target, 'id' | 'minerals'>, sectorId: string, marked: readonly string[], at: number): T {
-  const record = player.probes?.[target.id]
-  if (!record || record.readings[sectorId] || readingsLeft(record, at) <= 0 || !sectorIds().includes(sectorId)) return player
-  const reading: ProbeReading = { at, marked: target.minerals.filter(mineral => marked.includes(mineral)), deposits: sectorDeposits(target, sectorId) }
-  const next = { ...player, probes: { ...(player.probes ?? {}), [target.id]: { ...record, readings: { ...record.readings, [sectorId]: reading } } } }
-  return addStamp(next, 'probe-observation', at)
+export function collectProbeData<T extends ProbePlayer>(player: T, targets: readonly Pick<Target, 'id' | 'minerals'>[], at: number): T {
+  let probes = player.probes
+  let changed = false
+  for (const [id, record] of Object.entries(player.probes ?? {})) {
+    const target = targets.find(item => item.id === id)
+    const fresh = newSectors(record, at)
+    if (!target || !fresh.length) continue
+    const readings = { ...record.readings }
+    for (const sector of fresh) readings[sector] = { at, marked: [], deposits: sectorDeposits(target, sector) }
+    probes = { ...(probes ?? {}), [id]: { ...record, readings } }
+    changed = true
+  }
+  return changed ? addStamp({ ...player, probes }, 'probe-observation', at) : player
 }
 
-/** Deposits found so far on a body, in the body's mineral order. */
-export function depositsFound(record: ProbeRecord | undefined, target: Pick<Target, 'minerals'>): string[] {
-  const seen = new Set(Object.values(record?.readings ?? {}).flatMap(reading => reading.deposits))
-  return target.minerals.filter(mineral => seen.has(mineral))
+export interface SurveyTotal { mineral: string; tonnes: number; sectors: number }
+
+/** What the probe has found on a body so far: each mineral, its tonnes and how many sectors hold it. */
+export function bodySurvey(target: Pick<Target, 'id' | 'minerals'>, record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number, rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
+  const totals = new Map<string, SurveyTotal>()
+  for (const sector of sectorsMapped(record, now)) {
+    for (const mineral of sectorDeposits(target, sector)) {
+      const row = totals.get(mineral) ?? { mineral, tonnes: 0, sectors: 0 }
+      row.tonnes += depositTonnes(target, sector, mineral, rarity(mineral))
+      row.sectors += 1
+      totals.set(mineral, row)
+    }
+  }
+  return target.minerals.map(mineral => totals.get(mineral)).filter((row): row is SurveyTotal => !!row)
 }
 
 /** Merge two saves' probes: the earlier launch, every reading from both. */

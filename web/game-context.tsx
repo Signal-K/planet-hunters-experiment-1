@@ -502,7 +502,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       submitAsteroidClassification: loop.submitAsteroidClassification,
       submitSaturnClassification: loop.submitSaturnClassification,
       submitRadioMeteorClassification: loop.submitRadioMeteorClassification,
-      logProbeReading: loop.logProbeReading,
+      collectProbeData: loop.collectProbeData,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,

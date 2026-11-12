@@ -595,8 +595,8 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
-  /** SSL-773: log one survey-probe reading. */
-  logProbeReading: (targetId: string, sectorId: string, marked: string[]) => void
+  /** SSL-773: download the sectors the survey probes mapped since the last visit. */
+  collectProbeData: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

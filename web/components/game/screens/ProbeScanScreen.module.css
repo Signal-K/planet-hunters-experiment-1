@@ -59,53 +59,28 @@
 .dots { display: flex; gap: 3px; flex-wrap: wrap; }
 .dots i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #070b18; }
 
-/* The reflectance trace. */
-.trace { position: relative; height: clamp(96px, 18vh, 150px); border: 3px solid #070b18; border-radius: 8px; background: #0a1640; overflow: hidden; }
-.trace svg { position: absolute; inset: 6px 6px 22px; width: calc(100% - 12px); height: calc(100% - 28px); }
-.line { fill: none; stroke: #9de7ef; stroke-width: 2; }
-.cursor { stroke: #f2c24c; stroke-width: 1.5; stroke-dasharray: 4 3; }
-.standby { margin: 0; position: absolute; inset: 0; display: grid; place-items: center; color: #9de7ef; font: 800 16px/1 var(--ln-font-display); letter-spacing: .14em; }
-.axis { position: absolute; left: 6px; right: 6px; bottom: 3px; display: flex; justify-content: space-between; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); }
-.axis b:nth-child(2) { color: #f2c24c; }
+.sector:disabled { cursor: default; background: rgba(8, 16, 34, .62); color: rgba(201, 208, 194, .55); }
+.sector[data-scanning] { background: rgba(8, 16, 34, .5); color: #f2c24c; overflow: hidden; }
+.sector[data-scanning]::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(242, 194, 76, .35), transparent); animation: probe-sweep 2.4s linear infinite; }
+.sector[data-new] { box-shadow: inset 0 0 0 2px #6fe39a; }
+@keyframes probe-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .sector[data-scanning]::after { animation: none; } }
 
-/* Reference bands under the trace, at the same scale. */
-.reference { position: relative; height: 34px; margin: 0 9px; }
-.reference span { position: absolute; top: 0; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; font: 800 14px/1 var(--ln-font-display); }
-.reference i { width: 2px; height: 12px; background: currentColor; }
-
-.key { min-height: 48px; padding: 0 18px; border: 2px solid #0a1022; border-radius: 6px; background: linear-gradient(180deg, #f4efe4, #d8d0bf); color: #142840; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; box-shadow: 0 3px 0 #0a1022; cursor: pointer; align-self: center; }
-.key:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #0a1022; }
-.key:disabled { opacity: .45; cursor: not-allowed; }
-
-/* The marks: what the player says each dip is. */
-.marks { display: grid; gap: 8px; padding: 10px 14px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
-.marks > span { color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
-.marks > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.mark { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 2px solid rgba(244, 239, 228, .4); border-radius: 999px; background: transparent; color: #f4efe4; font: 700 14px/1 var(--ln-font-body); cursor: pointer; }
-.mark i { width: 10px; height: 10px; border-radius: 50%; }
-.mark small { color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); }
-.mark[aria-pressed='true'] { border-color: #f2c24c; background: rgba(242, 194, 76, .18); }
-.mark:disabled { opacity: .6; cursor: default; }
-
-.actions { display: grid; gap: 10px; }
-.actions > button { width: 100%; }
-.actions > .back { justify-self: center; width: auto; }
-
-/* The step strip: which page of the console this is. */
-.readout { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; }
-.steps { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.steps li { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px 0 4px; border-radius: 999px; color: #b8c8c0; font: 800 14px/1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
-.steps b { display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid currentColor; border-radius: 50%; font-size: 14px; }
-.steps li[aria-current='step'] { background: #f4efe4; color: #142840; }
-.steps li[data-done] { color: #6fe39a; }
-.sector:disabled { cursor: default; }
+/* What the probe has found: each mineral and its tonnes. */
+.found { display: grid; gap: 8px; padding: 10px 14px; border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.found > span { color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.found > p { margin: 0; color: #c9d0c2; font: 600 15px/1.35 var(--ln-font-body); }
+.found ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; margin: 0; padding: 0; list-style: none; }
+.found li { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 30px; padding: 0 4px; border-radius: 8px; }
+.found li[data-picked] { background: rgba(242, 194, 76, .18); }
+.found li i { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #070b18; }
+.found li b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 14px/1 var(--ln-font-body); }
+.found li small { margin-left: auto; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); white-space: nowrap; }
 
 @media (orientation: portrait) and (max-width: 700px) {
   .panel { width: 100%; }
-  .trace { height: 110px; }
-  .mark small { display: none; }
 }
 @media (max-height: 520px) {
-  .trace { height: 84px; }
   .sector { aspect-ratio: auto; }
+  .found li { min-height: 24px; }
 }

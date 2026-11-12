@@ -25,7 +25,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { logProbeReading as logProbeReadingFor, placeProbe } from '@/lib/probes/survey-probe'
+import { collectProbeData as collectProbeDataFor, placeProbe } from '@/lib/probes/survey-probe'
 import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
 import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
@@ -1153,18 +1153,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
   }, [setState, stateRef])
 
-  // SSL-773: a survey-probe reading logged in the data hub. One probe observation stamp per day, like every stamp;
-  // the sector's deposits go on the body's map. Synced in game_states; the ledger reports the stamp.
-  const logProbeReading = useCallback((targetId: string, sectorId: string, marked: string[]) => {
-    const target = catalog.targets.find(item => item.id === targetId)
-    if (!target) return
+  // SSL-773: opening the probe console downloads every sector the probes mapped since the last visit. That is a
+  // probe observation: one stamp per day, like every stamp. Synced in game_states; the ledger reports the stamp.
+  const collectProbeData = useCallback(() => {
     const at = Date.now()
     const before = stateRef.current.player
-    const after = logProbeReadingFor(before, target, sectorId, marked, at)
+    const after = collectProbeDataFor(before, catalog.targets, at)
     if (after === before) return
-    setState(s => ({ ...s, player: logProbeReadingFor(s.player, target, sectorId, marked, at) }))
-    const reading = after.probes?.[targetId]?.readings[sectorId]
-    captureGameEvent('probe_reading_logged', { target_id: targetId, sector_id: sectorId, marked: marked.length, deposits: reading?.deposits.length ?? 0 })
+    setState(s => ({ ...s, player: collectProbeDataFor(s.player, catalog.targets, at) }))
+    const count = (p: typeof before) => Object.values(p.probes ?? {}).reduce((sum, rec) => sum + Object.keys(rec.readings).length, 0)
+    captureGameEvent('probe_data_collected', { sectors: count(after) - count(before) })
   }, [catalog.targets, setState, stateRef])
 
   // Player picks where the satellite points for the *next* daily downlink
@@ -1550,6 +1548,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, logProbeReading,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData,
   }
 }

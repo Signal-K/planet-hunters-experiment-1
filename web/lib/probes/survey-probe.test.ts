@@ -3,18 +3,20 @@ import { TARGETS } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { explorerSteps, traderSteps } from '@/lib/research/paths'
 import {
-  PROBE_READINGS_PER_DAY,
+  PROBE_SECTOR_HOURS,
   bodyBands,
-  depositsFound,
-  logProbeReading,
+  bodySurvey,
+  collectProbeData,
   mergeProbes,
+  newSectors,
+  nextSector,
   placeProbe,
   probeMission,
   probeOffers,
-  readingsLeft,
   sectorDeposits,
   sectorIds,
   sectorSpectrum,
+  sectorsMapped,
 } from './survey-probe'
 
 const eros = TARGETS.find(target => target.id === 'eros')!
@@ -44,18 +46,33 @@ describe('survey probes (SSL-773)', () => {
     expect(probeMission(eros, 4).payload?.instrumentId).toBe('survey-probe')
   })
 
-  it('logs a reading as a probe observation, three a day, never the same sector twice', () => {
+  it('maps one sector every few hours on its own, and the whole body in two days', () => {
+    const record = placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW).probes!.eros
+    const hour = 3_600_000
+    expect(sectorsMapped(record, NOW + hour)).toHaveLength(0)
+    expect(sectorsMapped(record, NOW + PROBE_SECTOR_HOURS * hour * 5)).toHaveLength(5)
+    expect(nextSector(record, NOW)?.at).toBe(NOW + PROBE_SECTOR_HOURS * hour)
+    expect(sectorsMapped(record, NOW + 48 * hour)).toHaveLength(sectorIds().length)
+    expect(nextSector(record, NOW + 48 * hour)).toBeNull()
+  })
+
+  it('finds every mineral type with tonnes once the basic scan is done', () => {
+    const record = placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW).probes!.eros
+    const survey = bodySurvey(eros, record, NOW + 48 * 3_600_000)
+    expect(survey.map(row => row.mineral)).toEqual(eros.minerals)
+    expect(survey.every(row => row.tonnes > 0 && row.sectors > 0)).toBe(true)
+  })
+
+  it('downloads new sectors as one probe observation, and nothing twice', () => {
+    const later = NOW + 6 * 3_600_000
     const fresh: Pick<Player, 'probes' | 'researchStamps'> = { researchStamps: {} }
     let p = placeProbe(fresh, 'eros', NOW)
-    const ids = sectorIds()
-    p = logProbeReading(p, eros, ids[0], sectorDeposits(eros, ids[0]), NOW)
+    expect(collectProbeData(p, TARGETS, NOW)).toBe(p)
+    p = collectProbeData(p, TARGETS, later)
+    expect(Object.keys(p.probes!.eros.readings)).toHaveLength(3)
     expect(p.researchStamps?.['2026-11-11']).toContain('probe-observation')
-    expect(logProbeReading(p, eros, ids[0], [], NOW)).toBe(p)
-    for (const id of ids.slice(1, PROBE_READINGS_PER_DAY)) p = logProbeReading(p, eros, id, [], NOW)
-    expect(readingsLeft(p.probes?.eros, NOW)).toBe(0)
-    expect(logProbeReading(p, eros, ids[5], [], NOW)).toBe(p)
-    expect(readingsLeft(p.probes?.eros, NOW + 86_400_000)).toBe(PROBE_READINGS_PER_DAY)
-    expect(depositsFound(p.probes?.eros, eros).length).toBeGreaterThan(0)
+    expect(newSectors(p.probes!.eros, later)).toHaveLength(0)
+    expect(collectProbeData(p, TARGETS, later)).toBe(p)
   })
 
   it('merges two saves: every reading, the earlier launch', () => {

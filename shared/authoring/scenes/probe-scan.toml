@@ -1,10 +1,10 @@
 #:schema ../schema/scene.schema.json
-# Survey probe console: scene script (SSL-773). A probe left in orbit at a planet or asteroid sends surface readings.
+# Survey probe console: scene script (SSL-773). A probe left in orbit at a planet or asteroid maps the surface on its own (basic scan; scan levels come in cycle 11).
 format = 1
 id = "probe-scan"
 type = "exchange-lab"
 name = "Survey probe"
-summary = "Pull a sector's reflectance reading from a probe in orbit, sweep it with the BAND dial, mark the dips that match the reference bands and log it. Each logged reading is a probe observation and puts that sector's deposits on the body's map."
+summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the map filling in and every deposit found with its tonnes. Opening it downloads the new sectors, which is a probe observation."
 tickets = ["SSL-773"]
 qa = ["probe-scan"]
 
@@ -22,27 +22,11 @@ id = "probe-map"
 kind = "instrument"
 layout = "host"
 mechanics = ["instruments", "community-research"]
-note = "The body's map in 6 by 4 sectors. Read sectors show the deposits found there as mineral-coloured dots; the selected sector is outlined gold. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
-
-[[objects]]
-id = "probe-spectrum"
-kind = "instrument"
-parent = "probe-map"
-layout = "host"
-mechanics = ["instruments", "community-research"]
-note = "The sector's reflectance spectrum, 400 to 2500 nm. Each deposit is an absorption dip at its mineral's band. The reference bands for the body's minerals sit under the trace at the same scale. PULL READING uses one of the probe's 3 daily readings."
-
-[[objects]]
-id = "band-dial"
-kind = "instrument"
-parent = "probe-spectrum"
-layout = "host"
-mechanics = ["instruments", "community-research"]
-note = "BAND moves a cursor along the trace and reads out wavelength and reflectance. It never marks anything: the player matches dips to bands themselves."
+note = "The body's map in 6 by 4 sectors. Mapped sectors show their deposits as mineral-coloured dots; the sector being mapped now has a gold sweep; sectors new since the last visit are outlined green; unmapped sectors are dark. Tap a mapped sector to see its deposits and tonnes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
 
 [[objects]]
 id = "probe-desk"
 kind = "panel"
 layout = "host"
 mechanics = ["instruments", "community-research"]
-note = "Two-tone right half. The probe desk talks the player through each reading. Mark chips for the body's minerals, readings left today, deposits found, and LOG. Logging stamps probe-observation once per day (ledger: platform_contributions) and scores the marks against what is there."
+note = "Two-tone right half. The probe desk says what is new, when the next sector is done, or what a tapped sector holds. Under it, every mineral found so far with its total tonnes. Opening the console downloads new sectors: a probe-observation stamp once per day (ledger: platform_contributions)."

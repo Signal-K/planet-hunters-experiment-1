@@ -14,19 +14,19 @@
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 27,
     "authoringSources": 62,
-    "authoredObjectNodes": 155,
-    "authoredGameObjects": 79,
+    "authoredObjectNodes": 153,
+    "authoredGameObjects": 77,
     "authoredUiElements": 76,
     "authoredPrefabInstances": 5,
     "compiledScenes": 27,
-    "compiledObjectNodes": 155,
+    "compiledObjectNodes": 153,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 150,
+    "hostLayoutObjects": 148,
     "webGameComponents": 115,
     "nativeAppComponents": 57
   },
@@ -937,7 +937,7 @@
       },
       {
         "id": "probe-scan",
-        "name": "Survey probe: readings",
+        "name": "Survey probe: survey",
         "flow": "instruments",
         "web": "ui-probe-scan",
         "tickets": [
@@ -1425,12 +1425,12 @@
       {
         "id": "probe-scan",
         "path": "shared/authoring/scenes/probe-scan.toml",
-        "objects": 4,
-        "gameObjects": 3,
+        "objects": 2,
+        "gameObjects": 1,
         "uiElements": 1,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 4,
+        "hostLayoutObjects": 2,
         "mechanics": [
           "community-research",
           "instruments"
@@ -1651,7 +1651,7 @@
       },
       {
         "id": "probe-scan",
-        "objects": 4
+        "objects": 2
       },
       {
         "id": "radio-meteors",

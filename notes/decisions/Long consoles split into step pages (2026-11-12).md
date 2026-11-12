@@ -6,4 +6,4 @@ Rule: a console where the player works through several stages (pick, read, mark,
 
 - Every page has one main button that moves to the next step, plus a way back (BACK TO MAP).
 - Only the tools for the current step are on screen. The map and the spectrum are never shown together.
-- First applied to `web/components/game/screens/ProbeScanScreen.tsx`.
+- First applied to the probe console's reading activity. That activity has moved to cycle 11's scan levels (see `Basic probe scan is automatic; scan levels in cycle 11 (2026-11-12).md`), which must follow this rule.

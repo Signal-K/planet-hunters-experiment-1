@@ -552,7 +552,7 @@ function ScreenBody({
           player={game.player}
           targets={game.catalog.targets}
           onBack={() => game.goBack()}
-          onLog={game.logProbeReading}
+          onCollect={game.collectProbeData}
         />
       )
 

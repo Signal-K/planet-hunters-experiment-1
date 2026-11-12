@@ -695,7 +695,7 @@
   },
   {
    "id": "probe-scan",
-   "name": "Survey probe: readings",
+   "name": "Survey probe: survey",
    "flow": "instruments",
    "web": "ui-probe-scan",
    "tickets": [

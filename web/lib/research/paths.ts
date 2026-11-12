@@ -95,10 +95,10 @@ export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title:
 /** SSL-714: a shower with a mission chain words its event step for where the player is in it. */
 export type EventStepCopy = { title: string; brief: string }
 
-/** SSL-773: with a survey probe in orbit, logging one of its readings is a step on either path, just before the Breakthrough. */
+/** SSL-773: with a survey probe in orbit, downloading its newly mapped sectors is a step on either path, just before the Breakthrough. */
 const PROBE_STEP: PathStep = {
-  id: 'probe', kind: 'probe-observation', days: 1, icon: 'world', color: '#c9a7f0', title: 'Log a probe reading',
-  brief: 'Open your survey probe in the data hub, read one sector and log the deposits you find.',
+  id: 'probe', kind: 'probe-observation', days: 1, icon: 'world', color: '#c9a7f0', title: 'Check your probe survey',
+  brief: 'Open your survey probe in the data hub when it has mapped new sectors, to download the deposits it found.',
   why: 'Up-close readings show where the deposits really are, for everyone planning a mine.',
 }
 
