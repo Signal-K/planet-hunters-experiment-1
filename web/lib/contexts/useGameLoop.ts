@@ -820,7 +820,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (applyResolveScan(current, at, catalog.targets).player.scanFollowUp && !current.player.scanFollowUp) addToast('The scan needs a manual check. Open the Data hub to confirm it for a bonus.', 'ok')
     addToast(
       marked
-        ? 'Scan complete. Planet charted. Orionids-found voucher owned. Redeem coming soon.'
+        ? 'Scan complete. Planet charted. Orionids-found voucher owned: it opens a special mission on the Events board.'
         : 'Scan complete. Body charted and research XP awarded.',
       'ok',
     )
@@ -882,8 +882,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (findPreview?.granted) {
       addToast(
         findPreview.masteryGranted
-          ? 'Orionids-found. Voucher owned. Meteorite mastery 1. Redeem coming soon.'
-          : 'Orionids-found. Voucher owned. Redeem coming soon.',
+          ? 'Orionids-found. Voucher and Meteorite Mastery 1: each opens a special mission on the Events board.'
+          : 'Orionids-found. Voucher owned: it opens a special mission on the Events board.',
         'ok',
       )
     }

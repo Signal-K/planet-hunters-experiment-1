@@ -7,6 +7,7 @@ import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
 import { orionidsRunAvailable } from './orionids/access'
+import { specialMissions } from './orionids/special-missions'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun, showerRunMission } from './data/missions'
 import { SHOWERS, ORIONIDS_SHOWER_ID, showerForRunMission } from './data/showers'
 import { DEBRIS_PRESETS, isDebrisEventActive } from './data/sky-events'
@@ -251,6 +252,10 @@ export function buildRuntimeCatalog({
         return [...(run ? [run] : []), ...probeContracts(target, survey, flown)]
       }).filter(mission => !existingMissionIds.has(mission.id))
     : []
+  // SSL-657: a finished shower's special missions, by badge tier, voucher and Meteorite Mastery.
+  const showerSpecials: Mission[] = freeOperations
+    ? specialMissions(mergedTargets, player ?? {}, flown).filter(mission => !existingMissionIds.has(mission.id))
+    : []
   const surveyMissions: Mission[] = discoveredTargetList
     .map(target => ({
       id: `exo-survey-${target.id}`,
@@ -312,6 +317,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
   }
 }

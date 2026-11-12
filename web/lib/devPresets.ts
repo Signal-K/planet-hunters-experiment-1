@@ -174,6 +174,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
+      { key: 'ui-events-specials-gold', label: 'Events: special missions, gold', hint: 'SSL-657: Orionids and Leonids done in the window (gold), a gold Orionids find voucher and Meteorite Mastery 1. Every special is open, with Mastery +10%', stage: 'free-ops' },
+      { key: 'ui-events-specials-silver', label: 'Events: special missions, silver', hint: 'SSL-657: Orionids done after the window (silver), no voucher, no Mastery. Only the impact survey is open; the rest show what they need', stage: 'free-ops' },
       { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
       { key: 'ui-leonids-shower-debrief', label: 'Leonids run: debrief', hint: 'SSL-831: filled Leonids run back home: the Leonid fragment sample and LEO-1 is up', stage: 'free-ops' },
       { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
@@ -944,6 +946,27 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-events-specials-gold':
+    case 'ui-events-specials-silver': {
+      const gold = name === 'ui-events-specials-gold'
+      const earned = Date.parse('2026-10-22T03:00:00Z')
+      return {
+        screen: 'missions',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          fireballSpotter: { readAt: 1, passedAt: 1 },
+          orionidsEventStage: 3,
+          badges: gold
+            ? { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: earned }, 'leonids-2026': { eventId: 'leonids-2026', tier: 'gold', earnedAt: Date.parse('2026-11-17T12:00:00Z') } }
+            : { 'orionids-2026': { eventId: 'orionids-2026', tier: 'silver', earnedAt: Date.parse('2026-11-09T12:00:00Z') } },
+          ...(gold ? {
+            meteoriteMastery: 1,
+            showerChains: { 'leonids-2026': { stage: 2, at: Date.parse('2026-11-17T12:00:00Z') } },
+            orionidsFinds: { 'tic-1': { subjectId: 'tic-1', targetId: null, name: 'TIC 1', tier: 'gold' as const, earnedAt: earned, marker: 'orionids-found' as const, voucher: 'owned' as const } },
+          } : {}),
+        },
+      }
+    }
     case 'ui-leonids-events':
     case 'ui-leonids-events-leo1': {
       const runAt = Date.now() - 3_600_000

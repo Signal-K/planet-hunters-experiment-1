@@ -21,6 +21,7 @@ import {
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { getShower, showerForRunMission } from '@/lib/data/showers'
+import { SPECIAL_PREFIX, masteryBonus, showerSpecials, type SpecialView } from '@/lib/orionids/special-missions'
 import { chainNextScreen, getShowerChain } from '@/lib/orionids/chain'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
@@ -328,6 +329,29 @@ function PickIcon() {
   return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4 20 10M4 20l9-9M9 5c3-2 7-1 10 2M5 9c-2 3-1 7 2 10" /></svg>
 }
 
+/**
+ * SSL-657: the special missions a finished shower unlocks. Gold opens more than silver; the Orionids voucher and
+ * Meteorite Mastery each open one more, and Mastery raises what all of them pay. Shown once the player holds a key.
+ */
+function EventSpecials({ eventId, player, onStart }: { eventId: string; player: Player; onStart: (special: SpecialView) => void }) {
+  const flown = new Set((player.completedMissions ?? []).map(record => record.id))
+  const specials = showerSpecials(eventId, player, flown)
+  if (!specials.length || specials.every(special => special.state === 'locked')) return null
+  const open = specials.filter(special => special.state !== 'locked').length
+  const bonus = Math.round(masteryBonus(player) * 100)
+  return (
+    <div className={styles.specials} data-testid={`event-specials-${eventId}`}>
+      <p className={styles.specialsHead}><b>Special missions</b><span>{open} of {specials.length} unlocked{bonus ? ` · Mastery +${bonus}%` : ''}</span></p>
+      <ul>
+        {specials.map(special => <li key={special.id} data-state={special.state} data-testid={`special-${special.id}`}>
+          <span><b>{special.title}</b><small>{special.state === 'locked' ? special.needs : special.state === 'flown' ? 'Flown' : special.key === 'gold' ? 'Gold unlock' : special.key === 'badge' ? 'Badge unlock' : special.key === 'mastery' ? 'Mastery unlock' : 'Voucher unlock'}</small></span>
+          {special.state === 'open' && <button type="button" data-testid={`special-start-${special.id}`} onClick={() => onStart(special)}>Start</button>}
+        </li>)}
+      </ul>
+    </div>
+  )
+}
+
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
@@ -616,17 +640,20 @@ export default function MissionBoard({
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
-            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : pickedRun?.id.startsWith(PROBE_RUN_PREFIX) ? 'Free run · targeted' : 'Free run'}</span>
+            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : pickedRun?.id.startsWith(PROBE_RUN_PREFIX) ? 'Free run · targeted' : pickedRun?.id.startsWith(SPECIAL_PREFIX) ? 'Free run · special' : 'Free run'}</span>
             <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
           </div>
         </header>
         {picked && pickedRun?.id.startsWith(PROBE_RUN_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-probe">
           Targeted run from your probe survey · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · no client, no fee
         </p>}
+        {picked && pickedRun?.id.startsWith(SPECIAL_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-special">
+          {pickedRun.title} · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · ₣{(pickedRun.payout.francs / 1_000_000).toFixed(1)}M
+        </p>}
         {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {showerForRunMission(run.id)
+            {run.id.startsWith(SPECIAL_PREFIX) ? run.title : showerForRunMission(run.id)
               ? `Catch ${ORIONIDS_FRAGMENT_GOAL} ${showerForRunMission(run.id)!.name} fragments`
               : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
           </button>)}
@@ -733,6 +760,11 @@ export default function MissionBoard({
                         {event.steps.map(step => <li key={step.label} data-state={step.state}>{step.label}</li>)}
                       </ol>
                     </>}
+                    <EventSpecials eventId={event.id} player={player} onStart={special => {
+                      const target = catalog.targets.find(t => t.id === special.targetId)
+                      chooseTab('free'); setPickedId(special.targetId); setRunId(special.id)
+                      if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
+                    }} />
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
                     <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>

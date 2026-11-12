@@ -1,6 +1,6 @@
 // Orionids planet finds (SSL-578). A planet classified or charted during the
 // shower gets an Orionids-found marker, an owned voucher, and meteorite
-// mastery 1. Silver after the window. The voucher is not redeemable yet.
+// mastery 1. Silver after the window. The voucher opens a special mission (special-missions.ts, SSL-657).
 
 import { WSW_EVENT_IDS } from '@/lib/wsw'
 import {

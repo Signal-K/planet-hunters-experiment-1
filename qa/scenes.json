@@ -645,6 +645,26 @@
    "native": "community-research-phone"
   },
   {
+   "id": "events-specials-gold",
+   "name": "Events: special missions, gold",
+   "flow": "events",
+   "web": "ui-events-specials-gold",
+   "tickets": [
+    "SSL-657"
+   ],
+   "native": "mission-board-live"
+  },
+  {
+   "id": "events-specials-silver",
+   "name": "Events: special missions, silver",
+   "flow": "events",
+   "web": "ui-events-specials-silver",
+   "tickets": [
+    "SSL-657"
+   ],
+   "native": "mission-board-live"
+  },
+  {
    "id": "leonids-events",
    "name": "Leonids: events board",
    "flow": "events",

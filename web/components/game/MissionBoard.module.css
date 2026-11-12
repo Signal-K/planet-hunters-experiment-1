@@ -989,3 +989,18 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 @media (max-height: 520px) and (orientation: landscape) {
   .offerGroups button { padding: 0 8px; }
 }
+
+/* SSL-657: the special missions a finished shower unlocked, on its Events card. */
+.specials { display: grid; gap: 6px; margin: 4px 0; }
+.specialsHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
+.specialsHead b { font: 800 14px/1.1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; color: #f2c24c; }
+.specialsHead span { color: #c9d0c2; font: 700 14px/1.1 var(--ln-font-body); }
+.specials ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.specials li { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 4px 4px 4px 12px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.specials li > span { display: grid; gap: 2px; min-width: 0; }
+.specials li b { overflow-wrap: anywhere; color: #f4efe4; font: 700 14px/1.15 var(--ln-font-body); }
+.specials li small { color: #c9d0c2; font: 700 14px/1.1 var(--ln-font-body); }
+.specials li[data-state='locked'] { opacity: .6; border-style: dashed; }
+.specials li[data-state='flown'] small { color: #6fe39a; }
+.specials li[data-state='open'] { border-color: #f2c24c; }
+.specials button { flex: none; min-height: 44px; padding: 0 16px; border: 2px solid #f2c24c; border-radius: 999px; background: #f2c24c; color: #142840; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }

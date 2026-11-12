@@ -26,7 +26,7 @@ const SCREENS = [
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
   ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],
-  ['event-before', 'ui-community-research-event-before'], ['leonids', 'ui-community-research-leonids'], ['event-after', 'ui-community-research-event-after'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['leonids-events', 'ui-leonids-events'], ['leonids-debrief', 'ui-leonids-shower-debrief'], ['leo1', 'ui-radio-meteors-leo1'], ['geminids', 'ui-community-research-geminids'],
+  ['event-before', 'ui-community-research-event-before'], ['leonids', 'ui-community-research-leonids'], ['event-after', 'ui-community-research-event-after'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['leonids-events', 'ui-leonids-events'], ['specials-gold', 'ui-events-specials-gold'], ['specials-silver', 'ui-events-specials-silver'], ['leonids-debrief', 'ui-leonids-shower-debrief'], ['leo1', 'ui-radio-meteors-leo1'], ['geminids', 'ui-community-research-geminids'],
   ['build', 'ui-build'], ['intro', 'm1-intro'],
 ]
 
