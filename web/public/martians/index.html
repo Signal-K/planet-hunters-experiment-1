@@ -30,11 +30,29 @@
   [hidden] { display:none !important; }
   #msg.note { color:var(--dim); }
   #msg { min-height:1.2em; margin-top:10px; font-size:13px; color:#ff786e; }
+  /* The game is landscape; on a phone held upright it would be a thin strip. */
+  #rotate { position:fixed; inset:0; z-index:20; display:none; place-items:center; text-align:center; padding:24px;
+    background:var(--bg); }
+  #rotate svg { width:96px; height:96px; animation:tilt 2.4s ease-in-out infinite; }
+  #rotate h2 { margin:20px 0 6px; font-size:22px; }
+  #rotate p { margin:0 0 20px; color:var(--dim); font-size:15px; }
+  #rotate button { min-height:44px; padding:10px 18px; font:inherit; border-radius:6px; border:1px solid var(--dim);
+    background:transparent; color:var(--fg); cursor:pointer; }
+  @keyframes tilt { 0%,25% { transform:rotate(0) } 50%,75% { transform:rotate(-90deg) } 100% { transform:rotate(0) } }
+  @media (orientation:portrait) and (pointer:coarse) { #rotate:not(.dismissed) { display:grid; } }
 </style>
 </head>
 <body>
 <div id="boot">HAPHAZARD MARTIANS<small id="bootmsg">Loading…</small></div>
 <button id="acct" type="button">Sign in</button>
+<div id="rotate" role="dialog" aria-labelledby="rotatetitle">
+  <div>
+    <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="18" y="4" width="28" height="56" rx="5" fill="none" stroke="#ec783c" stroke-width="4"/><circle cx="32" cy="52" r="2.5" fill="#ec783c"/></svg>
+    <h2 id="rotatetitle">Turn your phone sideways</h2>
+    <p>The rover bay and the drive need the whole width.</p>
+    <button type="button" id="rotateskip">Play upright anyway</button>
+  </div>
+</div>
 <dialog id="dlg">
   <form method="dialog" id="form">
     <h2 id="dlgtitle">Sign in</h2>
@@ -56,6 +74,7 @@
 <script src="wasm_exec.js"></script>
 <script>
 const cfg = window.HM_CONFIG || {};
+document.getElementById('rotateskip').addEventListener('click', () => document.getElementById('rotate').classList.add('dismissed'));
 (async () => {
   const msg = document.getElementById('bootmsg');
   try {
