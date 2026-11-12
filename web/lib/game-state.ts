@@ -1,3 +1,4 @@
+import { mergeClientSales } from './client-sales'
 import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
@@ -742,6 +743,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
   merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
   merged.player.probes = mergeProbes(current.player.probes, remoteState.player?.probes)
+  merged.player.clientSales = mergeClientSales(current.player.clientSales, remoteState.player?.clientSales)
   merged.player.showerChains = mergeShowerChains(current.player.showerChains, remoteState.player?.showerChains)
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null

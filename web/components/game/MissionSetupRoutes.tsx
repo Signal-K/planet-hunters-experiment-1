@@ -71,6 +71,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       onPickTarget={game.onPickTarget}
       onRedeemFragments={game.onRedeemFragments}
       onCombineFragments={game.onCombineFragments}
+      onSellToClient={game.onSellToClient}
       rocketImg={rocketDisplayForConfig(game.rocket).img}
       tutorialBlocked={relay.tutorialMissionInProgress}
       onboardingComplete={relay.onboardingComplete}

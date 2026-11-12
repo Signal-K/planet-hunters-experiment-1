@@ -174,6 +174,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
+      { key: 'ui-clients-surplus', label: 'Clients: sell surplus', hint: 'SSL-734: Helios at affinity level 3 with platinum in the silo: its card sells surplus straight to Helios, 10% over the Exchange, up to 10 units today. Lumen (level 1) says what unlocks it. Open the Clients tab', stage: 'free-ops' },
       { key: 'ui-events-specials-gold', label: 'Events: special missions, gold', hint: 'SSL-657: Orionids and Leonids done in the window (gold), a gold Orionids find voucher and Meteorite Mastery 1. Every special is open, with Mastery +10%', stage: 'free-ops' },
       { key: 'ui-events-specials-silver', label: 'Events: special missions, silver', hint: 'SSL-657: Orionids done after the window (silver), no voucher, no Mastery. Only the impact survey is open; the rest show what they need', stage: 'free-ops' },
       { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
@@ -947,6 +948,15 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-clients-surplus':
+      return {
+        screen: 'missions',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          clientMissions: { 'helios-propulsion-depot': 10, 'lumen-research': 1 },
+          stash: { platinum: 14, nickel: 6, iron: 20 },
+        },
+      }
     case 'ui-events-specials-gold':
     case 'ui-events-specials-silver': {
       const gold = name === 'ui-events-specials-gold'

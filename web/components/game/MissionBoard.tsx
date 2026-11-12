@@ -21,6 +21,7 @@ import {
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { getShower, showerForRunMission } from '@/lib/data/showers'
+import { CLIENT_SALE_LEVEL, CLIENT_SALE_PREMIUM, clientSaleOffer } from '@/lib/client-sales'
 import { SPECIAL_PREFIX, masteryBonus, showerSpecials, type SpecialView } from '@/lib/orionids/special-missions'
 import { chainNextScreen, getShowerChain } from '@/lib/orionids/chain'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
@@ -55,6 +56,8 @@ interface MissionBoardProps {
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
+  /** SSL-734: sell surplus straight to a client at affinity level 3+. */
+  onSellToClient?: (clientId: string, level: number, mineral: string, amount: number) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -330,6 +333,32 @@ function PickIcon() {
 }
 
 /**
+ * SSL-734: at affinity level 3 a client buys surplus straight from the silo: only what it wants, a little over the
+ * Exchange price, up to its daily demand. Below level 3 the card says what unlocks it.
+ */
+function ClientSurplus({ player, catalog, clientId, clientName, level, onSell }: { player: Player; catalog: Catalog; clientId: string; clientName: string; level: number; onSell?: (clientId: string, level: number, mineral: string, amount: number) => void }) {
+  const offer = clientSaleOffer(player, clientId, level)
+  if (!offer.unlocked) {
+    return <p className={styles.surplusLocked} data-testid="client-surplus-locked">Reach affinity level {CLIENT_SALE_LEVEL} to sell surplus straight to {clientName}, above the Exchange price.</p>
+  }
+  return (
+    <section className={styles.surplus} data-testid="client-surplus" aria-label={`Sell surplus to ${clientName}`}>
+      <p className={styles.surplusHead}><b>Sell surplus</b><span>Takes {offer.left} more today · +{Math.round(CLIENT_SALE_PREMIUM * 100)}% over the Exchange</span></p>
+      {offer.rows.length === 0 && <p className={styles.surplusNone}>Nothing {clientName} wants is in your silo.</p>}
+      {offer.rows.map(row => {
+        const units = Math.min(row.held, offer.left)
+        return <div key={row.mineral} className={styles.surplusRow} data-testid={`client-surplus-${row.mineral}`}>
+          <span><b>{catalog.minerals[row.mineral]?.name ?? row.mineral}</b><small>{row.held} in silo · {formatCurrency(row.price, { compact: true })} each</small></span>
+          <button type="button" disabled={units <= 0 || !onSell} data-testid={`client-sell-${row.mineral}`} onClick={() => onSell?.(clientId, level, row.mineral, units)}>
+            {units > 0 ? `Sell ${units} · ${formatCurrency(row.price * units, { compact: true })}` : 'Full today'}
+          </button>
+        </div>
+      })}
+    </section>
+  )
+}
+
+/**
  * SSL-657: the special missions a finished shower unlocks. Gold opens more than silver; the Orionids voucher and
  * Meteorite Mastery each open one more, and Mastery raises what all of them pay. Shown once the player holds a key.
  */
@@ -354,7 +383,7 @@ function EventSpecials({ eventId, player, onStart }: { eventId: string; player: 
 
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
-  onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
+  onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
   const [requestedSite] = useState(() => pendingMissionBoardSite())
@@ -737,6 +766,7 @@ export default function MissionBoard({
                 <div><dt>Client premium</dt><dd>+{Math.round(focusedStanding.client.payoutPremium * 100)}%</dd></div>
                 <div><dt>Wants</dt><dd>{focusedStanding.client.mineralPreferences.map(id => catalog.minerals[id]?.name ?? id).join(', ') || 'Any cargo'}</dd></div>
               </dl>
+              <ClientSurplus player={player} catalog={catalog} clientId={focusedStanding.client.id} clientName={focusedStanding.client.name} level={focusedStanding.met ? focusedStanding.level : 0} onSell={onSellToClient} />
               {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
                 const first = cards.find(item => item.client?.id === focusedStanding.client.id)
                 setContractTargetId(null)

@@ -1004,3 +1004,15 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .specials li[data-state='flown'] small { color: #6fe39a; }
 .specials li[data-state='open'] { border-color: #f2c24c; }
 .specials button { flex: none; min-height: 44px; padding: 0 16px; border: 2px solid #f2c24c; border-radius: 999px; background: #f2c24c; color: #142840; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+
+/* SSL-734: selling surplus straight to a client at affinity level 3. */
+.surplus { display: grid; gap: 6px; width: 100%; }
+.surplusHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 0; }
+.surplusHead b { color: #f2c24c; font: 800 14px/1.1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.surplusHead span, .surplusNone, .surplusLocked { margin: 0; color: #c9d0c2; font: 600 14px/1.3 var(--ln-font-body); }
+.surplusRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 4px 4px 4px 12px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 14px; background: rgba(8, 16, 34, .3); }
+.surplusRow > span { display: grid; gap: 2px; min-width: 0; }
+.surplusRow b { color: #f4efe4; font: 700 14px/1.15 var(--ln-font-body); }
+.surplusRow small { color: #c9d0c2; font: 700 14px/1.1 var(--ln-font-body); }
+.surplusRow button { flex: none; min-height: 44px; padding: 0 14px; border: 2px solid #f2c24c; border-radius: 999px; background: #f2c24c; color: #142840; font: 800 14px/1 var(--ln-font-display); letter-spacing: .04em; cursor: pointer; }
+.surplusRow button:disabled { opacity: .5; cursor: default; }

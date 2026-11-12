@@ -39,6 +39,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
+import { applyClientSale } from '@/lib/client-sales'
 import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
@@ -1180,6 +1181,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
+  // SSL-734: sell surplus straight to a client once affinity is level 3.
+  const onSellToClient = useCallback((clientId: string, level: number, mineral: string, amount: number) => {
+    setState(s => applyClientSale(s, clientId, level, mineral, amount, Date.now()))
+    captureGameEvent('client_direct_sale', { client_id: clientId, mineral, amount })
+  }, [setState])
+
   const onBuyLaserCapacitor = useCallback((expectedLevel: number, reservedUnits: number) => {
     setState(s => applyBuyLaserCapacitor(s, expectedLevel, reservedUnits))
   }, [setState])
@@ -1553,7 +1560,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData,

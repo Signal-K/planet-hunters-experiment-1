@@ -655,6 +655,16 @@
    "native": "community-research-phone"
   },
   {
+   "id": "clients-surplus",
+   "name": "Clients: sell surplus",
+   "flow": "core-loop",
+   "web": "ui-clients-surplus",
+   "tickets": [
+    "SSL-734"
+   ],
+   "native": "mission-board-live"
+  },
+  {
    "id": "events-specials-gold",
    "name": "Events: special missions, gold",
    "flow": "events",

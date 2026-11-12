@@ -489,6 +489,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       onDebriefDone: loop.onDebriefDone,
       onHomeDelivery: loop.onHomeDelivery,
       onBuyLaserCapacitor: loop.onBuyLaserCapacitor,
+      onSellToClient: loop.onSellToClient,
       gainResearchXP: loop.gainResearchXP,
       startSurveyScan: loop.startSurveyScan,
       resolveSurveyScan: loop.resolveSurveyScan,

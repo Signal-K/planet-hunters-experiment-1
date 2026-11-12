@@ -372,6 +372,8 @@ export interface Player {
   probes?: Record<string, import('@/lib/probes/survey-probe').ProbeRecord>
   /** SSL-831: where the player is in each later shower's mission chain (Leonids), keyed by shower id. `at` is when that stage was reached. */
   showerChains?: Record<string, { stage: number; at: number }>
+  /** SSL-734: units sold straight to each client today (affinity level 3+), by UTC day. */
+  clientSales?: Record<string, { day: string; units: number }>
   /** SSL-658: fragment ledgers for the other showers, keyed by shower id. Orionids keep orionidsFragments. */
   showerFragments?: Record<string, { caught: number; redeemed: number }>
   /** SSL-658: each non-Orionid shower's `caught` count when its run was accepted. */
@@ -560,6 +562,7 @@ export interface GameActions {
   onReturnArrived: () => void
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
+  onSellToClient: (clientId: string, level: number, mineral: string, amount: number) => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: import('@/lib/debrief-exits').DebriefExitId) => void
   /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
   onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
