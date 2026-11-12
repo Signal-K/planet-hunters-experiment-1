@@ -111,7 +111,23 @@ document.getElementById('rotateskip').addEventListener('click', () => document.g
 })();
 // sw: false where the game shares an origin with another app (Landnam): its
 // cache cleanup would delete that app's caches.
-if (cfg.sw !== false && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+// A string names the host app's own worker instead (Landnam's /sw.js). That
+// worker does not precache the game, so once it controls this page the shell
+// is fetched again through it, and the first online visit is enough to play
+// offline afterwards.
+if (cfg.sw !== false && 'serviceWorker' in navigator) {
+  const own = typeof cfg.sw !== 'string';
+  navigator.serviceWorker.register(own ? 'sw.js' : cfg.sw).then(async () => {
+    if (own) return; // the game's sw.js precaches its shell on install
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise((ok) => navigator.serviceWorker.addEventListener('controllerchange', ok, { once: true }));
+    }
+    for (const f of [location.pathname, 'config.js', 'host.js', 'wasm_exec.js', cfg.wasm || 'game.wasm', 'manifest.webmanifest']) {
+      await fetch(f).catch(() => {});
+    }
+  }).catch(() => {});
+}
 </script>
 </body>
 </html>

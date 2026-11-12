@@ -12,7 +12,7 @@ const config = {
   shareAuth: 'pocketbase_auth', // Landnam's pocketbase-js auth: signed in there is signed in here
   wasm: 'game.wasm.gz',
   wasmGzip: true,
-  sw: false, // the game's service worker would delete Landnam's caches
+  sw: '/sw.js', // Landnam's worker, which caches /martians/ for offline play; the game's own would delete Landnam's caches
 }
 const out = fileURLToPath(new URL('../public/martians/config.js', import.meta.url))
 writeFileSync(out, `// Written by web/scripts/martians-config.mjs at deploy.\nwindow.HM_CONFIG = ${JSON.stringify(config)};\n`)

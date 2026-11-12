@@ -16,6 +16,10 @@ const CACHE = 'landnam-shell-v8'
 const SCIENCE_CACHE = 'landnam-science-v1'
 const SCIENCE_HOST = 'panoptes-uploads.zooniverse.org'
 const SCIENCE_MAX = 120
+// Haphazard Martians (playlandnam.space/martians/) is a separate static game.
+// Its files keep their names across deploys, so they are network-first and
+// kept here only so the game still opens offline.
+const MARTIANS_CACHE = 'landnam-martians-v1'
 
 const SHELL = [
   '/',
@@ -36,7 +40,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE && k !== SCIENCE_CACHE).map(k => caches.delete(k))
+        keys.filter(k => k !== CACHE && k !== SCIENCE_CACHE && k !== MARTIANS_CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   )
@@ -74,6 +78,21 @@ self.addEventListener('fetch', event => {
     url.port === '8092' ||
     url.hostname !== self.location.hostname
   ) return
+
+  if (url.pathname === '/martians' || url.pathname.startsWith('/martians/')) {
+    event.respondWith(
+      caches.open(MARTIANS_CACHE).then(cache =>
+        fetch(request)
+          .then(res => {
+            if (res.ok) cache.put(url.pathname, res.clone())
+            return res
+          })
+          .catch(async () => (await cache.match(url.pathname)) ??
+            new Response('', { status: 503, statusText: 'Offline' }))
+      )
+    )
+    return
+  }
 
   // Next.js route data — network-first so navigations always get fresh page
   // props; fall back to cache when offline.
