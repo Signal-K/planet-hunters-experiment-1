@@ -61,7 +61,9 @@ struct FlightPlanTests {
         let padded = placed
         #expect(FlightPlan.coach(placed, screen: .launchpad)?.objective == "Open client contracts")
         placed.flightPlan.complete("mining")
-        #expect(FlightPlan.coach(placed, screen: .hub)?.kicker == "SCAN OPS · STEP 2/3")
+        // Finishing onboarding folds the next coach until the player asks for it.
+        #expect(placed.flightPlan.hidden)
+        #expect(FlightPlan.coach(placed, screen: .hub) == nil)
         placed.flightPlan.hidden = true
         #expect(FlightPlan.coach(placed, screen: .hub) == nil)
         #expect(FlightPlan.coach(placed, screen: .hub, includeHidden: true)?.kicker == "SCAN OPS · STEP 2/3")

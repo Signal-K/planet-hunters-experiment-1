@@ -238,22 +238,27 @@ final class MiningScene: SKScene {
             [(6, 15, 4, 8), (11, 15, 4, 13), (16, 15, 4, 6)],
         ]
         let crystals = sets[variant % sets.count]
-        return pixelTexture(width: w, height: h) { (x: Int, y: Int) -> UInt32? in
-            let dx = CGFloat(x) - 11.5, dy = CGFloat(y) - 9.5
-            let inPocket = (dx * dx) / 132 + (dy * dy) / 62 < 1
+        let sample: (Int, Int) -> UInt32? = { x, y in
+            let dx = Double(x) - 11.5
+            let dy = Double(y) - 9.5
+            let horizontal = dx * dx / 132.0
+            let vertical = dy * dy / 62.0
+            let distance = horizontal + vertical
+            let inPocket = distance < 1.0
             for (cx, by, cw, ch) in crystals {
                 let top = by - ch
                 guard x >= cx, x < cx + cw, y <= by, y >= top else { continue }
                 let tip = y - top < 2 && (x == cx || x == cx + cw - 1)
                 if tip { break }
-                if glint && x == cx + 1 && y == top + 2 { return 0xFFFFFF }
+                if glint && x == cx + 1 && y == top + 2 { return UInt32(0xFFFFFF) }
                 if x == cx || y == top { return lit }
                 if x == cx + cw - 1 || y == by { return dark }
                 return base
             }
             if !inPocket { return nil }
-            return (dx * dx) / 132 + (dy * dy) / 62 > 0.72 ? rim : pocket
+            return distance > 0.72 ? rim : pocket
         }
+        return pixelTexture(width: w, height: h, sample)
     }
 
     // MARK: layers

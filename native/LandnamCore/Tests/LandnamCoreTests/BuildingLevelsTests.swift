@@ -18,9 +18,11 @@ import Foundation
 
     @Test func costsAndEffectsMatchWeb() throws {
         let f = try fixture()
-        // The web fixture still lists a refinery; native has no refinery structure.
-        #expect(BuildingLevels.upgradeCosts == f.costs.filter { $0.key != "refinery" })
-        #expect(BuildingLevels.effects == f.effects.filter { $0.key != "refinery" })
+        // Additional building upgrades are web-only under the 12 November
+        // parity decision. Verify every supported native building against web.
+        #expect(Set(BuildingLevels.ids) == ["launchpad", "surface-silo"])
+        #expect(BuildingLevels.upgradeCosts == f.costs.filter { BuildingLevels.ids.contains($0.key) })
+        #expect(BuildingLevels.effects == f.effects.filter { BuildingLevels.ids.contains($0.key) })
     }
 
     @Test func webSaveRoundTripsAndNormalises() throws {

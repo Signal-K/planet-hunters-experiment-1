@@ -18,9 +18,14 @@ describe('first-run onboarding', () => {
     let mined = false
     let settled = false
     let vehiclePicked = false
+    let startedAt = 0
     function advance(attempt = 0): Cypress.Chainable {
       if (attempt > 900) throw new Error('Onboarding did not settle within the operation budget')
       return cy.get('body').then($body => {
+        startedAt ||= Date.now()
+        if (Date.now() - startedAt > 5 * 60_000) {
+          throw new Error(`Onboarding stalled at ${window.location.pathname}: ${$body.find(testId('mining-order-readout')).text()}`)
+        }
         const enabled = (selector: string) => $body.find(selector).filter(':visible:not(:disabled)').first()
         if (settled) {
           get('base-camera').should('be.visible')
@@ -54,7 +59,9 @@ describe('first-run onboarding', () => {
           const cue = $body.find(testId('mining-target-cue')).text()
           const fire = enabled(testId('fire-laser-btn'))
           if (/fire now/i.test(cue) && fire.length) {
-            return cy.wrap(fire).trigger('click', { detail: 0 }).then(() => cy.wait(200)).then(() => advance(attempt + 1))
+            return cy.get('body').trigger('keydown', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
+              .trigger('keyup', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
+              .then(() => cy.wait(200)).then(() => advance(attempt + 1))
           }
         }
         const actions = [
