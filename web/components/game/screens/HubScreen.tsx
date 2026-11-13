@@ -13,7 +13,7 @@ import { readComponentNumber } from '@/lib/engine/registry'
 import { BaseLayerScene } from '@/components/game/hub/BaseLayerScene'
 import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
-import { BaseDock } from '@/components/game/hub/BaseDock'
+import { BaseDock, SubsurfaceArrow } from '@/components/game/hub/BaseDock'
 import { liveEventWeek } from '@/lib/research/event-week'
 import { BaseMenuSheet, type BaseMenuItem } from '@/components/game/hub/BaseMenuSheet'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -825,14 +825,13 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           position: 'absolute', left: 0, right: 0, bottom: 8, zIndex: subsurface ? 40 : 20,
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
         }}>
+          <SubsurfaceArrow subsurface={subsurface} onClick={() => setSubsurface(!subsurface)} />
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
               onPrev={() => moveBase(-0.22)}
               onNext={() => moveBase(0.22)}
-              onBuild={() => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) }}
+              onBuild={() => { setPlaceNote(null); setArrangeKind(null); setSubsurface(false); setEditMode(true) }}
               onMission={!subsurface && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
-              onSubsurface={() => setSubsurface(!subsurface)}
-              subsurface={subsurface}
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
               locationNavigationDisabled={false}

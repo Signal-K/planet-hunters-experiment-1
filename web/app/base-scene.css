@@ -259,3 +259,32 @@
 /* SSL-834: while the player builds on the Base, every piece of HUD is gone, the status chips drawn outside the hub included. */
 body[data-hub-building] .backend-status,
 body[data-hub-building] .sync-chip { display: none; }
+
+/* SSL-834: Subsurface is a round arrow in the bottom-left corner of the Base. Beside the dock where there is room;
+   right above its left end where the dock spans the screen. */
+.hub-subsurface-arrow {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left, 0px));
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ln-cyan) 52%, var(--ln-world-outline));
+  border-radius: 50%;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--ln-world-outline) 96%, var(--ln-world-trim-blue)), color-mix(in srgb, var(--ln-void) 88%, var(--ln-world-outline)));
+  box-shadow: 0 12px 30px rgb(0 0 0 / 28%), inset 0 1px 0 rgb(255 255 255 / 12%);
+  color: var(--ln-world-hull-lit);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.hub-subsurface-arrow:hover { color: var(--ln-cyan-bright); }
+.hub-subsurface-arrow:focus-visible { outline: 2px solid var(--ln-cyan-bright); outline-offset: 3px; }
+@media (max-width: 1040px) {
+  .hub-subsurface-arrow { bottom: calc(100% + 10px); }
+}
+/* Landscape phones keep the dock narrow and centred, so the corner is free. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .hub-subsurface-arrow { bottom: 0; }
+}

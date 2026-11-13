@@ -109,10 +109,8 @@ struct HubScreen: View {
             if !placing { BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
+                     onBuild: { placeNote = nil; upgrading = nil; if store.screen == .hubSubsurface { store.go(.hub) }; placing = true },
                      onMenu: { menuOpen = true },
-                     onSubsurface: { store.go(store.screen == .hubSubsurface ? .hub : .hubSubsurface) },
-                     subsurface: store.screen == .hubSubsurface,
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
                      locationNavigationDisabled: false,
@@ -120,6 +118,7 @@ struct HubScreen: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
+            if !placing { subsurfaceArrow(insets: insets, aboveDock: portrait && size.width < 1040) }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
@@ -134,6 +133,26 @@ struct HubScreen: View {
     private var selectedStagedRocket: StagedRocket? {
         guard let id = store.player.selectedStagedRocketId else { return nil }
         return store.player.stagedRockets.first { $0.id == id }
+    }
+
+    /// SSL-834: Subsurface is a round arrow in the bottom-left corner (web `SubsurfaceArrow`): down goes below the base,
+    /// up comes back. Beside the dock where there is room, right above its left end where the dock spans the screen.
+    private func subsurfaceArrow(insets: EdgeInsets, aboveDock: Bool) -> some View {
+        let below = store.screen == .hubSubsurface
+        return Button { store.go(below ? .hub : .hubSubsurface) } label: {
+            Image(systemName: below ? "arrow.up" : "arrow.down")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Theme.hudInk)
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(Theme.hudPanel))
+                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(below ? "Back to the surface" : "Go below the base")
+        .accessibilityIdentifier("hub-subsurface-btn")
+        .padding(.leading, max(insets.leading, 16))
+        .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
     }
 
     /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
