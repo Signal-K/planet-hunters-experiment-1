@@ -545,10 +545,17 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     if (next && onPointTelescope) onPointTelescope(next)
     else onOpenScene('instrument-hub')
   }
-  const skyCraftItems: SkyCraftItem[] = [
+  const skyCraftBase: SkyCraftItem[] = [
     ...(player.transitSatelliteLaunchedAt ? [{ id: 'transit' as const, name: 'Space telescope', needsPointing: needsPointing.includes('transit') }] : []),
     ...(player.deepSpaceTelescopeBuilt ? [{ id: 'deep-space' as const, name: 'Deep space telescope', needsPointing: needsPointing.includes('deep-space') }] : []),
   ]
+  // SSL-834 (Liam, 13.11): "data ready" rides on the craft in the sky, not in a HUD pill. Each craft carries its own
+  // signals; signals from an instrument with no craft overhead (the Saturn imager) ride on the first craft.
+  const readyByCraft = (id: SkyCraftItem['id'], index: number) => !dataChipShown ? 0
+    : signals.filter(signal => signal.kind === id || (index === 0 && !skyCraftBase.some(c => c.id === signal.kind))).length
+  const skyCraftItems = skyCraftBase.map((item, index) => ({ ...item, ready: readyByCraft(item.id, index) }))
+  // With no craft in the sky to carry it, the pill is the only place the data can show.
+  const dataPillShown = dataChipShown && skyCraftItems.length === 0
   // SSL-834: Build carries the Base itself: pick a standing structure, then move it to the next slot or upgrade it.
   const arrangeOrder = [...(arrangement ?? MOVABLE_KINDS)]
   const arrangeStanding = arrangeOrder.filter(kind => standingKinds.includes(kind))
@@ -576,7 +583,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       onDone={() => { setEditMode(false); setArrangeKind(null); setPlaceNote(null) }}
     />
   )
-  const orbitalNetwork = !subsurface && <SkyCraft craft={skyCraftItems} onPoint={openPointing} />
+  const orbitalNetwork = !subsurface && !editMode && <SkyCraft craft={skyCraftItems} onPoint={openPointing} onOpenData={() => onOpenScene('instrument-hub')} />
 
   return (
     <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
@@ -704,7 +711,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       {/* ── End persistent Base world ── */}
 
       {!subsurface && !editMode && <SkyEventChip surface="base" badgeTier={player.badges?.['orionids-2026']?.tier ?? null} orionidsRead={Boolean(player.fireballSpotter?.passedAt)} onParticipate={onOpenEvents} playerLocation={player.skyEventLocation} />}
-      {dataChipShown && !editMode && (
+      {dataPillShown && !editMode && (
         <DataReadyChip count={signals.length} onOpen={() => openPointing()} />
       )}
       {!subsurface && !editMode && onOpenCommunity && <CommunityGoalChip stamps={player.researchStamps} community={communityResearch} onOpen={onOpenCommunity} />}

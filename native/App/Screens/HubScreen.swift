@@ -96,7 +96,7 @@ struct HubScreen: View {
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
             )
-            if store.screen != .hubSubsurface { orbitingTelescopes(width: size.width, height: size.height) }
+            if store.screen != .hubSubsurface && !placing { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
             // SSL-834: Build hides every piece of HUD, the dock included; Done in the picker leaves Build.
             if !placing {
