@@ -256,6 +256,7 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
     if (cloud && overcast) ctx.filter = weather === 'storm' ? 'brightness(0.55)' : 'brightness(0.78)'
     if (e.def.sprite) drawSprite(ctx, e, sx, sy, px * z * e.scale)
     if (e.def.sprite && LAKE_PLAINS.has(e.def.sprite)) drawLake(ctx, e.def.sprite, sx, sy, px * z * e.scale, t)
+    if (e.def.sprite === 'ground-complex') drawStrata(ctx, e.def.sprite, sx, sy, px * z * e.scale)
     else if (!e.def.sprite) drawShape(ctx, e, sx, sy, px * z, world, groundY, t, w)
     ctx.filter = 'none'
   }
@@ -323,6 +324,68 @@ function drawLake(ctx: CanvasRenderingContext2D, sprite: string, sx: number, sy:
   // Near shore: a pale lip of wet sand along the bottom edge.
   ctx.fillStyle = 'rgb(236 228 210 / 55%)'
   ctx.fillRect(left, bottom - Math.max(1, k * 0.4), width, Math.max(1, k * 0.4))
+  ctx.restore()
+}
+
+/** The ground cut away under the apron's front edge: the soil and bedrock the Subsurface digs into, in its palette.
+ *  It fills the foreground a tall screen leaves below the structure row, instead of bare paving. */
+const STRATA: Array<{ depth: number; fill: string; edge: string }> = [
+  { depth: 16, fill: '#756f60', edge: '#8a836f' },
+  { depth: 20, fill: '#756b56', edge: '#59554b' },
+  { depth: 26, fill: '#605b4d', edge: '#4e4b3f' },
+  { depth: 9999, fill: '#575855', edge: '#4a4b48' },
+]
+
+function drawStrata(ctx: CanvasRenderingContext2D, sprite: string, sx: number, sy: number, k: number) {
+  const s = WORLD_SCENE.sprites[sprite as keyof typeof WORLD_SCENE.sprites]
+  if (!s) return
+  const left = Math.floor(sx + s.x0 * k)
+  const width = Math.ceil(s.w * k) + 1
+  const top = Math.round(sy - s.v0 * k)
+  const floor = top + 4000
+  const step = Math.max(2, Math.round(4 * k))
+  // A wavy, pixel-stepped seam between two layers, the same on every frame.
+  const seam = (x: number, layer: number) => Math.round(Math.sin(x / (k * 23) + layer * 1.9) * 1.6 + Math.sin(x / (k * 9) + layer) * 0.8) * Math.max(1, Math.round(k))
+  ctx.save()
+  // The apron slab's cut face, lit on top with a shadow under it.
+  ctx.fillStyle = '#a39d92'
+  ctx.fillRect(left, top, width, Math.max(2, 3 * k))
+  ctx.fillStyle = '#706c64'
+  ctx.fillRect(left, top + Math.max(2, 3 * k), width, Math.max(1, k))
+  let y = top + Math.max(3, 4 * k)
+  STRATA.forEach((band, i) => {
+    const bottom = Math.min(floor, y + band.depth * k)
+    ctx.fillStyle = band.fill
+    for (let x = left; x < left + width; x += step) {
+      const from = i === 0 ? y : y + seam(x, i)
+      const to = band.depth > 999 ? floor : bottom + seam(x, i + 1)
+      ctx.fillRect(x, from, step, to - from)
+    }
+    if (band.depth < 999) {
+      ctx.fillStyle = band.edge
+      for (let x = left; x < left + width; x += step) ctx.fillRect(x, bottom + seam(x, i + 1), step, Math.max(1, k * 0.7))
+    }
+    y = bottom
+  })
+  // Pebbles and mineral pockets, scattered the same way every frame.
+  const cell = 14 * k
+  for (let gx = Math.floor(left / cell); gx * cell < left + width; gx++) {
+    for (let gy = 0; gy < 18; gy++) {
+      const hash = Math.abs(Math.sin(gx * 127.1 + gy * 311.7) * 43758.5453) % 1
+      if (hash > 0.42) continue
+      const px = gx * cell + hash * cell * 2
+      if (px < left || px > left + width) continue
+      const py = top + 10 * k + gy * cell * 0.8 + ((hash * 7) % 1) * cell * 0.5
+      ctx.fillStyle = hash < 0.06 ? '#a58d5e' : hash < 0.14 ? '#9a8d6d' : '#4e4b3f'
+      ctx.fillRect(Math.round(px), Math.round(py), Math.max(2, Math.round((2 + hash * 5) * k)), Math.max(1, Math.round((1 + hash * 2) * k)))
+    }
+  }
+  // Deeper ground falls into shade.
+  const shade = ctx.createLinearGradient(0, top, 0, top + 160 * k)
+  shade.addColorStop(0, 'rgb(20 22 26 / 0%)')
+  shade.addColorStop(1, 'rgb(20 22 26 / 38%)')
+  ctx.fillStyle = shade
+  ctx.fillRect(left, top, width, floor - top)
   ctx.restore()
 }
 

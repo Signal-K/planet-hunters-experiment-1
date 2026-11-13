@@ -89,6 +89,9 @@
   gap: 6px;
   padding: 4px 10px;
   transform: translateX(-50%);
+  /* The tag slides across the craft in step with the crossing, so it hangs inward at either edge and is never cut off. */
+  animation: tag-slide var(--cross, 46s) linear infinite;
+  animation-delay: var(--delay, 0s);
   border: 1px solid var(--ln-cyan-border);
   border-radius: 999px;
   background: var(--ln-panel);
@@ -101,4 +104,10 @@
 }
 .tag i { width: 8px; height: 8px; border-radius: 50%; background: #58d0ea; animation: ready-pulse 1.8s ease-in-out infinite; }
 @keyframes ready-pulse { 50% { opacity: .35; } }
-@media (prefers-reduced-motion: reduce) { .tag i { animation: none; } }
+@keyframes tag-slide { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.lane[data-craft='deep-space'] .tag { animation-direction: reverse; }
+@media (prefers-reduced-motion: reduce) {
+  .tag i, .tag { animation: none; }
+  .lane[data-craft='transit'] .tag { transform: translateX(-72%); }
+  .lane[data-craft='deep-space'] .tag { transform: translateX(-18%); }
+}

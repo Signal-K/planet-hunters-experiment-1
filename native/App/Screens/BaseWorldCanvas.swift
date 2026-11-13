@@ -140,6 +140,7 @@ struct BaseWorldCanvas: View {
             layer.opacity = reveal * e.alpha * (cloud ? grade.clouds * (runner.sky?.weather.clouds ?? 1) : 1)
             if let name = e.def.sprite, let s = world.scene.sprites[name] {
                 drawSprite(&layer, s, e, sx: sx, sy: sy, k: px * z * CGFloat(e.scale))
+                if name == "ground-complex" { drawStrata(&layer, s, sx: sx, sy: sy, k: px * z * CGFloat(e.scale)) }
                 if Self.lakePlains.contains(name) { drawLake(&layer, s, coast: name == "plain-coast", sx: sx, sy: sy, k: px * z * CGFloat(e.scale), t: reduceMotion ? 0 : t) }
             } else {
                 drawShape(&layer, e, sx: sx, sy: sy, k: px * z, groundY: groundY, w: w, t: t)
@@ -202,6 +203,63 @@ struct BaseWorldCanvas: View {
         }
         let lip = max(1, k * 0.4)
         g.fill(Path(CGRect(x: left, y: bottom - lip, width: width, height: lip)), with: .color(Color(red: 236 / 255, green: 228 / 255, blue: 210 / 255).opacity(0.55)))
+    }
+
+    /// Web `drawStrata`: the ground cut away under the apron's front edge, the soil and bedrock the Subsurface digs into.
+    /// It fills the foreground a tall screen leaves below the structure row, instead of bare paving.
+    private static let strata: [(depth: CGFloat, fill: String, edge: String)] = [
+        (16, "#756f60", "#8a836f"), (20, "#756b56", "#59554b"), (26, "#605b4d", "#4e4b3f"), (9999, "#575855", "#4a4b48"),
+    ]
+
+    private func drawStrata(_ g: inout GraphicsContext, _ s: WorldScene.SpriteDef, sx: CGFloat, sy: CGFloat, k: CGFloat) {
+        let left = floor(sx + CGFloat(s.x0) * k), width = ceil(CGFloat(s.w) * k) + 1
+        let top = (sy - CGFloat(s.v0) * k).rounded()
+        let floorY = top + 4000
+        let step = max(2, (4 * k).rounded())
+        func seam(_ x: CGFloat, _ layer: Int) -> CGFloat {
+            (sin(x / (k * 23) + CGFloat(layer) * 1.9) * 1.6 + sin(x / (k * 9) + CGFloat(layer)) * 0.8).rounded() * max(1, k.rounded())
+        }
+        g.fill(Path(CGRect(x: left, y: top, width: width, height: max(2, 3 * k))), with: .color(color("#a39d92")))
+        g.fill(Path(CGRect(x: left, y: top + max(2, 3 * k), width: width, height: max(1, k))), with: .color(color("#706c64")))
+        var y = top + max(3, 4 * k)
+        for (i, band) in Self.strata.enumerated() {
+            let bottom = min(floorY, y + band.depth * k)
+            var body = Path(), edge = Path()
+            var x = left
+            while x < left + width {
+                let from = i == 0 ? y : y + seam(x, i)
+                let to = band.depth > 999 ? floorY : bottom + seam(x, i + 1)
+                body.addRect(CGRect(x: x, y: from, width: step, height: to - from))
+                if band.depth < 999 { edge.addRect(CGRect(x: x, y: bottom + seam(x, i + 1), width: step, height: max(1, k * 0.7))) }
+                x += step
+            }
+            g.fill(body, with: .color(color(band.fill)))
+            g.fill(edge, with: .color(color(band.edge)))
+            y = bottom
+        }
+        // Pebbles and mineral pockets, scattered the same way every frame.
+        let cell = 14 * k
+        var dark = Path(), sand = Path(), ore = Path()
+        var gx = Int(floor(left / cell))
+        while CGFloat(gx) * cell < left + width {
+            for gy in 0..<18 {
+                let raw = abs(sin(Double(gx) * 127.1 + Double(gy) * 311.7) * 43758.5453)
+                let hash = CGFloat(raw.truncatingRemainder(dividingBy: 1))
+                if hash > 0.42 { continue }
+                let px = CGFloat(gx) * cell + hash * cell * 2
+                if px < left || px > left + width { continue }
+                let py = top + 10 * k + CGFloat(gy) * cell * 0.8 + (hash * 7).truncatingRemainder(dividingBy: 1) * cell * 0.5
+                let r = CGRect(x: px.rounded(), y: py.rounded(), width: max(2, ((2 + hash * 5) * k).rounded()), height: max(1, ((1 + hash * 2) * k).rounded()))
+                if hash < 0.06 { ore.addRect(r) } else if hash < 0.14 { sand.addRect(r) } else { dark.addRect(r) }
+            }
+            gx += 1
+        }
+        g.fill(dark, with: .color(color("#4e4b3f")))
+        g.fill(sand, with: .color(color("#9a8d6d")))
+        g.fill(ore, with: .color(color("#a58d5e")))
+        g.fill(Path(CGRect(x: left, y: top, width: width, height: floorY - top)), with: .linearGradient(
+            Gradient(colors: [Color(red: 20 / 255, green: 22 / 255, blue: 26 / 255).opacity(0), Color(red: 20 / 255, green: 22 / 255, blue: 26 / 255).opacity(0.38)]),
+            startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: top + 160 * k)))
     }
 
     private func drawShape(_ g: inout GraphicsContext, _ e: WorldEntity, sx: CGFloat, sy: CGFloat, k: CGFloat, groundY: CGFloat, w: CGFloat, t: Double) {

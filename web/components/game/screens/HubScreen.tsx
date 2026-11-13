@@ -412,7 +412,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         sub: 'YOUR PROGRAM',
         status: 'ok' as const,
         w: 60,
-        callout: menuOpen || editMode || agencyLandmark ? undefined : stationCallout,
+        // Sky prompts share one spot in open sky, so only one speaks at a time: the pad and the welcome-back go first.
+        callout: menuOpen || editMode || agencyLandmark || launchpadCallout || economyCalloutAt ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onOpenScene('mission-history'),
       }
@@ -648,8 +649,9 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
               absolutely-positioned sibling with an explicit z-index (sky 1,
               motes 2, Pixi 3, soil 4), and the sky is fully opaque. Without a
               z-index here this layer sits at stacking level 0 and the sky
-              paints straight over the pills and callouts. */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
+              paints straight over the pills and callouts. It also sits above the
+              structure sprites (14), or a bell or a site label slides under the art. */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 15 }}>
             {/* pointerEvents stays 'none' here. This wrapper is inset:0, so
                 giving it 'auto' turned it into a transparent full-screen click
                 catcher at zIndex 10 — which sits above ProgressionCard (zIndex

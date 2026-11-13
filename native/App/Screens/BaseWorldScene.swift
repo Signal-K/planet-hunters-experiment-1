@@ -291,9 +291,15 @@ struct BaseWorldScene: View {
                     HStack(spacing: 8) {
                         Text("+").font(AppFont.display(16)).foregroundStyle(Theme.hudPanel)
                             .frame(width: 22, height: 22).background(Circle().fill(Theme.blue))
-                        Text("PLACE \(kindLabel(kind).uppercased())").font(AppFont.display(14)).tracking(1.6).foregroundStyle(Theme.hudInk)
+                        // Two short lines ("Place" over the name) keep the label about as wide as its plot (web SiteMarker).
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("PLACE").opacity(0.75)
+                            Text(kindLabel(kind).uppercased()).lineLimit(2)
+                        }
+                        .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
+                        .frame(maxWidth: max(width, 168) - 62, alignment: .leading)
                     }
-                    .padding(.horizontal, 16).frame(minHeight: 44)
+                    .padding(.horizontal, 16).padding(.vertical, 6).frame(minHeight: 44)
                     .background(Capsule().fill(Theme.hudPanel))
                     .overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
                     RoundedRectangle(cornerRadius: 4)
