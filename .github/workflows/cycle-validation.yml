@@ -102,15 +102,15 @@ jobs:
         run: |
           npm run dev > /tmp/landnam-next.log 2>&1 &
           for attempt in {1..90}; do
-            if curl --fail --silent http://127.0.0.1:3001/game/intro > /dev/null; then exit 0; fi
+            if curl --fail --silent http://localhost:3001/game/intro > /dev/null; then exit 0; fi
             sleep 2
           done
           cat /tmp/landnam-next.log
           exit 1
       - name: Play first-run onboarding
-        run: npx cypress run --spec cypress/e2e/onboarding.cy.ts --config video=true --reporter junit --reporter-options 'mochaFile=test-results/onboarding-[hash].xml'
+        run: npx cypress run --browser chrome --spec cypress/e2e/onboarding.cy.ts --config video=true,defaultCommandTimeout=60000 --reporter junit --reporter-options 'mochaFile=test-results/onboarding-[hash].xml'
         env:
-          CYPRESS_BASE_URL: http://127.0.0.1:3001
+          CYPRESS_BASE_URL: http://localhost:3001
       - name: Preserve browser evidence
         if: always()
         uses: actions/upload-artifact@v4
