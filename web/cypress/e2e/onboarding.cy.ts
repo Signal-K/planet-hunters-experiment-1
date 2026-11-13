@@ -24,7 +24,7 @@ describe('first-run onboarding', () => {
       return cy.get('body').then($body => {
         startedAt ||= Date.now()
         if (Date.now() - startedAt > 5 * 60_000) {
-          throw new Error(`Onboarding stalled at ${window.location.pathname}: ${$body.find(testId('mining-order-readout')).text()}`)
+          throw new Error(`Onboarding stalled at ${$body[0].ownerDocument.location.pathname}: ${$body.find(testId('mining-order-readout')).text()}`)
         }
         const enabled = (selector: string) => $body.find(selector).filter(':visible:not(:disabled)').first()
         if (settled) {
@@ -48,7 +48,9 @@ describe('first-run onboarding', () => {
           settled = true
           return cy.wrap(reward).click().then(() => cy.wait(1000)).then(() => advance(attempt + 1))
         }
-        const controls = enabled(testId('mining-controls'))
+        // The HUD wrapper has zero height: its visible keys are positioned
+        // independently. Test the keys' actionability, not wrapper geometry.
+        const controls = $body.find(testId('mining-controls'))
         if (controls.length) {
           mined = true
           const home = enabled(testId('return-home-btn'))
