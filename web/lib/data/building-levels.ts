@@ -1,7 +1,8 @@
 import { STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 
-/** Upgradable Earth Base buildings. The Garage is a future-sprint structure and has no levels yet. */
-export const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery'] as const
+/** Upgradable Earth Base buildings. SSL-792 adds the hangar, the Exchange (`market`) and the control station, each with
+ *  its own sprite per level. The Garage is a future-sprint structure and has no levels yet. */
+export const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery', 'hangar', 'market', 'control-station'] as const
 export type UpgradableBuildingId = typeof UPGRADABLE_BUILDINGS[number]
 
 export const MAX_BUILDING_LEVEL = 3
@@ -14,6 +15,9 @@ export const BUILDING_UPGRADE_COSTS: Record<UpgradableBuildingId, readonly [numb
   launchpad: [STRUCTURE_PRICES.launchpadUpgrade, STRUCTURE_PRICES.launchpadUpgrade * 2],
   'surface-silo': [SURFACE_SILO_PRICE * 2, SURFACE_SILO_PRICE * 4],
   refinery: [STRUCTURE_PRICES.refinery, STRUCTURE_PRICES.refinery * 2],
+  hangar: [STRUCTURE_PRICES.garage, STRUCTURE_PRICES.garage * 2],
+  market: [STRUCTURE_PRICES.exchange, STRUCTURE_PRICES.exchange * 2],
+  'control-station': [STRUCTURE_PRICES.controlStation, STRUCTURE_PRICES.controlStation * 2],
 }
 
 /** One concrete effect per building and level, shown on the building sheet. */
@@ -21,6 +25,9 @@ export const BUILDING_LEVEL_EFFECTS: Record<UpgradableBuildingId, readonly [stri
   launchpad: ['Explorer and Prospector, structures build in 10 s, service every 10 launches', 'Heavy Surveyor hull (18U), structures build 25% faster, service every 14 launches, plus the parts of one flown mission', 'Bulk hauler hull (24U), structures build 50% faster, service every 20 launches, plus the parts of two flown missions'],
   'surface-silo': ['Holds 40 units of ore', 'Holds 80 units of ore', 'Holds 120 units of ore'],
   refinery: ['Standard refining time', 'Refining takes 25% less time', 'Refining takes 50% less time'],
+  hangar: ['Rockets at list price', 'Gantry crane: rockets cost 10% less', 'Beacon tower and solar: rockets cost 20% less'],
+  market: ['Exchange prices', 'Second price board: sales pay 3% more', 'Trading floor: sales pay 6% more'],
+  'control-station': ['New probes map a sector every 2 h', 'Second dish: new probes map a sector every 1.5 h', 'Relay mast: new probes map a sector every hour'],
 }
 
 const SILO_CAPACITY_MULTIPLIER = [1, 2, 3] as const
@@ -31,6 +38,9 @@ export const PAD_LAUNCHES_BETWEEN_SERVICE = [10, 14, 20] as const
 export const PAD_SERVICE_COST = 1_000_000
 
 const PAD_BUILD_MULTIPLIER = [1, 0.75, 0.5] as const
+const HANGAR_ROCKET_DISCOUNT = [0, 0.1, 0.2] as const
+const EXCHANGE_SALE_BONUS = [0, 0.03, 0.06] as const
+const PROBE_SECTOR_HOURS_BY_LEVEL = [2, 1.5, 1] as const
 const LAUNCHPAD_MISSION_FLOOR = [0, 1, 2] as const
 
 export function isUpgradableBuilding(id: string): id is UpgradableBuildingId {
@@ -92,10 +102,19 @@ export function padNeedsService(player: PadWearPlayer): boolean {
 }
 
 export const padBuildMultiplier = (level: number) => PAD_BUILD_MULTIPLIER[clampLevel(level) - 1]
+/** SSL-792: what a hangar level takes off a rocket's price. */
+export const hangarRocketDiscount = (level: number) => HANGAR_ROCKET_DISCOUNT[clampLevel(level) - 1]
+/** SSL-792: what an Exchange level adds to every sale. */
+export const exchangeSaleBonus = (level: number) => EXCHANGE_SALE_BONUS[clampLevel(level) - 1]
+/** SSL-792: hours a probe launched at this control station level takes per sector. */
+export const probeSectorHours = (level: number) => PROBE_SECTOR_HOURS_BY_LEVEL[clampLevel(level) - 1]
 export const launchpadMissionFloor = (level: number) => LAUNCHPAD_MISSION_FLOOR[clampLevel(level) - 1]
 
 export const BUILDING_NAMES: Record<UpgradableBuildingId, string> = {
   launchpad: 'Launchpad',
   'surface-silo': 'Surface Silo',
   refinery: 'Refinery',
+  hangar: 'Hangar',
+  market: 'Exchange',
+  'control-station': 'Control Station',
 }

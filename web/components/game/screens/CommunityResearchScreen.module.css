@@ -1,6 +1,6 @@
 /* Two tones: the task and its story on the left, your week and the way in on the right. Tiles and the Go button come from MissionBoard.module.css. */
 .workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .34); }
-.left { background: rgba(60, 44, 118, .5); display: flex; flex-direction: column; align-items: stretch; gap: 18px; padding: 84px clamp(16px, 4vw, 48px) 32px; min-width: 0; }
+.left { background: rgba(60, 44, 118, .5); overflow-y: auto; display: flex; flex-direction: column; align-items: stretch; gap: 18px; padding: 84px clamp(16px, 4vw, 48px) 32px; min-width: 0; }
 .right { background: rgba(22, 104, 148, .46); display: flex; flex-direction: column; align-items: center; justify-content: safe center; overflow-y: auto; gap: 16px; padding: 72px clamp(16px, 4vw, 48px) 32px; min-width: 0; text-align: center; }
 .right > h2 { margin: 0; color: #9de7ef; font: 800 18px/1.1 var(--ln-font-display); text-transform: uppercase; letter-spacing: .12em; }
 .left .tiles.tiles { padding: 0 !important; background: none; width: 100%; gap: 0; }
@@ -111,3 +111,39 @@
   .right { justify-content: flex-start; gap: 10px; padding-top: 56px; padding-bottom: 40px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
   .how { gap: 8px; }
 }
+
+/* SSL-775: the flagship event panel, first on the left. Gold while the shower is live, quieter before and after. */
+.event { width: 100%; max-width: 540px; margin: 0 auto; display: grid; gap: 8px; padding: 12px 14px; border: 2px solid #e8a24a; border-radius: 18px; background: rgba(8, 16, 34, .42); box-shadow: 3px 4px 0 rgba(8, 16, 34, .3); }
+.event[data-phase='upcoming'] { border-color: rgba(157, 231, 239, .7); }
+.event[data-phase='ended'] { border-color: rgba(244, 239, 228, .4); }
+.eventHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap-reverse; }
+.eventHead h3 { margin: 0; font: 800 22px/1.1 var(--ln-font-display); }
+.eventStatus { display: inline-flex; align-items: center; gap: 6px; color: #ffd79a; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .08em; text-transform: uppercase; }
+.event[data-phase='upcoming'] .eventStatus { color: #9de7ef; }
+.event[data-phase='ended'] .eventStatus { color: #c9d0c2; }
+.eventStatus i { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.event[data-phase='live'] .eventStatus i { box-shadow: 0 0 8px currentColor; animation: event-led 1.4s ease-in-out infinite; }
+@keyframes event-led { 50% { opacity: .35; } }
+.eventPeak { margin: 0; color: #f4efe4; font: 700 15px/1.25 var(--ln-font-mono); }
+.eventWhat { margin: 0; color: #f4efe4; font: 600 15px/1.35 var(--ln-font-body); }
+.eventBar { display: flex; align-items: center; gap: 6px; }
+.eventBar i { flex: 1; height: 10px; border-radius: 999px; background: rgba(8, 16, 34, .55); border: 1px solid rgba(244, 239, 228, .3); }
+.eventBar i[data-done] { background: #e8a24a; border-color: #e8a24a; }
+.eventBar span { flex: none; margin-left: 4px; color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); }
+.eventTiers { display: flex; flex-wrap: wrap; gap: 6px; }
+.eventTiers span { padding: 5px 10px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 999px; color: #c9d0c2; font: 800 12px/1.1 var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
+.eventTiers span[data-tier='gold'][data-active] { border-color: #f2c24c; color: #f2c24c; }
+.eventTiers span[data-tier='silver'][data-active] { border-color: #dfe4ea; color: #dfe4ea; }
+@media (prefers-reduced-motion: reduce) { .event[data-phase='live'] .eventStatus i { animation: none; } }
+
+/* SSL-758: the Community Site: one bar, the stage, each part and your share. */
+.site { width: min(100%, 420px); display: grid; gap: 8px; padding: 12px 14px; border: 1px solid rgba(244, 239, 228, .35); border-radius: 16px; background: rgba(8, 16, 34, .28); color: #f4efe4; }
+.site .barLabel { font: 800 14px/1.2 var(--ln-font-body); }
+.siteFill { height: 100%; background: linear-gradient(90deg, #f2c24c, #e8a24a); }
+.siteParts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.siteParts li { display: grid; gap: 2px; padding: 6px 8px; border-radius: 10px; background: rgba(8, 16, 34, .3); }
+.siteParts li b { font: 800 14px/1.1 var(--ln-font-display); }
+.siteParts li small { color: #c9d0c2; font: 600 14px/1.15 var(--ln-font-body); }
+.siteParts li span { font: 700 14px/1 var(--ln-font-mono); }
+.siteParts li[data-full] span { color: #6fe39a; }
+.siteMine, .siteArchived { margin: 0; color: #c9d0c2; font: 600 14px/1.35 var(--ln-font-body); }

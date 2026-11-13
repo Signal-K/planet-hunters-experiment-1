@@ -50,6 +50,7 @@ func main() {
 	registerFriendsRoutes(app)
 	registerNotificationRoutes(app)
 	registerCommunityRoutes(app)
+	registerSiteLedger(app)
 	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {
@@ -554,6 +555,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "status", Max: 20})
 		col.Fields.Add(&core.TextField{Name: "body_id", Max: 80})
 		col.Fields.Add(&core.TextField{Name: "rover_name", Max: 80})
+		col.Fields.Add(&core.TextField{Name: "snapshot", Max: 2000000})
 		col.Fields.Add(&core.NumberField{Name: "time"})
 		// Sparse voxel edit deltas ("x,y,z" -> material), takeon's own delta
 		// save model — not a per-chunk table. Chunking is a client-side
@@ -898,6 +900,7 @@ func migrateVoxelWorlds(app core.App) {
 
 	addText("body_id", 80)
 	addText("rover_name", 80)
+	addText("snapshot", 2000000)
 	addNumber("time")
 	addJSON("anomalies", 200000)
 	addJSON("weather", 20000)

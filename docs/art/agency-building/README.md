@@ -1,15 +1,36 @@
-# agency-building (SSL-785)
+# Agency building (SSL-785)
 
-`line-drawing.svg` / `line-drawing.png`: first concept, front elevation, line only. Not a sprite yet.
+The dedicated Agency landmark uses the completed stage-4 drawing. Liam chose
+outlined civic architecture with progressively added detail on 10 November;
+this is the explicit exception to the base kit pixel-art rule in `docs/STYLE.md`.
+Stage 4 is the completed art for SSL-785.
 
-- Wide low civic hall: two glazed wings, a taller central block with a portico, steps, a blue dome and a flag. It reads as admin, not as the Control Station (no dishes or masts).
-- Palette follows base-kit: cream walls, blue dome and glass, navy base. No orange.
-- Drawn on a 4-unit grid so it carries to pixel art. Next: approve or change the drawing, then paint the sprite sheet under `docs/art/` with slices in the art folders, swap the first-run landmark, and remove the SSL-675 exception from `docs/STYLE.md` rule 4.
+## Source and runtime art
 
-## Stages (Liam 2026-11-10: line art, progressively more detail)
+- `line-drawing.svg` / `.png`: initial front-elevation concept.
+- `agency-stage1.svg` / `.png`: transparent line drawing.
+- `agency-stage2.svg` / `.png`: cream walls, pale blue glass and dome, cornice,
+  pilasters and ground shadow.
+- `agency-stage3.svg` / `.png`: lit windows, side shading, dome highlight and lamps.
+- `agency-stage4.svg` / `.png`: final drawing, with roof rails, solar panels,
+  planters, banners and a small dish; also the level-2 look for SSL-792.
+- `sheet.png`: full final sheet (one complete building, no detachable parts).
+- `web/public/game/assets/base/v7/structures/agency.png`: the runtime slice,
+  byte-identical to the full sheet and stage-4 PNG.
+- `native/App/Resources/Art/base/v7/structures/agency.png`: matching bundled
+  slice for future iOS parity; native scene wiring remains parked.
 
-- Stage 1: `agency-stage1.svg` / `.png` is the drawing with no background, used as the sprite (`web/public/game/assets/base/v7/structures/agency.png`, site map entry `agency`). Preview: `/game/stage?preset=hub-first-run`.
-- Stage 2: `agency-stage2.svg` / `.png` (now the live `agency.png`) adds cream wall fills, pale blue glass and dome, cornice and dentils, pilasters, door glass and a ground shadow line. Still outlined.
-- Stage 4: `agency-stage4.svg` / `.png` (now live) is the level-2 look: roof rails and solar, planters, banners, dish.
-- Next stages edit the SVG, re-render with Chromium (transparent) and overwrite `agency.png`.
-- Stage 3: `agency-stage3.svg` / `.png` (now live) adds night light: warm lit panes, shaded east sides of each block, dome shadow and highlight, flag fill, lamp glows. Next ideas: a level-2 look, roof details, planters.
+The palette is cream, blue and navy, without orange. Preserve the SVG sources
+and previous stages when updating the final drawing.
+
+## Scene contract
+
+Open `node scripts/scene-drive.mjs open hub-first-run --size 390x844`.
+The Agency is display-only: it appears once the launchpad is built and while
+no Control Station is owned. It grants no Control Station gameplay state.
+Once the player builds a Control Station, the real station sprite replaces it,
+including the station's own level variants. Use `hub-buildings-l2` to inspect
+that separate building art.
+
+Fresh-account acceptance uses the local account button on `/game`, then the
+first-run launchpad path; a stage fixture alone is not that account check.

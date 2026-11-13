@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="744" height="394" viewBox="0 0 744 394">
+  <image href="../../../web/public/game/assets/base/v7/structures/exchange.png" x="0" y="100" width="744" height="294"/>
+  <g transform="translate(0 100)">
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><rect x="160" y="40" width="80" height="50" fill="#2f6db0"/><line x1="200" y1="90" x2="200" y2="148" stroke-width="6"/></g>
+        <path d="M172 72 L184 54 L196 72 Z" fill="#2a9d9b"/><rect x="204" y="58" width="28" height="7" fill="#9fd3e6"/><rect x="204" y="72" width="20" height="7" fill="#9fd3e6"/>
+        <!-- a trading floor on top of the warehouse -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><rect x="462" y="-10" width="210" height="70" fill="#efe6d2"/><rect x="462" y="-10" width="210" height="12" fill="#2f6db0"/><path d="M452 -10 L482 -46 L652 -46 L682 -10 Z" fill="#d9cfb8"/></g>
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" stroke-width="3"><rect x="480" y="12" width="40" height="30" fill="#9fd3e6"/><rect x="532" y="12" width="40" height="30" fill="#ffd979"/><rect x="584" y="12" width="40" height="30" fill="#9fd3e6"/><rect x="636" y="12" width="24" height="30" fill="#9fd3e6"/></g>
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><line x1="560" y1="-46" x2="560" y2="-96" stroke-width="5"/><path d="M562 -96 L610 -84 L562 -72 Z" fill="#2f6db0"/></g></g>
+</svg>

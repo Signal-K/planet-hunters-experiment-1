@@ -71,7 +71,8 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
 export function PixelStructure({ kind, level = 1, parts, phase = 'idle', rocket = true }: { kind: string; level?: number; parts?: InstalledCustomizerPartsByKind | null; phase?: 'idle' | 'launch'; rocket?: boolean | 'core' }) {
   const tier = structureTier(level)
   if (kind === 'launchpad') return <LaunchpadKit tier={tier} parts={parts} phase={phase} rocket={rocket} />
-  const sprite = structureSprite(kind)
+  // SSL-792: the hangar, Exchange and control station draw their own sprite per level.
+  const sprite = structureSprite(kind, kind === 'agency' ? 1 : level)
   if (!sprite?.src || (kind !== 'hangar' && kind !== 'garage' && kind !== 'market' && kind !== 'control-station' && kind !== 'agency')) return null
   return (
     <img

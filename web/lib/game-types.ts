@@ -107,6 +107,8 @@ export type Screen =
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'radio-meteors'
+  | 'probe-scan'
+  | 'probe-watch'
   | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
@@ -132,6 +134,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'landing',
   'mining',
   'delivery',
+  'probe-watch',
   'refinery',
   'hangar',
   'tess-discovery',
@@ -306,6 +309,9 @@ export interface Player {
   transitStartedAt?: number | null
   /** Launch time of the active run. Event badges are graded at this time as well as at completion. */
   missionStartedAt?: number | null
+  /** SSL-781: receipt synced with the imported ledger credits. */
+  legacyProgressImported?: boolean
+  legacyDiscoveredBodies?: Record<string, import('./legacy-progress').LegacyBody>
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string
@@ -367,6 +373,14 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** SSL-772: confirmed field-camera impacts, merged by observation id. */
+  probeObservations?: Record<string, import('@/lib/probes/field-probe').ProbeObservation>
+  /** SSL-773: survey probes left in orbit, keyed by body id, with the surface readings logged from each. */
+  probes?: Record<string, import('@/lib/probes/survey-probe').ProbeRecord>
+  /** SSL-831: where the player is in each later shower's mission chain (Leonids), keyed by shower id. `at` is when that stage was reached. */
+  showerChains?: Record<string, { stage: number; at: number }>
+  /** SSL-734: units sold straight to each client today (affinity level 3+), by UTC day. */
+  clientSales?: Record<string, { day: string; units: number }>
   /** SSL-658: fragment ledgers for the other showers, keyed by shower id. Orionids keep orionidsFragments. */
   showerFragments?: Record<string, { caught: number; redeemed: number }>
   /** SSL-658: each non-Orionid shower's `caught` count when its run was accepted. */
@@ -400,7 +414,7 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
   telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
@@ -555,6 +569,7 @@ export interface GameActions {
   onReturnArrived: () => void
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onBuyLaserCapacitor: (expectedLevel: number, reservedUnits: number) => void
+  onSellToClient: (clientId: string, level: number, mineral: string, amount: number) => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: import('@/lib/debrief-exits').DebriefExitId) => void
   /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
   onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
@@ -590,6 +605,8 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   submitSaturnClassification: (candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => void
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
+  /** SSL-773: download the sectors the survey probes mapped since the last visit. */
+  collectProbeData: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean

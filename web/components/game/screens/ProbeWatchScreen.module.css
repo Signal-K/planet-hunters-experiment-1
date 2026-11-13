@@ -1,0 +1,17 @@
+.scene { position: relative; width: 100%; height: 100%; min-height: 320px; overflow: hidden; background: var(--ln-bg); color: var(--ln-text); font: 600 14px/1.4 var(--ln-font-body); }
+.ground { position: absolute; inset: 0; opacity: .7; pointer-events: none; }
+.field { height: 100%; min-height: 0; border: 0; border-radius: 0; }
+.camera { position: absolute; top: 22%; left: 22%; width: 56%; height: 48%; border: 2px solid var(--ln-cyan); background: transparent; }
+.cameraLabel { position: absolute; left: 8px; top: 8px; padding: 4px; background: var(--ln-bg); font-size: 14px; color: var(--ln-cyan); }
+.camera svg { display: block; }
+.cone { fill: var(--ln-cyan); fill-opacity: .06; stroke: var(--ln-cyan); stroke-dasharray: 4 6; }
+.cross { fill: none; stroke: var(--ln-cyan); }
+.impact { stroke: var(--ln-cyan); fill: none; stroke-width: 2; }
+.impact circle:last-child { fill: var(--ln-cyan); }
+.probe { stroke: var(--ln-text); fill: var(--ln-bg); stroke-width: 2; }
+.pan { position: absolute; bottom: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; }
+.pan button { min-height: 44px; min-width: 64px; padding: 8px; font: inherit; border: 1px solid var(--ln-cyan); color: var(--ln-text); background: var(--ln-bg); cursor: pointer; }
+.pan button:disabled { opacity: .5; }
+.title { font-size: 16px; }
+@media (orientation: portrait) { .camera { left: 6%; width: 88%; top: 17%; height: 42%; } }
+@media (max-height: 500px) and (orientation: landscape) { .camera { top: 19%; left: 25%; width: 50%; height: 40%; } }

@@ -1,4 +1,4 @@
-import { addStamp, isDiscoveryMission, type StampKind } from '@/lib/research/stamps'
+import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
@@ -25,8 +25,9 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { completeRadioMission, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
-import { grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
+import { collectProbeData as collectProbeDataFor, placeProbe } from '@/lib/probes/survey-probe'
+import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
+import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict, SaturnVerdict } from '@/lib/data'
@@ -38,6 +39,8 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
+import { applyClientSale } from '@/lib/client-sales'
+import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -785,6 +788,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // SSL-663: one stamp per research task kind per UTC day, for the calendar in the Control Station.
   const stampResearch = useCallback((kind: StampKind) => {
+    // SSL-758: a classification or survey day feeds the Community Site's data, once per kind per day.
+    if (kind === 'classification' || kind === 'survey') queueSiteContribution(`data:${kind}:${stampDayKey(Date.now())}`, dataSiteCredit())
     setState(s => {
       const player = addStamp(s.player, kind, Date.now())
       return player === s.player ? s : { ...s, player }
@@ -819,7 +824,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (applyResolveScan(current, at, catalog.targets).player.scanFollowUp && !current.player.scanFollowUp) addToast('The scan needs a manual check. Open the Data hub to confirm it for a bonus.', 'ok')
     addToast(
       marked
-        ? 'Scan complete. Planet charted. Orionids-found voucher owned. Redeem coming soon.'
+        ? 'Scan complete. Planet charted. Orionids-found voucher owned: it opens a special mission on the Events board.'
         : 'Scan complete. Body charted and research XP awarded.',
       'ok',
     )
@@ -881,8 +886,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (findPreview?.granted) {
       addToast(
         findPreview.masteryGranted
-          ? 'Orionids-found. Voucher owned. Meteorite mastery 1. Redeem coming soon.'
-          : 'Orionids-found. Voucher owned. Redeem coming soon.',
+          ? 'Orionids-found. Voucher and Meteorite Mastery 1: each opens a special mission on the Events board.'
+          : 'Orionids-found. Voucher owned: it opens a special mission on the Events board.',
         'ok',
       )
     }
@@ -1127,24 +1132,42 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...stateRef.current.player,
       radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
     }
-    // Orionids mission 3: enough recordings checked on ORI-1 completes the chain and grades the badge.
-    const preview = completeRadioMission(classified, at)
+    // The receiver the desk is tuned to: LEO-1 once the Leonids run is home (SSL-831), else ORI-1.
+    const receiver = receiverEventId(stateRef.current.player)
+    const chain = getShowerChain(receiver)
+    // Checking LEO-1 recordings during the Leonids is the community's event research too.
+    if (chain && !isOrionidsWindow(at) && badgeTierFor(chain.eventId, at) === 'gold') stampResearch('event')
+    // Orionids mission 3, or Leonids mission 2: enough recordings checked completes the chain and grades the badge.
+    const finish = <T extends Player>(player: T) => chain ? completeChainRadio(player, chain, at) : completeRadioMission(player, at)
+    const preview = finish(classified)
     setState(s => {
       const player = {
         ...s.player,
         radioMeteorClassifications: { ...(s.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
       }
-      const done = completeRadioMission(player, at)
+      const done = finish(player)
       return { ...s, player: done.completed ? addStamp(done.player, 'event', Date.now()) : done.player }
     })
-    queueRadioMeteorClassification(classification, ORIONIDS_CHAIN.eventId)
-    captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length })
+    queueRadioMeteorClassification(classification, receiver)
+    captureGameEvent('radio_meteor_classified', { subject_id: classification.subjectId, workflow_id: classification.workflowId, echoes: classification.boxes.length, event_id: receiver })
     if (preview.completed) {
-      const badge = preview.player.badges?.[ORIONIDS_CHAIN.eventId]
-      captureGameEvent('orionids_chain_completed', { tier: badge?.tier ?? null })
-      if (badge) captureGameEvent('badge_earned', { event_id: ORIONIDS_CHAIN.eventId, tier: badge.tier, activity: 'radio-confirmation' })
+      const badge = preview.player.badges?.[receiver]
+      captureGameEvent(chain ? 'shower_chain_completed' : 'orionids_chain_completed', { event_id: receiver, tier: badge?.tier ?? null })
+      if (badge) captureGameEvent('badge_earned', { event_id: receiver, tier: badge.tier, activity: 'radio-confirmation' })
     }
   }, [setState, stateRef])
+
+  // SSL-773: opening the probe console downloads every sector the probes mapped since the last visit. That is a
+  // probe observation: one stamp per day, like every stamp. Synced in game_states; the ledger reports the stamp.
+  const collectProbeData = useCallback(() => {
+    const at = Date.now()
+    const before = stateRef.current.player
+    const after = collectProbeDataFor(before, catalog.targets, at)
+    if (after === before) return
+    setState(s => ({ ...s, player: collectProbeDataFor(s.player, catalog.targets, at) }))
+    const count = (p: typeof before) => Object.values(p.probes ?? {}).reduce((sum, rec) => sum + Object.keys(rec.readings).length, 0)
+    captureGameEvent('probe_data_collected', { sectors: count(after) - count(before) })
+  }, [catalog.targets, setState, stateRef])
 
   // Player picks where the satellite points for the *next* daily downlink
   // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
@@ -1156,6 +1179,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }))
     captureGameEvent('satellite_target_chosen', { subject_id: subjectId })
     enqueueSurvey('lnm_satellite_clarity', 1200)
+  }, [setState])
+
+  // SSL-734: sell surplus straight to a client once affinity is level 3.
+  const onSellToClient = useCallback((clientId: string, level: number, mineral: string, amount: number) => {
+    setState(s => applyClientSale(s, clientId, level, mineral, amount, Date.now()))
+    captureGameEvent('client_direct_sale', { client_id: clientId, mineral, amount })
   }, [setState])
 
   const onBuyLaserCapacitor = useCallback((expectedLevel: number, reservedUnits: number) => {
@@ -1321,7 +1350,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
       const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
-      const orionidsBadged = completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
+      // SSL-831: a shower with a mission chain (Leonids) finishes mission 1 here; the badge waits for its receiver step.
+      const completedChain = getShowerChain(completedShower?.id)
+      const chainedPlayer = completedChain ? completeChainRun(wswBadgedPlayer, completedChain, Date.now())
+        : completedShower ? grantBadge(wswBadgedPlayer, completedShower.id, Date.now()) : wswBadgedPlayer
+      // SSL-773: a survey probe stays in orbit at its body (set on arrival; kept here for a run that skipped it).
+      const orionidsBadged = mission?.payload?.instrumentId === 'survey-probe' && mission.targetId
+        ? placeProbe(chainedPlayer, mission.targetId, Date.now()) : chainedPlayer
       const orionidsEventStage = mission?.id === ORIONIDS_NIGHT_RUN_ID
         ? Math.max(orionidsBadged.orionidsEventStage ?? 0, 3) as 0 | 1 | 2 | 3
         : orionidsBadged.orionidsEventStage ?? 0
@@ -1428,6 +1463,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         .then(runs => runs.forEach(run => queueUpdate('mission_runs', run.id, completedRun)))
         .catch(() => {})
     }
+    // SSL-758: the run also adds to the shared Community Site. Credit from the mined cargo; the player keeps it all.
+    const siteMission = catalog.missions.find(item => item.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(item => item.id === current.missionId) ?? null
+    const siteCredit = missionSiteCredit(siteMission, current.lastCargo)
+    if (siteCredit) queueSiteContribution(runId ?? `${current.missionId}:${current.player.missionStartedAt ?? 0}`, siteCredit)
     missionRunIdRef.current = null
     // Unconditional analytics event — separate from the (now sampled)
     // survey queue below, so mission-completion volume and drop-off stay
@@ -1520,9 +1560,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData,
   }
 }

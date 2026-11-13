@@ -191,3 +191,13 @@ func TestLedgerReadsStateFromAJSONFieldRecord(t *testing.T) {
 		t.Fatalf("rows = %+v, want the event stamp", rows)
 	}
 }
+
+// SSL-773: a logged survey-probe reading is a ledger kind and counts toward the community bar.
+func TestProbeObservationIsALedgerAndResearchKind(t *testing.T) {
+	if !ledgerStampKinds["probe-observation"] {
+		t.Fatal("probe-observation is not reported to platform_contributions")
+	}
+	if !researchStampKinds["probe-observation"] {
+		t.Fatal("probe-observation does not count toward the community bar")
+	}
+}

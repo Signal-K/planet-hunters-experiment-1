@@ -24,6 +24,7 @@ import { showerForRunMission, showerForResource } from '@/lib/data/showers'
 import { debriefExits } from '@/lib/debrief-exits'
 import { onlineTelescopes } from '@/lib/research/paths'
 import { addShowerCatches } from '@/lib/orionids/shower-ledger'
+import { placeProbe } from '@/lib/probes/survey-probe'
 import { showerRunCatches, showerRunFilled, showerRunPayout, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { queueEventBadge, queueOrionidsEventProof } from '@/lib/orionids/persist'
 import { captureGameEvent } from '@/lib/posthog'
@@ -208,6 +209,9 @@ export default function MissionOperationRoutes({
             }
             const hasLander = !!game.player.shipCustomizerParts?.lander
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
+              // SSL-773: a survey probe is released into orbit at the body and stays there.
+              const probeAt = game.mission?.payload?.instrumentId === 'survey-probe' ? game.mission.targetId : null
+              if (probeAt) game.setPlayer(current => placeProbe(current, probeAt, Date.now()))
               game.setPlayer(player => ({
                 ...player,
                 missionPhase: 'debrief',

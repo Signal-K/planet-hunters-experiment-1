@@ -42,6 +42,7 @@
       "name": "Contracts, Free Ops and mission lifecycle",
       "web": [
         "web/lib/systems/MissionRunLifecycle.ts",
+        "web/lib/systems/RunRecovery.ts",
         "web/lib/data/mission-generator.ts",
         "web/lib/data/daily-client-missions.ts"
       ],

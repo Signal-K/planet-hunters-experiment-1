@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="444" height="389" viewBox="0 0 444 389">
+  <image href="../../../web/public/game/assets/base/v7/structures/control-station.png" x="0" y="110" width="444" height="279"/>
+  <g transform="translate(0 110)">
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><path d="M18 52 Q42 20 74 46 Z" fill="#efe6d2"/><line x1="44" y1="44" x2="42" y2="96" stroke-width="5"/></g>
+        <circle cx="46" cy="40" r="5" fill="#2a9d9b" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="88" y="196" width="128" height="8" fill="#ffd979" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" stroke-width="2"/>
+        <!-- a lattice relay mast with a beacon -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" fill="none"><path d="M350 236 L366 -90 L382 236"/><path d="M354 180 L378 140 M356 140 L376 100 M358 100 L374 60 M360 60 L372 20 M362 20 L370 -20 M363 -20 L369 -60"/><path d="M354 180 L378 180 M356 140 L376 140 M358 100 L374 100 M360 60 L372 60 M362 20 L370 20 M363 -20 L369 -20"/></g>
+        <circle cx="366" cy="-98" r="9" fill="#ffd979" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"/>
+        <!-- the dome opens: an observing slit -->
+        <rect x="112" y="98" width="14" height="40" fill="#9fd3e6" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" stroke-width="3"/></g>
+</svg>

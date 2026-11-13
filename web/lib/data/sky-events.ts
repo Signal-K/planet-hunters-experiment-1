@@ -101,8 +101,9 @@ export const SKY_EVENTS: ReadonlyArray<SkyEvent> = [
   {
     id: 'leonids-2026',
     name: 'Leonids',
-    startUtc: '2026-11-17T00:00:00Z',
-    endUtc: '2026-11-18T00:00:00Z',
+    // SSL-831: the real activity window (IMO, 6 to 30 Nov), the same dates Community research uses. Peak 17 Nov.
+    startUtc: '2026-11-06T00:00:00Z',
+    endUtc: '2026-12-01T00:00:00Z',
     communityInstrument: { callsign: 'LEO-1', name: 'Leonids receiver' },
     badgeAfterMissions: true,
     activities: ['debris-mining'],
@@ -298,11 +299,11 @@ export const DRACONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   chipLabel: 'Draconids active',
 }
 
-/** Queued. Same shower config as the Orionids, inactive until 17 Nov. */
+/** SSL-831: the real activity window, 6 to 30 Nov, peaking on 17 Nov. */
 export const LEONIDS_DEBRIS_PRESET: DebrisEventPreset = {
   eventId: 'leonids-2026',
-  startUtc: '2026-11-17T00:00:00Z',
-  endUtc: '2026-11-18T00:00:00Z',
+  startUtc: '2026-11-06T00:00:00Z',
+  endUtc: '2026-12-01T00:00:00Z',
   peakUtc: '2026-11-17T12:00:00Z',
   peakRatePerMinute: 12,
   baseRatePerMinute: 4,

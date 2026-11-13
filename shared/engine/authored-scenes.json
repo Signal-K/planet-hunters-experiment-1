@@ -38,7 +38,8 @@
         "name": "Work",
         "routes": [
           "mining",
-          "surface-ops"
+          "surface-ops",
+          "probe-watch"
         ],
         "policy": "Perform mining, survey or field work with the appropriate engine adapter."
       },
@@ -138,6 +139,7 @@
       "name": "Contracts, Free Ops and mission lifecycle",
       "web": [
         "web/lib/systems/MissionRunLifecycle.ts",
+        "web/lib/systems/RunRecovery.ts",
         "web/lib/data/mission-generator.ts",
         "web/lib/data/daily-client-missions.ts"
       ],
@@ -2023,6 +2025,85 @@
             "records"
           ],
           "note": "Return to the base."
+        }
+      ]
+    },
+    {
+      "id": "probe-scan",
+      "type": "exchange-lab",
+      "route": "probe-scan",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/ProbeScanScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "probe-orbit",
+          "kind": "instrument",
+          "layout": "host",
+          "mechanics": [
+            "instruments",
+            "community-research"
+          ],
+          "note": "The body with its 6 by 4 sector map drawn on the disc and the probe on a tilted orbit, passing behind and in front. Mapped sectors show their deposits as mineral-coloured dots, the sector being mapped now glows gold, sectors new since the last visit are outlined green, unmapped ones are dark. A scan flash (beam and burst) goes off every few seconds, and on each sector during playback. The progress bar under it counts sectors and fills the next one as time passes. Deposits are fixed per body and sector (web/lib/probes/survey-probe.ts)."
+        },
+        {
+          "id": "probe-readout",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "instruments",
+            "community-research",
+            "mission-planning"
+          ],
+          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted), then three ways on: Targeted run (free; opens the Free run tab on this body with the probe's run picked), Contracts (opens the Contracts tab on this body's offers; probe contracts come from clients who want what was found, web/lib/probes/probe-offers.ts) and Back to hub. Skip ends the playback early."
+        }
+      ]
+    },
+    {
+      "id": "probe-watch",
+      "type": "field",
+      "route": "probe-watch",
+      "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/screens/ProbeWatchScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "probe-field",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "Takeon lunar terrain and meteorImpact events; fixed wheel-free camera spec, no driving. Body meteor-shower rate follows the real shower window and distance from its peak. The fixture uses the Leonids peak."
+        },
+        {
+          "id": "field-camera",
+          "kind": "instrument",
+          "parent": "probe-field",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "30-degree pan controls; 120-degree field of view. Only impacts covered when they arrive enter the eight-second confirmation buffer. Each confirmation saves one idempotent observation on the player."
+        },
+        {
+          "id": "watch-readout",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "sky-events"
+          ],
+          "note": "One minute or Finish watch opens results: this watch's count and closest sighting, plus saved lifetime count and best. Watch again or return to the Control Station. Campaign saves use the existing offline player outbox. The account-free fixture has a separate observation-only local slot and survives reload."
         }
       ]
     },

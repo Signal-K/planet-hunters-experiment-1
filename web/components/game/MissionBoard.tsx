@@ -20,7 +20,10 @@ import {
   isOrionidsWindow,
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
-import { showerForRunMission } from '@/lib/data/showers'
+import { getShower, showerForRunMission } from '@/lib/data/showers'
+import { CLIENT_SALE_LEVEL, CLIENT_SALE_PREMIUM, clientSaleOffer } from '@/lib/client-sales'
+import { SPECIAL_PREFIX, masteryBonus, showerSpecials, type SpecialView } from '@/lib/orionids/special-missions'
+import { chainNextScreen, getShowerChain } from '@/lib/orionids/chain'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
 import {
   eventsBoard,
@@ -28,7 +31,8 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { PROBE_CONTRACT_PREFIX, PROBE_RUN_PREFIX } from '@/lib/probes/probe-offers'
+import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardSite, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
@@ -52,6 +56,8 @@ interface MissionBoardProps {
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
+  /** SSL-734: sell surplus straight to a client at affinity level 3+. */
+  onSellToClient?: (clientId: string, level: number, mineral: string, amount: number) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -326,11 +332,61 @@ function PickIcon() {
   return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4 20 10M4 20l9-9M9 5c3-2 7-1 10 2M5 9c-2 3-1 7 2 10" /></svg>
 }
 
+/**
+ * SSL-734: at affinity level 3 a client buys surplus straight from the silo: only what it wants, a little over the
+ * Exchange price, up to its daily demand. Below level 3 the card says what unlocks it.
+ */
+function ClientSurplus({ player, catalog, clientId, clientName, level, onSell }: { player: Player; catalog: Catalog; clientId: string; clientName: string; level: number; onSell?: (clientId: string, level: number, mineral: string, amount: number) => void }) {
+  const offer = clientSaleOffer(player, clientId, level)
+  if (!offer.unlocked) {
+    return <p className={styles.surplusLocked} data-testid="client-surplus-locked">Reach affinity level {CLIENT_SALE_LEVEL} to sell surplus straight to {clientName}, above the Exchange price.</p>
+  }
+  return (
+    <section className={styles.surplus} data-testid="client-surplus" aria-label={`Sell surplus to ${clientName}`}>
+      <p className={styles.surplusHead}><b>Sell surplus</b><span>Takes {offer.left} more today · +{Math.round(CLIENT_SALE_PREMIUM * 100)}% over the Exchange</span></p>
+      {offer.rows.length === 0 && <p className={styles.surplusNone}>Nothing {clientName} wants is in your silo.</p>}
+      {offer.rows.map(row => {
+        const units = Math.min(row.held, offer.left)
+        return <div key={row.mineral} className={styles.surplusRow} data-testid={`client-surplus-${row.mineral}`}>
+          <span><b>{catalog.minerals[row.mineral]?.name ?? row.mineral}</b><small>{row.held} in silo · {formatCurrency(row.price, { compact: true })} each</small></span>
+          <button type="button" disabled={units <= 0 || !onSell} data-testid={`client-sell-${row.mineral}`} onClick={() => onSell?.(clientId, level, row.mineral, units)}>
+            {units > 0 ? `Sell ${units} · ${formatCurrency(row.price * units, { compact: true })}` : 'Full today'}
+          </button>
+        </div>
+      })}
+    </section>
+  )
+}
+
+/**
+ * SSL-657: the special missions a finished shower unlocks. Gold opens more than silver; the Orionids voucher and
+ * Meteorite Mastery each open one more, and Mastery raises what all of them pay. Shown once the player holds a key.
+ */
+function EventSpecials({ eventId, player, onStart }: { eventId: string; player: Player; onStart: (special: SpecialView) => void }) {
+  const flown = new Set((player.completedMissions ?? []).map(record => record.id))
+  const specials = showerSpecials(eventId, player, flown)
+  if (!specials.length || specials.every(special => special.state === 'locked')) return null
+  const open = specials.filter(special => special.state !== 'locked').length
+  const bonus = Math.round(masteryBonus(player) * 100)
+  return (
+    <div className={styles.specials} data-testid={`event-specials-${eventId}`}>
+      <p className={styles.specialsHead}><b>Special missions</b><span>{open} of {specials.length} unlocked{bonus ? ` · Mastery +${bonus}%` : ''}</span></p>
+      <ul>
+        {specials.map(special => <li key={special.id} data-state={special.state} data-testid={`special-${special.id}`}>
+          <span><b>{special.title}</b><small>{special.state === 'locked' ? special.needs : special.state === 'flown' ? 'Flown' : special.key === 'gold' ? 'Gold unlock' : special.key === 'badge' ? 'Badge unlock' : special.key === 'mastery' ? 'Mastery unlock' : 'Voucher unlock'}</small></span>
+          {special.state === 'open' && <button type="button" data-testid={`special-start-${special.id}`} onClick={() => onStart(special)}>Start</button>}
+        </li>)}
+      </ul>
+    </div>
+  )
+}
+
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
-  onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
+  onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
+  const [requestedSite] = useState(() => pendingMissionBoardSite())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
   const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? lastMissionBoardTab() ?? 'contracts')
@@ -339,11 +395,11 @@ export default function MissionBoard({
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
-    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow)),
+    () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
     [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
   )
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
-  const [contractTargetId, setContractTargetId] = useState<string | null>(null)
+  const [contractTargetId, setContractTargetId] = useState<string | null>(() => tab === 'contracts' ? requestedSite?.targetId ?? null : null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
   const [clientFocusId, setClientFocusId] = useState<string | null>(null)
   const roster = useMemo(
@@ -372,15 +428,19 @@ export default function MissionBoard({
   const offerWindow = tab === 'contracts' && count > 0
     ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
     : []
-  const [view, setView] = useState<MapView>('system')
+  const [view, setView] = useState<MapView>(() => {
+    const site = requestedSite ? catalog.targets.find(target => target.id === requestedSite.targetId) : null
+    return !site ? 'system' : site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer'
+  })
   const mineralSources = useMemo(() => sourceMineral
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && t.minerals.includes(sourceMineral)).sort((a, b) => a.orbit - b.orbit)
     : [], [catalog.targets, sourceMineral])
-  const [pickedId, setPickedId] = useState<string | null>(() => mineralSources[0]?.id ?? null)
-  const [runId, setRunId] = useState<string | null>(null)
+  const [pickedId, setPickedId] = useState<string | null>(() => (tab === 'free' ? requestedSite?.targetId : null) ?? mineralSources[0]?.id ?? null)
+  const [runId, setRunId] = useState<string | null>(() => tab === 'free' ? requestedSite?.runId ?? null : null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
-  const pickedRuns = picked ? freeRuns.filter(run =>
+  // A run tied to one body (a probe's targeted run) is offered only there.
+  const pickedRuns = picked ? freeRuns.filter(run => (!run.targetId || run.targetId === picked.id) &&
     (sourceMineral
       ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
       : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
@@ -403,6 +463,15 @@ export default function MissionBoard({
     ?? steps[0]
 
   useEffect(() => clearMissionBoardTab(), [])
+
+  // From the probe readout: open on the first contract its survey opened at that body.
+  useEffect(() => {
+    if (tab !== 'contracts' || !requestedSite) return
+    const first = cards.find(item => item.mission.id.startsWith(`${PROBE_CONTRACT_PREFIX}${requestedSite.targetId}-`))
+    if (first) onSelectMission(first.mission.id)
+    // Only on open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const first = mineralSources[0]
@@ -450,6 +519,13 @@ export default function MissionBoard({
   const openEvent = (event: SkyBoardCard) => {
     if (event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       if (event.status === 'upcoming') return
+    }
+    // SSL-831: a chained shower (Leonids) starts its run directly, then opens its receiver.
+    const chain = getShowerChain(event.id)
+    if (chain) {
+      if (chainNextScreen(player, chain) === 'radio-meteors') { onOpenEvent('radio-meteors'); return }
+      const runId = getShower(chain.eventId)?.runMissionId
+      if (runId && catalog.missions.some(mission => mission.id === runId)) { onAccept(runId); return }
     }
     if (event.id === 'orionids-2026' || event.id === 'draconids-2026' || event.id === 'leonids-2026' || event.id === 'geminids-2026') {
       // SSL-714: mission 2 (and listening on afterwards) happens on the community receiver, ORI-1.
@@ -593,14 +669,20 @@ export default function MissionBoard({
         </div>}
         <header className={styles.dockHead}>
           <div className={styles.dockWho}>
-            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : 'Free run'}</span>
+            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : pickedRun?.id.startsWith(PROBE_RUN_PREFIX) ? 'Free run · targeted' : pickedRun?.id.startsWith(SPECIAL_PREFIX) ? 'Free run · special' : 'Free run'}</span>
             <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
           </div>
         </header>
+        {picked && pickedRun?.id.startsWith(PROBE_RUN_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-probe">
+          Targeted run from your probe survey · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · no client, no fee
+        </p>}
+        {picked && pickedRun?.id.startsWith(SPECIAL_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-special">
+          {pickedRun.title} · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · ₣{(pickedRun.payout.francs / 1_000_000).toFixed(1)}M
+        </p>}
         {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
         {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
           {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {showerForRunMission(run.id)
+            {run.id.startsWith(SPECIAL_PREFIX) ? run.title : showerForRunMission(run.id)
               ? `Catch ${ORIONIDS_FRAGMENT_GOAL} ${showerForRunMission(run.id)!.name} fragments`
               : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
           </button>)}
@@ -684,6 +766,7 @@ export default function MissionBoard({
                 <div><dt>Client premium</dt><dd>+{Math.round(focusedStanding.client.payoutPremium * 100)}%</dd></div>
                 <div><dt>Wants</dt><dd>{focusedStanding.client.mineralPreferences.map(id => catalog.minerals[id]?.name ?? id).join(', ') || 'Any cargo'}</dd></div>
               </dl>
+              <ClientSurplus player={player} catalog={catalog} clientId={focusedStanding.client.id} clientName={focusedStanding.client.name} level={focusedStanding.met ? focusedStanding.level : 0} onSell={onSellToClient} />
               {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
                 const first = cards.find(item => item.client?.id === focusedStanding.client.id)
                 setContractTargetId(null)
@@ -701,6 +784,17 @@ export default function MissionBoard({
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
                     <p className={styles.eventReward}>{event.rewardLabel}</p>
+                    {event.steps && <>
+                      <p className={styles.eventBlurb} data-testid={`event-blurb-${event.id}`}>{event.blurb}</p>
+                      <ol className={styles.eventSteps} data-testid={`event-steps-${event.id}`}>
+                        {event.steps.map(step => <li key={step.label} data-state={step.state}>{step.label}</li>)}
+                      </ol>
+                    </>}
+                    <EventSpecials eventId={event.id} player={player} onStart={special => {
+                      const target = catalog.targets.find(t => t.id === special.targetId)
+                      chooseTab('free'); setPickedId(special.targetId); setRunId(special.id)
+                      if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
+                    }} />
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
                     <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
                   </div>

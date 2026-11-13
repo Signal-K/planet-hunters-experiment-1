@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="444" height="329" viewBox="0 0 444 329">
+  <image href="../../../web/public/game/assets/base/v7/structures/control-station.png" x="0" y="50" width="444" height="279"/>
+  <g transform="translate(0 50)">
+        <!-- a second dish on the left mast -->
+        <g stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"><path d="M18 52 Q42 20 74 46 Z" fill="#efe6d2"/><line x1="44" y1="44" x2="42" y2="96" stroke-width="5"/></g>
+        <circle cx="46" cy="40" r="5" fill="#2a9d9b" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round"/>
+        <!-- a status light strip under the roof band -->
+        <rect x="88" y="196" width="128" height="8" fill="#ffd979" stroke="#1b2a44" stroke-width="4" stroke-linejoin="round" stroke-width="2"/></g>
+</svg>

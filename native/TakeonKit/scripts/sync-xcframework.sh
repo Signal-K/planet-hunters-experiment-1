@@ -1,24 +1,10 @@
 #!/usr/bin/env bash
-# Build the Go runtime xcframework and copy it into Frameworks/.
-# Usage: scripts/sync-xcframework.sh [path-to-takeon-go-checkout]
-#
-# Calls gomobile with explicit architectures rather than `build.sh ios`: the bare
-# `-target iossimulator,macos` form emits arm64 only on Apple silicon hosts, which
-# breaks generic Simulator builds and Intel Macs at link time.
+# Build the shared checkout's Go core for its portable Swift package.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-GO_REPO="${1:-${TAKEON_GO_REPO:-$HOME/Navigation/takeon}}"
-export PATH="$PATH:$(go env GOPATH)/bin"
-OUT="$PWD/Frameworks/Takeon.xcframework.new"
-rm -rf "$OUT"; mkdir -p Frameworks
-(cd "$GO_REPO/go" && gomobile bind \
-  -target ios/arm64,iossimulator/arm64,iossimulator/amd64,macos/arm64,macos/amd64 \
-  -o "$OUT" ./mobile)
-scripts/verify-xcframework.sh "$OUT"
-rm -rf Frameworks/Takeon.xcframework
-mv "$OUT" Frameworks/Takeon.xcframework
-echo "Synced Frameworks/Takeon.xcframework from $GO_REPO"
-# Package.swift decides whether to include the binary target by checking for the
-# framework, and SwiftPM caches manifest evaluation: purge so the change is seen.
-rm -rf .build
-swift package purge-cache
+TAKEON_SOURCE="${1:-${TAKEON_PACKAGE_PATH:-${TAKEON_GO_REPO:-../../../takeon}}}"
+TAKEON_SOURCE="$(cd "$TAKEON_SOURCE" && pwd)"
+(cd "$TAKEON_SOURCE" && TAKEON_IOS_TARGETS=ios/arm64,iossimulator/arm64,iossimulator/amd64 go/scripts/build.sh ios)
+TAKEON_PACKAGE_PATH="$TAKEON_SOURCE" swift package reset
+printf 'Shared Takeon core built at %s/go/dist/Takeon.xcframework\n' "$TAKEON_SOURCE"
+printf 'Build Landnam with TAKEON_PACKAGE_PATH=%s\n' "$TAKEON_SOURCE"

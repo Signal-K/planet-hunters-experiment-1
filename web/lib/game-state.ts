@@ -1,3 +1,5 @@
+import { mergeProbeObservations } from './probes/field-probe'
+import { mergeClientSales } from './client-sales'
 import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
@@ -11,6 +13,8 @@ import { mergeNightCatches, sanitizeNightCatches } from '@/lib/orionids/night-ca
 import { fragmentsFromSave, mergeFragments } from '@/lib/orionids/fragments'
 import { detectOrionidsProgress } from '@/lib/orionids/progress'
 import { mergeShowerLedgers } from '@/lib/orionids/shower-ledger'
+import { mergeShowerChains } from '@/lib/orionids/chain'
+import { mergeProbes, probeTargetForMission } from '@/lib/probes/survey-probe'
 import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
@@ -351,7 +355,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, baseArrangement: sanitizeArrangement(player.baseArrangement), welcomeBack, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, probeObservations: mergeProbeObservations(player.probeObservations), baseArrangement: sanitizeArrangement(player.baseArrangement), welcomeBack, missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -462,7 +466,9 @@ function repairStateRoute(rawInput: GameState): GameState {
   // SSL-674: a survey flight to a discovered world is built at runtime from the save, so a reload mid-run keeps it.
   const discovered = input.player.discoveredExoplanetTargets ?? {}
   const hasRuntimeMission = !!input.missionId && (RUNTIME_MISSION_IDS.has(input.missionId)
-    || Object.keys(discovered).some(id => input.missionId === `exo-survey-${id}`))
+    || Object.keys(discovered).some(id => input.missionId === `exo-survey-${id}`)
+    // SSL-773: a survey probe launch is built at runtime per body.
+    || !!probeTargetForMission(input.missionId))
   const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
   const hasRuntimeTarget = !!input.targetId && (RUNTIME_TARGET_IDS.has(input.targetId) || input.targetId in discovered)
   // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
@@ -710,6 +716,17 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.doneSteps = remoteState.doneSteps ?? {}
   }
 
+  merged.player.legacyProgressImported = !!(current.player.legacyProgressImported || remoteState.player?.legacyProgressImported)
+  const legacyBodies = { ...current.player.legacyDiscoveredBodies }
+  for (const [id, body] of Object.entries(remoteState.player?.legacyDiscoveredBodies ?? {})) {
+    legacyBodies[id] = { ...body, rover: body.rover || !!legacyBodies[id]?.rover }
+  }
+  merged.player.legacyDiscoveredBodies = legacyBodies
+  merged.player.seen_planets = [...new Set([...(current.player.seen_planets ?? []), ...(remoteState.player?.seen_planets ?? [])])]
+  merged.player.roverDeployments = [...new Map([
+    ...(remoteState.player?.roverDeployments ?? []), ...(current.player.roverDeployments ?? []),
+  ].map(rover => [JSON.stringify([rover.roverId, rover.targetId, rover.clientId, rover.timestamp]), rover])).values()]
+
   // This map is monotonic and is written by the local classification flow.
   // Apply the union after the missionsDone branch so a stale remote player
   // cannot erase a target before runtimeCatalog builds its survey mission.
@@ -737,6 +754,10 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.orionidsFragments = mergeFragments(current.player.orionidsFragments, remoteState.player?.orionidsFragments)
   merged.player.showerFragments = mergeShowerLedgers(current.player.showerFragments, remoteState.player?.showerFragments)
   merged.player.orionidsSkyEffect = current.player.orionidsSkyEffect ?? remoteState.player?.orionidsSkyEffect
+  merged.player.probeObservations = mergeProbeObservations(current.player.probeObservations, remoteState.player?.probeObservations)
+  merged.player.probes = mergeProbes(current.player.probes, remoteState.player?.probes)
+  merged.player.clientSales = mergeClientSales(current.player.clientSales, remoteState.player?.clientSales)
+  merged.player.showerChains = mergeShowerChains(current.player.showerChains, remoteState.player?.showerChains)
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null
   merged.player.orionidsNightCatches = mergeNightCatches(current.player.orionidsNightCatches, remoteState.player?.orionidsNightCatches)

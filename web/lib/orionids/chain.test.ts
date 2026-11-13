@@ -5,6 +5,7 @@ import type { Player } from '@/lib/game-types'
 import type { RadioMeteorClassification } from '@/lib/radio-meteors'
 import { explorerSteps } from '@/lib/research/paths'
 import { completeRadioMission, ORIONIDS_CHAIN, orionidsResearchStep, showerItems } from './chain'
+import { chainRecordings, chainResearchStep, chainStage, completeChainRadio, completeChainRun, LEONIDS_CHAIN, liveShowerChain, mergeShowerChains, receiverEventId } from './chain'
 
 const IN_EVENT = Date.parse('2026-10-29T12:00:00Z')
 const AFTER_EVENT = Date.parse('2026-11-20T12:00:00Z')
@@ -56,5 +57,44 @@ describe('Orionids chain (SSL-714)', () => {
     expect(step(0).title).toBe('Orionids: catch and contribute fragments')
     expect(step(3).title).toBe('Orionids: fragments delivered')
     expect(step(3).kind).toBe('event')
+  })
+})
+
+describe('Leonids chain (SSL-831)', () => {
+  const run = Date.parse('2026-11-17T10:00:00Z')
+  type ChainP = Pick<Player, 'badges' | 'showerChains' | 'radioMeteorClassifications'>
+  const fresh = (): ChainP => ({ badges: {} })
+  const rec = (id: string, submittedAt: number) => ({ [id]: { subjectId: id, workflowId: '33017', imageUrl: '', filename: '', imageWidth: 1, imageHeight: 1, boxes: [], submittedAt } })
+
+  it('the run finishes mission 1 without a badge, and opens LEO-1', () => {
+    const p = completeChainRun(fresh(), LEONIDS_CHAIN, run)
+    expect(chainStage(p, LEONIDS_CHAIN.eventId)).toBe(1)
+    expect(p.badges?.['leonids-2026']).toBeUndefined()
+    expect(receiverEventId(p)).toBe('leonids-2026')
+    expect(chainResearchStep(p, LEONIDS_CHAIN).title).toContain('LEO')
+  })
+
+  it('counts only recordings checked after the run, then grades the badge on the third', () => {
+    let p: ChainP = completeChainRun(fresh(), LEONIDS_CHAIN, run)
+    p = { ...p, radioMeteorClassifications: { ...rec('ori-a', Date.parse('2026-10-29T00:00:00Z')), ...rec('a', run + 1), ...rec('b', run + 2) } }
+    expect(chainRecordings(p, LEONIDS_CHAIN)).toBe(2)
+    expect(completeChainRadio(p, LEONIDS_CHAIN, run + 3).completed).toBe(false)
+    p = { ...p, radioMeteorClassifications: { ...p.radioMeteorClassifications, ...rec('c', run + 3) } }
+    const done = completeChainRadio(p, LEONIDS_CHAIN, run + 3)
+    expect(done.completed).toBe(true)
+    expect(chainStage(done.player, LEONIDS_CHAIN.eventId)).toBe(2)
+    expect(done.player.badges?.['leonids-2026']?.tier).toBe('gold')
+  })
+
+  it('grades silver after the window closes', () => {
+    const late = Date.parse('2026-12-02T00:00:00Z')
+    const p = { ...completeChainRun(fresh(), LEONIDS_CHAIN, late), radioMeteorClassifications: { ...rec('a', late), ...rec('b', late), ...rec('c', late) } }
+    expect(completeChainRadio(p, LEONIDS_CHAIN, late).player.badges?.['leonids-2026']?.tier).toBe('silver')
+  })
+
+  it('is live on its real dates and merges saves upwards', () => {
+    expect(liveShowerChain(Date.parse('2026-11-11T12:00:00Z'))?.eventId).toBe('leonids-2026')
+    expect(liveShowerChain(Date.parse('2026-12-01T00:00:00Z'))).toBeUndefined()
+    expect(mergeShowerChains({ 'leonids-2026': { stage: 1, at: 5 } }, { 'leonids-2026': { stage: 2, at: 9 } })).toEqual({ 'leonids-2026': { stage: 2, at: 9 } })
   })
 })

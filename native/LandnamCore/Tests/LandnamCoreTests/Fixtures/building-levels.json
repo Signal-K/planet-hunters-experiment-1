@@ -11,6 +11,18 @@
     "refinery": [
       8000000,
       16000000
+    ],
+    "hangar": [
+      6000000,
+      12000000
+    ],
+    "market": [
+      4000000,
+      8000000
+    ],
+    "control-station": [
+      3000000,
+      6000000
     ]
   },
   "effects": {
@@ -28,6 +40,21 @@
       "Standard refining time",
       "Refining takes 25% less time",
       "Refining takes 50% less time"
+    ],
+    "hangar": [
+      "Rockets at list price",
+      "Gantry crane: rockets cost 10% less",
+      "Beacon tower and solar: rockets cost 20% less"
+    ],
+    "market": [
+      "Exchange prices",
+      "Second price board: sales pay 3% more",
+      "Trading floor: sales pay 6% more"
+    ],
+    "control-station": [
+      "New probes map a sector every 2 h",
+      "Second dish: new probes map a sector every 1.5 h",
+      "Relay mast: new probes map a sector every hour"
     ]
   },
   "save": {

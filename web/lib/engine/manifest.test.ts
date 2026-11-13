@@ -117,7 +117,7 @@ describe('production hub, terrain and actor sprites', () => {
   })
 
   it('registers the flat Earth Base facility sprites', () => {
-    for (const name of ['base_launchpad_flat', 'base_surface_silo_flat', 'base_hangar_flat']) {
+    for (const name of ['base_launchpad_flat', 'base_surface_silo_flat', 'base_hangar_flat', 'base_v7_structures_agency']) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }
   })

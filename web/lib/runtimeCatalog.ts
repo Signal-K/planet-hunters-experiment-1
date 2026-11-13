@@ -1,9 +1,13 @@
+import { downloadedSurvey, probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
+import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
+import { MINERAL_META } from '@/lib/data/minerals'
 import type { Catalog } from './catalog'
 import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
 import { orionidsRunAvailable } from './orionids/access'
+import { specialMissions } from './orionids/special-missions'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun, showerRunMission } from './data/missions'
 import { SHOWERS, ORIONIDS_SHOWER_ID, showerForRunMission } from './data/showers'
 import { DEBRIS_PRESETS, isDebrisEventActive } from './data/sky-events'
@@ -226,6 +230,32 @@ export function buildRuntimeCatalog({
         payout: { francs: 0, affinity: 0 },
       }]
     : []
+  // SSL-773: survey probes, from the control station like the satellites. The nearest bodies without a probe are
+  // offered; a probe already in flight keeps its mission so the run can finish.
+  const probeFlightTarget = probeTargetForMission(missionId)
+  const probeTargets = [
+    ...(freeOperations && hasControlStation ? probeOffers(mergedTargets, player ?? {}) : []),
+    ...(probeFlightTarget ? mergedTargets.filter(target => target.id === probeFlightTarget) : []),
+  ]
+  const probeMissions: Mission[] = [...new Map(probeTargets.map(target => [target.id, target])).values()]
+    .map(target => probeMission(target, missionsDone + 1))
+    .filter(mission => !existingMissionIds.has(mission.id))
+  // What each probe's downloaded survey opens: a free targeted run to the body and client contracts for its deposits.
+  // A contract already flown is not offered again; the one in flight stays so the run can finish.
+  const flown = new Set((player?.completedMissions ?? []).map(record => record.id).filter(id => id !== missionId))
+  const probeFollowUps: Mission[] = freeOperations
+    ? Object.entries(player?.probes ?? {}).flatMap(([id, record]) => {
+        const target = mergedTargets.find(item => item.id === id)
+        if (!target) return []
+        const survey = downloadedSurvey(target, record, mineral => MINERAL_META[mineral]?.rarity)
+        const run = probeRunMission(target, survey)
+        return [...(run ? [run] : []), ...probeContracts(target, survey, flown)]
+      }).filter(mission => !existingMissionIds.has(mission.id))
+    : []
+  // SSL-657: a finished shower's special missions, by badge tier, voucher and Meteorite Mastery.
+  const showerSpecials: Mission[] = freeOperations
+    ? specialMissions(mergedTargets, player ?? {}, flown).filter(mission => !existingMissionIds.has(mission.id))
+    : []
   const surveyMissions: Mission[] = discoveredTargetList
     .map(target => ({
       id: `exo-survey-${target.id}`,
@@ -287,6 +317,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
   }
 }

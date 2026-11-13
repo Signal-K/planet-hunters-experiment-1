@@ -19,21 +19,21 @@ const pending = `${out}.${process.pid}.tmp`
 // campaign state; use `node scripts/scene.mjs <id>` for an authored scene.
 const SCREENS = [
   ['economyarrival', 'ui-economy-arrival'], ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
-  ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
-  ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
+  ['agency', 'hub-first-run'], ['hub-first-run', 'hub-first-run'], ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
+  ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
   ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],
-  ['leonids', 'ui-community-research-leonids'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['geminids', 'ui-community-research-geminids'],
-  ['build', 'ui-build'], ['intro', 'm1-intro'],
+  ['site', 'ui-community-research-site'], ['event-before', 'ui-community-research-event-before'], ['leonids', 'ui-community-research-leonids'], ['event-after', 'ui-community-research-event-after'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['leonids-events', 'ui-leonids-events'], ['clients-surplus', 'ui-clients-surplus'], ['specials-gold', 'ui-events-specials-gold'], ['specials-silver', 'ui-events-specials-silver'], ['leonids-debrief', 'ui-leonids-shower-debrief'], ['leo1', 'ui-radio-meteors-leo1'], ['geminids', 'ui-community-research-geminids'],
+  ['build', 'ui-build'], ['intro', 'm1-intro'], ['buildings-l2', 'hub-buildings-l2'], ['buildings-l3', 'hub-buildings-l3'],
 ]
 
 const ROUTE_PRESETS = {
   hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
-  'instrument-hub': 'ui-instrument-hub', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
+  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
   targets: 'ui-target-picker', build: 'ui-build', intro: 'm1-intro',
 }
 

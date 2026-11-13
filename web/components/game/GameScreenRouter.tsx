@@ -41,6 +41,7 @@ const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScr
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
 const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
 const loadRadioMeteorScreen = () => import('@/components/game/screens/RadioMeteorScreen')
+const loadProbeScanScreen = () => import('@/components/game/screens/ProbeScanScreen')
 const loadSaturnStormSearchScreen = () => import('@/components/game/screens/SaturnStormSearchScreen')
 const loadAsteroidDiscoveryScreen = () => import('@/components/game/screens/AsteroidDiscoveryScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
@@ -53,7 +54,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
   loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
-  loadRadioMeteorScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
+  loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
 ]
 
@@ -66,13 +67,15 @@ const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
 const RadioMeteorScreen = dynamic(loadRadioMeteorScreen, { loading: ScreenLoading })
+const ProbeWatchScreen = dynamic(() => import('@/components/game/screens/ProbeWatchScreen'), { loading: ScreenLoading })
+const ProbeScanScreen = dynamic(loadProbeScanScreen, { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
 const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -94,6 +97,7 @@ import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
+import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -420,7 +424,7 @@ function ScreenBody({
             // Completing the sky reading should reveal the event brief first.
             // Accepting the focused event is the explicit step that starts
             // mission setup and lets the player choose a ship.
-            requestMissionBoardEvent('orionids-2026')
+            requestMissionBoardEvent(liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
             game.goToMissions()
           }}
           onFocusResources={(label, minerals) => {
@@ -536,8 +540,26 @@ function ScreenBody({
       return (
         <RadioMeteorScreen
           player={game.player}
+          eventId={receiverEventId(game.player)}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
+        />
+      )
+
+    case 'probe-watch':
+      return <ProbeWatchScreen player={game.player} onBack={() => game.goBack()} onSave={observation => game.setPlayer(player => ({ ...player, probeObservations: { ...player.probeObservations, [observation.id]: observation } }))} />
+
+    case 'probe-scan':
+      // SSL-773: the survey probes' readings, in the data hub.
+      return (
+        <ProbeScanScreen
+          player={game.player}
+          targets={game.catalog.targets}
+          onBack={() => game.goBack()}
+          onCollect={game.collectProbeData}
+          onHub={() => game.go('hub')}
+          onPlanRun={(targetId, runId) => { requestMissionBoardSite('free', targetId, runId); game.goToMissions() }}
+          onViewContracts={targetId => { requestMissionBoardSite('contracts', targetId); game.goToMissions() }}
         />
       )
 
@@ -716,8 +738,13 @@ function ScreenBody({
           }}
           onGo={kind => {
             // SSL-714: from mission 3 on, the Orionids step happens on ORI-1, not the mission board.
-            if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
-            if (kind === 'event') requestMissionBoardEvent('orionids-2026')
+            // SSL-831: during the Leonids the step opens the run, or LEO-1 once the run is home.
+            const chain = liveShowerChain(Date.now())
+            if (kind === 'event' && chain && chainNextScreen(game.player, chain) === 'radio-meteors') return game.go('radio-meteors')
+            if (kind === 'event' && chain) requestMissionBoardEvent(chain.eventId)
+            else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
+            else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
+            else if (kind === 'probe-observation') return game.go('probe-scan')
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')

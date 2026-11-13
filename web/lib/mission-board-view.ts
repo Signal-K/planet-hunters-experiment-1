@@ -20,6 +20,9 @@ import {
 } from '@/lib/data/sky-events'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from '@/lib/orionids/finds'
+import { chainInstrument, chainRecordings, chainStage, getShowerChain, type TwoStepChain } from '@/lib/orionids/chain'
+import { showerPreset } from '@/lib/data/showers'
+import { probeTargetForMission } from '@/lib/probes/survey-probe'
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
@@ -49,6 +52,8 @@ export interface SkyBoardCard {
   blurb: string
   actionLabel: string
   rewardLabel: string
+  /** SSL-831: a chained shower's missions, in order, so the card says which one is next. */
+  steps?: Array<{ label: string; state: 'done' | 'next' | 'todo' }>
 }
 
 export interface SpacetoberStep {
@@ -140,6 +145,19 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
       kind: 'instrument',
     }
   })
+
+  // SSL-773: survey probes to the nearest bodies without one, after the telescopes.
+  for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
+    steps.push({
+      id: mission.id,
+      title: mission.title,
+      detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
+      lockLine: free ? null : (mission.unlockAt ?? 'Reach Free Operations'),
+      state: free ? 'available' : 'locked',
+      kind: 'instrument',
+    })
+  }
 
   const mining = missionById(catalog, SELF_DIRECTED_MINING_MISSION_ID)
   steps.push({
@@ -240,6 +258,34 @@ export function spacetoberStrip(
   }
 }
 
+function peakLabel(eventId: string): string {
+  const peak = showerPreset(eventId)?.peakUtc
+  if (!peak) return 'on now'
+  return `peak on ${new Date(peak).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`
+}
+
+/** SSL-831: a chained shower's card names the next mission and starts it. */
+function chainCard(chain: TwoStepChain, name: string, status: SkyBoardStatus, earnedTier: SkyBoardCard['earnedTier'], player: Pick<Player, 'showerChains' | 'radioMeteorClassifications'>): SkyBoardCard {
+  const stage = chainStage(player, chain.eventId)
+  const callsign = chainInstrument(chain).callsign
+  const checked = Math.min(chain.radioTarget, chainRecordings(player, chain))
+  const state = (i: number): 'done' | 'next' | 'todo' => (i < stage ? 'done' : i === stage ? 'next' : 'todo')
+  return {
+    id: chain.eventId,
+    name,
+    status,
+    countdownLabel: null,
+    earnedTier,
+    blurb: `${name} ${peakLabel(chain.eventId)}. Fly through the stream, then help confirm it by radio.`,
+    actionLabel: stage === 0 ? (status === 'ended' ? 'SHOWER ENDED' : 'FLY THE SHOWER RUN') : `LISTEN ON ${callsign}`,
+    rewardLabel: earnedTier ? eventRewardLabel(status, earnedTier) : status === 'ended' ? 'REPLAY REWARD · SILVER BADGE' : 'TWO MISSIONS · GOLD BADGE',
+    steps: [
+      { label: 'Shower run · catch 20 fragments', state: state(0) },
+      { label: stage === 1 ? `${callsign} · ${checked} of ${chain.radioTarget} recordings checked` : `${callsign} · check ${chain.radioTarget} recordings`, state: state(1) },
+    ],
+  }
+}
+
 /** Orionids hero plus the World Space Week cards. Orionids is not a WSW event. */
 export function eventsBoard(
   now: number,
@@ -250,6 +296,8 @@ export function eventsBoard(
   orionidsEventStage = 0,
   /** False once the Orionids have ended and this player cannot replay them: the card points to the research archive. */
   orionidsReplayOpen = true,
+  /** SSL-831: where the player is in each chained shower (Leonids). */
+  chainPlayer: Pick<Player, 'showerChains' | 'radioMeteorClassifications'> = {},
 ): EventsBoard {
   const orionids = getSkyEvent('orionids-2026')
   const start = orionidsLocalStartMs()
@@ -299,6 +347,8 @@ export function eventsBoard(
     const eventStatus = skyStatus(eventStart, eventEnd, now)
     const tier = badges?.[id]?.tier
     const earnedTier = tier === 'gold' || tier === 'silver' ? tier : null
+    const chain = getShowerChain(id)
+    if (chain && eventStatus !== 'upcoming') return chainCard(chain, event?.name ?? id, eventStatus, earnedTier, chainPlayer)
     return {
       id,
       name: event?.name ?? id,

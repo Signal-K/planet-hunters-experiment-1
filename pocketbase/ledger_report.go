@@ -42,11 +42,13 @@ const (
 )
 
 // The stamp kinds Landnam already uses, trader kinds included. Mirrors
-// STAMP_KINDS in web/lib/research/stamps.ts. research.go counts only the first
-// four and review toward the community bar; the ledger takes all of them.
+// STAMP_KINDS in web/lib/research/stamps.ts. research.go counts the first
+// four, review and probe-observation toward the community bar; the ledger takes all of them.
 var ledgerStampKinds = map[string]bool{
 	"classification": true, "survey": true, "discovery-mission": true, "event": true,
 	"exchange-sale": true, "contract-run": true, "price-alert": true, "gift": true, "review": true,
+	// SSL-773: a logged survey-probe scan. platform_contributions.kind is free text, so no migration.
+	"probe-observation": true,
 }
 
 type ledgerRow struct {

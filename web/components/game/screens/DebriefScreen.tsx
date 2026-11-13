@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { SITE_RULES, missionSiteCredit } from '@/lib/community/site'
 import { showerForRunMission } from '@/lib/data/showers'
+import { PROBE_SECTOR_HOURS } from '@/lib/probes/survey-probe'
 import { calibrateOnboardingPayout, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
@@ -21,7 +23,7 @@ import type { HomeSettlement } from '@/lib/game-types'
 import type { DebriefExit, DebriefExitId } from '@/lib/debrief-exits'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
-import { chainInstrument, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
+import { chainInstrument, getShowerChain, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
 export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
   mission: Mission
@@ -55,6 +57,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   /** SSL-818: the other places this run can end. The primary button still returns to the default. */
   exits?: DebriefExit[]
 }) {
+  // SSL-758: what this run adds to the shared Community Site (the player keeps the haul).
+  const siteCredit = missionSiteCredit(mission, cargo)
   const settled = homeSettlement ?? null
   // A haul settled on the delivery sheet has no store/sell choice left to make here.
   const isFreeHaul = !settled && isFreeHaulMission(mission, cargo)
@@ -64,9 +68,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const shownRun = shownRunRef.current
   const isOrionidsRun = mission.id === ORIONIDS_NIGHT_RUN_ID
   // SSL-714: each Orionids mission hands over the story item that lets the next one start.
-  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID ? 1 : 0
-  const storyItem = storyStep ? ORIONIDS_CHAIN.items[storyStep - 1] : null
-  const instrument = chainInstrument()
+  // SSL-831: a chained shower's run (Leonids) hands over its own fragment sample and launches its receiver.
+  const runShower = showerForRunMission(mission.id)
+  const runChain = getShowerChain(runShower?.id)
+  const showerName = runShower?.name ?? 'Orionids'
+  const storyStep = mission.id === ORIONIDS_NIGHT_RUN_ID || runChain ? 1 : 0
+  const storyItem = storyStep ? (runChain ?? ORIONIDS_CHAIN).items[storyStep - 1] : null
+  const instrument = chainInstrument(runChain ?? ORIONIDS_CHAIN)
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
@@ -155,7 +163,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <h2 className="debrief-result-panel__title">{mission.title}</h2>
             <p className="debrief-result-panel__kicker">Program Outcome</p>
             <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
-            <p className="debrief-result-panel__note">{mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at {target.name}.</p>
+            <p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
+              ? `The probe stays in orbit at ${target.name} and does not come home. It maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and its finds land in your data hub.`
+              : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p>
           </section>
         ) : (
           <section className={styles.card} aria-label="Mission result" data-surface="cream">
@@ -169,7 +179,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
         {storyItem && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-story-item" data-item={storyItem.id}>
-            <p className={styles.kicker}>Orionids · fragments delivered</p>
+            <p className={styles.kicker}>{showerName} · fragments delivered</p>
             <div className={styles.storyItem}>
               <span className={styles.storyIcon} aria-hidden="true">{storyStep === 1
                 ? <svg viewBox="0 0 24 24"><path d="M12 3 5 9l2 9h10l2-9Z" /><path d="m9 11 3-2 3 2-1 4h-4Z" /></svg>
@@ -193,19 +203,30 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </svg>
               <div>
                 <strong>{instrument.callsign} is up</strong>
-                <p className={styles.note}>Launched by everyone flying the Orionids. It listens on 49.97 MHz for the echoes your shower run lit up.</p>
+                <p className={styles.note}>Launched by everyone flying the {showerName}. It listens on 49.97 MHz for the echoes your shower run lit up.</p>
               </div>
             </div>
           </section>
         )}
         {shownRun && (
           <section className={styles.card} data-surface="cream" data-testid="debrief-shower-run">
-            <p className={styles.kicker}>Orionids shower run</p>
+            <p className={styles.kicker}>{showerName} shower run</p>
             <PayRow testId="debrief-shower-payout" label="Run payout" value={shownRun.francs} />
             <div className={styles.row} data-testid="debrief-shower-fragments">
               <span>Fragments kept</span>
               <span>{shownRun.fragments}</span>
             </div>
+          </section>
+        )}
+
+        {siteCredit && !shipDestroyed && (
+          <section className={styles.card} data-surface="cream" data-testid="debrief-community-site">
+            <p className={styles.kicker}>Community Site</p>
+            <div className={styles.row}>
+              <span>{SITE_RULES.components.find(c => c.id === siteCredit.component)?.label} · {SITE_RULES.components.find(c => c.id === siteCredit.component)?.feed.toLowerCase()}</span>
+              <span>+{siteCredit.units}</span>
+            </div>
+            <p className={styles.note}>+{siteCredit.units} to the Community Site. You keep everything; this only records your share.</p>
           </section>
         )}
 
@@ -224,7 +245,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           <p className={styles.note} data-testid="mission-next-handoff">
             {storyItem
               ? storyItem.unlocks
-              : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
+              : mission.payload?.instrumentId === 'survey-probe'
+                ? 'Probe released. It starts mapping the surface now; check the data hub to see the deposits it finds.'
+                : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
           </p>
         </section>
 

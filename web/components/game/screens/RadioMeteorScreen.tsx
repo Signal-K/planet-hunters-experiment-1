@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { getSkyEvent } from '@/lib/data/sky-events'
-import { ORIONIDS_CHAIN, showerItems } from '@/lib/orionids/chain'
+import { chainItems, chainRecordings, chainStage, getShowerChain, ORIONIDS_CHAIN, showerItems } from '@/lib/orionids/chain'
 import type { Player } from '@/lib/game-types'
 import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
@@ -53,7 +53,7 @@ function clock(recordedAt: string | null, seconds: number): string {
 }
 
 /** A physical rotary control: drag (any direction), scroll, or arrow keys turn it through 270°. */
-function Dial({ label, readout, value, min, max, step, disabled, testId, onChange }: {
+export function Dial({ label, readout, value, min, max, step, disabled, testId, onChange }: {
   label: string
   readout: string
   value: number
@@ -122,13 +122,21 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const instrument = event?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
   const BRIEFING = briefingLines(instrument.callsign, event?.name ?? 'shower')
   // SSL-714: Orionids mission 3 is checking recordings here; the chain finishes on this screen.
-  const stage = player.orionidsEventStage ?? 0
+  // SSL-831: on LEO-1 it is Leonids mission 2, counted from the moment the shower run came home.
+  const chain = getShowerChain(eventId)
+  const stage = chain ? chainStage(player, eventId) : player.orionidsEventStage ?? 0
   const [enteredStage] = useState(stage)
-  const onMission = stage === 2
-  const justCompleted = enteredStage === 2 && stage === 3
-  const badgeTier = player.badges?.[ORIONIDS_CHAIN.eventId]?.tier ?? null
+  const missionStage = chain ? 1 : 2
+  const onMission = stage === missionStage
+  const justCompleted = enteredStage === missionStage && stage === missionStage + 1
+  const badgeTier = player.badges?.[eventId]?.tier ?? null
   const done = player.radioMeteorClassifications ?? {}
   const total = Object.keys(done).length
+  const target = chain?.radioTarget ?? ORIONIDS_CHAIN.radioTarget
+  const missionChecked = chain ? chainRecordings(player, chain) : total
+  const items = chain?.items ?? ORIONIDS_CHAIN.items
+  const held = chain ? chainItems(player, chain).length : showerItems(ORIONIDS_CHAIN, stage).length
+  const eventName = event?.name ?? 'shower'
   const [queue, setQueue] = useState<RadioMeteorSubject[]>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -244,7 +252,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
 
   const station = subject?.station ?? 'BRAMS'
   const line = justCompleted && (last?.kind === 'logged' || last?.kind === 'quiet')
-    ? `That’s ${ORIONIDS_CHAIN.radioTarget} recordings confirmed. The Orionids record is complete. Thank you. ${instrument.callsign} keeps listening if you want to stay on.`
+    ? `That’s ${target} recordings confirmed. The ${eventName} record is complete. Thank you. ${instrument.callsign} keeps listening if you want to stay on.`
     : briefing != null ? BRIEFING[briefing]
     : loading ? 'Tuning in. Pulling the next recording off the Belgian network.'
     : failed ? 'I can’t reach the archive from here. Check your connection and come back.'
@@ -255,7 +263,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     : last?.kind === 'deleted' ? (boxes.length ? `Box removed. ${boxes.length} left on this one.` : 'Box removed. Back to a clean sheet.')
     : last?.kind === 'logged' ? `Logged ${last.echoes} echo${last.echoes === 1 ? '' : 'es'} from ${last.at}. Next recording, from ${station}.`
     : last?.kind === 'quiet' ? `Quiet sweep from ${last.at}, logged. That counts too. Here’s the next one, from ${station}.`
-    : onMission ? `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Check ${ORIONIDS_CHAIN.radioTarget - Math.min(total, ORIONIDS_CHAIN.radioTarget)} more to confirm the shower. Box every meteor, or tell me it’s quiet.`
+    : onMission ? `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Check ${target - Math.min(missionChecked, target)} more to confirm the ${eventName}. Box every meteor, or tell me it’s quiet.`
     : `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Box every meteor, or tell me it’s quiet.`
 
   // The view: zoom scales both axes about the beacon line; pan moves along time.
@@ -368,15 +376,15 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             </div>
             {(onMission || justCompleted) && (
               <div className={styles.mission} data-testid="radio-mission" data-complete={justCompleted || undefined}>
-                <span>{justCompleted ? 'Orionids · complete' : 'Orionids · listening'}</span>
+                <span>{justCompleted ? `${eventName} · complete` : chain ? `${eventName} · 2 of 2` : `${eventName} · listening`}</span>
                 <ol>
-                  {ORIONIDS_CHAIN.items.map((item, i) => (
-                    <li key={item.id} data-held={i < showerItems(ORIONIDS_CHAIN, stage).length || undefined}>{item.name}</li>
+                  {items.map((item, i) => (
+                    <li key={item.id} data-held={i < held || undefined}>{item.name}</li>
                   ))}
                 </ol>
                 {justCompleted
                   ? <b data-testid="radio-mission-badge">{badgeTier ? `${badgeTier.toUpperCase()} BADGE EARNED` : 'RECORD COMPLETE'}</b>
-                  : <b data-testid="radio-mission-progress">{Math.min(total, ORIONIDS_CHAIN.radioTarget)} / {ORIONIDS_CHAIN.radioTarget} CONFIRMED</b>}
+                  : <b data-testid="radio-mission-progress">{Math.min(missionChecked, target)} / {target} CONFIRMED</b>}
               </div>
             )}
             <div className={styles.tally}>

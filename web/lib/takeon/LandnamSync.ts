@@ -1,3 +1,4 @@
+import { encodeCoreSnapshot, decodeCoreSnapshot } from './snapshot'
 import {
   LocalSync,
   type Anomaly,
@@ -254,6 +255,7 @@ export class LandnamSync implements SyncAdapter {
 
       return {
         schemaVersion: numberField(world, 'schema_version') || undefined,
+        coreSnapshot: decodeCoreSnapshot(world.snapshot),
         id,
         bodyId: textField(world, 'body_id'),
         seed: numberField(world, 'seed'),
@@ -297,6 +299,7 @@ export class LandnamSync implements SyncAdapter {
         anomalies: state.anomalies,
         photos: state.photos,
         weather: state.weather ?? null,
+        snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
       }
       const existing = await worlds.getFirstListItem(filter).catch(() => null)
       if (existing) await worlds.update(textField(existing, 'id'), data)
@@ -329,6 +332,7 @@ export class LandnamSync implements SyncAdapter {
       anomalies: state.anomalies,
       photos: state.photos,
       weather: state.weather ?? null,
+        snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
     })
     for (const structure of state.structures) {
       void queueUpsert(

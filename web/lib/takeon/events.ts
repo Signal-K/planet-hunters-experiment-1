@@ -8,6 +8,7 @@ import type {
 import type { ScheduledPush } from './push'
 
 export type TakeonHostEvent =
+  | { type: 'meteorImpact'; payload: GameEvents['meteorImpact'] }
   | { type: 'mined'; payload: { resource: ResourceKey | null; amount: number } }
   | { type: 'scan'; payload: { found: Anomaly[] } }
   | { type: 'built'; payload: { structure: Structure } }
@@ -51,6 +52,7 @@ export function bindTakeonHostEvents(
   onEvent: (event: TakeonHostEvent) => void
 ): () => void {
   const cleanups = [
+    events.on('meteorImpact', payload => onEvent({ type: 'meteorImpact', payload })),
     events.on('mined', ({ resource, amount }) => {
       onEvent({ type: 'mined', payload: { resource, amount } })
     }),

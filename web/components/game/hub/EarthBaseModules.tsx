@@ -194,7 +194,7 @@ export function EarthBaseModules({ buildings, parts, padRocket = false, arrangem
         // Kit structures stand on their home site on the strip (shared site map); others keep the plot percentage.
         const authoredSite = kit ? homeSite(building.kind, arrangement) : null
         const site = authoredSite ? displaySite(authoredSite) : null
-        const sprite = kit ? structureSprite(building.landmark ? 'agency' : building.kind) : null
+        const sprite = kit ? structureSprite(building.landmark ? 'agency' : building.kind, building.landmark ? 1 : building.level ?? 1) : null
         const left = site && sprite ? units(site.x + spriteCenterOffset(sprite)) : `${structureCenterPercent(building.kind, building.plotX, widthPct)}%`
         return (
           <span

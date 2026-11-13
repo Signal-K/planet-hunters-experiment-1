@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
-import { liveEventWeek } from '@/lib/research/event-week'
+import { countdown, eventPanel, liveEventWeek, type EventPanel } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
@@ -10,10 +10,13 @@ import type { Player } from '@/lib/game-types'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
 import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
+import { useSite } from '@/lib/community/useSite'
+import { SITE_RULES, type SiteView } from '@/lib/community/site'
 import CommunityConsensus, { type PendingConsensusReview } from './CommunityConsensus'
 import type { ConsensusQueueItem } from '@/lib/community/consensus'
 import { getShower } from '@/lib/data/showers'
-import { ORIONIDS_CHAIN, chainInstrument, orionidsResearchStep, radioChecked, showerItems } from '@/lib/orionids/chain'
+import { getSkyEvent } from '@/lib/data/sky-events'
+import { ORIONIDS_CHAIN, chainInstrument, chainItems, chainRecordings, chainResearchStep, chainStage, getShowerChain, SHOWER_CHAINS, orionidsResearchStep, radioChecked, showerItems, type TwoStepChain } from '@/lib/orionids/chain'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
@@ -71,6 +74,104 @@ function OrionidsRecord({ player, recordedOn }: { player: Player; recordedOn: st
   )
 }
 
+/** SSL-831: a chained shower (Leonids) in the research history: its two story items and what its receiver has heard. */
+function ChainRecord({ player, chain }: { player: Player; chain: TwoStepChain }) {
+  const stage = chainStage(player, chain.eventId)
+  if (!stage) return null
+  const name = getShower(chain.eventId)?.name ?? 'Shower'
+  const held = chainItems(player, chain).length
+  const recordings = chainRecordings(player, chain)
+  return (
+    <section className={styles.record} data-testid="community-research-history" data-event={chain.eventId} aria-label={`${name} record`}>
+      <b>{stage >= 2 ? `${name} record complete` : `${name} · mission ${stage + 1} of 2`}</b>
+      <ol>{chain.items.map((item, i) => <li key={item.id} data-held={i < held || undefined}>{item.name}</li>)}</ol>
+      {stage === 1 && <em>{chainInstrument(chain).callsign} · {Math.min(recordings, chain.radioTarget)} of {chain.radioTarget} recordings checked</em>}
+    </section>
+  )
+}
+
+/**
+ * SSL-758: the Community Site: one shared construction bar, the stage reached, each part and what fills it, and
+ * the player's own share. A late joiner sees the same bar; nothing is ever deducted from the player.
+ */
+function CommunitySite({ site, archived }: { site: SiteView; archived: SiteView | null }) {
+  return (
+    <section className={styles.site} data-testid="community-site" aria-label={site.name}>
+      <div className={styles.barLabel}><span>{site.name}</span><span data-testid="community-site-stage">{site.stage} · {Math.round(site.fill * 100)}%</span></div>
+      <div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(site.fill * 100)} aria-label="Community Site construction"><div className={styles.siteFill} style={{ width: `${site.fill * 100}%` }} /></div>
+      <ul className={styles.siteParts}>
+        {site.components.map(part => {
+          const meta = SITE_RULES.components.find(c => c.id === part.id)
+          return <li key={part.id} data-full={part.total >= part.target || undefined}>
+            <b>{meta?.label}</b><small>{meta?.feed}</small>
+            <span>{Math.min(part.total, part.target)} / {part.target}</span>
+          </li>
+        })}
+      </ul>
+      <p className={styles.siteMine} data-testid="community-site-mine">{site.mineTotal > 0 ? `Your share: ${site.mineTotal}. You keep everything you mine and earn.` : 'Finish missions to add your share. You keep everything you mine and earn.'}</p>
+      {archived && <p className={styles.siteArchived} data-testid="community-site-archived">Last month: {archived.name} reached {archived.stage} ({Math.round(archived.fill * 100)}%).</p>}
+    </section>
+  )
+}
+
+/** SSL-775: past events stay in the record: every chained shower the player joined, then the Orionids. */
+function EventRecords({ player, recordedOn }: { player: Player; recordedOn: string | null }) {
+  return <>
+    {SHOWER_CHAINS.map(chain => <ChainRecord key={chain.eventId} player={player} chain={chain} />)}
+    <OrionidsRecord player={player} recordedOn={recordedOn} />
+  </>
+}
+
+const shortDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+
+/**
+ * SSL-775: the flagship event, first thing on Community research. Before the window it previews what is coming and
+ * when; during it, a countdown to the peak, what to do next, the player's part and the badge tiers; for a week after
+ * it, the record and the next shower.
+ */
+function EventPanelCard({ panel, now, player, step }: { panel: EventPanel; now: number; player: Player; step?: { title: string; brief: string } }) {
+  const chain = getShowerChain(`${panel.id}-2026`)
+  const missions = chain ? 2 : 1
+  const stamps = player.researchStamps ?? {}
+  const eventDays = Object.entries(stamps).filter(([day, kinds]) => kinds.includes('event') && day >= stampDayKey(panel.startAt) && day < stampDayKey(panel.endAt)).length
+  const done = Math.min(missions, chain ? chainStage(player, chain.eventId) : eventDays)
+  const peak = panel.peakAt - now
+  // The gold window is the badge rule (sky-events.ts), which can be narrower than the sky calendar's shower.
+  const badgeEvent = getSkyEvent(`${panel.id}-2026`)
+  const goldFrom = badgeEvent ? Date.parse(badgeEvent.startUtc) : panel.startAt
+  const goldTo = badgeEvent ? Date.parse(badgeEvent.endUtc) : panel.endAt
+  const earned = player.badges?.[`${panel.id}-2026`]?.tier
+  const peakTime = new Date(panel.peakAt).toISOString().slice(11, 16)
+  const status = panel.phase === 'live' ? `Live · ends in ${countdown(panel.endAt - now)}`
+    : panel.phase === 'upcoming' ? `Starts in ${countdown(panel.startAt - now)} · ${shortDate(panel.startAt)}`
+      : `Ended ${shortDate(panel.endAt - 1)}`
+  const peakLine = panel.phase === 'ended' ? (panel.next ? `Next: ${panel.next.name} in ${panel.next.startsInDays} day${panel.next.startsInDays === 1 ? '' : 's'}` : null)
+    : peak > 0 ? `Peak in ${countdown(peak)} · ${shortDate(panel.peakAt)} ${peakTime} UTC` : 'Past the peak · still falling'
+  const what = panel.phase === 'live' ? (step?.title ?? `Fly the ${panel.name} shower run`)
+    : panel.phase === 'upcoming' ? `Fly the shower run${chain ? `, then confirm it on ${chainInstrument(chain).callsign}` : ''}. Every player fills the same bar.`
+      : done >= missions ? 'Your record is complete.' : 'Replay it from the Events board for silver.'
+  return (
+    <section className={styles.event} data-phase={panel.phase} data-testid="community-research-event" aria-label={`${panel.name} event`}>
+      <div className={styles.eventHead}>
+        <span className={styles.eventStatus}><i aria-hidden="true" />{status}</span>
+        <h3>{panel.name}</h3>
+      </div>
+      {peakLine && <p className={styles.eventPeak} data-testid="community-research-event-peak">{peakLine}</p>}
+      <p className={styles.eventWhat}>{what}</p>
+      <div className={styles.eventBar} role="progressbar" aria-valuemin={0} aria-valuemax={missions} aria-valuenow={done} aria-label="Your part in the event">
+        {Array.from({ length: missions }, (_, i) => <i key={i} data-done={i < done || undefined} />)}
+        <span>{done} of {missions} mission{missions === 1 ? '' : 's'}</span>
+      </div>
+      <div className={styles.eventTiers}>
+        {earned ? <span data-tier={earned} data-active data-testid="community-research-event-badge">{earned} badge earned</span> : <>
+          <span data-tier="gold" data-active={(now >= goldFrom && now < goldTo) || undefined}>Gold · {shortDate(goldFrom)} to {shortDate(goldTo - 1)}</span>
+          <span data-tier="silver" data-active={now >= goldTo || undefined}>Silver after</span>
+        </>}
+      </div>
+    </section>
+  )
+}
+
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
   'Finish its steps in any order. Missing a day costs nothing.',
@@ -90,6 +191,7 @@ function contributionTimes(player: Player): number[] {
 export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
+  const panel = eventPanel(now)
   const path = pathThisWeek(player.researchPath, now)
   const week = weekKey(now)
   const [selectedPath, setSelectedPath] = useState<ResearchPathId>('explorer')
@@ -98,18 +200,25 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   // SSL-714: during the Orionids the event step is the player's next mission in the three-mission chain.
   // SSL-774: any declared shower words its own step; only the Orionids has a saved stage so far.
   const showerId = event ? `${event.id}-2026` : undefined
-  const eventStep = showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
+  // SSL-773: a survey probe in orbit adds a probe-reading step.
+  const hasProbe = Object.keys(player.probes ?? {}).length > 0
+  // SSL-831: a shower with its own mission chain (Leonids) names the player's next mission in it.
+  const chain = getShowerChain(showerId)
+  const eventStep = chain ? chainResearchStep(player, chain)
+    : showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
   const steps = (path ?? selectedPath) === 'trader'
-    ? traderSteps({ eventName: event?.name ?? null, eventStep })
-    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep })
+    ? traderSteps({ eventName: event?.name ?? null, eventStep, hasProbe })
+    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep, hasProbe })
   const stamps = player.researchStamps ?? {}
-  const progress = steps.map(st => stepProgress(st, stamps, week, now))
+  // SSL-831: a chained shower's step counts its missions (1/2 after the run, done after LEO-1), not the day's stamp.
+  const progress = steps.map(st => chain && st.id === 'event' ? { have: chainStage(player, chain.eventId), need: 2 } : stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
   const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
   const consensus = useConsensus(true)
+  const { site, archived } = useSite(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
   const days = weekDays(now)
@@ -119,6 +228,8 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
   const bar = communityBar(ownThisMonth, communityResearch)
   const monthHistory = researchMonthHistory(stamps, now, 6, historicalContributionMonths(stamps, contributionTimes(player), now))
   const finished = progress.filter(p => p.have >= p.need).length
+  // The reward shelf reads its steps by id: the event and probe steps move the others around.
+  const doneById = (...ids: string[]) => steps.some((st, i) => ids.includes(st.id) && progress[i].have >= progress[i].need)
   const eventHistory = Object.entries(stamps)
     .filter(([, kinds]) => kinds.includes('event'))
     .sort(([a], [b]) => b.localeCompare(a))
@@ -148,6 +259,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
+                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -165,9 +277,10 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
                 </ol>
                 <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
+                {site && <CommunitySite site={site} archived={archived} />}
                 <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
               </section>
               {confirmingPath && (
                 <ActionConfirmBar
@@ -183,6 +296,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
           ) : (
             <>
               <section className={styles.left}>
+                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
                 <div className={styles.pathHeader}>
                   <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
                   <span>{finished}/{steps.length} complete</span>
@@ -201,7 +315,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
               <section className={styles.right}>
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
                   <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
-                  <button type="button" role="tab" aria-selected={readout === 'rewards'} onClick={() => setReadout('rewards')}>Rewards</button>
+                  <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
                   <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
                 {readout === 'mission' ? <>
@@ -221,15 +335,16 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
-                    <div className={styles.rewardCard} data-earned={progress[1]?.have >= progress[1]?.need}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={progress[3]?.have >= progress[3]?.need}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={progress[4]?.have >= progress[4]?.need}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
                   <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  {site && <CommunitySite site={site} archived={archived} />}
                   <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
-                  <OrionidsRecord player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                  <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}
               </section>
             </>
