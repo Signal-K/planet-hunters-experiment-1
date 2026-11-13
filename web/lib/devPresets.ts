@@ -1078,8 +1078,9 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-mission-log':
       return {
         screen: 'mission-history',
-        // SSL-751: real entries, so the log's thumbnails and debrief rows can be checked.
-        player: { ...POST_ONBOARDING_PLAYER, completedMissions: [
+        // SSL-751/781: modern entries alongside imported discoveries.
+        player: { ...POST_ONBOARDING_PLAYER, legacyProgressImported: true,
+          legacyDiscoveredBodies: { 'legacy-anomaly-42': { anomalyId: 42, rover: true }, 'legacy-anomaly-81': { anomalyId: 81, rover: false } }, completedMissions: [
           { id: FIRST_MISSION.id, title: FIRST_MISSION.title, targetId: 'eros', targetName: '433 Eros', clientName: 'Helios Propulsion Depot', completedAt: Date.UTC(2026, 9, 30), runId: 'log-fixture-1', kind: 'client' },
           { id: 'dcp-log-fixture', title: 'Palladium starter contract', targetId: 'bennu', targetName: '101955 Bennu', clientName: 'Helios-Propulsion-Depot', completedAt: Date.UTC(2026, 10, 1), runId: 'log-fixture-2', kind: 'client' },
         ] },

@@ -78,6 +78,16 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
           <p className={styles.stat}><span className={styles.count}>{ownRuns}</span><strong>OWN RUNS</strong></p>
           <p className={styles.stat}><span className={styles.count}>{transits}</span><strong>TRANSITS</strong></p>
         </div>
+        {Object.keys(player?.legacyDiscoveredBodies ?? {}).length > 0 && (
+          <div className={styles.empty}>
+            <div className={styles.emptyKicker}>Star Sailors discoveries</div>
+            {Object.entries(player?.legacyDiscoveredBodies ?? {}).map(([id, body]) => (
+              <p key={id} className={styles.emptyMessage}>
+                Body #{body.anomalyId} · Discovered{body.rover ? ' · Rover on site' : ''}
+              </p>
+            ))}
+          </div>
+        )}
         {ordered.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyKicker}>Archive status</div>

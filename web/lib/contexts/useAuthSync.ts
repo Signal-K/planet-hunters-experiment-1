@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
+import { importLegacyProgress, readLegacyProgress } from '@/lib/legacy-progress'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import {
@@ -142,6 +143,20 @@ export function useAuthSync({
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
+  // One attempt after hydration. Failed reads leave no receipt and retry next
+  // sign-in, without polling. Stage fixtures never read the old collections.
+  useEffect(() => {
+    if (!hydrated || isPreview || resetting || !authUserId || !backendReady || state.player.legacyProgressImported) return
+    let active = true
+    readLegacyProgress(pbShared, authUserId).then(data => {
+      if (!active || pbShared.authStore.record?.id !== authUserId) return
+      setState(current => importLegacyProgress(current, data))
+    }).catch(() => {
+      if (active) captureGameEvent('legacy_import_failed', { retry: 'next_sign_in' })
+    })
+    return () => { active = false }
+  }, [authUserId, backendReady, hydrated, isPreview, resetting, setState])
+
   // The gate must not decide that a returning user is anonymous until the
   // persisted PocketBase auth store has had a chance to restore. Keeping this
   // as an explicit phase prevents the sign-in sheet flashing/reopening during

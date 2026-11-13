@@ -307,6 +307,9 @@ export interface Player {
   transitStartedAt?: number | null
   /** Launch time of the active run. Event badges are graded at this time as well as at completion. */
   missionStartedAt?: number | null
+  /** SSL-781: receipt synced with the imported ledger credits. */
+  legacyProgressImported?: boolean
+  legacyDiscoveredBodies?: Record<string, import('./legacy-progress').LegacyBody>
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string

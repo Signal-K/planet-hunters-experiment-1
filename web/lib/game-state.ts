@@ -715,6 +715,17 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.doneSteps = remoteState.doneSteps ?? {}
   }
 
+  merged.player.legacyProgressImported = !!(current.player.legacyProgressImported || remoteState.player?.legacyProgressImported)
+  const legacyBodies = { ...current.player.legacyDiscoveredBodies }
+  for (const [id, body] of Object.entries(remoteState.player?.legacyDiscoveredBodies ?? {})) {
+    legacyBodies[id] = { ...body, rover: body.rover || !!legacyBodies[id]?.rover }
+  }
+  merged.player.legacyDiscoveredBodies = legacyBodies
+  merged.player.seen_planets = [...new Set([...(current.player.seen_planets ?? []), ...(remoteState.player?.seen_planets ?? [])])]
+  merged.player.roverDeployments = [...new Map([
+    ...(remoteState.player?.roverDeployments ?? []), ...(current.player.roverDeployments ?? []),
+  ].map(rover => [JSON.stringify([rover.roverId, rover.targetId, rover.clientId, rover.timestamp]), rover])).values()]
+
   // This map is monotonic and is written by the local classification flow.
   // Apply the union after the missionsDone branch so a stale remote player
   // cannot erase a target before runtimeCatalog builds its survey mission.
