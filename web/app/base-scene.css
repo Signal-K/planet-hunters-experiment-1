@@ -255,3 +255,7 @@
   .scene-location-actions .scene-dock-word svg { display: block; }
   .scene-location-actions .scene-dock-word span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 }
+
+/* SSL-834: while the player builds on the Base, every piece of HUD is gone, the status chips drawn outside the hub included. */
+body[data-hub-building] .backend-status,
+body[data-hub-building] .sync-chip { display: none; }

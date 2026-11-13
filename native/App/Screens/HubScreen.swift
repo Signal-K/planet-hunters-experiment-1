@@ -98,12 +98,15 @@ struct HubScreen: View {
             )
             if store.screen != .hubSubsurface { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
-            topLeftHud(insets: insets, portrait: portrait)
-            topRightHud(insets: insets)
+            // SSL-834: Build hides every piece of HUD, the dock included; Done in the picker leaves Build.
+            if !placing {
+                topLeftHud(insets: insets, portrait: portrait)
+                topRightHud(insets: insets)
+            }
             if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
             else if siloOpen && !placing && store.screen != .hubSubsurface { siloPanel(insets: insets) }
             else if placing { picker(width: size.width, insets: insets) }
-            BaseDock(tile: layout.tile, zones: zones.dock,
+            if !placing { BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
@@ -116,7 +119,7 @@ struct HubScreen: View {
                      compact: false)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
@@ -192,12 +195,19 @@ struct HubScreen: View {
                     ScrollView(.horizontal, showsIndicators: false) { chips }
                 }
             }
+            Button("DONE") { placing = false; placeNote = nil; upgrading = nil; picked = nil }
+                .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudPanel)
+                .frame(minWidth: 120, minHeight: 44).padding(.horizontal, 18)
+                .background(Capsule().fill(Theme.hudInk))
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("hub-build-done-btn")
         }
         .padding(.bottom, aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
-    private func aboveDock(_ insets: EdgeInsets) -> CGFloat { insets.bottom + max(zones.dock.bottomInset, 14) + dockHeight + 12 }
+    /// Build hides the dock (SSL-834), so its panels sit on the bottom edge instead of above it.
+    private func aboveDock(_ insets: EdgeInsets) -> CGFloat { insets.bottom + max(zones.dock.bottomInset, 14) + (placing ? 0 : dockHeight + 12) }
 
     /// In Build mode a finished upgradable building opens its upgrade bar instead of its screen.
     private func offerUpgrade(_ kind: String) -> Bool {
@@ -244,7 +254,7 @@ struct HubScreen: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
         .padding(.horizontal, 16)
-        .padding(.top, insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
+        .padding(.top, placing ? max(insets.top, 12) : insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
         .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
