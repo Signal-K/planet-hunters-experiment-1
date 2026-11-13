@@ -1,0 +1,39 @@
+#:schema ../schema/scene.schema.json
+format = 1
+id = "probe-watch"
+type = "field"
+name = "Field camera"
+summary = "A fixed lunar probe watches meteor impacts. Aim the camera, confirm a buffered sighting, then read the count and closest impact after a one-minute watch."
+tickets = ["SSL-772"]
+qa = ["probe-watch"]
+
+[runtime]
+surface = "canvas"
+web = ["web/components/game/screens/ProbeWatchScreen.tsx"]
+native = []
+
+[preview]
+route = "probe-watch"
+state = "ui-probe-watch"
+
+[[objects]]
+id = "probe-field"
+kind = "world"
+layout = "host"
+mechanics = ["sky-events"]
+note = "Takeon lunar terrain and meteorImpact events; fixed wheel-free camera spec, no driving. Body meteor-shower rate follows the real shower window and distance from its peak. The fixture uses the Leonids peak."
+
+[[objects]]
+id = "field-camera"
+kind = "instrument"
+parent = "probe-field"
+layout = "host"
+mechanics = ["sky-events"]
+note = "30-degree pan controls; 120-degree field of view. Only impacts covered when they arrive enter the eight-second confirmation buffer. Each confirmation saves one idempotent observation on the player."
+
+[[objects]]
+id = "watch-readout"
+kind = "panel"
+layout = "host"
+mechanics = ["sky-events"]
+note = "One minute or Finish watch opens results: this watch's count and closest sighting, plus saved lifetime count and best. Watch again or return to the Control Station. Campaign saves use the existing offline player outbox. The account-free fixture has a separate observation-only local slot and survives reload."

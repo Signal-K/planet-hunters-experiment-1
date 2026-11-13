@@ -160,7 +160,7 @@ const map = {
     routesWithoutSceneType: webRoutes.filter(route => !mappedRoutes.has(route)),
     unknownSlots: Object.values(sceneTypes.sceneTypes).flatMap(value => value.slots).filter(slot => !allSlots.has(slot)),
     qaWithoutWebPreset: qa.scenes.filter(scene => !scene.web).map(scene => scene.id),
-    qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native).map(scene => scene.id),
+    qaWithoutNativeScene: qa.scenes.filter(scene => !scene.native && !scene.nativeDeferred).map(scene => scene.id),
     scenesWithoutObjects: authoredSceneScripts.filter(scene => scene.objects === 0).map(scene => scene.id),
     routesWithoutNativeCase: webRoutes.filter(route => !nativeScreens.some(screen => screen.route === route)),
     scenesWithoutMechanics: authoredSceneScripts.filter(scene => scene.mechanics.length === 0).map(scene => scene.id),

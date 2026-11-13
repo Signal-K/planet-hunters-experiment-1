@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 27,
+    "webRoutes": 28,
     "nativeScreenCases": 24,
-    "qaScenes": 76,
+    "qaScenes": 85,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 27,
-    "authoringSources": 62,
-    "authoredObjectNodes": 153,
-    "authoredGameObjects": 77,
-    "authoredUiElements": 76,
+    "authoredSceneScripts": 28,
+    "authoringSources": 64,
+    "authoredObjectNodes": 156,
+    "authoredGameObjects": 79,
+    "authoredUiElements": 77,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 27,
-    "compiledObjectNodes": 153,
+    "compiledScenes": 28,
+    "compiledObjectNodes": 156,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 148,
-    "webGameComponents": 115,
+    "hostLayoutObjects": 151,
+    "webGameComponents": 116,
     "nativeAppComponents": 57
   },
   "scenes": {
@@ -111,6 +111,10 @@
       {
         "route": "probe-scan",
         "type": "exchange-lab"
+      },
+      {
+        "route": "probe-watch",
+        "type": "field"
       },
       {
         "route": "radio-meteors",
@@ -856,14 +860,75 @@
         "tickets": []
       },
       {
+        "id": "community-research-site",
+        "name": "Community research: Community Site",
+        "flow": "events",
+        "web": "ui-community-research-site",
+        "tickets": [
+          "SSL-758"
+        ],
+        "native": "community-research-phone"
+      },
+      {
+        "id": "community-research-event-before",
+        "name": "Community research: before a shower",
+        "flow": "events",
+        "web": "ui-community-research-event-before",
+        "tickets": [
+          "SSL-775"
+        ],
+        "native": "community-research-phone"
+      },
+      {
         "id": "community-research-leonids",
         "name": "Community research: Leonids",
         "flow": "events",
         "web": "ui-community-research-leonids",
         "tickets": [
-          "SSL-774"
+          "SSL-774",
+          "SSL-775"
         ],
         "native": "community-research-phone"
+      },
+      {
+        "id": "community-research-event-after",
+        "name": "Community research: after a shower",
+        "flow": "events",
+        "web": "ui-community-research-event-after",
+        "tickets": [
+          "SSL-775"
+        ],
+        "native": "community-research-phone"
+      },
+      {
+        "id": "clients-surplus",
+        "name": "Clients: sell surplus",
+        "flow": "core-loop",
+        "web": "ui-clients-surplus",
+        "tickets": [
+          "SSL-734"
+        ],
+        "native": "mission-board-live"
+      },
+      {
+        "id": "events-specials-gold",
+        "name": "Events: special missions, gold",
+        "flow": "events",
+        "web": "ui-events-specials-gold",
+        "tickets": [
+          "SSL-657"
+        ],
+        "native": "mission-board-live"
+      },
+      {
+        "id": "events-specials-silver",
+        "name": "Events: special missions, silver",
+        "flow": "events",
+        "web": "ui-events-specials-silver",
+        "tickets": [
+          "SSL-657"
+        ],
+        "native": "mission-board-live"
       },
       {
         "id": "leonids-events",
@@ -964,6 +1029,38 @@
           "SSL-774"
         ],
         "native": "community-research-phone"
+      },
+      {
+        "id": "hub-buildings-l2",
+        "name": "Base: buildings at level 2",
+        "flow": "core-loop",
+        "web": "hub-buildings-l2",
+        "tickets": [
+          "SSL-792"
+        ],
+        "native": "hub-structures-phone"
+      },
+      {
+        "id": "hub-buildings-l3",
+        "name": "Base: buildings at level 3",
+        "flow": "core-loop",
+        "web": "hub-buildings-l3",
+        "tickets": [
+          "SSL-792"
+        ],
+        "native": "hub-structures-phone"
+      },
+      {
+        "id": "probe-watch",
+        "name": "Field probe: watch the shower",
+        "flow": "field",
+        "web": "ui-probe-watch",
+        "tickets": [
+          "SSL-772"
+        ],
+        "objective": "Aim the fixed lunar camera and confirm impacts in its field of view.",
+        "complete": "Finish the one-minute watch; results show count and best sighting. Reload keeps confirmed sightings in the isolated fixture save.",
+        "nativeDeferred": "iOS deferred until requested: notes/decisions/Sky events follow the real sky (2026-11-11).md"
       }
     ],
     "authored": [
@@ -1442,6 +1539,23 @@
         "native": []
       },
       {
+        "id": "probe-watch",
+        "path": "shared/authoring/scenes/probe-watch.toml",
+        "objects": 3,
+        "gameObjects": 2,
+        "uiElements": 1,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 3,
+        "mechanics": [
+          "sky-events"
+        ],
+        "web": [
+          "web/components/game/screens/ProbeWatchScreen.tsx"
+        ],
+        "native": []
+      },
+      {
         "id": "radio-meteors",
         "path": "shared/authoring/scenes/radio-meteors.toml",
         "objects": 4,
@@ -1655,6 +1769,10 @@
         "objects": 2
       },
       {
+        "id": "probe-watch",
+        "objects": 3
+      },
+      {
         "id": "radio-meteors",
         "objects": 4
       },
@@ -1737,6 +1855,7 @@
       "name": "Contracts, Free Ops and mission lifecycle",
       "web": [
         "web/lib/systems/MissionRunLifecycle.ts",
+        "web/lib/systems/RunRecovery.ts",
         "web/lib/data/mission-generator.ts",
         "web/lib/data/daily-client-missions.ts"
       ],
@@ -2064,6 +2183,7 @@
         "hub",
         "launchpad",
         "mining",
+        "probe-watch",
         "radio-meteors"
       ]
     }
@@ -2105,7 +2225,8 @@
         "name": "Work",
         "routes": [
           "mining",
-          "surface-ops"
+          "surface-ops",
+          "probe-watch"
         ],
         "policy": "Perform mining, survey or field work with the appropriate engine adapter."
       },
@@ -2225,6 +2346,7 @@
       "web/components/game/screens/MissionHistoryScreen.tsx",
       "web/components/game/screens/NarrativeLedgerScreen.tsx",
       "web/components/game/screens/ProbeScanScreen.tsx",
+      "web/components/game/screens/ProbeWatchScreen.tsx",
       "web/components/game/screens/RadioMeteorScreen.tsx",
       "web/components/game/screens/RefineryScreen.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
@@ -2332,6 +2454,7 @@
       "shared/authoring/fixtures/missions.toml",
       "shared/authoring/fixtures/narrative-ledger.toml",
       "shared/authoring/fixtures/probe-scan.toml",
+      "shared/authoring/fixtures/probe-watch.toml",
       "shared/authoring/fixtures/radio-meteors.toml",
       "shared/authoring/fixtures/refinery.toml",
       "shared/authoring/fixtures/rocket-buy.toml",
@@ -2364,6 +2487,7 @@
       "shared/authoring/scenes/missions.toml",
       "shared/authoring/scenes/narrative-ledger.toml",
       "shared/authoring/scenes/probe-scan.toml",
+      "shared/authoring/scenes/probe-watch.toml",
       "shared/authoring/scenes/radio-meteors.toml",
       "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
@@ -2389,15 +2513,14 @@
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
       "probe-scan",
+      "probe-watch",
       "radio-meteors",
       "refinery",
       "sky-pointing"
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
-    "unownedDomainFiles": [
-      "web/lib/systems/RunRecovery.ts"
-    ],
+    "unownedDomainFiles": [],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
       "build",
@@ -2418,6 +2541,7 @@
       "missions",
       "narrative-ledger",
       "probe-scan",
+      "probe-watch",
       "radio-meteors",
       "refinery",
       "rocket-buy",

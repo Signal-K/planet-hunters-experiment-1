@@ -108,6 +108,7 @@ export type Screen =
   | 'saturn-storm-search'
   | 'radio-meteors'
   | 'probe-scan'
+  | 'probe-watch'
   | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
@@ -133,6 +134,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'landing',
   'mining',
   'delivery',
+  'probe-watch',
   'refinery',
   'hangar',
   'tess-discovery',
@@ -371,6 +373,8 @@ export interface Player {
   orionidsEventStage?: 0 | 1 | 2 | 3
   /** Ledger `caught` count when the shower run was accepted. The run's order counts catches past it (SSL-651). */
   orionidsRunBaseline?: number | null
+  /** SSL-772: confirmed field-camera impacts, merged by observation id. */
+  probeObservations?: Record<string, import('@/lib/probes/field-probe').ProbeObservation>
   /** SSL-773: survey probes left in orbit, keyed by body id, with the surface readings logged from each. */
   probes?: Record<string, import('@/lib/probes/survey-probe').ProbeRecord>
   /** SSL-831: where the player is in each later shower's mission chain (Leonids), keyed by shower id. `at` is when that stage was reached. */

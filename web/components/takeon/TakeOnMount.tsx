@@ -9,6 +9,8 @@ import {
   useState,
 } from 'react'
 import type {
+  ActiveWeather,
+  BodyDef,
   MissionState,
   ResourceKey,
   RoverGame,
@@ -22,6 +24,7 @@ import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { assistedClimb, type DrivableWorld } from '@/lib/takeon/drivable'
+import { installFieldProbeGlyph } from '@/lib/takeon/fieldProbeGlyph'
 import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
   bindTakeonHostEvents,
@@ -129,6 +132,8 @@ export interface TakeOnMountProps {
   lifeStage?: LifeStage
   /** Read-only visit: pointer input is disabled and no save is written. */
   readOnly?: boolean
+  /** Declarative field conditions for an observation visit; never mutates the body catalog. */
+  fieldWeather?: { rates: BodyDef['weather']; initial: ActiveWeather | null }
   /**
    * View the field opens in. Landnam defaults to the flat top-down map
    * (SSL-316 decision, 2026-09-19): screen up/down/left/right map straight
@@ -256,6 +261,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   target,
   lifeStage = 'dormant',
   readOnly = false,
+  fieldWeather,
   startView = 'flat',
   onEvent,
   onRouteChange,
@@ -445,11 +451,14 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // palette must exist before a saved mission referencing them resumes.
         registerLandnamSandbox(engine)
         installLandnamStructureGlyphs(engine)
+        if (rover?.id === 'field-probe') installFieldProbeGlyph(engine)
         const currentTarget = targetRef.current
-        const body = currentTarget
+        const catalogBody = currentTarget
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
+        const body = catalogBody ? engine.cloneBody(catalogBody) : undefined
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
+        if (fieldWeather) body.weather = { ...fieldWeather.rates }
         // Terrain colour from what the body is made of and its likely conditions (terrainColour.ts).
         const look = currentTarget ? terrainLookForTarget(currentTarget) : DEFAULT_TERRAIN_LOOK
         applyTerrainLook(engine as unknown as Parameters<typeof applyTerrainLook>[0], look)
@@ -484,7 +493,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           pixi: PIXI as unknown as import('@takeon/pixi').PixiNamespaceLike,
           stage: app.stage as unknown as import('@takeon/pixi').PixiContainerLike,
           ticker: app.ticker as unknown as import('@takeon/pixi').PixiTickerLike,
-          view: app.canvas,
+          view: readOnly ? undefined : app.canvas,
           // Keep the engine and Controls in CSS-pixel coordinates. The Pixi
           // backing buffer may be larger on a retina display.
           width: viewport.width,
@@ -602,6 +611,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           void save().catch(reportError)
         }
 
+        if (fieldWeather) mounted.game.sim.weather = fieldWeather.initial ? { ...fieldWeather.initial } : null
         const initialState = snapshot()
         callbacksRef.current.onRouteChange?.(mounted.game.plannedRoute().length)
         if (initialState) callbacksRef.current.onReady?.(initialState)
@@ -640,6 +650,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     lifeStage,
     missionId,
     readOnly,
+    fieldWeather,
     rover,
     roverName,
     seed,

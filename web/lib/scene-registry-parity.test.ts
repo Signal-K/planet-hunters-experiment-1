@@ -4,11 +4,11 @@ import { join } from 'node:path'
 import { DEV_GROUPS, SANDBOX_FIXTURES } from './devPresets'
 import { readdirSync } from 'node:fs'
 
-// qa/scenes.json is the one launch registry. Every row must resolve on both builds,
-// so web and iOS can never silently drift apart.
+// qa/scenes.json is the launch registry. Native fixtures must resolve unless a
+// row explicitly records the decision deferring its native implementation.
 const root = join(process.cwd(), '..')
 const registry = JSON.parse(readFileSync(join(root, 'qa/scenes.json'), 'utf8')).scenes as {
-  id: string; web?: string; native?: string
+  id: string; web?: string; native?: string; nativeDeferred?: string
 }[]
 const swift = ['SceneCatalog.swift', 'SceneCatalog+BaseWorld.swift']
   .map(f => readFileSync(join(root, 'native/App', f), 'utf8')).join('\n')
@@ -21,7 +21,7 @@ describe('scene registry parity', () => {
     expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([])
   })
   it('every iOS fixture exists in SceneCatalog', () => {
-    expect(registry.filter(s => !s.native || !nativeIds.has(s.native)).map(s => `${s.id} -> ${s.native}`)).toEqual([])
+    expect(registry.filter(s => !s.nativeDeferred && (!s.native || !nativeIds.has(s.native))).map(s => `${s.id} -> ${s.native}`)).toEqual([])
   })
   it('every web fixture exists as a dev preset', () => {
     expect(registry.filter(s => !s.web || !webKeys.has(s.web)).map(s => `${s.id} -> ${s.web}`)).toEqual([])

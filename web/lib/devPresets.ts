@@ -184,6 +184,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research-leonids-leo1', label: 'Community research: Leonids LEO-1', hint: 'SSL-831: Explorer path in the Leonids week, run done, 1 of 3 LEO-1 recordings: the event step names LEO-1 and the history shows the fragment sample', stage: 'free-ops' },
       { key: 'ui-probe-launch', label: 'Survey probe: launch', hint: 'SSL-773: control station built, Free Ops. The Program tab offers survey probes to the two nearest bodies without one', stage: 'free-ops' },
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
+      { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
       { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
@@ -774,6 +775,9 @@ function fixture(name: string): Partial<GameState> | null {
       const hub = instrumentHubFixture()
       return { ...hub, player: { ...hub.player!, probes: probeFixture() } }
     }
+
+    case 'ui-probe-watch':
+      return { screen: 'probe-watch', player: { ...POST_ONBOARDING_PLAYER }, tutorial: false, targetId: null, missionId: null, popup: null }
 
     case 'ui-probe-scan':
       return {

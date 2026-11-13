@@ -803,6 +803,18 @@
     "SSL-792"
    ],
    "native": "hub-structures-phone"
+  },
+  {
+   "id": "probe-watch",
+   "name": "Field probe: watch the shower",
+   "flow": "field",
+   "web": "ui-probe-watch",
+   "tickets": [
+    "SSL-772"
+   ],
+   "objective": "Aim the fixed lunar camera and confirm impacts in its field of view.",
+   "complete": "Finish the one-minute watch; results show count and best sighting. Reload keeps confirmed sightings in the isolated fixture save.",
+   "nativeDeferred": "iOS deferred until requested: notes/decisions/Sky events follow the real sky (2026-11-11).md"
   }
  ],
  "missions": [

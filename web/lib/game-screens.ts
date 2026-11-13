@@ -28,6 +28,7 @@ const SCREEN_LIST = {
   'saturn-storm-search': true,
   'radio-meteors': true,
   'probe-scan': true,
+  'probe-watch': true,
   'instrument-hub': true,
   'mission-history': true,
   'narrative-ledger': true,

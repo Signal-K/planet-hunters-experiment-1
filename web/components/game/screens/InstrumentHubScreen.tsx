@@ -32,7 +32,7 @@ interface InstrumentHubScreenProps {
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
-  onOpenScreen: (screen: 'radio-meteors' | 'probe-scan' | 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search') => void
+  onOpenScreen: (screen: 'radio-meteors' | 'probe-scan' | 'probe-watch' | 'tess-discovery' | 'asteroid-discovery' | 'saturn-storm-search') => void
   /** Builds the ground telescope in place; false when it could not. */
   onBuildGroundTelescope: () => boolean
   onSnoozePing?: () => void
@@ -127,6 +127,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
               <button type="button" data-testid="control-station-back" aria-label="Back" onClick={onBack}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
               </button>
+              <button type="button" aria-label="Watch the meteor shower with the field probe" onClick={() => onOpenScreen('probe-watch')}>WATCH</button>
               {help.button}
             </nav>
           )}

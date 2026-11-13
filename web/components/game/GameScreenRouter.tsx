@@ -67,6 +67,7 @@ const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
 const RadioMeteorScreen = dynamic(loadRadioMeteorScreen, { loading: ScreenLoading })
+const ProbeWatchScreen = dynamic(() => import('@/components/game/screens/ProbeWatchScreen'), { loading: ScreenLoading })
 const ProbeScanScreen = dynamic(loadProbeScanScreen, { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
@@ -544,6 +545,9 @@ function ScreenBody({
           onSubmit={game.submitRadioMeteorClassification}
         />
       )
+
+    case 'probe-watch':
+      return <ProbeWatchScreen player={game.player} onBack={() => game.goBack()} onSave={observation => game.setPlayer(player => ({ ...player, probeObservations: { ...player.probeObservations, [observation.id]: observation } }))} />
 
     case 'probe-scan':
       // SSL-773: the survey probes' readings, in the data hub.

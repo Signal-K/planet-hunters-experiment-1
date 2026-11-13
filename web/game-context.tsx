@@ -35,6 +35,7 @@ import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-st
 import { canonicalGamePath, entryScreenForPath } from '@/lib/game-route'
 import { pushScreenPath, screenForPath } from '@/lib/offline/offlineNav'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { PROBE_FIXTURE_KEY, mergeProbeObservations } from '@/lib/probes/field-probe'
 import { captureOrionidsQueryFlag } from '@/lib/data/sky-events'
 import { lockBaseWorldPreview, sanitizeEarthBiome } from '@/lib/scene/base-world'
 
@@ -126,6 +127,9 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
         isPreview.current = true
         const art = params.get('baseArt')
         const biomeParam = params.get('biome')
+        if (preset.screen === 'probe-watch' && preset.player) {
+          try { preset.player = { ...preset.player, probeObservations: mergeProbeObservations(preset.player.probeObservations, JSON.parse(localStorage.getItem(PROBE_FIXTURE_KEY) ?? '{}')) } } catch { /* broken fixture save starts empty */ }
+        }
         const presetPlayer = preset.player
         const playerPatch = presetPlayer && (art || biomeParam) ? {
           player: {
@@ -235,6 +239,9 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   // Running this before the auth hook could observe a newly signed-in PocketBase
   // record while React still held the previous player's state (KES-324).
   useEffect(() => {
+    if (hydrated && isPreview.current && state.screen === 'probe-watch') {
+      try { localStorage.setItem(PROBE_FIXTURE_KEY, JSON.stringify(state.player.probeObservations ?? {})) } catch { /* unavailable fixture storage */ }
+    }
     if (!hydrated || isPreview.current) return
     if (skipNextLocalPersist.current) {
       skipNextLocalPersist.current = false

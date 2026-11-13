@@ -20,7 +20,7 @@ const pending = `${out}.${process.pid}.tmp`
 const SCREENS = [
   ['economyarrival', 'ui-economy-arrival'], ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
-  ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
+  ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
   ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
@@ -33,7 +33,7 @@ const SCREENS = [
 const ROUTE_PRESETS = {
   hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
-  'instrument-hub': 'ui-instrument-hub', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
+  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
   targets: 'ui-target-picker', build: 'ui-build', intro: 'm1-intro',
 }
 

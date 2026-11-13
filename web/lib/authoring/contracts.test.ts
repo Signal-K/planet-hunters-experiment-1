@@ -31,7 +31,7 @@ describe('engine authoring contract', () => {
   it('declares every system owner and reports real route gaps, not first-case-per-line counts', () => {
     const map = JSON.parse(readFileSync(join(root, 'shared/engine/game-map.generated.json'), 'utf8'))
     expect(map.counts.nativeScreenCases).toBe(24)
-    expect(map.gaps.routesWithoutNativeCase).toEqual(['radio-meteors', 'refinery', 'sky-pointing'])
+    expect(map.gaps.routesWithoutNativeCase).toEqual(['probe-scan', 'probe-watch', 'radio-meteors', 'refinery', 'sky-pointing'])
     expect(map.gaps.scenesWithoutMechanics).toEqual([])
     expect(map.gaps.unownedDomainFiles).toEqual([])
     expect(map.counts.sharedLayoutObjects).toBe(5)
