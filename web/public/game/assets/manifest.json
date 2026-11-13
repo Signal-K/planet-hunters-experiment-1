@@ -205,5 +205,13 @@
   "base_v7_world_snow_drift_1": "/game/assets/base/v7/world/snow-drift-1.png",
   "base_v7_world_saxaul": "/game/assets/base/v7/world/saxaul.png",
   "base_v7_world_dune_grass": "/game/assets/base/v7/world/dune-grass.png",
-  "base_v7_world_ice": "/game/assets/base/v7/world/ice.png"
+  "base_v7_world_ice": "/game/assets/base/v7/world/ice.png",
+  "base_v7_structures_launchpad_l2": "/game/assets/base/v7/structures/launchpad-l2.png",
+  "base_v7_structures_launchpad_l3": "/game/assets/base/v7/structures/launchpad-l3.png",
+  "base_v7_structures_hangar_l2": "/game/assets/base/v7/structures/hangar-l2.png",
+  "base_v7_structures_hangar_l3": "/game/assets/base/v7/structures/hangar-l3.png",
+  "base_v7_structures_exchange_l2": "/game/assets/base/v7/structures/exchange-l2.png",
+  "base_v7_structures_exchange_l3": "/game/assets/base/v7/structures/exchange-l3.png",
+  "base_v7_structures_control_station_l2": "/game/assets/base/v7/structures/control-station-l2.png",
+  "base_v7_structures_control_station_l3": "/game/assets/base/v7/structures/control-station-l3.png"
 }

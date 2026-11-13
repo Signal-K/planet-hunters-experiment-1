@@ -17,6 +17,7 @@ describe('first-run onboarding', () => {
     // with its screenshot/video instead of hanging or silently skipping it.
     let mined = false
     let settled = false
+    let vehiclePicked = false
     function advance(attempt = 0): Cypress.Chainable {
       if (attempt > 900) throw new Error('Onboarding did not settle within the operation budget')
       return cy.get('body').then($body => {
@@ -25,6 +26,16 @@ describe('first-run onboarding', () => {
           get('base-camera').should('be.visible')
           cy.screenshot('onboarding-settled')
           return
+        }
+        // Accepting an offer previews a rocket; staging the vehicle is a
+        // separate player action, required before Build rocket can run.
+        if (!vehiclePicked && enabled(testId('mission-launch-review')).length) {
+          const vehicle = enabled('[data-testid^="plan-vehicle-"][data-role="use"]')
+          if (vehicle.length) {
+            vehiclePicked = true
+            return cy.wrap(vehicle).click().then(() => cy.wait(500)).then(() => advance(attempt + 1))
+          }
+          return get('plan-vehicle').click().then(() => cy.wait(500)).then(() => advance(attempt + 1))
         }
         const reward = enabled(testId('collect-reward-btn'))
         if (reward.length) {

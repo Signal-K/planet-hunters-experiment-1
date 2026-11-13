@@ -550,7 +550,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const orbitalNetwork = !subsurface && <SkyCraft craft={skyCraftItems} onPoint={openPointing} />
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'clip', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
 
       {/* One continuous vertical world: surface above, soil and bedrock below.
           Subsurface moves this canvas down instead of replacing the Hub with
@@ -571,7 +571,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           data-testid="base-camera"
           data-zoom={camera.cam.zoom.toFixed(2)}
           {...camera.handlers}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden', touchAction: 'none' }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'clip', touchAction: 'none' }}
         >
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>

@@ -15,7 +15,7 @@
   right: 0;
   left: 0;
   height: 200%;
-  overflow: hidden;
+  overflow: clip;
   transform: translateY(0);
   transition: transform 720ms cubic-bezier(.2, .82, .22, 1);
   will-change: transform;
@@ -26,7 +26,7 @@
 }
 
 .surface {
-  overflow: hidden;
+  overflow: clip;
 }
 
 .subsurfaceWorld {
@@ -35,7 +35,7 @@
   right: 0;
   left: 0;
   height: 50%;
-  overflow: hidden;
+  overflow: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {

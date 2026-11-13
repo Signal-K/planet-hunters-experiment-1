@@ -236,6 +236,12 @@ export const SANDBOX_FIXTURES = ['sandbox-hub', 'sandbox-transit'] as const
  * points those scenes use: the shape a screen needs and nothing more.
  */
 export function resolvePreset(name: string): Partial<GameState> | null {
+  const preset = resolvePresetState(name)
+  // Clear transient campaign UI even when a fixture omits the popup field.
+  return preset ? { ...preset, popup: preset.popup ?? null } : null
+}
+
+function resolvePresetState(name: string): Partial<GameState> | null {
   if (isSandboxName(name)) return resolveSandbox(name, fixture)
   return fixture(name)
 }
@@ -972,6 +978,7 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-clients-surplus':
       return {
         screen: 'missions',
+        popup: null,
         player: {
           ...POST_ONBOARDING_PLAYER,
           clientMissions: { 'helios-propulsion-depot': 10, 'lumen-research': 1 },
@@ -984,6 +991,7 @@ function fixture(name: string): Partial<GameState> | null {
       const earned = Date.parse('2026-10-22T03:00:00Z')
       return {
         screen: 'missions',
+        popup: null,
         player: {
           ...POST_ONBOARDING_PLAYER,
           fireballSpotter: { readAt: 1, passedAt: 1 },
