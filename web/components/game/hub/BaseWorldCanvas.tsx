@@ -255,7 +255,8 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
     ctx.globalAlpha = reveal * e.alpha * (cloud ? grade.clouds * sky.weather.clouds : 1)
     if (cloud && overcast) ctx.filter = weather === 'storm' ? 'brightness(0.55)' : 'brightness(0.78)'
     if (e.def.sprite) drawSprite(ctx, e, sx, sy, px * z * e.scale)
-    else drawShape(ctx, e, sx, sy, px * z, world, groundY, t, w)
+    if (e.def.sprite && LAKE_PLAINS.has(e.def.sprite)) drawLake(ctx, e.def.sprite, sx, sy, px * z * e.scale, t)
+    else if (!e.def.sprite) drawShape(ctx, e, sx, sy, px * z, world, groundY, t, w)
     ctx.filter = 'none'
   }
   ctx.globalAlpha = 1
@@ -274,6 +275,55 @@ function draw(ctx: CanvasRenderingContext2D, world: World, sky: SkyState, p: Pro
     ctx.fillRect(0, 0, w, h)
     ctx.globalAlpha = 1
   }
+}
+
+/** SSL-834 (Liam, 13.11): the lake on the horizon is bigger and its water moves. Every plain image carries a thin
+ *  strip of water along its top rows (about 2% to 14% of its height); the lake is redrawn over it, reaching about twice
+ *  as far towards the base, with slow drifting glints. The ridges and dunes in front still overlap it. */
+const LAKE_PLAINS = new Set(['steppe-plain', 'plain-desert', 'plain-tundra', 'plain-coast'])
+const LAKE_TOP = 0.02
+const LAKE_BOTTOM = 0.3
+let lakeStill: boolean | null = null
+
+function drawLake(ctx: CanvasRenderingContext2D, sprite: string, sx: number, sy: number, k: number, t: number) {
+  const s = WORLD_SCENE.sprites[sprite as keyof typeof WORLD_SCENE.sprites]
+  if (!s) return
+  if (lakeStill === null) lakeStill = reducedMotion()
+  const time = lakeStill ? 0 : t
+  const left = sx + s.x0 * k
+  const width = s.w * k
+  const imageTop = sy - (s.v0 + s.h) * k
+  const top = imageTop + s.h * k * LAKE_TOP
+  const bottom = imageTop + s.h * k * LAKE_BOTTOM
+  const depth = bottom - top
+  const coast = sprite === 'plain-coast'
+  const water = ctx.createLinearGradient(0, top, 0, bottom)
+  water.addColorStop(0, coast ? '#8fb5cc' : '#b4c3cf')
+  water.addColorStop(0.45, coast ? '#7aa6c2' : '#a2b6c7')
+  water.addColorStop(1, coast ? '#6b98b6' : '#8ea7bb')
+  ctx.save()
+  ctx.fillStyle = water
+  ctx.fillRect(left, top, width, depth)
+  // Far shore: a soft dark line where the water meets the land behind it.
+  ctx.fillStyle = 'rgb(60 78 92 / 22%)'
+  ctx.fillRect(left, top, width, Math.max(1, k * 0.35))
+  // Ripples: thin light dashes in rows, each row drifting at its own pace and fading in and out.
+  const rows = 6
+  const dash = Math.max(6, 9 * k)
+  for (let r = 0; r < rows; r++) {
+    const y = top + depth * (0.16 + (r / rows) * 0.78)
+    const gap = dash * (3.2 + (r % 3))
+    const speed = (4 + r * 1.7) * k * (r % 2 ? -1 : 1)
+    const offset = ((time * speed) % gap + gap) % gap
+    const alpha = 0.18 + 0.14 * Math.sin(time * 0.9 + r * 1.3)
+    ctx.fillStyle = `rgb(240 247 252 / ${Math.max(0.05, alpha).toFixed(3)})`
+    const h = Math.max(1, k * (0.28 + r * 0.06))
+    for (let x = left - gap + offset + (r * dash) % gap; x < left + width; x += gap) ctx.fillRect(x, y, dash * (0.6 + 0.4 * ((r + 1) % 2)), h)
+  }
+  // Near shore: a pale lip of wet sand along the bottom edge.
+  ctx.fillStyle = 'rgb(236 228 210 / 55%)'
+  ctx.fillRect(left, bottom - Math.max(1, k * 0.4), width, Math.max(1, k * 0.4))
+  ctx.restore()
 }
 
 function drawApronContinuation(ctx: CanvasRenderingContext2D, groundY: number, w: number, h: number, px: number) {

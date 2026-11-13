@@ -140,6 +140,7 @@ struct BaseWorldCanvas: View {
             layer.opacity = reveal * e.alpha * (cloud ? grade.clouds * (runner.sky?.weather.clouds ?? 1) : 1)
             if let name = e.def.sprite, let s = world.scene.sprites[name] {
                 drawSprite(&layer, s, e, sx: sx, sy: sy, k: px * z * CGFloat(e.scale))
+                if Self.lakePlains.contains(name) { drawLake(&layer, s, coast: name == "plain-coast", sx: sx, sy: sy, k: px * z * CGFloat(e.scale), t: reduceMotion ? 0 : t) }
             } else {
                 drawShape(&layer, e, sx: sx, sy: sy, k: px * z, groundY: groundY, w: w, t: t)
             }
@@ -169,6 +170,38 @@ struct BaseWorldCanvas: View {
         c.translateBy(x: sx, y: sy)
         if e.heading != 0 { c.rotate(by: .radians(e.heading)) }
         c.draw(img.resizable(), in: rect)
+    }
+
+    /// SSL-834 (web `drawLake`): the horizon lake is bigger and its water moves. Each plain image carries a thin strip of
+    /// water along its top rows; it is redrawn over that strip reaching about twice as far, with slow drifting ripples.
+    static let lakePlains: Set<String> = ["steppe-plain", "plain-desert", "plain-tundra", "plain-coast"]
+
+    private func drawLake(_ g: inout GraphicsContext, _ s: WorldScene.SpriteDef, coast: Bool, sx: CGFloat, sy: CGFloat, k: CGFloat, t: Double) {
+        let left = sx + CGFloat(s.x0) * k, width = CGFloat(s.w) * k
+        let imageTop = sy - CGFloat(s.v0 + s.h) * k
+        let top = imageTop + CGFloat(s.h) * k * 0.02, bottom = imageTop + CGFloat(s.h) * k * 0.3
+        let depth = bottom - top
+        g.fill(Path(CGRect(x: left, y: top, width: width, height: depth)), with: .linearGradient(
+            Gradient(colors: coast ? [color("#8fb5cc"), color("#7aa6c2"), color("#6b98b6")] : [color("#b4c3cf"), color("#a2b6c7"), color("#8ea7bb")]),
+            startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: bottom)))
+        g.fill(Path(CGRect(x: left, y: top, width: width, height: max(1, k * 0.35))), with: .color(Color(red: 60 / 255, green: 78 / 255, blue: 92 / 255).opacity(0.22)))
+        let dash = max(6, 9 * k)
+        for r in 0..<6 {
+            let y = top + depth * (0.16 + CGFloat(r) / 6 * 0.78)
+            let gap = dash * (3.2 + CGFloat(r % 3))
+            let speed = (4 + CGFloat(r) * 1.7) * k * (r % 2 == 1 ? -1 : 1)
+            let raw = (CGFloat(t) * speed).truncatingRemainder(dividingBy: gap)
+            let offset = raw < 0 ? raw + gap : raw
+            let alpha = max(0.05, 0.18 + 0.14 * sin(t * 0.9 + Double(r) * 1.3))
+            let h = max(1, k * (0.28 + CGFloat(r) * 0.06))
+            let len = dash * (0.6 + 0.4 * CGFloat((r + 1) % 2))
+            var x = left - gap + offset + (CGFloat(r) * dash).truncatingRemainder(dividingBy: gap)
+            var ripples = Path()
+            while x < left + width { ripples.addRect(CGRect(x: x, y: y, width: len, height: h)); x += gap }
+            g.fill(ripples, with: .color(Color(red: 240 / 255, green: 247 / 255, blue: 252 / 255).opacity(alpha)))
+        }
+        let lip = max(1, k * 0.4)
+        g.fill(Path(CGRect(x: left, y: bottom - lip, width: width, height: lip)), with: .color(Color(red: 236 / 255, green: 228 / 255, blue: 210 / 255).opacity(0.55)))
     }
 
     private func drawShape(_ g: inout GraphicsContext, _ e: WorldEntity, sx: CGFloat, sy: CGFloat, k: CGFloat, groundY: CGFloat, w: CGFloat, t: Double) {
