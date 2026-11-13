@@ -7,7 +7,7 @@ public enum NativeRecords {
     static func q(_ v: String) -> String { v.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") }
 
     /// One Takeon world per user + target. `state` is the engine's render state JSON; `snapshot` is the engine's own
-    /// snapshot (base64) so another iOS device can resume exactly; web ignores it.
+    /// snapshot (base64 UTF-8 Go JSON) shared by web and native for exact continuation.
     public static func voxelWorld(userId: String, targetId: String, seed: UInt64, state: JSONValue, snapshot: Data?) -> [OutboxOp] {
         guard case .object(let st) = state else { return [] }
         let filter = "user = \"\(q(userId))\" && target_id = \"\(q(targetId))\""

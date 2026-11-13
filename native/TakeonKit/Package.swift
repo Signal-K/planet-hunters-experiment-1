@@ -2,30 +2,22 @@
 import Foundation
 import PackageDescription
 
-// Takeon.xcframework is the gomobile build of the Go runtime
-// (takeon-go `go/scripts/build.sh ios`). It is ~30 MB of build output, so it is
-// not committed: run scripts/sync-xcframework.sh to copy it into Frameworks/.
-// Without it the package still builds with the Null engine only, so nothing in
-// Landnam changes until the Go runtime is wired in.
-let frameworkPath = "Frameworks/Takeon.xcframework"
-let manifestDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().path
-let hasGoRuntime = FileManager.default.fileExists(atPath: manifestDir + "/" + frameworkPath)
-
-var targets: [Target] = [
-    .target(name: "TakeonKit", dependencies: hasGoRuntime ? ["Takeon"] : []),
-    .testTarget(
-        name: "TakeonKitTests",
-        dependencies: ["TakeonKit"],
-        resources: [.copy("Fixtures")]
-    ),
-]
-if hasGoRuntime {
-    targets.append(.binaryTarget(name: "Takeon", path: frameworkPath))
-}
-
+// Prefer the sibling Takeon checkout when available. CI/release callers can
+// set TAKEON_PACKAGE_PATH explicitly or resolve the pinned source revision.
+let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+let sibling = root.appendingPathComponent("../../../takeon").standardizedFileURL.path
+let configured = ProcessInfo.processInfo.environment["TAKEON_PACKAGE_PATH"]
+let local = configured ?? (FileManager.default.fileExists(atPath: sibling + "/Package.swift") ? sibling : nil)
+let source: Package.Dependency = local.map { .package(name: "takeon", path: $0) } ?? .package(
+    url: "https://github.com/Signal-K/takeon.git",
+    revision: "912ad63e738947cfb636bdd04d1534f741494d2f"
+)
 let package = Package(
-    name: "TakeonKit",
-    platforms: [.macOS(.v14), .iOS(.v17)],
+    name: "TakeonKit", platforms: [.iOS(.v17)],
     products: [.library(name: "TakeonKit", targets: ["TakeonKit"])],
-    targets: targets
+    dependencies: [source],
+    targets: [
+        .target(name: "TakeonKit", dependencies: [.product(name: "TakeonCore", package: "takeon")]),
+        .testTarget(name: "TakeonKitTests", dependencies: ["TakeonKit"], resources: [.copy("Fixtures")]),
+    ]
 )
