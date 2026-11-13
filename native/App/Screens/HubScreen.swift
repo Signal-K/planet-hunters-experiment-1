@@ -318,7 +318,7 @@ struct HubScreen: View {
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "market": store.go(.market)
-        case "control-station": store.go(.instrumentHub)
+        case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
         case "surface-silo": siloOpen = true
         default: break
         }

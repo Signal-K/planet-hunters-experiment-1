@@ -405,13 +405,14 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     }
     if (kind === 'control-station') {
       return {
-        kind, label: agencyLandmark ? 'Agency' : 'Data hub',
-        sub: agencyLandmark ? 'YOUR PROGRAM' : 'TELESCOPES',
+        // SSL-834 (Liam, 13.11): this building is the Agency Hub. The Data hub is a panel, never a building.
+        kind, label: 'Agency hub',
+        sub: 'YOUR PROGRAM',
         status: 'ok' as const,
         w: 60,
         callout: menuOpen || editMode || arrangeMode || agencyLandmark ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
-        onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onFocusBuilding('control-station'),
+        onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onOpenScene('mission-history'),
       }
     }
     if (kind === 'market') {
@@ -528,7 +529,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         : []
     ),
     { id: 'community-research', icon: 'research', label: 'Community research', detail: liveSkyEvent ? `${liveSkyEvent.name} week, shared with every player` : 'Daily stamps and the shared monthly goal', onSelect: () => onOpenScene('community-research') },
-    { id: 'mission-log', icon: 'log', label: 'Mission log', detail: 'Past runs and what they paid', onSelect: () => onOpenScene('mission-history') },
     { id: 'ledger', icon: 'log', label: 'Narrative ledger', detail: 'What is live, adapting and planned', onSelect: () => onOpenScene('narrative-ledger') },
     { id: 'friends', icon: 'friends', label: 'Friends', detail: 'Callsign, requests, gifts and visits', onSelect: openFriends },
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
@@ -766,7 +766,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         }
         return (
           <RearrangeBar
-            name={arrangeKind ? (arrangeKind === 'market' ? 'Exchange' : arrangeKind === 'control-station' ? 'Data hub' : arrangeKind[0].toUpperCase() + arrangeKind.slice(1)) : null}
+            name={arrangeKind ? (arrangeKind === 'market' ? 'Exchange' : arrangeKind === 'control-station' ? 'Agency hub' : arrangeKind[0].toUpperCase() + arrangeKind.slice(1)) : null}
             canLeft={at > 0}
             canRight={at >= 0 && at < standing.length - 1}
             onLeft={() => move(-1)}

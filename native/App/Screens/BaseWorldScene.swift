@@ -218,7 +218,7 @@ struct BaseWorldScene: View {
         case "launchpad": return "Launchpad"
         case "hangar", "garage": return "Hangar"
         case "market": return "Exchange"
-        case "control-station": return "Control station"
+        case "control-station": return "Agency hub"
         default: return "Structure"
         }
     }

@@ -37,8 +37,7 @@ struct BaseMenu: View {
             || store.player.deepSpaceTelescopeLaunchedAt != nil
             || store.player.saturnImagerLaunchedAt != nil
         let hasControlStation = store.player.placed.contains("control-station")
-        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "instruments", label: "Instruments", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
-        rows.append(Item(id: "mission-log", label: "Mission log", detail: "Past runs and what they paid", symbol: "list.bullet.rectangle", run: { store.go(.missionHistory) }))
+        if hasControlStation || ownsOrbitalInstrument { rows.append(Item(id: "instruments", label: "Data hub", detail: "Satellites, telescopes and their feeds", symbol: "antenna.radiowaves.left.and.right", run: { store.go(.instrumentHub) })) }
         rows.append(Item(id: "narrative-ledger", label: "Narrative ledger", detail: "What is live, adapting and planned", symbol: "map", run: { store.go(.narrativeLedger) }))
         rows.append(Item(id: "community-research", label: "Community research", detail: "Choose a weekly path and earn permanent rewards", symbol: "telescope", run: { store.go(.communityResearch) }))
         return rows
