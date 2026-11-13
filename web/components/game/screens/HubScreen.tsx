@@ -523,7 +523,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures and launch support', onSelect: () => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) } },
-    { id: 'contracts', icon: 'mission', primary: true, label: 'New mission', detail: 'Client contracts and free runs', onSelect: () => onOpenScene('missions') },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
     ...(

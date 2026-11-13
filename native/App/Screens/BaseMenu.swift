@@ -24,7 +24,6 @@ struct BaseMenu: View {
         let hasMarket = store.player.placed.contains("market")
         return [
             Item(id: "build", label: "Build", detail: "New structures and launch support", symbol: "building.2", primary: true, run: onBuild),
-            Item(id: "contracts", label: "New mission", detail: "Client contracts and free runs", symbol: "paperplane", primary: true, run: { store.go(.missions) }),
             Item(id: "market", label: "Marketplace", detail: marketDetail(hasMarket), symbol: "cart", primary: true,
                  run: { store.go(.market) }),
         ]
