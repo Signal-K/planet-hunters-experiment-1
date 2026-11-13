@@ -258,6 +258,8 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
               const usable = role.kind === 'use'
               return (
                 <li key={model.id}><button type="button" data-role={role.kind} data-testid={`plan-vehicle-${model.id}`} data-current={model.id === selectedRocket?.id || undefined} disabled={!usable} onClick={() => {
+                  // Already staged for this job: tapping it again must not buy a second rocket.
+                  if (model.id === selectedRocket?.id) { setSheet(null); return }
                   if (player.francs < price) { game.addToast(`Not enough francs: you need ${formatCurrency(price - player.francs, { compact: true })} more`, 'warn'); return }
                   game.onPurchaseRocket(model.id)
                   setSheet(null)
