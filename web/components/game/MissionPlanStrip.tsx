@@ -11,10 +11,21 @@ import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { applyFreeRunGoal, clampGoalAmount, maxGoalAmount } from '@/lib/freeRunGoal'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
+import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 import styles from './MissionPlanStrip.module.css'
 
 // The Solar System map the target picker used; Pixi needs the browser, so it loads client-side only.
-const PixiGalaxyMap = dynamic(() => import('@/components/TargetPicker/PixiGalaxyMap'), { ssr: false })
+// The hub warms this loader while online. If its chunk still cannot load (offline before it was
+// ever cached, or a deploy replaced it), the sheet keeps its list of destinations instead of the
+// whole mission setup crashing.
+const PixiGalaxyMap = dynamic(
+  () => loadPixiGalaxyMap().catch(() => ({ default: MapUnavailable })),
+  { ssr: false },
+)
+
+function MapUnavailable() {
+  return <p className={styles.mapOffline}>The map loads when you are back online. Pick a destination from the list.</p>
+}
 
 type Game = ReturnType<typeof useGame>
 type Sheet = 'destination' | 'vehicle' | 'goal' | null

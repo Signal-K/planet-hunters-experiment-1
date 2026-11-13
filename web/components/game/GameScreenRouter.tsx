@@ -25,6 +25,7 @@ import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
+import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 
 const ScreenLoading = () => (
   <div className="game-screen-loading" role="status" aria-label="Loading screen">
@@ -55,6 +56,8 @@ const ALL_SCREEN_LOADERS = [
   loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
+  // Nested inside the mission plan's destination sheet (construction and contract runs).
+  loadPixiGalaxyMap,
 ]
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
