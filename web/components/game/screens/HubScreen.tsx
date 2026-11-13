@@ -27,7 +27,7 @@ import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { GROUND, STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
@@ -141,7 +141,10 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   // along the strip (drag), starting on the pad. Four structures no longer fit across 390pt at that size.
   const px = portraitPhone ? 2 : fullPx
   // Portrait phones are tall: the sky would take 70% of the screen, so the ground line (and everything standing on it) rises.
-  const groundLine = portraitPhone ? 0.46 : undefined
+  // SSL-834 (Liam, 13.11): the row of structures stands nearer the middle of the screen, not along the bottom. The
+  // painted ground line and the DOM structures' --hub-ground rise by the same share so the buildings stay on the apron.
+  const BASE_ROW_LIFT = 0.12
+  const groundLine = portraitPhone ? 0.46 : GROUND.lineFromBottom + BASE_ROW_LIFT
   const worldW = STRIP_W * px
   const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
@@ -586,7 +589,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const orbitalNetwork = !subsurface && !editMode && <SkyCraft craft={skyCraftItems} onPoint={openPointing} onOpenData={() => onOpenScene('instrument-hub')} />
 
   return (
-    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : {}) } as React.CSSProperties}>
+    <div className={`${layoutStyles.root} theme-blueprint`} data-screen="hub" data-pad-landing={padLanding ? 'true' : undefined} data-time={skyGrade} data-season={skySeason} data-kit-scale={px} aria-label={SCENE_NAMES.base} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', '--px': `${px}px`, ...(portraitPhone ? { '--hub-ground': '26%' } : { '--hub-ground': `${Math.round((0.2 + BASE_ROW_LIFT) * 100)}%` }) } as React.CSSProperties}>
 
       {/* One continuous vertical world: surface above, soil and bedrock below.
           Subsurface moves this canvas down instead of replacing the Hub with

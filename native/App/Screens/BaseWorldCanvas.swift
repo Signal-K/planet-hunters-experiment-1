@@ -103,7 +103,7 @@ struct BaseWorldCanvas: View {
             runner.sky = WorldSkyClock.sky(cal, at: now, grade: grade, biome: biome, force: WorldAssets.forcedSky)
             runner.skyAt = now
         }
-        let view = WorldView(w: size.width / px, h: size.height * (1 - site.ground.lineFromBottom) / px, camX: camX, px: px)
+        let view = WorldView(w: size.width / px, h: size.height * (1 - BaseWorld.groundLine(w: size.width, h: size.height)) / px, camX: camX, px: px)
         // Step in place: copying the world out and back each frame duplicated the entity array every frame.
         if let sky = runner.sky { runner.world!.applySky(sky, view: view, dt: reduceMotion ? 0 : dt) }
         if !reduceMotion { runner.carry = runner.world!.advance(dt, carry: runner.carry) }
@@ -114,7 +114,7 @@ struct BaseWorldCanvas: View {
         let (grade, gloom) = weatherGrade(base, kind: runner.sky?.weather.kind ?? "clear")
         let reveal = reduceMotion ? 1 : min(1, Date().timeIntervalSince(runner.revealStart ?? Date()) / Self.revealSeconds)
         let w = size.width, h = size.height
-        let groundY = h * (1 - site.ground.lineFromBottom)
+        let groundY = h * (1 - BaseWorld.groundLine(w: w, h: h))
         g.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), with: .linearGradient(
             Gradient(stops: [.init(color: color(grade.top), location: 0), .init(color: color(grade.mid), location: 0.55), .init(color: color(grade.horizon), location: 1)]),
             startPoint: .zero, endPoint: CGPoint(x: 0, y: groundY)))
