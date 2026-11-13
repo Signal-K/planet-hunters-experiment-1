@@ -785,6 +785,14 @@
    "native": "community-research-phone"
   },
   {
+   "id": "hub-first-run",
+   "name": "Base: first-run Agency landmark",
+   "flow": "core-loop",
+   "web": "hub-first-run",
+   "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
+   "tickets": ["SSL-785"]
+  },
+  {
    "id": "hub-buildings-l2",
    "name": "Base: buildings at level 2",
    "flow": "core-loop",
