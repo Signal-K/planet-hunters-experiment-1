@@ -4,6 +4,7 @@ import type { Target, Star, Mission, Part, RocketConfig } from './types'
 import { mineralsForArchetype } from './target-archetypes'
 import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
 import { suggestBuild, validateBuild } from './parts'
+import { RESOURCE_FOCUS_MISSION_ID } from './missions'
 
 // A landmark target: real body, hand-authored id/name/brief for narrative
 // recognizability, minerals derived from its composition archetype + orbit
@@ -170,7 +171,10 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
   return targets.filter(t => {
     const inRange = t.orbit <= mission.requires.max_orbit
     const typeOk = !isOnboarding || t.type === 'asteroid'
-    return inRange && typeOk && required.every(mineral => t.minerals.includes(mineral))
+    const mineralsAvailable = mission.id === RESOURCE_FOCUS_MISSION_ID
+      ? required.some(mineral => t.minerals.includes(mineral))
+      : required.every(mineral => t.minerals.includes(mineral))
+    return inRange && typeOk && mineralsAvailable
   })
 }
 

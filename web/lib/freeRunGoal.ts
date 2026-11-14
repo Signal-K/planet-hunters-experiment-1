@@ -1,4 +1,5 @@
 import type { Mission, MineralMeta } from '@/lib/data/types'
+import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 
 /** What the player chose to mine on their own free mining run (Liam, 10 Nov: pick the ore and how much). */
 export interface FreeRunGoal {
@@ -27,7 +28,7 @@ export function clampGoalAmount(amount: number, meta: MineralMeta | undefined, h
  * Pay stays the plain market price, because a run on your own account has no client.
  */
 export function applyFreeRunGoal(mission: Mission, goal: FreeRunGoal | undefined, minerals: Record<string, MineralMeta>): Mission {
-  if (!goal || goal.missionId !== mission.id || !minerals[goal.mineral]) return mission
+  if (mission.id === RESOURCE_FOCUS_MISSION_ID || !goal || goal.missionId !== mission.id || !minerals[goal.mineral]) return mission
   const meta = minerals[goal.mineral]
   return {
     ...mission,

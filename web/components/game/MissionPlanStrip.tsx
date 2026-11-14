@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isFreeHaulEligibleMission, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
+import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
 import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
@@ -76,7 +77,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   // Liam, 10.11: a free mining run lets the player choose the ore and how much, up to what the rocket's hold carries.
-  const goalEditable = !launched && !showerRun && isFreeHaulEligibleMission(mission)
+  const goalEditable = !launched && !showerRun && mission.id !== RESOURCE_FOCUS_MISSION_ID && isFreeHaulEligibleMission(mission)
   const holdUnits = selectedRocket?.stats.cargo ?? 6
   const drillTier = drill?.tier ?? 1
   const goalMineralId = Object.keys(mission.requires.minerals)[0]
