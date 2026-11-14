@@ -1,23 +1,53 @@
 name: CI
 
-# Fast source gate. Interactive scene proof is performed in the editor Simple
-# Browser, so CI never installs or runs a browser.
+# Browser interaction is reviewed in the real scene; CI runs source checks.
 on:
   push:
-    branches: [cycle/4]
+    branches: [main, 'cycle/**']
   pull_request:
-    branches: [cycle/4, main]
-
+    branches: [main, 'cycle/**']
+  workflow_dispatch:
 permissions:
   contents: read
-
+  pull-requests: read
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
-  check:
-    name: Typecheck and build
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      web_files: ${{ steps.filter.outputs.web_files }}
+      shared: ${{ steps.filter.outputs.shared }}
+      core: ${{ steps.filter.outputs.core }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          list-files: json
+          base: ${{ github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '' }}
+          filters: |
+            web:
+              - 'web/**'
+            shared:
+              - 'shared/**'
+              - 'scripts/authoring.mjs'
+              - 'scripts/ci-web-tests.mjs'
+              - 'scripts/sync*.mjs'
+              - '.github/workflows/ci.yml'
+            core:
+              - 'shared/core/**'
+              - '.github/workflows/ci.yml'
+            backend:
+              - 'pocketbase/**'
+              - 'shared/core/**'
+              - '.github/workflows/ci.yml'
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,27 +56,62 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: '24'
           cache: npm
           cache-dependency-path: web/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Build
-        run: npm run build
+      - run: npm ci
+      - name: Affected source tests
         env:
-          NEXT_TELEMETRY_DISABLED: "1"
-
+          CHANGED_WEB_FILES: ${{ needs.changes.outputs.web_files }}
+          FULL_TESTS: ${{ needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch' }}
+        run: node ../scripts/ci-web-tests.mjs
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+  authoring:
+    needs: changes
+    if: needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node scripts/authoring.mjs check
+  go:
+    needs: changes
+    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: shared/core
+            selected: ${{ needs.changes.outputs.core }}
+          - directory: pocketbase
+            selected: ${{ needs.changes.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+        if: matrix.selected == 'true' || github.event_name == 'workflow_dispatch'
+      - uses: actions/setup-go@v5
+        if: matrix.selected == 'true' || github.event_name == 'workflow_dispatch'
+        with:
+          go-version-file: ${{ matrix.directory }}/go.mod
+          cache-dependency-path: ${{ matrix.directory }}/go.sum
+      - name: Test Go module
+        if: matrix.selected == 'true' || github.event_name == 'workflow_dispatch'
+        working-directory: ${{ matrix.directory }}
+        run: go test ./...
   ci-required:
     name: CI required
     if: always()
-    needs: [check]
+    needs: [changes, web, authoring, go]
     runs-on: ubuntu-latest
     steps:
-      - name: Every required job must succeed
+      - name: Selected jobs must succeed
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: |
           echo "$RESULTS"
-          test "$(echo "$RESULTS" | grep -c '"result": "success"')" -eq 1
+          node -e 'const jobs = JSON.parse(process.env.RESULTS); if (jobs.changes.result !== "success" || Object.values(jobs).some(j => !["success", "skipped"].includes(j.result))) process.exit(1)'
