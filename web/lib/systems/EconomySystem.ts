@@ -345,6 +345,10 @@ export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string
   if (s.screen !== 'rocket-buy' && s.screen !== 'fab' && s.screen !== 'targets' && s.screen !== 'hangar') return 'Return to the launch review before building.'
   if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
   const price = rocketPrice(rocket, s.player)
+  // Never charge twice for the same job: a vehicle of this model already staged for this contract is the one that flies.
+  const alreadyStaged = (s.player.stagedRockets ?? []).some(v => v.rocketId === rocket.id && v.missionId === s.missionId
+    && v.targetId === s.targetId && (v.location === 'hangar' || v.location === 'launchpad'))
+  if (alreadyStaged && price > 0) return 'This rocket is already staged for this job.'
   if (s.player.francs < price) {
     return `Need ${price - s.player.francs} more francs to build this rocket.`
   }
