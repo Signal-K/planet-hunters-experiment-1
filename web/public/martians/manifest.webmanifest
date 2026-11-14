@@ -1,7 +1,7 @@
 {
   "name": "Haphazard Martians",
   "short_name": "Haphazard Martians",
-  "description": "Label Mars terrain, build a rover, cross the planet.",
+  "description": "Build a rover and explore Mars.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
