@@ -128,6 +128,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
         launchDisabled={actionDisabled}
         launchLabel={actionLabel}
+        cargoNeed={game.mission.requires.cargo_min}
         onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
         earthBiome={game.player.earthBiome}
         onRequestLaunch={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}

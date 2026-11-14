@@ -32,3 +32,10 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 ## Deployment
 
 Deployed to a Cloudflare Worker via OpenNext (`npm run build:cf`, `wrangler deploy`). See `.github/workflows/deploy.yml`.
+
+GitHub Actions selects checks by changed area: web code runs Vitest's related
+source tests plus typecheck and build; shared, configuration and ambiguous web
+changes run the full web suite. Shared authoring, Go modules and iOS have
+separate checks. Manual CI dispatch runs all web and Go checks; iOS review can
+be dispatched separately. Dependency selection follows static imports, so use
+the full suite for changes with dynamic or external dependencies.

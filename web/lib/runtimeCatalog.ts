@@ -303,13 +303,15 @@ export function buildRuntimeCatalog({
     ? [{
         id: RESOURCE_FOCUS_MISSION_ID,
         title: `Materials for ${resourceFocusLabel}`,
-        brief: `A program mining run configured to recover the missing materials for ${resourceFocusLabel}. The haul returns to Base storage for construction.`,
+        brief: `Collect the missing materials for ${resourceFocusLabel} over as many trips as needed. Return each haul to Base and store it for construction.`,
         tag: 'RESOURCE',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
         unlockAt: 'Add a construction requirement to focus',
-        requires: { minerals: focusedMinerals, cargo_min: focusedCargo, drill_tier: 1, max_orbit: 8 },
+        // The focus is a long-term goal, not a single-flight order. A ship
+        // only needs room for one obtainable piece to start collecting it.
+        requires: { minerals: focusedMinerals, cargo_min: focusedCargo > 0 ? Math.min(...Object.keys(focusedMinerals).map(id => Math.max(1, catalog.minerals[id]?.cargoUnits ?? 1))) : 0, drill_tier: 1, max_orbit: 8 },
         payout: { francs: 0, affinity: 0 },
       }]
     : []

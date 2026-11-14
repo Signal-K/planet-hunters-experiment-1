@@ -83,6 +83,14 @@ jobs:
           cache-dependency-path: '${{ matrix.directory }}/go.sum'
       - run: go test -count=1 -v ./...
         working-directory: '${{ matrix.directory }}'
+  native-core:
+    name: All native core tests
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run complete native domain suite
+        run: swift test --package-path native/LandnamCore
   onboarding:
     name: Onboarding only browser e2e
     runs-on: ubuntu-latest

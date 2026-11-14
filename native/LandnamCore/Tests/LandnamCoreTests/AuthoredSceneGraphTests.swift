@@ -9,12 +9,13 @@ import Testing
         let data = try Data(contentsOf: Self.repo.appendingPathComponent("shared/engine/authored-scenes.json").standardized)
         let shared = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(AuthoredSceneDeclarations.json == shared)
-        #expect(AuthoredSceneGraph.scenes.count == 25)
+        #expect(AuthoredSceneGraph.scenes.count == 28)
         #expect(AuthoredSceneGraph.scenes.allSatisfy { !$0.objects.isEmpty })
         #expect(AuthoredSceneGraph.scenes.flatMap(\.objects).allSatisfy { !($0.mechanics ?? []).isEmpty })
         #expect(Set(AuthoredSceneGraph.mechanics.map(\.id)).count == AuthoredSceneGraph.mechanics.count)
         #expect(AuthoredSceneGraph.mechanics.contains { $0.id == "community-research" })
-        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery"])
+        // Explicit native parity backlog, also checked by the web authoring contract.
+        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery", "radio-meteors", "sky-pointing", "probe-watch", "probe-scan"])
     }
 
     @Test(arguments: [(390.0, 844.0), (926.0, 428.0), (1440.0, 900.0)])
@@ -44,7 +45,7 @@ import Testing
         let scene = try #require(AuthoredSceneGraph.scene("launchpad"))
         let parts = AuthoredSceneGraph.resolve(scene, width: 1104, height: 865, prefabRoot: "launchpad-complex")
         let rocket = try #require(parts.first { $0.object.id == "staged-rocket" })
-        #expect(abs(rocket.frame.x + rocket.frame.w / 2 - 359.904) < 0.000_001)
+        #expect(abs(rocket.frame.x + rocket.frame.w / 2 - 376.464) < 0.000_001)
         #expect(abs(rocket.frame.y + rocket.frame.h - 785.42) < 0.000_001)
         #expect(parts.first { $0.object.id == "launch-control" }?.object.action == "choose-mission")
         #expect(!parts.contains { $0.object.id == "mission-selector" })

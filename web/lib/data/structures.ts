@@ -55,13 +55,13 @@ export const STRUCTURES: StructureBlueprint[] = [
   },
   {
     id: 'control-station',
-    name: 'Control Station',
+    name: 'Agency Hub',
     kind: 'control-station',
     cost: STRUCTURE_PRICES.controlStation,
     // Satellites and telescopes are run from here, so it comes before the first launch of either.
     unlocksAt: 'Opens once the guided missions are flown',
     unlockTrigger: 'onboarding-missions',
-    description: 'Runs your satellites and telescopes. Build it before you launch one.',
+    description: 'Your agency headquarters. Holds the mission log and runs your satellites and telescopes. Build it before you launch one.',
   },
 ]
 

@@ -5,16 +5,28 @@ import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
 import { ROCKET_MODELS, isFreeHaulEligibleMission, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
 import { feasibleTargetsFor } from '@/lib/data/targets'
+import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
 import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { applyFreeRunGoal, clampGoalAmount, maxGoalAmount } from '@/lib/freeRunGoal'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
+import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 import styles from './MissionPlanStrip.module.css'
 
 // The Solar System map the target picker used; Pixi needs the browser, so it loads client-side only.
-const PixiGalaxyMap = dynamic(() => import('@/components/TargetPicker/PixiGalaxyMap'), { ssr: false })
+// The hub warms this loader while online. If its chunk still cannot load (offline before it was
+// ever cached, or a deploy replaced it), the sheet keeps its list of destinations instead of the
+// whole mission setup crashing.
+const PixiGalaxyMap = dynamic(
+  () => loadPixiGalaxyMap().catch(() => ({ default: MapUnavailable })),
+  { ssr: false },
+)
+
+function MapUnavailable() {
+  return <p className={styles.mapOffline}>The map loads when you are back online. Pick a destination from the list.</p>
+}
 
 type Game = ReturnType<typeof useGame>
 type Sheet = 'destination' | 'vehicle' | 'goal' | null
@@ -76,7 +88,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   // Liam, 10.11: a free mining run lets the player choose the ore and how much, up to what the rocket's hold carries.
-  const goalEditable = !launched && !showerRun && isFreeHaulEligibleMission(mission)
+  const goalEditable = !launched && !showerRun && mission.id !== RESOURCE_FOCUS_MISSION_ID && isFreeHaulEligibleMission(mission)
   const holdUnits = selectedRocket?.stats.cargo ?? 6
   const drillTier = drill?.tier ?? 1
   const goalMineralId = Object.keys(mission.requires.minerals)[0]
@@ -258,6 +270,8 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
               const usable = role.kind === 'use'
               return (
                 <li key={model.id}><button type="button" data-role={role.kind} data-testid={`plan-vehicle-${model.id}`} data-current={model.id === selectedRocket?.id || undefined} disabled={!usable} onClick={() => {
+                  // Already staged for this job: tapping it again must not buy a second rocket.
+                  if (model.id === selectedRocket?.id) { setSheet(null); return }
                   if (player.francs < price) { game.addToast(`Not enough francs: you need ${formatCurrency(price - player.francs, { compact: true })} more`, 'warn'); return }
                   game.onPurchaseRocket(model.id)
                   setSheet(null)

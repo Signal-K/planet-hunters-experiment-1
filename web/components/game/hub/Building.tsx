@@ -277,11 +277,12 @@ export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w
             }}
           >
             <span style={{
-              width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'var(--ln-hairline)' : 'var(--ln-info)',
-              border: '2px solid var(--hub-panel)',
+              // A read bell stays a solid chip: the faint grey one vanished against dark facades.
+              width: 26, height: 26, borderRadius: '50%',
+              background: seen ? 'var(--ln-world-hull-lit)' : 'var(--ln-info)',
+              border: '2px solid var(--ln-world-outline)',
               display: 'grid', placeItems: 'center',
-              color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
+              color: seen ? 'var(--ln-world-outline)' : 'var(--ln-text-inverse)',
               boxShadow: seen ? 'none' : '0 0 12px color-mix(in srgb, var(--ln-info) 40%, transparent)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
             }}>

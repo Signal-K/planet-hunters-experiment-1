@@ -17,14 +17,30 @@ describe('first-run onboarding', () => {
     // with its screenshot/video instead of hanging or silently skipping it.
     let mined = false
     let settled = false
+    let vehiclePicked = false
+    let startedAt = 0
     function advance(attempt = 0): Cypress.Chainable {
       if (attempt > 900) throw new Error('Onboarding did not settle within the operation budget')
       return cy.get('body').then($body => {
+        startedAt ||= Date.now()
+        if (Date.now() - startedAt > 5 * 60_000) {
+          throw new Error(`Onboarding stalled at ${$body[0].ownerDocument.location.pathname}: ${$body.find(testId('mining-order-readout')).text()}`)
+        }
         const enabled = (selector: string) => $body.find(selector).filter(':visible:not(:disabled)').first()
         if (settled) {
           get('base-camera').should('be.visible')
           cy.screenshot('onboarding-settled')
           return
+        }
+        // Accepting an offer previews a rocket; staging the vehicle is a
+        // separate player action, required before Build rocket can run.
+        if (!vehiclePicked && enabled(testId('mission-launch-review')).length) {
+          const vehicle = enabled('[data-testid^="plan-vehicle-"][data-role="use"]')
+          if (vehicle.length) {
+            vehiclePicked = true
+            return cy.wrap(vehicle).click().then(() => cy.wait(500)).then(() => advance(attempt + 1))
+          }
+          return get('plan-vehicle').click().then(() => cy.wait(500)).then(() => advance(attempt + 1))
         }
         const reward = enabled(testId('collect-reward-btn'))
         if (reward.length) {
@@ -32,7 +48,9 @@ describe('first-run onboarding', () => {
           settled = true
           return cy.wrap(reward).click().then(() => cy.wait(1000)).then(() => advance(attempt + 1))
         }
-        const controls = enabled(testId('mining-controls'))
+        // The HUD wrapper has zero height: its visible keys are positioned
+        // independently. Test the keys' actionability, not wrapper geometry.
+        const controls = $body.find(testId('mining-controls'))
         if (controls.length) {
           mined = true
           const home = enabled(testId('return-home-btn'))
@@ -43,7 +61,9 @@ describe('first-run onboarding', () => {
           const cue = $body.find(testId('mining-target-cue')).text()
           const fire = enabled(testId('fire-laser-btn'))
           if (/fire now/i.test(cue) && fire.length) {
-            return cy.wrap(fire).trigger('click', { detail: 0 }).then(() => cy.wait(200)).then(() => advance(attempt + 1))
+            return cy.get('body').trigger('keydown', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
+              .trigger('keyup', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
+              .then(() => cy.wait(200)).then(() => advance(attempt + 1))
           }
         }
         const actions = [
