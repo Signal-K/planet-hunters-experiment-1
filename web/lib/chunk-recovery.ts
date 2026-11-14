@@ -11,6 +11,24 @@ export function isStaleChunkError(reason: unknown): boolean {
   return STALE_CHUNK.test(text)
 }
 
+/** Reload to fetch the current build, at most once a minute so a missing chunk cannot loop. */
+export function reloadOnceForStaleChunk(
+  message: string,
+  onReload?: (message: string) => void,
+  reload: () => void = () => window.location.reload(),
+): boolean {
+  try {
+    const last = Number(window.sessionStorage.getItem(RELOAD_KEY) ?? 0)
+    if (Date.now() - last < RELOAD_COOLDOWN_MS) return false
+    window.sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
+  } catch {
+    return false // no storage means no loop guard, so do not reload
+  }
+  onReload?.(message)
+  reload()
+  return true
+}
+
 export function installChunkRecovery(
   onReload?: (message: string) => void,
   reload: () => void = () => window.location.reload(),
@@ -19,15 +37,7 @@ export function installChunkRecovery(
 
   const recover = (reason: unknown) => {
     if (!isStaleChunkError(reason)) return
-    try {
-      const last = Number(window.sessionStorage.getItem(RELOAD_KEY) ?? 0)
-      if (Date.now() - last < RELOAD_COOLDOWN_MS) return
-      window.sessionStorage.setItem(RELOAD_KEY, String(Date.now()))
-    } catch {
-      return // no storage means no loop guard, so do not reload
-    }
-    onReload?.(reason instanceof Error ? reason.message : String(reason))
-    reload()
+    reloadOnceForStaleChunk(reason instanceof Error ? reason.message : String(reason), onReload, reload)
   }
 
   const onError = (event: ErrorEvent) => recover(event.error ?? event.message)

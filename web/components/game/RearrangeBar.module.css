@@ -1,32 +1,33 @@
+/* Sits inside the Build picker, under the new-structure choices. */
 .bar {
-  position: absolute;
-  left: 50%;
-  top: 124px;
-  z-index: 24;
-  display: grid;
-  gap: 8px;
-  width: min(420px, calc(100% - 24px));
-  padding: 10px;
-  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(720px, calc(100vw - 24px));
+  padding: 8px 10px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: 12px;
   background: var(--ln-panel);
   box-shadow: var(--ln-shadow-panel);
+  pointer-events: auto;
 }
 
 .hint {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
   color: var(--ln-text);
   font: 800 14px/1.2 var(--ln-font-display);
   letter-spacing: .08em;
-  text-align: center;
   text-transform: uppercase;
 }
 
-.row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.row { display: flex; flex: 0 0 auto; gap: 8px; }
 
 .key {
+  min-width: 88px;
   min-height: 44px;
+  padding: 0 12px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: 8px;
   background: transparent;
@@ -39,9 +40,8 @@
 .key:disabled { opacity: .4; cursor: default; }
 .done { border-color: transparent; background: #58d0ea; color: #06121f; }
 
-/* Short landscape screens: one row over the dock's spot, so the structures stay tappable above it. */
-@media (orientation: landscape) and (max-height: 640px) {
-  .bar { top: auto; bottom: 10px; display: flex; align-items: center; gap: 10px; width: min(720px, calc(100% - 24px)); padding: 8px 10px; }
-  .hint { flex: 1 1 auto; min-width: 0; text-align: left; }
-  .row { flex: 0 0 auto; width: 330px; }
+/* Upright phones: the hint takes its own line above the buttons. */
+@media (max-width: 520px) {
+  .bar { flex-direction: column; align-items: stretch; }
+  .row > .key { flex: 1 1 0; min-width: 0; }
 }

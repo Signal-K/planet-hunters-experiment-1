@@ -96,27 +96,29 @@ struct HubScreen: View {
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) }
             )
-            if store.screen != .hubSubsurface { orbitingTelescopes(width: size.width, height: size.height) }
+            if store.screen != .hubSubsurface && !placing { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
-            topLeftHud(insets: insets, portrait: portrait)
-            topRightHud(insets: insets)
+            // SSL-834: Build hides every piece of HUD, the dock included; Done in the picker leaves Build.
+            if !placing {
+                topLeftHud(insets: insets, portrait: portrait)
+                topRightHud(insets: insets)
+            }
             if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
             else if siloOpen && !placing && store.screen != .hubSubsurface { siloPanel(insets: insets) }
             else if placing { picker(width: size.width, insets: insets) }
-            BaseDock(tile: layout.tile, zones: zones.dock,
+            if !placing { BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
                      onNext: { camera.pan(by: size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
-                     onBuild: { placeNote = nil; upgrading = nil; placing.toggle() },
+                     onBuild: { placeNote = nil; upgrading = nil; if store.screen == .hubSubsurface { store.go(.hub) }; placing = true },
                      onMenu: { menuOpen = true },
-                     onSubsurface: { store.go(store.screen == .hubSubsurface ? .hub : .hubSubsurface) },
-                     subsurface: store.screen == .hubSubsurface,
                      onMission: (!placing && store.player.activeMission == nil && !store.player.pendingLaunch) ? { store.go(.missions) } : nil,
                      locationLabel: "Earth",
                      locationNavigationDisabled: false,
                      compact: false)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { dockHeight = $0 }
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
+            if !placing { subsurfaceArrow(insets: insets, aboveDock: portrait && size.width < 1040) }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
@@ -131,6 +133,26 @@ struct HubScreen: View {
     private var selectedStagedRocket: StagedRocket? {
         guard let id = store.player.selectedStagedRocketId else { return nil }
         return store.player.stagedRockets.first { $0.id == id }
+    }
+
+    /// SSL-834: Subsurface is a round arrow in the bottom-left corner (web `SubsurfaceArrow`): down goes below the base,
+    /// up comes back. Beside the dock where there is room, right above its left end where the dock spans the screen.
+    private func subsurfaceArrow(insets: EdgeInsets, aboveDock: Bool) -> some View {
+        let below = store.screen == .hubSubsurface
+        return Button { store.go(below ? .hub : .hubSubsurface) } label: {
+            Image(systemName: below ? "arrow.up" : "arrow.down")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Theme.hudInk)
+                .frame(width: 56, height: 56)
+                .background(Circle().fill(Theme.hudPanel))
+                .overlay(Circle().stroke(Theme.hudInk, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(below ? "Back to the surface" : "Go below the base")
+        .accessibilityIdentifier("hub-subsurface-btn")
+        .padding(.leading, max(insets.leading, 16))
+        .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
     }
 
     /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
@@ -192,12 +214,19 @@ struct HubScreen: View {
                     ScrollView(.horizontal, showsIndicators: false) { chips }
                 }
             }
+            Button("DONE") { placing = false; placeNote = nil; upgrading = nil; picked = nil }
+                .font(AppFont.display(14)).tracking(0.8).foregroundStyle(Theme.hudPanel)
+                .frame(minWidth: 120, minHeight: 44).padding(.horizontal, 18)
+                .background(Capsule().fill(Theme.hudInk))
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("hub-build-done-btn")
         }
         .padding(.bottom, aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
 
-    private func aboveDock(_ insets: EdgeInsets) -> CGFloat { insets.bottom + max(zones.dock.bottomInset, 14) + dockHeight + 12 }
+    /// Build hides the dock (SSL-834), so its panels sit on the bottom edge instead of above it.
+    private func aboveDock(_ insets: EdgeInsets) -> CGFloat { insets.bottom + max(zones.dock.bottomInset, 14) + (placing ? 0 : dockHeight + 12) }
 
     /// In Build mode a finished upgradable building opens its upgrade bar instead of its screen.
     private func offerUpgrade(_ kind: String) -> Bool {
@@ -244,7 +273,7 @@ struct HubScreen: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
         .padding(.horizontal, 16)
-        .padding(.top, insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
+        .padding(.top, placing ? max(insets.top, 12) : insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
         .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
@@ -318,7 +347,7 @@ struct HubScreen: View {
         // Mission first: the hangar opens on its rocket choice only once a mission and destination are set up.
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "market": store.go(.market)
-        case "control-station": store.go(.instrumentHub)
+        case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
         case "surface-silo": siloOpen = true
         default: break
         }
