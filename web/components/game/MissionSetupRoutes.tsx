@@ -92,7 +92,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const hold = check.holds?.[0]
   const blockedReason = launchReady ? null : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone, buildingLevel(game.player, 'launchpad')) : null) : (check.problems[0] ?? 'Mission requirements not met')
   // Nothing is built or launched that cannot do the job (Liam, 02.11).
-  const actionDisabled = !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
+  // SSL-842: Launch stays on screen through the lift-off; a second tap must not launch again.
+  const actionDisabled = launchPending || !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
   const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'
   const ownProgram = isOwnProgramMission(game.mission)
 

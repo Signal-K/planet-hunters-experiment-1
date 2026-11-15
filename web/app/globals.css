@@ -3122,6 +3122,9 @@ html[data-flight-target]:not([data-flight-target~="hub-build-btn"]) [data-testid
 @media (orientation: landscape) and (max-height: 520px) {
   body:has([data-testid="mission-launch-review"]) .flight-plan-slot { display: none; }
 }
+/* SSL-842: an open plan sheet (vehicle, destination, cargo) is the step the coach points at, and the strip sat on
+   its rows (the Explorer row at 1440x900). The sheet explains itself; the strip returns when it closes. */
+body:has([data-testid^="plan-sheet-"]) .flight-plan-slot > .flight-plan { display: none; }
 .flight-plan-slot:has(> .help-coach-dock) { z-index: 81; }
 .flight-plan-slot:has(> .help-coach-dock) > .flight-plan { display: none; }
 .flight-plan {

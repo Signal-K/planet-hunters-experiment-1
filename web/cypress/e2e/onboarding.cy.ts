@@ -20,7 +20,7 @@ describe('first-run onboarding', () => {
     let vehiclePicked = false
     let startedAt = 0
     function advance(attempt = 0): Cypress.Chainable {
-      if (attempt > 900) throw new Error('Onboarding did not settle within the operation budget')
+      if (attempt > 4000) throw new Error('Onboarding did not settle within the operation budget')
       return cy.get('body').then($body => {
         startedAt ||= Date.now()
         if (Date.now() - startedAt > 5 * 60_000) {
@@ -63,7 +63,7 @@ describe('first-run onboarding', () => {
           if (/fire now/i.test(cue) && fire.length) {
             return cy.get('body').trigger('keydown', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
               .trigger('keyup', { eventConstructor: 'KeyboardEvent', key: 'f', code: 'KeyF' })
-              .then(() => cy.wait(200)).then(() => advance(attempt + 1))
+              .then(() => cy.wait(150)).then(() => advance(attempt + 1))
           }
         }
         const actions = [
@@ -75,9 +75,17 @@ describe('first-run onboarding', () => {
         ]
         for (const selector of actions) {
           const button = enabled(selector)
-          if (button.length) return cy.wrap(button).click().then(() => cy.wait(500)).then(() => advance(attempt + 1))
+          // Re-query at click time: React can replace the node, or the route can change, between the read and
+          // the click (Launch does both). A button that is gone by then is skipped, not failed.
+          if (button.length) {
+            return cy.get('body').then($now => {
+              const live = $now.find(selector).filter(':visible:not(:disabled)').first()
+              return live.length ? cy.wrap(live).click() : cy.wrap(null)
+            }).then(() => cy.wait(500)).then(() => advance(attempt + 1))
+          }
         }
-        return cy.wait(500).then(() => advance(attempt + 1))
+        // The fire-now window for one seam is about half a second, so watch the cue closely while mining.
+        return cy.wait(controls.length ? 80 : 500).then(() => advance(attempt + 1))
       })
     }
     advance()
