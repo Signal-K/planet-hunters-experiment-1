@@ -589,6 +589,8 @@ export interface GameActions {
   excavateSubsurface: () => void
   /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
   buildGroundTelescope: () => boolean
+  /** SSL-843: stands an owned annex structure on a free annex slot; false when the slot is taken or the kind is not owned. */
+  placeAnnex: (kind: string, plot: number) => boolean
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
   buyMinerals: (mineralId: string, amount: number) => void

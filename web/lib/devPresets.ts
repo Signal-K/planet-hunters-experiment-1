@@ -197,6 +197,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
       { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
       { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
@@ -375,6 +376,20 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'hub-pad-l2':
+    case 'hub-unplaced':
+      return {
+        screen: 'hub',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          francs: 11_500_000_000,
+          placed: ['launchpad', 'market', 'control-station', 'surface-silo', 'ground-telescope'],
+          placementPlots: { launchpad: 0, market: 1, 'surface-silo': 2, 'control-station': 3 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
     case 'hub-buildings-l2':
     case 'hub-buildings-l3': {
       const level = name === 'hub-buildings-l3' ? 3 : 2

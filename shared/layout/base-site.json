@@ -334,5 +334,32 @@
     "coast": {
       "label": "Coast"
     }
+  },
+  "annexSlots": {
+    "about": "Small fixed slots for small structures (SSL-843). Owned annex structures without a slot wait in the Base's Unplaced tray; tapping one lights the free slots. plot numbers start at 10 so they never collide with the main sites' save plots.",
+    "kinds": {
+      "ground-telescope": {
+        "label": "Ground telescope",
+        "short": "Telescope",
+        "body": 24,
+        "height": 40
+      }
+    },
+    "slots": [
+      {
+        "id": "annex-west",
+        "x": 22,
+        "half": 12,
+        "plot": 10,
+        "label": "West annex"
+      },
+      {
+        "id": "annex-gate",
+        "x": 50,
+        "half": 12,
+        "plot": 11,
+        "label": "Gate annex"
+      }
+    ]
   }
 }

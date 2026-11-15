@@ -537,6 +537,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       serviceLaunchpad: economy.serviceLaunchpad,
       excavateSubsurface: economy.excavateSubsurface,
       buildGroundTelescope: economy.buildGroundTelescope,
+      placeAnnex: economy.placeAnnex,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,

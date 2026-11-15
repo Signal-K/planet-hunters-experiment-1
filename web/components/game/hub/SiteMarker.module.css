@@ -73,3 +73,7 @@
 @media (prefers-reduced-motion: reduce) {
   .footprint { animation: none; opacity: 0.9; }
 }
+
+/* SSL-843: a compact marker is a round plus over a small annex slot. */
+.marker[data-compact] .label { padding: 0; width: 44px; justify-content: center; max-width: none; }
+.marker[data-compact] .plus { width: 28px; height: 28px; font-size: 20px; }

@@ -26,8 +26,10 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
+import { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
+import { AnnexStructures, UnplacedTray } from '@/components/game/hub/AnnexStructures'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
-import { GROUND, STRIP_W, builtSpan, displaySite, homeCenter, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
+import { ANNEX_SLOTS, GROUND, STRIP_W, builtSpan, displaySite, displayX, homeCenter, placedAnnex, unplacedAnnexKinds, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { FIRST_STORAGE_MISSIONS_DONE } from '@/lib/data/structures'
 import { BUILDING_LEVEL_EFFECTS, BUILDING_NAMES, MAX_BUILDING_LEVEL, type SubsurfaceRoomId, type UpgradableBuildingId, buildingLevel, isUpgradableBuilding, upgradeCost } from '@/lib/data'
@@ -94,6 +96,8 @@ interface HubScreenProps {
   buildOptions?: HubBuildOption[]
   /** Places a structure on a plot. Returns false when it could not be placed. */
   onPlaceStructure?: (id: string, plot: number) => boolean
+  /** SSL-843: stands an owned annex structure (from the Unplaced tray) on a free annex slot. */
+  onPlaceAnnex?: (kind: string, plot: number) => boolean
   rocketVariant?: HubBuildingDef['rocketVariant']
   onboardingActive?: boolean
   coachVisible?: boolean
@@ -122,7 +126,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -146,7 +150,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const BASE_ROW_LIFT = 0.12
   const groundLine = portraitPhone ? 0.46 : GROUND.lineFromBottom + BASE_ROW_LIFT
   const worldW = STRIP_W * px
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement, player.placementPlots) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
@@ -154,6 +158,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const [arrangeKind, setArrangeKind] = useState<string | null>(null)
   const [pickedBuild, setPickedBuild] = useState<string | null>(null)
   const [placeNote, setPlaceNote] = useState<string | null>(null)
+  // SSL-843: the Unplaced tray item being placed; while set, the free annex slots light up.
+  const [placingAnnex, setPlacingAnnex] = useState<string | null>(null)
   const surfaceRef = useRef<HTMLDivElement | null>(null)
   // Hub-only UI state is addressable by URL (`/game/hub?menu=1`, `?building=hangar`) so tooling can
   // deep-link to it. Client-only screen, so reading location during init is safe.
@@ -540,6 +546,9 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     { id: 'settings', icon: 'settings', label: 'Settings', detail: 'Sound, display and account', onSelect: openSettings },
   ]
 
+  const annexStanding = placedAnnex(player)
+  const unplacedAnnex = unplacedAnnexKinds(player)
+  useEffect(() => { if (placingAnnex && !unplacedAnnex.includes(placingAnnex)) setPlacingAnnex(null) }, [placingAnnex, unplacedAnnex])
   const dataChipShown = !subsurface && hasControlStation && !agencyLandmark && !onboardingActive && !player.activeMission && signals.length > 0
   // SSL-827: the Point prompt, the data-ready chip and the craft in the sky all open the same pointing screen, on the
   // telescope that still needs a target (or the one tapped). Without a pointable telescope they fall back to the Data hub.
@@ -643,6 +652,19 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
               in both hardware WebGL and Docker/Electron screenshot runners. */}
           <EarthBaseModules arrangement={arrangement} buildings={sceneBuildings} parts={player.shipCustomizerParts} padRocket={padLanding || homecoming ? 'core' : rocketOnPad} />
           {rollingOut && <RocketRollout onDone={finishRollout} />}
+          <AnnexStructures
+            standing={annexStanding}
+            placing={placingAnnex}
+            quiet={agencyLandmark}
+            onPlace={slot => {
+              if (placingAnnex && onPlaceAnnex?.(placingAnnex, slot.plot)) {
+                captureGameEvent('annex_structure_placed', { structure_kind: placingAnnex, slot: slot.id })
+                setPlacingAnnex(null)
+                camera.focusX(displayX(slot.x) * px)
+              }
+            }}
+            onOpen={kind => { if (kind === GROUND_TELESCOPE_STRUCTURE_ID) onOpenScene('instrument-hub') }}
+          />
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an
@@ -837,6 +859,18 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, pointerEvents: 'none',
         }}>
           <SubsurfaceArrow subsurface={subsurface} onClick={() => setSubsurface(!subsurface)} />
+          {!subsurface && onPlaceAnnex && (
+            <UnplacedTray
+              kinds={unplacedAnnex}
+              placing={placingAnnex}
+              onPick={kind => {
+                setPlacingAnnex(kind)
+                const free = ANNEX_SLOTS.find(slot => !annexStanding.has(slot.plot))
+                if (free) camera.focusX(displayX(free.x) * px)
+              }}
+              onCancel={() => setPlacingAnnex(null)}
+            />
+          )}
           <div style={{ pointerEvents: 'auto' }}>
             <BaseDock
               onPrev={() => moveBase(-0.22)}

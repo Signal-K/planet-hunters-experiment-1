@@ -7,6 +7,7 @@ import type { GameState } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
 import { STRUCTURE_PRICES } from '@/lib/data/economy'
 import { GROUND_TELESCOPE_STRUCTURE_ID } from './InstrumentFeedSystem'
+import { annexSlotForPlot, isAnnexKind, placedAnnex } from '@/lib/scene/base-site'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
@@ -506,6 +507,16 @@ export function applyBuildGroundTelescope(s: GameState): GameState {
       placed: [...s.player.placed, GROUND_TELESCOPE_STRUCTURE_ID],
     },
   }
+}
+
+/** SSL-843: stand an owned annex structure (one already paid for) on a free annex slot, or move it to another one.
+ *  Free: the price was paid when it was built. A taken slot, an unowned kind or a non-annex kind is a no-op. */
+export function applyPlaceAnnex(s: GameState, kind: string, plot: number): GameState {
+  if (!isAnnexKind(kind) || !s.player.placed.includes(kind)) return s
+  if (!annexSlotForPlot(plot)) return s
+  const holder = placedAnnex(s.player).get(plot)
+  if (holder) return s
+  return { ...s, player: { ...s.player, placementPlots: { ...s.player.placementPlots, [kind]: plot } } }
 }
 
 export function applyExcavateSubsurface(s: GameState): GameState {
