@@ -266,12 +266,6 @@ export interface Player {
   priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
-  /** Board changes since the last snapshot the player saw; cleared once read. */
-  economyArrival?: import('@/lib/systems/EconomyArrival').EconomyArrival
-  /** Last time the player was in the game (ms). Drives the welcome-back catch-up (SSL-702). */
-  lastVisitAt?: number
-  /** Non-market catch-up sources for the welcome-back card (SSL-702). */
-  welcomeBack?: import('@/lib/systems/WelcomeBack').WelcomeBack
   /** Immutable evidence that a player-built client structure completed. */
   clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>

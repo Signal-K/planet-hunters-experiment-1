@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import type { MutableRefObject } from 'react'
-import { withWelcomeBack } from '@/lib/systems/WelcomeBack'
 import type { Toast } from '@/components/ui/ToastLayer'
 import type { GameState } from '@/lib/game-types'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
@@ -18,8 +16,6 @@ interface InstrumentFeedNotificationOpts {
   player: GameState['player']
   setState: React.Dispatch<React.SetStateAction<GameState>>
   addToast: (message: string, kind?: Toast['kind']) => void
-  /** Set when the session opened after 4+ hours away: the digest then joins the welcome-back card. */
-  returnedSince?: MutableRefObject<number | undefined>
 }
 
 /**
@@ -32,7 +28,6 @@ export function useInstrumentFeedNotifications({
   player,
   setState,
   addToast,
-  returnedSince,
 }: InstrumentFeedNotificationOpts): void {
   // Keep the first render identical on the server and client. The real UTC
   // date is only needed by the post-commit notification effect.
@@ -84,22 +79,6 @@ export function useInstrumentFeedNotifications({
             return state
           }
 
-          // A return after a long absence folds the digest into the welcome-back
-          // card (SSL-702), so it is never announced twice.
-          const since = returnedSince?.current
-          if (since !== undefined) {
-            return {
-              ...state,
-              player: markInstrumentDigestNotified(
-                state.player.welcomeBack?.since === since
-                  ? { ...state.player, welcomeBack: withWelcomeBack(state.player.welcomeBack, since, { digest: pending.length }) }
-                  : state.player,
-                TRANSIT_TELESCOPE_INSTRUMENT_ID,
-                dateKey
-              ),
-            }
-          }
-
           const notificationKey = `${TRANSIT_TELESCOPE_INSTRUMENT_ID}:${dateKey}`
           if (!emitted.current.has(notificationKey)) {
             emitted.current.add(notificationKey)
@@ -130,7 +109,6 @@ export function useInstrumentFeedNotifications({
     return () => { cancelled = true }
   }, [
     addToast,
-    returnedSince,
     dateKey,
     enabled,
     player.freeOperations,

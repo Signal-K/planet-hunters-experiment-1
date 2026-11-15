@@ -22,7 +22,6 @@ import { useDailyClientPoolSync } from '@/lib/contexts/useDailyClientPoolSync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
-import { useWelcomeBack } from '@/lib/contexts/useWelcomeBack'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { applyResearchLanding } from '@/lib/systems/LandingSystem'
 import { claimFriendGift as claimFriendGiftRequest, sendFriendGift as sendFriendGiftRequest } from '@/lib/friends/client'
@@ -281,7 +280,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
-  const returnedSince = useWelcomeBack(stateRef, setState, hydrated, isPreview.current, !!auth.authUserId && pbShared.authStore.isValid)
   useDailyClientPoolSync(setState, hydrated, isPreview.current, !!state.player.freeOperations, state.player.missionsDone, state.player.clientMissions)
   const runtimeCatalog = useRuntimeCatalog(catalog, state)
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
@@ -323,7 +321,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     player: state.player,
     setState,
     addToast: ui.addToast,
-    returnedSince,
   })
 
   // Sync location changes to the URL. Mission creation is one location at

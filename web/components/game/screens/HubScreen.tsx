@@ -39,7 +39,6 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
 import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { welcomeBackRows } from '@/lib/systems/WelcomeBack'
 import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -113,8 +112,6 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
-  /** Clears the welcome-back market note once read. */
-  onDismissEconomyArrival?: () => void
   onOpenEvents?: () => void
   communityResearch?: CommunityResearch | null
   onOpenCommunity?: () => void
@@ -126,7 +123,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onDismissEconomyArrival, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -350,29 +347,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
     }
     : undefined
 
-  // Welcome back: the daily board moved while the player was away. It speaks
-  // from the Exchange when there is one, otherwise from a quiet launchpad.
-  // Only a return after 4+ hours opens a welcome-back, and only with something to say.
-  const welcomeBack = player.welcomeBack
-  const welcomeRows = welcomeBack ? welcomeBackRows(player.economyArrival, welcomeBack, kind => kind.replace(/-/g, ' ').replace(/^./, c => c.toUpperCase())) : []
-  const openWelcomeScene = (scene: 'market' | 'instrument' | 'base' | 'friends') => {
-    onDismissEconomyArrival?.()
-    if (scene === 'market') onOpenMarket?.()
-    else if (scene === 'instrument') onOpenScene('instrument-hub')
-    else if (scene === 'friends') openFriends()
-  }
-  const economyCallout: BuildingCallout | undefined = welcomeRows.length > 0 && !onboardingActive && !coachVisible && onDismissEconomyArrival
-    ? {
-      title: 'Welcome back',
-      body: 'While you were away:',
-      cta: 'Got it',
-      placement: 'viewport-clear',
-      rows: welcomeRows.map(row => ({ text: row.text, onOpen: () => openWelcomeScene(row.scene) })),
-      onCta: onDismissEconomyArrival,
-    }
-    : undefined
-  const economyCalloutAt = !economyCallout ? null : placed.includes('market') ? 'market' : launchpadCallout ? null : 'launchpad'
-
   // One sky control for the craft: flying, arrived and waiting on the pad.
   const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
     if (padLanding || homecoming) return null
@@ -407,7 +381,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         // taller hit area below covers the gantry without creating an
         // oversized box that shifts the building label away from the structure.
         w: BUILDING_W.launchpad,
-        callout: menuOpen || editMode ? undefined : launchpadCallout ?? (economyCalloutAt === 'launchpad' ? economyCallout : undefined),
+        callout: menuOpen || editMode ? undefined : launchpadCallout,
         onClick: () => padWorn && onServiceLaunchpad ? setServicingPad(true) : onFocusBuilding('launchpad'),
       }
     }
@@ -418,8 +392,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         sub: 'YOUR PROGRAM',
         status: 'ok' as const,
         w: 60,
-        // Sky prompts share one spot in open sky, so only one speaks at a time: the pad and the welcome-back go first.
-        callout: menuOpen || editMode || agencyLandmark || launchpadCallout || economyCalloutAt ? undefined : stationCallout,
+        // Sky prompts share one spot in open sky, so only one speaks at a time: the pad goes first.
+        callout: menuOpen || editMode || agencyLandmark || launchpadCallout ? undefined : stationCallout,
         // The landmark opens the build list once the station is unlocked and does nothing before.
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onOpenScene('mission-history'),
       }
@@ -430,7 +404,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         sub: 'SELL ORE',
         status: 'ok' as const,
         w: 150,
-        callout: menuOpen || editMode || economyCalloutAt !== 'market' ? undefined : economyCallout,
         onClick: () => onFocusBuilding('market'),
       }
     }

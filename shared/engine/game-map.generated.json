@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 28,
     "nativeScreenCases": 24,
-    "qaScenes": 85,
+    "qaScenes": 87,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 28,
     "authoringSources": 64,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 151,
-    "webGameComponents": 116,
+    "webGameComponents": 117,
     "nativeAppComponents": 57
   },
   "scenes": {
@@ -354,6 +354,16 @@
         ]
       },
       {
+        "id": "free-mining-silo-full",
+        "name": "Free mining run, silo full",
+        "flow": "core-loop",
+        "web": "ui-free-mining-silo-full",
+        "nativeDeferred": "iOS settles with the same rule (Market, HomeDelivery); not built in the cloud session.",
+        "tickets": [
+          "SSL-845"
+        ]
+      },
+      {
         "id": "free-mining",
         "name": "Free mining run",
         "flow": "core-loop",
@@ -573,16 +583,6 @@
         "native": "community-research-phone",
         "tickets": [
           "SSL-790"
-        ]
-      },
-      {
-        "id": "economy-arrival",
-        "name": "Welcome back: market board",
-        "flow": "progression",
-        "web": "ui-economy-arrival",
-        "native": "economy-arrival-phone",
-        "tickets": [
-          "SSL-701"
         ]
       },
       {
@@ -1029,6 +1029,26 @@
           "SSL-774"
         ],
         "native": "community-research-phone"
+      },
+      {
+        "id": "hub-first-run",
+        "name": "Base: first-run Agency landmark",
+        "flow": "core-loop",
+        "web": "hub-first-run",
+        "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
+        "tickets": [
+          "SSL-785"
+        ]
+      },
+      {
+        "id": "hub-unplaced",
+        "name": "Base: unplaced structures tray",
+        "flow": "core-loop",
+        "web": "hub-unplaced",
+        "nativeDeferred": "iOS Base has no annex slots yet: SSL-844.",
+        "tickets": [
+          "SSL-843"
+        ]
       },
       {
         "id": "hub-buildings-l2",
@@ -1993,16 +2013,13 @@
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
         "web/lib/systems/MarketplaceSystem.ts",
-        "web/lib/systems/DailyEconomyInput.ts",
-        "web/lib/systems/EconomyArrival.ts",
-        "web/lib/systems/WelcomeBack.ts"
+        "web/lib/systems/DailyEconomyInput.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
-        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/EconomyArrival.swift"
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
       ],
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": [],
@@ -2290,6 +2307,7 @@
       "web/components/game/control-station/ControlStationConsole.tsx",
       "web/components/game/control-station/ResearchCalendar.tsx",
       "web/components/game/control-station/SurveyScanConsole.tsx",
+      "web/components/game/hub/AnnexStructures.tsx",
       "web/components/game/hub/BaseConstellations.tsx",
       "web/components/game/hub/BaseDock.tsx",
       "web/components/game/hub/BaseLayerScene.tsx",
