@@ -6,7 +6,7 @@ import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -276,8 +276,8 @@ export default function MissionOperationRoutes({
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
-      const nightHold = showerForRunMission(game.mission.id) && chassis
-        ? (chassis.cargo ?? 0)
+      const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis
+        ? (chassis.cargo ?? 0) + loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity
         : undefined
       return (
         <MiningScreen
@@ -351,7 +351,7 @@ export default function MissionOperationRoutes({
           initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
           fragmentCatches={showerRunCatches(game.player, showerForRunMission(game.mission.id)?.id)}
-          cargoCapacity={nightHold}
+          cargoCapacity={limitedHold}
           fireballCaughtAt={game.player.fireball2026CaughtAt ?? null}
           skyEventLocation={game.player.skyEventLocation}
           onFireballCaught={() => {

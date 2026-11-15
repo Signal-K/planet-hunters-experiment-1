@@ -286,7 +286,8 @@ body:has([data-screen="launchpad"]) .suite-identity-chip {
     width: min(260px, 36vw) !important;
     transform: none !important;
   }
-  .hub-callout--clear { top: 60px !important; left: 28% !important; }
+  /* The sky here is a thin band: a wide, short card beside the HUD chips stays in it, clear of the pad's tower. */
+  .hub-callout--clear { top: 8px !important; left: 216px !important; width: min(460px, calc(100vw - 232px)) !important; padding: 8px 12px !important; }
 }
 
 .portrait-canvas:has([data-screen="hub"]) .earth-base-structure--launchpad::after {

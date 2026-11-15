@@ -24,11 +24,11 @@ private enum Tone {
 private struct ScopeDressing: View, Animatable {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// How far the sky has swung, in fractions of the field (SSL-826).
-    var pan: (x: Double, y: Double) = (0, 0)
+    nonisolated var pan: (x: Double, y: Double) = (0, 0)
     /// Hides the centre bead while a body fills the reticle.
     var focused = false
     /// Lets SwiftUI ease the pan between telescopes rather than jump.
-    var animatableData: AnimatablePair<Double, Double> {
+    nonisolated var animatableData: AnimatablePair<Double, Double> {
         get { AnimatablePair(pan.x, pan.y) }
         set { pan = (newValue.first, newValue.second) }
     }

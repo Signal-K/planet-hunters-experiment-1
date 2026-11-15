@@ -3,10 +3,12 @@
 import React from 'react'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MINERAL_META, MISSIONS, TARGETS } from '@/lib/data'
 import { orionidsNightRun } from '@/lib/data/missions'
-import { ORIONIDS_SHOWER_TARGET } from '@/lib/runtimeCatalog'
+import { buildRuntimeCatalog, ORIONIDS_SHOWER_TARGET } from '@/lib/runtimeCatalog'
+import { STATIC_CATALOG } from '@/lib/catalog'
+import { DEFAULT_STATE } from '@/lib/game-state'
 import MiningScreen from './MiningScreen'
 
 describe('MiningScreen guide', () => {
@@ -83,6 +85,21 @@ describe('MiningScreen guide', () => {
     expect(host.querySelector('[data-testid="mining-target-cue"]')).toBeNull()
     expect(host.querySelector('[data-testid="sky-event-mining"]')).toBeNull()
 
+    await act(async () => root.unmount())
+  })
+
+  it('lets a construction focus return a partial haul when the hold is smaller than the goal', async () => {
+    const player = { ...DEFAULT_STATE.player, resourceFocus: { label: 'Vault', minerals: { aluminium: 12 } } }
+    const mission = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player }).missions.find(m => m.id === 'focus-resource-mining')!
+    const onComplete = vi.fn()
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+    await act(async () => root.render(<MiningScreen mission={mission} target={TARGETS[0]} minerals={MINERAL_META}
+      initialCargo={{ aluminium: 6 }} initialEarthDisposition="store" isFreeHaulEligible cargoCapacity={6}
+      onComplete={onComplete} onBack={() => undefined} />))
+    await act(async () => host.querySelector<HTMLButtonElement>('[data-testid="return-home-btn"]')?.click())
+    expect(onComplete).toHaveBeenCalledWith({ aluminium: 6 }, 'store')
     await act(async () => root.unmount())
   })
 })

@@ -27,6 +27,8 @@ import {
 
 interface RocketBuilderSceneProps {
   missionTitle?: string | null
+  /** Cargo the job needs. A cargo part that still leaves the rocket short of it is not sold. */
+  cargoNeed?: number
   missionPayload?: { type: string; name: string; cargoCost: number }
   target?: Pick<Target, 'id' | 'name' | 'type' | 'archetype'> | null
   /** A physical vehicle is actually staged on the pad, rather than merely a default configuration. */
@@ -64,6 +66,7 @@ export const ROLLOUT_MS = 1600
 
 export default function RocketBuilderScene({
   missionTitle,
+  cargoNeed,
   missionPayload,
   target = null,
   hasStagedRocket = false,
@@ -126,9 +129,19 @@ export default function RocketBuilderScene({
   const fittedId = partIdForSlot(loadout, activeSlot)
   const fittedPart = options.find(part => part.id === fittedId)
 
+  // Capacity if this part replaced whatever is in the cargo-hold slot now.
+  const capacityWith = (part: (typeof options)[number]) => stats.capacity - Math.floor((fittedPart?.successBonus ?? 0) / 10) + Math.floor(part.successBonus / 10)
   const fitPart = (partId: string, unlockedAt: number) => {
     if (unlockedAt > missionsDone) { setNotice(`Unlocks after ${unlockedAt} missions`); return }
     if (!onInstall) return
+    // Paying for a hold that still cannot carry the job is wasted money: say so instead of taking it.
+    if (activeSlot.id === 'cargo-hold' && cargoNeed && partId !== fittedId) {
+      const part = options.find(candidate => candidate.id === partId)
+      if (part && part.price > 0 && capacityWith(part) < cargoNeed) {
+        setNotice(`Even with this part the rocket holds ${capacityWith(part)}U and the job needs ${cargoNeed}U. Choose a bigger rocket.`)
+        return
+      }
+    }
     const ok = onInstall(installSlot(loadout, activeSlot, partId), loadout)
     setNotice(ok ? '' : 'Not enough francs for this part')
   }
@@ -257,7 +270,7 @@ export default function RocketBuilderScene({
                         <span>{part.description}</span>
                       </span>
                       <span className={styles.optionMeta}>
-                        <em>{partEffectLabel(activeSlot, part)}</em>
+                        <em>{partEffectLabel(activeSlot, part)}{activeSlot.id === 'cargo-hold' && cargoNeed && !fittedNow && capacityWith(part) < cargoNeed ? ` · short of ${cargoNeed}U` : ''}</em>
                         <b>{fittedNow ? 'Fitted' : locked ? `After ${part.unlockedAtMissions} missions` : part.price === 0 ? 'Free' : formatCurrency(part.price, { compact: true })}</b>
                       </span>
                     </button>

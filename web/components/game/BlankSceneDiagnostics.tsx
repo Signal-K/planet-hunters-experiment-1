@@ -21,10 +21,24 @@ function introVisible(): boolean {
   return !!top && (top === title || title.contains(top) || !!top.closest('.intro-content'))
 }
 
-// Average brightness (0-255) of the first canvas, or null when it cannot be read (e.g. WebGL).
+// SSL-842: the biggest canvas on screen is the scene. Mining also mounts a small transparent helper canvas first,
+// and reading that one (transparent reads as 0) put this report over a healthy first mining run.
+function sceneCanvas(): HTMLCanvasElement | null {
+  let best: HTMLCanvasElement | null = null
+  let bestArea = 0
+  document.querySelectorAll<HTMLCanvasElement>('.game-screen-area canvas').forEach(canvas => {
+    const rect = canvas.getBoundingClientRect()
+    const area = rect.width * rect.height
+    if (canvas.width > 0 && canvas.height > 0 && area > bestArea) { best = canvas; bestArea = area }
+  })
+  return best
+}
+
+// Average brightness (0-255) of the scene canvas's painted pixels, or null when it cannot be read: a WebGL
+// read-back, or nothing on it opaque (a transparent canvas over a painted page is not a black screen).
 function canvasLuma(): number | null {
-  const canvas = document.querySelector('.game-screen-area canvas') as HTMLCanvasElement | null
-  if (!canvas || canvas.width === 0 || canvas.height === 0) return null
+  const canvas = sceneCanvas()
+  if (!canvas) return null
   try {
     const probe = document.createElement('canvas')
     probe.width = 16
@@ -34,8 +48,16 @@ function canvasLuma(): number | null {
     ctx.drawImage(canvas, 0, 0, 16, 16)
     const { data } = ctx.getImageData(0, 0, 16, 16)
     let total = 0
-    for (let i = 0; i < data.length; i += 4) total += (data[i] + data[i + 1] + data[i + 2]) / 3
-    return Math.round(total / (data.length / 4))
+    let painted = 0
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue
+      total += (data[i] + data[i + 1] + data[i + 2]) / 3
+      painted++
+    }
+    // A live WebGL scene (mining, Pixi) clears its buffer after compositing, so reading it back gives solid
+    // opaque black whether it painted or not. That reading proves nothing, so it is unknown, not blank.
+    if (!painted || total === 0) return null
+    return Math.round(total / painted)
   } catch {
     return null
   }

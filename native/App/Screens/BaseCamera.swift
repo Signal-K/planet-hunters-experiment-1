@@ -9,7 +9,13 @@ struct BaseWorld {
     var portrait: Bool { h > w * 1.15 }
     /// Points per kit unit (web `kitScale`).
     var px: CGFloat { CGFloat(WorldAssets.site?.scale(w: Double(w), h: Double(h)) ?? 2) }
-    var ground: CGFloat { h * CGFloat(1 - (WorldAssets.site?.ground.lineFromBottom ?? 0.2)) }
+    /// SSL-834 (Liam, 13.11): the structure row stands nearer the middle of the screen. Off upright phones the ground
+    /// line rises by `rowLift` (web `BASE_ROW_LIFT`); the painted world and the structures both read it from here.
+    static let rowLift = 0.12
+    static func groundLine(w: CGFloat, h: CGFloat) -> Double {
+        (WorldAssets.site?.ground.lineFromBottom ?? 0.2) + (h > w * 1.15 ? 0 : rowLift)
+    }
+    var ground: CGFloat { h * CGFloat(1 - Self.groundLine(w: w, h: h)) }
     /// Distance from the ground line to the top of the soil: at the surface the paving fills the screen to its
     /// bottom edge (as web); the soil and cutaway only show when the camera dives.
     var dirtDepth: CGFloat { max(h - ground, 20 * px) }

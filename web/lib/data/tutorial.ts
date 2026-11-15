@@ -49,7 +49,7 @@ const LOOP_SCREENS = new Set([
  * (SSL-675), not a first-run stop. */
 const LAUNCH_SCREENS = new Set(['targets', 'rocket-buy'])
 /** Flight and landing are one zero-tap sequence with no coach step (SSL-675). */
-const FLIGHT_SCREENS = new Set(['transit', 'landing', 'delivery'])
+const FLIGHT_SCREENS = new Set(['flight', 'transit', 'landing', 'delivery'])
 
 export function trainingTryStep(
   tryId: TrainingTryId,

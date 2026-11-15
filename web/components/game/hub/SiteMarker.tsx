@@ -23,7 +23,7 @@ export function SiteMarker({ site, label, onPlace, disabled = false }: { site: B
       <span className={styles.footprint} aria-hidden="true" />
       <span className={styles.label}>
         <span className={styles.plus} aria-hidden="true">+</span>
-        Place {label}
+        <span><b>Place</b><b>{label}</b></span>
       </span>
     </button>
   )

@@ -20,8 +20,8 @@ public enum Construction {
                            summary: "Small Earth-side mineral storage. Keep ore for construction; overflow sells when a flight returns."),
         StructureBlueprint(id: "market", name: "Exchange", cost: Economy.exchangePrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
                            summary: "Cargo dock where you sell ore at the spot price."),
-        StructureBlueprint(id: "control-station", name: "Control Station", cost: Economy.controlStationPrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
-                           summary: "Runs your satellites and telescopes. Build it before you launch one."),
+        StructureBlueprint(id: "control-station", name: "Agency Hub", cost: Economy.controlStationPrice, materials: [:], unlocksAt: "Opens once the guided missions are flown",
+                           summary: "Your agency headquarters. Holds the mission log and runs your satellites and telescopes. Build it before you launch one."),
     ]
     public static let byId: [String: StructureBlueprint] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 

@@ -5,7 +5,6 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/cycle-validation.yml'
-      - 'web/cypress/e2e/onboarding.cy.ts'
 permissions:
   contents: read
 jobs:
@@ -83,41 +82,11 @@ jobs:
           cache-dependency-path: '${{ matrix.directory }}/go.sum'
       - run: go test -count=1 -v ./...
         working-directory: '${{ matrix.directory }}'
-  onboarding:
-    name: Onboarding only browser e2e
-    runs-on: ubuntu-latest
+  native-core:
+    name: All native core tests
+    runs-on: macos-15
     timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - name: Start disposable local app
-        run: |
-          npm run dev > /tmp/landnam-next.log 2>&1 &
-          for attempt in {1..90}; do
-            if curl --fail --silent http://localhost:3001/game/intro > /dev/null; then exit 0; fi
-            sleep 2
-          done
-          cat /tmp/landnam-next.log
-          exit 1
-      - name: Play first-run onboarding
-        run: npx cypress run --browser chrome --spec cypress/e2e/onboarding.cy.ts --config video=true,defaultCommandTimeout=60000 --reporter junit --reporter-options 'mochaFile=test-results/onboarding-[hash].xml'
-        env:
-          CYPRESS_BASE_URL: http://localhost:3001
-      - name: Preserve browser evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: onboarding-evidence
-          path: |
-            web/cypress/screenshots/
-            web/cypress/videos/
-            web/test-results/
-            /tmp/landnam-next.log
+      - name: Run complete native domain suite
+        run: swift test --package-path native/LandnamCore

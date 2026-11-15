@@ -4,6 +4,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
 import { getLogs } from '@/lib/diagnostics-log'
 import { captureGameEvent } from '@/lib/posthog'
+import { isStaleChunkError, reloadOnceForStaleChunk } from '@/lib/chunk-recovery'
 
 type Game = ReturnType<typeof useGame>
 
@@ -58,6 +59,8 @@ export default class SceneErrorBoundary extends Component<Props, State> {
         stack: (error.stack ?? '').split('\n').slice(0, 8).join('\n'),
       })
     } catch { /* reporting must never throw inside the boundary */ }
+    // A screen whose code is missing (deploy replaced it) is fixed by one reload while online.
+    if (isStaleChunkError(error) && navigator.onLine) reloadOnceForStaleChunk(error.message)
   }
 
   componentDidUpdate(prev: Props) {
@@ -90,6 +93,8 @@ export default class SceneErrorBoundary extends Component<Props, State> {
     if (!error) return this.props.children
     const { game } = this.props
     const report = this.report()
+    const missingCode = isStaleChunkError(error)
+    const offline = typeof navigator !== 'undefined' && !navigator.onLine
     const button = {
       minHeight: 44, padding: '10px 20px', background: 'transparent', color: '#00e5ff',
       border: '1px solid rgba(0, 229, 255, 0.5)', borderRadius: 4, fontSize: 14, cursor: 'pointer',
@@ -99,9 +104,15 @@ export default class SceneErrorBoundary extends Component<Props, State> {
         position: 'fixed', inset: 0, zIndex: 50, overflow: 'auto', background: '#070b12',
         color: '#fff', padding: 16, fontFamily: 'ui-monospace, monospace', fontSize: 14,
       }}>
-        <h1 style={{ fontSize: 18, color: '#00e5ff', margin: '0 0 8px' }}>THIS SCENE CRASHED</h1>
+        <h1 style={{ fontSize: 18, color: '#00e5ff', margin: '0 0 8px' }}>
+          {missingCode ? 'THIS SCENE IS NOT DOWNLOADED YET' : 'THIS SCENE CRASHED'}
+        </h1>
         <p style={{ margin: '0 0 12px', color: 'rgba(255,255,255,0.7)' }}>
-          Your save is intact. Leave the scene, or discard the run if it crashes every time.
+          {missingCode
+            ? offline
+              ? 'Your save is intact. This part of the game was not saved for offline play. Go back to base, and reload once you are online.'
+              : 'Your save is intact. A new version of the game is out. Reload to get it.'
+            : 'Your save is intact. Leave the scene, or discard the run if it crashes every time.'}
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
           <button type="button" style={button} onClick={() => game.go('hub')}>BACK TO BASE</button>

@@ -41,11 +41,16 @@
   background: var(--ln-bp-paper, #fff);
   box-shadow: 3px 3px 0 var(--ln-bp-line-strong, rgba(15, 36, 54, 0.3));
   color: var(--ln-bp-ink, #0f2436);
-  font: 800 14px/1 var(--ln-font-display);
-  letter-spacing: 0.12em;
+  font: 800 14px/1.15 var(--ln-font-display);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  white-space: nowrap;
+  /* Two short lines ("Place" over the name) keep the label about as wide as its plot, clear of the neighbours. */
+  max-width: max(100%, 168px);
+  padding-block: 6px;
+  text-align: left;
 }
+.label b { display: block; font-weight: 800; }
+.label b:first-of-type { opacity: .75; }
 
 .plus {
   display: inline-grid;

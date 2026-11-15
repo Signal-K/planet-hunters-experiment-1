@@ -9,6 +9,11 @@ import {
 } from './runtimeCatalog'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from './data'
 import { DEFAULT_STATE } from './game-state'
+import { compatibleTargetsFor } from './data/targets'
+import { applyMiningDone, applyReturnArrived } from './systems/MiningSystem'
+import { applyFreeRunGoal } from './freeRunGoal'
+import { validateBuild } from './data/parts'
+import { applyHomeSplit } from './systems/HomeDeliverySystem'
 
 describe('buildRuntimeCatalog', () => {
   it('keeps an active Orionids run resolvable when a remote catalog omits the event row', () => {
@@ -65,7 +70,29 @@ describe('buildRuntimeCatalog', () => {
     })
     const mission = catalog.missions.find(item => item.id === 'focus-resource-mining')
     expect(mission?.requires.minerals).toEqual({ aluminium: 11, copper: 8 })
-    expect(mission?.requires.cargo_min).toBe(19)
+    expect(mission?.requires.cargo_min).toBe(1)
+  })
+  it('keeps a construction focus available across partial hauls and separate mineral sources', () => {
+    const focus = { label: 'Vault', minerals: { aluminium: 12, copper: 2 } }
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, resourceFocus: focus, stash: {} }
+    const build = (p: typeof player, missionId?: string) => buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: p, missionId })
+    const first = build(player).missions.find(m => m.id === 'focus-resource-mining')!
+    expect(first.requires.cargo_min).toBe(1)
+    expect(applyFreeRunGoal(first, { missionId: first.id, mineral: 'aluminium', amount: 12 }, STATIC_CATALOG.minerals)).toBe(first)
+    const source = { ...STATIC_CATALOG.targets[0], id: 'aluminium-only', orbit: 1, minerals: ['aluminium'] }
+    expect(compatibleTargetsFor(first, [source])).toEqual([source])
+    const rocket = { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
+    expect(validateBuild({ mission: first, target: source, rocket }).problems.filter(problem => problem.includes('cargo'))).toEqual([])
+    const active = { ...DEFAULT_STATE, screen: 'mining' as const, missionId: first.id, targetId: source.id, player }
+    const returned = applyReturnArrived(applyMiningDone(active, { aluminium: 6 }, null))
+    expect(returned.player.stash?.aluminium).toBe(6)
+    const settled = applyHomeSplit(returned, { aluminium: { client: 0, silo: 6, sell: 0 } }).state
+    expect(settled.player.stash?.aluminium).toBe(6)
+    const second = build({ ...player, stash: settled.player.stash ?? {} }).missions.find(m => m.id === first.id)!
+    expect(second.requires.minerals).toEqual({ aluminium: 6, copper: 2 })
+    expect(second.requires.cargo_min).toBe(1)
+    expect(build({ ...player, stash: { aluminium: 12, copper: 2 } }).missions.find(m => m.id === first.id)).toBeUndefined()
+    expect(build({ ...player, stash: { aluminium: 12, copper: 2 } }, first.id).missions.find(m => m.id === first.id)).toBeDefined()
   })
   it('offers no satellite or telescope launch until a control station is built', () => {
     const catalog = buildRuntimeCatalog({
