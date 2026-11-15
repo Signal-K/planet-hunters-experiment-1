@@ -7,7 +7,7 @@
 import type { GameState, HomeSettlement } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
 import { calibrateOnboardingPayout, isFreeHaulMission } from '@/lib/data'
-import { applySellHaul, earthStorageBuilt, sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
+import { applySellHaul, earthStorageBuilt, pickOverflowFromHaul, sellUnitPrice, storageCapacity, storedUnits } from './EconomySystem'
 
 export type HomeDestination = 'client' | 'silo' | 'sell'
 export type HomeSplit = Record<string, Record<HomeDestination, number>>
@@ -19,13 +19,25 @@ export function clientDemand(mission: Mission | null | undefined, cargo: Record<
   return Object.fromEntries(Object.entries(required).filter(([, n]) => n > 0))
 }
 
-/** Free silo room for this haul. The haul already sits in the stash, so it does not count against the room. */
-export function siloRoomFor(player: GameState['player'], cargo: Record<string, number>): { capacity: number; used: number; free: number; built: boolean } {
+/** Silo room for this haul. The haul already sits in the stash, so it does not count against the room.
+ *  SSL-845: `limit` is how much of the haul may go into the silo: the whole silo. Units past `free` push the
+ *  cheapest older stock out (sold at market on settle), so a full silo never stops the player storing a haul. */
+export function siloRoomFor(player: GameState['player'], cargo: Record<string, number>): { capacity: number; used: number; free: number; limit: number; built: boolean } {
   const built = earthStorageBuilt(player)
   const capacity = built ? storageCapacity(player) : 0
   const haul = storedUnits(cargo)
   const used = Math.max(0, storedUnits(player.stash) - haul)
-  return { capacity, used, free: Math.max(0, capacity - used), built }
+  return { capacity, used, free: Math.max(0, capacity - used), limit: capacity, built }
+}
+
+/** SSL-845: older stock (stash minus this haul) that must be sold, cheapest first, to fit `siloUnits` of the haul. */
+export function displacedForSilo(stash: Record<string, number> | undefined, cargo: Record<string, number>, siloUnits: number, capacity: number): Record<string, number> {
+  const older: Record<string, number> = {}
+  for (const [id, n] of Object.entries(stash ?? {})) {
+    const kept = Math.max(0, n) - Math.max(0, cargo[id] ?? 0)
+    if (kept > 0) older[id] = kept
+  }
+  return pickOverflowFromHaul(older, Math.max(0, storedUnits(older) + siloUnits - capacity))
 }
 
 /** Sensible starting split: fill the contract first, then the silo, then sell the rest. */
@@ -96,7 +108,12 @@ export function marketValue(player: GameState['player'], units: Record<string, n
  * the debrief does not run again.
  */
 export function applyHomeSplit(s: GameState, split: HomeSplit, now = Date.now(), terms: { payout: number; affinity: number } = { payout: 0, affinity: 0 }): { state: GameState; consumed: Record<string, number> } {
-  const soldUnits = pick(split, 'sell')
+  const fromHaul = pick(split, 'sell')
+  // SSL-845: units stored past the free room push out the cheapest older stock, sold at market alongside.
+  const cargo = Object.fromEntries(Object.entries(split).map(([id, row]) => [id, row.client + row.silo + row.sell]))
+  const displaced = earthStorageBuilt(s.player) ? displacedForSilo(s.player.stash, cargo, splitTotals(split).silo, storageCapacity(s.player)) : {}
+  const soldUnits: Record<string, number> = { ...fromHaul }
+  for (const [id, n] of Object.entries(displaced)) soldUnits[id] = (soldUnits[id] ?? 0) + n
   const sold = applySellHaul(s, soldUnits, now)
   const consumed = pick(split, 'client')
   // SSL-751: the run stays open on the debrief, which reads this ledger and closes it.

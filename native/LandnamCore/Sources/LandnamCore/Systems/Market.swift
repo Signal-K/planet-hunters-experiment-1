@@ -102,13 +102,29 @@ public enum Market {
         return spill
     }
 
-    /// Self-directed haul on return: sell it all, or keep up to silo capacity and sell the spill.
+    /// SSL-845: what leaves the silo when a stored haul does not fit. Older stock goes first, cheapest ore first, so the
+    /// haul the player chose to store stays; only a haul bigger than the whole silo spills its own cheapest ore.
+    public static func pickSpillForStore(stash: Cargo, haul: Cargo, overflow: Int) -> Cargo {
+        guard overflow > 0 else { return [:] }
+        var older: Cargo = [:]
+        for (id, n) in stash {
+            let kept = max(0, n) - max(0, haul[id] ?? 0)
+            if kept > 0 { older[id] = kept }
+        }
+        let fromOlder = pickOverflow(older, overflow: overflow)
+        var spill = fromOlder
+        for (id, n) in pickOverflow(haul, overflow: overflow - storedUnits(fromOlder)) { spill[id, default: 0] += n }
+        return spill
+    }
+
+    /// Self-directed haul on return: sell it all, or store it. A full silo never blocks storing (SSL-845): the cheapest
+    /// ore already held is sold at market to make room for the new haul.
     public static func applyFreeHaulDisposition(_ s: GameState, haul: Cargo, disposition: HaulDisposition, now: Double) -> GameState {
         guard haul.values.contains(where: { $0 > 0 }) else { return s }
         let effective: HaulDisposition = earthStorageBuilt(s.player) ? disposition : .sell
         if effective == .sell { return applySellHaul(s, haul: haul, now: now) }
         let overflow = max(0, storedUnits(s.player.stash) - storageCapacity(s.player))
-        return overflow <= 0 ? s : applySellHaul(s, haul: pickOverflow(haul, overflow: overflow), now: now)
+        return overflow <= 0 ? s : applySellHaul(s, haul: pickSpillForStore(stash: s.player.stash, haul: haul, overflow: overflow), now: now)
     }
 
     // MARK: rockets

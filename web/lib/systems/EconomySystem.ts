@@ -211,9 +211,10 @@ export function pickOverflowFromHaul(haul: Record<string, number>, overflow: num
  * so this only decides how much leaves again:
  *
  * - `sell` (or no vault built): sell the whole haul at market, crediting francs.
- * - `store` with a vault: keep the haul up to silo capacity; any units over
- *   capacity spill and are auto-sold (cheapest ore first). Ore already held
- *   before this run is never force-sold.
+ * - `store` with a vault: the new haul goes into the silo. SSL-845 (Liam, 16 Nov:
+ *   a full silo must never stop him storing what he mines): when it does not fit,
+ *   the cheapest ore already in the silo is sold at market to make room, then (only
+ *   if the haul alone is bigger than the silo) the haul's own cheapest ore.
  */
 export function applyFreeHaulDisposition(
   s: GameState,
@@ -228,7 +229,24 @@ export function applyFreeHaulDisposition(
   }
   const overflow = Math.max(0, storedUnits(s.player.stash) - storageCapacity(s.player))
   if (overflow <= 0) return s
-  return applySellHaul(s, pickOverflowFromHaul(haul, overflow), now)
+  return applySellHaul(s, pickSpillForStore(s.player.stash ?? {}, haul, overflow), now)
+}
+
+/** SSL-845: what leaves the silo when a stored haul does not fit. Older stock goes first, cheapest ore first, so the
+ *  haul the player chose to store stays; only a haul bigger than the whole silo spills its own cheapest ore. */
+export function pickSpillForStore(stash: Record<string, number>, haul: Record<string, number>, overflow: number): Record<string, number> {
+  if (overflow <= 0) return {}
+  const older: Record<string, number> = {}
+  for (const [id, n] of Object.entries(stash)) {
+    const kept = Math.max(0, n) - Math.max(0, haul[id] ?? 0)
+    if (kept > 0) older[id] = kept
+  }
+  const fromOlder = pickOverflowFromHaul(older, overflow)
+  const rest = overflow - storedUnits(fromOlder)
+  const fromHaul = pickOverflowFromHaul(haul, rest)
+  const spill: Record<string, number> = { ...fromOlder }
+  for (const [id, n] of Object.entries(fromHaul)) spill[id] = (spill[id] ?? 0) + n
+  return spill
 }
 
 

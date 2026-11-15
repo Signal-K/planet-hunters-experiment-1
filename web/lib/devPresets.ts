@@ -164,6 +164,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 2 on ORI-1', stage: 'free-ops' },
       { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 2 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
+      { key: 'ui-free-mining-silo-full', label: 'Free mining run, silo full', hint: 'Free run with the 40-unit Surface Silo already full (iron, cobalt, nickel). Store on Earth stays open: the haul goes in and the cheapest stored ore is sold to make room. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -1071,12 +1072,14 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-free-mining-silo-full':
     case 'ui-free-mining':
       return {
         screen: 'mining',
         player: {
           ...POST_ONBOARDING_PLAYER,
           placed: [...POST_ONBOARDING_PLAYER.placed, 'surface-silo'],
+          ...(name === 'ui-free-mining-silo-full' ? { stash: { iron: 24, cobalt: 10, nickel: 6 } } : {}),
           activeMission: { id: SELF_DIRECTED_MINING_MISSION_ID, label: 'Self-Directed Mining Run' },
           missionPhase: 'mining',
         },

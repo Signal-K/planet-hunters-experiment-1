@@ -108,6 +108,16 @@
    ]
   },
   {
+   "id": "free-mining-silo-full",
+   "name": "Free mining run, silo full",
+   "flow": "core-loop",
+   "web": "ui-free-mining-silo-full",
+   "nativeDeferred": "iOS settles with the same rule (Market, HomeDelivery); not built in the cloud session.",
+   "tickets": [
+    "SSL-845"
+   ]
+  },
+  {
    "id": "free-mining",
    "name": "Free mining run",
    "flow": "core-loop",
