@@ -49,10 +49,12 @@ function initialise() {
     // after a click — the actual cause of "panels take a second to
     // register a click" on every screen, not just canvas-heavy ones.
     // Sampling keeps replay coverage for triage while avoiding rrweb work in
-    // 19 out of 20 sessions.
+    // most sessions. KES-447 (Liam, 16.11): raised from 5% to 25% so /game
+    // replays (the trigger added to the shared project) arrive often enough to
+    // watch; 3 sessions in 4 still skip rrweb entirely.
     session_recording: {
       maskAllInputs: true,
-      sampleRate: 0.05,
+      sampleRate: 0.25,
     },
   })
   initialised = true
