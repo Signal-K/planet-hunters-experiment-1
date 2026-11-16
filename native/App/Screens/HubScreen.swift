@@ -24,6 +24,8 @@ struct HubScreen: View {
     @State private var upgrading: String?
     /// Tapping the Surface Silo opens its contents above ground (web `SurfaceSiloPanel`). The Mineral Vault underground is a separate building.
     @State private var siloOpen = false
+    /// SSL-844: the Unplaced tray item being placed; while set, the free annex slots light up.
+    @State private var placingAnnex: String?
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
     @State private var dockHeight: CGFloat = 112
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
@@ -94,7 +96,9 @@ struct HubScreen: View {
                 onExcavate: { _ = store.excavateSubsurface() },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
-                onSlot: { placeOnSlot($0) }
+                onSlot: { placeOnSlot($0) },
+                placingAnnex: placingAnnex,
+                onAnnexSlot: { placeAnnex(on: $0, size: size) }
             )
             if store.screen != .hubSubsurface && !placing { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
@@ -119,6 +123,7 @@ struct HubScreen: View {
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
             if !placing { subsurfaceArrow(insets: insets, aboveDock: portrait && size.width < 1040) }
+            if !placing && store.screen != .hubSubsurface { unplacedTray(insets: insets, aboveDock: portrait && size.width < 1040, size: size) }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
@@ -153,6 +158,45 @@ struct HubScreen: View {
         .padding(.leading, max(insets.leading, 16))
         .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+    }
+
+    /// SSL-844: owned annex structures with no slot, waiting to be placed (web `unplacedAnnexKinds`).
+    private var unplacedAnnex: [String] {
+        WorldAssets.site?.unplacedAnnexKinds(placed: store.player.placed, plots: store.player.placementPlots) ?? []
+    }
+
+    /// The Unplaced tray, just right of the Subsurface arrow (web: beside it in the bottom-left stack).
+    @ViewBuilder private func unplacedTray(insets: EdgeInsets, aboveDock: Bool, size: CGSize) -> some View {
+        if let map = WorldAssets.site, !unplacedAnnex.isEmpty {
+            UnplacedTray(
+                map: map, kinds: unplacedAnnex, placing: placingAnnex,
+                onPick: { kind in pickAnnex(kind, map: map, size: size) },
+                onCancel: { placingAnnex = nil }
+            )
+            .padding(.leading, max(insets.leading, 16) + 56 + 12)
+            .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+    }
+
+    /// Picks a tray item and swings the camera to the first free annex slot.
+    private func pickAnnex(_ kind: String, map: BaseSiteMap, size: CGSize) {
+        placingAnnex = kind
+        let standing = map.placedAnnex(placed: store.player.placed, plots: store.player.placementPlots)
+        guard let free = map.annexSlotList.first(where: { standing[$0.plot] == nil }) else { return }
+        focus(onStripX: free.x, size: size)
+    }
+
+    private func placeAnnex(on plot: Int, size: CGSize) {
+        guard let kind = placingAnnex, let map = WorldAssets.site, store.placeAnnex(kind, plot: plot, map: map) else { return }
+        placingAnnex = nil
+        if let slot = map.annexSlot(plot: plot) { focus(onStripX: slot.x, size: size) }
+    }
+
+    /// Pans the camera so a strip x (kit units) sits mid-screen.
+    private func focus(onStripX x: Double, size: CGSize) {
+        let world = BaseWorld(w: size.width, h: size.height)
+        camera.pan(by: CGFloat(x) * world.px - size.width / 2 - camera.x, world)
     }
 
     /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
@@ -349,6 +393,8 @@ struct HubScreen: View {
         case "market": store.go(.market)
         case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
         case "surface-silo": siloOpen = true
+        // SSL-844: the ground telescope on its annex slot opens the Data hub, as on web.
+        case ControlStation.groundTelescopeStructureId: store.go(.instrumentHub)
         default: break
         }
     }

@@ -77,6 +77,17 @@ public enum Construction {
         return n
     }
 
+    /// SSL-843: stand an owned annex structure (one already paid for) on a free annex slot, or move it to another one.
+    /// Free: the price was paid when it was built. A taken slot, an unowned kind or a non-annex kind is a no-op
+    /// (web `applyPlaceAnnex`).
+    public static func applyPlaceAnnex(_ s: GameState, kind: String, plot: Int, map: BaseSiteMap) -> GameState {
+        guard map.isAnnexKind(kind), s.player.placed.contains(kind), map.annexSlot(plot: plot) != nil,
+              map.placedAnnex(placed: s.player.placed, plots: s.player.placementPlots)[plot] == nil else { return s }
+        var n = s
+        n.player.placementPlots[kind] = plot
+        return n
+    }
+
     public static func progress(_ startedAt: Double?, now: Double) -> Double {
         guard let startedAt else { return 1 }
         return min(1, max(0, (now - startedAt) / buildMs))

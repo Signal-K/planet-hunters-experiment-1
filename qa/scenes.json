@@ -797,9 +797,10 @@
    "name": "Base: unplaced structures tray",
    "flow": "core-loop",
    "web": "hub-unplaced",
-   "nativeDeferred": "iOS Base has no annex slots yet: SSL-844.",
+   "native": "hub-unplaced-phone",
    "tickets": [
-    "SSL-843"
+    "SSL-843",
+    "SSL-844"
    ]
   },
   {

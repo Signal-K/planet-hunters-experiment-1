@@ -351,6 +351,12 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    /// SSL-843: stands an owned annex structure from the Unplaced tray on a free annex slot.
+    @discardableResult public func placeAnnex(_ kind: String, plot: Int, map: BaseSiteMap) -> Bool {
+        let next = Construction.applyPlaceAnnex(state, kind: kind, plot: plot, map: map)
+        guard next != state else { return false }
+        apply(next); return true
+    }
     /// Clears the unbuilt bedrock below a placed surface silo. Kept in the
     /// store so native applies the same one-time cost as the web Hub.
     @discardableResult public func excavateSubsurface() -> Bool {
