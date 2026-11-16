@@ -97,7 +97,9 @@ public final class GameStore {
             || p.placed.contains("deep-space-telescope") != n.placed.contains("deep-space-telescope")
             || p.saturnImagerLaunchedAt != n.saturnImagerLaunchedAt
             || p.discoveredExoplanetTargets != n.discoveredExoplanetTargets
-            || p.dailyClientPool?.missions != n.dailyClientPool?.missions {
+            || p.dailyClientPool?.missions != n.dailyClientPool?.missions
+            // SSL-840: the focus run appears, shrinks after each stored haul, and goes once the goal is met.
+            || p.resourceFocus != n.resourceFocus || ResourceFocusRun.missing(p) != ResourceFocusRun.missing(n) {
             catalog = Self.runtimeCatalog(baseCatalog, player: n, missionId: next.missionId, targetId: next.targetId)
         }
     }
