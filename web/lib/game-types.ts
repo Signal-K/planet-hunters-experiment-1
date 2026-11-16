@@ -218,6 +218,8 @@ export interface Player {
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
+  /** SSL-802: owned a ground telescope before telescopes had to be placed to observe; that one observes from the tray. */
+  groundTelescopeGrandfathered?: boolean
   /** Left-to-right order of the movable structures along the Base (hangar, launchpad, control-station, market). Absent: authored order. */
   baseArrangement?: string[]
   /** kind -> startedAt ms. Absence means the structure is fully built. */
@@ -266,12 +268,6 @@ export interface Player {
   priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
-  /** Board changes since the last snapshot the player saw; cleared once read. */
-  economyArrival?: import('@/lib/systems/EconomyArrival').EconomyArrival
-  /** Last time the player was in the game (ms). Drives the welcome-back catch-up (SSL-702). */
-  lastVisitAt?: number
-  /** Non-market catch-up sources for the welcome-back card (SSL-702). */
-  welcomeBack?: import('@/lib/systems/WelcomeBack').WelcomeBack
   /** Immutable evidence that a player-built client structure completed. */
   clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>
@@ -589,6 +585,8 @@ export interface GameActions {
   excavateSubsurface: () => void
   /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
   buildGroundTelescope: () => boolean
+  /** SSL-843: stands an owned annex structure on a free annex slot; false when the slot is taken or the kind is not owned. */
+  placeAnnex: (kind: string, plot: number) => boolean
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
   buyMinerals: (mineralId: string, amount: number) => void

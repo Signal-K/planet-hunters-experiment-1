@@ -145,16 +145,13 @@
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
         "web/lib/systems/MarketplaceSystem.ts",
-        "web/lib/systems/DailyEconomyInput.ts",
-        "web/lib/systems/EconomyArrival.ts",
-        "web/lib/systems/WelcomeBack.ts"
+        "web/lib/systems/DailyEconomyInput.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Systems/Market.swift",
         "native/LandnamCore/Sources/LandnamCore/Systems/Marketplace.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/Refinery.swift",
-        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift",
-        "native/LandnamCore/Sources/LandnamCore/Systems/EconomyArrival.swift"
+        "native/LandnamCore/Sources/LandnamCore/Data/Economy.swift"
       ],
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": []

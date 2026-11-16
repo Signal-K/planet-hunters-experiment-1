@@ -33,11 +33,13 @@ export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelesco
 
 /** Structure id a player places to own ground telescopes. */
 export { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
-import { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
+import { GROUND_TELESCOPE_STRUCTURE_ID, observingGroundTelescopes } from '@/lib/systems/InstrumentFeedSystem'
 
 export interface StationPlayer {
   freeOperations?: boolean
   placed?: readonly string[]
+  placementPlots?: Record<string, number>
+  groundTelescopeGrandfathered?: boolean
   badges?: Record<string, PlayerBadge>
   transitSatelliteLaunchedAt?: number | null
   deepSpaceTelescopeBuilt?: boolean
@@ -81,7 +83,8 @@ export interface StationEquipment {
   /** Structure the player builds to own this equipment, for `presence: 'built'`. */
   structureId?: string
   /** Which launch makes this piece's queue live. `always` needs no launch. */
-  feedFlag: StationPlayerFlag | 'always'
+  /** `ground-observing`: live while a ground telescope stands on the Base (or the pre-SSL-802 one, anywhere). */
+  feedFlag: StationPlayerFlag | 'always' | 'ground-observing'
   observingLabel: string
   readyLabel: string
   standbyLabel: string
@@ -120,8 +123,8 @@ export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
     projectIds: ['asteroid-discovery'],
     presence: 'built',
     structureId: GROUND_TELESCOPE_STRUCTURE_ID,
-    // Live as soon as it is built: it adds its own candidates each day.
-    feedFlag: 'always',
+    // SSL-802: live once one stands on an annex slot; a new one in the Unplaced tray is standing by.
+    feedFlag: 'ground-observing',
     observingLabel: 'Observing',
     readyLabel: 'Observing',
     standbyLabel: 'Standing by',
@@ -222,8 +225,9 @@ export interface ControlStationModel {
   skyBadges: WswChip[]
 }
 
-function flagOn(player: StationPlayer, flag: StationPlayerFlag | 'always'): boolean {
+function flagOn(player: StationPlayer, flag: StationEquipment['feedFlag']): boolean {
   if (flag === 'always') return true
+  if (flag === 'ground-observing') return observingGroundTelescopes(player) > 0
   const value = player[flag]
   return value === true || (typeof value === 'number' && value > 0)
 }

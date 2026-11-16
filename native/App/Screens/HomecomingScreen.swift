@@ -36,7 +36,8 @@ struct HomecomingScreen: View {
         guard autoSettle, settling == nil else { return }
         let c = cargo
         let demand = HomeDelivery.demand(store.mission, cargo: c)
-        settle(HomeDelivery.defaultSplit(c, demand: demand, siloFree: HomeDelivery.silo(store.player, cargo: c).free))
+        let room = HomeDelivery.silo(store.player, cargo: c)
+        settle(HomeDelivery.defaultSplit(c, demand: demand, siloFree: store.player.freeHaulDisposition == .store ? room.limit : room.free))
     }
 
     private var cargo: Cargo { (store.state.lastCargo ?? [:]).filter { $0.value > 0 } }
@@ -45,7 +46,7 @@ struct HomecomingScreen: View {
         let mission = store.mission
         let demand = HomeDelivery.demand(mission, cargo: cargo)
         let silo = HomeDelivery.silo(store.player, cargo: cargo)
-        let current = split ?? HomeDelivery.defaultSplit(cargo, demand: demand, siloFree: silo.free)
+        let current = split ?? HomeDelivery.defaultSplit(cargo, demand: demand, siloFree: store.player.freeHaulDisposition == .store ? silo.limit : silo.free)
         let totals = HomeDelivery.totals(current)
         let payout = HomeDelivery.clientPayout(mission, split: current, demand: demand, missionsDone: store.player.missionsDone)
         let sellValue = HomeDelivery.marketValue(store.player, units: HomeDelivery.pick(current, .sell), now: store.now)
@@ -154,7 +155,8 @@ struct HomecomingScreen: View {
     private func card(_ id: String, row: HomeDelivery.Row, demand: Cargo, silo: HomeDelivery.Silo, current: HomeDelivery.Split) -> some View {
         let meta = Minerals.byId[id]
         let price = Market.unitPrice(id, player: store.player, clientId: nil, now: store.now).price
-        let siloLeft = max(0, silo.free - HomeDelivery.totals(current).silo)
+        let siloUsed = HomeDelivery.totals(current).silo
+        let siloNote = !silo.built ? "No silo" : siloUsed > silo.free ? "Sells \(siloUsed - silo.free) cheapest" : "\(silo.free - siloUsed) free"
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Self.navy)
@@ -163,7 +165,7 @@ struct HomecomingScreen: View {
             }
             HStack(spacing: 6) {
                 choice(id, .client, "Deliver", row.client, note: (demand[id] ?? 0) > 0 ? "Needs \(demand[id]!)" : "Not needed", tint: Color(red: 0.882, green: 0.922, blue: 0.973), demand: demand, silo: silo, current: current)
-                choice(id, .silo, "Silo", row.silo, note: silo.built ? "\(siloLeft) free" : "No silo", tint: Color(red: 0.902, green: 0.922, blue: 0.945), demand: demand, silo: silo, current: current)
+                choice(id, .silo, "Silo", row.silo, note: siloNote, tint: Color(red: 0.902, green: 0.922, blue: 0.945), demand: demand, silo: silo, current: current)
                 choice(id, .sell, "Sell", row.sell, note: "F\(price.formatted()) ea", tint: Color(red: 0.937, green: 0.925, blue: 0.894), demand: demand, silo: silo, current: current)
             }
         }
@@ -174,9 +176,9 @@ struct HomecomingScreen: View {
         VStack(spacing: 4) {
             Text(title).font(AppFont.body(12, "SemiBold")).foregroundStyle(Self.steel)
             HStack(spacing: 2) {
-                stepper("minus") { split = HomeDelivery.release(current, id: id, from: d, siloFree: silo.free) }
+                stepper("minus") { split = HomeDelivery.release(current, id: id, from: d, siloFree: silo.limit) }
                 Text("\(n)").font(AppFont.display(18)).foregroundStyle(Self.navy).frame(minWidth: 22)
-                stepper("plus") { split = HomeDelivery.shift(current, id: id, to: d, demand: demand, siloFree: silo.free) }
+                stepper("plus") { split = HomeDelivery.shift(current, id: id, to: d, demand: demand, siloFree: silo.limit) }
             }
             Text(note).font(AppFont.body(11)).foregroundStyle(Self.steel).lineLimit(1).minimumScaleFactor(0.7)
         }

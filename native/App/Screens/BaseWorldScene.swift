@@ -43,6 +43,9 @@ struct BaseWorldScene: View {
     var placing: Bool = false
     var pickedKind: String? = nil
     var onSlot: (Int) -> Void = { _ in }
+    /// SSL-844: the Unplaced tray item being placed; while set, the free annex slots show a Place marker.
+    var placingAnnex: String? = nil
+    var onAnnexSlot: (Int) -> Void = { _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pinchStart: CGFloat?
     @State private var dragStartX: CGFloat?
@@ -90,6 +93,7 @@ struct BaseWorldScene: View {
                         }
                     }
                     if placing { siteMarker(world: world) }
+                    annexLayer(world: world)
                     if constellationSkyVisible { ConstellationLayer(player: player, world: world) }
                 }
                 .frame(width: world.worldW, height: world.worldH, alignment: .topLeading)
@@ -106,7 +110,7 @@ struct BaseWorldScene: View {
             .simultaneousGesture(pinch())
             .onAppear {
                 // Frame what is built (the pad site on a fresh base) once; the player pans from there.
-                if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds) }
+                if !camera.homed && camera.x == 0 && camera.depth == 0 { camera.x = world.homeX(shownKinds, plots: plots) }
                 camera.homed = true
                 if subsurfaceActive { camera.dive(true, world, reduceMotion: reduceMotion) }
             }
@@ -276,6 +280,22 @@ struct BaseWorldScene: View {
             .position(x: centerX, y: bottom + 14)
             .allowsHitTesting(false)
             .accessibilityHidden(true))
+    }
+
+    /// SSL-844: the annex slots, with whatever stands on them (web `AnnexStructures`). Quiet on a first-run base and
+    /// in Build, where the main sites are the point.
+    @ViewBuilder private func annexLayer(world: BaseWorld) -> some View {
+        if let map = WorldAssets.site, !map.annexSlotList.isEmpty {
+            BaseAnnexLayer(
+                map: map, world: world,
+                standing: map.placedAnnex(placed: placed, plots: plots),
+                placing: placingAnnex,
+                showsNames: world.h > 640,
+                quiet: placed.isEmpty || placing,
+                onPlace: { onAnnexSlot($0.plot) },
+                onOpen: { onStructure($0) }
+            )
+        }
     }
 
     /// The picked structure's one site, marked on the ground at its real footprint while it is free (web `SiteMarker`).

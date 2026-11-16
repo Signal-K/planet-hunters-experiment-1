@@ -38,6 +38,8 @@ interface ControlStationConsoleProps {
   onBuild: () => void
   buildCost?: string
   buildShortfall?: string | null
+  /** SSL-802: the ground telescopes the player owns, how many can stand on the Base, and how many still wait to be placed. */
+  ground?: { owned: number; max: number; unplaced: number }
   /** The back and help controls, top left. */
   rail: ReactNode
   /** A pending ask above the instrument list (a scan waiting for a manual check). */
@@ -165,6 +167,7 @@ export function ControlStationConsole({
   onBuild,
   buildCost,
   buildShortfall = null,
+  ground,
   rail,
   notice,
   onLogbook,
@@ -287,7 +290,7 @@ export function ControlStationConsole({
               >
                 <span className={styles.switch} aria-hidden="true"><span /></span>
                 <span className={styles.keyCopy}>
-                  <b>{scope.name.replace('-', '\u2011')}{scope.community && <span className={styles.communityTag}>Community</span>}</b>
+                  <b>{(scope.id === 'ground' && ground && ground.owned > 1 ? `Ground telescopes ×${ground.owned}` : scope.name).replace('-', '\u2011')}{scope.community && <span className={styles.communityTag}>Community</span>}</b>
                   <small>
                     <i className={styles.led} data-on={scope.live} data-ready={scope.readyCount > 0} aria-hidden="true" />
                     {scope.status}
@@ -300,18 +303,27 @@ export function ControlStationConsole({
                 </span>
                 {scope.built && <span className={styles.counter} data-ready={scope.readyCount > 0} aria-label={`${scope.readyCount} ready`}>{String(scope.readyCount).padStart(2, '0')}</span>}
               </button>
-              {!scope.built && (
-                <button
-                  type="button"
-                  className={styles.build}
-                  data-testid="control-station-build"
-                  disabled={!!buildShortfall}
-                  aria-label={buildShortfall ? `Build ${scope.name}: needs ${buildShortfall}` : `Build ${scope.name}${buildCost ? ` for ${buildCost}` : ''}`}
-                  onClick={onBuild}
-                >
-                  {buildShortfall ? `Needs ${buildShortfall}` : `Build${buildCost ? ` · ${buildCost}` : ''}`}
-                </button>
+              {scope.id === 'ground' && scope.built && ground && ground.unplaced > 0 && (
+                <p className={styles.placeNote} data-testid="control-station-place-note">
+                  {ground.unplaced === 1 ? 'One telescope waits' : `${ground.unplaced} telescopes wait`} in the Base's Unplaced tray. Place it to observe.
+                </p>
               )}
+              {(!scope.built || (scope.id === 'ground' && ground && ground.owned < ground.max)) && (() => {
+                const more = scope.built
+                const verb = more ? 'Add a telescope' : 'Build'
+                return (
+                  <button
+                    type="button"
+                    className={styles.build}
+                    data-testid={more ? 'control-station-build-more' : 'control-station-build'}
+                    disabled={!!buildShortfall}
+                    aria-label={buildShortfall ? `${verb} ${more ? '' : scope.name}: needs ${buildShortfall}` : `${more ? 'Add another ground telescope' : `Build ${scope.name}`}${buildCost ? ` for ${buildCost}` : ''}`}
+                    onClick={onBuild}
+                  >
+                    {buildShortfall ? `Needs ${buildShortfall}` : `${verb}${buildCost ? ` · ${buildCost}` : ''}`}
+                  </button>
+                )
+              })()}
             </li>
           ))}
         </ul>

@@ -49,7 +49,7 @@ describe('PostHog idle init', () => {
     expect(init.mock.calls[0][1]).toMatchObject({
       capture_heatmaps: false,
       capture_dead_clicks: false,
-      session_recording: { maskAllInputs: true, sampleRate: 0.05 },
+      session_recording: { maskAllInputs: true, sampleRate: 0.25 },
     })
     expect(capture).toHaveBeenCalledWith('free_ops_unlocked', { missions_done: 1 })
   })

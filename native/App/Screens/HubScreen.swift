@@ -24,6 +24,8 @@ struct HubScreen: View {
     @State private var upgrading: String?
     /// Tapping the Surface Silo opens its contents above ground (web `SurfaceSiloPanel`). The Mineral Vault underground is a separate building.
     @State private var siloOpen = false
+    /// SSL-844: the Unplaced tray item being placed; while set, the free annex slots light up.
+    @State private var placingAnnex: String?
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
     @State private var dockHeight: CGFloat = 112
     /// Homecoming (SSL-553): the core stage lands on the pad behind the delivery sheet.
@@ -89,12 +91,15 @@ struct HubScreen: View {
                 onStructure: { openStructure($0) },
                 onShaft: { if !offerUpgrade("surface-silo") { store.go(.hubSubsurface) } },
                 onBuildSilo: { buildSilo() },
-                onBuildSubsurfaceSilo: { _ = store.buildSubsurfaceSilo() },
-                onBuildDeepSubsurfaceSilo: { _ = store.buildSubsurfaceSilo(deep: true) },
-                onExcavate: { _ = store.excavateSubsurface() },
+                // SSL-840: a build short of materials focuses them and opens the run that collects them (web FOCUS MATERIALS).
+                onBuildSubsurfaceSilo: { if !store.buildSubsurfaceSilo() { store.focusResources(label: "Mineral Vault", materials: GameStore.subsurfaceSiloMaterials(deep: false)) } },
+                onBuildDeepSubsurfaceSilo: { if !store.buildSubsurfaceSilo(deep: true) { store.focusResources(label: "Deep Mineral Vault", materials: GameStore.subsurfaceSiloMaterials(deep: true)) } },
+                onExcavate: { if !store.excavateSubsurface() { store.focusResources(label: "Subsurface excavation", materials: GameStore.excavationMaterials) } },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
-                onSlot: { placeOnSlot($0) }
+                onSlot: { placeOnSlot($0) },
+                placingAnnex: placingAnnex,
+                onAnnexSlot: { placeAnnex(on: $0, size: size) }
             )
             if store.screen != .hubSubsurface && !placing { orbitingTelescopes(width: size.width, height: size.height) }
             skyCraft(width: size.width, height: size.height)
@@ -119,6 +124,7 @@ struct HubScreen: View {
                 .padding(.bottom, insets.bottom + max(zones.dock.bottomInset, 14))
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
             if !placing { subsurfaceArrow(insets: insets, aboveDock: portrait && size.width < 1040) }
+            if !placing && store.screen != .hubSubsurface { unplacedTray(insets: insets, aboveDock: portrait && size.width < 1040, size: size) }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
     }
@@ -153,6 +159,45 @@ struct HubScreen: View {
         .padding(.leading, max(insets.leading, 16))
         .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+    }
+
+    /// SSL-844: owned annex structures with no slot, waiting to be placed (web `unplacedAnnexKinds`).
+    private var unplacedAnnex: [String] {
+        WorldAssets.site?.unplacedAnnexKinds(placed: store.player.placed, plots: store.player.placementPlots) ?? []
+    }
+
+    /// The Unplaced tray, just right of the Subsurface arrow (web: beside it in the bottom-left stack).
+    @ViewBuilder private func unplacedTray(insets: EdgeInsets, aboveDock: Bool, size: CGSize) -> some View {
+        if let map = WorldAssets.site, !unplacedAnnex.isEmpty {
+            UnplacedTray(
+                map: map, kinds: unplacedAnnex, placing: placingAnnex,
+                onPick: { kind in pickAnnex(kind, map: map, size: size) },
+                onCancel: { placingAnnex = nil }
+            )
+            .padding(.leading, max(insets.leading, 16) + 56 + 12)
+            .padding(.bottom, aboveDock ? self.aboveDock(insets) : insets.bottom + max(zones.dock.bottomInset, 14))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+    }
+
+    /// Picks a tray item and swings the camera to the first free annex slot.
+    private func pickAnnex(_ kind: String, map: BaseSiteMap, size: CGSize) {
+        placingAnnex = kind
+        let standing = map.placedAnnex(placed: store.player.placed, plots: store.player.placementPlots)
+        guard let free = map.annexSlotList.first(where: { standing[$0.plot] == nil }) else { return }
+        focus(onStripX: free.x, size: size)
+    }
+
+    private func placeAnnex(on plot: Int, size: CGSize) {
+        guard let kind = placingAnnex, let map = WorldAssets.site, store.placeAnnex(kind, plot: plot, map: map) else { return }
+        placingAnnex = nil
+        if let slot = map.annexSlot(plot: plot) { focus(onStripX: slot.x, size: size) }
+    }
+
+    /// Pans the camera so a strip x (kit units) sits mid-screen.
+    private func focus(onStripX x: Double, size: CGSize) {
+        let world = BaseWorld(w: size.width, h: size.height)
+        camera.pan(by: CGFloat(x) * world.px - size.width / 2 - camera.x, world)
     }
 
     /// Builds the silo on the first free plot; when it is locked or unaffordable the Build screen explains why.
@@ -349,6 +394,8 @@ struct HubScreen: View {
         case "market": store.go(.market)
         case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
         case "surface-silo": siloOpen = true
+        // SSL-844: the ground telescope on its annex slot opens the Data hub, as on web.
+        case let k where ControlStation.isGroundTelescope(k): store.go(.instrumentHub)
         default: break
         }
     }
@@ -359,8 +406,6 @@ struct HubScreen: View {
             HudGearClock(onSettings: { showSettings = true }, onFriends: { showFriends = true }, onNotifications: { showNotifications = true }, notificationCount: notificationCount)
             if store.player.activeMission != nil {
                 ContractCard(width: z.contractCard.width, collapsible: portrait && z.contractCard.collapseInPortrait)
-            } else if !placing, let summary = EconomyArrival.summary(store.player) {
-                ArrivalNote(width: z.contractCard.width, summary: summary)
             }
         }
         .padding(.leading, max(insets.leading + z.inset, 12))
@@ -503,46 +548,6 @@ private struct ContractCard: View {
     }
 }
 
-/// Welcome back: what moved on the shared daily market board while the player was away (SSL-701).
-private struct ArrivalNote: View {
-    @Environment(GameStore.self) private var store
-    let width: CGFloat
-    let summary: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 0) {
-                Text("WELCOME BACK").font(AppFont.display(14)).tracking(1.2).foregroundStyle(Theme.hudMint)
-                    .padding(.horizontal, 12).frame(height: 24)
-                    .background(Theme.hudInk, in: UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8))
-                Spacer(minLength: 0)
-            }
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 4) {
-                    Text(summary).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Button { store.dismissEconomyArrival() } label: {
-                        Image(systemName: "xmark").font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.hudInk)
-                            .frame(width: 44, height: 44).contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain).accessibilityLabel("Dismiss")
-                    .padding(.top, -10).padding(.trailing, -8)
-                }
-                Button { store.dismissEconomyArrival(); store.go(.market) } label: {
-                    Text("OPEN MARKET").font(AppFont.display(14)).tracking(1.0).foregroundStyle(Theme.hudInk)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(Theme.hudMint, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.hudInk, lineWidth: 1.5))
-                }.buttonStyle(.plain)
-            }
-            .padding(10)
-            .background(Theme.hudPanel, in: UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12))
-            .overlay(UnevenRoundedRectangle(bottomLeadingRadius: 12, bottomTrailingRadius: 12, topTrailingRadius: 12).stroke(Theme.hudInk, lineWidth: 1.5))
-        }
-        .frame(width: width)
-    }
-}
 
 private struct HudBar: View {
     let value: Double

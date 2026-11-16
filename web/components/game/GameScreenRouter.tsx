@@ -363,6 +363,7 @@ function ScreenBody({
           placementMode={screen === 'build'}
           buildOptions={buildOptions}
           onPlaceStructure={placeStructureFromBase}
+          onPlaceAnnex={(kind, plot) => game.placeAnnex(kind, plot)}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           onboardingActive={onboardingActive}
           coachVisible={coachVisible}
@@ -420,7 +421,6 @@ function ScreenBody({
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onOpenMarket={() => game.go('market')}
-          onDismissEconomyArrival={() => game.setPlayer(current => ({ ...current, economyArrival: undefined, welcomeBack: undefined }))}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={() => {

@@ -436,7 +436,7 @@ function CargoDestinationPanel({
             {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%` }} />}
             {haulUnits > 0 && <span style={{ width: `${Math.min(100, (haulUnits / cap) * 100)}%` }} />}
           </div>
-          {overflowUnits > 0 && <p className={styles.note}>{overflowUnits} units over capacity are sold.</p>}
+          {overflowUnits > 0 && <p className={styles.note}>{overflowUnits} units of the cheapest stored ore are sold to make room.</p>}
         </>
       ) : (
         <div className={styles.netLine}>

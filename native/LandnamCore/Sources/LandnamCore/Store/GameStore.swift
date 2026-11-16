@@ -97,7 +97,9 @@ public final class GameStore {
             || p.placed.contains("deep-space-telescope") != n.placed.contains("deep-space-telescope")
             || p.saturnImagerLaunchedAt != n.saturnImagerLaunchedAt
             || p.discoveredExoplanetTargets != n.discoveredExoplanetTargets
-            || p.dailyClientPool?.missions != n.dailyClientPool?.missions {
+            || p.dailyClientPool?.missions != n.dailyClientPool?.missions
+            // SSL-840: the focus run appears, shrinks after each stored haul, and goes once the goal is met.
+            || p.resourceFocus != n.resourceFocus || ResourceFocusRun.missing(p) != ResourceFocusRun.missing(n) {
             catalog = Self.runtimeCatalog(baseCatalog, player: n, missionId: next.missionId, targetId: next.targetId)
         }
     }
@@ -164,6 +166,16 @@ public final class GameStore {
         var n = state
         guard ResearchFragments.convertAvailable(&n.player) > 0 else { return }
         apply(n)
+    }
+
+    /// SSL-840: aim the programme at a construction's missing materials and open the run that collects them.
+    /// Returns false when nothing is short.
+    @discardableResult public func focusResources(label: String, materials: Cargo) -> Bool {
+        var n = state
+        guard ResourceFocusRun.focus(&n.player, label: label, materials: materials) else { return false }
+        apply(n)
+        openMissionBoard(tab: ResourceFocusRun.boardTab)
+        return true
     }
 
     public func openMissionBoard(tab: Int) {
@@ -351,11 +363,27 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    /// SSL-802: buys the next ground telescope into the Unplaced tray.
+    @discardableResult public func buildGroundTelescope() -> Bool {
+        let next = Construction.applyBuildGroundTelescope(state)
+        guard next != state else { return false }
+        apply(next); return true
+    }
+    /// SSL-843: stands an owned annex structure from the Unplaced tray on a free annex slot.
+    @discardableResult public func placeAnnex(_ kind: String, plot: Int, map: BaseSiteMap) -> Bool {
+        let next = Construction.applyPlaceAnnex(state, kind: kind, plot: plot, map: map)
+        guard next != state else { return false }
+        apply(next); return true
+    }
     /// Clears the unbuilt bedrock below a placed surface silo. Kept in the
     /// store so native applies the same one-time cost as the web Hub.
+    /// Materials the subsurface work takes from the stash (web `SUBSURFACE_EXCAVATE_COST`, `SUBSURFACE_ROOMS`).
+    public static let excavationMaterials: Cargo = ["aluminium": 10]
+    public static func subsurfaceSiloMaterials(deep: Bool) -> Cargo { deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8] }
+
     @discardableResult public func excavateSubsurface() -> Bool {
         let cost = 2_000_000
-        let aluminium = 10
+        let aluminium = Self.excavationMaterials["aluminium", default: 0]
         guard state.player.placed.contains("surface-silo"), !state.player.subsurfaceExcavated,
               state.player.francs >= cost, state.player.stash["aluminium", default: 0] >= aluminium else { return false }
         var next = state
@@ -372,7 +400,7 @@ public final class GameStore {
         let id = deep ? "deep-mineral-vault" : "mineral-vault"
         guard !state.player.subsurfaceBuilt.contains(id) else { return false }
         let cost = deep ? 8_000_000 : 3_000_000
-        let materials = deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8]
+        let materials = Self.subsurfaceSiloMaterials(deep: deep)
         guard state.player.francs >= cost,
               materials.allSatisfy({ state.player.stash[$0.key, default: 0] >= $0.value }) else { return false }
         var next = state
@@ -402,7 +430,6 @@ public final class GameStore {
     public func sellRefined(_ recipeId: String, amount: Int) { apply(Refinery.applySell(state, recipeId: recipeId, amount: amount, now: now)) }
     public func sell(_ mineralId: String, amount: Int) { apply(Market.applySell(state, mineralId: mineralId, amount: amount, now: now)) }
     public func buy(_ mineralId: String, amount: Int) { apply(Marketplace.applyBuy(state, mineralId: mineralId, amount: amount, now: now)) }
-    public func dismissEconomyArrival() { apply(EconomyArrival.applyDismiss(state)) }
     public func setPriceAlert(_ mineralId: String, target: Int) { apply(Marketplace.applySetAlert(state, mineralId: mineralId, target: target, now: now)) }
     public func removePriceAlert(_ id: String) { apply(Marketplace.applyRemoveAlert(state, alertId: id)) }
     /// Returns the alerts that fired this call so the caller can notify the player.

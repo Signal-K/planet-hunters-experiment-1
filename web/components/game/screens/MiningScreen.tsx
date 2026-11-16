@@ -183,7 +183,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
   const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const siloFull = !!hasEarthStorage && storageFree !== undefined && storageFree <= 0
-  const canStore = !!hasEarthStorage && !siloFull
+  // SSL-845: a full silo never blocks storing. The haul goes in and the cheapest stored ore is sold to make room.
+  const canStore = !!hasEarthStorage
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const steerRef = useRef<((dir: number) => void) | null>(null)
@@ -574,7 +575,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               <button type="button" className={gateStyles.choice} data-testid="mining-gate-store" onClick={() => canStore && setEarthDisposition('store')} disabled={!canStore}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5z" /><path d="M4 9 12 4l8 5M9 13h6" /></svg>
                 <b>Store on Earth</b>
-                <small>{!hasEarthStorage ? 'Needs a silo or vault' : siloFull ? 'Silo full. Sell, or upgrade it' : 'Into the silo'}</small>
+                <small>{!hasEarthStorage ? 'Needs a silo or vault' : siloFull ? 'Silo full: sells your cheapest stored ore to make room' : storageFree !== undefined ? `Into the silo · ${storageFree} free` : 'Into the silo'}</small>
               </button>
             </div>
           </section>

@@ -46,22 +46,6 @@ enum SceneCatalog {
         return gs
     }
 
-    /// Base with the Exchange and a new daily board since the last visit (web `ui-economy-arrival`).
-    static func economyArrivalState() -> GameState {
-        var gs = webHubState()
-        gs.player.placed = ["launchpad", "market", "hangar", "control-station"]
-        gs.player.placementPlots = ["launchpad": 0, "market": 1, "hangar": 2, "control-station": 3]
-        gs.player.extras["economyArrival"] = .object([
-            "fromDate": .string("2026-10-24"), "toDate": .string("2026-10-27"),
-            "moves": .array([
-                .object(["materialId": .string("nickel"), "materialName": .string("Nickel"), "changePct": .number(11)]),
-                .object(["materialId": .string("copper"), "materialName": .string("Copper"), "changePct": .number(-6)]),
-            ]),
-            "levelUps": .array([.object(["clientId": .string("atlas-aggregate"), "clientName": .string("Atlas Aggregate"), "levelAfter": .number(3)])]),
-        ])
-        return gs
-    }
-
     static func basePlayer() -> GameState {
         var gs = GameState()
         gs.player.freeOperations = true; gs.player.missionsDone = 4; gs.player.francs = 60_000_000
@@ -297,6 +281,24 @@ enum SceneCatalog {
         return gs
     }
 
+    /// SSL-840 (web `ui-focus-run`): a Mineral Vault focus with 6 of 15 aluminium stored, mining at Itokawa in a 6-unit hull.
+    static func focusRunState(mining: Bool) -> GameState {
+        var gs = miningState(rover: false, target: "itokawa")
+        gs.player.freeOperations = true; gs.player.missionsDone = 5
+        gs.player.placed.append("surface-silo")
+        gs.player.stash = ["aluminium": 6]
+        gs.player.resourceFocus = ResourceFocus(label: "Mineral Vault", minerals: ["aluminium": 15, "copper": 8])
+        gs.player.freeHaulDisposition = .store
+        gs.rocket = RocketConfig(chassis: "hull-mk1", propulsion: "ion-a1", drill: "hand-drill")
+        if mining {
+            gs.missionId = ResourceFocusRun.missionId
+            gs.player.activeMission = ActiveMission(id: ResourceFocusRun.missionId, label: "Materials for Mineral Vault")
+        } else {
+            gs.screen = .missions; gs.missionId = nil; gs.targetId = nil; gs.player.activeMission = nil; gs.player.missionPhase = nil
+        }
+        return gs
+    }
+
     static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
         var gs = miningState(rover: false)
         gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
@@ -314,7 +316,6 @@ enum SceneCatalog {
         scene("takeon-live-landscape", 402, w: 874) { TakeonSceneScreen(onExit: {}).environment(GameStore()) },
         scene("friends-landscape", 428, w: 926) { FriendsSheet(onClose: {}).environment(GameStore()) },
         scene("hub-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: webHubState())) },
-        scene("economy-arrival-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0)).environment(GameStore(state: economyArrivalState())) },
         scene("upgrade-launchpad-phone", 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 62, leading: 0, bottom: 34, trailing: 0), placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
         scene("upgrade-silo-max-landscape", 402, w: 874) { HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true, upgrading: "surface-silo").environment(GameStore(state: { var gs = basePlayer(); gs.player.buildingLevels["surface-silo"] = 3; return gs }())) },
         scene("upgrade-launchpad-desktop", 900, w: 1440) { HubScreen(placing: true, upgrading: "launchpad").environment(GameStore(state: basePlayer())) },
@@ -453,8 +454,17 @@ enum SceneCatalog {
         },
         scene("control-station-built-phone", 874) {
             var gs = GameState()
-            gs.player.freeOperations = true; gs.player.placed = ["ground-telescope"]; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
+            gs.player.freeOperations = true; gs.player.placed = ["ground-telescope"]; gs.player.placementPlots = ["ground-telescope": 10]; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
             gs.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .gold, earnedAt: wswNoon)]
+            let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
+            return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
+        // SSL-802: one ground telescope on the West annex and ₣6M: Add a telescope buys the second into the Unplaced tray.
+        scene("second-ground-telescope-phone", 874) {
+            var gs = GameState()
+            gs.player.freeOperations = true; gs.player.francs = 6_000_000
+            gs.player.placed = ["ground-telescope"]; gs.player.placementPlots = ["ground-telescope": 10]
+            gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },
@@ -692,6 +702,10 @@ enum SceneCatalog {
         },
         scene("transit-live-landscape", 402, w: 874) {
             TransitScreen().environment(GameStore(state: transitState(returning: false)))
+        },
+        scene("mining-focus-run", 874) { MiningScreen().environment(GameStore(state: focusRunState(mining: true))) },
+        scene("mission-focus-run-phone", 874) {
+            MissionsScreen(startTab: ResourceFocusRun.boardTab).environment(GameStore(state: focusRunState(mining: false), clock: { wswNoon })).environment(\.flatLayout, true)
         },
         scene("mining-laser-live", 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))

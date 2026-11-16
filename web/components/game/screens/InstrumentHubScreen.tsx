@@ -13,7 +13,7 @@ import { buildControlStation } from '@/lib/control-station'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
-import { GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES, type InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import { GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES, GROUND_TELESCOPE_IDS, groundTelescopeObserving, ownedGroundTelescopes, type InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import { STRUCTURE_PRICES } from '@/lib/data/economy'
 import { formatCurrency } from '@/lib/format'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
@@ -110,6 +110,11 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           onBuild={() => { if (onBuildGroundTelescope()) setJustBuilt(true) }}
           buildCost={formatCurrency(groundCost, { compact: true })}
           buildShortfall={buildShortfall}
+          ground={{
+            owned: ownedGroundTelescopes(player).length,
+            max: GROUND_TELESCOPE_IDS.length,
+            unplaced: ownedGroundTelescopes(player).filter(id => !groundTelescopeObserving(player, id)).length,
+          }}
           onLogbook={() => setLogbookOpen(true)}
           scan={canScan ? { scanning, onOpen: () => setScanOpen(true) } : undefined}
           notice={player.scanFollowUp ? (() => {
@@ -134,7 +139,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
         />
       {justBuilt && (
         <p className={styles.toast} role="status" data-testid="ground-telescope-built">
-          Ground telescope built. It adds {GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate to your feed every day.
+          Ground telescope built. Place it on the Base and it adds {GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate to your feed every day.
         </p>
       )}
       {scanOpen && onStartScan && onResolveScan && (

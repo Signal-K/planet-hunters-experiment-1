@@ -22,13 +22,28 @@ public enum HomeDelivery {
         return (mission.construction?.requiredMaterials ?? mission.requires.minerals).filter { $0.value > 0 }
     }
 
-    public struct Silo: Equatable, Sendable { public var capacity: Int; public var used: Int; public var free: Int; public var built: Bool }
+    /// `limit` (SSL-845) is how much of the haul may go into the silo: the whole silo. Units past `free` push the
+    /// cheapest older stock out (sold at market on settle), so a full silo never stops the player storing a haul.
+    public struct Silo: Equatable, Sendable {
+        public var capacity: Int; public var used: Int; public var free: Int; public var built: Bool
+        public var limit: Int { capacity }
+    }
     /// Free silo room for this haul; the haul already sits in the stash so it does not count against the room.
     public static func silo(_ p: Player, cargo: Cargo) -> Silo {
         let built = Market.earthStorageBuilt(p)
         let capacity = built ? Market.storageCapacity(p) : 0
         let used = max(0, Market.storedUnits(p.stash) - Market.storedUnits(cargo))
         return Silo(capacity: capacity, used: used, free: max(0, capacity - used), built: built)
+    }
+
+    /// SSL-845: older stock (stash minus this haul) sold, cheapest first, to fit `siloUnits` of the haul.
+    public static func displaced(stash: Cargo, cargo: Cargo, siloUnits: Int, capacity: Int) -> Cargo {
+        var older: Cargo = [:]
+        for (id, n) in stash {
+            let kept = max(0, n) - max(0, cargo[id] ?? 0)
+            if kept > 0 { older[id] = kept }
+        }
+        return Market.pickOverflow(older, overflow: max(0, Market.storedUnits(older) + siloUnits - capacity))
     }
 
     /// Contract first, then the silo, then sell the rest.
@@ -86,7 +101,12 @@ public enum HomeDelivery {
 
     /// Settle the market share (sold out of the stash) and leave silo units in place. Returns the client share for the debrief ledger.
     public static func apply(_ s: GameState, split: Split, now: Double) -> (state: GameState, consumed: Cargo) {
-        var n = Market.applySellHaul(s, haul: pick(split, .sell), now: now)
+        var sold = pick(split, .sell)
+        if Market.earthStorageBuilt(s.player) {
+            let cargo = split.mapValues { $0.total }
+            for (id, k) in displaced(stash: s.player.stash, cargo: cargo, siloUnits: totals(split).silo, capacity: Market.storageCapacity(s.player)) { sold[id, default: 0] += k }
+        }
+        var n = Market.applySellHaul(s, haul: sold, now: now)
         n.player.homeDeliveryPending = false
         n.player.cargoSettledOffworld = true
         n.player.freeHaulDisposition = nil

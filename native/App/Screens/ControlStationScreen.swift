@@ -38,40 +38,66 @@ private struct ScopeDressing: View, Animatable {
                 let t = tl.date.timeIntervalSinceReferenceDate
                 // SSL-830: the sky itself is the shared base map; the scope draws its ring and reticle on it.
                 SkyMapBase.draw(ctx, size: size, time: t, pan: pan, still: reduceMotion)
-                let c = CGPoint(x: size.width / 2, y: size.height / 2)
-                let r = min(size.width, size.height) * 0.46
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r)), with: .color(Tone.cream.opacity(0.28)), lineWidth: 2)
-                let band = r - 7.5
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - band, y: c.y - band, width: 2 * band, height: 2 * band)), with: .color(Tone.ink.opacity(0.55)), lineWidth: 13)
-                let inner = r - 14.5
-                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - inner, y: c.y - inner, width: 2 * inner, height: 2 * inner)), with: .color(Tone.cyan.opacity(0.45)), lineWidth: 1)
-                var fine = Path(), major = Path()
-                for deg in stride(from: 0, to: 360, by: 5) {
-                    let a = Double(deg) * .pi / 180, long = deg % 30 == 0
-                    let p0 = CGPoint(x: c.x + cos(a) * (r - 1), y: c.y + sin(a) * (r - 1))
-                    let p1 = CGPoint(x: c.x + cos(a) * (r - (long ? 14 : 9)), y: c.y + sin(a) * (r - (long ? 14 : 9)))
-                    if long { major.move(to: p0); major.addLine(to: p1) } else { fine.move(to: p0); fine.addLine(to: p1) }
-                }
-                ctx.stroke(fine, with: .color(Tone.cream.opacity(0.42)), lineWidth: 1)
-                ctx.stroke(major, with: .color(Tone.cyanSoft.opacity(0.8)), lineWidth: 2)
-                var cross = Path()
-                cross.move(to: CGPoint(x: 0, y: c.y)); cross.addLine(to: CGPoint(x: size.width, y: c.y))
-                cross.move(to: CGPoint(x: c.x, y: 0)); cross.addLine(to: CGPoint(x: c.x, y: size.height))
-                ctx.stroke(cross, with: .color(Tone.cyanSoft.opacity(0.22)), lineWidth: 1)
-                var corners = Path()
-                let k = 20.0, m = 10.0
-                for (cx, cy, sx, sy) in [(m, m, 1.0, 1.0), (size.width - m, m, -1.0, 1.0), (m, size.height - m, 1.0, -1.0), (size.width - m, size.height - m, -1.0, -1.0)] {
-                    corners.move(to: CGPoint(x: cx, y: cy + sy * k)); corners.addLine(to: CGPoint(x: cx, y: cy)); corners.addLine(to: CGPoint(x: cx + sx * k, y: cy))
-                }
-                ctx.stroke(corners, with: .color(Tone.cream.opacity(0.6)), lineWidth: 2)
-                if !focused {
-                    ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 13, y: c.y - 13, width: 26, height: 26)), with: .color(Tone.cream.opacity(0.7)), lineWidth: 1.5)
-                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(Tone.cyan))
-                }
+                Self.drawReticle(ctx, size: size, focused: focused)
             }
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    // SSL-841: the reticle is drawn in small typed steps so the Swift compiler type-checks `body` quickly.
+    private static func ring(_ ctx: GraphicsContext, _ c: CGPoint, _ radius: CGFloat, _ color: Color, _ width: CGFloat) {
+        let rect = CGRect(x: c.x - radius, y: c.y - radius, width: 2 * radius, height: 2 * radius)
+        ctx.stroke(Path(ellipseIn: rect), with: .color(color), lineWidth: width)
+    }
+
+    private static func ticks(_ ctx: GraphicsContext, _ c: CGPoint, _ r: CGFloat) {
+        var fine = Path()
+        var major = Path()
+        for deg in stride(from: 0, to: 360, by: 5) {
+            let a: CGFloat = CGFloat(deg) * .pi / 180
+            let long: Bool = deg % 30 == 0
+            let outer: CGFloat = r - 1
+            let innerR: CGFloat = r - (long ? 14 : 9)
+            let p0 = CGPoint(x: c.x + cos(a) * outer, y: c.y + sin(a) * outer)
+            let p1 = CGPoint(x: c.x + cos(a) * innerR, y: c.y + sin(a) * innerR)
+            if long { major.move(to: p0); major.addLine(to: p1) } else { fine.move(to: p0); fine.addLine(to: p1) }
+        }
+        ctx.stroke(fine, with: .color(Tone.cream.opacity(0.42)), lineWidth: 1)
+        ctx.stroke(major, with: .color(Tone.cyanSoft.opacity(0.8)), lineWidth: 2)
+    }
+
+    private static func crosshairs(_ ctx: GraphicsContext, _ c: CGPoint, _ size: CGSize) {
+        var cross = Path()
+        cross.move(to: CGPoint(x: 0, y: c.y)); cross.addLine(to: CGPoint(x: size.width, y: c.y))
+        cross.move(to: CGPoint(x: c.x, y: 0)); cross.addLine(to: CGPoint(x: c.x, y: size.height))
+        ctx.stroke(cross, with: .color(Tone.cyanSoft.opacity(0.22)), lineWidth: 1)
+    }
+
+    private static func brackets(_ ctx: GraphicsContext, _ size: CGSize) {
+        var corners = Path()
+        let k: CGFloat = 20, m: CGFloat = 10
+        let anchors: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
+            (m, m, 1, 1), (size.width - m, m, -1, 1), (m, size.height - m, 1, -1), (size.width - m, size.height - m, -1, -1),
+        ]
+        for (cx, cy, sx, sy) in anchors {
+            corners.move(to: CGPoint(x: cx, y: cy + sy * k)); corners.addLine(to: CGPoint(x: cx, y: cy)); corners.addLine(to: CGPoint(x: cx + sx * k, y: cy))
+        }
+        ctx.stroke(corners, with: .color(Tone.cream.opacity(0.6)), lineWidth: 2)
+    }
+
+    private static func drawReticle(_ ctx: GraphicsContext, size: CGSize, focused: Bool) {
+        let c = CGPoint(x: size.width / 2, y: size.height / 2)
+        let r: CGFloat = min(size.width, size.height) * 0.46
+        ring(ctx, c, r, Tone.cream.opacity(0.28), 2)
+        ring(ctx, c, r - 7.5, Tone.ink.opacity(0.55), 13)
+        ring(ctx, c, r - 14.5, Tone.cyan.opacity(0.45), 1)
+        ticks(ctx, c, r)
+        crosshairs(ctx, c, size)
+        brackets(ctx, size)
+        guard !focused else { return }
+        ring(ctx, c, 13, Tone.cream.opacity(0.7), 1.5)
+        ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(Tone.cyan))
     }
 }
 
@@ -354,6 +380,16 @@ struct ControlStationScreen: View {
         .background(Tone.well, in: RoundedRectangle(cornerRadius: 8))
     }
 
+    /// SSL-802: ground telescopes bought but not yet standing on an annex slot.
+    private var unplacedGround: Int {
+        ControlStation.ownedGroundTelescopes(store.player).filter { !ControlStation.groundTelescopeObserving(store.player, $0) }.count
+    }
+
+    private func displayName(_ scope: StationSky.Telescope) -> String {
+        let owned = ControlStation.ownedGroundTelescopes(store.player).count
+        return scope.id == "ground" && owned > 1 ? "Ground telescopes ×\(owned)" : scope.name
+    }
+
     /// A telescope key: a toggle switch that filters the map, an LED, and a digit counter.
     private func key(_ scope: StationSky.Telescope) -> some View {
         let on = scope.id == telescopeId
@@ -367,7 +403,7 @@ struct ControlStationScreen: View {
                     .opacity(scope.built ? 1 : 0.45)
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 8) {
-                            Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                            Text(displayName(scope).uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
                             if scope.community {
                                 Text("COMMUNITY").font(AppFont.body(12, "Bold")).tracking(1).foregroundStyle(Tone.gold)
                                     .padding(.horizontal, 8).padding(.vertical, 2).background(Tone.gold.opacity(0.18), in: Capsule())
@@ -391,7 +427,25 @@ struct ControlStationScreen: View {
             .buttonStyle(.plain).disabled(!scope.built)
             .accessibilityAddTraits(on ? .isSelected : [])
             .accessibilityIdentifier("control-station-telescope-\(scope.id)")
-            if !scope.built {
+            if scope.id == "ground" && scope.built && unplacedGround > 0 {
+                Text(unplacedGround == 1 ? "One telescope waits in the Base's Unplaced tray. Place it to observe." : "\(unplacedGround) telescopes wait in the Base's Unplaced tray. Place them to observe.")
+                    .font(AppFont.body(14, "Bold")).foregroundStyle(Tone.gold)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10)
+                    .accessibilityIdentifier("control-station-place-note")
+            }
+            if scope.id == "ground" && (!scope.built || ControlStation.nextGroundTelescopeId(store.player) != nil) {
+                // SSL-802: buy a ground telescope here, ₣2M each, one per annex slot (web `control-station-build-more`).
+                let price = ControlStation.groundTelescopePrice
+                let short = store.player.francs < price ? Economy.format(francs: price - store.player.francs) : nil
+                let verb = scope.built ? "ADD A TELESCOPE" : "BUILD"
+                Button { store.buildGroundTelescope() } label: {
+                    Text(short.map { "NEEDS \($0) MORE" } ?? "\(verb) · \(Economy.format(francs: price))").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
+                        .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))
+                }
+                .buttonStyle(.plain).padding([.horizontal, .bottom], 8).disabled(short != nil).opacity(short == nil ? 1 : 0.6)
+                .accessibilityLabel(scope.built ? "Add another ground telescope" : "Build \(scope.name)")
+                .accessibilityIdentifier(scope.built ? "control-station-build-more" : "control-station-build")
+            } else if !scope.built {
                 Button { store.go(.build) } label: {
                     Text("BUILD").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
                         .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))

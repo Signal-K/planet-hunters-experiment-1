@@ -43,7 +43,12 @@ const WEB_SITE_COMPRESSION = 0.84
  * source of truth; this is only a camera composition adjustment for web.
  */
 export function displaySite(source: BaseSite): BaseSite {
-  return { ...source, x: STRIP_W / 2 + (source.x - STRIP_W / 2) * WEB_SITE_COMPRESSION }
+  return { ...source, x: displayX(source.x) }
+}
+
+/** Web display x for an authored strip x (see displaySite). */
+export function displayX(x: number): number {
+  return STRIP_W / 2 + (x - STRIP_W / 2) * WEB_SITE_COMPRESSION
 }
 
 /** Points per kit unit. Portrait fits the hangar and pad across the width (between 1.5 and 2); landscape is 2
@@ -60,8 +65,13 @@ export function kitScale(view: { w: number; h: number }): number {
 
 /** Strip x (kit units) the camera starts centred on: the middle of everything built, or the pad site on a fresh
  *  base. When the built span is wider than the view, the pad stays in frame. */
-export function homeCenter(kinds: readonly string[], viewUnits: number, order?: readonly string[] | null): number {
-  const sites = kinds.map(k => homeSite(k, order)).filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+export function homeCenter(kinds: readonly string[], viewUnits: number, order?: readonly string[] | null, plots?: Record<string, number>): number {
+  const sites: Array<Pick<BaseSite, 'x' | 'half'>> = kinds.map(k => homeSite(k, order)).filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
+  // SSL-843: a structure on an annex slot is part of what is built, so the camera frames it too.
+  for (const k of kinds) {
+    const slot = isAnnexKind(k) ? annexSlotForPlot(plots?.[k]) : null
+    if (slot) sites.push({ x: displayX(slot.x), half: slot.half })
+  }
   const pad = displaySite(homeSite('launchpad', order) ?? siteById('pad'))
   if (!sites.length) return pad.x
   const l = Math.min(...sites.map(s => s.x - s.half))
@@ -134,6 +144,38 @@ export function spriteCenterOffset(sprite: StructureSprite): number {
 
 export const GROUND = site.ground
 
+/** SSL-843: a fixed slot for a small structure, like a tree spot in a garden. Main sites take one kind each; annex
+ *  slots take any annex kind. `plot` is the save slot (`placementPlots[kind]`), numbered from 10. */
+export interface AnnexSlot { id: string; x: number; half: number; plot: number; label: string }
+export interface AnnexKind { label: string; /** Name on the Base's ground label, short so it clears the neighbours'. */ short: string; body: number; height: number }
+export const ANNEX_SLOTS = site.annexSlots.slots as AnnexSlot[]
+export const ANNEX_KINDS = site.annexSlots.kinds as Record<string, AnnexKind>
+
+export function isAnnexKind(kind: string): boolean {
+  return Object.prototype.hasOwnProperty.call(ANNEX_KINDS, kind)
+}
+
+export function annexSlotForPlot(plot: number | null | undefined): AnnexSlot | null {
+  return plot == null ? null : ANNEX_SLOTS.find(s => s.plot === plot) ?? null
+}
+
+/** Annex structures standing on a slot, by slot plot. A slot two saves both claim goes to the first kind listed. */
+export function placedAnnex(player: { placed?: readonly string[]; placementPlots?: Record<string, number> }): Map<number, string> {
+  const out = new Map<number, string>()
+  for (const kind of player.placed ?? []) {
+    if (!isAnnexKind(kind)) continue
+    const slot = annexSlotForPlot(player.placementPlots?.[kind])
+    if (slot && !out.has(slot.plot)) out.set(slot.plot, kind)
+  }
+  return out
+}
+
+/** Owned annex structures with no slot: they wait in the Base's Unplaced tray. */
+export function unplacedAnnexKinds(player: { placed?: readonly string[]; placementPlots?: Record<string, number> }): string[] {
+  const standing = new Set(placedAnnex(player).values())
+  return (player.placed ?? []).filter(kind => isAnnexKind(kind) && !standing.has(kind))
+}
+
 export interface BackdropBand { id: string; src: string; bottom: number; height: number; parallax: number }
 
 export function backdropFor(biome: EarthBiomeId): BackdropBand[] {
@@ -161,6 +203,17 @@ export function validateBaseSite(): string[] {
     const home = SITES.find(s => s.id === sprite.site)
     if (!home) { problems.push(`${kind} has no site ${sprite.site}`); continue }
     if (sprite.body && sprite.body / 2 > home.half) problems.push(`${kind} is wider than site ${home.id}`)
+  }
+  const main = SITES.map(s => ({ id: s.id as string, l: s.x - s.half, r: s.x + s.half }))
+  for (const slot of ANNEX_SLOTS) {
+    if (slot.x - slot.half < 0 || slot.x + slot.half > STRIP_W) problems.push(`annex ${slot.id} runs off the strip`)
+    for (const other of [...main, ...ANNEX_SLOTS.filter(o => o !== slot).map(o => ({ id: o.id, l: o.x - o.half, r: o.x + o.half }))]) {
+      if (slot.x - slot.half < other.r && slot.x + slot.half > other.l && slot.id < other.id) problems.push(`annex ${slot.id} overlaps ${other.id}`)
+    }
+    if (slot.plot < 10) problems.push(`annex ${slot.id} uses a main save plot`)
+  }
+  for (const [kind, k] of Object.entries(ANNEX_KINDS)) {
+    if (ANNEX_SLOTS.some(slot => k.body / 2 > slot.half)) problems.push(`${kind} is wider than an annex slot`)
   }
   const ground = site.ground
   if (ground.left > 0 || ground.left + ground.width < STRIP_W) problems.push('the paved ground does not cover the strip')

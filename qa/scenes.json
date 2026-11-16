@@ -108,6 +108,16 @@
    ]
   },
   {
+   "id": "free-mining-silo-full",
+   "name": "Free mining run, silo full",
+   "flow": "core-loop",
+   "web": "ui-free-mining-silo-full",
+   "nativeDeferred": "iOS settles with the same rule (Market, HomeDelivery); not built in the cloud session.",
+   "tickets": [
+    "SSL-845"
+   ]
+  },
+  {
    "id": "free-mining",
    "name": "Free mining run",
    "flow": "core-loop",
@@ -116,6 +126,17 @@
    "tickets": [
     "SSL-711"
    ]
+  },
+  {
+   "id": "focus-run",
+   "name": "Materials focus run",
+   "flow": "core-loop",
+   "web": "ui-focus-run",
+   "native": "mining-focus-run",
+   "tickets": [
+    "SSL-840"
+   ],
+   "note": "A construction goal bigger than the hold: return a partial haul, store it, and the next trip asks only for the rest. iOS board view: mission-focus-run-phone."
   },
   {
    "id": "radio-meteors",
@@ -327,16 +348,6 @@
    "native": "community-research-phone",
    "tickets": [
     "SSL-790"
-   ]
-  },
-  {
-   "id": "economy-arrival",
-   "name": "Welcome back: market board",
-   "flow": "progression",
-   "web": "ui-economy-arrival",
-   "native": "economy-arrival-phone",
-   "tickets": [
-    "SSL-701"
    ]
   },
   {
@@ -765,6 +776,16 @@
    "native": "radio-meteors"
   },
   {
+   "id": "second-ground-telescope",
+   "name": "Control Station: second ground telescope",
+   "flow": "instruments",
+   "web": "ui-second-ground-telescope",
+   "tickets": [
+    "SSL-802"
+   ],
+   "native": "second-ground-telescope-phone"
+  },
+  {
    "id": "probe-hub",
    "name": "Survey probe: data hub",
    "flow": "instruments",
@@ -791,6 +812,17 @@
    "web": "hub-first-run",
    "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
    "tickets": ["SSL-785"]
+  },
+  {
+   "id": "hub-unplaced",
+   "name": "Base: unplaced structures tray",
+   "flow": "core-loop",
+   "web": "hub-unplaced",
+   "native": "hub-unplaced-phone",
+   "tickets": [
+    "SSL-843",
+    "SSL-844"
+   ]
   },
   {
    "id": "hub-buildings-l2",

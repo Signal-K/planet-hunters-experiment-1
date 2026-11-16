@@ -7,11 +7,12 @@ import styles from './SiteMarker.module.css'
  * Where a structure will stand, marked on the ground at its real footprint (SSL-423 site map).
  * A fresh base shows exactly one of these, on the pad site, so the first build has an obvious place.
  */
-export function SiteMarker({ site, label, onPlace, disabled = false }: { site: BaseSite; label: string; onPlace: () => void; disabled?: boolean }) {
+export function SiteMarker({ site, label, onPlace, disabled = false, compact = false }: { site: Pick<BaseSite, 'x' | 'half' | 'plot'> & { id: string }; label: string; onPlace: () => void; disabled?: boolean; /** Small slots (SSL-843 annex) show only the plus, so neighbouring slots' labels do not overlap. */ compact?: boolean }) {
   return (
     <button
       type="button"
       className={styles.marker}
+      data-compact={compact || undefined}
       data-testid={site.plot != null ? `build-plot-${site.plot}` : `build-site-${site.id}`}
       data-beacon={site.plot != null ? `build-plot-${site.plot}` : undefined}
       data-site={site.id}
@@ -23,7 +24,7 @@ export function SiteMarker({ site, label, onPlace, disabled = false }: { site: B
       <span className={styles.footprint} aria-hidden="true" />
       <span className={styles.label}>
         <span className={styles.plus} aria-hidden="true">+</span>
-        <span><b>Place</b><b>{label}</b></span>
+        {!compact && <span><b>Place</b><b>{label}</b></span>}
       </span>
     </button>
   )

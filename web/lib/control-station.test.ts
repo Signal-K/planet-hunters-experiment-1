@@ -17,6 +17,7 @@ const signal = (partial: Pick<InstrumentSignal, 'id' | 'kind'> & Partial<Instrum
 const launched: StationPlayer = {
   freeOperations: true,
   placed: ['ground-telescope'],
+  placementPlots: { 'ground-telescope': 10 },
   transitSatelliteLaunchedAt: 1,
   deepSpaceTelescopeBuilt: true,
   saturnImagerLaunchedAt: 1,
@@ -59,7 +60,7 @@ describe('control station registry', () => {
   })
 
   it('opens a built ground telescope on its own, without the Space Telescope', () => {
-    const player: StationPlayer = { freeOperations: true, placed: ['ground-telescope'] }
+    const player: StationPlayer = { freeOperations: true, placed: ['ground-telescope'], placementPlots: { 'ground-telescope': 10 } }
     const model = buildControlStation({ player, signals, bodyId: 'all' })
     expect(model.groups.flatMap(group => group.rows).map(item => item.equipmentId)).toEqual(['ground-telescopes'])
     expect(model.groups[0]?.rows[0]).toMatchObject({ status: 'Observing', live: true, buildPrompt: false })

@@ -11,6 +11,9 @@ import {
   transitInstrumentDigest,
   unresolvedDeepSpaceInstrumentDigest,
   unresolvedTransitInstrumentDigest,
+  observingGroundTelescopes,
+  groundTelescopeObserving,
+  asteroidFeedOnline,
 } from './InstrumentFeedSystem'
 
 function candidate(id: string): TessCandidate {
@@ -215,7 +218,24 @@ describe('InstrumentFeedSystem', () => {
 describe('ground telescope (Liam, 31.10)', () => {
   const asteroids = Array.from({ length: 6 }, (_, i) => ({ id: `neo-${i}`, tempDesig: `NEO${i}`, vMag: 20, score: 90 })) as unknown as Parameters<typeof deepSpaceInstrumentDigest>[0]
   it('adds one candidate a day, alone or on top of the Space Telescope', () => {
-    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: false, placed: ['ground-telescope'] }, '2026-07-30')).toHaveLength(1)
-    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: true, placed: ['ground-telescope'] }, '2026-07-30')).toHaveLength(2)
+    const standing = { placed: ['ground-telescope'], placementPlots: { 'ground-telescope': 10 } }
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: false, ...standing }, '2026-07-30')).toHaveLength(1)
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: true, ...standing }, '2026-07-30')).toHaveLength(2)
+  })
+
+  // SSL-802 (Liam, 16.11): one telescope per annex slot; a new one observes only once placed, the pre-update one anywhere.
+  it('each placed telescope adds a candidate; a new one in the tray adds nothing', () => {
+    const both = ['ground-telescope', 'ground-telescope-2']
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: false, placed: both, placementPlots: { 'ground-telescope': 10, 'ground-telescope-2': 11 } }, '2026-07-30')).toHaveLength(2)
+    expect(deepSpaceInstrumentDigest(asteroids, { deepSpaceTelescopeBuilt: true, placed: both, placementPlots: { 'ground-telescope': 10 } }, '2026-07-30')).toHaveLength(2)
+    expect(observingGroundTelescopes({ placed: both, placementPlots: {} })).toBe(0)
+    expect(asteroidFeedOnline({ freeOperations: true, deepSpaceTelescopeBuilt: false, placed: ['ground-telescope'], placementPlots: {} })).toBe(false)
+  })
+
+  it('the telescope built before the rule observes from the tray; a second one bought later does not', () => {
+    const legacy = { placed: ['ground-telescope', 'ground-telescope-2'], placementPlots: {}, groundTelescopeGrandfathered: true }
+    expect(groundTelescopeObserving(legacy, 'ground-telescope')).toBe(true)
+    expect(groundTelescopeObserving(legacy, 'ground-telescope-2')).toBe(false)
+    expect(observingGroundTelescopes(legacy)).toBe(1)
   })
 })

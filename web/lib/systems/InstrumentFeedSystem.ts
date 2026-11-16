@@ -16,8 +16,48 @@ export const GROUND_TELESCOPE_STRUCTURE_ID = 'ground-telescope'
 /** Extra asteroid candidates a built ground telescope adds to each daily digest (Liam, 31.10). */
 export const GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES = 1
 
+/** SSL-802: every ground telescope a player can own, one per annex slot. The first keeps its old id. */
+export const GROUND_TELESCOPE_IDS = [GROUND_TELESCOPE_STRUCTURE_ID, 'ground-telescope-2'] as const
+
+export function isGroundTelescopeId(kind: string): boolean {
+  return (GROUND_TELESCOPE_IDS as readonly string[]).includes(kind)
+}
+
+type GroundTelescopePlayer = {
+  placed?: readonly string[]
+  placementPlots?: Record<string, number>
+  groundTelescopeGrandfathered?: boolean
+}
+
+export function ownedGroundTelescopes(player: { placed?: readonly string[] }): string[] {
+  return GROUND_TELESCOPE_IDS.filter(id => player.placed?.includes(id))
+}
+
 export function groundTelescopeBuilt(player: { placed?: readonly string[] }): boolean {
-  return !!player.placed?.includes(GROUND_TELESCOPE_STRUCTURE_ID)
+  return ownedGroundTelescopes(player).length > 0
+}
+
+/** The next telescope id to build, or null when every annex slot already has one. */
+export function nextGroundTelescopeId(player: { placed?: readonly string[] }): string | null {
+  return GROUND_TELESCOPE_IDS.find(id => !player.placed?.includes(id)) ?? null
+}
+
+/** Annex save plots start at 10 (shared/layout/base-site.json). Kept local so this system stays free of the scene. */
+const ANNEX_PLOT_MIN = 10
+
+/**
+ * SSL-802 (Liam, 16.11): a ground telescope observes once it stands on an annex slot. The one a player built before
+ * this rule observes from the Unplaced tray too; telescopes built since must be placed first.
+ */
+export function groundTelescopeObserving(player: GroundTelescopePlayer, id: string): boolean {
+  if (!player.placed?.includes(id)) return false
+  const plot = player.placementPlots?.[id]
+  if (typeof plot === 'number' && plot >= ANNEX_PLOT_MIN) return true
+  return id === GROUND_TELESCOPE_STRUCTURE_ID && !!player.groundTelescopeGrandfathered
+}
+
+export function observingGroundTelescopes(player: GroundTelescopePlayer): number {
+  return GROUND_TELESCOPE_IDS.filter(id => groundTelescopeObserving(player, id)).length
 }
 
 /**
@@ -25,8 +65,8 @@ export function groundTelescopeBuilt(player: { placed?: readonly string[] }): bo
  * or the orbiting Space Telescope. A ground telescope is cheaper and adds its
  * own candidates each day; the Space Telescope adds its level's worth.
  */
-export function asteroidFeedOnline(player: { freeOperations?: boolean; deepSpaceTelescopeBuilt?: boolean; placed?: readonly string[] }): boolean {
-  return !!player.freeOperations && (!!player.deepSpaceTelescopeBuilt || groundTelescopeBuilt(player))
+export function asteroidFeedOnline(player: { freeOperations?: boolean; deepSpaceTelescopeBuilt?: boolean } & GroundTelescopePlayer): boolean {
+  return !!player.freeOperations && (!!player.deepSpaceTelescopeBuilt || observingGroundTelescopes(player) > 0)
 }
 
 export const SATURN_IMAGER_INSTRUMENT_ID = 'saturn-imager'
@@ -58,7 +98,7 @@ type DeepSpaceInstrumentFeedPlayer = Pick<
   | 'deepSpaceTelescopeBuilt'
   | 'placed'
   | 'instrumentDigestNotifiedOn'
->
+> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered'>>
 
 export function instrumentDigestDateKey(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
@@ -126,7 +166,7 @@ export function deepSpaceInstrumentDigest(
   const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
   // A player with only a ground telescope has no Space Telescope share.
   const space = player.deepSpaceTelescopeBuilt === false ? 0 : deepSpaceInstrumentLevel(player)
-  const ground = groundTelescopeBuilt(player) ? GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES : 0
+  const ground = observingGroundTelescopes(player) * GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES
   return dailyAsteroidCandidates(candidates, dateKey, space + ground + extra)
 }
 
@@ -209,7 +249,7 @@ export function collectInstrumentSignals(opts: {
     | 'saturnImagerLaunchedAt'
     | 'saturnClassifications'
     | 'instrumentDigestNotifiedOn'
-  >
+  > & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered'>>
   dateKey: string
 }): InstrumentSignal[] {
   const signals: InstrumentSignal[] = []

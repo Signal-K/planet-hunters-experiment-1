@@ -42,6 +42,7 @@ public enum Instruments {
             add(launch(saturnMissionId, "Launch Saturn Imager", "Deploy a Saturn imager into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.",
                        target: saturnTargetId, name: "Saturn Imager", instrument: "saturn-imager", outcome: "Saturn imager online · Cassini storm-cloud feed unlocked", sequence: seq))
         }
+        if let focus = ResourceFocusRun.mission(p, activeMissionId: missionId) { add(focus) }
         for t in p.discoveredExoplanetTargets.values.sorted(by: { $0.id < $1.id }) {
             add(t)
             add(Mission(id: "exo-survey-\(t.id)", title: "\(t.name) survey flight",

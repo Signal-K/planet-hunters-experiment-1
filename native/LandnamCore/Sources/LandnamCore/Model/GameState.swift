@@ -17,6 +17,13 @@ public struct FlightPlanProgress: Codable, Equatable, Sendable {
 
 public enum HaulDisposition: String, Codable, Sendable { case store, sell }
 
+/// A construction the player is gathering materials for (web `ResourceFocus`). Wire format matches web.
+public struct ResourceFocus: Codable, Equatable, Sendable {
+    public var label: String
+    public var minerals: Cargo
+    public init(label: String, minerals: Cargo) { self.label = label; self.minerals = minerals }
+}
+
 /// Player progress. Field names match the web save JSON (`game_states.state`) so a
 /// save can move between clients. Fields not yet ported live in `extras` and are
 /// written back untouched.
@@ -43,6 +50,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var missionRocketSource: StagedRocket.Source?
     public var placed: [String] = []
     public var placementPlots: [String: Int] = [:]
+    /// SSL-802: owned a ground telescope before telescopes had to be placed to observe; that one observes from the tray.
+    public var groundTelescopeGrandfathered: Bool = false
     public var controlBuilt: Bool = false
     public var missionsDone: Int = 0
     public var freeOperations: Bool = false
@@ -60,6 +69,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var homeDeliveryPending: Bool = false
     public var cargoSettledOffworld: Bool = false
     public var freeHaulDisposition: HaulDisposition?
+    /// SSL-840: the construction the player is collecting materials for (web `resourceFocus`). It spans as many trips as needed.
+    public var resourceFocus: ResourceFocus?
     public var returningToEarth: Bool = false
     public var shipDestroyed: Bool = false
     public var headingToDelivery: Bool = false
@@ -149,12 +160,16 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("pendingRocketLocation", &pendingRocketLocation); getOpt("pendingRocketSource", &pendingRocketSource)
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
+        // SSL-802: a save from before the rule has no flag; the ground telescope it already owns keeps observing unplaced.
+        if c.contains(AnyKey("groundTelescopeGrandfathered")) { get("groundTelescopeGrandfathered", &groundTelescopeGrandfathered) }
+        else { consumed.insert("groundTelescopeGrandfathered"); groundTelescopeGrandfathered = placed.contains(ControlStation.groundTelescopeStructureId) }
         get("missionsDone", &missionsDone)
         get("freeOperations", &freeOperations); get("earthBiome", &earthBiome); get("earthBiomeMoveUsed", &earthBiomeMoveUsed); getOpt("skyEventLocation", &skyEventLocation); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
         getOpt("dailyClientPool", &dailyClientPool)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
+        getOpt("resourceFocus", &resourceFocus)
         get("returningToEarth", &returningToEarth); get("shipDestroyed", &shipDestroyed)
         get("headingToDelivery", &headingToDelivery); get("stash", &stash); get("marketSupply", &marketSupply)
         get("marketSupplyUpdatedAt", &marketSupplyUpdatedAt); get("clientMissions", &clientMissions)
@@ -211,12 +226,14 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("pendingRocketLocation", pendingRocketLocation); try putOpt("pendingRocketSource", pendingRocketSource)
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
+        try put("groundTelescopeGrandfathered", groundTelescopeGrandfathered)
         try put("missionsDone", missionsDone); 
         try put("freeOperations", freeOperations); try put("earthBiome", earthBiome); try put("earthBiomeMoveUsed", earthBiomeMoveUsed); try putOpt("skyEventLocation", skyEventLocation); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
         try putOpt("dailyClientPool", dailyClientPool)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)
+        try putOpt("resourceFocus", resourceFocus)
         try put("returningToEarth", returningToEarth); try put("shipDestroyed", shipDestroyed)
         try put("headingToDelivery", headingToDelivery); try put("stash", stash); try put("marketSupply", marketSupply)
         try put("marketSupplyUpdatedAt", marketSupplyUpdatedAt); try put("clientMissions", clientMissions)

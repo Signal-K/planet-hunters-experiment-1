@@ -3,7 +3,7 @@ import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS, ROCKET_IDS, TARGETS } from '@/lib/data'
 import { sectorDeposits, sectorIds } from '@/lib/probes/survey-probe'
-import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -164,12 +164,13 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 2 on ORI-1', stage: 'free-ops' },
       { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 2 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
+      { key: 'ui-free-mining-silo-full', label: 'Free mining run, silo full', hint: 'Free run with the 40-unit Surface Silo already full (iron, cobalt, nickel). Store on Earth stays open: the haul goes in and the cheapest stored ore is sold to make room. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-focus-run', label: 'Materials focus run', hint: 'SSL-840: a Mineral Vault focus (15 aluminium, 8 copper) with 6 aluminium already stored, mining at Itokawa in a 6-unit hull. Return with whatever the hold carries; the next trip asks only for what is still missing', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-economy-arrival', label: 'Welcome back', hint: 'Base after 4+ hours away: market moves, a client level-up, telescope items, a finished build and a friend gift in one list', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -186,6 +187,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-second-ground-telescope', label: 'Control Station: second ground telescope', hint: 'SSL-802: one ground telescope standing on the West annex and ₣6M in hand: Add a telescope buys the second one (₣2M) into the Unplaced tray', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
       { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
       { key: 'ui-community-research-event-before', label: 'Community research: before a shower', hint: 'SSL-775: pinned to 20 Sep. The event panel previews the Orionids: when they start, what to do, the badge tiers', stage: 'free-ops' },
@@ -197,6 +199,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
       { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
       { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
@@ -375,6 +378,20 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'hub-pad-l2':
+    case 'hub-unplaced':
+      return {
+        screen: 'hub',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          francs: 11_500_000_000,
+          placed: ['launchpad', 'market', 'control-station', 'surface-silo', 'ground-telescope'],
+          placementPlots: { launchpad: 0, market: 1, 'surface-silo': 2, 'control-station': 3 },
+        },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
     case 'hub-buildings-l2':
     case 'hub-buildings-l3': {
       const level = name === 'hub-buildings-l3' ? 3 : 2
@@ -777,6 +794,13 @@ function fixture(name: string): Partial<GameState> | null {
       return instrumentHubFixture()
 
     // SSL-773: survey probes. Two sectors of Eros were read yesterday; Vesta's probe has just arrived.
+    // SSL-802: the first ground telescope stands on the West annex; the second slot is free.
+    case 'ui-second-ground-telescope': {
+      const hub = instrumentHubFixture()
+      const p = hub.player!
+      return { ...hub, player: { ...p, francs: 6_000_000, placed: [...p.placed, 'ground-telescope'], placementPlots: { ...p.placementPlots, 'ground-telescope': 10 }, groundTelescopeGrandfathered: false, scanFollowUp: null } }
+    }
+
     case 'ui-probe-hub': {
       const hub = instrumentHubFixture()
       return { ...hub, player: { ...hub.player!, probes: probeFixture() } }
@@ -1056,18 +1080,41 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-free-mining-silo-full':
     case 'ui-free-mining':
       return {
         screen: 'mining',
         player: {
           ...POST_ONBOARDING_PLAYER,
           placed: [...POST_ONBOARDING_PLAYER.placed, 'surface-silo'],
+          ...(name === 'ui-free-mining-silo-full' ? { stash: { iron: 24, cobalt: 10, nickel: 6 } } : {}),
           activeMission: { id: SELF_DIRECTED_MINING_MISSION_ID, label: 'Self-Directed Mining Run' },
           missionPhase: 'mining',
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: SELF_DIRECTED_MINING_MISSION_ID,
+        targetId: 'itokawa',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-focus-run':
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: [...POST_ONBOARDING_PLAYER.placed, 'surface-silo'],
+          stash: { aluminium: 6 },
+          resourceFocus: { label: 'Mineral Vault', minerals: { aluminium: 15, copper: 8 } },
+          activeMission: { id: RESOURCE_FOCUS_MISSION_ID, label: 'Materials for Mineral Vault' },
+          missionPhase: 'mining',
+          freeHaulDisposition: 'store',
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: RESOURCE_FOCUS_MISSION_ID,
         targetId: 'itokawa',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
@@ -1348,31 +1395,6 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
-
-    case 'ui-economy-arrival': {
-      const base = fixture('cp-late') as GameState
-      return {
-        ...base,
-        player: {
-          ...base.player,
-          // The hub scene authors plots 0-3 only, so the Exchange needs a real one. All four base structures
-          // stand here so the set can be reviewed together.
-          placed: ['launchpad', 'market', 'hangar', 'control-station'],
-          placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
-          economyArrival: {
-            fromDate: '2026-10-24', toDate: '2026-10-27', idempotencyKey: 'daily-economy:2026-10-27',
-            moves: [
-              { materialId: 'nickel', materialName: 'Nickel', changePct: 11 },
-              { materialId: 'copper', materialName: 'Copper', changePct: -6 },
-            ],
-            levelUps: [{ clientId: 'atlas-aggregate', clientName: 'Atlas Aggregate', levelAfter: 3 }],
-          },
-          // A 4h+ return: telescope digest, a finished build and a friend gift join the market note.
-          lastVisitAt: 1_792_000_000_000,
-          welcomeBack: { since: 1_792_000_000_000, built: ['refinery'], digest: 3, gifts: 1 },
-        },
-      }
-    }
 
     case 'cp-late':
       return {

@@ -51,7 +51,8 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
 
   const demand = useMemo(() => clientDemand(mission, cargo), [mission, cargo])
   const silo = useMemo(() => siloRoomFor(player, cargo), [player, cargo])
-  const [split, setSplit] = useState<HomeSplit>(() => defaultHomeSplit(cargo, demand, silo.free))
+  // SSL-845: a player who chose Store before mining gets the haul in the silo even when it is full.
+  const [split, setSplit] = useState<HomeSplit>(() => defaultHomeSplit(cargo, demand, player.freeHaulDisposition === 'store' ? silo.limit : silo.free))
   const totals = splitTotals(split)
   const payout = clientPayout(mission, split, demand, player.missionsDone)
   const fulfilled = contractFulfilled(split, demand)
@@ -103,7 +104,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
               </div>
               <div className={styles.meters}>
                 <span className={styles.meter} data-testid="silo-capacity">
-                  Silo {silo.built ? `${silo.used + totals.silo}/${silo.capacity}` : 'not built'}
+                  Silo {silo.built ? `${Math.min(silo.capacity, silo.used + totals.silo)}/${silo.capacity}` : 'not built'}
                   {silo.built && <i style={{ width: `${Math.min(100, ((silo.used + totals.silo) / Math.max(1, silo.capacity)) * 100)}%` }} />}
                 </span>
               </div>
@@ -126,10 +127,10 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                         const note = choice.key === 'client'
                           ? (demand[id] ? `Needs ${demand[id]}` : 'Not ordered')
                           : choice.key === 'silo'
-                            ? (silo.built ? `${Math.max(0, silo.free - totals.silo)} free` : 'No silo')
+                            ? (!silo.built ? 'No silo' : totals.silo > silo.free ? `Sells ${totals.silo - silo.free} cheapest stored` : `${silo.free - totals.silo} free`)
                             : `${formatCurrency(price)} each`
                         const canAdd = on && !(choice.key === 'client' && row.client >= (demand[id] ?? 0))
-                          && !(choice.key === 'silo' && totals.silo >= silo.free)
+                          && !(choice.key === 'silo' && totals.silo >= silo.limit)
                           && (row.client + row.silo + row.sell - row[choice.key]) > 0
                         return (
                           <div key={choice.key} className={styles.choice} data-kind={choice.key} data-disabled={on ? undefined : 'true'}>
@@ -137,10 +138,10 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                             <span className={styles.choiceNote}>{note}</span>
                             <div className={styles.stepper}>
                               <button type="button" aria-label={`Fewer ${meta?.name ?? id} to ${choice.label}`} disabled={!on || row[choice.key] <= 0}
-                                onClick={() => setSplit(s => releaseUnit(s, id, choice.key, silo.free))}>−</button>
+                                onClick={() => setSplit(s => releaseUnit(s, id, choice.key, silo.limit))}>−</button>
                               <output data-testid={`split-${id}-${choice.key}`}>{row[choice.key]}</output>
                               <button type="button" aria-label={`More ${meta?.name ?? id} to ${choice.label}`} disabled={!canAdd}
-                                onClick={() => setSplit(s => shiftUnit(s, id, choice.key, demand, silo.free))}>+</button>
+                                onClick={() => setSplit(s => shiftUnit(s, id, choice.key, demand, silo.limit))}>+</button>
                             </div>
                           </div>
                         )
@@ -171,7 +172,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
               style={{ left: c.x, top: c.y, background: c.color, animationDelay: `${c.delay}ms` }} />
           ))}
           <p className={styles.settleNote} role="status" data-testid="settle-note">
-            {[soldUnits > 0 ? `Sold ${soldUnits} for ${formatCurrency(sale)}` : '', storedUnits > 0 ? `Stored ${storedUnits} in the silo` : '', 'Rocket recycled'].filter(Boolean).join(' · ')}
+            {[soldUnits > 0 ? `Sold ${soldUnits} for ${formatCurrency(sale)}` : '', storedUnits > 0 ? `Stored ${storedUnits} in the silo` : '', storedUnits > silo.free ? `Sold ${storedUnits - silo.free} older ore to make room` : '', 'Rocket recycled'].filter(Boolean).join(' · ')}
           </p>
         </>
       )}

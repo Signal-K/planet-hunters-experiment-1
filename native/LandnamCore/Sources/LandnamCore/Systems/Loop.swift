@@ -41,7 +41,9 @@ public enum Loop {
     static func pickMissionState(_ s: GameState, id: String, catalog: Catalog, haul: HaulDisposition? = nil) -> GameState {
         guard s.screen == .missions || s.screen == .launchpad, let mission = catalog.mission(id) else { return s }
         if s.screen == .launchpad && !mission.isOwnProgram { return s }
-        if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram { return s }
+        // Builds and instrument launches start from the Launchpad; programme mining runs also start from the board's Free run tab.
+        let boardRun = mission.id.hasPrefix("self-directed-") || mission.id == ResourceFocusRun.missionId
+        if s.screen == .missions && s.player.freeOperations && mission.isOwnProgram && !boardRun { return s }
         guard s.player.activeMission == nil else { return s }
         // Off-world builds carry the materials from the stash; no kit, no flight.
         if let plan = mission.construction, mission.isOwnProgram, plan.requiredMaterials.contains(where: { (s.player.stash[$0.key] ?? 0) < $0.value }) { return s }

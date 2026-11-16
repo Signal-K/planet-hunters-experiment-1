@@ -82,7 +82,8 @@ public enum Targets {
         return targets.filter { t in
             t.orbit <= mission.requires.maxOrbit
                 && (!onboarding || t.type == .asteroid)
-                && required.allSatisfy { t.minerals.contains($0) }
+                // SSL-840: a construction focus is collected over several trips, so any source of any needed mineral will do.
+                && (mission.id == ResourceFocusRun.missionId ? required.contains { t.minerals.contains($0) } : required.allSatisfy { t.minerals.contains($0) })
         }
     }
 

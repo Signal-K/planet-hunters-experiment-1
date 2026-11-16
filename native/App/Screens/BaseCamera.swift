@@ -26,9 +26,9 @@ struct BaseWorld {
     var shaftX: CGFloat { CGFloat(WorldAssets.site?.site("shaft")?.x ?? 466) * px }
     var worldW: CGFloat { max(stripW, shaftX + 164 * u) }
     /// Camera x that centres what is built (the pad site on a fresh base), as web `homeCenter`.
-    func homeX(_ kinds: [String]) -> CGFloat {
+    func homeX(_ kinds: [String], plots: [String: Int] = [:]) -> CGFloat {
         let units = Double(w / px)
-        let centre = WorldAssets.site?.homeCenter(kinds, viewUnits: units) ?? 190
+        let centre = WorldAssets.site?.homeCenter(kinds, viewUnits: units, plots: plots) ?? 190
         return min(max(CGFloat(centre) * px - w / 2, 0), maxX)
     }
     var maxX: CGFloat { max(0, worldW - w) }
