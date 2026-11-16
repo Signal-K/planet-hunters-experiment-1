@@ -152,18 +152,12 @@ final class Services {
             guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }
             Task { await shared.enqueue(op); await shared.flush() }
         }
-        monitor.pathUpdateHandler = Self.pathHandler(self, sync: sync, shared: shared)
-        monitor.start(queue: .global(qos: .utility))
-    }
-
-    /// SSL-841: NWPathMonitor calls this on its utility queue (the SDK declares the handler @Sendable). Built outside the
-    /// main actor it runs anywhere and hops to the main actor for state.
-    nonisolated private static func pathHandler(_ owner: Services, sync: CloudSync, shared: Outbox) -> @Sendable (NWPath) -> Void {
-        { [weak owner] path in
+        monitor.pathUpdateHandler = { path in
             let up = path.status == .satisfied && !PocketBaseExecutor.forceOffline
-            Task { @MainActor in owner?.online = up }
-            if up { Task { @MainActor in owner?.pullIfNeeded(); await sync.flush(); await shared.flush() } }
+            Task { @MainActor in self.online = up }
+            if up { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
         }
+        monitor.start(queue: .global(qos: .utility))
     }
 
     func attach(_ session: AuthSession?) {
