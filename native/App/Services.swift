@@ -12,20 +12,32 @@ final class GameCenter {
     private var reportedAch: [String: Double] = [:]
 
     func authenticate() {
-        GKLocalPlayer.local.authenticateHandler = { [weak self] viewController, _ in
-            Task { @MainActor in
-                guard let self else { return }
-                #if os(iOS)
-                if let viewController, let root = UIApplication.shared.connectedScenes
-                    .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController }).first {
-                    root.present(viewController, animated: true)
-                }
-                #else
-                _ = viewController
-                #endif
-                self.isAuthenticated = GKLocalPlayer.local.isAuthenticated
-            }
+        Self.installAuthHandler(self)
+    }
+
+    /// GameKit calls `authenticateHandler` on its own queue. A closure written inside this
+    /// main-actor class would be main-actor isolated, and Swift 6 checks that on entry: the app
+    /// trapped at launch (the iOS test host crashed before any test ran). Built here, outside the
+    /// actor, the handler runs anywhere and hops to the main actor for the UI work.
+    nonisolated private static func installAuthHandler(_ owner: GameCenter) {
+        GKLocalPlayer.local.authenticateHandler = { [weak owner] viewController, _ in
+            guard let owner else { return }
+            // UIKit only touches it back on the main actor, in `finishAuth`.
+            nonisolated(unsafe) let sheet: AnyObject? = viewController
+            Task { @MainActor in owner.finishAuth(sheet) }
         }
+    }
+
+    private func finishAuth(_ sheet: AnyObject?) {
+        #if os(iOS)
+        if let viewController = sheet as? UIViewController, let root = UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.keyWindow?.rootViewController }).first {
+            root.present(viewController, animated: true)
+        }
+        #else
+        _ = sheet
+        #endif
+        isAuthenticated = GKLocalPlayer.local.isAuthenticated
     }
 
     /// Reports only values that increased since the last report.
