@@ -363,6 +363,12 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    /// SSL-802: buys the next ground telescope into the Unplaced tray.
+    @discardableResult public func buildGroundTelescope() -> Bool {
+        let next = Construction.applyBuildGroundTelescope(state)
+        guard next != state else { return false }
+        apply(next); return true
+    }
     /// SSL-843: stands an owned annex structure from the Unplaced tray on a free annex slot.
     @discardableResult public func placeAnnex(_ kind: String, plot: Int, map: BaseSiteMap) -> Bool {
         let next = Construction.applyPlaceAnnex(state, kind: kind, plot: plot, map: map)

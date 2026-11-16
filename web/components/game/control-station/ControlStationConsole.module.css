@@ -161,6 +161,12 @@
   cursor: pointer;
 }
 .build:disabled { opacity: 0.6; cursor: not-allowed; }
+/* SSL-802: a telescope bought but not yet placed on the Base. */
+.placeNote {
+  margin: 0 8px 6px;
+  color: var(--gold);
+  font: 600 14px/1.3 var(--ln-font-body, inherit);
+}
 
 /* History: the tally and the last few things classified. */
 .history { margin-top: auto; display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(244, 239, 228, 0.22); }

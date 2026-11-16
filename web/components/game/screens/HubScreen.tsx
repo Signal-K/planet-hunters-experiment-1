@@ -26,7 +26,7 @@ export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModul
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
-import { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
+import { isGroundTelescopeId } from '@/lib/systems/InstrumentFeedSystem'
 import { AnnexStructures, UnplacedTray } from '@/components/game/hub/AnnexStructures'
 import { SiteMarker } from '@/components/game/hub/SiteMarker'
 import { ANNEX_SLOTS, GROUND, STRIP_W, builtSpan, displaySite, displayX, homeCenter, placedAnnex, unplacedAnnexKinds, homeSite, MOVABLE_KINDS, kitScale, siteById, structureSprite, units } from '@/lib/scene/base-site'
@@ -636,7 +636,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                 camera.focusX(displayX(slot.x) * px)
               }
             }}
-            onOpen={kind => { if (kind === GROUND_TELESCOPE_STRUCTURE_ID) onOpenScene('instrument-hub') }}
+            onOpen={kind => { if (isGroundTelescopeId(kind)) onOpenScene('instrument-hub') }}
           />
 
           {/* Surface buildings — hit areas + labels.

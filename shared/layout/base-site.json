@@ -343,6 +343,12 @@
         "short": "Telescope",
         "body": 24,
         "height": 40
+      },
+      "ground-telescope-2": {
+        "label": "Ground telescope",
+        "short": "Telescope",
+        "body": 24,
+        "height": 40
       }
     },
     "slots": [

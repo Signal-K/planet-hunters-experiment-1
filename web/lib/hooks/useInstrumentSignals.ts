@@ -62,6 +62,9 @@ export function useInstrumentSignals(player: Player): {
     player.transitSatelliteLaunchedAt,
     player.deepSpaceTelescopeBuilt,
     player.placed,
+    // SSL-802: placing a ground telescope brings its candidates online.
+    player.placementPlots,
+    player.groundTelescopeGrandfathered,
     player.tessClassifications,
     player.asteroidClassifications,
     player.saturnImagerLaunchedAt,

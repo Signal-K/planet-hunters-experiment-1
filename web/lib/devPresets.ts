@@ -187,6 +187,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-second-ground-telescope', label: 'Control Station: second ground telescope', hint: 'SSL-802: one ground telescope standing on the West annex and ₣6M in hand: Add a telescope buys the second one (₣2M) into the Unplaced tray', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
       { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
       { key: 'ui-community-research-event-before', label: 'Community research: before a shower', hint: 'SSL-775: pinned to 20 Sep. The event panel previews the Orionids: when they start, what to do, the badge tiers', stage: 'free-ops' },
@@ -793,6 +794,13 @@ function fixture(name: string): Partial<GameState> | null {
       return instrumentHubFixture()
 
     // SSL-773: survey probes. Two sectors of Eros were read yesterday; Vesta's probe has just arrived.
+    // SSL-802: the first ground telescope stands on the West annex; the second slot is free.
+    case 'ui-second-ground-telescope': {
+      const hub = instrumentHubFixture()
+      const p = hub.player!
+      return { ...hub, player: { ...p, francs: 6_000_000, placed: [...p.placed, 'ground-telescope'], placementPlots: { ...p.placementPlots, 'ground-telescope': 10 }, groundTelescopeGrandfathered: false, scanFollowUp: null } }
+    }
+
     case 'ui-probe-hub': {
       const hub = instrumentHubFixture()
       return { ...hub, player: { ...hub.player!, probes: probeFixture() } }

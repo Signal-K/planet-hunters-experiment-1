@@ -380,6 +380,16 @@ struct ControlStationScreen: View {
         .background(Tone.well, in: RoundedRectangle(cornerRadius: 8))
     }
 
+    /// SSL-802: ground telescopes bought but not yet standing on an annex slot.
+    private var unplacedGround: Int {
+        ControlStation.ownedGroundTelescopes(store.player).filter { !ControlStation.groundTelescopeObserving(store.player, $0) }.count
+    }
+
+    private func displayName(_ scope: StationSky.Telescope) -> String {
+        let owned = ControlStation.ownedGroundTelescopes(store.player).count
+        return scope.id == "ground" && owned > 1 ? "Ground telescopes ×\(owned)" : scope.name
+    }
+
     /// A telescope key: a toggle switch that filters the map, an LED, and a digit counter.
     private func key(_ scope: StationSky.Telescope) -> some View {
         let on = scope.id == telescopeId
@@ -393,7 +403,7 @@ struct ControlStationScreen: View {
                     .opacity(scope.built ? 1 : 0.45)
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 8) {
-                            Text(scope.name.uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
+                            Text(displayName(scope).uppercased()).font(AppFont.display(16)).tracking(0.6).foregroundStyle(Tone.cream)
                             if scope.community {
                                 Text("COMMUNITY").font(AppFont.body(12, "Bold")).tracking(1).foregroundStyle(Tone.gold)
                                     .padding(.horizontal, 8).padding(.vertical, 2).background(Tone.gold.opacity(0.18), in: Capsule())
@@ -417,7 +427,25 @@ struct ControlStationScreen: View {
             .buttonStyle(.plain).disabled(!scope.built)
             .accessibilityAddTraits(on ? .isSelected : [])
             .accessibilityIdentifier("control-station-telescope-\(scope.id)")
-            if !scope.built {
+            if scope.id == "ground" && scope.built && unplacedGround > 0 {
+                Text(unplacedGround == 1 ? "One telescope waits in the Base's Unplaced tray. Place it to observe." : "\(unplacedGround) telescopes wait in the Base's Unplaced tray. Place them to observe.")
+                    .font(AppFont.body(14, "Bold")).foregroundStyle(Tone.gold)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10)
+                    .accessibilityIdentifier("control-station-place-note")
+            }
+            if scope.id == "ground" && (!scope.built || ControlStation.nextGroundTelescopeId(store.player) != nil) {
+                // SSL-802: buy a ground telescope here, ₣2M each, one per annex slot (web `control-station-build-more`).
+                let price = ControlStation.groundTelescopePrice
+                let short = store.player.francs < price ? Economy.format(francs: price - store.player.francs) : nil
+                let verb = scope.built ? "ADD A TELESCOPE" : "BUILD"
+                Button { store.buildGroundTelescope() } label: {
+                    Text(short.map { "NEEDS \($0) MORE" } ?? "\(verb) · \(Economy.format(francs: price))").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
+                        .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))
+                }
+                .buttonStyle(.plain).padding([.horizontal, .bottom], 8).disabled(short != nil).opacity(short == nil ? 1 : 0.6)
+                .accessibilityLabel(scope.built ? "Add another ground telescope" : "Build \(scope.name)")
+                .accessibilityIdentifier(scope.built ? "control-station-build-more" : "control-station-build")
+            } else if !scope.built {
                 Button { store.go(.build) } label: {
                     Text("BUILD").font(AppFont.display(15)).tracking(1.2).foregroundStyle(Theme.hex(0x152033))
                         .frame(maxWidth: .infinity, minHeight: 44).background(Tone.cream, in: RoundedRectangle(cornerRadius: 4))

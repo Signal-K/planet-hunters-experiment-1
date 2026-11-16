@@ -776,6 +776,16 @@
    "native": "radio-meteors"
   },
   {
+   "id": "second-ground-telescope",
+   "name": "Control Station: second ground telescope",
+   "flow": "instruments",
+   "web": "ui-second-ground-telescope",
+   "tickets": [
+    "SSL-802"
+   ],
+   "native": "second-ground-telescope-phone"
+  },
+  {
    "id": "probe-hub",
    "name": "Survey probe: data hub",
    "flow": "instruments",

@@ -30,6 +30,7 @@ export function GroundTelescopeArt({ className }: { className?: string }) {
 
 const ART: Record<string, (p: { className?: string }) => React.ReactElement> = {
   'ground-telescope': GroundTelescopeArt,
+  'ground-telescope-2': GroundTelescopeArt,
 }
 
 export function AnnexArt({ kind, className }: { kind: string; className?: string }) {

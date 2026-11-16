@@ -50,6 +50,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var missionRocketSource: StagedRocket.Source?
     public var placed: [String] = []
     public var placementPlots: [String: Int] = [:]
+    /// SSL-802: owned a ground telescope before telescopes had to be placed to observe; that one observes from the tray.
+    public var groundTelescopeGrandfathered: Bool = false
     public var controlBuilt: Bool = false
     public var missionsDone: Int = 0
     public var freeOperations: Bool = false
@@ -158,6 +160,9 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("pendingRocketLocation", &pendingRocketLocation); getOpt("pendingRocketSource", &pendingRocketSource)
         get("rocketPurchaseCounts", &rocketPurchaseCounts); getOpt("missionRocketSource", &missionRocketSource)
         get("placed", &placed); get("placementPlots", &placementPlots); get("controlBuilt", &controlBuilt)
+        // SSL-802: a save from before the rule has no flag; the ground telescope it already owns keeps observing unplaced.
+        if c.contains(AnyKey("groundTelescopeGrandfathered")) { get("groundTelescopeGrandfathered", &groundTelescopeGrandfathered) }
+        else { consumed.insert("groundTelescopeGrandfathered"); groundTelescopeGrandfathered = placed.contains(ControlStation.groundTelescopeStructureId) }
         get("missionsDone", &missionsDone)
         get("freeOperations", &freeOperations); get("earthBiome", &earthBiome); get("earthBiomeMoveUsed", &earthBiomeMoveUsed); getOpt("skyEventLocation", &skyEventLocation); get("debriefPending", &debriefPending); get("homeDeliveryPending", &homeDeliveryPending)
         getOpt("transitSatelliteLaunchedAt", &transitSatelliteLaunchedAt); get("deepSpaceTelescopeBuilt", &deepSpaceTelescopeBuilt)
@@ -221,6 +226,7 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("pendingRocketLocation", pendingRocketLocation); try putOpt("pendingRocketSource", pendingRocketSource)
         try put("rocketPurchaseCounts", rocketPurchaseCounts); try putOpt("missionRocketSource", missionRocketSource)
         try put("placed", placed); try put("placementPlots", placementPlots); try put("controlBuilt", controlBuilt)
+        try put("groundTelescopeGrandfathered", groundTelescopeGrandfathered)
         try put("missionsDone", missionsDone); 
         try put("freeOperations", freeOperations); try put("earthBiome", earthBiome); try put("earthBiomeMoveUsed", earthBiomeMoveUsed); try putOpt("skyEventLocation", skyEventLocation); try put("debriefPending", debriefPending); try put("homeDeliveryPending", homeDeliveryPending)
         try putOpt("transitSatelliteLaunchedAt", transitSatelliteLaunchedAt); try put("deepSpaceTelescopeBuilt", deepSpaceTelescopeBuilt)

@@ -75,7 +75,7 @@ struct GroundTelescopeArt: View {
 struct AnnexArt: View {
     let kind: String
     var body: some View {
-        if kind == ControlStation.groundTelescopeStructureId { GroundTelescopeArt() } else { Color.clear }
+        if ControlStation.isGroundTelescope(kind) { GroundTelescopeArt() } else { Color.clear }
     }
 }
 

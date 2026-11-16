@@ -44,4 +44,15 @@ describe('annex slots', () => {
     const withScope = homeCenter(['launchpad', 'market', 'ground-telescope'], 1000, null, { 'ground-telescope': WEST.plot })
     expect(withScope).toBeLessThan(without)
   })
+
+  // SSL-802: a second telescope for the second slot, ₣2M each, and no third.
+  it('builds a second telescope into the tray, then stops at one per slot', () => {
+    const one = applyBuildGroundTelescope(state(['ground-telescope'], { 'ground-telescope': WEST.plot }, 5_000_000))
+    expect(one.player.placed).toContain('ground-telescope-2')
+    expect(one.player.francs).toBe(3_000_000)
+    expect(unplacedAnnexKinds(one.player)).toEqual(['ground-telescope-2'])
+    const placed = applyPlaceAnnex(one, 'ground-telescope-2', GATE.plot)
+    expect(placedAnnex(placed.player).get(GATE.plot)).toBe('ground-telescope-2')
+    expect(applyBuildGroundTelescope(placed)).toBe(placed)
+  })
 })

@@ -454,8 +454,17 @@ enum SceneCatalog {
         },
         scene("control-station-built-phone", 874) {
             var gs = GameState()
-            gs.player.freeOperations = true; gs.player.placed = ["ground-telescope"]; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
+            gs.player.freeOperations = true; gs.player.placed = ["ground-telescope"]; gs.player.placementPlots = ["ground-telescope": 10]; gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
             gs.player.badges = ["rocket-revolution-2026": PlayerBadge(eventId: "rocket-revolution-2026", tier: .gold, earnedAt: wswNoon)]
+            let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
+            return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
+        },
+        // SSL-802: one ground telescope on the West annex and ₣6M: Add a telescope buys the second into the Unplaced tray.
+        scene("second-ground-telescope-phone", 874) {
+            var gs = GameState()
+            gs.player.freeOperations = true; gs.player.francs = 6_000_000
+            gs.player.placed = ["ground-telescope"]; gs.player.placementPlots = ["ground-telescope": 10]
+            gs.player.deepSpaceTelescopeBuilt = true; gs.player.saturnImagerLaunchedAt = 1
             let sigs = [InstrumentSignal(id: "n", kind: .deepSpace, title: "NEOCP"), InstrumentSignal(id: "s", kind: .saturn, title: "Frame")]
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },

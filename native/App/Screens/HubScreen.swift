@@ -395,7 +395,7 @@ struct HubScreen: View {
         case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
         case "surface-silo": siloOpen = true
         // SSL-844: the ground telescope on its annex slot opens the Data hub, as on web.
-        case ControlStation.groundTelescopeStructureId: store.go(.instrumentHub)
+        case let k where ControlStation.isGroundTelescope(k): store.go(.instrumentHub)
         default: break
         }
     }

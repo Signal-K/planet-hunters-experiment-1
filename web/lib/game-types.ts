@@ -218,6 +218,8 @@ export interface Player {
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
+  /** SSL-802: owned a ground telescope before telescopes had to be placed to observe; that one observes from the tray. */
+  groundTelescopeGrandfathered?: boolean
   /** Left-to-right order of the movable structures along the Base (hangar, launchpad, control-station, market). Absent: authored order. */
   baseArrangement?: string[]
   /** kind -> startedAt ms. Absence means the structure is fully built. */

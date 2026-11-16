@@ -67,4 +67,28 @@ import Testing
         let with = map.homeCenter(["launchpad", Self.telescope], viewUnits: 600, plots: [Self.telescope: slot.plot])
         #expect(with < without, "the west annex pulls the framing west")
     }
+
+    // SSL-802 (Liam, 16.11): one ground telescope per annex slot at ₣2M; a new one observes only once placed.
+    @Test func buysASecondTelescopeThatObservesOncePlaced() throws {
+        let map = try Self.map()
+        var s = GameState()
+        s.player.freeOperations = true; s.player.francs = 5_000_000
+        s.player.placed = [Self.telescope]; s.player.placementPlots = [Self.telescope: 10]
+        let bought = Construction.applyBuildGroundTelescope(s)
+        #expect(bought.player.placed.contains("ground-telescope-2"))
+        #expect(bought.player.francs == 3_000_000)
+        #expect(ControlStation.observingGroundTelescopes(bought.player) == 1)
+        #expect(map.unplacedAnnexKinds(placed: bought.player.placed, plots: bought.player.placementPlots) == ["ground-telescope-2"])
+        let placed = Construction.applyPlaceAnnex(bought, kind: "ground-telescope-2", plot: 11, map: map)
+        #expect(ControlStation.observingGroundTelescopes(placed.player) == 2)
+        #expect(Construction.applyBuildGroundTelescope(placed) == placed)
+    }
+
+    @Test func theTelescopeOwnedBeforeTheRuleObservesFromTheTray() throws {
+        let legacy = try JSONDecoder().decode(Player.self, from: Data(#"{"placed":["ground-telescope"],"placementPlots":{}}"#.utf8))
+        #expect(legacy.groundTelescopeGrandfathered)
+        #expect(ControlStation.observingGroundTelescopes(legacy) == 1)
+        let fresh = try JSONDecoder().decode(Player.self, from: Data(#"{"placed":["ground-telescope"],"placementPlots":{},"groundTelescopeGrandfathered":false}"#.utf8))
+        #expect(ControlStation.observingGroundTelescopes(fresh) == 0)
+    }
 }

@@ -6,7 +6,7 @@ import { rocketPrice } from '@/lib/rockets'
 import type { GameState } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
 import { STRUCTURE_PRICES } from '@/lib/data/economy'
-import { GROUND_TELESCOPE_STRUCTURE_ID } from './InstrumentFeedSystem'
+import { nextGroundTelescopeId } from './InstrumentFeedSystem'
 import { annexSlotForPlot, isAnnexKind, placedAnnex } from '@/lib/scene/base-site'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
@@ -512,9 +512,11 @@ export function applyBuyLaserCapacitor(s: GameState, expectedLevel: number, rese
   return { ...s, player: { ...s.player, stash, laserCapacitorLevel: tier.level } }
 }
 
-/** Builds the ground telescope from the control station (Liam, 31.10: the station's Build button must build it). */
+/** Builds the next ground telescope from the control station (Liam, 31.10: the station's Build button must build it).
+ *  SSL-802: one per annex slot, ₣2M each. A new telescope waits in the Base's Unplaced tray and observes once placed. */
 export function applyBuildGroundTelescope(s: GameState): GameState {
-  if (s.player.placed.includes(GROUND_TELESCOPE_STRUCTURE_ID)) return s
+  const id = nextGroundTelescopeId(s.player)
+  if (!id) return s
   if (!s.player.freeOperations) return s
   if (s.player.francs < STRUCTURE_PRICES.groundTelescope) return s
   return {
@@ -522,7 +524,7 @@ export function applyBuildGroundTelescope(s: GameState): GameState {
     player: {
       ...s.player,
       francs: s.player.francs - STRUCTURE_PRICES.groundTelescope,
-      placed: [...s.player.placed, GROUND_TELESCOPE_STRUCTURE_ID],
+      placed: [...s.player.placed, id],
     },
   }
 }

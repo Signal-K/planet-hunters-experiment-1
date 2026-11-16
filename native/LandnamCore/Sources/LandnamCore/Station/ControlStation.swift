@@ -15,12 +15,29 @@ public struct InstrumentSignal: Equatable, Sendable {
 public enum ControlStation {
     /// Structure id a player places to own ground telescopes.
     public static let groundTelescopeStructureId = "ground-telescope"
+    /// SSL-802: every ground telescope a player can own, one per annex slot (web `GROUND_TELESCOPE_IDS`).
+    public static let groundTelescopeIds = [groundTelescopeStructureId, "ground-telescope-2"]
+    /// Francs per ground telescope (web `STRUCTURE_PRICES.groundTelescope`).
+    public static let groundTelescopePrice = 2_000_000
+    /// Annex save plots start at 10 (shared/layout/base-site.json).
+    static let annexPlotMin = 10
+
+    public static func isGroundTelescope(_ kind: String) -> Bool { groundTelescopeIds.contains(kind) }
+    public static func ownedGroundTelescopes(_ p: Player) -> [String] { groundTelescopeIds.filter { p.placed.contains($0) } }
+    public static func nextGroundTelescopeId(_ p: Player) -> String? { groundTelescopeIds.first { !p.placed.contains($0) } }
+    /// A ground telescope observes once it stands on an annex slot; the one owned before SSL-802 observes from the tray too.
+    public static func groundTelescopeObserving(_ p: Player, _ id: String) -> Bool {
+        guard p.placed.contains(id) else { return false }
+        if let plot = p.placementPlots[id], plot >= annexPlotMin { return true }
+        return id == groundTelescopeStructureId && p.groundTelescopeGrandfathered
+    }
+    public static func observingGroundTelescopes(_ p: Player) -> Int { groundTelescopeIds.filter { groundTelescopeObserving(p, $0) }.count }
     public static let mapWidth = 640.0, mapHeight = 320.0
 
     public struct Body: Sendable, Identifiable { public let id: String, name: String; public let x, y, r: Double; public let ringed: Bool }
     public struct Location: Sendable { let id: String, bodyId: String, groupLabel: String }
     public struct Project: Sendable { public let id: String, label: String; let signalKind: SignalKind }
-    enum Flag: Sendable { case always, transit, deepSpace, saturn }
+    enum Flag: Sendable { case always, transit, deepSpace, saturn, groundObserving }
     struct Equipment: Sendable {
         let id: String, name: String, locationId: String
         let projectIds: [String]
@@ -46,7 +63,7 @@ public enum ControlStation {
         Project(id: "saturn-storms", label: "Saturn storms", signalKind: .saturn),
     ]
     static let equipment = [
-        Equipment(id: "ground-telescopes", name: "Ground telescopes", locationId: "earth-surface", projectIds: ["asteroid-discovery"], presence: nil, structureId: groundTelescopeStructureId, feed: .deepSpace, readyLabel: "Observing", x: 148, y: 172),
+        Equipment(id: "ground-telescopes", name: "Ground telescopes", locationId: "earth-surface", projectIds: ["asteroid-discovery"], presence: nil, structureId: groundTelescopeStructureId, feed: .groundObserving, readyLabel: "Observing", x: 148, y: 172),
         Equipment(id: "transit-telescope", name: "Space Telescope", locationId: "earth-orbit", projectIds: ["exoplanet-hunters"], presence: .transit, structureId: nil, feed: .transit, readyLabel: "Observing", x: 188, y: 68),
         Equipment(id: "deep-space-telescope", name: "Space Telescope", locationId: "earth-orbit", projectIds: ["asteroid-discovery"], presence: .deepSpace, structureId: nil, feed: .deepSpace, readyLabel: "Observing", x: 252, y: 178),
         Equipment(id: "saturn-imager", name: "Saturn satellite", locationId: "saturn", projectIds: ["saturn-storms"], presence: .saturn, structureId: nil, feed: .saturn, readyLabel: "Frame ready", x: 540, y: 96),
@@ -83,6 +100,7 @@ public enum ControlStation {
         case .transit: (p.transitSatelliteLaunchedAt ?? 0) > 0
         case .deepSpace: p.deepSpaceTelescopeBuilt
         case .saturn: (p.saturnImagerLaunchedAt ?? 0) > 0
+        case .groundObserving: observingGroundTelescopes(p) > 0
         }
     }
 

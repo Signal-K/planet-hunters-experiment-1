@@ -77,6 +77,17 @@ public enum Construction {
         return n
     }
 
+    /// SSL-802: buy the next ground telescope (₣2M, one per annex slot). It waits in the Unplaced tray and observes once
+    /// placed (web `applyBuildGroundTelescope`).
+    public static func applyBuildGroundTelescope(_ s: GameState) -> GameState {
+        guard let id = ControlStation.nextGroundTelescopeId(s.player), s.player.freeOperations,
+              s.player.francs >= ControlStation.groundTelescopePrice else { return s }
+        var n = s
+        n.player.francs -= ControlStation.groundTelescopePrice
+        n.player.placed.append(id)
+        return n
+    }
+
     /// SSL-843: stand an owned annex structure (one already paid for) on a free annex slot, or move it to another one.
     /// Free: the price was paid when it was built. A taken slot, an unowned kind or a non-annex kind is a no-op
     /// (web `applyPlaceAnnex`).
