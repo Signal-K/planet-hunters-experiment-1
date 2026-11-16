@@ -156,10 +156,9 @@ final class Services {
         monitor.start(queue: .global(qos: .utility))
     }
 
-    /// SSL-841: NWPathMonitor calls this on its utility queue. Written inside this main-actor class the closure would be
-    /// main-actor isolated and Swift 6 traps on entry (as the notification callback did); built here it runs anywhere and
-    /// hops to the main actor for state.
-    nonisolated private static func pathHandler(_ owner: Services, sync: CloudSync, shared: Outbox) -> (NWPath) -> Void {
+    /// SSL-841: NWPathMonitor calls this on its utility queue (the SDK declares the handler @Sendable). Built outside the
+    /// main actor it runs anywhere and hops to the main actor for state.
+    nonisolated private static func pathHandler(_ owner: Services, sync: CloudSync, shared: Outbox) -> @Sendable (NWPath) -> Void {
         { [weak owner] path in
             let up = path.status == .satisfied && !PocketBaseExecutor.forceOffline
             Task { @MainActor in owner?.online = up }
