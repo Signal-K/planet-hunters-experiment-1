@@ -66,6 +66,30 @@ jobs:
           CODE_SIGNING_ALLOWED=NO
           CODE_SIGNING_REQUIRED=NO
 
+      # SSL-841: the test host has been trapping at launch with no stack in the log. Print the crashed thread of the
+      # newest Landnam crash report (the simulator writes them on the host) so the cause is visible in the run.
+      - name: Show the app's crash report
+        if: failure()
+        run: |
+          ls -t ~/Library/Logs/DiagnosticReports/ 2>/dev/null | head -10 || true
+          f=$(ls -t ~/Library/Logs/DiagnosticReports/Landnam*.ips 2>/dev/null | head -1)
+          [ -n "$f" ] || { echo "no Landnam crash report"; exit 0; }
+          echo "== $f"
+          python3 - "$f" <<'PY'
+          import json, sys
+          raw = open(sys.argv[1]).read()
+          body = json.loads(raw[raw.index('\n') + 1:])
+          print('exception:', json.dumps(body.get('exception')), json.dumps(body.get('termination'))[:600])
+          images = body.get('usedImages', [])
+          for t in body.get('threads', []):
+              if not t.get('triggered'):
+                  continue
+              for fr in t.get('frames', [])[:40]:
+                  img = images[fr.get('imageIndex', 0)] if images else {}
+                  name = img.get('name') or img.get('path', '?').split('/')[-1]
+                  print(f"{name:<28} {fr.get('symbol', '?')} +{fr.get('symbolLocation', fr.get('imageOffset'))}  {fr.get('sourceFile', '')}:{fr.get('sourceLine', '')}")
+          PY
+
       - name: Run core tests
         working-directory: native/LandnamCore
         run: swift test
