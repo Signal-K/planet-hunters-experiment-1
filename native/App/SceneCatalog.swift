@@ -281,6 +281,24 @@ enum SceneCatalog {
         return gs
     }
 
+    /// SSL-840 (web `ui-focus-run`): a Mineral Vault focus with 6 of 15 aluminium stored, mining at Itokawa in a 6-unit hull.
+    static func focusRunState(mining: Bool) -> GameState {
+        var gs = miningState(rover: false, target: "itokawa")
+        gs.player.freeOperations = true; gs.player.missionsDone = 5
+        gs.player.placed.append("surface-silo")
+        gs.player.stash = ["aluminium": 6]
+        gs.player.resourceFocus = ResourceFocus(label: "Mineral Vault", minerals: ["aluminium": 15, "copper": 8])
+        gs.player.freeHaulDisposition = .store
+        gs.rocket = RocketConfig(chassis: "hull-mk1", propulsion: "ion-a1", drill: "hand-drill")
+        if mining {
+            gs.missionId = ResourceFocusRun.missionId
+            gs.player.activeMission = ActiveMission(id: ResourceFocusRun.missionId, label: "Materials for Mineral Vault")
+        } else {
+            gs.screen = .missions; gs.missionId = nil; gs.targetId = nil; gs.player.activeMission = nil; gs.player.missionPhase = nil
+        }
+        return gs
+    }
+
     static func shipMiningState(_ chassis: String, _ propulsion: String, _ drill: String) -> GameState {
         var gs = miningState(rover: false)
         gs.rocket = RocketConfig(chassis: chassis, propulsion: propulsion, drill: drill)
@@ -675,6 +693,10 @@ enum SceneCatalog {
         },
         scene("transit-live-landscape", 402, w: 874) {
             TransitScreen().environment(GameStore(state: transitState(returning: false)))
+        },
+        scene("mining-focus-run", 874) { MiningScreen().environment(GameStore(state: focusRunState(mining: true))) },
+        scene("mission-focus-run-phone", 874) {
+            MissionsScreen(startTab: ResourceFocusRun.boardTab).environment(GameStore(state: focusRunState(mining: false), clock: { wswNoon })).environment(\.flatLayout, true)
         },
         scene("mining-laser-live", 874) {
             MiningScreen().environment(GameStore(state: miningState(rover: false)))

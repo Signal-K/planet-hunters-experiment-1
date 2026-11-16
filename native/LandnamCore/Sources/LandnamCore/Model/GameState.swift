@@ -17,6 +17,13 @@ public struct FlightPlanProgress: Codable, Equatable, Sendable {
 
 public enum HaulDisposition: String, Codable, Sendable { case store, sell }
 
+/// A construction the player is gathering materials for (web `ResourceFocus`). Wire format matches web.
+public struct ResourceFocus: Codable, Equatable, Sendable {
+    public var label: String
+    public var minerals: Cargo
+    public init(label: String, minerals: Cargo) { self.label = label; self.minerals = minerals }
+}
+
 /// Player progress. Field names match the web save JSON (`game_states.state`) so a
 /// save can move between clients. Fields not yet ported live in `extras` and are
 /// written back untouched.
@@ -60,6 +67,8 @@ public struct Player: Codable, Equatable, Sendable {
     public var homeDeliveryPending: Bool = false
     public var cargoSettledOffworld: Bool = false
     public var freeHaulDisposition: HaulDisposition?
+    /// SSL-840: the construction the player is collecting materials for (web `resourceFocus`). It spans as many trips as needed.
+    public var resourceFocus: ResourceFocus?
     public var returningToEarth: Bool = false
     public var shipDestroyed: Bool = false
     public var headingToDelivery: Bool = false
@@ -155,6 +164,7 @@ public struct Player: Codable, Equatable, Sendable {
         getOpt("saturnImagerLaunchedAt", &saturnImagerLaunchedAt)
         getOpt("dailyClientPool", &dailyClientPool)
         get("cargoSettledOffworld", &cargoSettledOffworld); getOpt("freeHaulDisposition", &freeHaulDisposition)
+        getOpt("resourceFocus", &resourceFocus)
         get("returningToEarth", &returningToEarth); get("shipDestroyed", &shipDestroyed)
         get("headingToDelivery", &headingToDelivery); get("stash", &stash); get("marketSupply", &marketSupply)
         get("marketSupplyUpdatedAt", &marketSupplyUpdatedAt); get("clientMissions", &clientMissions)
@@ -217,6 +227,7 @@ public struct Player: Codable, Equatable, Sendable {
         try putOpt("saturnImagerLaunchedAt", saturnImagerLaunchedAt)
         try putOpt("dailyClientPool", dailyClientPool)
         try put("cargoSettledOffworld", cargoSettledOffworld); try putOpt("freeHaulDisposition", freeHaulDisposition)
+        try putOpt("resourceFocus", resourceFocus)
         try put("returningToEarth", returningToEarth); try put("shipDestroyed", shipDestroyed)
         try put("headingToDelivery", headingToDelivery); try put("stash", stash); try put("marketSupply", marketSupply)
         try put("marketSupplyUpdatedAt", marketSupplyUpdatedAt); try put("clientMissions", clientMissions)

@@ -3,7 +3,7 @@ import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS, ROCKET_IDS, TARGETS } from '@/lib/data'
 import { sectorDeposits, sectorIds } from '@/lib/probes/survey-probe'
-import { ORIONIDS_NIGHT_RUN_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
@@ -166,6 +166,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
       { key: 'ui-free-mining-silo-full', label: 'Free mining run, silo full', hint: 'Free run with the 40-unit Surface Silo already full (iron, cobalt, nickel). Store on Earth stays open: the haul goes in and the cheapest stored ore is sold to make room. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-focus-run', label: 'Materials focus run', hint: 'SSL-840: a Mineral Vault focus (15 aluminium, 8 copper) with 6 aluminium already stored, mining at Itokawa in a 6-unit hull. Return with whatever the hold carries; the next trip asks only for what is still missing', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -1085,6 +1086,27 @@ function fixture(name: string): Partial<GameState> | null {
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: SELF_DIRECTED_MINING_MISSION_ID,
+        targetId: 'itokawa',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-focus-run':
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          placed: [...POST_ONBOARDING_PLAYER.placed, 'surface-silo'],
+          stash: { aluminium: 6 },
+          resourceFocus: { label: 'Mineral Vault', minerals: { aluminium: 15, copper: 8 } },
+          activeMission: { id: RESOURCE_FOCUS_MISSION_ID, label: 'Materials for Mineral Vault' },
+          missionPhase: 'mining',
+          freeHaulDisposition: 'store',
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: RESOURCE_FOCUS_MISSION_ID,
         targetId: 'itokawa',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,

@@ -77,7 +77,7 @@ struct MissionsScreen: View {
                 .padding(.top, compact ? insets.top + 52 : railTop).padding(.leading, side)
 
             if tab == 3 {
-                FreeRunBoard(runs: store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked && ($0.id != OrionidsRun.surfaceResearchMissionId || store.player.orionidsEventStage == 1) }, eventFocus: eventFocus) { store.pickMission($0) }
+                FreeRunBoard(runs: store.catalog.missions.filter { $0.id == ResourceFocusRun.missionId } + store.catalog.missions.filter { $0.id.hasPrefix("self-directed-") && !$0.locked && ($0.id != OrionidsRun.surfaceResearchMissionId || store.player.orionidsEventStage == 1) }, eventFocus: eventFocus) { store.pickMission($0) }
                     .background(Theme.paper, in: RoundedRectangle(cornerRadius: 20))
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.ink, lineWidth: 3))
                     .padding(.top, portrait ? railTop + 64 : railTop)

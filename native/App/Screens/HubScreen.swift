@@ -91,9 +91,10 @@ struct HubScreen: View {
                 onStructure: { openStructure($0) },
                 onShaft: { if !offerUpgrade("surface-silo") { store.go(.hubSubsurface) } },
                 onBuildSilo: { buildSilo() },
-                onBuildSubsurfaceSilo: { _ = store.buildSubsurfaceSilo() },
-                onBuildDeepSubsurfaceSilo: { _ = store.buildSubsurfaceSilo(deep: true) },
-                onExcavate: { _ = store.excavateSubsurface() },
+                // SSL-840: a build short of materials focuses them and opens the run that collects them (web FOCUS MATERIALS).
+                onBuildSubsurfaceSilo: { if !store.buildSubsurfaceSilo() { store.focusResources(label: "Mineral Vault", materials: GameStore.subsurfaceSiloMaterials(deep: false)) } },
+                onBuildDeepSubsurfaceSilo: { if !store.buildSubsurfaceSilo(deep: true) { store.focusResources(label: "Deep Mineral Vault", materials: GameStore.subsurfaceSiloMaterials(deep: true)) } },
+                onExcavate: { if !store.excavateSubsurface() { store.focusResources(label: "Subsurface excavation", materials: GameStore.excavationMaterials) } },
                 placing: placing,
                 pickedKind: picked ?? options.first?.id,
                 onSlot: { placeOnSlot($0) },

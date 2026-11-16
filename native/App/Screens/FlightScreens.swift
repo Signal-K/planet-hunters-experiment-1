@@ -114,7 +114,10 @@ struct MiningScreen: View {
     private func handleReturn(_ f: MiningField) {
         // SSL-651: a shower run whose fragments are caught (launch plus mined) is filled; leaving early pays it.
         let showerFilled = store.mission?.id == OrionidsRun.missionId && OrionidsRun.filled(store.player)
-        if f.isComplete || f.charge <= 0 || showerFilled {
+        // SSL-840 (web `isFreeHaulEligible`): your own run with no delivery or kit returns whatever the hold carries, so a
+        // construction goal bigger than the hold is collected over several trips.
+        let freeHaul = store.mission.map { $0.isOwnProgram && $0.deliveryTargetId == nil && $0.construction == nil && $0.id != OrionidsRun.missionId } ?? false
+        if f.isComplete || f.charge <= 0 || showerFilled || freeHaul {
             guard f.cargoUnits > 0 || showerFilled else { say("Nothing mined yet"); return }
             store.miningDone(f.cargo)
             return

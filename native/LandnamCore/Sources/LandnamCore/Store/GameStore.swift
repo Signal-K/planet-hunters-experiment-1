@@ -166,6 +166,16 @@ public final class GameStore {
         apply(n)
     }
 
+    /// SSL-840: aim the programme at a construction's missing materials and open the run that collects them.
+    /// Returns false when nothing is short.
+    @discardableResult public func focusResources(label: String, materials: Cargo) -> Bool {
+        var n = state
+        guard ResourceFocusRun.focus(&n.player, label: label, materials: materials) else { return false }
+        apply(n)
+        openMissionBoard(tab: ResourceFocusRun.boardTab)
+        return true
+    }
+
     public func openMissionBoard(tab: Int) {
         requestedMissionBoardTab = tab
         go(.missions)
@@ -359,9 +369,13 @@ public final class GameStore {
     }
     /// Clears the unbuilt bedrock below a placed surface silo. Kept in the
     /// store so native applies the same one-time cost as the web Hub.
+    /// Materials the subsurface work takes from the stash (web `SUBSURFACE_EXCAVATE_COST`, `SUBSURFACE_ROOMS`).
+    public static let excavationMaterials: Cargo = ["aluminium": 10]
+    public static func subsurfaceSiloMaterials(deep: Bool) -> Cargo { deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8] }
+
     @discardableResult public func excavateSubsurface() -> Bool {
         let cost = 2_000_000
-        let aluminium = 10
+        let aluminium = Self.excavationMaterials["aluminium", default: 0]
         guard state.player.placed.contains("surface-silo"), !state.player.subsurfaceExcavated,
               state.player.francs >= cost, state.player.stash["aluminium", default: 0] >= aluminium else { return false }
         var next = state
@@ -378,7 +392,7 @@ public final class GameStore {
         let id = deep ? "deep-mineral-vault" : "mineral-vault"
         guard !state.player.subsurfaceBuilt.contains(id) else { return false }
         let cost = deep ? 8_000_000 : 3_000_000
-        let materials = deep ? ["aluminium": 30, "copper": 16, "silicon": 8] : ["aluminium": 15, "copper": 8]
+        let materials = Self.subsurfaceSiloMaterials(deep: deep)
         guard state.player.francs >= cost,
               materials.allSatisfy({ state.player.stash[$0.key, default: 0] >= $0.value }) else { return false }
         var next = state

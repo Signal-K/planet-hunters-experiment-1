@@ -128,6 +128,17 @@
    ]
   },
   {
+   "id": "focus-run",
+   "name": "Materials focus run",
+   "flow": "core-loop",
+   "web": "ui-focus-run",
+   "native": "mining-focus-run",
+   "tickets": [
+    "SSL-840"
+   ],
+   "note": "A construction goal bigger than the hold: return a partial haul, store it, and the next trip asks only for the rest. iOS board view: mission-focus-run-phone."
+  },
+  {
    "id": "radio-meteors",
    "name": "Meteor radio",
    "flow": "events",
