@@ -152,12 +152,19 @@ final class Services {
             guard let id = user.value, let op = verdict.op(sharedUserId: id) else { return }
             Task { await shared.enqueue(op); await shared.flush() }
         }
-        monitor.pathUpdateHandler = { path in
-            let up = path.status == .satisfied && !PocketBaseExecutor.forceOffline
-            Task { @MainActor in self.online = up }
-            if up { Task { @MainActor in self.pullIfNeeded(); await sync.flush(); await shared.flush() } }
-        }
+        monitor.pathUpdateHandler = Self.pathHandler(self, sync: sync, shared: shared)
         monitor.start(queue: .global(qos: .utility))
+    }
+
+    /// SSL-841: NWPathMonitor calls this on its utility queue. Written inside this main-actor class the closure would be
+    /// main-actor isolated and Swift 6 traps on entry (as the notification callback did); built here it runs anywhere and
+    /// hops to the main actor for state.
+    nonisolated private static func pathHandler(_ owner: Services, sync: CloudSync, shared: Outbox) -> (NWPath) -> Void {
+        { [weak owner] path in
+            let up = path.status == .satisfied && !PocketBaseExecutor.forceOffline
+            Task { @MainActor in owner?.online = up }
+            if up { Task { @MainActor in owner?.pullIfNeeded(); await sync.flush(); await shared.flush() } }
+        }
     }
 
     func attach(_ session: AuthSession?) {
@@ -285,7 +292,8 @@ final class TokenBox: @unchecked Sendable {
 
 /// Local iOS notifications (SSL-559). Delivered by iOS itself, so they work offline; each one is mirrored to
 /// `scheduled_notifications`. Without an APNs entitlement the device registers a local-only endpoint.
-@MainActor
+/// SSL-841: not main-actor isolated. iOS calls the authorization callback on its own queue; as a main-actor closure it
+/// tripped Swift 6's isolation check and the app trapped at launch (crash report: `closure #1 in requestProvisional`).
 enum LocalNotifications {
     static var endpoint: String { "ios-local:" + Ledger.deviceId() }
     static func requestProvisional() {
