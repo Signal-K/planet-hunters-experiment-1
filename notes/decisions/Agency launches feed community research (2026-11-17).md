@@ -46,6 +46,37 @@ community research.
 - While a chained shower is live, the radio desk tunes to its receiver.
 - Two receivers up at once stand apart on the Data hub horizon.
 
+## Liam's follow-up (17 Nov, later)
+
+- Some missions launch to upgrade or repair a craft. Craft are not set-and-forget.
+- The game should be more abstract, so that community research is actually useful and still gives the citizen
+  science contribution. We already know how the game works behind the scenes, so research that only reveals our own
+  rules is not useful. Everything the player does needs a reason.
+
+## Proposed by the agent, waiting on Liam: the world is what the community finds
+
+The reason for everything: nobody, the developers included, knows the answers yet. Landnam's universe beyond the home
+system is not authored. It is made from what players conclude together about real data.
+
+1. **Real data in, worlds out.** When community consensus says a TESS candidate is a planet, it becomes a world in
+   Landnam for everyone, built from the real fit (size, orbit, temperature). Confirmed asteroid candidates become
+   mining targets. Saturn storm frames set the weather for Saturn missions. Meteor echoes set how dense a shower's
+   debris is. Today a player's own "planet" verdict only makes a target for that player.
+2. **Surveys are shared.** What a world holds is unknown until probes map it. Every probe reading fills in the same
+   map, so the community charts the worlds it created.
+3. **Craft wear and get serviced.** Real space weather (solar storms, which ties in with answer 3) wears craft
+   down, and a worn craft brings less data. A servicing mission repairs it. Small upgrades ride along on servicing
+   missions; a big performance upgrade is its own mission.
+4. **Spare capacity is donated.** Data you can't work goes to the community queue, so candidates reach consensus
+   sooner and new worlds appear sooner.
+5. **Community research is the frontier.** In place of the flat 100-stamp bar it shows what the community is close
+   to deciding: candidates near consensus, worlds still unmapped, and craft that need servicing.
+
+Why it is useful:
+- For science: consensus classifications of real data, which is the citizen science output.
+- For us: which worlds players choose to settle, and how quickly a community reaches agreement, tell us how the game
+  is played.
+
 ## Not yet
 
 - iOS: the `launch` stamp kind and the Agency path are web only. iOS still keeps only the seven older stamp kinds.
