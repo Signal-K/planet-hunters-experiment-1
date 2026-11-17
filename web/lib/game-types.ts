@@ -410,11 +410,11 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation' | 'launch')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
   telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
-  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
+  researchPath?: { week: string; path: 'explorer' | 'trader' | 'agency'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
   /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
   skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>
   /** Permanent regular fragments earned from completed weekly research paths. */

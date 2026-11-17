@@ -2,7 +2,7 @@ import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
 import { asteroidFeedOnline } from '@/lib/systems/InstrumentFeedSystem'
 import { markMapped, type SkyAim, type SkyMap } from './sky-map'
 
-export type ResearchPathId = 'explorer' | 'trader'
+export type ResearchPathId = 'explorer' | 'trader' | 'agency'
 export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
 export type TelescopeAim = Partial<Record<InstrumentPointing, { week: string; aim?: SkyAim; /** Saturn only: the sector the orbiter was steered to (SkyTarget id). */ sector?: string }>>
 export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing; /** Where in the sky the week's instrument was locked (SSL-788). */ aim?: SkyAim }
@@ -167,10 +167,54 @@ export function traderSteps(opts: { eventName: string | null; eventStep?: EventS
   return withProbeStep(steps, opts.hasProbe)
 }
 
+/**
+ * SSL-852: the Agency path is built from the agency programme (lib/agency/programme.ts): put a craft up, work the
+ * data it sends, and have a finding checked. `nextLaunch` is the craft to launch or build next; with nothing left
+ * to add, the step is a survey scan. `hasData` is false until a craft sends data to classify.
+ */
+export function agencySteps(opts: { eventName: string | null; eventStep?: EventStepCopy; hasProbe?: boolean; nextLaunch: { name: string; how: 'launch' | 'build'; project: string; /** False when another craft already feeds this project. */ opensProject: boolean; adds: string } | null; hasData: boolean; ownedNames: string[]; /** A craft already went up this week: the step keeps saying so, not naming the next one as done. */ launchedThisWeek?: boolean }): PathStep[] {
+  const fleet = opts.ownedNames.length ? opts.ownedNames.join(', ').toLowerCase() : null
+  const first: PathStep = opts.launchedThisWeek
+    ? { id: 'launch', kind: 'launch', days: 1, icon: 'star', color: '#f2c24c', title: 'Add a craft to your fleet',
+        brief: opts.nextLaunch ? `Your agency put a craft up this week. Next you could ${opts.nextLaunch.how === 'build' ? 'build' : 'launch'} a ${opts.nextLaunch.name.toLowerCase()} for ${opts.nextLaunch.project}.` : 'Your agency put a craft up this week.',
+        why: 'Every craft an agency puts up is more of the sky being watched, and more data for everyone to work through.' }
+    : opts.nextLaunch
+    ? { id: 'launch', kind: 'launch', days: 1, icon: 'star', color: '#f2c24c', title: `${opts.nextLaunch.how === 'build' ? 'Build' : 'Launch'} a ${opts.nextLaunch.name.toLowerCase()}`,
+        brief: `${opts.nextLaunch.how === 'build' ? 'Build it in the Data hub and place it on the Base' : 'Fly it from the launchpad, on the Program tab'}. It ${opts.nextLaunch.opensProject ? `opens ${opts.nextLaunch.project} for your agency` : `adds to ${opts.nextLaunch.project}`}: ${opts.nextLaunch.adds.charAt(0).toLowerCase()}${opts.nextLaunch.adds.slice(1)}.`,
+        why: 'Every craft an agency puts up is more of the sky being watched, and more data for everyone to work through.' }
+    : { id: 'scan', kind: 'survey', days: 1, icon: 'scan', color: '#9ad28a', title: 'Finish a survey scan',
+        brief: 'Your fleet is complete. Start a scan from the Data hub and see it through to the result.',
+        why: 'Scans show us how planets and generation behave, so worlds get more believable.' }
+  const steps: PathStep[] = [
+    first,
+    { id: 'fleet-classify', kind: 'classification', days: 1, icon: 'signal', color: '#58d0ea', title: 'Work your fleet\u2019s data',
+      brief: opts.hasData && fleet ? `Your ${fleet} sent data today. Open the Data hub, pick an item and say what it is.` : 'Nothing is sending data yet. Launch or build a telescope first, then classify what it sends.',
+      why: 'Data only counts once someone has looked at it. Your answer joins every other player\u2019s.' },
+    { id: 'fleet-watch', kind: 'classification', days: 3, icon: 'signal', color: '#58d0ea', title: 'Clear the feed on 3 days',
+      brief: 'Classify something from your fleet on three different days this week.',
+      why: 'A craft sends new data every day. An agency that keeps up with it finds things first.' },
+    { id: 'review', kind: 'review', days: 1, icon: 'signal', color: '#f2c24c', title: 'Review a finding',
+      brief: 'Open Community research, check another player\u2019s finding with your own look, then Support, Dispute or Unsure.',
+      why: 'A finding is only verified when other agencies agree. Consensus is the community\u2019s goal.' },
+    { id: 'breakthrough', kind: 'classification', days: 0, icon: 'star', color: '#f2c24c', title: 'Breakthrough',
+      brief: 'Stamp research on five different days this week to finish the path.',
+      why: 'A full week of steady research is what turns scattered reports into a result.' },
+  ]
+  if (opts.eventName) steps.unshift({
+    id: 'event', kind: 'event', days: 1, icon: 'sky', color: '#e8a24a', title: opts.eventStep?.title ?? `Catch debris in the ${opts.eventName}`,
+    brief: opts.eventStep?.brief ?? 'Send your agency into the shared event run and bring a stamp home for the whole community.',
+    why: 'Event weeks are shared research. Every agency that joins fills the same bar.',
+  })
+  return withProbeStep(steps, opts.hasProbe)
+}
+
+/** The fragment marker a rewarded step is recorded under in `claimedSteps`. */
+const REWARD_MARKER: Record<string, number> = { 'step-2': 2, 'step-4': 4, breakthrough: 5 }
+
 export function weeklyRewardKey(step: PathStep): keyof typeof WEEKLY_RESEARCH_REWARDS | null {
   if (step.id === 'breakthrough') return 'breakthrough'
-  if (step.id === 'scan' || step.id === 'contract') return 'step-2'
-  if (step.id === 'sales' || step.id === 'scan-again' || step.id === 'world') return 'step-4'
+  if (step.id === 'scan' || step.id === 'contract' || step.id === 'launch') return 'step-2'
+  if (step.id === 'sales' || step.id === 'scan-again' || step.id === 'world' || step.id === 'fleet-watch') return 'step-4'
   return null
 }
 
@@ -179,7 +223,7 @@ export function claimResearchReward<T extends { researchPath?: ResearchPathChoic
   const rewardKey = weeklyRewardKey(step)
   if (!choice || !rewardKey || progress.have < progress.need) return player
   const claimed = choice.claimedSteps ?? []
-  const marker = step.id === 'breakthrough' ? 5 : step.id === 'scan' || step.id === 'contract' ? 2 : 4
+  const marker = REWARD_MARKER[rewardKey]
   if (claimed.includes(marker)) return player
   const reward = WEEKLY_RESEARCH_REWARDS[rewardKey]
   const next = { ...player, researchPath: { ...choice, claimedSteps: [...claimed, marker] }, researchFragments: (player.researchFragments ?? 0) + reward.fragments }

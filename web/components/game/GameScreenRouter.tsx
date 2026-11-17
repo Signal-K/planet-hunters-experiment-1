@@ -101,6 +101,7 @@ import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
+import { agencySummary } from '@/lib/agency/programme'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -748,6 +749,11 @@ function ScreenBody({
             else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
             else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'probe-observation') return game.go('probe-scan')
+            // SSL-852: a craft is launched from the Program tab; a ground telescope is built in the Data hub.
+            else if (kind === 'launch') {
+              if (agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
+              requestMissionBoardTab('program')
+            }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')

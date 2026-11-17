@@ -595,6 +595,15 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "SSL-746: the review area. Any player can ask for consensus on their own classification (ASK COMMUNITY key on the finished readout) and review others'. The reviewer runs the instrument first; only then is the requester's readout released and Support, Dispute (with a reason) or Unsure accepted. Reviewers never see running counts. Verified at ceil(log2(active players + 1)) supports, 3 to 9, with disputes under a third of supports. Reachable without choosing a weekly path. Stage fixtures: add &consensus=queue, &consensus=review or &consensus=settled to /game/stage?preset=ui-community-research. Transit only so far; asteroid and Saturn follow."
+        },
+        {
+          "id": "agency-path",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-852: the Agency path, third on the picker. Its steps come from the agency programme (web/lib/agency/programme.ts): launch or build the next craft (a `launch` stamp), work the fleet's data, clear the feed on 3 days, review a finding, Breakthrough. A line under the title lists the craft the agency has up, items of data a day and contributions. GO on the launch step opens the Data hub for a ground telescope and the Program tab for anything launched. The path links out to instruments; it holds no instrument tools."
         }
       ]
     },

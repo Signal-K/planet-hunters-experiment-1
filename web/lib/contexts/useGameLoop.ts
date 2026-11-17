@@ -41,6 +41,7 @@ import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
 import { applyClientSale } from '@/lib/client-sales'
 import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
+import { isAgencyLaunch } from '@/lib/agency/programme'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -1348,7 +1349,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
-      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
+      // SSL-852: putting an agency craft up is research.
+      const launchStampedPlayer = isAgencyLaunch(mission) ? addStamp(stampedPlayer, 'launch', Date.now()) : stampedPlayer
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(launchStampedPlayer, 'discovery-mission', Date.now()) : launchStampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
       // SSL-831: a shower with a mission chain (Leonids) finishes mission 1 here; the badge waits for its receiver step.
       const completedChain = getShowerChain(completedShower?.id)
