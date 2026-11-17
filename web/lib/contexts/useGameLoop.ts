@@ -1133,8 +1133,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...stateRef.current.player,
       radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
     }
-    // The receiver the desk is tuned to: LEO-1 once the Leonids run is home (SSL-831), else ORI-1.
-    const receiver = receiverEventId(stateRef.current.player)
+    // The receiver the desk is tuned to: LEO-1 while the Leonids are live (SSL-852) or once its run is home, else ORI-1.
+    const receiver = receiverEventId(stateRef.current.player, at)
     const chain = getShowerChain(receiver)
     // Checking LEO-1 recordings during the Leonids is the community's event research too.
     if (chain && !isOrionidsWindow(at) && badgeTierFor(chain.eventId, at) === 'gold') stampResearch('event')

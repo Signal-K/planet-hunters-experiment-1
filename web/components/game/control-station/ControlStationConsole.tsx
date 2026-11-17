@@ -103,6 +103,15 @@ const HORIZON_SPOT: Record<StationTelescope['place'], { left: number; top: numbe
   probe: { left: 74, top: 44 },
 }
 
+/** Shower receivers share the relay place; a second one up at once stands high between the dome and orbit. */
+const RELAY_SPOTS: readonly { left: number; top: number }[] = [HORIZON_SPOT.relay, { left: 42, top: 12 }]
+
+function horizonSpot(scope: StationTelescope, all: readonly StationTelescope[]): { left: number; top: number } {
+  if (scope.place !== 'relay') return HORIZON_SPOT[scope.place]
+  const nth = all.filter(t => t.place === 'relay').indexOf(scope)
+  return RELAY_SPOTS[Math.min(nth, RELAY_SPOTS.length - 1)]
+}
+
 /** SSL-748: where each telescope stands, shown on its desk card next to the same icon as on the horizon. */
 const PLACE_TEXT: Record<StationTelescope['place'], string> = {
   surface: 'Dome at your base',
@@ -256,7 +265,7 @@ export function ControlStationConsole({
               aria-pressed={scope.id === telescopeId}
               aria-label={`${scope.name}, ${scope.status}`}
               disabled={!scope.built}
-              style={{ left: `${HORIZON_SPOT[scope.place].left}%`, top: `${HORIZON_SPOT[scope.place].top}%` }}
+              style={{ left: `${horizonSpot(scope, telescopes).left}%`, top: `${horizonSpot(scope, telescopes).top}%` }}
               onClick={() => toggle(scope.id)}
             >
               <TelescopeIcon place={scope.place} />

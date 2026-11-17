@@ -71,6 +71,9 @@ describe('Leonids chain (SSL-831)', () => {
     expect(chainStage(p, LEONIDS_CHAIN.eventId)).toBe(1)
     expect(p.badges?.['leonids-2026']).toBeUndefined()
     expect(receiverEventId(p)).toBe('leonids-2026')
+    // SSL-852: during the Leonids the desk is on LEO-1 even before the run is home.
+    expect(receiverEventId(fresh(), run)).toBe('leonids-2026')
+    expect(receiverEventId(fresh(), Date.parse('2026-12-05T00:00:00Z'))).toBe('orionids-2026')
     expect(chainResearchStep(p, LEONIDS_CHAIN).title).toContain('LEO')
   })
 

@@ -3,6 +3,7 @@ import type { ControlStationModel, ControlStationRow } from '@/lib/control-stati
 import { parseRadioFilename } from '@/lib/radio-meteors'
 import { chainRecordings, chainStage, LEONIDS_CHAIN } from '@/lib/orionids/chain'
 import { probeSectorsWaiting, probesInOrbit } from '@/lib/probes/survey-probe'
+import { getSkyEvent } from '@/lib/data/sky-events'
 
 /**
  * Control station sky (SSL-730, Liam's drawing of 2026-11-01).
@@ -17,7 +18,7 @@ import { probeSectorsWaiting, probesInOrbit } from '@/lib/probes/survey-probe'
  * Telescopes are one row per place, not per equipment record: the Space
  * Telescope is one telescope with two feeds (SSL-531). Community instruments
  * (ORI-1, later shower receivers) are rows in COMMUNITY_INSTRUMENTS: they
- * join once the community launches them and open their own screen, since
+ * go up on their shower's real start date (SSL-852) and open their own screen, since
  * their recordings come from a live queue, not the daily instrument feed.
  */
 
@@ -57,7 +58,8 @@ export interface CommunityInstrumentDef {
   finds: string
   /** The screen its recordings are checked on. */
   screen: 'radio-meteors'
-  launched: (player: SkyPlayer) => boolean
+  /** Up once its shower starts on the real calendar (SSL-852); saves that opened it by a mission keep it. */
+  launched: (player: SkyPlayer, now: number) => boolean
   /** Recordings the player still owes the current mission, 0 when none is open. */
   owed: (player: SkyPlayer) => number
 }
@@ -65,23 +67,29 @@ export interface CommunityInstrumentDef {
 /** Recordings Orionids mission 3 asks for (web lib/orionids/chain.ts). */
 const ORI1_MISSION_CHECKS = 3
 
+/** True once the shower's real activity window has opened. Receivers keep listening after it ends. */
+export function showerStarted(eventId: string, now: number): boolean {
+  const start = Date.parse(getSkyEvent(eventId)?.startUtc ?? '')
+  return Number.isFinite(start) && now >= start
+}
+
 export const COMMUNITY_INSTRUMENTS: readonly CommunityInstrumentDef[] = [
   {
     id: 'ori-1',
     callsign: 'ORI-1',
     finds: 'Meteor echoes',
     screen: 'radio-meteors',
-    // The community launches ORI-1 after Orionids mission 2 (the rover debrief).
-    launched: player => (player.orionidsEventStage ?? 0) >= 2,
+    // ORI-1 goes up when the Orionids start (SSL-852), or for a save that reached Orionids mission 2 first.
+    launched: (player, now) => showerStarted('orionids-2026', now) || (player.orionidsEventStage ?? 0) >= 2,
     owed: player => (player.orionidsEventStage === 2 ? Math.max(0, ORI1_MISSION_CHECKS - Object.keys(player.radioMeteorClassifications ?? {}).length) : 0),
   },
   {
-    // SSL-831: the community launches LEO-1 when the player's Leonids shower run comes home.
+    // LEO-1 goes up when the Leonids start (SSL-852), or for a save whose shower run came home first (SSL-831).
     id: 'leo-1',
     callsign: 'LEO-1',
     finds: 'Meteor echoes',
     screen: 'radio-meteors',
-    launched: player => chainStage(player, LEONIDS_CHAIN.eventId) >= 1,
+    launched: (player, now) => showerStarted(LEONIDS_CHAIN.eventId, now) || chainStage(player, LEONIDS_CHAIN.eventId) >= 1,
     owed: player => (chainStage(player, LEONIDS_CHAIN.eventId) === 1 ? Math.max(0, LEONIDS_CHAIN.radioTarget - chainRecordings(player, LEONIDS_CHAIN)) : 0),
   },
 ]
@@ -253,8 +261,8 @@ export function stationTelescopes(model: ControlStationModel): StationTelescope[
   })
 }
 
-export function communityTelescopes(player: SkyPlayer): StationTelescope[] {
-  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player)).map(def => {
+export function communityTelescopes(player: SkyPlayer, now: number = Date.now()): StationTelescope[] {
+  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player, now)).map(def => {
     const owed = def.owed(player)
     return {
       id: def.id,
@@ -307,8 +315,8 @@ function probeQueue(player: SkyPlayer, now: number): SkyAnomaly[] {
 }
 
 /** The live queue of each launched community instrument, as one unexplored anomaly that opens its screen. */
-function communityQueues(player: SkyPlayer): SkyAnomaly[] {
-  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player)).map(def => ({
+function communityQueues(player: SkyPlayer, now: number): SkyAnomaly[] {
+  return COMMUNITY_INSTRUMENTS.filter(def => def.launched(player, now)).map(def => ({
     id: `queue:${def.id}`,
     label: `${def.callsign} recordings`,
     detail: `${def.finds} · ready to check`,
@@ -341,7 +349,8 @@ export function buildStationSky(input: {
     signal,
     screen: null,
   }))
-  open.push(...communityQueues(input.player), ...probeQueue(input.player, input.now ?? Date.now()))
+  const now = input.now ?? Date.now()
+  open.push(...communityQueues(input.player, now), ...probeQueue(input.player, now))
   const done = explored(input.player).slice(0, EXPLORED_CAP).map(({ at: _at, ...rest }) => rest)
   const known = catalogue(input.player)
   const shown = input.view === 'unexplored' ? open : input.view === 'explored' ? done : [...known, ...done, ...open]

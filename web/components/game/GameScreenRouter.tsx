@@ -101,6 +101,8 @@ import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
+import { skyEventNow } from '@/lib/data'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { agencySummary } from '@/lib/agency/programme'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
@@ -544,7 +546,7 @@ function ScreenBody({
       return (
         <RadioMeteorScreen
           player={game.player}
-          eventId={receiverEventId(game.player)}
+          eventId={receiverEventId(game.player, skyEventNow(isDevLauncherEnabled()))}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
         />

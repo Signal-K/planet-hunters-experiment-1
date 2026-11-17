@@ -71,7 +71,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
     }),
     [player, signals, awaitingFeed, now],
   )
-  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player)], [model, player, now])
+  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player, now)], [model, player, now])
   const activeTelescope = telescopes.find(scope => scope.id === telescopeId && scope.built) ?? null
   const anomalies = useMemo(
     () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope, now }),

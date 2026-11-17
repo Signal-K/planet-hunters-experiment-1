@@ -28,12 +28,23 @@ community research.
   telescope is built. It counts on the monthly community bar and goes to the Garden ledger.
 - The Agency path in Community research is open. Its steps come from the programme.
 
-## Proposed by the agent, not yet decided by Liam
+## Liam's answers (17 Nov)
 
-- Launches stay on offer after the first one, and the Program tab says which project each opens.
-- Contributions carry their project, so community research can show a goal per project.
-- Community goals launch the community instruments (ORI-1, LEO-1), and a finished Community Site gives every
-  player something to launch.
+1. **More craft and upgrades.** Upgrades add small improvements. A player can also launch more craft and donate the
+   extra capacity, or buy a substantial performance upgrade. Launches stay on offer after the first one.
+2. **Community research has an abstract goal.** It should tell us about the game as a whole: its mechanics, how its
+   world is made and who plays it. The model is No Man's Sky, where players' research improves the developers'
+   understanding of the game's own generation. There is no goal per project.
+3. **Real-world events set the timing.** A mission or instrument tied to a real event goes up while that event is
+   happening. The shower receivers (ORI-1, LEO-1) go up on their shower's real start date, not when a player's own
+   mission ends, and keep listening afterwards. The badge chain still asks for the shower run before its recordings.
+
+## Built for answer 3
+
+- `communityTelescopes(player, now)` puts a receiver up from its shower's `startUtc`. Saves that opened it through a
+  mission keep it.
+- While a chained shower is live, the radio desk tunes to its receiver.
+- Two receivers up at once stand apart on the Data hub horizon.
 
 ## Not yet
 

@@ -76,8 +76,8 @@ export function chainInstrument(chain: Pick<ShowerChain, 'eventId'> = ORIONIDS_C
 }
 
 // ---- Later showers (SSL-831) ------------------------------------------------
-// The Leonids are two missions: the shower run hands over the fragment sample and the community
-// launches LEO-1; checking recordings on LEO-1 hands over the radio confirmation and grades the
+// The Leonids are two missions: the shower run hands over the fragment sample; checking recordings
+// on LEO-1 (up since the Leonids began, SSL-852) hands over the radio confirmation and grades the
 // badge. State lives in player.showerChains, keyed by shower id. The Orionids keep their own fields.
 
 export interface TwoStepChain {
@@ -96,7 +96,7 @@ export const LEONIDS_CHAIN: TwoStepChain = {
       id: 'fragment-sample',
       name: 'Leonid fragment sample',
       detail: 'A sealed Leonid fragment, shed by comet Tempel-Tuttle. Leonids hit the air at 71 km/s, faster than any other shower, so their trails ring loud on the radio.',
-      unlocks: 'The community has launched LEO-1. Check 3 of its recordings to confirm the Leonids and earn the badge.',
+      unlocks: 'LEO-1 went up when the Leonids began. Check 3 of its recordings to confirm the Leonids and earn the badge.',
     },
     {
       id: 'radio-confirmation',
@@ -162,8 +162,13 @@ export function chainNextScreen(player: Pick<Player, 'showerChains'>, chain: Two
   return chainStage(player, chain.eventId) >= 1 ? 'radio-meteors' : 'events'
 }
 
-/** The shower whose receiver the radio desk is tuned to: the latest chain the player has reached LEO-1 in, else the Orionids. */
-export function receiverEventId(player: Pick<Player, 'showerChains'>): string {
+/**
+ * The shower whose receiver the radio desk is tuned to: the chained shower live now (its receiver goes up on the real
+ * date, SSL-852), else the latest chain the player has reached its receiver in, else the Orionids.
+ */
+export function receiverEventId(player: Pick<Player, 'showerChains'>, now?: number): string {
+  const live = now === undefined ? undefined : liveShowerChain(now)
+  if (live) return live.eventId
   return [...SHOWER_CHAINS].reverse().find(chain => chainStage(player, chain.eventId) >= 1)?.eventId ?? ORIONIDS_CHAIN.eventId
 }
 
@@ -173,7 +178,7 @@ export function chainResearchStep(player: RecordingPlayer, chain: TwoStepChain):
   // A non-breaking hyphen keeps LEO-1 on one line in the step title.
   const callsign = chainInstrument(chain).callsign.replace('-', '‑')
   const stage = chainStage(player, chain.eventId)
-  if (stage === 0) return { title: `${name}: fly the shower run`, brief: `Mission 1 of 2. Fly into the ${name} and catch 20 fragments. Bringing them home launches ${callsign} for everyone.` }
+  if (stage === 0) return { title: `${name}: fly the shower run`, brief: `Mission 1 of 2. Fly into the ${name} and catch 20 fragments. ${callsign} is up for the shower: once the run is home, check ${chain.radioTarget} of its recordings for the badge.` }
   if (stage === 1) {
     const left = Math.max(0, chain.radioTarget - chainRecordings(player, chain))
     return { title: `${name}: check ${chain.radioTarget} recordings on ${callsign}`, brief: `Mission 2 of 2. ${callsign} is listening. Box the meteor echoes on ${left} more recording${left === 1 ? '' : 's'} to confirm the shower and earn the badge.` }
