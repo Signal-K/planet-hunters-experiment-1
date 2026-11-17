@@ -10,7 +10,8 @@
 // restoring the network lets the existing save sync without a new mutation.
 // `make up` is development mode and unregisters this worker.
 
-const CACHE = 'landnam-shell-v8'
+// v9: v8 could hold redirected copies of the shell (see unredirect), so it is dropped.
+const CACHE = 'landnam-shell-v9'
 // SSL-828: science images (Cassini frames) live on Zooniverse's upload host. The game asks for the coming week's
 // frames ahead of time (CACHE_SCIENCE) and they are served cache-first, so the Saturn satellite works offline.
 const SCIENCE_CACHE = 'landnam-science-v1'
@@ -28,10 +29,38 @@ const SHELL = [
   '/manifest.webmanifest',
 ]
 
+// A navigation must never be answered with a response that followed a
+// redirect: WebKit (every iOS browser, installed PWAs included) refuses it
+// with "Response served by service worker has redirections" and shows a blank
+// page, and the Fetch spec makes it a network error. Production redirects
+// plenty: playlandnam.space -> www, /martians -> /martians/, /game/ -> /game.
+// Cached copies are rebuilt without the redirected flag; live redirects are
+// handed to the browser as a real redirect so the address bar follows.
+function unredirect(res) {
+  if (!res || !res.redirected) return res
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers })
+}
+
+async function navigationResponse(res, request) {
+  if (res.redirected && request.mode === 'navigate') return Response.redirect(res.url, 302)
+  return res
+}
+
 self.addEventListener('install', event => {
+  // Each shell page is stored on its own, without a redirected flag. Only /game
+  // is required: one flaky optional page on a phone network must not cost the
+  // player the whole offline shell.
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(SHELL))
+      .then(cache => Promise.all(SHELL.map(async path => {
+        try {
+          const res = await fetch(path, { cache: 'reload', credentials: 'same-origin' })
+          if (!res.ok) throw new Error(`${path} ${res.status}`)
+          await cache.put(path, unredirect(res))
+        } catch (error) {
+          if (path === '/game') throw error
+        }
+      })))
       .then(() => self.skipWaiting())
   )
 })
@@ -80,14 +109,20 @@ self.addEventListener('fetch', event => {
   ) return
 
   if (url.pathname === '/martians' || url.pathname.startsWith('/martians/')) {
+    // The game's files are relative to /martians/, and the host 307s the bare
+    // path there. Do it here so it also works offline (it was a blank 503).
+    if (url.pathname === '/martians' || url.pathname === '/martians/index.html') {
+      event.respondWith(Response.redirect(new URL('/martians/' + url.search, url).href, 302))
+      return
+    }
     event.respondWith(
       caches.open(MARTIANS_CACHE).then(cache =>
         fetch(request)
           .then(res => {
-            if (res.ok) cache.put(url.pathname, res.clone())
-            return res
+            if (res.ok && !res.redirected) cache.put(url.pathname, res.clone())
+            return navigationResponse(res, request)
           })
-          .catch(async () => (await cache.match(url.pathname)) ??
+          .catch(async () => unredirect(await cache.match(url.pathname)) ??
             new Response('', { status: 503, statusText: 'Offline' }))
       )
     )
@@ -118,7 +153,10 @@ self.addEventListener('fetch', event => {
   // regardless of actual game state. Only match real static files (an
   // extension in the last path segment) under /game/.
   const isGameStaticAsset = url.pathname.startsWith('/game/') && /\.[a-zA-Z0-9]+$/.test(url.pathname)
-  if (url.pathname.startsWith('/_next/static/') || isGameStaticAsset) {
+  // Self-hosted fonts and icons never change name either; without them an offline
+  // load fell back to system fonts.
+  const isSiteStaticAsset = /^\/(fonts|icons)\/[^/]+\.[a-zA-Z0-9]+$/.test(url.pathname)
+  if (url.pathname.startsWith('/_next/static/') || isGameStaticAsset || isSiteStaticAsset) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached
@@ -153,26 +191,31 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(request)
       .then(res => {
-        if (res.ok && isNavigation) {
+        // A redirected page is stored under the URL it ended at, never under
+        // the one asked for: that copy would be refused offline (unredirect).
+        if (res.ok && isNavigation && !res.redirected) {
           const toCache = res.clone()
           caches.open(CACHE).then(c => c.put(request, toCache))
         }
-        return res
+        return navigationResponse(res, request)
       })
       .catch(async () => {
         // Only navigations may be answered with an HTML document; any other
         // request (fetch/XHR for data) must fail cleanly instead of receiving HTML.
         if (!isNavigation) return new Response('', { status: 503, statusText: 'Offline' })
-        const cached = await caches.match(request, { ignoreSearch: url.pathname.startsWith('/game/') })
-        if (cached) return cached
+        // Next's trailing-slash redirect is gone offline; /game/hub/ is /game/hub.
+        const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname
+        const cached = await caches.match(request, { ignoreSearch: path.startsWith('/game/') }) ??
+          (path !== url.pathname ? await caches.match(path) : undefined)
+        if (cached) return unredirect(cached)
         // SSL-729: every game screen renders from the saved state, so any game
         // shell can open an unvisited /game/<screen> offline; the hub shell first.
-        if (url.pathname.startsWith('/game/') || url.pathname === '/game') {
+        if (path.startsWith('/game/') || path === '/game') {
           const shell = await caches.match('/game/hub') ?? await caches.match('/game')
-          if (shell) return shell
+          if (shell) return unredirect(shell)
         }
         const offline = await caches.match('/offline')
-        return offline ?? new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+        return unredirect(offline) ?? new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
       })
   )
 })
@@ -182,7 +225,9 @@ self.addEventListener('fetch', event => {
 async function cacheShell(cache, path) {
   if (await cache.match(path)) return
   const response = await fetch(path, { credentials: 'same-origin' })
-  if (!response.ok) return
+  // A legacy screen id redirects to its new screen; storing that copy under the
+  // old path would be refused offline. The hub-shell fallback covers it.
+  if (!response.ok || response.redirected) return
   const html = await response.clone().text()
   await cache.put(path, response)
   const chunks = new Set(html.match(/\/_next\/static\/[^"'\\\s)]+\.(?:js|css)/g) ?? [])
