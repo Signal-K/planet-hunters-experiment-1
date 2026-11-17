@@ -42,6 +42,7 @@ import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist
 import { applyClientSale } from '@/lib/client-sales'
 import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
 import { isAgencyLaunch } from '@/lib/agency/programme'
+import { serviceCraft } from '@/lib/agency/condition'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -1417,6 +1418,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           saturnImagerLaunchedAt: mission?.payload?.instrumentId === 'saturn-imager'
             ? (s.player.saturnImagerLaunchedAt ?? Date.now())
             : s.player.saturnImagerLaunchedAt,
+          // SSL-852: a servicing mission puts its craft back to full condition.
+          craftServicedAt: mission?.payload?.service
+            ? serviceCraft(s.player, mission.payload.service, Date.now()).craftServicedAt
+            : s.player.craftServicedAt,
         },
         lastCargo: null,
         deliveredCargo: null,

@@ -473,6 +473,7 @@ function ScreenBody({
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
           onBuildGroundTelescope={() => game.buildGroundTelescope()}
+          onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
@@ -753,7 +754,7 @@ function ScreenBody({
             else if (kind === 'probe-observation') return game.go('probe-scan')
             // SSL-852: a craft is launched from the Program tab; a ground telescope is built in the Data hub.
             else if (kind === 'launch') {
-              if (agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
+              if (!agencySummary(game.player).needsService && agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
               requestMissionBoardTab('program')
             }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')

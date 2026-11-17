@@ -77,6 +77,29 @@ Why it is useful:
 - For us: which worlds players choose to settle, and how quickly a community reaches agreement, tell us how the game
   is played.
 
+## Liam's answers to the proposal (17 Nov)
+
+1. **A mixture.** Landnam's world is partly authored and partly made from what the community confirms in real data.
+   The authored home system and story stay; community-confirmed worlds are added to it.
+2. **Both.** Craft wear down from use and time, and from real solar storms.
+
+## Servicing (built, SSL-852)
+
+- Orbiting craft (the space telescope, the Saturn satellite) have a condition from 0 to 100%.
+- They lose 1.5% a day from use and time.
+- Each UTC day with a geomagnetic storm since the last service costs (Kp - 4) x 6%: 6% at G1 (Kp 5) up to 30% at
+  G5 (Kp 9). Storms come from NOAA SWPC's planetary K-index feed, and each day counts once, at its highest Kp.
+- At 50% or more a craft sends all its data. Below 50% it sends half, rounded up. Below 15% it has failed and sends
+  nothing until it is serviced.
+- A servicing mission is offered on the Program tab once a craft is below 75%, worst first, and from a SERVICE
+  button on the craft's Data hub card. It flies like a launch, earns the `launch` stamp and puts the craft back to
+  100%. On the Agency path in Community research, servicing a worn craft comes before launching anything new.
+- Craft already up when wear began start from full on 17 Nov 2026.
+- Storm days are fetched from NOAA every three hours and kept in the save (`spaceStorms`), so a storm still counts
+  after it leaves NOAA's seven-day window.
+- Not yet: ground telescopes and probes do not wear; servicing carries no upgrade; servicing costs nothing beyond the
+  flight.
+
 ## Not yet
 
 - iOS: the `launch` stamp kind and the Agency path are web only. iOS still keeps only the seven older stamp kinds.

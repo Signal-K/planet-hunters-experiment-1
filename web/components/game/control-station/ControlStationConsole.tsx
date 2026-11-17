@@ -11,6 +11,7 @@ import {
   type StationHistory,
   type StationTelescope,
 } from '@/lib/control-station-sky'
+import type { CraftCondition } from '@/lib/agency/condition'
 import styles from './ControlStationConsole.module.css'
 import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 
@@ -48,6 +49,10 @@ interface ControlStationConsoleProps {
   onLogbook: () => void
   /** Opens the scan sheet. Present once a telescope is launched (SSL-807). */
   scan?: { scanning: boolean; onOpen: () => void }
+  /** SSL-852: wear on each orbiting craft, by telescope id ('space', 'saturn'). */
+  conditions?: Partial<Record<string, CraftCondition>>
+  /** Opens the servicing mission for a worn craft (the Program tab). */
+  onService?: () => void
 }
 
 const EMPTY: Record<SkyView, string> = {
@@ -181,6 +186,8 @@ export function ControlStationConsole({
   notice,
   onLogbook,
   scan,
+  conditions,
+  onService,
 }: ControlStationConsoleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
@@ -312,6 +319,21 @@ export function ControlStationConsole({
                 </span>
                 {scope.built && <span className={styles.counter} data-ready={scope.readyCount > 0} aria-label={`${scope.readyCount} ready`}>{String(scope.readyCount).padStart(2, '0')}</span>}
               </button>
+              {conditions?.[scope.id] && (() => {
+                const condition = conditions[scope.id]!
+                const label = condition.state === 'failed' ? 'Failed · sends nothing' : condition.state === 'worn' ? 'Worn · half data' : 'Good'
+                return (
+                  <div className={styles.condition} data-testid="control-station-condition" data-state={condition.state}>
+                    <span className={styles.conditionBar} aria-hidden="true"><i style={{ width: `${condition.percent}%` }} /></span>
+                    <span className={styles.conditionText}>
+                      Condition {condition.percent}% · {label}{condition.storms > 0 ? ` · ${condition.storms} solar storm${condition.storms === 1 ? '' : 's'}` : ''}
+                    </span>
+                    {condition.needsService && onService && (
+                      <button type="button" className={styles.build} data-testid="control-station-service" onClick={onService}>Service</button>
+                    )}
+                  </div>
+                )
+              })()}
               {scope.id === 'ground' && scope.built && ground && ground.unplaced > 0 && (
                 <p className={styles.placeNote} data-testid="control-station-place-note">
                   {ground.unplaced === 1 ? 'One telescope waits' : `${ground.unplaced} telescopes wait`} in the Base's Unplaced tray. Place it to observe.

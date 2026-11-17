@@ -1,4 +1,5 @@
 import { mergeProbeObservations } from './probes/field-probe'
+import { mergeCraftServicedAt, mergeStormDays } from '@/lib/agency/condition'
 import { mergeClientSales } from './client-sales'
 import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
@@ -749,6 +750,8 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.probeObservations = mergeProbeObservations(current.player.probeObservations, remoteState.player?.probeObservations)
   merged.player.probes = mergeProbes(current.player.probes, remoteState.player?.probes)
   merged.player.clientSales = mergeClientSales(current.player.clientSales, remoteState.player?.clientSales)
+  merged.player.craftServicedAt = mergeCraftServicedAt(current.player.craftServicedAt, remoteState.player?.craftServicedAt)
+  merged.player.spaceStorms = mergeStormDays(current.player.spaceStorms, remoteState.player?.spaceStorms)
   merged.player.showerChains = mergeShowerChains(current.player.showerChains, remoteState.player?.showerChains)
   merged.player.orionidsEventStage = Math.max(current.player.orionidsEventStage ?? 0, remoteState.player?.orionidsEventStage ?? 0) as 0 | 1 | 2 | 3
   merged.player.orionidsLookedUpAt = earliestStamp(current.player.orionidsLookedUpAt, remoteState.player?.orionidsLookedUpAt) ?? null

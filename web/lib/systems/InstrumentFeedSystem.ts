@@ -1,3 +1,5 @@
+import { conditionedCount, conditionOnDay, type ConditionPlayer } from '@/lib/agency/condition'
+import { SATURN_IMAGER_DAILY_COUNT } from '@/lib/data/saturn-candidates'
 import { dailyTessCandidates, dailyAsteroidCandidates, dailySaturnCandidates, type TessCandidate, type AsteroidCandidate, type SaturnCandidate } from '@/lib/data'
 import { isNewMoonDay } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
@@ -89,7 +91,7 @@ type InstrumentFeedPlayer = Pick<
   | 'satelliteTargetId'
   | 'tessClassifications'
   | 'instrumentDigestNotifiedOn'
->
+> & ConditionPlayer
 
 type DeepSpaceInstrumentFeedPlayer = Pick<
   Player,
@@ -121,10 +123,13 @@ export function transitInstrumentDigest(
   player: InstrumentFeedPlayer,
   dateKey: string
 ): TessCandidate[] {
+  // SSL-852: a worn telescope sends half its light curves; a failed one sends none until it is serviced.
+  const count = conditionedCount(transitInstrumentLevel(player), conditionOnDay(player, 'space-telescope', dateKey))
+  if (count <= 0) return []
   return dailyTessCandidates(
     candidates,
     dateKey,
-    transitInstrumentLevel(player),
+    count,
     player.satelliteTargetId
   )
 }
@@ -165,7 +170,8 @@ export function deepSpaceInstrumentDigest(
   // extra asteroid candidate. Deterministic: same dateKey, same digest.
   const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
   // A player with only a ground telescope has no Space Telescope share.
-  const space = player.deepSpaceTelescopeBuilt === false ? 0 : deepSpaceInstrumentLevel(player)
+  // SSL-852: the Space Telescope's share follows its condition; ground telescopes do not wear.
+  const space = player.deepSpaceTelescopeBuilt === false ? 0 : conditionedCount(deepSpaceInstrumentLevel(player), conditionOnDay(player as ConditionPlayer, 'space-telescope', dateKey))
   const ground = observingGroundTelescopes(player) * GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES
   return dailyAsteroidCandidates(candidates, dateKey, space + ground + extra)
 }
@@ -185,16 +191,19 @@ export function unresolvedDeepSpaceInstrumentDigest(
 
 export function unresolvedSaturnInstrumentDigest(
   candidates: SaturnCandidate[],
-  player: Pick<Player, 'saturnClassifications'>,
+  player: Pick<Player, 'saturnClassifications'> & ConditionPlayer,
   dateKey: string
 ): SaturnCandidate[] {
   const classifications = player.saturnClassifications ?? {}
+  // SSL-852: a failed Saturn satellite sends no frames until it is serviced.
+  const count = conditionedCount(SATURN_IMAGER_DAILY_COUNT, conditionOnDay(player, 'saturn-satellite', dateKey))
+  if (count <= 0) return []
   return dailySaturnCandidates(candidates.filter(candidate => {
     const progress = classifications[candidate.id]
     // A legacy single-verdict record was the old whole-frame submission.
     // New records stay in the feed until all nine panes are complete.
     return !progress || (!!progress.cells && Object.keys(progress.cells).length < 9)
-  }), dateKey)
+  }), dateKey, count)
 }
 
 export function instrumentDigestWasNotified(

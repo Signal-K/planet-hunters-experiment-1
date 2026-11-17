@@ -234,6 +234,7 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
     : shownPath === 'agency'
       ? agencySteps({
           eventName: event?.name ?? null, eventStep, hasProbe, hasData: agency.hasClassifyData, launchedThisWeek: Object.entries(player.researchStamps ?? {}).some(([day, kinds]) => day >= weekKey(now) && kinds.includes('launch')), ownedNames: agency.owned.filter(item => item.id !== 'survey-probe').map(item => item.name),
+          service: agency.needsService?.condition ? { name: agency.needsService.name, percent: agency.needsService.condition.percent, failed: agency.needsService.condition.state === 'failed' } : null,
           nextLaunch: agency.next ? { name: agency.next.name, how: agency.next.how, project: agency.next.projects[0].name, opensProject: !agency.owned.some(item => item.projects.some(project => project.id === agency.next?.projects[0].id)), adds: agency.next.adds } : null,
         })
     : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep, hasProbe })

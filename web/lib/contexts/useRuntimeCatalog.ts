@@ -10,11 +10,14 @@ export function useRuntimeCatalog(catalog: Catalog, state: GameState): Catalog {
     discoveredExoplanetTargets, freeOperations, transitSatelliteLaunchedAt, missionsDone,
     deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt,
     resourceFocus, stash, orionidsEventStage, probes, completedMissions, badges, meteoriteMastery, orionidsFinds,
+    craftServicedAt, spaceStorms,
   } = player
   const catalogPlayer = useMemo(() => ({
     deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt,
     resourceFocus, stash, orionidsEventStage, probes, completedMissions, badges, meteoriteMastery, orionidsFinds,
-  }), [deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt, resourceFocus, stash, orionidsEventStage, probes, completedMissions, badges, meteoriteMastery, orionidsFinds])
+    // SSL-852: craft condition decides which servicing missions are offered.
+    transitSatelliteLaunchedAt, craftServicedAt, spaceStorms,
+  }), [deepSpaceTelescopeLaunchedAt, deepSpaceTelescopeBuilt, placed, saturnImagerLaunchedAt, resourceFocus, stash, orionidsEventStage, probes, completedMissions, badges, meteoriteMastery, orionidsFinds, transitSatelliteLaunchedAt, craftServicedAt, spaceStorms])
   return useMemo(() => buildRuntimeCatalog({
     catalog, discoveredTargets: discoveredExoplanetTargets, freeOperations,
     transitSatelliteLaunchedAt, missionId, targetId, missionsDone, player: catalogPlayer,

@@ -16,6 +16,7 @@ import { enqueueSurvey } from '@/lib/surveys'
 import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
+import { useSpaceWeatherSync } from '@/lib/contexts/useSpaceWeatherSync'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
 import { useDailyClientPoolSync } from '@/lib/contexts/useDailyClientPoolSync'
@@ -280,6 +281,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   useDailyEconomySync(setState, hydrated, isPreview.current)
+  useSpaceWeatherSync(setState, hydrated, isPreview.current)
   useDailyClientPoolSync(setState, hydrated, isPreview.current, !!state.player.freeOperations, state.player.missionsDone, state.player.clientMissions)
   const runtimeCatalog = useRuntimeCatalog(catalog, state)
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })

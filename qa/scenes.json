@@ -786,6 +786,15 @@
    "native": "second-ground-telescope-phone"
   },
   {
+   "id": "craft-service",
+   "name": "Data hub: worn and failed craft",
+   "flow": "instruments",
+   "web": "ui-craft-service",
+   "tickets": [
+    "SSL-852"
+   ]
+  },
+  {
    "id": "probe-hub",
    "name": "Survey probe: data hub",
    "flow": "instruments",

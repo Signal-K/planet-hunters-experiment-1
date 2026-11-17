@@ -172,9 +172,14 @@ export function traderSteps(opts: { eventName: string | null; eventStep?: EventS
  * data it sends, and have a finding checked. `nextLaunch` is the craft to launch or build next; with nothing left
  * to add, the step is a survey scan. `hasData` is false until a craft sends data to classify.
  */
-export function agencySteps(opts: { eventName: string | null; eventStep?: EventStepCopy; hasProbe?: boolean; nextLaunch: { name: string; how: 'launch' | 'build'; project: string; /** False when another craft already feeds this project. */ opensProject: boolean; adds: string } | null; hasData: boolean; ownedNames: string[]; /** A craft already went up this week: the step keeps saying so, not naming the next one as done. */ launchedThisWeek?: boolean }): PathStep[] {
+export function agencySteps(opts: { eventName: string | null; eventStep?: EventStepCopy; hasProbe?: boolean; nextLaunch: { name: string; how: 'launch' | 'build'; project: string; /** False when another craft already feeds this project. */ opensProject: boolean; adds: string } | null; hasData: boolean; ownedNames: string[]; /** A craft already went up this week: the step keeps saying so, not naming the next one as done. */ launchedThisWeek?: boolean; /** SSL-852: a worn craft comes before anything new. */ service?: { name: string; percent: number; failed: boolean } | null }): PathStep[] {
   const fleet = opts.ownedNames.length ? opts.ownedNames.join(', ').toLowerCase() : null
-  const first: PathStep = opts.launchedThisWeek
+  const service = !opts.launchedThisWeek ? opts.service : null
+  const first: PathStep = service
+    ? { id: 'launch', kind: 'launch', days: 1, icon: 'star', color: '#f2c24c', title: `Service the ${service.name.replace(/^Space/, 'space')}`,
+        brief: `Your ${service.name.replace(/^Space/, 'space')} is at ${service.percent}%${service.failed ? ' and has failed: it sends nothing' : ''}. Fly its servicing mission from the Program tab to put it back to full.`,
+        why: 'Use and real solar storms wear craft down. An agency that keeps its craft working keeps the data coming for everyone.' }
+    : opts.launchedThisWeek
     ? { id: 'launch', kind: 'launch', days: 1, icon: 'star', color: '#f2c24c', title: 'Add a craft to your fleet',
         brief: opts.nextLaunch ? `Your agency put a craft up this week. Next you could ${opts.nextLaunch.how === 'build' ? 'build' : 'launch'} a ${opts.nextLaunch.name.toLowerCase()} for ${opts.nextLaunch.project}.` : 'Your agency put a craft up this week.',
         why: 'Every craft an agency puts up is more of the sky being watched, and more data for everyone to work through.' }

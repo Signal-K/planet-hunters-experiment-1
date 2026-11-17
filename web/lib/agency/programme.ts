@@ -13,6 +13,7 @@ import {
   observingGroundTelescopes, ownedGroundTelescopes, transitInstrumentLevel,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { sectorMsOf } from '@/lib/probes/survey-probe'
+import { conditionedCount, craftCondition, type CraftCondition } from '@/lib/agency/condition'
 
 export type AgencyProjectId = 'exoplanet-hunters' | 'asteroid-discovery' | 'saturn-storms' | 'deposit-survey'
 
@@ -50,13 +51,15 @@ export interface AgencyCraft {
   canAdd: boolean
   /** What one more adds, for the launch prompt. */
   adds: string
+  /** SSL-852: wear on an orbiting craft the agency has, null for craft that do not wear or are not up. */
+  condition: CraftCondition | null
 }
 
 export type ProgrammePlayer = Pick<Player,
   | 'freeOperations' | 'placed' | 'transitSatelliteLaunchedAt' | 'transitSatelliteLevel' | 'deepSpaceTelescopeBuilt'
   | 'deepSpaceTelescopeLevel' | 'saturnImagerLaunchedAt' | 'probes' | 'tessClassifications' | 'asteroidClassifications'
   | 'saturnClassifications'
-> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'satelliteTargetId' | 'instrumentDigestNotifiedOn'>>
+> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'satelliteTargetId' | 'instrumentDigestNotifiedOn' | 'craftServicedAt' | 'spaceStorms'>>
 
 const DAY_MS = 86_400_000
 const count = (records: Record<string, unknown> | undefined) => Object.keys(records ?? {}).length
@@ -72,7 +75,9 @@ export function projectContributions(player: ProgrammePlayer): Record<AgencyProj
 }
 
 /** Every craft the agency can have, owned or not, in the order a player meets them. */
-export function agencyProgramme(player: ProgrammePlayer): AgencyCraft[] {
+export function agencyProgramme(player: ProgrammePlayer, now: number = Date.now()): AgencyCraft[] {
+  const spaceCondition = craftCondition(player, 'space-telescope', now)
+  const saturnCondition = craftCondition(player, 'saturn-satellite', now)
   const done = projectContributions(player)
   const P = AGENCY_PROJECTS
   const ground = ownedGroundTelescopes(player).length
@@ -88,22 +93,25 @@ export function agencyProgramme(player: ProgrammePlayer): AgencyCraft[] {
       contributed: done['asteroid-discovery'],
       canAdd: nextGroundTelescopeId(player) !== null && ground < GROUND_TELESCOPE_IDS.length,
       adds: `+${GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate a day`,
+      condition: null,
     },
     {
       id: 'space-telescope', name: 'Space telescope', how: 'launch', projects: [P['exoplanet-hunters'], P['asteroid-discovery']],
       owned: spaceUp ? 1 : 0,
-      dataPerDay: spaceUp ? transitInstrumentLevel(player as Parameters<typeof transitInstrumentLevel>[0]) + asteroidsFromOrbit : 0,
+      dataPerDay: spaceUp ? conditionedCount(transitInstrumentLevel(player as Parameters<typeof transitInstrumentLevel>[0]), spaceCondition) + conditionedCount(asteroidsFromOrbit, spaceCondition) : 0,
       contributed: done['exoplanet-hunters'] + done['asteroid-discovery'],
       canAdd: !spaceUp,
       adds: 'Light curves and asteroid candidates every day',
+      condition: spaceCondition,
     },
     {
       id: 'saturn-satellite', name: 'Saturn satellite', how: 'launch', projects: [P['saturn-storms']],
       owned: saturnUp ? 1 : 0,
-      dataPerDay: saturnUp ? SATURN_IMAGER_DAILY_COUNT : 0,
+      dataPerDay: saturnUp ? conditionedCount(SATURN_IMAGER_DAILY_COUNT, saturnCondition) : 0,
       contributed: done['saturn-storms'],
       canAdd: !saturnUp,
       adds: `+${SATURN_IMAGER_DAILY_COUNT} Cassini frame${SATURN_IMAGER_DAILY_COUNT === 1 ? '' : 's'} a day`,
+      condition: saturnCondition,
     },
     {
       id: 'survey-probe', name: 'Survey probe', how: 'launch', projects: [P['deposit-survey']],
@@ -113,6 +121,7 @@ export function agencyProgramme(player: ProgrammePlayer): AgencyCraft[] {
       // A probe goes to a body without one; the Program tab offers the nearest two.
       canAdd: true,
       adds: 'Maps a body, one sector at a time',
+      condition: null,
     },
   ]
 }
@@ -126,10 +135,12 @@ export interface AgencySummary {
   contributed: number
   /** True when at least one owned craft sends data the player classifies (a probe maps on its own). */
   hasClassifyData: boolean
+  /** SSL-852: the worst-worn craft that needs a servicing mission, if any. */
+  needsService: AgencyCraft | null
 }
 
-export function agencySummary(player: ProgrammePlayer): AgencySummary {
-  const craft = agencyProgramme(player)
+export function agencySummary(player: ProgrammePlayer, now: number = Date.now()): AgencySummary {
+  const craft = agencyProgramme(player, now)
   const owned = craft.filter(item => item.owned > 0)
   const done = projectContributions(player)
   return {
@@ -138,6 +149,7 @@ export function agencySummary(player: ProgrammePlayer): AgencySummary {
     dataPerDay: owned.reduce((sum, item) => sum + item.dataPerDay, 0),
     contributed: Object.values(done).reduce((sum, n) => sum + n, 0),
     hasClassifyData: owned.some(item => item.id !== 'survey-probe' && item.dataPerDay > 0),
+    needsService: owned.filter(item => item.condition?.needsService).sort((a, b) => (a.condition?.percent ?? 100) - (b.condition?.percent ?? 100))[0] ?? null,
   }
 }
 

@@ -33,7 +33,7 @@ const SCREENS = [
 const ROUTE_PRESETS = {
   hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
-  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
+  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', 'craft-service': 'ui-craft-service', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
   targets: 'ui-target-picker', build: 'ui-build', intro: 'm1-intro',
 }
 

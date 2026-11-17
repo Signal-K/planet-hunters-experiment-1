@@ -25,6 +25,7 @@ import { SkyBadgeRow } from './SkyBadgeRow'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { wswBanner } from '@/lib/wsw'
+import { craftCondition, type CraftCondition } from '@/lib/agency/condition'
 import styles from './InstrumentHubScreen.module.css'
 
 interface InstrumentHubScreenProps {
@@ -43,13 +44,15 @@ interface InstrumentHubScreenProps {
   onResolveScan?: () => void
   /** SSL-673: the shared monthly total, null until it loads or when offline. */
   communityResearch?: CommunityResearch | null
+  /** SSL-852: opens the Program tab, where a worn craft's servicing mission waits. */
+  onOpenProgram?: () => void
 }
 
 /**
  * Control Station. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch, onOpenProgram }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [view, setView] = useState<SkyView>('all')
   const [telescopeId, setTelescopeId] = useState<string | null>(null)
@@ -71,7 +74,16 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
     }),
     [player, signals, awaitingFeed, now],
   )
-  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player, now)], [model, player, now])
+  // SSL-852: wear runs on the real clock, not the dev event clock.
+  const conditions = useMemo(() => {
+    const at = Date.now()
+    const space = craftCondition(player, 'space-telescope', at)
+    const saturn = craftCondition(player, 'saturn-satellite', at)
+    return { ...(space ? { space } : {}), ...(saturn ? { saturn } : {}) } as Partial<Record<string, CraftCondition>>
+  }, [player])
+  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player, now)]
+    // A failed craft is dark until it is serviced.
+    .map(scope => conditions[scope.id]?.state === 'failed' ? { ...scope, live: false, status: 'Failed' } : scope), [model, player, now, conditions])
   const activeTelescope = telescopes.find(scope => scope.id === telescopeId && scope.built) ?? null
   const anomalies = useMemo(
     () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope, now }),
@@ -117,6 +129,8 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           }}
           onLogbook={() => setLogbookOpen(true)}
           scan={canScan ? { scanning, onOpen: () => setScanOpen(true) } : undefined}
+          conditions={conditions}
+          onService={onOpenProgram}
           notice={player.scanFollowUp ? (() => {
             const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
             const screen = ({ tess: 'tess-discovery', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]

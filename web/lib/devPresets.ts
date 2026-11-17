@@ -156,6 +156,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
       { key: 'ui-research-calendar-month-half', label: 'Research calendar, half month', hint: 'Control Station with stamps on most days so far this month', stage: 'free-ops' },
+      { key: 'ui-craft-service', label: 'Data hub, worn craft', hint: 'SSL-852: the space telescope is worn by use and a solar storm, the Saturn satellite has failed; both offer servicing', stage: 'free-ops' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-radio-meteors', label: 'Meteor radio', hint: 'Real BRAMS radio spectrograms from Radio Meteor Zoo (live Panoptes queue): box the meteor echoes. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -799,6 +800,25 @@ function fixture(name: string): Partial<GameState> | null {
       const hub = instrumentHubFixture()
       const p = hub.player!
       return { ...hub, player: { ...p, francs: 6_000_000, placed: [...p.placed, 'ground-telescope'], placementPlots: { ...p.placementPlots, 'ground-telescope': 10 }, groundTelescopeGrandfathered: false, scanFollowUp: null } }
+    }
+
+    // SSL-852: craft wear. Serviced 25 and 55 days ago, with a Kp 6.67 storm three days ago: the space telescope is
+    // worn (half data) and the Saturn satellite has failed. Both offer a servicing mission.
+    case 'ui-craft-service': {
+      const hub = instrumentHubFixture()
+      const day = 86_400_000
+      const now = Date.now()
+      const stormDay = new Date(now - 3 * day).toISOString().slice(0, 10)
+      return {
+        ...hub,
+        player: {
+          ...hub.player!,
+          transitSatelliteLaunchedAt: now - 90 * day,
+          saturnImagerLaunchedAt: now - 90 * day,
+          craftServicedAt: { 'space-telescope': now - 25 * day, 'saturn-satellite': now - 55 * day },
+          spaceStorms: { [stormDay]: 6.67 },
+        },
+      }
     }
 
     case 'ui-probe-hub': {

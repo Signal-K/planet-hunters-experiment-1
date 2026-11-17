@@ -146,6 +146,19 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     }
   })
 
+  // SSL-852: servicing a worn craft comes straight after the craft themselves, before new probes.
+  for (const mission of catalog.missions.filter(item => item.payload?.service)) {
+    steps.push({
+      id: mission.id,
+      title: mission.title,
+      detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
+      lockLine: null,
+      state: 'available',
+      kind: 'instrument',
+    })
+  }
+
   // SSL-773: survey probes to the nearest bodies without one, after the telescopes.
   for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
     steps.push({

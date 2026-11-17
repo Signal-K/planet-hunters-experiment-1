@@ -349,6 +349,10 @@ export interface Player {
   // Saturn imager (SSL-492): a third launched instrument. It has no hub
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
+  /** SSL-852: when each orbiting craft was last put right by a servicing mission (lib/agency/condition.ts). */
+  craftServicedAt?: Partial<Record<'space-telescope' | 'saturn-satellite', number>>
+  /** SSL-852: geomagnetic storm days seen in NOAA's K-index feed, UTC day → highest Kp (5 and above only). */
+  spaceStorms?: Record<string, number>
   saturnClassifications?: Record<string, SaturnClassification>
   /** SSL-714: Radio Meteor Zoo spectrograms this player boxed, keyed by Panoptes subject id. Kept on Landnam's side only. */
   radioMeteorClassifications?: Record<string, import('@/lib/radio-meteors').RadioMeteorClassification>
