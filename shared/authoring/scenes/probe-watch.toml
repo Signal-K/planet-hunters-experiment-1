@@ -2,9 +2,9 @@
 format = 1
 id = "probe-watch"
 type = "field"
-name = "Field camera"
-summary = "A fixed lunar probe watches meteor impacts. Aim the camera, confirm a buffered sighting, then read the count and closest impact after a one-minute watch."
-tickets = ["SSL-772"]
+name = "Moon field camera"
+summary = "You stand behind a camera on the Moon's surface, looking out at the horizon. Meteor impacts flash on the ground; turn toward one and confirm it before its dust settles, then read the count and closest impact after a one-minute watch."
+tickets = ["SSL-772", "SSL-853"]
 qa = ["probe-watch"]
 
 [runtime]
@@ -21,7 +21,7 @@ id = "probe-field"
 kind = "world"
 layout = "host"
 mechanics = ["sky-events"]
-note = "Takeon lunar terrain and meteorImpact events; fixed wheel-free camera spec, no driving. Body meteor-shower rate follows the real shower window and distance from its peak. The fixture uses the Leonids peak."
+note = "One first-person view from a fixed camera on the Moon: horizon, Earth, Sun and craters drawn in perspective, no rover and no top-down map. A seeded impact schedule (probeImpacts) follows the real shower window and distance from its peak. The shower is named once, in the intro sentence. The fixture uses the Leonids peak."
 
 [[objects]]
 id = "field-camera"
@@ -29,7 +29,7 @@ kind = "instrument"
 parent = "probe-field"
 layout = "host"
 mechanics = ["sky-events"]
-note = "30-degree pan controls; 120-degree field of view. Only impacts covered when they arrive enter the eight-second confirmation buffer. Each confirmation saves one idempotent observation on the player."
+note = "30-degree pan controls at the screen edges, with a bearing tape; 120-degree field of view. A flash outside the frame cues the side to turn. Any impact stays confirmable for eight seconds once it is in frame. Each confirmation saves one idempotent observation on the player."
 
 [[objects]]
 id = "watch-readout"

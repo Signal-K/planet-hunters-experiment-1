@@ -2,12 +2,33 @@ import { describe, expect, it } from 'vitest'
 import { EventBus, getBody, Simulation } from '@takeon/engine'
 import { DEFAULT_STATE, mergeRemoteState, normalizeState } from '@/lib/game-state'
 import { DEBRIS_PRESETS } from '@/lib/data/sky-events'
-import { bestSighting, cameraCovers, FIELD_PROBE, mergeProbeObservations, probeRatePerMinute, probeShowerAt, probeWeatherRates, type ProbeObservation } from './field-probe'
+import { bestSighting, cameraCovers, FIELD_PROBE, mergeProbeObservations, probeImpacts, probeRatePerMinute, probeShowerAt, probeWeatherRates, PROBE_RUN_SECONDS, type ProbeObservation } from './field-probe'
 
 const leonids = DEBRIS_PRESETS.find(p => p.eventId === 'leonids-2026')!
 const observation: ProbeObservation = { id: 'watch-1', runId: 'watch', eventId: leonids.eventId, bodyId: 'moon', observedAt: 1234, bearing: 355, distance: 8, pos: { x: 5, y: 10 } }
 
 describe('fixed meteor camera', () => {
+  it('schedules a seeded, spaced run of impacts that thins away from the peak', () => {
+    const peak = Date.parse(leonids.peakUtc)
+    const run = probeImpacts('watch-a', leonids, peak)
+    expect(probeImpacts('watch-a', leonids, peak)).toEqual(run)
+    expect(probeImpacts('watch-b', leonids, peak)).not.toEqual(run)
+    expect(run.length).toBeGreaterThanOrEqual(5)
+    expect(run[0].atMs).toBeGreaterThanOrEqual(2000)
+    expect(run[0].atMs).toBeLessThanOrEqual(4000)
+    for (let i = 1; i < run.length; i++) expect(run[i].atMs - run[i - 1].atMs).toBeGreaterThanOrEqual(2500)
+    for (const impact of run) {
+      expect(impact.atMs).toBeLessThan(PROBE_RUN_SECONDS * 1000)
+      expect(impact.bearing).toBeGreaterThanOrEqual(0)
+      expect(impact.bearing).toBeLessThan(360)
+      expect(impact.distance).toBeGreaterThanOrEqual(3)
+      expect(impact.distance).toBeLessThanOrEqual(40)
+    }
+    const start = Date.parse(leonids.startUtc)
+    expect(probeImpacts('watch-a', leonids, start).length).toBeLessThanOrEqual(run.length)
+    expect(probeImpacts('watch-a', null, peak)).toEqual([])
+    expect(probeImpacts('watch-a', leonids, Date.parse(leonids.endUtc))).toEqual([])
+  })
   it.each(DEBRIS_PRESETS)('uses $eventId window and configured peak', preset => {
     const peak = Date.parse(preset.peakUtc), start = Date.parse(preset.startUtc), end = Date.parse(preset.endUtc)
     expect(probeRatePerMinute(preset, peak)).toBe(preset.peakRatePerMinute)

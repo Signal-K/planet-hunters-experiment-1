@@ -42,6 +42,35 @@ export function probeWeatherRates(body: Pick<BodyDef, 'weather'>, preset: Debris
   return { 'meteor-shower': preset ? (body.weather?.['meteor-shower'] ?? 0) * probeRatePerMinute(preset, at) / referencePeak : 0 }
 }
 
+export interface ProbeImpact { atMs: number; bearing: number; distance: number; pos: { x: number; y: number } }
+
+/** Where the camera stands, in the same field coordinates saved sightings use. */
+export const PROBE_ORIGIN = { x: 48, y: 48 }
+
+/**
+ * The impacts of one watch: a busy shower lands about ten a minute around the camera, a quiet one about four. Seeded by
+ * the watch id, so a watch replays the same sky and two watches differ. Distances are kilometres from the camera.
+ */
+export function probeImpacts(runId: string, preset: DebrisEventPreset | null, at: number, seconds = PROBE_RUN_SECONDS): ProbeImpact[] {
+  if (!preset) return []
+  const activity = Math.max(0, Math.min(1, probeRatePerMinute(preset, at) / preset.peakRatePerMinute))
+  if (activity <= 0) return []
+  let seed = 2166136261
+  for (let i = 0; i < runId.length; i++) seed = Math.imul(seed ^ runId.charCodeAt(i), 16777619) >>> 0
+  const next = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 }
+  const meanGap = 60 / (4 + 6 * activity)
+  const impacts: ProbeImpact[] = []
+  let t = 2 + next() * 2
+  while (t < seconds - 1) {
+    const bearing = Math.floor(next() * 360)
+    const distance = Math.round((3 + 37 * next() ** 1.6) * 10) / 10
+    const rad = bearing * Math.PI / 180
+    impacts.push({ atMs: Math.round(t * 1000), bearing, distance, pos: { x: PROBE_ORIGIN.x + Math.cos(rad) * distance, y: PROBE_ORIGIN.y + Math.sin(rad) * distance } })
+    t += Math.max(2.5, Math.min(12, meanGap * (0.5 + next())))
+  }
+  return impacts
+}
+
 export function impactBearing(pos: { x: number; y: number }, origin: { x: number; y: number }): number {
   return (Math.atan2(pos.y - origin.y, pos.x - origin.x) * 180 / Math.PI + 360) % 360
 }

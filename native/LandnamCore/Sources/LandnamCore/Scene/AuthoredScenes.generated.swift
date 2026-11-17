@@ -2086,7 +2086,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "sky-events"
           ],
-          "note": "Takeon lunar terrain and meteorImpact events; fixed wheel-free camera spec, no driving. Body meteor-shower rate follows the real shower window and distance from its peak. The fixture uses the Leonids peak."
+          "note": "One first-person view from a fixed camera on the Moon: horizon, Earth, Sun and craters drawn in perspective, no rover and no top-down map. A seeded impact schedule (probeImpacts) follows the real shower window and distance from its peak. The shower is named once, in the intro sentence. The fixture uses the Leonids peak."
         },
         {
           "id": "field-camera",
@@ -2096,7 +2096,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "sky-events"
           ],
-          "note": "30-degree pan controls; 120-degree field of view. Only impacts covered when they arrive enter the eight-second confirmation buffer. Each confirmation saves one idempotent observation on the player."
+          "note": "30-degree pan controls at the screen edges, with a bearing tape; 120-degree field of view. A flash outside the frame cues the side to turn. Any impact stays confirmable for eight seconds once it is in frame. Each confirmation saves one idempotent observation on the player."
         },
         {
           "id": "watch-readout",
