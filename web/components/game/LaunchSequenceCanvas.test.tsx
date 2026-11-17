@@ -2,13 +2,7 @@
 import React, { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-vi.mock('@/components/game/hub/BaseWorldCanvas', () => ({ BaseWorldCanvas: () => <div data-testid="base-world" /> }))
-vi.mock('@/components/game/hub/PixelStructure', () => ({ PixelStructure: () => <div data-testid="base-launchpad" /> }))
-vi.mock('@/components/game/hub/KitRocket', () => ({ KitRocket: () => <div data-testid="base-rocket" /> }))
-vi.mock('@/components/game/SequenceDesktopFrame', () => ({ default: ({ renderStage }: { renderStage: (style: React.CSSProperties) => React.ReactNode }) => <div>{renderStage({})}</div> }))
-
-import { LaunchSequenceCanvas } from './LaunchSequenceCanvas'
+import { LAUNCH_COMPLETE_MS, LaunchSequenceCanvas } from './LaunchSequenceCanvas'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -26,30 +20,23 @@ describe('LaunchSequenceCanvas', () => {
     act(() => root.unmount())
     container.remove()
     vi.useRealTimers()
-    vi.clearAllMocks()
   })
 
-  it('starts on the shared base launchpad rather than a separate canvas scene', async () => {
+  it('draws no pad, rocket or sky of its own: the launch plays on the launchpad underneath', async () => {
+    const done = vi.fn()
     await act(async () => {
       root = createRoot(container)
-      root.render(<LaunchSequenceCanvas rocketName="Explorer" targetName="433 Eros" onComplete={vi.fn()} />)
+      root.render(<LaunchSequenceCanvas rocketName="Explorer" targetName="433 Eros" onComplete={done} />)
       await vi.advanceTimersByTimeAsync(0)
     })
-    expect(container.querySelector('[data-testid="base-world"]')).not.toBeNull()
-    expect(container.querySelector('[data-testid="base-launchpad"]')).not.toBeNull()
-  })
-
-  it('shows exhaust flames on the pad and in the air, and a sky once it lifts off', async () => {
-    await act(async () => {
-      root = createRoot(container)
-      root.render(<LaunchSequenceCanvas rocketName="Explorer" targetName="433 Eros" onComplete={vi.fn()} />)
-      await vi.advanceTimersByTimeAsync(0)
-    })
-    expect(container.querySelector('[data-testid="launch-flame"]')).toBeNull()
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_500) })
-    expect(container.querySelector('[data-testid="launch-ignition"]')).not.toBeNull()
+    expect(container.querySelector('img, canvas')).toBeNull()
+    expect(container.textContent).toContain('433 Eros')
+    expect(container.querySelector('[data-phase="countdown"]')).not.toBeNull()
     await act(async () => { await vi.advanceTimersByTimeAsync(2_500) })
-    expect(container.querySelectorAll('[data-testid="launch-flame"]').length).toBe(3)
-    expect(container.querySelector('[data-testid="launch-sky"]')).not.toBeNull()
+    expect(container.querySelector('[data-phase="ascent"]')).not.toBeNull()
+    expect(Number((container.querySelector('[data-testid="launch-fade"]') as HTMLElement).style.opacity)).toBe(0)
+    expect(done).not.toHaveBeenCalled()
+    await act(async () => { await vi.advanceTimersByTimeAsync(LAUNCH_COMPLETE_MS) })
+    expect(done).toHaveBeenCalledTimes(1)
   })
 })

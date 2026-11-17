@@ -77,3 +77,15 @@ Landnam-local repack of the 0.2.1 engine: the flat map backdrop uses the body's 
 draws no rover (iso and flat views), and `showRover` overrides. The same change
 is on the `landnam/show-rover` branch of signal-k/takeon. The 0.2.2 build was
 ahead of that repo's `main`, so it was patched in place rather than rebuilt.
+
+## 2026-11-17: 0.2.4 → 0.2.5 (space flight, SSL-848 / KES-527)
+
+Built from signal-k/takeon `claude/trusting-hawking-aq7fe7` (flight module on top of that repo's default branch).
+`@takeon/engine` 0.2.5 adds `createFlightScene`, `FlightSim`, `FlightView` and the body and craft looks that draw the
+Transit scene. The 0.2.4 tarballs are removed.
+
+This build also carries what takeon's default branch had merged since Landnam's 0.2.4 was cut:
+
+- the 60° three-quarter surface camera (KES-206), so every Takeon landscape (landing, delivery, probe watch, rover
+  field) shows more ground and shorter cliffs than before;
+- "a scene only has a rover when it brings one" (SSL-768): the landing scene no longer draws a stray rover.

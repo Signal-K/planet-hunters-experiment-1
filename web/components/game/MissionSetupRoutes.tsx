@@ -99,7 +99,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
-      <MissionPlanStrip
+      {/* The plan is settled once the engines light: the strip leaves the sky clear for the ascent. */}
+      {!launchPending && <MissionPlanStrip
         game={game}
         launched={launchPending}
         blockedReason={blockedReason}
@@ -107,7 +108,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         primaryLabel={actionLabel}
         primaryDisabled={actionDisabled}
         primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
-      />
+      />}
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
         onPick={game.onPickMission}

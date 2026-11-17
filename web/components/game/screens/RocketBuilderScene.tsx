@@ -150,6 +150,7 @@ export default function RocketBuilderScene({
     <div
       className={styles.root}
       data-testid="rocket-builder"
+      data-launching={launching && onLaunchComplete ? 'true' : undefined}
       data-palette={biome}
       data-mission={missionTitle ?? ''}
       data-guided={guided ? 'true' : 'false'}
@@ -284,7 +285,7 @@ export default function RocketBuilderScene({
       </div>
 
       {launching && onLaunchComplete && (
-        <LaunchSequenceCanvas rocketId={rocketId} rocketName={launchRocketName} rocketImageSrc={launchRocketSrc} targetName={target?.name ?? 'orbit'} earthBiome={biome} onComplete={onLaunchComplete} />
+        <LaunchSequenceCanvas rocketName={launchRocketName} targetName={target?.name ?? 'orbit'} onComplete={onLaunchComplete} />
       )}
     </div>
   )
