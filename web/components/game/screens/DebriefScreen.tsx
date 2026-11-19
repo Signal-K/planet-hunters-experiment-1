@@ -21,6 +21,7 @@ import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import type { HomeSettlement } from '@/lib/game-types'
 import type { DebriefExit, DebriefExitId } from '@/lib/debrief-exits'
+import { debriefStatus } from '@/lib/debrief-status'
 import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { chainInstrument, getShowerChain, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
@@ -86,6 +87,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const settledUnits = Object.values(settledCargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : settledUnits
   const [scrapping, setScrapping] = useState(false)
+  const [dismantled, setDismantled] = useState(false)
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
   const vehicleCost = rocketSource === 'fabricated' ? 0 : starterRocket.costFrancs
@@ -113,11 +115,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     : 0
   const showLaserCapacitor = !!onBuyLaserCapacitor && !isProgramOperation
     && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
-  const status = shipDestroyed
-    ? 'Hull lost · cargo recovered'
-    : isOrbitalInstrumentDeployment
-      ? 'Commissioned · instrument online'
-      : 'Docked · mission complete'
+  const result = debriefStatus({ shipDestroyed: !!shipDestroyed, orbitalDeployment: isOrbitalInstrumentDeployment, homeSettled: !!settled, dismantled })
 
   const collect = (next?: DebriefExitId) => {
     if (collectingRef.current) return
@@ -169,10 +167,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         ) : (
           <section className={styles.card} aria-label="Mission result" data-surface="cream">
-            <p className={`${styles.status} ${shipDestroyed ? styles.statusCrit : ''}`}><i aria-hidden="true" /> {status}</p>
+            <p className={`${styles.status} ${shipDestroyed ? styles.statusCrit : ''}`}><i aria-hidden="true" /> {result.status}</p>
             <div className={styles.route}>
               <div><span>Mission</span><strong>{mission.title}</strong></div>
-              <div><span>{isProgramOperation ? 'Stationed at' : 'Returned from'}</span><strong>{target.name}</strong></div>
+              <div><span>{result.destinationLabel}</span><strong>{target.name}</strong></div>
             </div>
           </section>
         )}
@@ -328,7 +326,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </nav>
         )}
         <div className={styles.dock} data-ui-zone={UI_ZONES.bottomActions}>
-        {!isOrbitalInstrumentDeployment && (
+        {result.canTeardown && (
           <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
             Teardown
           </GhostBtn>
@@ -360,7 +358,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       {scrapping && (
         <ScrapSequenceCanvas
           rocketImageSrc={rocketDisplay.img}
-          onComplete={() => { setScrapping(false) }}
+          onComplete={() => { setDismantled(true); setScrapping(false) }}
         />
       )}
     </div>

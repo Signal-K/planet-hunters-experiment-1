@@ -651,7 +651,7 @@ struct DebriefScreen: View {
         let sale = HomeDelivery.marketValue(store.player, units: run == nil ? cargo : OrionidsRun.withoutFragments(cargo), now: store.now)
         let overflow = max(0, Market.storedUnits(store.player.stash) - Market.storageCapacity(store.player))
         let target = store.target
-        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : orbital ? "Commissioned · instrument online" : "Docked · mission complete"
+        let status = store.player.shipDestroyed ? "Hull lost · cargo recovered" : orbital ? "Commissioned · instrument online" : scrapped ? "Rocket recycled · mission complete" : "Mission complete"
         let reserved = m?.requires.minerals.values.reduce(0, +) ?? 0
         let showLaser = m?.isOwnProgram == false && store.player.missionsDone >= 2 && (LaserCapacitor.units(store.player.stash) > 0 || !cargo.isEmpty)
 
@@ -689,8 +689,8 @@ struct DebriefScreen: View {
                             statusLine(status, crit: store.player.shipDestroyed)
                             // Side by side when both titles fit on a line; stacked on a narrow card so no word breaks mid-letter.
                             ViewThatFits(in: .horizontal) {
-                                HStack(alignment: .top, spacing: 28) { debriefMissionColumn(m?.title); debriefTargetColumn(program: program, target: target?.name) }
-                                VStack(alignment: .leading, spacing: 12) { debriefMissionColumn(m?.title); debriefTargetColumn(program: program, target: target?.name) }
+                                HStack(alignment: .top, spacing: 28) { debriefMissionColumn(m?.title); debriefTargetColumn(target?.name) }
+                                VStack(alignment: .leading, spacing: 12) { debriefMissionColumn(m?.title); debriefTargetColumn(target?.name) }
                             }
                         }
                     }
@@ -795,8 +795,8 @@ struct DebriefScreen: View {
         }
         .overlay(alignment: .bottom) {
             HStack(spacing: 8) {
-                if !orbital {
-                    RecordDockButton(title: scrapped ? "Dismantled" : "Teardown", filled: false, enabled: !scrapped) { scrapped = true }
+                if !orbital && !store.player.shipDestroyed && !scrapped {
+                    RecordDockButton(title: "Teardown", filled: false) { scrapped = true }
                 }
                 RecordDockButton(title: run.map { "COMPLETE MISSION · RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
                     guard !collecting else { return }
@@ -899,9 +899,9 @@ private extension DebriefScreen {
         }
     }
 
-    func debriefTargetColumn(program: Bool, target: String?) -> some View {
+    func debriefTargetColumn(_ target: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(program ? "STATIONED AT" : "RETURNED FROM").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
+            Text("MISSION DESTINATION").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)
             Text(target ?? "—").font(AppFont.display(22)).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
         }
     }
