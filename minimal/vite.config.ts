@@ -30,7 +30,7 @@ const config: UserConfig = {
     strictPort: true,
     fs: { allow: [here('..')] },
     // Landnam's fonts and art are served by Landnam's own dev server.
-    proxy: { '/fonts': 'http://localhost:4320' },
+    proxy: { '/fonts': 'http://localhost:4320', '/game/assets': 'http://localhost:4320' },
   },
   build: {
     outDir: here('../web/public/minimal'),
