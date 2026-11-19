@@ -50,6 +50,7 @@ button.mn-chip { cursor: pointer; }
 .mn-card .mn-goal { font-size: 18px; color: var(--cream); }
 
 /* Route: chapters as a flight route over the live base. */
+.mn-sky-scrim { inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(14, 22, 38, .78) 0%, rgba(14, 22, 38, .42) 42%, rgba(14, 22, 38, 0) 68%); }
 .mn-route-line { inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 .mn-route-ahead { fill: none; stroke: rgba(243,234,216,.45); stroke-width: 2; stroke-dasharray: 6 8; }
 .mn-route-flown { fill: none; stroke: var(--cyan); stroke-width: 3; }
@@ -59,21 +60,20 @@ button.mn-chip { cursor: pointer; }
 .mn-waypoint-hit:disabled { cursor: default; }
 .mn-waypoint-hit img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 .mn-waypoint-num { position: relative; font-weight: 700; font-size: 16px; color: var(--cream); text-shadow: 0 1px 2px #000; }
-.mn-waypoint-name { font-size: 14px; font-weight: 700; color: var(--cream); text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.8); white-space: nowrap; }
+.mn-waypoint-name { font-size: 14px; font-weight: 700; color: var(--cream); white-space: nowrap; padding: 2px 8px; border-radius: 999px; background: rgba(10, 14, 24, .72); }
 .mn-waypoint-tag { font-size: 14px; letter-spacing: .14em; color: var(--cyan); text-shadow: 0 1px 3px #000; }
 .mn-waypoint.mn-locked { opacity: .55; }
 .mn-waypoint.mn-now .mn-waypoint-hit { animation: beacon 1.6s ease-in-out infinite; }
 @keyframes beacon { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 var(--cyan)); } 50% { transform: scale(1.12); filter: drop-shadow(0 0 12px var(--cyan)); } }
 
 /* Briefing: the destination's TakeOn diorama. */
-.mn-diorama { inset: 0; width: 100%; height: 100%; display: block; }
-.mn-space { inset: 0; image-rendering: pixelated; animation: starfield 40s linear infinite alternate; }
-@keyframes starfield { from { background-position: 40% center; } to { background-position: 60% center; } }
-.mn-destination { width: min(70vw, 56vh, 360px); top: 14%; right: -8%; image-rendering: pixelated; animation: drift 12s ease-in-out infinite alternate; }
-.mn-flying-rocket { width: 64px; left: 14%; top: 46%; transform: rotate(52deg); image-rendering: pixelated; animation: cruise 3s ease-in-out infinite alternate; }
-@keyframes drift { from { transform: translateY(0) rotate(0); } to { transform: translateY(12px) rotate(6deg); } }
-@keyframes cruise { from { transform: rotate(52deg) translate(0, 0); } to { transform: rotate(52deg) translate(0, -10px); } }
+.mn-world { inset: 0; width: 100%; height: 100%; display: block; }
+/* Shown while TakeOn loads: a plain sky so the screen is never blank. */
+.mn-sky { inset: 0; background: linear-gradient(180deg, #2d3e63 0%, #6b7fa6 55%, #a8b59a 100%); }
 .mn-haul { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-@media (orientation: landscape) { .mn-briefing-scene .mn-scene-bottom { right: auto; width: min(420px, 46vw); margin: 0; } }
-@media (prefers-reduced-motion: reduce) { .mn-waypoint.mn-now .mn-waypoint-hit, .mn-destination, .mn-flying-rocket, .mn-space { animation: none; } }
+@media (orientation: landscape) {
+  .mn-briefing-scene .mn-scene-bottom { right: auto; width: min(420px, 46vw); margin: 0; }
+  .mn-card.mn-sign-in { right: auto; width: min(420px, 46vw); margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .mn-waypoint.mn-now .mn-waypoint-hit { animation: none; } }

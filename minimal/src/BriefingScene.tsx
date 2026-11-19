@@ -1,26 +1,16 @@
 // A chapter briefing as the destination itself: TakeOn's voxel world for that
-// body (createMinimalScene, KES-530) with the rover parked by a deposit and a
-// dashed route to it, over Landnam's starfield. One goal line, one button.
+// body (minimal deposit scene, KES-530) with the rover parked by a deposit of
+// what the contract wants and a dashed route to it. One goal line, one button.
 import MineralChip from '@landnam/components/game/MineralChip'
-import { flightBodySpec } from '@landnam/lib/flight-body'
 import { CHAPTERS, francs, type Chapter } from './chapters'
-import { lazy, Suspense } from 'react'
-
-// TakeOn's engine (with its Go core) is large; load it only when a briefing opens.
-const TakeonDiorama = lazy(() => import('./TakeonDiorama').then(m => ({ default: m.TakeonDiorama })))
+import { DepositScenery } from './scenes'
 
 export function BriefingScene({ chapter, onBack }: { chapter: Chapter; onBack: () => void }) {
   const { mission, target } = chapter
   const minerals = Object.entries(mission?.requires.minerals ?? {})
-  const body = target ? flightBodySpec({ id: target.id, name: target.name, type: target.type, archetype: target.archetype }, false) : null
   return (
     <main className="mn-scene mn-briefing-scene" data-scene="minimal-briefing">
-      <div className="mn-space" aria-hidden style={{ background: `url(/game/assets/galaxy/galaxy_map_bg.png) center / cover no-repeat${body ? `, ${body.palette.skyCss}` : ''}` }} />
-      {target && (
-        <Suspense fallback={null}>
-          <TakeonDiorama className="mn-diorama" target={target} minerals={minerals.map(([id]) => id)} />
-        </Suspense>
-      )}
+      {target && <DepositScenery target={target} minerals={minerals.map(([id]) => id)} />}
       <header className="mn-scene-top">
         <button className="mn-chip mn-back" onClick={onBack}>‹ BACK</button>
         {target && <span className="mn-chip mn-place">{target.name}</span>}

@@ -12,11 +12,16 @@ It is its own module in this repo, not part of the Landnam app:
   site serves. `npm run typecheck:minimal` type-checks it.
 - It imports Landnam's sources instead of copying them: `@landnam/*` is `web/`, `@shared/*`
   is `shared/`. React comes from `web/node_modules`. Change a mission or rule in Landnam.
-- Destination scenes come from TakeOn's minimal scene (`createMinimalScene`, signal-k/takeon,
-  KES-530): a read-only diorama of the body with the rover parked by a deposit. Its build is
-  vendored in `vendor/takeon/` (Minimal's only own dependency; Landnam's TakeOn is unchanged).
-  To update it: `npm run build -w @takeon/engine` in takeon, `npm pack` into `vendor/takeon/`,
-  then `npm install` here (clear the npm cache if the file name is unchanged).
+- Every screen stands on a TakeOn minimal scene (`createMinimalScene`, signal-k/takeon, KES-530),
+  a read-only diorama: sign-in watches a `launch` from the home outpost, the chapter route sits
+  over the `outpost`, and a briefing shows the destination's `deposit` with the rover parked by
+  ore of the kind the contract wants (Landnam minerals map to TakeOn resources through
+  `LANDNAM_TO_TAKEON_MINERAL`, so platinum shows as crystal). Worlds are dressed with Landnam's
+  own biomes and colours (`src/takeonWorlds.ts`, reusing `lib/takeon/sandbox.ts` and
+  `terrainColour.ts`); home is a lichen-steppe outpost.
+- TakeOn's engine is vendored in `vendor/takeon/` (Minimal's only own dependency; Landnam's
+  TakeOn is unchanged) and loads lazily after the first paint. To update it from a TakeOn
+  checkout: `minimal/scripts/update-takeon.sh [path-to-takeon]` (default `../takeon`).
 
 See `docs/simple-landnam.md` for why and the plan, and
 `notes/decisions/Landnam Minimal is a separate game at playlandnam.space-minimal (2026-11-19).md`.

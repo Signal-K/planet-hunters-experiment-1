@@ -3,7 +3,7 @@ import { currentPilot, SIGN_IN_URL } from './auth'
 import type { Chapter } from './chapters'
 import { RouteScene } from './RouteScene'
 import { BriefingScene } from './BriefingScene'
-import { WorldBackdrop } from '@landnam/components/game/hub/WorldBackdrop'
+import { LaunchScenery } from './scenes'
 import { readSharedSave } from './sharedSave'
 
 type View = { kind: 'route' } | { kind: 'briefing'; chapter: Chapter }
@@ -16,7 +16,7 @@ export function App() {
   if (!pilot) {
     return (
       <main className="mn-scene" data-scene="minimal-sign-in">
-        <WorldBackdrop />
+        <LaunchScenery />
         <section className="mn-card mn-sign-in">
           <p className="mn-eyebrow">LANDNAM MINIMAL</p>
           <h1>Run a space agency, one step at a time.</h1>

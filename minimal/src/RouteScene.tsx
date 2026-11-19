@@ -1,7 +1,7 @@
-// The chapter route as an in-world scene: Landnam's live base (sky, weather,
-// steppe, the pad and rocket from WorldBackdrop) with the six chapters drawn as a
-// flight route that climbs from the pad into the sky. Text is names only.
-import { WorldBackdrop } from '@landnam/components/game/hub/WorldBackdrop'
+// The chapter route as an in-world scene: the home outpost in TakeOn (pad,
+// habitat, solar, rover; KES-530) with the six chapters drawn as a flight route
+// that climbs from the pad into the sky. Text is names only.
+import { OutpostScenery } from './scenes'
 import { useViewSize } from '@landnam/lib/hooks/useViewSize'
 import { CHAPTERS, francs, type Chapter } from './chapters'
 
@@ -34,7 +34,8 @@ export function RouteScene({ reached, money, onboardedInLandnam, onOpen }: {
   const flown = STOPS.slice(0, reached).map(p => `${p.x},${p.y}`).join(' ')
   return (
     <main className="mn-scene" data-scene="minimal-route">
-      <WorldBackdrop />
+      <OutpostScenery rover={false} />
+      <div className="mn-sky-scrim" aria-hidden />
       <svg className="mn-route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
         <polyline points={points} className="mn-route-ahead" vectorEffect="non-scaling-stroke" />
         <polyline points={flown} className="mn-route-flown" vectorEffect="non-scaling-stroke" />
