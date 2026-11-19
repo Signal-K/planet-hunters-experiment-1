@@ -84,7 +84,18 @@ public struct MiningField: Equatable, Sendable {
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required
     }
 
-    /// A sky-fed fragment landed: it banks itself, with no charge and no hold limit (like web, fragments never block on a full hold).
+    /// Resume the existing run after visiting a menu or another Base service.
+    public mutating func restoreProgress(cargo saved: Cargo, charge savedCharge: Int?) {
+        cargo = saved.filter { $0.value > 0 && Minerals.byId[$0.key] != nil }
+        charge = min(chargeCap, max(0, savedCharge ?? chargeCap))
+        var remaining = cargo
+        for i in nodes.indices where remaining[nodes[i].mineralId, default: 0] > 0 {
+            nodes[i].hp = 0
+            remaining[nodes[i].mineralId, default: 0] -= 1
+        }
+    }
+
+    /// An explicit Catch action banks a sky-fed fragment, with no charge and no hold limit (like web, fragments never block on a full hold).
     public mutating func catchFragment(_ mineralId: String) {
         cargo[mineralId, default: 0] += 1
     }

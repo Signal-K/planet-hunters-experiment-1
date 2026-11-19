@@ -1827,7 +1827,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "laser-mining"
           ],
-          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped."
+          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped, including a quick press-and-release. Native uses MiningTrigger for both button and canvas inputs."
         },
         {
           "id": "action-button",

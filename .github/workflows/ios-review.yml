@@ -43,6 +43,9 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
+      - name: Run native domain tests
+        run: swift test --package-path native/LandnamCore
+
       - name: Build iOS app
         run: >-
           xcodebuild
@@ -65,6 +68,29 @@ jobs:
           test
           CODE_SIGNING_ALLOWED=NO
           CODE_SIGNING_REQUIRED=NO
+
+      # SSL-709: launch the existing account-free SceneCatalog; these are rendered review captures, not an e2e flow.
+      - name: Capture native mining fixtures
+        run: |
+          set -euo pipefail
+          MINING_SIM=$(xcrun simctl list devices available --json | python3 -c 'import json,sys; print(next(d["udid"] for ds in json.load(sys.stdin)["devices"].values() for d in ds if d["name"] == "iPhone 16"))')
+          xcrun simctl bootstatus "$MINING_SIM" -b
+          xcrun simctl install "$MINING_SIM" "$RUNNER_TEMP/landnam-ios/Build/Products/Debug-iphonesimulator/Landnam.app"
+          mkdir -p "$RUNNER_TEMP/mining-captures"
+          for MINING_SCENE in mining-laser-live mining-laser-live-landscape mining-shower-live mining-shower-live-landscape; do
+            xcrun simctl launch --terminate-running-process "$MINING_SIM" com.atlasskyventures.sslandnam -scene "$MINING_SCENE"
+            sleep 2
+            xcrun simctl io "$MINING_SIM" screenshot "$RUNNER_TEMP/mining-captures/$MINING_SCENE-start.png"
+            sleep 4
+            xcrun simctl io "$MINING_SIM" screenshot "$RUNNER_TEMP/mining-captures/$MINING_SCENE.png"
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-mining-captures
+          path: ${{ runner.temp }}/mining-captures/
+          if-no-files-found: warn
 
       # SSL-841: the test host has been trapping at launch with no stack in the log. Print the crashed thread of the
       # newest Landnam crash report (the simulator writes them on the host) so the cause is visible in the run.

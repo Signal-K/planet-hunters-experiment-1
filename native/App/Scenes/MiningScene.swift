@@ -34,10 +34,8 @@ final class MiningScene: SKScene {
     var onBump: (() -> Void)?
     /// True while the laser recharges between shots (drives the gauge sweep).
     var onCharging: ((Bool) -> Void)?
-    private var triggerHeld = false
-    private var nextShotAt: TimeInterval = 0
+    private var trigger = MiningTrigger()
     private var wasCharging = false
-    private static let fireCooldown: TimeInterval = 0.42
     private var scrollX: CGFloat = 0
     private var clock: TimeInterval = 0
     private var lastTime: TimeInterval?
@@ -81,11 +79,10 @@ final class MiningScene: SKScene {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    private var baseBeamX: CGFloat { min(96, max(72, size.width * 0.18)) }
+    private var baseBeamX: CGFloat { max(110, min(320, size.width * 0.24)) }
     /// d-pad left/right slides the ship (and its beam) along the sky; the ground keeps scrolling at its own pace.
     private var shipShift: CGFloat = 0
     private var steerInput = 0.0
-    private var maxShift: CGFloat { max(0, min(260, size.width * 0.34)) }
     private var beamX: CGFloat { baseBeamX + shipShift }
     /// Ship centre limits: under the top HUD row, and a belly's clearance above the ground, so up and down always have room (phones included).
     private var ceilingCenterY: CGFloat { size.height - 64 }
@@ -625,7 +622,10 @@ final class MiningScene: SKScene {
     func setClimb(_ input: Double) { climbInput = max(-1, min(1, input)) }
     var isFiring: Bool { clock < flashUntil }
     /// Press-and-hold trigger: fires on press, then again each time the laser recharges, until release.
-    func setTrigger(_ held: Bool) { triggerHeld = held }
+    func setTrigger(_ held: Bool) { trigger.setHeld(held) }
+    func stopControls() {
+        trigger.cancelInput(); steerInput = 0; climbInput = 0; scrollInput = 0; catchBuffered = 0
+    }
 
     /// Dock arrows: a short burst of faster or slower scroll.
     func nudge(_ dir: Double) {
@@ -645,9 +645,10 @@ final class MiningScene: SKScene {
         onChange?(field)
     }
 
-    func fireLaser() { fire(at: CGPoint(x: beamX, y: surfaceY)) }
+    func fireLaser() { trigger.request() }
+    func fire(at _: CGPoint) { trigger.request() }
 
-    func fire(at _: CGPoint) {
+    private func fireShot() {
         let hit = nodeSprites.min { abs($0.value.position.x - beamX) < abs($1.value.position.x - beamX) }.flatMap { abs($0.value.position.x - beamX) < 56 ? $0 : nil }
         let outcome = field.strike(nodeId: hit?.key)
         flashBeam(hit: {
@@ -785,7 +786,7 @@ final class MiningScene: SKScene {
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
             guard falling.count < 3 else { continue }
-            let hex = Minerals.byId[rain.resourceId]?.colorHex ?? palette.beamCore
+            let hex = Minerals.byId[rain.resourceId]?.colorHex ?? String(format: "#%06X", palette.beamCore)
             let node = SKNode()
             let rim = SKShapeNode(circleOfRadius: 20)
             rim.fillColor = LaserPalette.sk(palette.groundDeep)
@@ -917,16 +918,13 @@ final class MiningScene: SKScene {
         altitude += CGFloat(-climbInput) * 110 * CGFloat(dt)
         let ceiling = ceilingCenterY - shipY   // stay under the HUD
         altitude = max(floorCenterY - shipY, min(ceiling, altitude))
-        shipShift = max(0, min(maxShift, shipShift + CGFloat(steerInput) * 90 * CGFloat(dt)))
+        shipShift = max(40 - baseBeamX, min(size.width - 40 - baseBeamX, shipShift + CGFloat(steerInput) * 100 * CGFloat(dt)))
         ship.position.x = beamX
         beam.position.x = beamX
         spark.position.x = beamX
         opsBrackets.position.x = shipShift
-        if triggerHeld, clock >= nextShotAt {
-            nextShotAt = clock + Self.fireCooldown
-            fireLaser()
-        }
-        let charging = clock < nextShotAt
+        if trigger.step(at: clock) { fireShot() }
+        let charging = trigger.charging(at: clock)
         if charging != wasCharging { wasCharging = charging; onCharging?(charging) }
         // Liam, 01.11: the hills behind the grey ridge are scenery, not solid (web MiningCanvas).
         // The flight floor keeps the hull above the grey foreground ridge.

@@ -35,6 +35,7 @@ public struct Player: Codable, Equatable, Sendable {
     public var missionStartedAt: Double?
     public var missionPhase: MissionPhase?
     public var miningCargoInProgress: Cargo?
+    public var miningLaserCharges: Int?
     public var deliveryUnloadStartedAt: Double?
     public var landingStartedAt: Double?
     public var landingReturnStartedAt: Double?
@@ -152,7 +153,7 @@ public struct Player: Codable, Equatable, Sendable {
             if let value = try? c.decodeIfPresent(T.self, forKey: AnyKey(key)) { keep = value }
         }
         get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId); getOpt("missionStartedAt", &missionStartedAt)
-        getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress)
+        getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress); getOpt("miningLaserCharges", &miningLaserCharges)
         getOpt("deliveryUnloadStartedAt", &deliveryUnloadStartedAt); getOpt("landingStartedAt", &landingStartedAt)
         getOpt("landingReturnStartedAt", &landingReturnStartedAt); getOpt("hasLanded", &hasLanded)
         get("missionCount", &missionCount); get("pendingLaunch", &pendingLaunch); get("stagedRockets", &stagedRockets)
@@ -218,7 +219,7 @@ public struct Player: Codable, Equatable, Sendable {
         func put<T: Encodable>(_ key: String, _ value: T) throws { try c.encode(value, forKey: AnyKey(Player.renamed[key] ?? key)) }
         func putOpt<T: Encodable>(_ key: String, _ value: T?) throws { if let value { try c.encode(value, forKey: AnyKey(key)) } }
         try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId); try putOpt("missionStartedAt", missionStartedAt)
-        try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress)
+        try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress); try putOpt("miningLaserCharges", miningLaserCharges)
         try putOpt("deliveryUnloadStartedAt", deliveryUnloadStartedAt); try putOpt("landingStartedAt", landingStartedAt)
         try putOpt("landingReturnStartedAt", landingReturnStartedAt); try putOpt("hasLanded", hasLanded)
         try put("missionCount", missionCount); try put("pendingLaunch", pendingLaunch); try put("stagedRockets", stagedRockets)

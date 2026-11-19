@@ -29,7 +29,7 @@ public enum OrionidsRun {
     public static let missionId = "self-directed-orionids-night-run"
     /// Fragments offered for manual Catch, per minute (web `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE`). A player weaving under
     /// them fills the order in about a minute; parking in one spot catches roughly a quarter.
-    public static let fragmentsPerMinute = 18.0
+    public static let fragmentsPerMinute = 28.0
     /// Legacy ground catch-zone radius; the scene now uses the visible beam above the ship.
     public static let catchRadius = 100.0
     public static func fragmentRate(at ms: Double, location: PlayerLocation?) -> Double {

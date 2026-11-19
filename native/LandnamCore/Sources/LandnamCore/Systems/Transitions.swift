@@ -28,6 +28,7 @@ public enum Transitions {
         n.player.transitStartedAt = transitStartedAt ?? (arrivalAt != nil ? now : nil)
         n.player.missionPhase = .transit
         n.player.miningCargoInProgress = nil
+        n.player.miningLaserCharges = nil
         n.player.landingReturnStartedAt = nil
         n.player.headingToDelivery = hasDelivery
         n.player.debriefPending = !hasDelivery
