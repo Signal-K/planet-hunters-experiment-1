@@ -1,9 +1,13 @@
-// A chapter briefing as a flight scene: the real destination (Landnam's painted
-// body for that target), the rocket heading for it, and what to bring back as
-// ore swatches. One short goal line, one button.
+// A chapter briefing as the destination itself: TakeOn's voxel world for that
+// body (createMinimalScene, KES-530) with the rover parked by a deposit and a
+// dashed route to it, over Landnam's starfield. One goal line, one button.
 import MineralChip from '@landnam/components/game/MineralChip'
 import { flightBodySpec } from '@landnam/lib/flight-body'
 import { CHAPTERS, francs, type Chapter } from './chapters'
+import { lazy, Suspense } from 'react'
+
+// TakeOn's engine (with its Go core) is large; load it only when a briefing opens.
+const TakeonDiorama = lazy(() => import('./TakeonDiorama').then(m => ({ default: m.TakeonDiorama })))
 
 export function BriefingScene({ chapter, onBack }: { chapter: Chapter; onBack: () => void }) {
   const { mission, target } = chapter
@@ -12,17 +16,11 @@ export function BriefingScene({ chapter, onBack }: { chapter: Chapter; onBack: (
   return (
     <main className="mn-scene mn-briefing-scene" data-scene="minimal-briefing">
       <div className="mn-space" aria-hidden style={{ background: `url(/game/assets/galaxy/galaxy_map_bg.png) center / cover no-repeat${body ? `, ${body.palette.skyCss}` : ''}` }} />
-      {body && (
-        <img
-          className="mn-destination"
-          src={body.kind === 'earth' ? '/game/assets/base/kit/earth-pixel.png' : '/game/assets/base/kit/asteroid-pixel.png'}
-          alt=""
-          data-body={body.kind}
-          style={{ filter: `drop-shadow(0 0 28px ${body.palette.beamCss})` }}
-          draggable={false}
-        />
+      {target && (
+        <Suspense fallback={null}>
+          <TakeonDiorama className="mn-diorama" target={target} minerals={minerals.map(([id]) => id)} />
+        </Suspense>
       )}
-      <img className="mn-flying-rocket" src="/game/assets/base/kit/pad-rocket.png" alt="" draggable={false} />
       <header className="mn-scene-top">
         <button className="mn-chip mn-back" onClick={onBack}>‹ BACK</button>
         {target && <span className="mn-chip mn-place">{target.name}</span>}

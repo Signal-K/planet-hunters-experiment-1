@@ -65,7 +65,8 @@ button.mn-chip { cursor: pointer; }
 .mn-waypoint.mn-now .mn-waypoint-hit { animation: beacon 1.6s ease-in-out infinite; }
 @keyframes beacon { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 var(--cyan)); } 50% { transform: scale(1.12); filter: drop-shadow(0 0 12px var(--cyan)); } }
 
-/* Briefing: the destination ahead, the rocket on its way. */
+/* Briefing: the destination's TakeOn diorama. */
+.mn-diorama { inset: 0; width: 100%; height: 100%; display: block; }
 .mn-space { inset: 0; image-rendering: pixelated; animation: starfield 40s linear infinite alternate; }
 @keyframes starfield { from { background-position: 40% center; } to { background-position: 60% center; } }
 .mn-destination { width: min(70vw, 56vh, 360px); top: 14%; right: -8%; image-rendering: pixelated; animation: drift 12s ease-in-out infinite alternate; }
@@ -74,5 +75,5 @@ button.mn-chip { cursor: pointer; }
 @keyframes cruise { from { transform: rotate(52deg) translate(0, 0); } to { transform: rotate(52deg) translate(0, -10px); } }
 .mn-haul { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-@media (orientation: landscape) { .mn-flying-rocket { top: 24%; left: 30%; } .mn-destination { top: 10%; right: 4%; } }
+@media (orientation: landscape) { .mn-briefing-scene .mn-scene-bottom { right: auto; width: min(420px, 46vw); margin: 0; } }
 @media (prefers-reduced-motion: reduce) { .mn-waypoint.mn-now .mn-waypoint-hit, .mn-destination, .mn-flying-rocket, .mn-space { animation: none; } }

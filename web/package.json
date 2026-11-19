@@ -6,7 +6,7 @@
     "dev": "next dev -p ${PORT:-3001}",
     "dev:minimal": "vite --config ../minimal/vite.config.ts",
     "build": "next build",
-    "build:minimal": "vite build --config ../minimal/vite.config.ts",
+    "build:minimal": "npm --prefix ../minimal ci --no-audit --no-fund && vite build --config ../minimal/vite.config.ts",
     "build:cf": "opennextjs-cloudflare build",
     "preview:cf": "opennextjs-cloudflare preview",
     "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
