@@ -1,0 +1,443 @@
+<title>Minimal Scenery Sketches</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Same frame as the mining sketches: reasoning first, then three live phone frames side by side (stacked on a phone). One dark look, matched to the Scene Monitor. */
+:root {
+  --void: #05080f;
+  --panel: #0d1422;
+  --line: #22304b;
+  --ink: #e6ecf7;
+  --ink-dim: #93a0ba;
+  --signal: #5cc8ff;
+  --ore: #e8c46a;
+  --pick: #9ff0b0;
+  --font-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--void); color: var(--ink); }
+body {
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.04em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 5vw, 38px); text-transform: uppercase; }
+h2 { font-size: 20px; text-transform: uppercase; color: var(--signal); letter-spacing: 0.12em; }
+h3 { font-size: 18px; text-transform: uppercase; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--ink-dim); font-size: 17px; }
+.why { display: grid; gap: 10px; }
+.why ul, .rec ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+.why b { color: var(--ink); font-weight: 500; }
+.num { font-family: var(--font-mono); color: var(--ore); font-size: 15px; }
+.views { display: flex; gap: 8px; flex-wrap: wrap; position: sticky; top: 0; z-index: 2; padding: 10px 0; background: var(--void); }
+.views button { min-height: 44px; padding: 0 18px; background: transparent; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 22px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 14px; cursor: pointer; }
+.views button[aria-pressed="true"] { color: var(--void); background: var(--signal); border-color: var(--signal); }
+.views button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
+.concept { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.concept header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pickTag { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--void); background: var(--pick); padding: 2px 8px; border-radius: 4px; }
+.phone {
+  position: relative; width: min(100%, 300px); aspect-ratio: 390 / 844; max-width: 100%;
+  border: 2px solid var(--line); border-radius: 22px; overflow: hidden; background: #000; cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+}
+.phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.how { font-family: var(--font-mono); font-size: 14px; color: var(--signal); }
+.concept p { font-size: 15px; }
+.concept .tradeoff { color: var(--ink-dim); }
+.rec { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <h1>Minimal scenery sketches</h1>
+    <p class="lede">Three new looks for the pictures behind Minimal's screens: home, the launch, and a destination. Switch the view below; all three frames follow it. Tap a frame to launch its rocket. Rough sketches, not final art.</p>
+  </header>
+
+  <section class="why">
+    <h2>Why today's view is hard to follow</h2>
+    <ul>
+      <li><b>The ground is a quilt.</b> Every tile is shaded on its own and every one-voxel step draws an edge, so flat steppe reads as a patchwork of light and dark diamonds. There is no single shape for the eye to land on.</li>
+      <li><b>The subject is small.</b> The outpost takes about <span class="num">1/5</span> of the frame; the rest is terrain that means nothing. Its buildings are one tile each and read as marks (two blue squares, a yellow cage), not as a base.</li>
+      <li><b>There is no up.</b> A 40° camera on an upright phone looks at ground from top to bottom: no horizon, no sky. A launch has nowhere to go, so the rocket leaves into more ground.</li>
+      <li><b>Hard biome edges</b> (the green block) and a drifting camera with no landmark add movement without meaning.</li>
+    </ul>
+  </section>
+
+  <nav class="views" aria-label="View">
+    <button type="button" data-view="home" aria-pressed="true">Home</button>
+    <button type="button" data-view="launch" aria-pressed="false">Launch</button>
+    <button type="button" data-view="away" aria-pressed="false">On Bennu</button>
+  </nav>
+
+  <section class="concepts" aria-label="Concepts">
+    <article class="concept">
+      <header><h3>A · Horizon slice</h3><span class="pickTag">Recommended</span></header>
+      <div class="phone" id="phoneA"><canvas aria-label="Sketch: horizon slice"></canvas></div>
+      <span class="how">Side-on · sky above, ground cut open below</span>
+      <p>Look at the place from the side, like a cut through the ground. The tall side of the phone becomes sky, so the rocket climbs the whole screen. The base stands on one clear skyline, big enough to read each building. Below the surface you see the ground in section, so at a destination the deposit is visible in the rock: the same picture the scan reveals in the mining pass.</p>
+      <p class="tradeoff">Can come straight from TakeOn's world: the skyline is one row of the real heightfield and the section is its real voxel columns, ore included. Loses the "walk around a world" feeling, which Minimal does not use anyway.</p>
+    </article>
+
+    <article class="concept">
+      <header><h3>B · Low camera</h3></header>
+      <div class="phone" id="phoneB"><canvas aria-label="Sketch: low camera"></canvas></div>
+      <span class="how">Ground-level 3D · horizon at the top third</span>
+      <p>Drop the camera to just above the ground and look across it to a horizon. Terrain is smooth rolling ground that fades into the sky, with no tiles. The base sits big in the foreground and the rocket rises into open sky.</p>
+      <p class="tradeoff">Feels most like standing on a world. TakeOn has no 3D view, so this is a new renderer (a real perspective camera, likely WebGL), the most work of the three, and deposits are hard to show from this angle.</p>
+    </article>
+
+    <article class="concept">
+      <header><h3>C · Island diorama</h3></header>
+      <div class="phone" id="phoneC"><canvas aria-label="Sketch: island diorama"></canvas></div>
+      <span class="how">Today's isometric view · one small floating island</span>
+      <p>Keep TakeOn's isometric engine, but show only a small cut-out of the world, about 7 by 7 tiles, floating in sky. Calm ground with two shades, not a quilt. Bigger buildings that fill the island. The island's cut edge shows the strata, and the ore seam at a destination.</p>
+      <p class="tradeoff">Smallest change to TakeOn: a crop, a calmer ground palette and bigger props. Still a toy-like view seen from above, and the rocket still has only the sky around the island to climb.</p>
+    </article>
+  </section>
+
+  <section class="rec">
+    <h2>What I'd do</h2>
+    <ol>
+      <li>Build A as a new view in TakeOn's minimal scene (KES-530): a side renderer that reads the same generated world, so every body keeps its real ground, colours and ore. Minimal's home, launch, route and destination screens all switch to it.</li>
+      <li>Keep the isometric view for the full TakeOn rover game; only Minimal's pictures change.</li>
+      <li>If you want the world to feel walkable instead, B, accepting a new 3D renderer. C only if we need something this week.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(() => {
+  const W = 390, H = 844; // design space, the phone viewport
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let view = 'home';
+  const HOME = { sky: ['#6f93b5', '#b9cfe0'], ground: '#7c7a63', ground2: '#6f6e58', soil: '#58523f', rock: '#4a4d52', deep: '#33363b', lichen: '#8a8c62', far: '#8ea4b6', mid: '#727866' };
+  const BENNU = { sky: ['#03050b', '#0b1020'], ground: '#4a4540', ground2: '#3d3934', soil: '#34302c', rock: '#2a2724', deep: '#1c1a18', lichen: '#57514a', far: '#1c1e26', mid: '#2c2a28' };
+  const ORE = '#e8e4d8', ORE_GLOW = '#e8c46a';
+  const mix = (a, b, t) => {
+    const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+    const [x, y] = [p(a), p(b)];
+    return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  };
+  // Smooth 1D/2D value noise from sines: calm, repeatable.
+  const n1 = x => Math.sin(x * 1.3) * 0.5 + Math.sin(x * 2.9 + 1.7) * 0.3 + Math.sin(x * 6.1 + 4.2) * 0.2;
+  const n2 = (x, z) => (Math.sin(x * 0.31 + z * 0.17) + Math.sin(x * 0.13 - z * 0.29 + 2.1) * 0.8 + Math.sin(x * 0.7 + z * 0.55 + 0.4) * 0.25) / 2.05;
+  const stars = Array.from({ length: 70 }, (_, i) => ({ x: (i * 97.3) % W, y: (i * 61.7) % (H * 0.7), r: (i % 3) * 0.5 + 0.6 }));
+
+  // ---- shared rocket ----
+  const rockets = { A: -99, B: -99, C: -99 };
+  const smoke = { A: [], B: [], C: [] };
+  const altitude = tl => tl < 0.7 ? 0 : 60 * (tl - 0.7) ** 2 + 20 * (tl - 0.7);
+  function rocket(ctx, x, y, s, tl, key) {
+    // y is the pad top; s is pixels per metre-ish scale (rocket ~ 9s tall)
+    const alt = tl >= 0 ? altitude(tl) * s / 6 : 0;
+    const shake = tl >= 0 && tl < 0.7 ? Math.sin(tl * 90) * s * 0.06 : 0;
+    const rx = x + shake, ry = y - alt;
+    if (tl >= 0 && tl < 6) {
+      if (Math.random() < 0.7) smoke[key].push({ x: x + (Math.random() - 0.5) * s * 1.5, y: y, r: s * 0.5, vx: (Math.random() - 0.5) * s * 6, life: 1 });
+      const fl = s * (2.2 + Math.random() * 1.2);
+      const g = ctx.createLinearGradient(0, ry, 0, ry + fl);
+      g.addColorStop(0, '#fff6c8'); g.addColorStop(0.4, '#ffb347'); g.addColorStop(1, 'rgba(255,90,40,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(rx - s * 0.6, ry); ctx.quadraticCurveTo(rx, ry + fl * 1.2, rx + s * 0.6, ry); ctx.fill();
+    }
+    ctx.fillStyle = '#c94b3a';
+    ctx.beginPath(); ctx.moveTo(rx - s * 0.75, ry); ctx.lineTo(rx - s * 1.5, ry + s * 0.3); ctx.lineTo(rx - s * 0.75, ry - s * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(rx + s * 0.75, ry); ctx.lineTo(rx + s * 1.5, ry + s * 0.3); ctx.lineTo(rx + s * 0.75, ry - s * 2); ctx.fill();
+    ctx.fillStyle = '#eef0f2'; ctx.fillRect(rx - s * 0.75, ry - s * 7, s * 1.5, s * 7);
+    ctx.fillStyle = '#c9ced4'; ctx.fillRect(rx + s * 0.2, ry - s * 7, s * 0.55, s * 7);
+    ctx.fillStyle = '#c94b3a';
+    ctx.beginPath(); ctx.moveTo(rx - s * 0.75, ry - s * 7); ctx.quadraticCurveTo(rx, ry - s * 10, rx + s * 0.75, ry - s * 7); ctx.fill();
+    ctx.fillStyle = '#2b3a55'; ctx.beginPath(); ctx.arc(rx, ry - s * 5.2, s * 0.38, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawSmoke(ctx, key, dt) {
+    const list = smoke[key];
+    for (const p of list) { p.life -= dt * 0.6; p.r += dt * 7; p.x += p.vx * dt; p.y -= dt * 4; }
+    smoke[key] = list.filter(p => p.life > 0).slice(-80);
+    for (const p of smoke[key]) {
+      ctx.fillStyle = `rgba(235,235,230,${p.life * 0.4})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // ---- shared chrome (matches Minimal's top row and bottom CTA) ----
+  function chrome(ctx) {
+    const place = view === 'away' ? 'Bennu' : 'Home';
+    const cta = view === 'home' ? 'START' : view === 'launch' ? 'LAUNCH' : 'MINE';
+    ctx.save();
+    ctx.font = '700 15px "Chakra Petch", system-ui'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(10,16,30,.88)';
+    ctx.beginPath(); ctx.roundRect(16, 16, 96, 44, 22); ctx.fill();
+    const pw = ctx.measureText(place).width + 40;
+    ctx.beginPath(); ctx.roundRect(W - 16 - pw, 16, pw, 44, 22); ctx.fill();
+    ctx.fillStyle = '#e6ecf7'; ctx.textAlign = 'center';
+    ctx.fillText('‹ LEAVE', 64, 39); ctx.fillText(place, W - 16 - pw / 2, 39);
+    const at = view === 'home' ? 0 : view === 'launch' ? 0 : 1;
+    for (let i = 0; i < 3; i++) { ctx.fillStyle = i === at ? '#f2efe4' : 'rgba(242,239,228,.45)'; ctx.beginPath(); ctx.roundRect(W / 2 - 34 + i * 26 - (i === at ? 6 : 0), 35, i === at ? 22 : 9, 8, 4); ctx.fill(); }
+    ctx.fillStyle = '#f2efe4';
+    ctx.beginPath(); ctx.roundRect(16, H - 96, W - 32, 64, 12); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(28, H - 34, W - 56, 3);
+    ctx.fillStyle = '#16181c'; ctx.font = '700 17px "Chakra Petch", system-ui';
+    ctx.fillText(cta.split('').join(String.fromCharCode(8202)), W / 2, H - 63);
+    ctx.restore();
+  }
+  function marker(ctx, x, y, t, label) {
+    const p = (t * 0.8) % 1;
+    ctx.save();
+    ctx.strokeStyle = ORE_GLOW; ctx.lineWidth = 2.5;
+    ctx.globalAlpha = 1 - p; ctx.beginPath(); ctx.arc(x, y, 12 + p * 18, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.font = '600 14px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = '#05080f'; ctx.strokeText(label, x, y - 40);
+    ctx.fillStyle = '#fff'; ctx.fillText(label, x, y - 40);
+    ctx.restore();
+  }
+  function skyFill(ctx, pal, t, horizonY) {
+    const g = ctx.createLinearGradient(0, 0, 0, horizonY);
+    g.addColorStop(0, pal.sky[0]); g.addColorStop(1, pal.sky[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (pal === BENNU) {
+      for (const s of stars) { ctx.fillStyle = `rgba(255,255,255,${0.4 + 0.3 * Math.sin(t + s.x)})`; ctx.fillRect(s.x, s.y, s.r, s.r); }
+      ctx.fillStyle = '#fff4d6'; ctx.beginPath(); ctx.arc(W * 0.78, H * 0.16, 9, 0, Math.PI * 2); ctx.fill();
+    } else {
+      for (let i = 0; i < 4; i++) {
+        const cx = ((i * 140 + t * 6) % (W + 200)) - 100, cy = 120 + i * 70;
+        ctx.fillStyle = 'rgba(255,255,255,.35)';
+        ctx.beginPath(); ctx.ellipse(cx, cy, 60, 12, 0, 0, Math.PI * 2); ctx.ellipse(cx + 30, cy - 8, 36, 10, 0, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+
+  // ---- buildings, side-on (A and B share them) ----
+  function habitat(ctx, x, y, s) {
+    ctx.fillStyle = '#dfe3e6'; ctx.beginPath(); ctx.ellipse(x, y, s * 5, s * 4.2, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#c3c9ce'; ctx.beginPath(); ctx.ellipse(x + s * 1.6, y, s * 3.4, s * 4.2, 0, Math.PI * 1.5, 0); ctx.fill();
+    ctx.strokeStyle = 'rgba(80,90,100,.35)'; ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.ellipse(x, y, s * 5, s * 4.2 * i / 4, 0, Math.PI, 0); ctx.stroke(); }
+    ctx.fillStyle = '#6a8fb3'; ctx.fillRect(x - s * 3.2, y - s * 1.6, s * 1.6, s * 1.6);
+    ctx.fillStyle = '#9aa2a8'; ctx.fillRect(x + s * 4.4, y - s * 1.8, s * 3, s * 1.8);
+  }
+  function solar(ctx, x, y, s) {
+    ctx.strokeStyle = '#8b9095'; ctx.lineWidth = Math.max(1, s * 0.35);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - s * 2.6); ctx.stroke();
+    ctx.fillStyle = '#2c5b8f';
+    ctx.beginPath(); ctx.moveTo(x - s * 3.4, y - s * 2.2); ctx.lineTo(x + s * 3.4, y - s * 3.6); ctx.lineTo(x + s * 3.4, y - s * 4.4); ctx.lineTo(x - s * 3.4, y - s * 3); ctx.fill();
+    ctx.strokeStyle = 'rgba(160,200,240,.5)'; ctx.lineWidth = 1;
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(x + i * s * 1.2, y - s * 2.6 - i * s * 0.25); ctx.lineTo(x + i * s * 1.2, y - s * 3.4 - i * s * 0.25); ctx.stroke(); }
+  }
+  function beacon(ctx, x, y, s, t) {
+    ctx.strokeStyle = '#9aa0a6'; ctx.lineWidth = Math.max(1, s * 0.3);
+    ctx.beginPath(); ctx.moveTo(x - s, y); ctx.lineTo(x, y - s * 9); ctx.lineTo(x + s, y); ctx.stroke();
+    for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(x - s * (1 - i / 4), y - s * 9 * i / 4); ctx.lineTo(x + s * (1 - i / 4), y - s * 9 * i / 4); ctx.stroke(); }
+    if (Math.sin(t * 4) > 0) { ctx.fillStyle = '#ff4a3a'; ctx.beginPath(); ctx.arc(x, y - s * 9.3, s * 0.6, 0, Math.PI * 2); ctx.fill(); }
+  }
+  function drill(ctx, x, y, s) {
+    ctx.strokeStyle = '#e2a826'; ctx.lineWidth = Math.max(1, s * 0.4);
+    ctx.beginPath(); ctx.moveTo(x - s * 2, y); ctx.lineTo(x, y - s * 7); ctx.lineTo(x + s * 2, y); ctx.moveTo(x - s * 1.3, y - s * 2.4); ctx.lineTo(x + s * 1.3, y - s * 2.4); ctx.moveTo(x - s * 0.7, y - s * 4.6); ctx.lineTo(x + s * 0.7, y - s * 4.6); ctx.stroke();
+    ctx.fillStyle = '#5a5f66'; ctx.fillRect(x - s * 2.6, y - s * 0.8, s * 5.2, s * 0.8);
+  }
+  function pad(ctx, x, y, s) {
+    ctx.fillStyle = '#3a3e45'; ctx.fillRect(x - s * 4, y - s * 0.9, s * 8, s * 0.9);
+    ctx.fillStyle = '#e2a826'; for (let i = 0; i < 4; i++) ctx.fillRect(x - s * 3.6 + i * s * 2, y - s * 0.9, s, s * 0.25);
+    ctx.strokeStyle = '#6c7178'; ctx.lineWidth = Math.max(1, s * 0.35);
+    ctx.beginPath(); ctx.moveTo(x - s * 2.6, y - s * 0.9); ctx.lineTo(x - s * 2.6, y - s * 9); ctx.lineTo(x - s * 1.2, y - s * 8); ctx.stroke();
+  }
+  function lander(ctx, x, y, s) {
+    ctx.fillStyle = '#d8dbe0'; ctx.beginPath(); ctx.moveTo(x - s * 2, y - s * 2); ctx.lineTo(x + s * 2, y - s * 2); ctx.lineTo(x + s * 1.2, y - s * 5); ctx.lineTo(x - s * 1.2, y - s * 5); ctx.fill();
+    ctx.strokeStyle = '#a8adb4'; ctx.lineWidth = Math.max(1, s * 0.35);
+    ctx.beginPath(); ctx.moveTo(x - s * 1.6, y - s * 2); ctx.lineTo(x - s * 3, y); ctx.moveTo(x + s * 1.6, y - s * 2); ctx.lineTo(x + s * 3, y); ctx.stroke();
+    ctx.fillStyle = '#2b3a55'; ctx.beginPath(); ctx.arc(x, y - s * 3.6, s * 0.6, 0, Math.PI * 2); ctx.fill();
+  }
+  function boulder(ctx, x, y, s, col) {
+    ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x - s * 2, y); ctx.lineTo(x - s * 1.6, y - s * 1.4); ctx.lineTo(x - s * 0.2, y - s * 2.1); ctx.lineTo(x + s * 1.5, y - s * 1.2); ctx.lineTo(x + s * 2, y); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.beginPath(); ctx.moveTo(x - s * 1.6, y - s * 1.4); ctx.lineTo(x - s * 0.2, y - s * 2.1); ctx.lineTo(x, y - s); ctx.fill();
+  }
+
+  // ---- A: horizon slice ----
+  function drawA(ctx, t, dt) {
+    const away = view === 'away', pal = away ? BENNU : HOME;
+    const gy = H * (view === 'launch' ? 0.74 : 0.6); // surface line
+    const pan = reduce ? 0 : Math.sin(t / 9) * 8;
+    skyFill(ctx, pal, t, gy);
+    // far and mid ridges (parallax)
+    const ridge = (base, amp, k, off, col, par) => {
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W; x += 6) ctx.lineTo(x, base - amp * (0.6 + 0.4 * n1((x + pan * par) * k + off)));
+      ctx.lineTo(W, H); ctx.fill();
+    };
+    ridge(gy - 10, away ? 40 : 70, 0.012, 3, mix(pal.far, pal.sky[1], away ? 0 : 0.35), 0.3);
+    ridge(gy - 2, away ? 22 : 34, 0.02, 9, pal.mid, 0.6);
+    // surface profile: flat where the base stands, gentle elsewhere
+    const surf = x => {
+      const flat = Math.max(0, 1 - Math.abs(x - W * 0.5) / (W * 0.42));
+      return gy + (1 - flat) * 14 * n1(x * 0.03 + 1) + (away ? (x - W / 2) ** 2 / 2600 : 0);
+    };
+    // section: soil, rock, deep bands following the surface
+    const band = (d0, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H); for (let x = 0; x <= W; x += 4) ctx.lineTo(x, surf(x) + d0 + 4 * n1(x * 0.05 + d0)); ctx.lineTo(W, H); ctx.fill(); };
+    band(0, pal.ground); band(10, pal.soil); band(52, pal.rock); band(150, pal.deep);
+    // pebbles in the section
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    for (let i = 0; i < 40; i++) { const x = (i * 53.7) % W, y = surf(x) + 30 + ((i * 37) % 200); ctx.fillRect(x, y, 3 + (i % 3), 2); }
+    // surface lip
+    ctx.strokeStyle = pal.lichen; ctx.lineWidth = 4; ctx.beginPath();
+    for (let x = 0; x <= W; x += 4) x ? ctx.lineTo(x, surf(x)) : ctx.moveTo(x, surf(x)); ctx.stroke();
+    const s = 8;
+    if (!away) {
+      const at = x => surf(x);
+      solar(ctx, W * 0.08, at(W * 0.08), s * 0.75); solar(ctx, W * 0.2, at(W * 0.2), s * 0.75);
+      habitat(ctx, W * 0.36, at(W * 0.36), s);
+      drill(ctx, W * 0.91, at(W * 0.91), s * 0.8);
+      beacon(ctx, W * 0.78, at(W * 0.78), s * 0.8, t);
+      pad(ctx, W * 0.6, at(W * 0.6), s);
+      drawSmoke(ctx, 'A', dt);
+      const tl = t - rockets.A;
+      if (tl < 0 || tl > 6) rocket(ctx, W * 0.6, at(W * 0.6) - s * 0.9, s, -1, 'A');
+      else rocket(ctx, W * 0.6, at(W * 0.6) - s * 0.9, s, tl, 'A');
+      // a pipe to the drill, shown in section
+      ctx.strokeStyle = '#5a5f66'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(W * 0.91, at(W * 0.91)); ctx.lineTo(W * 0.91, at(W * 0.91) + 90); ctx.stroke();
+    } else {
+      for (const [fx, k] of [[0.12, 1.2], [0.3, 0.8], [0.82, 1.5], [0.93, 0.9]]) boulder(ctx, W * fx, surf(W * fx), 5 * k, '#2e2b28');
+      lander(ctx, W * 0.32, surf(W * 0.32), s);
+      // the deposit, seen in the rock under the surface
+      const dx = W * 0.64, dy = surf(dx) + 60;
+      ctx.fillStyle = 'rgba(232,196,106,.18)'; ctx.beginPath(); ctx.ellipse(dx, dy, 78, 32, -0.1, 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 14; i++) {
+        const a = i * 2.4, r = 10 + (i * 7) % 50;
+        ctx.fillStyle = i % 3 ? ORE : ORE_GLOW;
+        ctx.fillRect(dx + Math.cos(a) * r * 1.3 - 5, dy + Math.sin(a) * r * 0.5 - 3, 9 + (i % 3) * 3, 6);
+      }
+      ctx.strokeStyle = 'rgba(232,196,106,.6)'; ctx.setLineDash([4, 5]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(W * 0.32, surf(W * 0.32) - 4); ctx.quadraticCurveTo(W * 0.48, surf(W * 0.48) - 40, dx, surf(dx) - 4); ctx.stroke(); ctx.setLineDash([]);
+      marker(ctx, dx, surf(dx) - 6, t, 'Platinum');
+    }
+    chrome(ctx);
+  }
+
+  // ---- B: low camera ----
+  function drawB(ctx, t, dt) {
+    const away = view === 'away', pal = away ? BENNU : HOME;
+    const hy = H * (view === 'launch' ? 0.48 : 0.36);
+    const f = W * 0.95, camH = view === 'launch' ? 1.6 : 2.6;
+    const camX = reduce ? 0 : Math.sin(t / 7) * 1.4;
+    const height = (x, z) => {
+      const base = (x - 0.5) ** 2 / 70 + (z - 7.5) ** 2 / 60;
+      const flat = Math.min(1, base);
+      return n2(x, z) * 1.6 * flat + (away ? 0.4 * n2(x * 2, z * 2) * flat : 0);
+    };
+    const proj = (x, y, z) => [W / 2 + (x - camX) * f / z, hy + (camH - y) * f / z];
+    skyFill(ctx, pal, t, hy);
+    // distant ridge at the horizon
+    ctx.fillStyle = mix(pal.far, pal.sky[1], away ? 0 : 0.4); ctx.beginPath(); ctx.moveTo(0, hy + 2);
+    for (let x = 0; x <= W; x += 6) ctx.lineTo(x, hy - 18 - 14 * n1(x * 0.02 + 5)); ctx.lineTo(W, hy + 2); ctx.fill();
+    const ZF = 46, ZN = 1.2, STEP = 1;
+    for (let z = ZF; z > ZN; z -= STEP) {
+      const fog = Math.min(1, (z - 6) / (ZF - 6));
+      for (let x = -30; x < 30; x += 1.5) {
+        const y00 = height(x, z), y10 = height(x + 1.5, z), y01 = height(x, z - STEP), y11 = height(x + 1.5, z - STEP);
+        const shade = (y10 - y00) * 0.18 + (y00 - y01) * 0.25;
+        let col = mix(pal.ground, pal.ground2, 0.5 + 0.5 * n2(x * 0.5 + 9, z * 0.5));
+        col = shade > 0 ? mix(col, '#ffffff', Math.min(0.25, shade)) : mix(col, '#000000', Math.min(0.35, -shade));
+        col = mix(col, pal.sky[1], Math.max(0, fog) * (away ? 0.5 : 0.75));
+        const p = [proj(x, y00, z), proj(x + 1.5, y10, z), proj(x + 1.5, y11, z - STEP), proj(x, y01, z - STEP)];
+        ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(...p[0]); ctx.lineTo(...p[1]); ctx.lineTo(...p[2]); ctx.lineTo(...p[3]); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    }
+    drawSmoke(ctx, 'B', dt);
+    const items = away
+      ? [[-1.9, 8.5, (x, y, s) => lander(ctx, x, y, s * 0.7)], [2, 6.5, (x, y, s) => { ctx.fillStyle = 'rgba(232,196,106,.35)'; ctx.beginPath(); ctx.ellipse(x, y, s * 3.5, s * 0.8, 0, 0, Math.PI * 2); ctx.fill(); for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? ORE : ORE_GLOW; ctx.fillRect(x + Math.cos(i * 2.3) * s * 2.4, y + Math.sin(i * 2.3) * s * 0.5 - s * 0.3, s * 0.7, s * 0.5); } marker(ctx, x, y, t, 'Platinum'); }], [-8, 16, (x, y, s) => boulder(ctx, x, y, s * 1.6, '#2e2b28')], [7, 12, (x, y, s) => boulder(ctx, x, y, s * 1.2, '#2e2b28')], [0, 22, (x, y, s) => boulder(ctx, x, y, s * 2, '#2a2724')]]
+      : [[-6.2, 8.5, (x, y, s) => solar(ctx, x, y, s * 0.55)], [-5, 10.5, (x, y, s) => solar(ctx, x, y, s * 0.55)], [-2.6, 7, (x, y, s) => habitat(ctx, x, y, s * 0.6)], [4.8, 9, (x, y, s) => drill(ctx, x, y, s * 0.6)], [3.2, 6.5, (x, y, s) => beacon(ctx, x, y, s * 0.55, t)],
+         [0.6, 7.5, (x, y, s) => { pad(ctx, x, y, s * 0.6); const tl = t - rockets.B; rocket(ctx, x, y - s * 0.55, s * 0.6, tl < 0 || tl > 6 ? -1 : tl, 'B'); }]];
+    items.sort((a, b) => b[1] - a[1]);
+    for (const [x, z, draw] of items) { const [sx, sy] = proj(x, height(x, z), z); draw(sx, sy, f / z / 3.2); }
+    chrome(ctx);
+  }
+
+  // ---- C: island diorama (isometric) ----
+  function drawC(ctx, t, dt) {
+    const away = view === 'away', pal = away ? BENNU : HOME;
+    skyFill(ctx, pal, t, H);
+    const N = 7, tw = 46, th = 23, hz = 10;
+    const cx = W / 2, cy = H * (view === 'launch' ? 0.62 : 0.42) + (reduce ? 0 : Math.sin(t / 2) * 3);
+    const hgt = (i, j) => (away ? i >= 5 && j >= 5 && i + j < 12 : i < 2 && j < 2) ? 1 : 0;
+    const P = (a, b, h) => [cx + (a - b) * tw / 2, cy + (a + b - N) * th / 2 - h * hz];
+    const poly = (pts, col) => { ctx.fillStyle = col; ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(...p) : ctx.moveTo(...p)); ctx.closePath(); ctx.fill(); };
+    // underside rock
+    poly([P(0, N, 0).map((v, k) => k ? v + 69 : v), [cx + 20, cy + N * th / 2 + 190], P(N, 0, 0).map((v, k) => k ? v + 69 : v), P(N, N, 0).map((v, k) => k ? v + 69 : v)], mix(pal.deep, '#000000', 0.2));
+    // edge walls with strata (+i and +j faces)
+    const wall = (a0, b0, a1, b1, light) => {
+      const bands = [[0, 9, pal.soil], [9, 40, pal.rock], [40, 70, pal.deep]];
+      for (const [d0, d1, col] of bands) {
+        const p0 = P(a0, b0, 0), p1 = P(a1, b1, 0);
+        poly([[p0[0], p0[1] + d0], [p1[0], p1[1] + d0], [p1[0], p1[1] + d1], [p0[0], p0[1] + d1]], light ? col : mix(col, '#000000', 0.25));
+      }
+    };
+    wall(0, N, N, N, false); wall(N, 0, N, N, true);
+    if (away) { // the seam shows in the cut edge
+      const p = P(N, 3.5, 0);
+      for (let i = 0; i < 9; i++) { ctx.fillStyle = i % 3 ? ORE : ORE_GLOW; ctx.fillRect(p[0] - 14 + (i * 7) % 30, p[1] + 20 + (i * 5) % 18, 6, 4); }
+    }
+    for (let s = 0; s <= 2 * (N - 1); s++)
+      for (let i = 0; i < N; i++) {
+        const j = s - i; if (j < 0 || j >= N) continue;
+        const h = hgt(i, j);
+        const shade = (i * 3 + j * 5) % 4 === 0 ? pal.ground2 : pal.ground;
+        if (h) {
+          poly([P(i, j + 1, h), P(i + 1, j + 1, h), P(i + 1, j + 1, 0), P(i, j + 1, 0)], mix(pal.soil, '#000000', 0.15));
+          poly([P(i + 1, j, h), P(i + 1, j + 1, h), P(i + 1, j + 1, 0), P(i + 1, j, 0)], pal.soil);
+        }
+        poly([P(i, j, h), P(i + 1, j, h), P(i + 1, j + 1, h), P(i, j + 1, h)], shade);
+      }
+    const at = (i, j) => P(i + 0.5, j + 0.5, hgt(Math.floor(i), Math.floor(j)));
+    const S = 5.5;
+    drawSmoke(ctx, 'C', dt);
+    if (!away) {
+      const items = [[1, 4, (x, y) => solar(ctx, x, y, S)], [1, 5.6, (x, y) => solar(ctx, x, y, S)], [2.4, 2.6, (x, y) => habitat(ctx, x, y, S)], [5, 1.4, (x, y) => drill(ctx, x, y, S)], [5.2, 5, (x, y) => beacon(ctx, x, y, S, t)],
+        [3.6, 3.8, (x, y) => { poly([[x, y - 18], [x + 36, y], [x, y + 18], [x - 36, y]], '#3a3e45'); const tl = t - rockets.C; rocket(ctx, x, y, S, tl < 0 || tl > 6 ? -1 : tl, 'C'); }]];
+      items.sort((a, b) => a[0] + a[1] - b[0] - b[1]);
+      for (const [i, j, d] of items) d(...at(i, j));
+    } else {
+      const [lx, ly] = at(1.5, 4.5); lander(ctx, lx, ly, S);
+      for (const [i, j, k] of [[0.5, 1, 1.2], [5.5, 1.5, 1], [2, 6, 0.8]]) boulder(ctx, ...at(i, j), 5 * k, '#2e2b28');
+      const [dx, dy] = at(4.6, 3.4);
+      ctx.fillStyle = 'rgba(232,196,106,.3)'; ctx.beginPath(); ctx.ellipse(dx, dy, 24, 12, 0, 0, Math.PI * 2); ctx.fill();
+      for (let i = 0; i < 7; i++) { ctx.fillStyle = i % 2 ? ORE : ORE_GLOW; ctx.fillRect(dx + Math.cos(i * 2.3) * 14 - 3, dy + Math.sin(i * 2.3) * 6 - 2, 6, 4); }
+      marker(ctx, dx, dy, t, 'Platinum');
+    }
+    chrome(ctx);
+  }
+
+  const frames = [['A', drawA], ['B', drawB], ['C', drawC]].map(([key, draw]) => {
+    const el = document.getElementById('phone' + key), canvas = el.querySelector('canvas'), ctx = canvas.getContext('2d');
+    el.addEventListener('pointerdown', () => { if (view !== 'away') { const now = performance.now() / 1000; if (now - rockets[key] > 6) rockets[key] = now; } });
+    return { key, el, canvas, ctx, draw };
+  });
+  document.querySelectorAll('.views button').forEach(b => b.addEventListener('click', () => {
+    view = b.dataset.view;
+    document.querySelectorAll('.views button').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+    for (const k in rockets) { rockets[k] = view === 'launch' ? performance.now() / 1000 - 0.2 : -99; smoke[k] = []; }
+  }));
+  let last = performance.now() / 1000;
+  function frame() {
+    const t = performance.now() / 1000, dt = Math.min(0.05, t - last); last = t;
+    for (const f of frames) {
+      const r = f.el.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+      const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+      if (f.canvas.width !== w || f.canvas.height !== h) { f.canvas.width = w; f.canvas.height = h; }
+      f.ctx.setTransform(w / W, 0, 0, h / H, 0, 0);
+      if (view === 'launch' && t - rockets[f.key] > 6.5) rockets[f.key] = t;
+      f.draw(f.ctx, t, dt);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
