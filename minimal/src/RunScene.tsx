@@ -1,7 +1,9 @@
 // A run, from START to home: one scene per step, one button per scene. The
-// steps follow the chapter's verb (chapters.ts). Mining is Landnam's own laser
-// scene (MiningScreen), so the mechanics are Landnam's exactly; every other
-// step stands on a TakeOn minimal scene.
+// steps follow the chapter's verb (chapters.ts). Mining is Minimal's top-down
+// laser pass (MineScene, SSL-865): scan, then fire, laid out for an upright
+// phone. The shower run keeps Landnam's own mining scene for its CATCH beam
+// until the pass learns to catch. Every other step stands on a TakeOn
+// minimal scene.
 import { useRef, useState } from 'react'
 import type { MinimalSceneHandle } from '@takeon/engine'
 import MiningScreen from '@landnam/components/game/screens/MiningScreen'
@@ -10,6 +12,7 @@ import { MINERAL_META } from '@landnam/lib/data/minerals'
 import { francs, type Chapter, type Verb } from './chapters'
 import { resultFor, type RunResult } from './progress'
 import { Scenery } from './scenes'
+import { MineScene } from './MineScene'
 
 type Step = 'launch' | 'mine' | 'deliver' | 'build' | 'deploy' | 'survey' | 'home'
 
@@ -51,6 +54,20 @@ export function RunScene({ chapter, onFinish, onQuit }: {
       <span className="mn-chip mn-place">{step === 'deliver' ? chapter.deliveryTarget?.name : step === 'launch' || step === 'home' ? 'Home' : target?.name}</span>
     </header>
   )
+
+  if (step === 'mine' && mission && target && chapter.type !== 'shower-run') {
+    return (
+      <MineScene
+        mission={mission}
+        target={target}
+        header={header}
+        onComplete={haul => {
+          setCargo(haul)
+          next()
+        }}
+      />
+    )
+  }
 
   if (step === 'mine' && mission && target) {
     // Landnam's mining scene, whole: fly, fire, fill the order, head out.

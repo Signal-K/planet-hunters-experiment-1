@@ -9,6 +9,7 @@
  * flows, nothing to run in CI. See "Cloud sessions" in AGENTS.md.
  *
  *   node scripts/scene-drive.mjs open <scene-id|/route> [--size 926x428]   (phone landscape by default)
+ *   node scripts/scene-drive.mjs open http://localhost:4330/minimal/?stage=1   (another local app, e.g. Minimal's dev server)
  *   node scripts/scene-drive.mjs look                 list the buttons and labels on screen
  *   node scripts/scene-drive.mjs click "<text>"       click a button or label by its text
  *   node scripts/scene-drive.mjs click css=<selector>
@@ -99,7 +100,7 @@ function describe(target) {
 }
 
 function resolveRoute(target) {
-  if (target.startsWith('/')) return target
+  if (target.startsWith('/') || /^http:\/\//.test(target)) return target
   const info = describe(target)
   if (!info) throw new Error(`Unknown scene "${target}". Run: node scripts/scene.mjs list`)
   return info.web ? `/game/stage?preset=${encodeURIComponent(info.web)}` : '/game/stage'
@@ -128,7 +129,9 @@ if (!command || command === 'help') {
   process.exit(0)
 }
 
-if (command === 'open') {
+// A full local URL (Minimal's dev server, say) skips the Landnam stack check.
+const localUrl = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(positional[0] ?? '')
+if (command === 'open' && !localUrl) {
   const ensure = spawnSync(join(root, 'scripts', 'ensure-stack.sh'), { stdio: 'inherit' })
   if (ensure.status !== 0) process.exit(ensure.status ?? 1)
 }
@@ -145,7 +148,7 @@ switch (command) {
     const size = flag('--size')
     if (size) { const [w, h] = size.split('x').map(Number); await page.setViewportSize({ width: w, height: h }) }
     const route = resolveRoute(positional[0] ?? '/game/stage')
-    await page.goto(WEB + route, { waitUntil: 'domcontentloaded', timeout: 90_000 })
+    await page.goto(localUrl ? route : WEB + route, { waitUntil: 'domcontentloaded', timeout: 90_000 })
     mkdirSync(shotsDir, { recursive: true })
     writeFileSync(currentFile, JSON.stringify({ ...(describe(positional[0] ?? '') ?? {}), route }))
     label = `open-${positional[0]}`

@@ -85,3 +85,20 @@ button.mn-chip { cursor: pointer; }
 .mn-steps i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); }
 .mn-steps i.mn-step-done { background: var(--cream); }
 .mn-steps i.mn-step-now { width: 22px; border-radius: 4px; background: var(--cream); }
+
+/* Mining: Minimal's top-down pass (SSL-865). The field fills the screen; the order sits
+   bottom-left, SCAN and FIRE bottom-right within one thumb's reach. */
+.mn-mine { touch-action: none; user-select: none; -webkit-user-select: none; background: #2a2622; }
+.mn-mine-field { inset: 0; width: 100%; height: 100%; display: block; }
+.mn-mine-prompt { position: absolute; right: 0; bottom: calc(100% + 8px); margin: 0; white-space: nowrap; pointer-events: none; font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: .18em; color: var(--cyan); text-shadow: 0 1px 3px #000, 0 0 10px rgba(0,0,0,.7); }
+.mn-mine-bottom { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; pointer-events: none; max-width: 560px; margin: 0 auto; }
+.mn-mine-bottom > * { pointer-events: auto; }
+.mn-mine-bottom > .mn-cta, .mn-mine-bottom > .mn-mine-haul { flex: 1 1 100%; }
+.mn-mine-goal { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.mn-mine-buttons { position: relative; display: flex; align-items: flex-end; gap: 12px; }
+.mn-round { display: grid; place-items: center; border-radius: 50%; border: 4px solid var(--cyan); background: var(--panel); color: var(--cream); font: 700 16px 'Oxanium', system-ui, sans-serif; letter-spacing: .1em; cursor: pointer; backdrop-filter: blur(6px); }
+.mn-round.mn-ready { background: var(--cyan); color: var(--ink); }
+.mn-scan { width: 64px; height: 64px; margin-bottom: 40px; font-size: 14px; }
+.mn-scan:not(.mn-ready) { opacity: .6; }
+.mn-fire { width: 92px; height: 92px; }
+.mn-round:focus-visible, .mn-cta:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }

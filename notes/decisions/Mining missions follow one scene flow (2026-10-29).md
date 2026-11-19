@@ -29,8 +29,9 @@ bottom are still Liam's to decide.
 - A client contract names its target; the map highlights it and the player does not search
   for one. Delivering the cargo and putting the rocket away are one debrief moment, with the
   client taking delivery as the animation.
-- Scanning never gates mining. An unscanned body is still mineable; a quick scan shows how
-  rich its deposits are. The full citizen-science scan (one a day) is cycle 8.
+- ~~Scanning never gates mining.~~ Replaced 2026-11-19 by `You scan before you mine
+  (2026-11-19).md`: the laser only cuts deposits a scan has shown. An unsurveyed body can
+  still be flown to. The full citizen-science scan (one a day) is cycle 8.
 - When Review and Launch asks for something the player lacks, it offers "Where to get it",
   which opens the map with the sources highlighted. This is the mission guide; it is not a
   separate system.

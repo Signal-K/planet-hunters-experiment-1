@@ -24,7 +24,10 @@ It is its own module in this repo, not part of the Landnam app:
   checkout: `minimal/scripts/update-takeon.sh [path-to-takeon]` (default `../takeon`).
 
 - START plays the chapter's run (`src/RunScene.tsx`): one chapter per Landnam mission type
-  (`src/chapters.ts`), with Landnam's own mining scene for mining. Progress, earnings and stored
+  (`src/chapters.ts`). Mining is Minimal's own top-down pass (`src/MineScene.tsx`, SSL-865):
+  drag to steer, SCAN shows what the deposits ahead are, FIRE cuts only scanned ones. The
+  shower chapter still uses Landnam's mining scene for CATCH. With `&dev=1`, P pauses the
+  ground (the ship still steers) so a shot can be lined up by hand. Progress, earnings and stored
   materials are Minimal's own, per pilot on the device (`src/progress.ts`). In dev,
   `?stage=1&chapter=N` opens a briefing, `&run=1` starts it, and `&dev=1` shows Landnam's
   SKIP MINING button.
