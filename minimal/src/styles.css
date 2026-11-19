@@ -1,0 +1,60 @@
+/* Landnam's two-tone mission style: dark rounded panels, cream text, cyan accents,
+   gold rewards, cream CTA. Text >= 14px, taps >= 44px, 8pt rhythm.
+   Colours follow shared/tokens/tokens.json (cyan #70d9ea). */
+@font-face { font-family: 'Oxanium'; src: url('/fonts/Oxanium-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Oxanium'; src: url('/fonts/Oxanium-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+
+:root {
+  --sky-top: #0f1524;
+  --sky-low: #2b3550;
+  --panel: rgba(13, 19, 33, 0.88);
+  --line: rgba(163, 236, 245, 0.18);
+  --cream: #f3ead8;
+  --muted: #b9c0cf;
+  --cyan: #70d9ea;
+  --gold: #f1c46b;
+  --ink: #101521;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-low) 70%, #4a4436 100%);
+  color: var(--cream);
+  font: 400 16px/1.45 'Oxanium', system-ui, sans-serif;
+}
+
+.screen { min-height: 100%; display: flex; flex-direction: column; gap: 16px; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; }
+.screen.center { justify-content: center; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 28px; line-height: 1.15; margin: 0; font-weight: 700; }
+p { margin: 0; color: var(--muted); }
+.eyebrow { font-size: 14px; letter-spacing: 0.24em; color: var(--cyan); font-weight: 700; }
+
+.cta { display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; border: 0; border-radius: 12px; background: var(--cream); color: var(--ink); font: 700 16px 'Oxanium', system-ui, sans-serif; letter-spacing: 0.12em; text-decoration: none; cursor: pointer; }
+.cta:disabled { opacity: 0.55; cursor: default; }
+.back { align-self: flex-start; min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--panel); color: var(--cream); font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: 0.12em; cursor: pointer; }
+
+.route-head { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.route { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; flex: 1; }
+.stop { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; position: relative; }
+.stop:not(:last-child)::after { content: ''; position: absolute; left: 21px; top: 56px; bottom: -8px; width: 2px; background: var(--line); }
+.dot { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; border: 2px solid var(--line); color: var(--muted); background: var(--panel); }
+.stop-text { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.stop-text strong { font-size: 18px; }
+.stop-text span { font-size: 14px; color: var(--muted); }
+.stop.now .dot { border-color: var(--cyan); color: var(--ink); background: var(--cyan); }
+.stop.done .dot { border-color: var(--cyan); color: var(--cyan); }
+.stop.locked { opacity: 0.6; }
+
+.dock { position: sticky; bottom: max(16px, env(safe-area-inset-bottom)); margin-top: auto; }
+
+.briefing .goal { font-size: 18px; color: var(--cream); }
+.facts { display: grid; gap: 8px; margin: 8px 0 0; }
+.facts div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.facts dt { font-size: 14px; letter-spacing: 0.18em; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 700; text-align: right; }
+.gold { color: var(--gold); }
+.rules { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; display: grid; gap: 4px; }

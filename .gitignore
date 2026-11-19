@@ -105,3 +105,7 @@ web/.dev-follower.json
 
 # Scene Studio local focus state
 web/.studio/
+
+# Landnam Minimal build output (minimal/ builds it at deploy: npm run build:minimal)
+web/public/minimal/
+minimal/.vite/

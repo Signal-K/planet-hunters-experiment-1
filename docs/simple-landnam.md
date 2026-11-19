@@ -5,7 +5,11 @@ anyone can jump into it, it's fast, it's clear what to do." Hugo last played Lan
 October; Landnam has added a lot since (probes, data hub, upgrades, telescopes, community
 site, votes), so a newcomer today faces more than he did.
 
-This is an investigation, not a decision. Nothing in the game has changed yet.
+**Decided 2026-11-19 (Liam):** the simple version is **Landnam Minimal**, a separate project
+kept in this repo as its own module (`minimal/`) and served at **playlandnam.space/minimal**. It is a standalone game with
+Landnam's mechanics, research, narrative and missions. "Anyone can play" means no context
+needed; sign-in is still required. See the decision note in `notes/decisions/` and
+"How Minimal is built" below. The findings that follow are why.
 
 ## What a new player does today (played by hand, phone 390x844, `m1-intro` stage)
 
@@ -41,9 +45,7 @@ problem; the shell around them is.**
    affinity, stamps, Leonids, data hub, probes. HM has credits, parts and a finish line.
 4. **Breadth.** 95 registered scenes and 52 standing product decisions. All of it can
    reach a new player in their first week.
-5. **Account first.** Landnam needs sign-in before play (product rule). HM can be played
-   right away; sign-in is optional and progress stays in the browser.
-6. **Evidence is thin but matches.** PostHog, last 30 days: 7 players started the
+5. **Evidence is thin but matches.** PostHog, last 30 days: 7 players started the
    tutorial, 4 saw the contract screen, 3 launched, 3 reached mining, 2 reached a debrief.
 
 ## What HM does that we can borrow
@@ -54,13 +56,12 @@ problem; the shell around them is.**
 - **Failure is cheap and explained.** A crash costs the rover, a fast finish earns +2. Rules
   fit on one panel.
 - **Every screen has one primary button.** Start Mission 2. Continue. Retry.
-- **Play first, account later.**
 
-## Proposal: Story mode
+## Proposal: Minimal is a story
 
-A short, numbered chapter route that is the default for new players, built entirely from
-scenes that already exist. The full agency (contract tabs, clients, probes, data hub, votes,
-upgrades) opens when the story is finished, or straight away from Menu > "Full agency".
+Minimal is a short, numbered chapter route over Landnam's real missions. The full agency
+(contract tabs, clients, probes, data hub, votes, upgrades) stays in Landnam; the last chapter
+points there for players who want more.
 
 | Chapter | Player does | Existing scenes | Teaches |
 | --- | --- | --- | --- |
@@ -71,7 +72,7 @@ upgrades) opens when the story is finished, or straight away from Menu > "Full a
 | 5. Shower | The live sky event run (Leonids now) | shower mining | Events |
 | 6. Settle | Store a haul in a silo and settle the place | silo, settlement | The release-bar goal |
 
-Rules for story mode:
+Rules for Minimal:
 
 - **One NEXT button.** The Base shows francs, the next chapter's button and Menu, and
   nothing else (the same trick as build mode hiding the HUD). The button names the chapter:
@@ -79,7 +80,7 @@ Rules for story mode:
 - **No decisions before the first run.** Landscape defaults to Steppe (still movable later),
   the launchpad is already placed, the rocket and destination are picked for the player
   (already the rule: the cheapest rocket that fits).
-- **Short transit.** 5 s in story mode, or tap to skip.
+- **Short transit.** 5 s, or tap to skip.
 - **A one-panel briefing per chapter.** The goal, the reward and what happens if it goes
   wrong, HM style. Then one START button.
 - **A chapter strip.** "Chapter 2 of 6" with dots, like HM's route, shown on the briefing
@@ -87,27 +88,34 @@ Rules for story mode:
 - **Small numbers in copy.** Show ₣9M, not ₣9.0M, and keep body names to familiar ones
   (Moon, Mars, an asteroid) until chapter 3.
 
-Engineering shape (to confirm before building): a `storyChapter` on the player, a chapter
-table in `shared/authoring/` (one entry per chapter: preset, mission, briefing copy,
-unlock), a `simpleHud` flag read by the Base and the dock, each chapter registered in
-`qa/scenes.json` with a stage preset, and iOS mirrored in `SceneCatalog`. No new mechanics.
+## How Minimal is built
 
-## Clashes with current rules (need Liam)
+`minimal/` is its own module in this repo: its own Vite + React app, entry point and build,
+with no new repository and no submodule. It builds to `web/public/minimal/`, so Landnam's deploy
+serves it at playlandnam.space/minimal, the way Haphazard Martians is served at /martians/.
 
-- **"No account-free play"** (product.md). HM's "anyone can jump in" depends on playing
-  before sign-in. Chapter 1 without an account would break that rule.
-- **Cycle 11 is "release, watch, fix blockers only"** (release plan). Story mode is new
-  work. It could count as the onboarding fix the release bar asks for ("sign-up to first
-  haul, sale and settlement unaided"), since its chapters are that bar.
-- **"The dock is ‹ › Build and Menu"** and the Base's current controls would be hidden
-  during the story.
-- **"Separate small games"**: is simple Landnam a mode inside Landnam, or its own small
-  app on the same world?
+| Piece | Where |
+| --- | --- |
+| App | `minimal/` (Vite + React + TypeScript, base `/minimal/`) |
+| Build | `cd web && npm run build:minimal` → `web/public/minimal/` (runs before `next build`) |
+| Dev | `cd web && npm run dev:minimal` → http://localhost:4330/minimal/ |
+| Sign-in | Required: reads Landnam's shared `pocketbase_auth` on the same origin; no session sends the player to Landnam to sign in |
+| Offline | Landnam's `public/sw.js` caches `/minimal/` (to add with the first playable slice) |
 
-## Suggested first slice
+**Same mechanics, research, narrative, missions.** Minimal imports Landnam's sources
+through a `@landnam` alias (`web/`) and `@shared` (`shared/`) instead of copying them: the
+mission, target, mineral and economy data in `web/lib/data/`, the UI-free logic in `web/lib/`
+(`mission-flow.ts`, `lib/mining/*`), and the tokens in `shared/tokens/`. React and the other
+libraries come from `web/node_modules`, so there is one copy of each. A mission or rule changes
+once, in Landnam, and Minimal picks it up on its next build.
 
-Chapter 1 only, behind a stage preset (`story-ch1`): no landscape picker, launchpad
-pre-placed, a simple Base with one "CHAPTER 1 · FIRST LIGHT" button, one briefing panel,
-a 5 s transit, the existing mining run, and a debrief that shows "Chapter 1 of 6 done" and
-"CHAPTER 2". Then hand it to Hugo and time him from first tap to first FIRE (today it is
-about 8 taps and over a minute).
+The mining run (`web/components/game/screens/MiningCanvas.tsx`) is next: lift it into a
+context-free component both games draw, so Minimal's chapter 1 is the real run.
+
+## Next steps
+
+1. First playable slice: sign in → "CHAPTER 1 · FIRST LIGHT" → one briefing panel → 5 s
+   transit → the real mining run → "Chapter 1 of 6 done".
+2. Add `/minimal/` to Landnam's service worker cache and to the deploy build.
+3. Time Hugo from first tap to first FIRE (in Landnam today it is about 8 taps and over a
+   minute).
