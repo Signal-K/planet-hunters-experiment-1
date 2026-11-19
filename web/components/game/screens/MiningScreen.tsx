@@ -12,7 +12,7 @@ import { openSettings } from '@/lib/mining/openChrome'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 import { MiningActionButton, MiningBackButton, MiningDPad, MiningFireButton, MiningGuideMark as GuideMark } from './MiningControls'
-import { miningSecondaryAction, type MiningSecondaryAction } from '@/lib/mining/secondaryAction'
+import { MINING_SCAN, miningSecondaryAction, type MiningSecondaryAction } from '@/lib/mining/secondaryAction'
 import controlStyles from './MiningControls.module.css'
 import { showerForRunMission, showerPreset } from '@/lib/data/showers'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
@@ -49,13 +49,15 @@ function useFreeOpsFirstSuccessAck() {
 function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null) {
   const items = [
     { kind: 'scroll', label: 'Steer', desc: 'The pad on the left flies the ship: up and down for height, left and right to move along the ground (arrow keys or W/A/S/D).' },
-    { kind: 'fire', label: 'Fire', desc: 'The round button on the right fires the laser straight down. Line a labelled seam up under the ship, then fire (Space or F). Hold it to keep firing.' },
+    { kind: 'fire', label: 'Fire', desc: 'The round button on the right fires the laser straight down. Line a scanned seam up under the ship, then fire (Space or F). Hold it to keep firing. A "?" seam needs a scan first.' },
     { kind: 'charges', label: 'Charge', desc: 'The ring around Fire is your laser charge. Clipping a ridge costs one. Recharge from this menu.' },
     { kind: 'order', label: 'Order', desc: 'The panel beside Fire shows what is still owed. When it turns solid, tap it to head home.' },
     hasDelivery
       ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
       : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
   ]
+  // SSL-865: scan comes before fire.
+  items.splice(1, 0, { kind: 'scan', label: MINING_SCAN.label, desc: MINING_SCAN.howTo })
   if (action) items.splice(1, 0, { kind: 'event', label: action.label, desc: action.howTo })
   return items
 }
@@ -231,6 +233,23 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }
   const catchFragmentRef = useRef(catchFragment)
   catchFragmentRef.current = catchFragment
+  // SSL-865: "You scan before you mine". SCAN reads the seams ahead; FIRE only cuts scanned ones.
+  const scanRef = useRef<(() => boolean) | null>(null)
+  const scanReadyRef = useRef<((ready: boolean) => void) | null>(null)
+  const warnUnscannedRef = useRef<(() => boolean) | null>(null)
+  const [scanReady, setScanReady] = useState(true)
+  scanReadyRef.current = ready => setScanReady(ready)
+  const [scanPressed, setScanPressed] = useState(false)
+  const hintedScanRef = useRef(false)
+  const scanAhead = () => {
+    if (sceneStatus !== 'ready') return
+    scanRef.current?.()
+    help.reportAction('scan')
+    setScanPressed(true)
+    window.setTimeout(() => setScanPressed(false), 140)
+  }
+  const scanAheadRef = useRef(scanAhead)
+  scanAheadRef.current = scanAhead
   const obstacleAheadRef = useRef<((ahead: boolean) => void) | null>(null)
   const [obstacleAhead, setObstacleAhead] = useState(false)
   obstacleAheadRef.current = ahead => setObstacleAhead(current => current === ahead ? current : ahead)
@@ -373,6 +392,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       if (!quiet) queuedFireRef.current = true
       return
     }
+    // SSL-865: over an unscanned seam FIRE fires nothing and costs no charge; the seam says "Scan it first".
+    if (warnUnscannedRef.current?.()) {
+      if (quiet) return
+      if (addToast && !hintedScanRef.current) {
+        hintedScanRef.current = true
+        addToast('Scan first: press Scan to read the seams ahead, then fire.', 'info')
+      }
+      return
+    }
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     help.reportAction('fire')
@@ -403,6 +431,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       } else if (secondaryAction && e.code === secondaryAction.key) {
         e.preventDefault()
         catchFragmentRef.current()
+      } else if (e.code === MINING_SCAN.key) {
+        e.preventDefault()
+        scanAheadRef.current()
       } else if (e.code === 'KeyW' || e.code === 'ArrowUp') {
         e.preventDefault()
         altitudeRef.current?.(-1)
@@ -659,8 +690,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <span className="mining-start-brief__eyebrow">{nightRun ? `${showerName} shower` : isFreeOps ? 'Free mining · no client' : mission.title}</span>
           <strong>{briefGoal}</strong>
           <span>{secondaryAction ? secondaryAction.brief
-            : isFreeOps ? (earthDisposition === 'store' ? 'Steer over any seam and fire. The haul goes into your Earth silo.' : 'Steer over any seam and fire. You sell the haul at market price on Earth.')
-            : 'Steer over a labelled seam, then press Fire.'}</span>
+            : isFreeOps ? (earthDisposition === 'store' ? 'Scan the ground ahead, then fire at any seam it shows. The haul goes into your Earth silo.' : 'Scan the ground ahead, then fire at any seam it shows. You sell the haul at market price on Earth.')
+            : MINING_SCAN.brief}</span>
         </button>
       )}
 
@@ -719,6 +750,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           catchRain={secondaryAction?.kind === 'catch'}
           catchRef={catchRef}
           onCatchCueRef={catchCueRef}
+          scanRef={scanRef}
+          onScanReadyRef={scanReadyRef}
+          warnUnscannedRef={warnUnscannedRef}
           debrisPreset={debrisPreset}
           fireballCaughtAt={fireballCaughtAt}
           skyEventLocation={skyEventLocation}
@@ -865,6 +899,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             onPress={catchFragment}
           />
         ) : null}
+        <MiningActionButton
+          action={MINING_SCAN.kind}
+          label={MINING_SCAN.label}
+          keyLabel={MINING_SCAN.keyLabel}
+          ready={scanReady}
+          pressed={scanPressed}
+          slot={secondaryAction ? 2 : 1}
+          disabled={gateOpen || sceneStatus !== 'ready'}
+          onPress={scanAhead}
+          testId="mining-scan-btn"
+        />
         {isFreeOps && freeOpsDebrisReadout ? <span className="laser-dock__debris" data-testid="freeops-event-debris">{freeOpsDebrisReadout}</span> : null}
       </div>
 

@@ -44,6 +44,12 @@ const ORE_LABEL_FILL = 0xffffff
 const ORE_LABEL_HALO = 0x0a0a12
 const MAX_ORES = 60
 const FLASH_DURATION = 0.14
+// SSL-865, "You scan before you mine": seams arrive unknown until a scan sweeps over them.
+const SCAN_COOLDOWN = 1.4
+/** How far ahead of the ship one scan reads, as a share of the field width. */
+const SCAN_RANGE_SHARE = 0.85
+const SCAN_SWEEP_SPEED = 900
+const UNKNOWN_RIM = 0xd8d2c4
 // Laser stops this far below the surface — deep enough to reach all ore tiers (max depth 96) + buffer
 const LASER_MAX_DEPTH = 124
 // Laser reach per equipped drill tier — deliberately stops just short of the next tier's
@@ -218,6 +224,10 @@ export interface MiningControllerOptions {
   shipYNow?: () => number
   /** SSL-711: true while a catchable fragment is inside the collector beam, so CATCH can light up. */
   onCatchCue?: (ready: boolean) => void
+  /** SSL-865: seams start unknown and FIRE only cuts scanned ones. On unless set false. */
+  scanGate?: boolean
+  /** SSL-865: SCAN is ready again after its cooldown. */
+  onScanReady?: (ready: boolean) => void
   /** Skip hit-stop freezes when the player prefers reduced motion. */
   reducedMotion?: boolean
   /**
@@ -302,6 +312,14 @@ interface OreEntity {
   catchable?: boolean
   /** SSL-710: dark backing and mineral-coloured rim that lifts a seam off the soil. */
   halo?: Graphics | null
+  haloSize?: { w: number; h: number }
+  /** SSL-865: false until a scan reads this seam. Undefined (falling debris, no gate) counts as scanned. */
+  scanned?: boolean
+  /** The "?" drawn on an unknown seam, and its name pill held back until the scan. */
+  mark?: Text | null
+  hiddenLabel?: Text | null
+  /** Which art was showing before the seam was hidden, restored by the scan. */
+  revealArt?: { sprite: boolean; renderer: boolean; chip: boolean }
 }
 
 interface LaserEntity {
@@ -358,6 +376,11 @@ export class MiningController extends ScriptBehaviour {
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
+  private scanCooldown = 0
+  private scanWarnCooldown = 0
+  private scanReadyState = true
+  private scanSweep: { x: number; end: number } | null = null
+  private scanLine: Graphics | null = null
   private targetCueState = ''
   /** Local-dev QA multiplier (1 everywhere else), see lib/devMiningSpeed.ts. */
   private readonly devSpeed = devMiningSpeedMultiplier()
@@ -382,6 +405,9 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
+    // A rebuilt field (resize, rerun) starts with nothing lined up; clear any cue the last one left.
+    this.opts.onTargetCue?.(null, false)
+    this.opts.onOreNearby?.(false)
     const required = this.opts.requiredMinerals ?? []
     const lead = (this.opts.leadMinerals ?? []).filter(mineral => mineral.length > 0)
     const tier = this.opts.maxLaserTier ?? 3
@@ -439,6 +465,7 @@ export class MiningController extends ScriptBehaviour {
       if (ore.sprite) ore.sprite.x = Math.round(ore.go.transform.position.x)
       if (ore.chip) ore.chip.x = Math.round(ore.go.transform.position.x)
       if (ore.halo) ore.halo.x = Math.round(ore.go.transform.position.x)
+      if (ore.mark) ore.mark.x = Math.round(ore.go.transform.position.x)
       if (ore.label) {
         const halfLabel = ore.label.width * (ore.chip ? 0.58 : 0.5)
         const oreX = ore.go.transform.position.x
@@ -462,6 +489,8 @@ export class MiningController extends ScriptBehaviour {
         }
       }
     }
+
+    this.updateScan(dt)
 
     visibleChipLabels.sort((a, b) => a.center - b.center)
     const laneEnds: number[] = []
@@ -502,7 +531,7 @@ export class MiningController extends ScriptBehaviour {
     const heroes = this.ores.filter(o => o.go.active && o.hero)
     // SSL-710: a seam deeper than the laser reaches is never a target, so FIRE only lights up for a shot that can hit.
     const reach = this.laserFloor()
-    const seamTargets = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && o.go.transform.position.y - o.radius <= reach && (!needed || needed.size === 0 || needed.has(o.mineral)))
+    const seamTargets = this.ores.filter(o => o.go.active && o.fallSpeed === undefined && o.scanned !== false && o.go.transform.position.y - o.radius <= reach && (!needed || needed.size === 0 || needed.has(o.mineral)))
     const targetOres = heroes.length > 0 ? heroes : seamTargets
     const target = targetOres.reduce<OreEntity | null>((best, ore) => {
       if (!best) return ore
@@ -566,6 +595,85 @@ export class MiningController extends ScriptBehaviour {
       next.halo.scale.set(pulse)
       next.halo.alpha = 1
     }
+  }
+
+  /**
+   * SSL-865: the SCAN button. A sweep runs ahead of the ship along the ground and
+   * shows every seam it passes. Returns false while the scanner is still cooling.
+   */
+  scanAhead(): boolean {
+    if (this.scanCooldown > 0) return false
+    this.scanCooldown = SCAN_COOLDOWN
+    const x = this.currentShipX()
+    this.scanSweep = { x: x - 30, end: x + this.opts.worldWidth * SCAN_RANGE_SHARE }
+    return true
+  }
+
+  /**
+   * SSL-865: FIRE over an unknown seam. Nothing is fired (so no charge and no stray
+   * hit on debris above it); the seam says "Scan it first". Returns true when it did.
+   */
+  warnUnscanned(): boolean {
+    if (this.oreNearState) return false
+    const x = this.currentShipX()
+    const reach = this.laserFloor()
+    const ore = this.ores.find(o => o.go.active && o.scanned === false && Math.abs(o.go.transform.position.x - x) < HIT_TOLERANCE && o.go.transform.position.y - o.radius <= reach)
+    if (!ore) return false
+    if (this.scanWarnCooldown <= 0) {
+      this.scanWarnCooldown = 0.8
+      this.spawnPopup(ore.go.transform.position.x, (ore.chip ? ore.chip.y : ore.go.transform.position.y) - 24, 'Scan it first')
+    }
+    return true
+  }
+
+  private updateScan(dt: number): void {
+    this.scanCooldown = Math.max(0, this.scanCooldown - dt)
+    this.scanWarnCooldown = Math.max(0, this.scanWarnCooldown - dt)
+    const ready = this.scanCooldown === 0
+    if (ready !== this.scanReadyState) { this.scanReadyState = ready; this.opts.onScanReady?.(ready) }
+    const sweep = this.scanSweep
+    if (!this.scanLine) {
+      this.scanLine = new Graphics()
+      this.opts.container.addChild(this.scanLine)
+    }
+    const g = this.scanLine
+    g.clear()
+    if (!sweep) return
+    sweep.x += SCAN_SWEEP_SPEED * dt
+    const from = this.currentShipX() - 40
+    for (const ore of this.ores) {
+      const ox = ore.go.transform.position.x
+      if (ore.go.active && ore.scanned === false && ox >= from && ox <= sweep.x) this.revealOre(ore)
+    }
+    const top = (this.opts.surfaceY ?? SURFACE_Y) - 36
+    const bottom = this.laserFloor() + 8
+    const x = Math.round(Math.min(sweep.x, sweep.end))
+    g.rect(x - 2, top, 4, bottom - top).fill({ color: 0x7fe3f2, alpha: 0.85 })
+    g.rect(x - 14, top, 12, bottom - top).fill({ color: 0x7fe3f2, alpha: 0.18 })
+    if (sweep.x >= sweep.end) this.scanSweep = null
+  }
+
+  private paintHalo(halo: Graphics, size: { w: number; h: number }, rim: number, unknown: boolean): void {
+    halo.clear()
+    halo.ellipse(0, 0, size.w, size.h).fill({ color: 0x05080f, alpha: unknown ? 0.7 : 0.55 })
+    halo.ellipse(0, 0, size.w, size.h).stroke({ color: rim, width: 2.5, alpha: 0.95 })
+  }
+
+  /** The scan has read this seam: show its art, name and mineral rim. */
+  private revealOre(ore: OreEntity): void {
+    ore.scanned = true
+    if (ore.mark) { this.opts.container.removeChild(ore.mark); ore.mark.destroy(); ore.mark = null }
+    if (ore.hiddenLabel) {
+      ore.label = ore.hiddenLabel
+      ore.hiddenLabel = null
+    }
+    const art = ore.revealArt
+    if (art) {
+      if (ore.sprite) ore.sprite.visible = art.sprite
+      if (art.renderer) ore.renderer?.setShown(true)
+      if (ore.chip) ore.chip.visible = art.chip
+    }
+    if (ore.halo && ore.haloSize) this.paintHalo(ore.halo, ore.haloSize, mixHex(ore.mineralColor, 0xffffff, 0.35), false)
   }
 
   fireLaser(): void {
@@ -1063,13 +1171,40 @@ export class MiningController extends ScriptBehaviour {
 
     const haloW = Math.max(radius * 2, sprite ? sprite.width : 0) * 0.62 + 6
     const haloH = Math.max(radius * 2, sprite ? sprite.height : 0) * 0.5 + 6
-    halo.ellipse(0, 0, haloW, haloH).fill({ color: 0x05080f, alpha: 0.55 })
-    halo.ellipse(0, 0, haloW, haloH).stroke({ color: mixHex(mineralColor, 0xffffff, 0.35), width: 2.5, alpha: 0.95 })
+    const haloSize = { w: haloW, h: haloH }
+    const gated = this.opts.scanGate !== false
+    this.paintHalo(halo, haloSize, gated ? UNKNOWN_RIM : mixHex(mineralColor, 0xffffff, 0.35), gated)
     halo.x = Math.round(x)
     halo.y = y
+    // SSL-865: an unknown seam shows only its dark backing and a "?" until a scan reads it.
+    let shownLabel = label
+    let hiddenLabel: Text | null = null
+    let mark: Text | null = null
+    let revealArt: OreEntity['revealArt']
+    if (gated) {
+      revealArt = { sprite: sprite?.visible ?? false, renderer: !!renderer && this.opts.chipFill == null, chip: !!chip }
+      if (sprite) sprite.visible = false
+      renderer?.setShown(false)
+      if (chip) chip.visible = false
+      // The name pill waits for the scan; the "?" sits on the seam itself.
+      hiddenLabel = label
+      if (label) label.visible = false
+      shownLabel = null
+      mark = this.unknownText(x, y, Math.max(18, Math.round(haloH * 1.1)))
+    }
 
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, label, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null, halo })
+    this.ores.push({ go, renderer, sprite, label: shownLabel, labelBaseY: labelY, chip, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor, animTime: 0, variant: 0, frames: art ? null : frames ?? null, halo, haloSize, scanned: gated ? false : undefined, mark, hiddenLabel, revealArt })
+  }
+
+  /** The "?" an unknown seam shows, in the same ink as the seam names. */
+  private unknownText(x: number, y: number, fontSize: number): Text {
+    const t = new Text({ text: '?', style: { fontFamily: 'Oxanium, system-ui, sans-serif', fontSize, fontWeight: '800', fill: 0xf4f1ea, stroke: { color: 0x1a2a3c, width: 4, join: 'round' } } })
+    t.anchor.set(0.5)
+    t.x = Math.round(x)
+    t.y = y
+    this.opts.container.addChild(t)
+    return t
   }
 
   /** Faceted nodules, seams and crystals inside the soil, with a sym disc on the mass. */
@@ -1167,6 +1302,13 @@ export class MiningController extends ScriptBehaviour {
         if (maxTravelY < hitY - ore.radius || minTravelY > hitY + ore.radius) continue
         if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
 
+        // SSL-865: the laser cannot cut a seam nobody has scanned. No impact, no damage.
+        if (ore.scanned === false) {
+          laser.go.active = false
+          this.spawnPopup(ox, (ore.chip ? ore.chip.y : oy) - 18, 'Scan it first')
+          break
+        }
+
         ore.hp -= 1
         laser.go.active = false
         this.opts.onHit?.()
@@ -1241,6 +1383,11 @@ export class MiningController extends ScriptBehaviour {
       if (ore.halo) {
         this.opts.container.removeChild(ore.halo)
         ore.halo.destroy()
+      }
+      for (const extra of [ore.mark, ore.hiddenLabel]) {
+        if (!extra) continue
+        this.opts.container.removeChild(extra)
+        extra.destroy()
       }
       if (this.aimTarget === ore) this.aimTarget = null
       return false

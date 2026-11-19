@@ -1835,6 +1835,16 @@
           "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (today: Catch, for the Orionids shower). It lights up when pressing now would work; an early press is buffered."
         },
         {
+          "id": "scan-button",
+          "kind": "ui",
+          "parent": "mining-field",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "SSL-865, you scan before you mine: every run has SCAN (key E) beside FIRE, or one step further out beside CATCH in a shower run (MINING_SCAN in web/lib/mining/secondaryAction.ts). Seams start as '?'; a scan sweeps the ground ahead and shows them. FIRE only lights for and only cuts a scanned seam; over a '?' it fires nothing and says Scan it first."
+        },
+        {
           "id": "return-action",
           "kind": "button",
           "parent": "mining-field",

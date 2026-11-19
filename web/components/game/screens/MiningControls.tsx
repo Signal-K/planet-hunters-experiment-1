@@ -90,6 +90,7 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
       className={styles.fire}
       data-testid={testId}
       data-beacon="mining-fire-laser"
+      data-coach-target="mining-fire-laser"
       data-state={state}
       data-charging={charging || undefined}
       data-firing={firing || undefined}
@@ -135,8 +136,10 @@ const ACTION_ICONS: Record<string, ReactNode> = {
  * lib/mining/secondaryAction.ts gets it; `ready` lights it when pressing now
  * would work.
  */
-export function MiningActionButton({ action, label, keyLabel, ready, pressed, disabled, onPress, testId = 'mining-action-btn' }: {
+export function MiningActionButton({ action, label, keyLabel, ready, pressed, disabled, onPress, slot = 1, testId = 'mining-action-btn' }: {
   action: string
+  /** SSL-865: 2 sits one step further from FIRE, for SCAN beside CATCH in a shower run. */
+  slot?: 1 | 2
   label: string
   keyLabel?: string
   ready: boolean
@@ -151,6 +154,9 @@ export function MiningActionButton({ action, label, keyLabel, ready, pressed, di
       className={styles.action}
       data-testid={testId}
       data-action={action}
+      data-slot={slot === 2 ? '2' : undefined}
+      data-beacon={action === 'scan' ? 'mining-scan' : undefined}
+      data-coach-target={action === 'scan' ? 'mining-scan' : undefined}
       data-ready={ready || undefined}
       data-pressed={pressed || undefined}
       disabled={disabled}
