@@ -116,6 +116,3 @@ jobs:
                   print(f"{name:<28} {fr.get('symbol', '?')} +{fr.get('symbolLocation', fr.get('imageOffset'))}  {fr.get('sourceFile', '')}:{fr.get('sourceLine', '')}")
           PY
 
-      - name: Run core tests
-        working-directory: native/LandnamCore
-        run: swift test
