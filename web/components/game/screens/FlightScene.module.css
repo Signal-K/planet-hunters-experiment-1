@@ -176,6 +176,12 @@
 
 .routeName { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .routeEta { color: #b8e4ea; font-variant-numeric: tabular-nums; }
+.arrivalNote {
+  position: absolute; z-index: 6; left: 50%; bottom: 88px; transform: translateX(-50%);
+  width: min(720px, calc(100% - 32px)); margin: 0; padding: 8px 16px;
+  color: var(--ln-map-sun); background: var(--ln-blueprint-ink); border-radius: 14px;
+  font: 600 14px/1.4 var(--ln-font-body); text-align: center;
+}
 
 .exit,
 .boost {
@@ -197,8 +203,10 @@
 
 /* Phones held upright: the route reads on its own row above Back and Boost. */
 @media (orientation: portrait) and (max-width: 560px) {
+  .arrivalNote { bottom: 160px; }
   .controls { flex-wrap: wrap; border-radius: 24px; padding: 10px; }
   .route { order: -1; flex-basis: 100%; padding: 2px 6px 4px; }
+  .routeName { flex: 0 1 130px; white-space: normal; overflow: visible; line-height: 1.3; }
   .exit { flex: 0 0 auto; }
   .boost { flex: 1 1 auto; }
 }

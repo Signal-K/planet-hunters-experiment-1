@@ -172,9 +172,10 @@ export default function TransitScreen({
         </div>
       </div>
 
-      {/* SSL-716: one two-tone flight bar. Where you are going and how long is left, Back on the left, Boost (then Arrive) as the one cream button. */}
+      {returning && <p className={styles.arrivalNote}>Next: land on Earth and settle cargo. Flight continues while you view Base.</p>}
+      {/* The navigation button views Base without changing the rocket's flight. */}
       <div className={styles.controls}>
-        <button type="button" className={styles.exit} onClick={onBack}>‹ Back</button>
+        <button type="button" className={styles.exit} data-testid="transit-base-btn" onClick={onBack}>View Base</button>
         <div className={styles.route}>
           <span className={styles.routeName} data-testid="transit-destination">{returning ? 'Returning to Earth' : `To ${target.name}`}</span>
           <div

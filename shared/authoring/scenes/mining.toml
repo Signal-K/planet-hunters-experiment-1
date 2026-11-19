@@ -91,7 +91,7 @@ kind = "button"
 parent = "mining-field"
 layout = "host"
 mechanics = ["delivery"]
-note = "Progress pill between the pad and FIRE (above FIRE on phone portrait). Turns solid when the order is filled; tap to finish mining and start the delivery or home leg."
+note = "Return to Earth (or Fly to the delivery site) in the mission menu starts travel with the current cargo. The progress pill also names that action when ready. View Base pauses mining without sending the rocket home."
 
 [[objects]]
 id = "training-guide"

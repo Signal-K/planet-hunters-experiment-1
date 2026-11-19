@@ -42,9 +42,15 @@ struct TransitScreen: View {
                 ZStack(alignment: .topLeading) {
                     FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
                     VStack(spacing: 24) {
+                        Text(store.player.returningToEarth == true ? "RETURNING TO EARTH" : "TO \(store.target?.name ?? "DESTINATION")")
+                            .font(AppFont.display(16)).foregroundStyle(Theme.tokenMapSun)
+                        if store.player.returningToEarth == true {
+                            Text("Land on Earth to settle cargo. Viewing Base keeps the flight running.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.tokenMapSun).multilineTextAlignment(.center)
+                        }
                         FlightProgressBar(value: p)
                         HStack(spacing: 8) {
-                            Button("BACK") { store.go(.hub) }.frame(minWidth: 44, minHeight: 44)
+                            Button("VIEW BASE") { store.go(.hub) }.frame(minWidth: 44, minHeight: 44).accessibilityIdentifier("transit-base-btn")
                             Button(p >= 1 ? "ARRIVE" : "BOOST") {
                                 if p >= 1 { store.transitArrived() }
                                 else if store.player.arrivalAt == nil { boost += 0.14 }
@@ -110,7 +116,9 @@ struct MiningScreen: View {
     @State private var showGuide = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
+    private var returnLabel: String { store.mission?.deliveryTargetId == nil ? "Return to Earth" : "Deliver cargo" }
+
+    /// SSL-411: Return stays tappable and says what is still missing.
     private func handleReturn(_ f: MiningField) {
         // SSL-651: a shower run whose fragments are caught (launch plus mined) is filled; leaving early pays it.
         let showerFilled = store.mission?.id == OrionidsRun.missionId && OrionidsRun.filled(store.player)
@@ -144,6 +152,8 @@ struct MiningScreen: View {
                 if showGuide {
                     MiningGuide(
                         isOrionids: store.mission?.id == OrionidsRun.missionId,
+                        returnLabel: returnLabel,
+                        onReturn: { if let field { showGuide = false; handleReturn(field) } },
                         onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
                         onScrub: { showGuide = false; confirmingScrub = true },
                         onClose: { showGuide = false }
@@ -192,7 +202,7 @@ struct MiningScreen: View {
         let showerRun = store.mission?.id == OrionidsRun.missionId
         let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
         let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
+            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue, returnLabel: returnLabel)
                 .onLongPressGesture { showGuide = true }
         }
         .frame(maxWidth: 220)
@@ -318,6 +328,7 @@ struct MiningActionRow: View {
     var targetCue: String? = nil
     /// Shower run: the order reads caught fragments (launch plus mined) over the full goal, like web.
     var showerCaught: Int? = nil
+    var returnLabel = "Return to Earth"
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -332,6 +343,7 @@ struct MiningActionRow: View {
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
                             .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(1)
                     }
+                    if field.isComplete { Text(returnLabel.uppercased()).font(AppFont.display(14)).foregroundStyle(Glass.ink) }
                     if let targetCue {
                         Text(targetCue).font(AppFont.display(14)).foregroundStyle(Glass.cyan).lineLimit(1)
                     }
@@ -347,7 +359,7 @@ struct MiningActionRow: View {
                 .glowPanel(RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
+            .accessibilityLabel("\(returnLabel). Order. Laser charge \(field.charge) of \(field.chargeCap).")
             .accessibilityAction(named: "Scrub mission", onScrub)
             if showFire {
             Button(action: onFire) {
@@ -386,7 +398,7 @@ struct OrionidsRunObjective: View {
                     Text("\(caught) / \(OrionidsRun.fragmentGoal)").font(AppFont.display(16)).monospacedDigit().foregroundStyle(Glass.cyan)
                 }
                 ProgressTrack(value: Double(caught) / Double(OrionidsRun.fragmentGoal))
-                Text(caught >= OrionidsRun.fragmentGoal ? "FRAGMENTS COMPLETE · RETURN" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
+                Text(caught >= OrionidsRun.fragmentGoal ? "COMPLETE · RETURN TO EARTH" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
                     .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(2)
             }
             .padding(12)
@@ -452,6 +464,8 @@ struct LaunchSequenceScreen: View {
 struct MiningGuide: View {
     @Environment(\.flatLayout) private var flat
     var isOrionids = false
+    var returnLabel = "Return to Earth"
+    var onReturn: (() -> Void)? = nil
     let onRecharge: () -> Void
     let onScrub: () -> Void
     let onClose: () -> Void
@@ -462,12 +476,15 @@ struct MiningGuide: View {
         ("Order", "The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty."),
         ("Scroll", "The dock arrows change how fast the ground moves. They settle back to a steady crawl."),
         ("Inventory", "The order lines show collected against required. Fill every line to unlock return."),
-        ("Return home", "Return for recovery. Payout unlocks after landing."),
+        ("Return to Earth", "Use Return to Earth in this menu to start the flight with your cargo. Land on Earth to settle the haul."),
     ]
 
     private var items: [(String, String)] {
-        guard isOrionids else { return Self.baseItems }
         var items = Self.baseItems
+        if returnLabel != "Return to Earth", let index = items.firstIndex(where: { $0.0 == "Return to Earth" }) {
+            items[index] = (returnLabel, "Starts the delivery flight with your cargo. Settle the delivery on arrival.")
+        }
+        guard isOrionids else { return items }
         items.insert(("Catch Orionid debris", "Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
@@ -485,6 +502,7 @@ struct MiningGuide: View {
 
     private var buttons: some View {
         VStack(spacing: SetStyle.gap) {
+            if let onReturn { SetButton(title: returnLabel, solid: true, fill: true, action: onReturn).accessibilityIdentifier("mining-return-btn") }
             SetButton(title: "Recharge laser", solid: true, fill: true, action: onRecharge)
             SetButton(title: "Scrub mission", color: SetStyle.danger, fill: true, action: onScrub)
         }.padding(16)
@@ -495,7 +513,7 @@ struct MiningGuide: View {
             let wide = geo.size.width > geo.size.height
             VStack(spacing: 0) {
                 HStack {
-                    Text("Controls".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
+                    Text("MISSION MENU").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark").font(.system(size: 18, weight: .heavy)).foregroundStyle(SetStyle.ink)
