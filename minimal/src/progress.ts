@@ -65,7 +65,9 @@ export function resultFor(chapter: Chapter, cargo: Record<string, number>): RunR
     case 'materials-haul':
       return { ...none, stored: cargo, outcome: 'Stored at home.' }
     default:
-      return { ...none, outcome: mission?.programReward?.outcome ?? 'Done.' }
+      // Landnam's program outcome reads "Space telescope online · daily instrument
+      // feed unlocked": the home screen keeps the first clause.
+      return { ...none, outcome: shortOutcome(mission?.programReward?.outcome) }
   }
 }
 
@@ -89,4 +91,10 @@ export function missingMaterials(chapter: Chapter, stash: Record<string, number>
     if (short > 0) missing[id] = short
   }
   return missing
+}
+
+function shortOutcome(text?: string): string {
+  const first = text?.split(' · ')[0]?.trim()
+  if (!first) return 'Done.'
+  return /[.!]$/.test(first) ? first : `${first}.`
 }
