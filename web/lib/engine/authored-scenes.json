@@ -2405,6 +2405,52 @@
       ]
     },
     {
+      "id": "surface-silo",
+      "type": "base",
+      "route": "surface-silo",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/hub/SurfaceSiloPanel.tsx"
+        ],
+        "native": [
+          "native/App/Screens/HubScreen.swift"
+        ]
+      },
+      "objects": [
+        {
+          "id": "contents",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Full contents page: level, capacity and every mineral, split between silo and overflow."
+        },
+        {
+          "id": "back",
+          "kind": "button",
+          "parent": "contents",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Return to the Base above ground."
+        },
+        {
+          "id": "sell",
+          "kind": "button",
+          "parent": "contents",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Open the Exchange without changing the held ore."
+        }
+      ]
+    },
+    {
       "id": "targets",
       "type": "menu",
       "route": "targets",

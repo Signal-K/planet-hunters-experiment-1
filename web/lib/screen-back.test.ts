@@ -62,6 +62,10 @@ describe('logical scene back', () => {
     })).toBe('hub')
   })
 
+  it('Surface Silo returns above ground even when the remembered host is the Launchpad', () => {
+    expect(resolveLogicalBack({ current: 'surface-silo', fallback: 'launchpad', lastHost: 'launchpad', hangarReturn: 'launchpad' })).toBe('hub')
+  })
+
   it('mission setup walks Rocket → Targets → Missions, then the host', () => {
     expect(resolveLogicalBack({
       current: 'rocket-buy',

@@ -24,7 +24,7 @@ import { RocketRollout } from '@/components/game/hub/RocketRollout'
 import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
-import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
+import { surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
 import { isGroundTelescopeId } from '@/lib/systems/InstrumentFeedSystem'
 import { AnnexStructures, UnplacedTray } from '@/components/game/hub/AnnexStructures'
@@ -179,7 +179,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
   const [servicingPad, setServicingPad] = useState(false)
-  const [siloOpen, setSiloOpen] = useState(false)
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
@@ -425,7 +424,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         w: 62,
         // The Surface Silo stands above ground: it opens its own contents
         // here. The Mineral Vault underground is a separate building.
-        onClick: () => setSiloOpen(true),
+        onClick: () => onOpenScene('surface-silo'),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -739,16 +738,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           {!subsurface && <div id="hub-top-right" className={layoutStyles.topRight} />}
         </div>
       </div>
-
-      {siloOpen && !subsurface && (
-        <SurfaceSiloPanel
-          stash={player.stash}
-          buildingLevels={player.buildingLevels}
-          subsurfaceBuilt={player.subsurfaceBuilt}
-          onSell={player.placed?.includes('market') && onOpenMarket ? () => { setSiloOpen(false); onOpenMarket() } : undefined}
-          onClose={() => setSiloOpen(false)}
-        />
-      )}
 
       {servicingPad && onServiceLaunchpad && (
         <ActionConfirmBar

@@ -49,5 +49,6 @@ export function entryScreenForPath(pathname: string, placed: readonly string[], 
   // A returning player who opens the intro link sees it (as Resume operations) instead of the saved screen.
   if (pathname === '/game/intro') return 'intro'
   if (pathname === '/game/launchpad' && placed.includes('launchpad')) return 'launchpad'
+  if (pathname === '/game/surface-silo' && placed.includes('surface-silo')) return 'surface-silo'
   return trayScreenFromPath(pathname)
 }

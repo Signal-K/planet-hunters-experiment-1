@@ -74,6 +74,7 @@ export const GAME_ROUTES = [
   // Home
   { path: '/game/hub', screen: 'hub', surface: 'home' },
   { path: '/game/hub-subsurface', screen: 'hub-subsurface', surface: 'home' },
+  { path: '/game/surface-silo', screen: 'surface-silo', surface: 'home' },
   { path: '/game/build', screen: 'build', surface: 'home' },
   { path: '/game/market', screen: 'market', surface: 'home' },
 

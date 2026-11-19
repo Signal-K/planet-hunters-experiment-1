@@ -855,6 +855,16 @@
    "objective": "Aim the fixed lunar camera and confirm impacts in its field of view.",
    "complete": "Finish the one-minute watch; results show count and best sighting. Reload keeps confirmed sightings in the isolated fixture save.",
    "nativeDeferred": "iOS deferred until requested: notes/decisions/Sky events follow the real sky (2026-11-11).md"
+  },
+  {
+   "id": "surface-silo",
+   "name": "Surface Silo contents",
+   "flow": "core-loop",
+   "web": "ui-surface-silo",
+   "native": "surface-silo-live",
+   "tickets": [
+    "SSL-857"
+   ]
   }
  ],
  "missions": [

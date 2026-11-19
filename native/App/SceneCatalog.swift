@@ -308,6 +308,15 @@ enum SceneCatalog {
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
+        scene("surface-silo-live", 874) {
+            SurfaceSiloScreen().environment(GameStore(state: {
+                var gs = basePlayer(); gs.screen = .surfaceSilo
+                gs.player.placed = ["launchpad", "surface-silo", "market"]
+                gs.player.stash = ["iron": 18, "aluminium": 9, "silicon": 8, "nickel": 6, "carbon": 3, "leonid_debris": 1]
+                gs.player.subsurfaceBuilt = ["mineral-vault"]
+                return gs
+            }()))
+        },
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-phone", 874) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-landscape", 402, w: 874) { IntroScreen().environment(GameStore(state: GameState())) },

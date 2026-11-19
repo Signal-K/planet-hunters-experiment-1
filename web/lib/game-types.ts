@@ -90,6 +90,7 @@ export type Screen =
   | 'build'
   | 'hub'
   | 'hub-subsurface'
+  | 'surface-silo'
   | 'missions'
   | 'tess-discovery'
   | 'targets'
@@ -129,6 +130,7 @@ export type Screen =
 export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
   'hub-subsurface',
+  'surface-silo',
   'launchpad',
   'flight',
   'landing',

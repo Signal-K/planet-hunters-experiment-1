@@ -10,6 +10,7 @@ const SCREEN_LIST = {
   build: true,
   hub: true,
   'hub-subsurface': true,
+  'surface-silo': true,
   missions: true,
   'tess-discovery': true,
   targets: true,

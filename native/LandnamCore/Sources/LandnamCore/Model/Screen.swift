@@ -5,6 +5,7 @@ import Foundation
 public enum Screen: String, CaseIterable, Sendable {
     case intro, build, hub
     case hubSubsurface = "hub-subsurface"
+    case surfaceSilo = "surface-silo"
     case missions, targets, fab, landing, mining, delivery, debrief
     /// Web ids since SSL-817: the TESS screen is `tess-discovery`, the rocket flight is `flight`. Older saves say `galaxy` / `transit`.
     case galaxy = "tess-discovery"
@@ -24,7 +25,7 @@ public enum Screen: String, CaseIterable, Sendable {
     /// that keep the boxed card treatment (mirrors `LOCATION_SCREENS` on web).
     public var isLocation: Bool {
         switch self {
-        case .hub, .hubSubsurface, .launchpad, .transit, .landing, .mining, .roverSurvey,
+        case .hub, .hubSubsurface, .surfaceSilo, .launchpad, .transit, .landing, .mining, .roverSurvey,
              .delivery, .hangar, .galaxy, .market,
              .asteroidDiscovery, .saturnStormSearch, .instrumentHub:
             return true

@@ -23,6 +23,7 @@ import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
+import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
@@ -444,6 +445,15 @@ function ScreenBody({
       )
       return hub
     }
+
+    case 'surface-silo':
+      return <SurfaceSiloPanel
+        stash={game.player.stash}
+        buildingLevels={game.player.buildingLevels}
+        subsurfaceBuilt={game.player.subsurfaceBuilt}
+        onClose={() => game.go('hub')}
+        onSell={game.player.placed.includes('market') ? () => game.go('market') : undefined}
+      />
 
     case 'mission-history':
       // Mission Log is its own page with its own panel, not a tray over the Base.

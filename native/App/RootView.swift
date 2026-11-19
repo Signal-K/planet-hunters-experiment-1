@@ -27,6 +27,7 @@ struct RootView: View {
             case nil: WelcomeScreen()
             case .intro: IntroScreen()
             case .hub, .hubSubsurface: HubScreen()
+            case .surfaceSilo: SurfaceSiloScreen()
             case .missionHistory: MissionHistoryScreen()
             case .narrativeLedger: NarrativeLedgerScreen()
             case .communityResearch: CommunityResearchScreen()

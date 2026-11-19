@@ -17,6 +17,7 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   intro: 'hub',
   hub: 'hub',
   'hub-subsurface': 'hub',
+  'surface-silo': 'hub',
   launchpad: 'hub',
   hangar: 'hub',
   missions: 'launchpad',
@@ -60,7 +61,7 @@ export function resolveLogicalBack(input: {
   if (current === 'rocket-buy') return 'targets'
   if (current === 'fab' && fallback === 'rocket-buy') return 'rocket-buy'
 
-  if (current === 'launchpad' || current === 'hub-subsurface') {
+  if (current === 'launchpad' || current === 'hub-subsurface' || current === 'surface-silo') {
     return LOGICAL_BACK[current]
   }
 

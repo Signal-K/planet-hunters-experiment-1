@@ -201,6 +201,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
       { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
       { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
+      { key: 'ui-surface-silo', label: 'Surface Silo contents', hint: 'Full contents page with mixed ore, overflow and Exchange access', stage: 'free-ops' },
       { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
       { key: 'hub-pad-worn', label: 'Base: launchpad needs service', hint: 'Level 1 pad after 10 launches: tap it to service for F1M, or launches stay held (SSL-693)', stage: 'free-ops' },
@@ -1119,6 +1120,13 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
+      }
+
+    case 'ui-surface-silo':
+      return {
+        screen: 'surface-silo',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'surface-silo', 'market'], stash: { iron: 18, aluminium: 9, silicon: 8, nickel: 6, carbon: 3, leonid_debris: 1 }, subsurfaceBuilt: ['mineral-vault'] },
+        tutorial: false, doneSteps: TRAINING_DONE, missionId: null, targetId: null, lastCargo: null, popup: null,
       }
 
     case 'ui-market':

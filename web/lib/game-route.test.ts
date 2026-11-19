@@ -48,6 +48,10 @@ describe('entryScreenForPath (SSL-476)', () => {
   it('does not open a Launchpad the player has not built', () => {
     expect(entryScreenForPath('/game/launchpad', [])).toBeNull()
   })
+  it('opens the full silo page on a cold link only when that silo is built', () => {
+    expect(entryScreenForPath('/game/surface-silo', ['surface-silo'])).toBe('surface-silo')
+    expect(entryScreenForPath('/game/surface-silo', [])).toBeNull()
+  })
   it('keeps Base and the tray routes pinned', () => {
     expect(entryScreenForPath('/game/hub', [])).toBe('hub')
     expect(entryScreenForPath('/game/hub-subsurface', [])).toBe('hub-subsurface')
