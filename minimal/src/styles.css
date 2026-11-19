@@ -37,16 +37,19 @@ p { margin: 0; color: var(--muted); }
 .cta:disabled { opacity: 0.55; cursor: default; }
 .back { align-self: flex-start; min-height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--panel); color: var(--cream); font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: 0.12em; cursor: pointer; }
 
-.route-head { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.route-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-top: 8px; }
+.route-title { display: flex; flex-direction: column; gap: 4px; }
+.money { flex: none; min-height: 44px; display: flex; align-items: center; padding: 0 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); color: var(--gold); font-weight: 700; font-size: 16px; }
 .route { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; flex: 1; }
 .stop { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; position: relative; }
 .stop:not(:last-child)::after { content: ''; position: absolute; left: 21px; top: 56px; bottom: -8px; width: 2px; background: var(--line); }
-.dot { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; border: 2px solid var(--line); color: var(--muted); background: var(--panel); }
+.dot { flex: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid var(--line); color: var(--muted); background: var(--panel); }
 .stop-text { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
 .stop-text strong { font-size: 18px; }
 .stop-text span { font-size: 14px; color: var(--muted); }
 .stop.now .dot { border-color: var(--cyan); color: var(--ink); background: var(--cyan); }
 .stop.done .dot { border-color: var(--cyan); color: var(--cyan); }
+.stop.done .dot::after { content: '✓'; margin-left: 2px; font-size: 14px; }
 .stop.locked { opacity: 0.6; }
 
 .dock { position: sticky; bottom: max(16px, env(safe-area-inset-bottom)); margin-top: auto; }

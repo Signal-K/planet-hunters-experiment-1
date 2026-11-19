@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { currentPilot, SIGN_IN_URL } from './auth'
 import { CHAPTERS, francs, mineralName, type Chapter } from './chapters'
+import { readSharedSave } from './sharedSave'
 
 type View = { kind: 'route' } | { kind: 'briefing'; chapter: Chapter }
 
@@ -8,7 +9,6 @@ type View = { kind: 'route' } | { kind: 'briefing'; chapter: Chapter }
 export function App() {
   const pilot = currentPilot()
   const [view, setView] = useState<View>({ kind: 'route' })
-  const reached = 1 // chapter progress lands with the first playable slice
 
   if (!pilot) {
     return (
@@ -16,7 +16,7 @@ export function App() {
         <section className="panel">
           <p className="eyebrow">LANDNAM MINIMAL</p>
           <h1>Run a space agency, one step at a time.</h1>
-          <p>Sign in to start. Your progress is shared with Landnam.</p>
+          <p>Sign in with your Landnam account. Your francs come with you.</p>
           <a className="cta" href={SIGN_IN_URL}>SIGN IN TO PLAY</a>
         </section>
       </main>
@@ -25,12 +25,19 @@ export function App() {
 
   if (view.kind === 'briefing') return <Briefing chapter={view.chapter} onBack={() => setView({ kind: 'route' })} />
 
+  // Shared with Landnam: francs, and whether its onboarding is done. Finishing it
+  // there counts as chapter 1 (First light) here. Chapter progress itself is Minimal's.
+  const save = readSharedSave(pilot.id)
+  const reached = save.onboardingDone ? 2 : 1
   const next = CHAPTERS[reached - 1]
   return (
     <main className="screen">
       <header className="route-head">
-        <p className="eyebrow">LANDNAM MINIMAL</p>
-        <h1>Chapter {next.number} of {CHAPTERS.length}</h1>
+        <div className="route-title">
+          <p className="eyebrow">LANDNAM MINIMAL</p>
+          <h1>Chapter {next.number} of {CHAPTERS.length}</h1>
+        </div>
+        <span className="money" aria-label="Your francs">{francs(save.francs)}</span>
       </header>
       <ol className="route" aria-label="Chapters">
         {CHAPTERS.map(chapter => {
@@ -40,7 +47,7 @@ export function App() {
               <span className="dot" aria-hidden>{chapter.number}</span>
               <span className="stop-text">
                 <strong>{chapter.name}</strong>
-                <span>{state === 'locked' ? `Opens after chapter ${chapter.number - 1}` : chapter.goal}</span>
+                <span>{state === 'locked' ? `Opens after chapter ${chapter.number - 1}` : state === 'done' && chapter.number === 1 && save.onboardingDone ? 'Done in Landnam' : chapter.goal}</span>
               </span>
             </li>
           )

@@ -21,8 +21,11 @@ anyone can jump into it, it is fast, and it is clear what to do.
   built statically and served at **playlandnam.space/minimal**.
 - It is a **standalone game with the same mechanics, research, narrative and missions** as
   Landnam. It reuses Landnam's data and rules; it does not invent its own economy or story.
-- It shares Landnam's sign-in and backend, so research and progress made there count the
-  same as in Landnam.
+- It shares Landnam's sign-in and backend, so research made there counts the same as in Landnam.
+- From the player's Landnam save it shares exactly two things: **their francs**, and **whether
+  they have finished Landnam's onboarding**. A player who finished onboarding in Landnam starts
+  Minimal with chapter 1 done. Chapter progress is Minimal's own.
+- **Web only for now.** No iOS build of Minimal.
 
 ## Consequences
 
@@ -34,6 +37,5 @@ anyone can jump into it, it is fast, and it is clear what to do.
 
 ## Open
 
-- Whether Minimal and Landnam share one save (one agency, two ways in) or Minimal keeps its own
-  progress while research counts for both.
-- Web only for now, or iOS as well.
+- Writing back: francs earned in Minimal, and chapter 1 counting as Landnam's onboarding, go
+  through Landnam's save sync and offline outbox once chapter 1 is playable.
