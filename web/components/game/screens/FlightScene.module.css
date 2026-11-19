@@ -3,7 +3,9 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: var(--ln-world-night-top);
+  background-color: var(--ln-world-night-top);
+  background-image: radial-gradient(circle at 20% 30%, var(--ln-map-sun) 1px, transparent 1.5px), radial-gradient(circle at 80% 70%, var(--ln-cyan) 1px, transparent 1.5px);
+  background-size: 160px 120px, 230px 190px;
   color: var(--ln-world-outline);
 }
 

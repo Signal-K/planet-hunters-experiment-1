@@ -23,6 +23,7 @@ import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
+import { FLIGHT_ASSET_URLS } from '@/lib/offline/flight-assets'
 import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
@@ -190,7 +191,7 @@ function ScreenBody({
           .map(entry => entry.name)
           .filter(url => !seen.has(url))
           .filter(url => { try { return new URL(url).pathname.startsWith('/_next/static/') } catch { return false } })
-        if (urls.length > 0) controller.postMessage({ type: 'CACHE_URLS', urls })
+        controller.postMessage({ type: 'CACHE_URLS', urls: [...FLIGHT_ASSET_URLS, ...urls] })
       })
     }
     const idleWindow = window as Window & {
