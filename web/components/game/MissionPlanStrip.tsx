@@ -201,7 +201,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
           </div>
           <ul className={styles.mapList}>
             {targets.map(t => (
-              <li key={t.id}><button type="button" data-current={t.id === target.id || undefined} onClick={() => { game.onPickTarget(t.id); setSheet(null) }}>
+              <li key={t.id}><button type="button" aria-pressed={t.id === target.id} data-current={t.id === target.id || undefined} onClick={() => { game.onPickTarget(t.id); setSheet(null) }}>
                 <strong>{t.name}</strong>
                 <span>{t.type} · orbit {t.orbit} · {t.minerals.map(id => game.catalog.minerals[id]?.name ?? id).join(', ')}</span>
               </button></li>
