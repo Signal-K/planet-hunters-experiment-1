@@ -2,7 +2,7 @@
 // for a body, framed as a deposit, an outpost or a launch. Read-only; nothing
 // here reacts to input. Loaded lazily (see scenes.tsx): the engine is large.
 import { useEffect, useRef } from 'react'
-import { createMinimalScene, type MinimalSceneHandle, type MinimalSceneKind, type ResourceKey } from '@takeon/engine'
+import { createMinimalScene, type MinimalBase, type MinimalSceneHandle, type MinimalSceneKind, type ResourceKey } from '@takeon/engine'
 import type { Target } from '@landnam/lib/data/types'
 import { destinationBody, HOME_SEED, homeBody } from './takeonWorlds'
 
@@ -11,7 +11,9 @@ export type Framing = { portrait: Frame; landscape: Frame }
 
 const seedOf = (id: string) => [...id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7)
 
-export function TakeonScene({ kind, target, highlight = [], framing, rover, autoLaunch, onReady, className }: {
+export function TakeonScene({ kind, target, highlight = [], framing, rover, autoLaunch, base, onReady, className }: {
+  /** Home only: the player's base, drawn with TakeOn's kit (KES-533). */
+  base?: MinimalBase
   kind: MinimalSceneKind
   rover?: boolean
   autoLaunch?: boolean
@@ -28,6 +30,7 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, auto
   readyRef.current = onReady
   const highlightKey = highlight.join(',')
   const framingKey = JSON.stringify(framing)
+  const baseKey = base ? JSON.stringify(base) : ''
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -43,6 +46,7 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, auto
       drift: !reduced,
       rover,
       autoLaunch,
+      base: !target && baseKey ? (JSON.parse(baseKey) as MinimalBase) : undefined,
       // Dev only: ?elev=40 tries another camera angle.
       ...(import.meta.env.DEV && new URLSearchParams(location.search).get('elev') ? { elevation: Number(new URLSearchParams(location.search).get('elev')) } : {}),
     })
@@ -69,7 +73,7 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, auto
       readyRef.current?.(null)
       scene.destroy()
     }
-  }, [kind, target, highlightKey, framingKey, rover, autoLaunch])
+  }, [kind, target, highlightKey, framingKey, rover, autoLaunch, baseKey])
 
   return <canvas ref={canvasRef} className={className} aria-hidden data-takeon-scene={kind} />
 }

@@ -23,8 +23,9 @@ import type { Mission, Target } from '@landnam/lib/data/types'
  * - build: carry stored materials out and raise the structure on site.
  * - deploy: put a satellite or probe in orbit.
  * - survey: fly out and scan the body.
+ * - found: break ground at home (clear, flatten, agency, launch pad).
  */
-export type Verb = 'mine' | 'deliver' | 'build' | 'deploy' | 'survey'
+export type Verb = 'mine' | 'deliver' | 'build' | 'deploy' | 'survey' | 'found'
 
 /** Landnam's mission types, as the storyboard and the briefing name them. */
 export type MissionType =
@@ -37,6 +38,7 @@ export type MissionType =
   | 'materials-haul'
   | 'construction'
   | 'survey-flight'
+  | 'founding'
 
 export interface Chapter {
   number: number
@@ -49,6 +51,8 @@ export interface Chapter {
   target?: Target
   /** Second stop for a delivery run. */
   deliveryTarget?: Target
+  /** The building this chapter adds to the home base (a TakeOn kit asset id, KES-533). */
+  builds?: string
 }
 
 const nearest = (mission: Mission | undefined): Target | undefined =>
@@ -100,15 +104,17 @@ const haul = runtimeMission(m => m.id === RESOURCE_FOCUS_MISSION_ID)
 const surveyFlight = runtimeMission(m => m.id.startsWith('exo-survey-'))
 
 export const CHAPTERS: Chapter[] = [
-  { number: 1, name: 'First light', goal: 'Fly out, mine with the laser, come home.', teaches: 'Fly and fire', type: 'client-contract', verb: 'mine', mission: contract, target: nearest(contract) },
-  { number: 2, name: 'First sale', goal: 'Mine what you like and sell it at market.', teaches: 'Francs', type: 'self-directed', verb: 'mine', mission: selfDirected, target: nearest(selfDirected) },
-  { number: 3, name: 'Courier', goal: 'Mine an order, then drop it at a second world.', teaches: 'Deliveries', type: 'delivery', verb: 'deliver', mission: delivery, target: nearest(delivery), deliveryTarget: TARGETS.find(t => t.id === delivery?.deliveryTargetId) },
-  { number: 4, name: 'Eyes on the sky', goal: 'Launch a space telescope into orbit.', teaches: 'Satellites', type: 'satellite', verb: 'deploy', mission: telescope, target: runtimeTarget(telescope?.targetId) },
-  { number: 5, name: 'Probe', goal: 'Leave a survey probe in orbit to map a world.', teaches: 'Probes', type: 'survey-probe', verb: 'deploy', mission: probe, target: runtimeTarget(probe?.targetId) },
-  { number: 6, name: 'Shower', goal: 'Fly into the meteor shower and catch fragments.', teaches: 'Sky events', type: 'shower-run', verb: 'mine', mission: showerRun, target: shower && showerTarget(shower.id) },
-  { number: 7, name: 'Stockpile', goal: 'Haul materials home and store them for building.', teaches: 'Storage', type: 'materials-haul', verb: 'mine', mission: haul, target: nearest(haul) },
-  { number: 8, name: 'Build', goal: 'Carry your materials out and raise a structure.', teaches: 'Construction', type: 'construction', verb: 'build', mission: build, target: nearest(build) },
-  { number: 9, name: 'Follow-up', goal: 'Fly to the world your satellite found and scan it.', teaches: 'Research', type: 'survey-flight', verb: 'survey', mission: surveyFlight, target: runtimeTarget(surveyFlight?.targetId) },
+  // 0. Before any flight the agency needs a home: the base is founded in front of you.
+  { number: 0, name: 'Groundbreaking', goal: 'Clear the ground, level it, raise your agency and its launch pad.', teaches: 'Your base', type: 'founding', verb: 'found' },
+  { number: 1, name: 'First light', goal: 'Fly out, mine with the laser, come home.', teaches: 'Fly and fire', type: 'client-contract', verb: 'mine', mission: contract, target: nearest(contract), builds: 'solar-farm' },
+  { number: 2, name: 'First sale', goal: 'Mine what you like and sell it at market.', teaches: 'Francs', type: 'self-directed', verb: 'mine', mission: selfDirected, target: nearest(selfDirected), builds: 'warehouse' },
+  { number: 3, name: 'Courier', goal: 'Mine an order, then drop it at a second world.', teaches: 'Deliveries', type: 'delivery', verb: 'deliver', mission: delivery, target: nearest(delivery), deliveryTarget: TARGETS.find(t => t.id === delivery?.deliveryTargetId), builds: 'fuel-depot' },
+  { number: 4, name: 'Eyes on the sky', goal: 'Launch a space telescope into orbit.', teaches: 'Satellites', type: 'satellite', verb: 'deploy', mission: telescope, target: runtimeTarget(telescope?.targetId), builds: 'comms-dish' },
+  { number: 5, name: 'Probe', goal: 'Leave a survey probe in orbit to map a world.', teaches: 'Probes', type: 'survey-probe', verb: 'deploy', mission: probe, target: runtimeTarget(probe?.targetId), builds: 'hangar' },
+  { number: 6, name: 'Shower', goal: 'Fly into the meteor shower and catch fragments.', teaches: 'Sky events', type: 'shower-run', verb: 'mine', mission: showerRun, target: shower && showerTarget(shower.id), builds: 'observatory' },
+  { number: 7, name: 'Stockpile', goal: 'Haul materials home and store them for building.', teaches: 'Storage', type: 'materials-haul', verb: 'mine', mission: haul, target: nearest(haul), builds: 'silo' },
+  { number: 8, name: 'Build', goal: 'Carry your materials out and raise a structure.', teaches: 'Construction', type: 'construction', verb: 'build', mission: build, target: nearest(build), builds: 'assembly-hall' },
+  { number: 9, name: 'Follow-up', goal: 'Fly to the world your satellite found and scan it.', teaches: 'Research', type: 'survey-flight', verb: 'survey', mission: surveyFlight, target: runtimeTarget(surveyFlight?.targetId), builds: 'habitat' },
 ]
 
 export function mineralName(id: string): string {

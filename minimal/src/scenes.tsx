@@ -2,7 +2,7 @@
 // Home is an outpost on Landnam's steppe, signing in and launching watch a rocket
 // leave it, and a destination shows its deposit or the outpost built there.
 import { lazy, Suspense } from 'react'
-import type { MinimalSceneHandle, MinimalSceneKind, ResourceKey } from '@takeon/engine'
+import type { MinimalBase, MinimalSceneHandle, MinimalSceneKind, ResourceKey } from '@takeon/engine'
 import type { Target } from '@landnam/lib/data/types'
 import { LANDNAM_TO_TAKEON_MINERAL } from '@landnam/lib/takeon/minerals'
 import type { Framing } from './TakeonScene'
@@ -25,6 +25,11 @@ export const FRAMING: Record<MinimalSceneKind, Framing> = {
     landscape: { focus: { x: 0.72, y: 0.5 }, zoom: 2.4 },
   },
 }
+/** Groundbreaking frames the site centre with the agency and pad both in view. */
+export const FOUND_FRAMING: Framing = {
+  portrait: { focus: { x: 0.5, y: 0.42 }, zoom: 2.35 },
+  landscape: { focus: { x: 0.68, y: 0.55 }, zoom: 1.9 },
+}
 /** The route draws its chapters in the sky above the outpost, so the outpost sits low. */
 export const ROUTE_FRAMING: Framing = {
   portrait: { focus: { x: 0.5, y: 0.74 }, zoom: 1.9 },
@@ -39,7 +44,9 @@ export function takeonResources(minerals: readonly string[]): ResourceKey[] {
 // The sky shows while the engine loads, so the screen is never blank.
 const Sky = () => <div className="mn-sky" aria-hidden />
 
-export function Scenery({ kind, target, minerals = [], rover, autoLaunch, framing, onReady }: {
+export function Scenery({ kind, target, minerals = [], rover, autoLaunch, framing, base, onReady }: {
+  /** Home: the player's base as far as it is built. */
+  base?: MinimalBase
   kind: MinimalSceneKind
   /** A destination; none means home. */
   target?: Target
@@ -59,6 +66,7 @@ export function Scenery({ kind, target, minerals = [], rover, autoLaunch, framin
         highlight={takeonResources(minerals)}
         rover={rover}
         autoLaunch={autoLaunch}
+        base={base}
         framing={framing ?? FRAMING[kind]}
         onReady={onReady}
       />

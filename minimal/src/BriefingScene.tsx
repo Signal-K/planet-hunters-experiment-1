@@ -11,6 +11,7 @@ const START_LABEL: Record<Chapter['verb'], string> = {
   build: 'BUILD',
   deploy: 'LAUNCH',
   survey: 'SURVEY',
+  found: 'BREAK GROUND',
 }
 
 export function BriefingScene({ chapter, missing, onBack, onStart }: {
@@ -26,6 +27,7 @@ export function BriefingScene({ chapter, missing, onBack, onStart }: {
   const reward = mission?.payout.francs ?? 0
   return (
     <main className="mn-scene mn-briefing-scene" data-scene="minimal-briefing" data-chapter={chapter.number}>
+      {chapter.verb === 'found' && <Scenery kind="outpost" base={{ stage: 'raw' }} />}
       {target && (chapter.verb === 'deploy'
         ? <Scenery kind="launch" />
         : <Scenery kind="deposit" target={target} minerals={minerals.map(([id]) => id)} />)}
@@ -42,11 +44,12 @@ export function BriefingScene({ chapter, missing, onBack, onStart }: {
               {reward > 0 && <span className="mn-chip mn-reward">{francs(reward)}</span>}
             </div>
           )}
+          {chapter.verb === 'found' && <p className="mn-goal">{chapter.goal}</p>}
           {short.length > 0 && (
             <p className="mn-note">Store {short.map(([id, n]) => `${n} ${mineralName(id)}`).join(' and ')} first.</p>
           )}
         </section>
-        <button className="mn-cta" disabled={!mission || !target || short.length > 0} onClick={onStart}>
+        <button className="mn-cta" disabled={chapter.verb !== 'found' && (!mission || !target || short.length > 0)} onClick={onStart}>
           {START_LABEL[chapter.verb]}
         </button>
       </footer>
