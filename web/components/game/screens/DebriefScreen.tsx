@@ -154,7 +154,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       {/* Two tones like Community research: what the flight did on the left, settling up on the right. */}
       <article className={styles.workspace} data-ui-zone={UI_ZONES.screenContent}>
         <section className={styles.story} aria-label="Flight">
-        <SkyBadgeRow badges={badges} className={styles.badges} />
+        <SkyBadgeRow badges={badges} className={styles.badges} history />
         {isOrbitalInstrumentDeployment ? (
           <section className={`debrief-result-panel ${styles.card}`} aria-label="Mission result" data-testid="debrief-result-panel" data-surface="cream">
             <p className="debrief-result-panel__status"><span aria-hidden="true" /> Commissioned · instrument online</p>
@@ -224,7 +224,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <span>{SITE_RULES.components.find(c => c.id === siteCredit.component)?.label} · {SITE_RULES.components.find(c => c.id === siteCredit.component)?.feed.toLowerCase()}</span>
               <span>+{siteCredit.units}</span>
             </div>
-            <p className={styles.note}>+{siteCredit.units} to the Community Site. You keep everything; this only records your share.</p>
+            <p className={styles.note}>A shared spaceport built by everyone’s completed missions. Completing this run adds {siteCredit.units} to its {SITE_RULES.components.find(c => c.id === siteCredit.component)?.label.toLowerCase()}. You keep your cargo and earnings.</p>
+            <p className={styles.note}>This is construction credit, separate from research stamps.</p>
+            {exits.length > 0 && <button type="button" className={styles.siteLink} data-testid="debrief-community-link" disabled={collecting} onClick={() => collect('community')}>Complete mission · view Community Site</button>}
           </section>
         )}
 

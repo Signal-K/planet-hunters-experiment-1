@@ -82,7 +82,7 @@
   padding: 84px clamp(16px, 4vw, 48px) 24px;
 }
 
-.story { grid-row: 1 / -1; justify-content: center; background: rgba(60, 44, 118, .62); }
+.story { grid-row: 1 / -1; justify-content: flex-start; background: rgba(60, 44, 118, .62); }
 .settle { justify-content: flex-start; padding-bottom: 12px; background: rgba(22, 104, 148, .58); }
 /* Settling up sits just above the buttons; an auto margin (not flex-end) keeps an overflowing half scrollable to its top. */
 .settle > :first-child { margin-top: auto; }
@@ -327,3 +327,6 @@
   cursor: pointer;
 }
 .exit:disabled { opacity: .5; cursor: default; }
+
+.siteLink { min-height: 44px; width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid var(--ln-cyan-border); border-radius: 12px; background: var(--ln-blueprint-ink); color: var(--ln-map-sun); font: 800 14px/1.4 var(--ln-font-display); text-transform: uppercase; cursor: pointer; }
+.siteLink:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 3px; }
