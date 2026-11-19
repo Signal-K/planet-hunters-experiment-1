@@ -2,7 +2,7 @@ import SwiftUI
 import LandnamCore
 
 /// SSL-553: the core stage lands back on the base pad, then the delivery sheet settles every unit of the haul:
-/// deliver to the client (fulfils the contract), store in the underground silo, or sell at the market price.
+/// deliver to the client (fulfils the contract), store in the Surface Silo, or sell at the market price.
 struct HomecomingScreen: View {
     @Environment(GameStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -54,13 +54,13 @@ struct HomecomingScreen: View {
         let client = mission?.client.flatMap { id in Clients.all.first { $0.id == id } }
         GeometryReader { g in
             ZStack {
-                Color(red: 0.06, green: 0.08, blue: 0.16).opacity(0.45).ignoresSafeArea()
+                Theme.tokenPurpleDepth.opacity(0.45).ignoresSafeArea()
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Cargo home").font(AppFont.display(22)).foregroundStyle(Self.navy)
+                            Text("Cargo home").font(AppFont.display(22)).foregroundStyle(Self.foreground)
                             Text([mission?.title, client.map { "for \($0.name)" }].compactMap { $0 }.joined(separator: " · "))
-                                .font(AppFont.body(13)).foregroundStyle(Self.steel)
+                                .font(AppFont.body(14)).foregroundStyle(Self.muted)
                         }
                         Spacer()
                         siloMeter(used: silo.used + totals.silo, capacity: silo.capacity, built: silo.built)
@@ -73,31 +73,49 @@ struct HomecomingScreen: View {
                             }
                         }
                     }
-                    HStack(spacing: 14) {
-                        summary("Client", demand.isEmpty ? "—" : (payout > 0 ? "F\(payout.formatted())" : "Short \(short)"), warn: payout == 0 && !demand.isEmpty)
-                        summary("Silo", "\(totals.silo) U", warn: false)
-                        summary("Sell", "F\(sellValue.formatted())", warn: false)
-                        Spacer()
-                        Button { settle(current) } label: {
-                            Text("Settle cargo").font(AppFont.display(16)).foregroundStyle(Self.cream)
-                                .padding(.horizontal, 18).frame(minHeight: 44).background(Self.navy)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 16) {
+                            settlementSummary(demand: demand, payout: payout, short: short, totals: totals, sellValue: sellValue)
+                            Spacer()
+                            settleButton(current)
                         }
-                        .accessibilityIdentifier("delivery-confirm")
+                        VStack(alignment: .leading, spacing: 12) {
+                            settlementSummary(demand: demand, payout: payout, short: short, totals: totals, sellValue: sellValue)
+                            settleButton(current).frame(maxWidth: .infinity)
+                        }
                     }
                 }
                 .padding(16)
                 .frame(width: min(980, g.size.width - 24)).frame(maxHeight: g.size.height - 24)
-                .background(Self.cream)
-                .overlay(Rectangle().stroke(Self.navy, lineWidth: 3))
+                .background(Self.panel)
+                .overlay(Rectangle().stroke(Self.foreground, lineWidth: 3))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
+    private func settlementSummary(demand: Cargo, payout: Int, short: Int, totals: HomeDelivery.Row, sellValue: Int) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            summary("Client", demand.isEmpty ? "—" : (payout > 0 ? "F\(payout.formatted())" : "Short \(short)"), warn: payout == 0 && !demand.isEmpty)
+            summary("Silo", "\(totals.silo) U", warn: false)
+            summary("Sell", "F\(sellValue.formatted())", warn: false)
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func settleButton(_ current: HomeDelivery.Split) -> some View {
+        Button { settle(current) } label: {
+            Text("SETTLE CARGO").font(AppFont.display(16)).foregroundStyle(Self.panel)
+                .padding(.horizontal, 16).frame(minHeight: 48).frame(maxWidth: .infinity)
+                .background(Self.foreground, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain).accessibilityIdentifier("delivery-confirm")
+    }
+
     private func settle(_ current: HomeDelivery.Split) {
         guard settling == nil else { return }
-        if reduceMotion { store.homeDelivery(current); return }
         settling = (Date(), current)
+        if reduceMotion { store.homeDelivery(current); return }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(Self.settle))
             store.homeDelivery(current)
@@ -106,7 +124,7 @@ struct HomecomingScreen: View {
 
     private static func mineralColor(_ id: String) -> Color {
         let hex = Minerals.byId[id]?.colorHex ?? "#c8ccd2"
-        return UInt32(hex.dropFirst(), radix: 16).map { Theme.hex($0) } ?? Self.steel
+        return UInt32(hex.dropFirst(), radix: 16).map { Theme.hex($0) } ?? Self.muted
     }
 
     private struct Crate: Identifiable { let id: Int; let stored: Bool; let color: Color }
@@ -133,7 +151,7 @@ struct HomecomingScreen: View {
                     let p = CGFloat(max(0, min(1, (t - Double(c.id) * 0.14) / 1.1)))
                     let q = (p * 10).rounded(.down) / 10
                     RoundedRectangle(cornerRadius: 2).fill(c.color).frame(width: 14, height: 14)
-                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(Self.navy, lineWidth: 2))
+                        .overlay(RoundedRectangle(cornerRadius: 2).stroke(Self.foreground, lineWidth: 2))
                         .opacity(p <= 0 || p >= 1 ? 0 : 1)
                         .scaleEffect(c.stored ? 1 - 0.5 * q : 1 - 0.4 * q)
                         .position(x: g.size.width * 0.5 + CGFloat(c.id % 4) * 10 - 15 + (c.stored ? 0 : 60 * q),
@@ -141,9 +159,9 @@ struct HomecomingScreen: View {
                 }
                 VStack {
                     // Clear sky under the HUD: at the bottom it sat over the building labels and the mission bar.
-                    Text(note.uppercased()).font(AppFont.display(14)).tracking(0.8).multilineTextAlignment(.center).foregroundStyle(Self.navy)
-                        .padding(.horizontal, 16).padding(.vertical, 8).background(Self.cream, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Self.navy, lineWidth: 2))
+                    Text(note.uppercased()).font(AppFont.display(14)).tracking(0.8).multilineTextAlignment(.center).foregroundStyle(Self.foreground)
+                        .padding(.horizontal, 16).padding(.vertical, 8).background(Self.panel, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Self.foreground, lineWidth: 2))
                         .padding(.top, 150).padding(.horizontal, 16).accessibilityIdentifier("settle-note")
                     Spacer()
                 }
@@ -159,60 +177,78 @@ struct HomecomingScreen: View {
         let siloNote = !silo.built ? "No silo" : siloUsed > silo.free ? "Sells \(siloUsed - silo.free) cheapest" : "\(silo.free - siloUsed) free"
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Self.navy)
+                Text(meta?.name ?? id).font(AppFont.display(16)).foregroundStyle(Self.foreground)
                 Spacer()
-                Text("\(row.total) U").font(AppFont.mono(14)).foregroundStyle(Self.steel)
+                Text("\(row.total) U").font(AppFont.mono(14)).foregroundStyle(Self.muted)
             }
-            HStack(spacing: 6) {
-                choice(id, .client, "Deliver", row.client, note: (demand[id] ?? 0) > 0 ? "Needs \(demand[id]!)" : "Not needed", tint: Color(red: 0.882, green: 0.922, blue: 0.973), demand: demand, silo: silo, current: current)
-                choice(id, .silo, "Silo", row.silo, note: siloNote, tint: Color(red: 0.902, green: 0.922, blue: 0.945), demand: demand, silo: silo, current: current)
-                choice(id, .sell, "Sell", row.sell, note: "F\(price.formatted()) ea", tint: Color(red: 0.937, green: 0.925, blue: 0.894), demand: demand, silo: silo, current: current)
+            VStack(spacing: 8) {
+                choice(id, .client, "Deliver to client", row.client, note: (demand[id] ?? 0) > 0 ? "Needs \(demand[id]!)" : "Not needed", tint: Theme.tokenCyan.opacity(0.08), demand: demand, silo: silo, current: current)
+                choice(id, .silo, "Store in silo", row.silo, note: siloNote, tint: Theme.tokenCyan.opacity(0.08), demand: demand, silo: silo, current: current)
+                choice(id, .sell, "Sell", row.sell, note: "F\(price.formatted()) ea", tint: Theme.tokenCyan.opacity(0.08), demand: demand, silo: silo, current: current)
             }
         }
-        .padding(10).background(Color.white.opacity(0.55)).overlay(Rectangle().stroke(Self.steel.opacity(0.5), lineWidth: 2))
+        .padding(12).background(Theme.tokenBlueprintBlue.opacity(0.16), in: RoundedRectangle(cornerRadius: 14))
     }
 
     private func choice(_ id: String, _ d: HomeDelivery.Destination, _ title: String, _ n: Int, note: String, tint: Color, demand: Cargo, silo: HomeDelivery.Silo, current: HomeDelivery.Split) -> some View {
-        VStack(spacing: 4) {
-            Text(title).font(AppFont.body(12, "SemiBold")).foregroundStyle(Self.steel)
-            HStack(spacing: 2) {
-                stepper("minus") { split = HomeDelivery.release(current, id: id, from: d, siloFree: silo.limit) }
-                Text("\(n)").font(AppFont.display(18)).foregroundStyle(Self.navy).frame(minWidth: 22)
-                stepper("plus") { split = HomeDelivery.shift(current, id: id, to: d, demand: demand, siloFree: silo.limit) }
+        let row = current[id] ?? .init()
+        let siloUsed = HomeDelivery.totals(current).silo
+        let available = d == .client ? (demand[id] ?? 0) > 0 : d == .silo ? silo.built : true
+        let canAdd = available && row.total > n
+            && (d != .client || n < (demand[id] ?? 0))
+            && (d != .silo || siloUsed < silo.limit)
+        let canRemove = available && n > 0 && (d != .sell || siloUsed < silo.limit)
+        return HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(AppFont.body(14, "SemiBold")).foregroundStyle(Self.foreground)
+                Text(note).font(AppFont.body(14)).foregroundStyle(Self.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text(note).font(AppFont.body(11)).foregroundStyle(Self.steel).lineLimit(1).minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 4) {
+                stepper("minus", label: "Fewer \(Minerals.byId[id]?.name ?? id) to \(title)", enabled: canRemove) {
+                    split = HomeDelivery.release(current, id: id, from: d, siloFree: silo.limit)
+                }
+                Text("\(n)").font(AppFont.display(18)).monospacedDigit().foregroundStyle(Self.foreground).frame(minWidth: 32)
+                stepper("plus", label: "More \(Minerals.byId[id]?.name ?? id) to \(title)", enabled: canAdd) {
+                    split = HomeDelivery.shift(current, id: id, to: d, demand: demand, siloFree: silo.limit)
+                }
+            }
+            .fixedSize()
         }
-        .padding(6).frame(maxWidth: .infinity).background(tint)
+        .padding(8).background(tint, in: RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .contain).accessibilityLabel("\(title) \(n)")
     }
 
-    private func stepper(_ icon: String, _ action: @escaping () -> Void) -> some View {
+    private func stepper(_ icon: String, label: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon).font(.system(size: 12, weight: .bold)).foregroundStyle(Self.navy).frame(width: 28, height: 28)
-                .background(Self.cream).overlay(Rectangle().stroke(Self.navy, lineWidth: 2))
+            Image(systemName: icon).font(.system(size: 18, weight: .bold)).foregroundStyle(Self.panel)
+                .frame(width: 44, height: 44)
+                .background(Self.foreground, in: RoundedRectangle(cornerRadius: 10))
         }
-        .frame(width: 32, height: 44).contentShape(Rectangle())
+        .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.35)
+        .accessibilityLabel(label)
     }
 
     private func siloMeter(used: Int, capacity: Int, built: Bool) -> some View {
         VStack(alignment: .trailing, spacing: 4) {
-            Text(built ? "Silo \(used)/\(capacity)" : "No silo built").font(AppFont.mono(13)).foregroundStyle(Self.navy)
+            Text(built ? "Silo \(used)/\(capacity)" : "No silo built").font(AppFont.mono(14)).foregroundStyle(Self.foreground)
             ZStack(alignment: .leading) {
-                Rectangle().fill(Self.steel.opacity(0.25))
-                Rectangle().fill(Color(red: 0.25, green: 0.5, blue: 0.95)).frame(width: capacity > 0 ? 120 * min(1, CGFloat(used) / CGFloat(capacity)) : 0)
+                Rectangle().fill(Self.muted.opacity(0.25))
+                Rectangle().fill(Theme.tokenCyan).frame(width: capacity > 0 ? 120 * min(1, CGFloat(used) / CGFloat(capacity)) : 0)
             }.frame(width: 120, height: 8)
         }
     }
 
     private func summary(_ k: String, _ v: String, warn: Bool) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(k).font(AppFont.body(11)).foregroundStyle(Self.steel)
-            Text(v).font(AppFont.display(15)).foregroundStyle(warn ? Self.brick : Self.navy)
+            Text(k).font(AppFont.body(14)).foregroundStyle(Self.muted)
+            Text(v).font(AppFont.display(15)).foregroundStyle(warn ? Self.warning : Self.foreground)
         }
     }
 
-    static let cream = Color(red: 0.957, green: 0.945, blue: 0.918)
-    static let navy = Color(red: 0.12, green: 0.16, blue: 0.32)
-    static let steel = Color(red: 0.33, green: 0.38, blue: 0.47)
-    static let brick = Color(red: 0.608, green: 0.231, blue: 0.196)
+    static let panel = Theme.tokenPurpleDepth
+    static let foreground = Theme.tokenMapSun
+    static let muted = Theme.tokenMapSun.opacity(0.78)
+    static let warning = Theme.tokenCrit
 }

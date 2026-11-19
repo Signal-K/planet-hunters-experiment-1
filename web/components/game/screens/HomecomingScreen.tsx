@@ -2,7 +2,7 @@
 
 // SSL-553: back home. The rocket touches down on the Earth Base pad, then a roomy
 // delivery sheet over the base settles the haul: per mineral, units go to the
-// client (fulfils the contract), the underground silo, or the open market.
+// client (fulfils the contract), the Surface Silo, or the open market.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MineralMeta, Mission } from '@/lib/data'
@@ -36,7 +36,7 @@ interface Props {
 
 const CHOICES: { key: HomeDestination; label: string; hint: string }[] = [
   { key: 'client', label: 'Deliver to client', hint: 'Fulfils the contract' },
-  { key: 'silo', label: 'Store in silo', hint: 'Underground storage' },
+  { key: 'silo', label: 'Store in silo', hint: 'Surface storage' },
   { key: 'sell', label: 'Sell', hint: 'Commodity Exchange' },
 ]
 
@@ -64,12 +64,14 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
   const [crates, setCrates] = useState<Crate[] | null>(null)
   const settling = crates !== null
   const settledTimer = useRef<number | null>(null)
+  const settlementStarted = useRef(false)
   useEffect(() => () => { if (settledTimer.current) window.clearTimeout(settledTimer.current) }, [])
 
   // Settle: crates leave the rocket (stored ones sink into the ground, sold ones fly to the francs counter), the rocket is
   // dismantled from the top, then the settlement is confirmed.
   const settle = () => {
-    if (settling) return
+    if (settlementStarted.current) return
+    settlementStarted.current = true
     const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     const root = rootRef.current
     const rocket = root?.querySelector('[data-testid="pad-rocket"]')?.getBoundingClientRect()
@@ -123,7 +125,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                     </div>
                     <div className={styles.choices}>
                       {CHOICES.map(choice => {
-                        const on = available(choice.key)
+                        const on = available(choice.key) && (choice.key !== 'client' || (demand[id] ?? 0) > 0)
                         const note = choice.key === 'client'
                           ? (demand[id] ? `Needs ${demand[id]}` : 'Not ordered')
                           : choice.key === 'silo'
@@ -132,12 +134,13 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
                         const canAdd = on && !(choice.key === 'client' && row.client >= (demand[id] ?? 0))
                           && !(choice.key === 'silo' && totals.silo >= silo.limit)
                           && (row.client + row.silo + row.sell - row[choice.key]) > 0
+                        const canRemove = on && row[choice.key] > 0 && (choice.key !== 'sell' || totals.silo < silo.limit)
                         return (
                           <div key={choice.key} className={styles.choice} data-kind={choice.key} data-disabled={on ? undefined : 'true'}>
                             <span className={styles.choiceLabel}>{choice.label}</span>
                             <span className={styles.choiceNote}>{note}</span>
                             <div className={styles.stepper}>
-                              <button type="button" aria-label={`Fewer ${meta?.name ?? id} to ${choice.label}`} disabled={!on || row[choice.key] <= 0}
+                              <button type="button" aria-label={`Fewer ${meta?.name ?? id} to ${choice.label}`} disabled={!canRemove}
                                 onClick={() => setSplit(s => releaseUnit(s, id, choice.key, silo.limit))}>−</button>
                               <output data-testid={`split-${id}-${choice.key}`}>{row[choice.key]}</output>
                               <button type="button" aria-label={`More ${meta?.name ?? id} to ${choice.label}`} disabled={!canAdd}
