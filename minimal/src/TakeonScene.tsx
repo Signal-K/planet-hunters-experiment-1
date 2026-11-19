@@ -2,7 +2,7 @@
 // for a body, framed as a deposit, an outpost or a launch. Read-only; nothing
 // here reacts to input. Loaded lazily (see scenes.tsx): the engine is large.
 import { useEffect, useRef } from 'react'
-import { createMinimalScene, type MinimalSceneKind, type ResourceKey } from '@takeon/engine'
+import { createMinimalScene, type MinimalSceneHandle, type MinimalSceneKind, type ResourceKey } from '@takeon/engine'
 import type { Target } from '@landnam/lib/data/types'
 import { destinationBody, HOME_SEED, homeBody } from './takeonWorlds'
 
@@ -11,9 +11,12 @@ export type Framing = { portrait: Frame; landscape: Frame }
 
 const seedOf = (id: string) => [...id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7)
 
-export function TakeonScene({ kind, target, highlight = [], framing, rover, className }: {
+export function TakeonScene({ kind, target, highlight = [], framing, rover, autoLaunch, onReady, className }: {
   kind: MinimalSceneKind
   rover?: boolean
+  autoLaunch?: boolean
+  /** The live scene, for a step that fires a rocket or raises a building. */
+  onReady?: (scene: MinimalSceneHandle | null) => void
   /** The destination to show; none means home (Landnam's steppe outpost). */
   target?: Target
   highlight?: readonly ResourceKey[]
@@ -21,6 +24,8 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, clas
   className?: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const readyRef = useRef(onReady)
+  readyRef.current = onReady
   const highlightKey = highlight.join(',')
   const framingKey = JSON.stringify(framing)
 
@@ -37,6 +42,9 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, clas
       highlight: highlightKey ? (highlightKey.split(',') as ResourceKey[]) : [],
       drift: !reduced,
       rover,
+      autoLaunch,
+      // Dev only: ?elev=40 tries another camera angle.
+      ...(import.meta.env.DEV && new URLSearchParams(location.search).get('elev') ? { elevation: Number(new URLSearchParams(location.search).get('elev')) } : {}),
     })
     // Upright and sideways layouts put the card in different places, so the
     // subject moves with them.
@@ -54,12 +62,14 @@ export function TakeonScene({ kind, target, highlight = [], framing, rover, clas
     const observer = new ResizeObserver(fit)
     observer.observe(canvas)
     scene.start()
+    readyRef.current?.(scene)
     if (import.meta.env.DEV) (window as unknown as { __mnScene?: unknown }).__mnScene = scene
     return () => {
       observer.disconnect()
+      readyRef.current?.(null)
       scene.destroy()
     }
-  }, [kind, target, highlightKey, framingKey, rover])
+  }, [kind, target, highlightKey, framingKey, rover, autoLaunch])
 
   return <canvas ref={canvasRef} className={className} aria-hidden data-takeon-scene={kind} />
 }

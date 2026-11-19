@@ -77,3 +77,6 @@ button.mn-chip { cursor: pointer; }
   .mn-card.mn-sign-in { right: auto; width: min(420px, 46vw); margin: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .mn-waypoint.mn-now .mn-waypoint-hit { animation: none; } }
+.mn-note { font-size: 14px; color: var(--amber, #f6c96a); margin: 0; }
+/* Landnam's mining scene, full screen, exactly as Landnam lays it out. */
+.mn-mining { position: fixed; inset: 0; }

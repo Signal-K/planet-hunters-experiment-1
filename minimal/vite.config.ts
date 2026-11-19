@@ -25,12 +25,23 @@ const config: UserConfig = {
     ],
   },
   oxc: { jsx: { runtime: 'automatic' } },
+  // Landnam's globals.css is Tailwind v4 through PostCSS: use Landnam's config.
+  css: { postcss: here('../web') },
+  // Landnam code reads Next's public env (PocketBase URLs, deploy env). Inline the
+  // same NEXT_PUBLIC_* values Next would, from the build's environment (the deploy
+  // workflow sets them for build:minimal too). Nothing else from process.env leaks.
+  define: {
+    'process.env': JSON.stringify(
+      Object.fromEntries(Object.entries(process.env).filter(([name]) => name.startsWith('NEXT_PUBLIC_'))),
+    ),
+  },
   server: {
     port: 4330,
     strictPort: true,
     fs: { allow: [here('..')] },
-    // Landnam's fonts and art are served by Landnam's own dev server.
-    proxy: { '/fonts': 'http://localhost:4320', '/game/assets': 'http://localhost:4320' },
+    // Landnam's fonts, art and scene files (/game/...) come from Landnam's dev server;
+    // in production Minimal is served by the same site, so the paths resolve there.
+    proxy: { '/fonts': 'http://localhost:4320', '/game': 'http://localhost:4320' },
   },
   build: {
     outDir: here('../web/public/minimal'),

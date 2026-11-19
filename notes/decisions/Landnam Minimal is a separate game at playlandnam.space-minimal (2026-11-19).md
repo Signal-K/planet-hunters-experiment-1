@@ -26,6 +26,13 @@ anyone can jump into it, it is fast, and it is clear what to do.
   they have finished Landnam's onboarding**. A player who finished onboarding in Landnam starts
   Minimal with chapter 1 done. Chapter progress is Minimal's own.
 - **Web only for now.** No iOS build of Minimal.
+- **Every Landnam mission type can be played in Minimal** (Liam, later the same day): client
+  contract, self-directed mining, delivery, satellite launch, survey probe, meteor shower run,
+  materials haul, construction and survey flight. Each is one chapter, and each mission is
+  built by Landnam's own code. Mining is Landnam's own mining scene, unchanged.
+- **Scenery is TakeOn**, in one consistent perspective: Minimal's scenes use a near-isometric
+  camera (40°) and a rover in proportion to tiles and buildings, not the survey field's 60°
+  top-down ground under three-quarter sprites, which read as 2D and 3D at once.
 
 ## Consequences
 
@@ -38,4 +45,5 @@ anyone can jump into it, it is fast, and it is clear what to do.
 ## Open
 
 - Writing back: francs earned in Minimal, and chapter 1 counting as Landnam's onboarding, go
-  through Landnam's save sync and offline outbox once chapter 1 is playable.
+  through Landnam's save sync and offline outbox. Until then Minimal keeps its earnings and
+  stored materials per pilot on the device and shows Landnam's balance plus its own earnings.

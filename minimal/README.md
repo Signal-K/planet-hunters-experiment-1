@@ -23,5 +23,11 @@ It is its own module in this repo, not part of the Landnam app:
   TakeOn is unchanged) and loads lazily after the first paint. To update it from a TakeOn
   checkout: `minimal/scripts/update-takeon.sh [path-to-takeon]` (default `../takeon`).
 
+- START plays the chapter's run (`src/RunScene.tsx`): one chapter per Landnam mission type
+  (`src/chapters.ts`), with Landnam's own mining scene for mining. Progress, earnings and stored
+  materials are Minimal's own, per pilot on the device (`src/progress.ts`). In dev,
+  `?stage=1&chapter=N` opens a briefing, `&run=1` starts it, and `&dev=1` shows Landnam's
+  SKIP MINING button.
+
 See `docs/simple-landnam.md` for why and the plan, and
 `notes/decisions/Landnam Minimal is a separate game at playlandnam.space-minimal (2026-11-19).md`.

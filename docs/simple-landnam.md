@@ -112,6 +112,25 @@ once, in Landnam, and Minimal picks it up on its next build.
 The mining run (`web/components/game/screens/MiningCanvas.tsx`) is next: lift it into a
 context-free component both games draw, so Minimal's chapter 1 is the real run.
 
+## Every mission type, one chapter each (2026-11-19)
+
+| Chapter | Landnam mission type | Built from | Run |
+| --- | --- | --- | --- |
+| 1 First light | Client contract | first sequence-1 client mission | Launch, mine, home |
+| 2 First sale | Self-directed mining | `SELF_DIRECTED_MINING_MISSION_ID` | Launch, mine, home (sold at market) |
+| 3 Courier | Delivery contract | first mission with `deliveryTargetId` | Launch, mine, deliver, home |
+| 4 Eyes on the sky | Satellite launch | runtime catalog, space telescope | Launch, deploy, home |
+| 5 Probe | Survey probe | runtime catalog, `probeMission` | Launch, deploy, home |
+| 6 Shower | Meteor shower run | `showerRunMission` (Leonids) | Launch, catch fragments, home |
+| 7 Stockpile | Materials haul | runtime catalog, resource focus | Launch, mine, home (stored) |
+| 8 Build | Construction job | daily client pool, construct template | Launch, build, home (spends stored materials) |
+| 9 Follow-up | Survey flight | runtime catalog, `exo-survey-*` | Launch, scan, home |
+
+Mining is Landnam's `MiningScreen`, mounted whole. Payouts follow Landnam: contracts, deliveries,
+builds and shower runs pay their stated payout; self-directed hauls sell at the open-market
+price; a materials haul is stored; satellites, probes and survey flights give their outcome.
+Storyboard of every screen: https://claude.ai/artifact/MqCkAyn9GUJagZKLSsQXVt
+
 ## Next steps
 
 1. First playable slice: sign in → "CHAPTER 1 · FIRST LIGHT" → one briefing panel → 5 s

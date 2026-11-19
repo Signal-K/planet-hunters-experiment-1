@@ -1,16 +1,34 @@
-// A chapter briefing as the destination itself: TakeOn's voxel world for that
-// body (minimal deposit scene, KES-530) with the rover parked by a deposit of
-// what the contract wants and a dashed route to it. One goal line, one button.
+// A chapter briefing as the destination itself: TakeOn's world for that body
+// (minimal deposit scene, KES-530) with the rover parked by ore of the kind the
+// mission wants. One goal line, what it asks and pays, and START.
 import MineralChip from '@landnam/components/game/MineralChip'
-import { CHAPTERS, francs, type Chapter } from './chapters'
-import { DepositScenery } from './scenes'
+import { CHAPTERS, francs, mineralName, type Chapter } from './chapters'
+import { Scenery } from './scenes'
 
-export function BriefingScene({ chapter, onBack }: { chapter: Chapter; onBack: () => void }) {
+const START_LABEL: Record<Chapter['verb'], string> = {
+  mine: 'MINING RUN',
+  deliver: 'DELIVERY RUN',
+  build: 'BUILD RUN',
+  deploy: 'LAUNCH',
+  survey: 'SURVEY FLIGHT',
+}
+
+export function BriefingScene({ chapter, missing, onBack, onStart }: {
+  chapter: Chapter
+  /** Materials a build still needs from the home stash. */
+  missing: Record<string, number>
+  onBack: () => void
+  onStart: () => void
+}) {
   const { mission, target } = chapter
   const minerals = Object.entries(mission?.requires.minerals ?? {})
+  const short = Object.entries(missing)
+  const reward = mission?.payout.francs ?? 0
   return (
-    <main className="mn-scene mn-briefing-scene" data-scene="minimal-briefing">
-      {target && <DepositScenery target={target} minerals={minerals.map(([id]) => id)} />}
+    <main className="mn-scene mn-briefing-scene" data-scene="minimal-briefing" data-chapter={chapter.number}>
+      {target && (chapter.verb === 'deploy'
+        ? <Scenery kind="launch" />
+        : <Scenery kind="deposit" target={target} minerals={minerals.map(([id]) => id)} />)}
       <header className="mn-scene-top">
         <button className="mn-chip mn-back" onClick={onBack}>‹ BACK</button>
         {target && <span className="mn-chip mn-place">{target.name}</span>}
@@ -19,16 +37,19 @@ export function BriefingScene({ chapter, onBack }: { chapter: Chapter; onBack: (
         <section className="mn-card">
           <p className="mn-eyebrow">CHAPTER {chapter.number} OF {CHAPTERS.length} · {chapter.name.toUpperCase()}</p>
           <p className="mn-goal">{chapter.goal}</p>
-          {mission && (
-            <div className="mn-haul" aria-label="Bring back and reward">
+          {mission && (minerals.length > 0 || reward > 0) && (
+            <div className="mn-haul" aria-label="What it asks and pays">
               {minerals.map(([id, n]) => <MineralChip key={id} mineral={id} count={n} />)}
-              <span className="mn-chip mn-reward">{francs(mission.payout.francs)}</span>
+              {reward > 0 && <span className="mn-chip mn-reward">{francs(reward)}</span>}
             </div>
           )}
+          {short.length > 0 && (
+            <p className="mn-note">Store {short.map(([id, n]) => `${n} ${mineralName(id)}`).join(' and ')} first (chapter 7).</p>
+          )}
         </section>
-        <button className="mn-cta" disabled title="The mining run is the next build step (SSL-864)">
-          <span className="mn-cta-kicker">MINING RUN</span>
-          <span>COMING NEXT</span>
+        <button className="mn-cta" disabled={!mission || !target || short.length > 0} onClick={onStart}>
+          <span className="mn-cta-kicker">{START_LABEL[chapter.verb]}</span>
+          <span>START</span>
         </button>
       </footer>
     </main>
