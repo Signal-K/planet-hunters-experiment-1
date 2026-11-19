@@ -4,8 +4,8 @@ format = 1
 id = "sky-pointing"
 type = "menu"
 name = "Sky pointing"
-summary = "Steer a telescope anywhere on the sky with the joystick and lock on. Every lock maps a field; the goal is the whole sky."
-tickets = ["SSL-788", "SSL-790"]
+summary = "Steer a telescope anywhere on the sky with the joystick and lock on. Every lock maps a field; the goal is the whole sky. Continuing opens a fresh session for the next unpointed instrument, including after switching telescope tabs."
+tickets = ["SSL-788", "SSL-790", "SSL-856"]
 qa = ["sky-pointing", "sky-dialogue"]
 
 [runtime]

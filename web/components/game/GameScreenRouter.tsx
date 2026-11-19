@@ -148,6 +148,7 @@ function ScreenBody({
   // SSL-746: a review in progress, and the reviewer's own finished run waiting to be compared.
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
   const [pointingTarget, setPointingTarget] = useState<InstrumentPointing>('transit')
+  const [pointingStep, setPointingStep] = useState(0)
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
   // One way out of every instrument screen: reviews go back to where they started, everything else to the Data hub.
   // The inspected subject is dropped with it so the next door does not open on a stale one.
@@ -701,7 +702,7 @@ function ScreenBody({
     case 'sky-pointing':
       return (
         <SkyPointingScreen
-          key={pointingTarget}
+          key={`${pointingTarget}:${pointingStep}`}
           player={game.player}
           onOpenData={() => game.go('instrument-hub')}
           start={pointingTarget}
@@ -717,8 +718,12 @@ function ScreenBody({
             game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
             // Each online telescope is aimed in turn: carry straight on to the next unpointed one.
             const rest = telescopesNeedingPointing(pointTelescope(game.player, instrument, now, aim, sector), now)
-            if (rest.length) setPointingTarget(rest[0])
-            else game.goBack('hub')
+            if (rest.length) {
+              setPointingTarget(rest[0])
+              // The operator may have switched tabs away from the route's starting instrument.
+              // Reset its confirmation even when the next instrument is that same starting one.
+              setPointingStep(step => step + 1)
+            } else game.goBack('hub')
           }}
         />
       )

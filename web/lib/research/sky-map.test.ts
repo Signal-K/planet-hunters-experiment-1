@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_STATE, mergeRemoteState, normalizeState, type PartialSave } from '@/lib/game-state'
 import { TOTAL_FIELDS, fieldCentre, fieldId, landmarkNear, mappedCount, markMapped, mergeSkyMaps, raDelta, wrapRa, type SkyMap } from './sky-map'
 import { pointTelescope, saturnSectorName, telescopesNeedingPointing, type TelescopeAim } from './paths'
 
@@ -62,4 +63,17 @@ describe('sky map', () => {
     expect(telescopesNeedingPointing(pointTelescope<typeof online & { telescopeAim?: TelescopeAim }>(online, 'transit', now, { ra: 1, dec: 1 }), now)).toEqual([])
     expect(telescopesNeedingPointing(pointTelescope<typeof online & { telescopeAim?: TelescopeAim }>(online, 'transit', now, { ra: 1, dec: 1 }), Date.parse('2026-11-10T12:00:00Z'))).toEqual(['transit'])
   })
+  it('keeps each instrument lock through a saved reload and a stale reconnect, then asks again next week', () => {
+    const now = Date.parse('2026-11-18T12:00:00Z')
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, missionsDone: 5, placed: ['surface-silo'], transitSatelliteLaunchedAt: 1, deepSpaceTelescopeBuilt: true }
+    const space = pointTelescope(player, 'transit', now, { ra: 10, dec: 20 })
+    expect(telescopesNeedingPointing(space, now)).toEqual(['deep-space'])
+    const both = pointTelescope(space, 'deep-space', now, { ra: 120, dec: -40 })
+    const saved = normalizeState(JSON.parse(JSON.stringify({ ...DEFAULT_STATE, screen: 'hub', player: both })) as PartialSave)
+    const reconnected = mergeRemoteState(saved, { player: space })
+    expect(telescopesNeedingPointing(reconnected.player, now)).toEqual([])
+    expect(reconnected.player.telescopeAim?.['deep-space']?.aim).toEqual({ ra: 120, dec: -40 })
+    expect(telescopesNeedingPointing(reconnected.player, Date.parse('2026-11-23T12:00:00Z'))).toEqual(['transit', 'deep-space'])
+  })
+
 })
