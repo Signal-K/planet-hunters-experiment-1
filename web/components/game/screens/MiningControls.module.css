@@ -168,8 +168,7 @@
   transition: transform 80ms ease-out, background 120ms ease-out;
 }
 .action[data-pressed], .action:active { transform: scale(0.93); }
-.action[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); animation: fireReady 0.7s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .action[data-ready] { animation: none; } }
+.action[data-ready] { background: var(--ln-cyan); color: var(--ln-bp-ink); border-color: var(--ln-bp-paper); box-shadow: 0 0 16px var(--ln-cyan-border); }
 .action:disabled { cursor: default; opacity: 0.55; }
 .action:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 4px; }
 

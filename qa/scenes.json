@@ -124,7 +124,8 @@
    "web": "ui-free-mining",
    "native": "mining-laser-live",
    "tickets": [
-    "SSL-711"
+    "SSL-711",
+    "SSL-863"
    ]
   },
   {
@@ -155,7 +156,8 @@
    "web": "ui-leonids-shower-mining-fresh",
    "native": "mining-shower-live",
    "tickets": [
-    "SSL-658"
+    "SSL-658",
+    "SSL-863"
    ]
   },
   {

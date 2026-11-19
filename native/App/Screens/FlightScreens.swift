@@ -108,6 +108,7 @@ struct MiningScreen: View {
     @State private var obstacleAhead = false
     @State private var toast: String?
     @State private var laserCharging = false
+    @State private var catchReady = false
     /// Orionid fragments already added to the ledger from this field's cargo (SSL-651).
     @State private var fragmentsCounted = 0
     @FocusState private var keysFocused: Bool
@@ -180,6 +181,7 @@ struct MiningScreen: View {
                     case "a": scene?.setSteer(down ? -1 : 0)
                     case "d": scene?.setSteer(down ? 1 : 0)
                     case "f": scene?.setTrigger(down)
+                    case "c": if down { scene?.catchFragment() }
                     default: return .ignored
                     }
                 }
@@ -254,6 +256,25 @@ struct MiningScreen: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
+            if showerRun {
+                Button { scene?.catchFragment() } label: {
+                    VStack(spacing: 4) {
+                        Text("CATCH").font(AppFont.display(14))
+                        Text(catchReady ? "NOW" : "LINE UP").font(AppFont.body(14))
+                    }
+                    .frame(width: 80, height: 80)
+                    .foregroundStyle(catchReady ? Theme.ink : Theme.paper)
+                    .background(catchReady ? Theme.blueBright : Theme.ink, in: Circle())
+                    .overlay(Circle().stroke(Theme.blueBright, lineWidth: 3))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("catch-fragment-btn")
+                .accessibilityLabel(catchReady ? "Catch fragment now" : "Catch: steer a fragment into the beam")
+                .padding(.trailing, insets.trailing + 16)
+                .padding(.bottom, insets.bottom + (short ? 84 : 132))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            }
+
             // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
             if !showerRun {
                 LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
@@ -286,15 +307,13 @@ struct MiningScreen: View {
         let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
             : max(Flight.baseLaserCharges, ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
-        // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
-        let shower = mission.id == OrionidsRun.missionId ? nil : SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
+        // Shower fragments never join an ordinary mining field as seams or pickups.
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
-        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
+        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: nil, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
-        if mission.id == OrionidsRun.missionId, let preset = SkyEvents.activePreset(at: store.now) {
-            // Shower fragments fall and bank on landing; the laser is for ore (matches web autoCollect).
-            s.fragmentRain = (preset.resourceId, OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
+        if mission.id == OrionidsRun.missionId {
+            s.fragmentRain = ("orionid_debris", OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
         }
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
@@ -305,6 +324,7 @@ struct MiningScreen: View {
         }
         s.onTargetCue = { cue in if mission.id != OrionidsRun.missionId { targetCue = cue } }
         s.onObstacleAhead = { obstacleAhead = $0 }
+        s.onCatchCue = { catchReady = $0 }
         s.reducedMotion = reduceMotion
         #if DEBUG
         // Simulator playtests have no tap driver: `-autofire` holds the real trigger so the laser path is exercised unattended.
@@ -485,7 +505,7 @@ struct MiningGuide: View {
             items[index] = (returnLabel, "Starts the delivery flight with your cargo. Settle the delivery on arrival.")
         }
         guard isOrionids else { return items }
-        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
+        items.insert(("Catch Orionid debris", "Steer a blue fragment into the light beam above the ship, then press Catch when it lights up (C). A fragment that reaches the ground breaks up. Fire is only for ground seams. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
 

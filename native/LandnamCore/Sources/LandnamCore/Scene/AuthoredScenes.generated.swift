@@ -1837,7 +1837,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "sky-events"
           ],
-          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (today: Catch, for the Orionids shower). It lights up when pressing now would work; an early press is buffered."
+          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (Catch, for shower runs). It lights up when a fragment is in the visible beam above the ship; an early press is buffered. Fragments have a bright rim and a separate label; uncaught fragments break up on the ground. Ordinary mining shows event streaks and the existing fireball, never shower rain."
         },
         {
           "id": "return-action",

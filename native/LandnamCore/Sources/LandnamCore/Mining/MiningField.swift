@@ -51,7 +51,7 @@ public struct MiningField: Equatable, Sendable {
 
     /// Builds a field of ore nodes weighted toward the mission's required minerals so a
     /// contract is always completable, then sprinkled with the target's other minerals.
-    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is caught on landing (Orionids fragments).
+    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is banked by an explicit Catch action (Orionids fragments).
     /// `debris` adds drifting shower particles of that resource on top of the normal field (SSL-475).
     public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64,
                 debris: (resourceId: String, count: Int)? = nil, skyFed: String? = nil) {
