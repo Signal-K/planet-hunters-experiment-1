@@ -10,6 +10,7 @@ import { MINERAL_META } from '@landnam/lib/data/minerals'
 import { francs, type Chapter, type Verb } from './chapters'
 import { resultFor, type RunResult } from './progress'
 import { Scenery } from './scenes'
+import { OrbitScene } from './OrbitScene'
 
 type Step = 'launch' | 'mine' | 'deliver' | 'build' | 'deploy' | 'survey' | 'home'
 
@@ -24,6 +25,8 @@ const STEPS: Record<Verb, Step[]> = {
 /** How long the rocket climbs before the next scene (drawLaunch fades at 3 s). */
 const LIFTOFF_MS = 2300
 const BUILD_MS = 2400
+/** The payload drifts clear and opens its panels before home. */
+const RELEASE_MS = 2600
 
 export function RunScene({ chapter, onFinish, onQuit }: {
   chapter: Chapter
@@ -146,11 +149,18 @@ export function RunScene({ chapter, onFinish, onQuit }: {
   if (step === 'deploy') {
     return (
       <main className="mn-scene" data-scene="minimal-deploy">
-        <Scenery kind="launch" autoLaunch />
+        <OrbitScene world={/earth/i.test(target?.name ?? '') ? 'earth' : 'rock'} released={busy} />
         {header}
         <footer className="mn-scene-bottom">
-          <button className="mn-cta" onClick={next}>
-            DEPLOY
+          <button
+            className="mn-cta"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true)
+              window.setTimeout(next, RELEASE_MS)
+            }}
+          >
+            {busy ? 'RELEASED' : 'DEPLOY'}
           </button>
         </footer>
       </main>

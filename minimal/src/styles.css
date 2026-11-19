@@ -85,3 +85,15 @@ button.mn-chip { cursor: pointer; }
 .mn-steps i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); }
 .mn-steps i.mn-step-done { background: var(--cream); }
 .mn-steps i.mn-step-now { width: 22px; border-radius: 4px; background: var(--cream); }
+/* Orbit (deploy): world low in frame, upper stage centre, payload rides on its nose. */
+.mn-orbit { position: absolute; inset: 0; overflow: hidden; background: #0b0f1f; }
+.mn-orbit img { image-rendering: pixelated; position: absolute; }
+.mn-orbit-world { width: 150vmax; height: auto; left: 50%; top: 62%; transform: translateX(-50%); }
+.mn-orbit-stage { width: 88px; left: calc(50% - 44px); top: 30%; animation: mn-orbit-bob 4s ease-in-out infinite; transition: transform 2.4s ease-in; }
+.mn-orbit-payload { position: absolute; width: 72px; left: calc(50% - 36px); top: calc(30% - 22px); animation: mn-orbit-bob 4s ease-in-out infinite; }
+.mn-orbit-panel { transform-box: fill-box; transform-origin: center; transform: scaleX(0.15); transition: transform .8s ease-out 1s; }
+.mn-orbit[data-released] .mn-orbit-stage { animation: none; transform: translate(-60px, 120px) rotate(-18deg); }
+.mn-orbit[data-released] .mn-orbit-payload { animation: mn-orbit-release 2.6s ease-out forwards; }
+.mn-orbit[data-released] .mn-orbit-panel { transform: scaleX(1); }
+@keyframes mn-orbit-bob { 50% { translate: 0 -4px; } }
+@keyframes mn-orbit-release { to { translate: 40px -70px; scale: 1.25; } }
