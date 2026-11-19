@@ -54,16 +54,16 @@ export function resultFor(chapter: Chapter, cargo: Record<string, number>): RunR
   switch (chapter.type) {
     case 'client-contract':
     case 'delivery':
-      return { ...none, francs: mission?.payout.francs ?? 0, outcome: 'Order delivered. The client paid.' }
+      return { ...none, francs: mission?.payout.francs ?? 0, outcome: 'Delivered and paid.' }
     case 'construction':
-      return { ...none, francs: mission?.payout.francs ?? 0, spent: mission?.requires.minerals ?? {}, outcome: `${mission?.title.replace(/^Build an? /, '') ?? 'Structure'} raised on ${chapter.target?.name ?? 'site'}.` }
+      return { ...none, francs: mission?.payout.francs ?? 0, spent: mission?.requires.minerals ?? {}, outcome: `${mission?.title.replace(/^Build an? /, '') ?? 'Structure'} raised.` }
     case 'shower-run':
       // Landnam pays the run's stated payout for the fragments (showerRunMission).
-      return { ...none, francs: mission?.payout.francs ?? 0, outcome: 'Fragments caught and handed in.' }
+      return { ...none, francs: mission?.payout.francs ?? 0, outcome: 'Fragments handed in.' }
     case 'self-directed':
-      return { ...none, francs: marketValue(cargo), outcome: 'Haul sold at market.' }
+      return { ...none, francs: marketValue(cargo), outcome: 'Sold at market.' }
     case 'materials-haul':
-      return { ...none, stored: cargo, outcome: 'Materials stored at home for building.' }
+      return { ...none, stored: cargo, outcome: 'Stored at home.' }
     default:
       return { ...none, outcome: mission?.programReward?.outcome ?? 'Done.' }
   }

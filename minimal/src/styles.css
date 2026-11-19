@@ -80,3 +80,8 @@ button.mn-chip { cursor: pointer; }
 .mn-note { font-size: 14px; color: var(--amber, #f6c96a); margin: 0; }
 /* Landnam's mining scene, full screen, exactly as Landnam lays it out. */
 .mn-mining { position: fixed; inset: 0; }
+.mn-title { margin: 0; font-size: 20px; font-weight: 700; color: var(--cream); }
+.mn-steps { display: flex; align-items: center; gap: 8px; }
+.mn-steps i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); }
+.mn-steps i.mn-step-done { background: var(--cream); }
+.mn-steps i.mn-step-now { width: 22px; border-radius: 4px; background: var(--cream); }

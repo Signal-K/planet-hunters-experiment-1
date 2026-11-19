@@ -63,8 +63,7 @@ export function RouteScene({ done, money, onboardedInLandnam, onOpen }: {
       </header>
       <footer className="mn-scene-bottom">
         <button className="mn-cta" onClick={() => onOpen(next)}>
-          <span className="mn-cta-kicker">{done.size >= CHAPTERS.length ? 'ALL DONE · FLY AGAIN' : `CHAPTER ${next.number} OF ${CHAPTERS.length}`}</span>
-          <span>{next.name.toUpperCase()}</span>
+          {next.name.toUpperCase()}
         </button>
       </footer>
     </main>

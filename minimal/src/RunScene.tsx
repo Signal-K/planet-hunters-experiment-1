@@ -7,7 +7,7 @@ import type { MinimalSceneHandle } from '@takeon/engine'
 import MiningScreen from '@landnam/components/game/screens/MiningScreen'
 import MineralChip from '@landnam/components/game/MineralChip'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
-import { CHAPTERS, francs, type Chapter, type Verb } from './chapters'
+import { francs, type Chapter, type Verb } from './chapters'
 import { resultFor, type RunResult } from './progress'
 import { Scenery } from './scenes'
 
@@ -47,10 +47,10 @@ export function RunScene({ chapter, onFinish, onQuit }: {
   const header = (
     <header className="mn-scene-top">
       <button className="mn-chip mn-back" onClick={onQuit}>‹ LEAVE</button>
+      <Steps count={steps.length} at={index} />
       <span className="mn-chip mn-place">{step === 'deliver' ? chapter.deliveryTarget?.name : step === 'launch' || step === 'home' ? 'Home' : target?.name}</span>
     </header>
   )
-  const kicker = `CHAPTER ${chapter.number} OF ${CHAPTERS.length} · STEP ${index + 1} OF ${steps.length}`
 
   if (step === 'mine' && mission && target) {
     // Landnam's mining scene, whole: fly, fire, fill the order, head out.
@@ -78,10 +78,6 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         <Scenery kind="launch" autoLaunch={false} onReady={s => (scene.current = s)} />
         {header}
         <footer className="mn-scene-bottom">
-          <section className="mn-card">
-            <p className="mn-eyebrow">{kicker}</p>
-            <p className="mn-goal">{chapter.verb === 'deploy' ? `${mission?.payload?.name ?? 'Payload'} is on the pad.` : chapter.verb === 'build' ? 'Materials are loaded.' : `Rocket fuelled for ${target?.name}.`}</p>
-          </section>
           <button
             className="mn-cta"
             disabled={busy}
@@ -91,8 +87,7 @@ export function RunScene({ chapter, onFinish, onQuit }: {
               window.setTimeout(next, LIFTOFF_MS)
             }}
           >
-            <span className="mn-cta-kicker">{busy ? 'LIFTOFF' : 'READY'}</span>
-            <span>LAUNCH</span>
+            {busy ? 'LIFTOFF' : 'LAUNCH'}
           </button>
         </footer>
       </main>
@@ -106,13 +101,10 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         {header}
         <footer className="mn-scene-bottom">
           <section className="mn-card">
-            <p className="mn-eyebrow">{kicker}</p>
-            <p className="mn-goal">Drop the order at {chapter.deliveryTarget?.name}'s outpost.</p>
             <Haul minerals={cargo} />
           </section>
           <button className="mn-cta" onClick={next}>
-            <span className="mn-cta-kicker">SECOND STOP</span>
-            <span>DELIVER</span>
+            DELIVER
           </button>
         </footer>
       </main>
@@ -140,13 +132,11 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         {header}
         <footer className="mn-scene-bottom">
           <section className="mn-card">
-            <p className="mn-eyebrow">{kicker}</p>
-            <p className="mn-goal">{mission?.title ?? 'Build'} on {target?.name}.</p>
+            <p className="mn-title">{mission?.title ?? 'Build'}</p>
             <Haul minerals={mission?.requires.minerals ?? {}} />
           </section>
           <button className="mn-cta" disabled={busy} onClick={build}>
-            <span className="mn-cta-kicker">{busy ? 'RAISING' : 'ON SITE'}</span>
-            <span>BUILD</span>
+            {busy ? 'RAISING' : 'BUILD'}
           </button>
         </footer>
       </main>
@@ -159,13 +149,8 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         <Scenery kind="launch" autoLaunch />
         {header}
         <footer className="mn-scene-bottom">
-          <section className="mn-card">
-            <p className="mn-eyebrow">{kicker}</p>
-            <p className="mn-goal">In orbit{target ? ` at ${target.name}` : ''}. Release the {mission?.payload?.name?.toLowerCase() ?? 'payload'}.</p>
-          </section>
           <button className="mn-cta" onClick={next}>
-            <span className="mn-cta-kicker">IN ORBIT</span>
-            <span>DEPLOY</span>
+            DEPLOY
           </button>
         </footer>
       </main>
@@ -178,14 +163,13 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         <Scenery kind="deposit" target={target} minerals={target?.minerals} />
         {header}
         <footer className="mn-scene-bottom">
-          <section className="mn-card">
-            <p className="mn-eyebrow">{kicker}</p>
-            <p className="mn-goal">{scanned ? `${target?.name} holds:` : `Landed on ${target?.name}. Scan the ground.`}</p>
-            {scanned && <Haul minerals={Object.fromEntries((target?.minerals ?? []).slice(0, 4).map(id => [id, 0]))} />}
-          </section>
+          {scanned && (
+            <section className="mn-card">
+              <Haul minerals={Object.fromEntries((target?.minerals ?? []).slice(0, 4).map(id => [id, 0]))} />
+            </section>
+          )}
           <button className="mn-cta" onClick={() => (scanned ? next() : setScanned(true))}>
-            <span className="mn-cta-kicker">{scanned ? 'READINGS IN' : 'SURVEY'}</span>
-            <span>{scanned ? 'HEAD HOME' : 'SCAN'}</span>
+            {scanned ? 'HEAD HOME' : 'SCAN'}
           </button>
         </footer>
       </main>
@@ -199,18 +183,15 @@ export function RunScene({ chapter, onFinish, onQuit }: {
       <Scenery kind="outpost" />
       <header className="mn-scene-top">
         <span className="mn-chip mn-place">Home</span>
-        {result.francs > 0 && <span className="mn-chip mn-money">+{francs(result.francs)}</span>}
       </header>
       <footer className="mn-scene-bottom">
         <section className="mn-card">
-          <p className="mn-eyebrow">CHAPTER {chapter.number} DONE · {chapter.name.toUpperCase()}</p>
           <p className="mn-goal">{result.outcome}</p>
           {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
           {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
         </section>
         <button className="mn-cta" onClick={() => onFinish(result)}>
-          <span className="mn-cta-kicker">NEXT CHAPTER</span>
-          <span>CONTINUE</span>
+          CONTINUE
         </button>
       </footer>
     </main>
@@ -224,5 +205,14 @@ function Haul({ minerals }: { minerals: Record<string, number> }) {
     <div className="mn-haul">
       {rows.map(([id, n]) => <MineralChip key={id} mineral={id} count={n || undefined} />)}
     </div>
+  )
+}
+
+/** Where the run is, as dots: no "step 2 of 3" to read. */
+function Steps({ count, at }: { count: number; at: number }) {
+  return (
+    <span className="mn-steps" aria-label={`Step ${at + 1} of ${count}`}>
+      {Array.from({ length: count }, (_, i) => <i key={i} className={i < at ? 'mn-step-done' : i === at ? 'mn-step-now' : ''} />)}
+    </span>
   )
 }
