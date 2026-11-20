@@ -344,6 +344,17 @@
    ]
   },
   {
+   "id": "signal-dialogue",
+   "name": "Signals ready dismissal",
+   "flow": "records",
+   "web": "ui-signal-dialogue",
+   "native": "hub-phone",
+   "tickets": [
+    "SSL-868"
+   ],
+   "objective": "Dismiss the current signals, navigate away and back; the popup stays closed while the Data hub remains accessible."
+  },
+  {
    "id": "sky-dialogue",
    "name": "Sky dialogue",
    "flow": "records",

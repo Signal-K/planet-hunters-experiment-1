@@ -732,6 +732,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
   merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
   merged.player.telescopeAim = mergeTelescopeAim(current.player.telescopeAim, remoteState.player?.telescopeAim)
+  merged.player.dismissedHubPrompts = maxMergeRecord(current.player.dismissedHubPrompts, remoteState.player?.dismissedHubPrompts)
   merged.player.skyMap = mergeSkyMaps(current.player.skyMap, remoteState.player?.skyMap)
   merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
   merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)

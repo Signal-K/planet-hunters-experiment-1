@@ -2,9 +2,15 @@ import type { Player } from '@/lib/game-types'
 
 export const HUB_PROMPT_TRANSIT_TELESCOPE = 'transit-telescope'
 
-export type HubPromptKey = typeof HUB_PROMPT_TRANSIT_TELESCOPE
+export type HubPromptKey = typeof HUB_PROMPT_TRANSIT_TELESCOPE | `signal:${string}:${string}`
+
+/** Identity follows the candidate, not its position or the changing ready count. */
+export function signalPromptKey(signal: { kind: string; id: string }): HubPromptKey {
+  return `signal:${signal.kind}:${signal.id}`
+}
 
 export function hubPromptValue(key: HubPromptKey, player: Pick<Player, 'transitSatelliteLaunchedAt'>): number {
+  if (key.startsWith('signal:')) return 1
   return player.transitSatelliteLaunchedAt ? 0 : 1
 }
 

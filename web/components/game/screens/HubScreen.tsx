@@ -39,7 +39,7 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
 import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
+import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, signalPromptKey, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
@@ -336,13 +336,15 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       placement: 'viewport-clear',
       onCta: () => onPointTelescope(needsPointing[0]),
     }
-    : signals.length > 0
+    : signals.some(signal => !isHubPromptDismissed(player, signalPromptKey(signal)))
     ? {
+      id: signals.map(signalPromptKey).sort().join('|'),
       title: signals.length === 1 ? '1 signal ready' : `${signals.length} signals ready`,
       body: 'Your telescopes found something. Classify it and the research moves forward.',
       cta: 'Classify',
       placement: 'viewport-clear',
       onCta: () => onOpenScene('instrument-hub'),
+      onDismiss: onDismissHubPrompt ? () => signals.forEach(signal => onDismissHubPrompt(signalPromptKey(signal))) : undefined,
     }
     : undefined
 

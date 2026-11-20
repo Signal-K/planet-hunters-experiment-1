@@ -195,6 +195,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
+      { key: 'ui-signal-dialogue', label: 'Signals ready dismissal', hint: 'SSL-868: pointed space telescope with its live daily feed; dismiss the signal popup and leave and revisit the Base', stage: 'free-ops' },
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
@@ -1205,6 +1206,11 @@ function fixture(name: string): Partial<GameState> | null {
           skyMap: Object.fromEntries(['18_8', '20_8', '19_7', '17_9', '5_6', '6_6', '12_3', '0_10'].map((id, i) => [id, { week: `2026-W${40 + i}`, instrument: i % 3 === 2 ? 'deep-space' as const : 'transit' as const }])),
         },
       }
+
+    case 'ui-signal-dialogue': {
+      const base = fixture('ui-sky-dialogue')!
+      return { ...base, player: { ...base.player!, telescopeAim: { transit: { week: weekKey(Date.now()), sector: 'band' }, 'deep-space': { week: weekKey(Date.now()), sector: 'band' }, saturn: { week: weekKey(Date.now()), sector: 'band' } } } }
+    }
 
     case 'ui-sky-dialogue': {
       const base = fixture('cp-late') as GameState

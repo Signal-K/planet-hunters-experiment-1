@@ -17,6 +17,8 @@ import { holdSurveys } from '@/lib/survey-gating'
  */
 
 export interface BuildingCallout {
+  /** Stable identity for automatic opening; callbacks may change every render. */
+  id?: string
   title: string
   body: string
   cta: string
@@ -170,11 +172,14 @@ export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w
 
   // Small delay so it reads as the base speaking up, rather than slamming
   // into view on load. Matches the mockup's 900ms auto-open.
+  const calloutId = callout ? callout.id ?? callout.title : undefined
   useEffect(() => {
-    if (!callout) return
+    setCalloutOpen(false)
+    setSeen(false)
+    if (!calloutId) return
     const t = setTimeout(() => { setCalloutOpen(true); setSeen(true) }, 900)
     return () => clearTimeout(t)
-  }, [callout])
+  }, [calloutId])
 
   return (
     // data-testid lives on this wrapper, not the inner button, because the
@@ -328,7 +333,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w
               <button
                 type="button"
                 aria-label="Dismiss"
-                onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
+                onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onDismiss?.() }}
                 style={{
                   // 46px stays at least 44px while the bubble scales to 0.96 before it opens.
                   flex: '0 0 auto', width: 46, height: 46, margin: '-8px -8px 0 0', border: 'none', cursor: 'pointer',

@@ -1192,6 +1192,14 @@ enum AuthoredSceneDeclarations {
           ],
           "prefab": "base-dock",
           "note": "Bottom centre: previous, Build, Menu, next. No shared slot fits it yet (see bottom-nav in shared/layout/base-hud-zones.json)."
+        },
+        {
+          "id": "signal-callout",
+          "kind": "ui",
+          "mechanics": [
+            "persistence"
+          ],
+          "note": "Dismissal follows signal kind and candidate id across navigation, reload and sync. Render updates do not auto-open the same callout. New candidates may notify; Data hub access remains available."
         }
       ]
     },
