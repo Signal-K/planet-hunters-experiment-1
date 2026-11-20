@@ -1,6 +1,7 @@
 import { dailyTessCandidates, dailyAsteroidCandidates, dailySaturnCandidates, type TessCandidate, type AsteroidCandidate, type SaturnCandidate } from '@/lib/data'
 import { isNewMoonDay } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
+import { groundTelescopeLevel } from '@/lib/ground-telescope-upgrades'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
 export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
@@ -27,6 +28,7 @@ type GroundTelescopePlayer = {
   placed?: readonly string[]
   placementPlots?: Record<string, number>
   groundTelescopeGrandfathered?: boolean
+  groundTelescopeLevels?: Record<string, number>
 }
 
 export function ownedGroundTelescopes(player: { placed?: readonly string[] }): string[] {
@@ -98,7 +100,7 @@ type DeepSpaceInstrumentFeedPlayer = Pick<
   | 'deepSpaceTelescopeBuilt'
   | 'placed'
   | 'instrumentDigestNotifiedOn'
-> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered'>>
+> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'groundTelescopeLevels'>>
 
 export function instrumentDigestDateKey(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
@@ -166,7 +168,8 @@ export function deepSpaceInstrumentDigest(
   const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
   // A player with only a ground telescope has no Space Telescope share.
   const space = player.deepSpaceTelescopeBuilt === false ? 0 : deepSpaceInstrumentLevel(player)
-  const ground = observingGroundTelescopes(player) * GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES
+  const ground = GROUND_TELESCOPE_IDS.reduce((sum, id) => sum + (groundTelescopeObserving(player, id) ? groundTelescopeLevel(player, id) : 0), 0)
+  if (space + ground === 0) return []
   return dailyAsteroidCandidates(candidates, dateKey, space + ground + extra)
 }
 

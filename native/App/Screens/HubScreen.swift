@@ -107,7 +107,10 @@ struct HubScreen: View {
                 topLeftHud(insets: insets, portrait: portrait)
                 topRightHud(insets: insets)
             }
-            if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
+            if placing, let upgrading {
+                if ControlStation.isGroundTelescope(upgrading) { groundScopeUpgradeBar(upgrading, insets: insets) }
+                else { upgradeBar(upgrading, insets: insets) }
+            }
             else if placing { picker(width: size.width, insets: insets) }
             if !placing { BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
@@ -220,6 +223,18 @@ struct HubScreen: View {
 
     private func picker(width: CGFloat, insets: EdgeInsets) -> some View {
         VStack(spacing: 6) {
+            ForEach(ControlStation.ownedGroundTelescopes(store.player), id: \.self) { id in
+                Button {
+                    upgrading = id
+                } label: {
+                    Text("Ground telescope\(id.hasSuffix("-2") ? " 2" : "") · Level \(GroundTelescopeUpgrades.level(store.player, id)) · \(unplacedAnnex.contains(id) ? "Unplaced" : "On annex") · Upgrade")
+                        .font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                        .padding(.horizontal, 12).frame(minHeight: 44)
+                        .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("customize-\(id)")
+            }
             if let placeNote {
                 Text(placeNote).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                     .padding(.horizontal, 12).padding(.vertical, 6)
@@ -273,6 +288,7 @@ struct HubScreen: View {
 
     /// In Build mode a finished upgradable building opens its upgrade bar instead of its screen.
     private func offerUpgrade(_ kind: String) -> Bool {
+        if placing && ControlStation.isGroundTelescope(kind) && store.player.placed.contains(kind) { upgrading = kind; return true }
         guard placing, BuildingLevels.ids.contains(kind), store.player.placed.contains(kind),
               Construction.progress(store.player.underConstruction[kind], now: store.now) >= 1 else { return false }
         upgrading = kind
@@ -318,6 +334,42 @@ struct HubScreen: View {
         .padding(.horizontal, 16)
         .padding(.top, placing ? max(insets.top, 12) : insets.top < 10 ? 124 : insets.top + 68) // landscape: clear the clock row plus the sky-event chip
         .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
+        .accessibilityIdentifier("action-confirm-bar")
+    }
+
+    private func groundScopeUpgradeBar(_ id: String, insets: EdgeInsets) -> some View {
+        let level = GroundTelescopeUpgrades.level(store.player, id)
+        let cost = GroundTelescopeUpgrades.cost(store.player, id)
+        let observing = ControlStation.groundTelescopeObserving(store.player, id)
+        let reason = GroundTelescopeUpgrades.reason(store.player, id)
+        let iron = store.player.stash["iron", default: 0]
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Level \(level) of 3 · \(observing ? "Observing" : "Unplaced")").font(AppFont.display(14)).foregroundStyle(Theme.textMuted)
+            Text("Upgrade ground telescope\(id.hasSuffix("-2") ? " 2" : "")").font(AppFont.display(18)).foregroundStyle(Theme.hudInk)
+            Text("Now: \(level) asteroid candidate\(level == 1 ? "" : "s") per day.")
+                .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            if let cost {
+                Text("Next: \(level + 1) candidates per day. Cost: \(cost) U iron; \(iron) U stored. \(reason ?? "Upgrades are permanent.")")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            } else { Text("Fully upgraded.").font(AppFont.body(14)).foregroundStyle(Theme.hudInk) }
+            if !observing {
+                Text("Place it on a free annex slot to observe. You can upgrade it here before placing it.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            }
+            HStack(spacing: 8) {
+                Button("CANCEL") { upgrading = nil }
+                    .font(AppFont.display(14)).foregroundStyle(Theme.hudInk).frame(minWidth: 88, minHeight: 44)
+                    .accessibilityIdentifier("confirm-action-dismiss")
+                PrimaryButton(title: cost.map { "Upgrade · \($0) U iron" } ?? "Max level", enabled: reason == nil) {
+                    store.upgradeGroundTelescope(id)
+                }.accessibilityIdentifier("confirm-action-confirm")
+            }
+        }
+        .padding(14).frame(maxWidth: 440, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
+        .padding(.horizontal, 16).padding(.top, max(insets.top, 12)).padding(.bottom, aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
         .accessibilityIdentifier("action-confirm-bar")
     }

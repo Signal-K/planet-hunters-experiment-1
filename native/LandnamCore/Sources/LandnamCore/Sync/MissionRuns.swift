@@ -130,6 +130,7 @@ public enum CloudMerge {
         n.player.placed = l.placed + r.placed.filter { !l.placed.contains($0) }
         n.player.placementPlots = r.placementPlots.merging(l.placementPlots) { _, mine in mine }
         n.player.buildingLevels = maxRec(l.buildingLevels, r.buildingLevels)
+        n.player.groundTelescopeLevels = GroundTelescopeUpgrades.sanitize(maxRec(l.groundTelescopeLevels, r.groundTelescopeLevels))
         n.player.launchpadUpgraded = l.launchpadUpgraded || r.launchpadUpgraded
         n.player.discoveredExoplanetTargets = r.discoveredExoplanetTargets.merging(l.discoveredExoplanetTargets) { _, mine in mine }
         n.player.tessClassifications = r.tessClassifications.merging(l.tessClassifications) { _, mine in mine }

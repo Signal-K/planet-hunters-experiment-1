@@ -1195,6 +1195,15 @@
             "persistence"
           ],
           "note": "Dismissal follows signal kind and candidate id across navigation, reload and sync. Render updates do not auto-open the same callout. New candidates may notify; Data hub access remains available."
+        },
+        {
+          "id": "ground-telescope-upgrades",
+          "kind": "ui",
+          "mechanics": [
+            "construction",
+            "persistence"
+          ],
+          "note": "Customize lists every owned ground telescope, including unplaced or off-screen ones. Each shows level and placement. Its upgrade rail shows current and next daily candidates, iron cost, shortfall or max-level reason. L2 costs 1 U iron; L3 costs 2 U. Each observing telescope supplies its level in candidates per day; unplaced scopes wait except the grandfathered first scope."
         }
       ]
     },

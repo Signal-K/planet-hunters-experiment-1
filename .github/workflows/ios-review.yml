@@ -70,6 +70,23 @@ jobs:
           CODE_SIGNING_REQUIRED=NO
 
       # SSL-709: launch the existing account-free SceneCatalog; these are rendered review captures, not an e2e flow.
+      - name: Capture ground telescope upgrade fixtures
+        run: |
+          set -euo pipefail
+          SCOPE_SIM=$(xcrun simctl list devices available --json | python3 -c 'import json,sys; print(next(d["udid"] for ds in json.load(sys.stdin)["devices"].values() for d in ds if d["name"] == "iPhone 16"))')
+          xcrun simctl bootstatus "$SCOPE_SIM" -b
+          xcrun simctl install "$SCOPE_SIM" "$RUNNER_TEMP/landnam-ios/Build/Products/Debug-iphonesimulator/Landnam.app"
+          mkdir -p "$RUNNER_TEMP/scope-captures"
+          for SCOPE_SCENE in ground-telescope-upgrades-phone ground-telescope-upgrades-landscape ground-telescope-upgrade-l2 ground-telescope-upgrade-max ground-telescope-upgrade-poor; do
+            xcrun simctl launch --terminate-running-process "$SCOPE_SIM" com.atlasskyventures.sslandnam -scene "$SCOPE_SCENE"
+            sleep 3
+            xcrun simctl io "$SCOPE_SIM" screenshot "$RUNNER_TEMP/scope-captures/$SCOPE_SCENE.png"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ground-telescope-captures
+          path: ${{ runner.temp }}/scope-captures/
+
       - name: Capture native mining fixtures
         run: |
           set -euo pipefail

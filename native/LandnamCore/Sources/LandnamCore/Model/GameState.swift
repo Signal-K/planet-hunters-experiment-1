@@ -103,6 +103,7 @@ public struct Player: Codable, Equatable, Sendable {
     public var launchpadUpgraded: Bool = false
     /// Levels 2-3 of upgradable buildings (`BuildingLevels`); absent means level 1. Same JSON key as web.
     public var buildingLevels: [String: Int] = [:]
+    public var groundTelescopeLevels: [String: Int] = [:]
     public var lastClient: String?
     public var arrivalAt: Double?
     public var transitStartedAt: Double?
@@ -183,7 +184,9 @@ public struct Player: Codable, Equatable, Sendable {
         get("underConstruction", &underConstruction); get("discoveredExoplanetTargets", &discoveredExoplanetTargets)
         getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("lastSeenConfirmedAt", &lastSeenConfirmedAt); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); 
         get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); 
-        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient); 
+        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient);
+        get("groundTelescopeLevels", &groundTelescopeLevels)
+        groundTelescopeLevels = GroundTelescopeUpgrades.sanitize(groundTelescopeLevels)
         getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
@@ -247,7 +250,8 @@ public struct Player: Codable, Equatable, Sendable {
         try put("underConstruction", underConstruction); try put("discoveredExoplanetTargets", discoveredExoplanetTargets)
         try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("lastSeenConfirmedAt", lastSeenConfirmedAt); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); 
         try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); 
-        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient); 
+        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient);
+        try put("groundTelescopeLevels", GroundTelescopeUpgrades.sanitize(groundTelescopeLevels))
         try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)

@@ -423,6 +423,11 @@ public final class GameStore {
         guard next != state else { return false }
         apply(next); return true
     }
+    @discardableResult public func upgradeGroundTelescope(_ id: String) -> Bool {
+        let next = GroundTelescopeUpgrades.applyUpgrade(state, id: id)
+        guard next != state else { return false }
+        apply(next); return true
+    }
     /// Applies a polled global confirmation; returns true when it is new news worth a notice.
     @discardableResult
     public func noteConfirmedDiscovery(_ lastConfirmedAt: String?) -> Bool {

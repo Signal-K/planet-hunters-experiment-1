@@ -35,6 +35,18 @@
    ]
   },
   {
+   "id": "ground-telescope-upgrades",
+   "name": "Ground telescope upgrades",
+   "flow": "progression",
+   "web": "hub-telescope-upgrades",
+   "native": "ground-telescope-upgrades-phone",
+   "tickets": [
+    "SSL-855",
+    "SSL-802"
+   ],
+   "objective": "Open Menu > Build. Upgrade the unplaced telescope with 1 U iron, then 2 U; level 3 disables further upgrades. Place it to observe."
+  },
+  {
    "id": "hub",
    "name": "Earth Base",
    "flow": "core-loop",

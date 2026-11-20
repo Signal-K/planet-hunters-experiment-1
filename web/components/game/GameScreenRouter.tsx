@@ -1,5 +1,6 @@
 'use client'
 
+import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
@@ -377,6 +378,7 @@ function ScreenBody({
           }}
           onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
+          onUpgradeGroundTelescope={id => game.setPlayer(current => applyGroundTelescopeUpgrade(current, id))}
           onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')

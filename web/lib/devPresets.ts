@@ -200,6 +200,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-telescope-upgrades', label: 'Ground telescope upgrades', hint: 'SSL-855: owned unplaced telescope, 3 U iron for levels 2 and 3; open Build in Menu', stage: 'free-ops' },
       { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
       { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
       { key: 'ui-surface-silo', label: 'Surface Silo contents', hint: 'Full contents page with mixed ore, overflow and Exchange access', stage: 'free-ops' },
@@ -378,6 +379,11 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
+
+    case 'hub-telescope-upgrades': {
+      const base = fixture('hub-unplaced')!
+      return { ...base, player: { ...base.player!, stash: { iron: 3 }, groundTelescopeLevels: {}, groundTelescopeGrandfathered: false } }
+    }
 
     case 'hub-pad-l2':
     case 'hub-unplaced':

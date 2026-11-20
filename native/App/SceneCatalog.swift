@@ -28,6 +28,16 @@ enum SceneCatalog {
         CatalogScene(id: id, size: CGSize(width: w, height: h), make: { AnyView(build()) })
     }
 
+    private static func groundScopeState(level: Int = 1, iron: Int = 3) -> GameState {
+        var s = GameState()
+        s.player.freeOperations = true
+        s.player.placed = ["launchpad", "control-station", "ground-telescope"]
+        s.player.placementPlots = ["launchpad": 0, "control-station": 3]
+        s.player.stash = ["iron": iron]
+        s.player.groundTelescopeLevels = ["ground-telescope": level]
+        return s
+    }
+
     private static func settingsOverlay(focusBaseMove: Bool = false) -> some View {
         HubScreen(safeAreaOverride: EdgeInsets())
             .overlay { SettingsSheet(onClose: {}, initialScrollTarget: focusBaseMove ? "base-landscape-move" : nil) }
@@ -469,6 +479,21 @@ enum SceneCatalog {
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },
         // SSL-802: one ground telescope on the West annex and ₣6M: Add a telescope buys the second into the Unplaced tray.
+        scene("ground-telescope-upgrades-phone", 874) {
+            HubScreen(placing: true).environment(GameStore(state: groundScopeState()))
+        },
+        scene("ground-telescope-upgrades-landscape", 402, w: 874) {
+            HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true).environment(GameStore(state: groundScopeState()))
+        },
+        scene("ground-telescope-upgrade-l2", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(level: 2, iron: 2)))
+        },
+        scene("ground-telescope-upgrade-max", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(level: 3, iron: 0)))
+        },
+        scene("ground-telescope-upgrade-poor", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(iron: 0)))
+        },
         scene("second-ground-telescope-phone", 874) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.francs = 6_000_000
