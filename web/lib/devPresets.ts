@@ -7,6 +7,7 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
+const WORKSHOP_MISSION = { ...(MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres') ?? FIRST_MISSION), id: 'qa-workshop-relay', title: 'Workshop relay fit check', targetId: 'lutetia', requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 8, drill_tier: 2, max_orbit: 6 } }
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
 // SSL-332 Transport lesson (guided mission 2) is the two-leg "mine then
 // deliver" client choice — Belt Courier Run (Bennu -> Vesta) is the authored
@@ -213,6 +214,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
       { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
+      { key: 'ui-rocket-workshop', label: 'Rocket workshop', hint: 'SSL-850: weekly parts, livery and mission limits', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -1301,6 +1303,19 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-rocket-workshop':
+      return {
+        screen: 'rocket-workshop',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 12_000_000, missionsDone: 2,
+          researchPath: { week: '2026-11-16', path: 'explorer', claimedSteps: [2, 4, 5] },
+          researchRocketParts: ['storage-silo-t2', 'fusion-thruster-t2', 'ringed-laser-t3'],
+          dailyClientPool: { date: new Date().toISOString().slice(0, 10), missions: [WORKSHOP_MISSION], acceptedId: null, completedIds: [] },
+          shipCustomizerParts: {} },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: WORKSHOP_MISSION.id, targetId: WORKSHOP_MISSION.targetId,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
     case 'ui-launchpad':
       return {
         screen: 'launchpad',

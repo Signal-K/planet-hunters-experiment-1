@@ -22,6 +22,7 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   targets: 'plan',
   'rocket-buy': 'plan',
   launchpad: 'launch',
+  'rocket-workshop': 'launch',
   fab: 'launch',
   flight: 'flight',
   landing: 'flight',

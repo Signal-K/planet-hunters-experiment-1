@@ -41,6 +41,7 @@ const loadMissionOperationRoutes = () => import('@/components/game/MissionOperat
 const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
+const loadRocketWorkshopScreen = () => import('@/components/game/screens/RocketWorkshopScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
 const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
@@ -57,7 +58,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
-  loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadHangarScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
   // Nested inside the mission plan's destination sheet (construction and contract runs).
@@ -69,6 +70,7 @@ const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: Sc
 const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
+const RocketWorkshopScreen = dynamic(loadRocketWorkshopScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
@@ -674,6 +676,13 @@ function ScreenBody({
         />
       )
 
+    case 'rocket-workshop':
+      return <RocketWorkshopScreen player={game.player} rocket={game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)?.rocket ?? game.rocket}
+        mission={game.mission} target={game.target} deliveryTarget={game.catalog.targets.find(target => target.id === game.mission?.deliveryTargetId)}
+        onBack={() => game.go(game.mission && game.target ? 'fab' : 'launchpad')}
+        onInstall={game.confirmShipCustomizerBuild}
+        onLivery={rocketLivery => game.setPlayer(player => ({ ...player, rocketLivery }))}
+        onResearch={() => game.go('community-research')} />
     case 'hangar':
       return (
         <HangarScreen
@@ -854,6 +863,7 @@ function ScreenBody({
           hasStagedRocket={game.player.stagedRockets?.some(vehicle => vehicle.id === game.player.selectedStagedRocketId && vehicle.location === 'launchpad') ?? false}
           onDismantle={() => game.onDismantleStagedRocket()}
           guided={onboardingActive}
+          onOpenWorkshop={() => game.go('rocket-workshop')}
           onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
           onRequestLaunch={() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)

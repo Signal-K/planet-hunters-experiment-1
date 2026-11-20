@@ -385,6 +385,14 @@
    "tickets": []
   },
   {
+   "id": "rocket-workshop",
+   "name": "Rocket workshop",
+   "flow": "core-loop",
+   "web": "ui-rocket-workshop",
+   "nativeDeferred": "iOS comes in cycle 13 — Liam, SSL-850 comment, 19 Nov 2026",
+   "tickets": ["SSL-850"]
+  },
+  {
    "id": "launchpad",
    "name": "Launchpad",
    "flow": "core-loop",

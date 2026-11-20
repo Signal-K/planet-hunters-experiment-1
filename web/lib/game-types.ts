@@ -105,6 +105,7 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'launchpad'
+  | 'rocket-workshop'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'radio-meteors'
@@ -132,6 +133,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub-subsurface',
   'surface-silo',
   'launchpad',
+  'rocket-workshop',
   'flight',
   'landing',
   'mining',
@@ -452,6 +454,8 @@ export interface Player {
   // Persisted ship-customiser loadout for the player's owned Explorer (sr1) —
   // part id installed per room slot. Confirmed builds deduct real francs and
   // survive across sessions instead of resetting to a fresh 3B mock budget.
+  rocketLivery?: import('@/lib/launchpad/workshop').RocketLivery
+  researchRocketParts?: string[]
   shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.

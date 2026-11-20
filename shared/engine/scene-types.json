@@ -42,7 +42,7 @@
     "build": {
       "description": "Assembly and customisation around a physical vehicle or structure.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["hangar", "rocket-buy"]
+      "routes": ["hangar", "rocket-buy", "rocket-workshop"]
     },
     "exchange-lab": {
       "description": "In-world instruments, trading and processing surfaces.",

@@ -333,7 +333,7 @@ export default function MissionOperationRoutes({
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
           laserBonusCharges={laserCapacitorBonus(game.player.laserCapacitorLevel)}
-          laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
+          laserTier={Math.max(game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1, loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).laserTier ?? 0)}
           trainingMiningTry={trainingMiningTry}
           deliveryTargetName={deliveryTargetName}
           onAbandon={game.abandonMission}

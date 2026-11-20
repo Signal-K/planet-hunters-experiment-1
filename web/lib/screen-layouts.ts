@@ -107,6 +107,7 @@ export const GAME_ROUTES = [
   { path: '/game/radio-meteors', screen: 'radio-meteors', surface: 'instrument' },
   { path: '/game/probe-scan', screen: 'probe-scan', surface: 'instrument' },
   { path: '/game/probe-watch', screen: 'probe-watch', surface: 'takeon' },
+  { path: '/game/rocket-workshop', screen: 'rocket-workshop', surface: 'instrument' },
   { path: '/game/hangar', screen: 'hangar', surface: 'instrument' },
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },
   { path: '/game/launchpad', screen: 'launchpad', surface: 'instrument' },

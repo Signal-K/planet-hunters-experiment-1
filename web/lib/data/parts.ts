@@ -85,7 +85,7 @@ export function validateBuild(opts: {
   rocket: RocketConfig
   parts?: typeof PARTS
     /** Cargo units and orbit reach added by fitted customizer parts; the builder chips already show them (SSL-647). */
-  loadoutBonus?: { capacity: number; range: number }
+  loadoutBonus?: { capacity: number; range: number; laserTier?: number }
   /** The monthly community goal's fuel efficiency as a fraction (0.07); adds orbit reach (SSL-685). */
   fuelFraction?: number
   /** Launchpad level 1-3. When given, a chassis that needs a bigger pad fails the check (SSL-693). */
@@ -117,9 +117,10 @@ export function validateBuild(opts: {
     holds.push({ kind: 'cargo', have: cargoCapacity, need: mission.requires.cargo_min })
   }
   // cargo-module-t1 is a valid drill-slot occupant (rate === 0 is intentional for cargo missions)
-  if (drill.id !== 'cargo-module-t1' && (drill.tier ?? 0) < mission.requires.drill_tier) {
-    problems.push(`Drill T${drill.tier} below mission requirement T${mission.requires.drill_tier}`)
-    holds.push({ kind: 'drill', have: drill.tier ?? 0, need: mission.requires.drill_tier })
+  const drillTier = Math.max(drill.tier ?? 0, opts.loadoutBonus?.laserTier ?? 0)
+  if (drill.id !== 'cargo-module-t1' && drillTier < mission.requires.drill_tier) {
+    problems.push(`Drill T${drillTier} below mission requirement T${mission.requires.drill_tier}`)
+    holds.push({ kind: 'drill', have: drillTier, need: mission.requires.drill_tier })
   }
 
   return { chassis, propulsion, drill, ok: problems.length === 0, problems, holds }

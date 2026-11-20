@@ -41,6 +41,7 @@ interface LaunchpadScreenProps {
   hasStagedRocket?: boolean
   onDismantle?: () => void
   cargoNeed?: number
+  onOpenWorkshop?: () => void
   onInstallLoadout?: (next: BuilderLoadout, prev: BuilderLoadout) => boolean
   onRequestLaunch?: () => void
   launching?: boolean
@@ -63,7 +64,7 @@ const STARTER_ROCKET: RocketConfig = { chassis: 'hull-mk1', propulsion: 'ion-a1'
 export default function LaunchpadScreen({
   onBack, onViewContracts, onLaunchpadAction, onResumeMission, missionRuns = [], onResumeMissionRun, player, rocketImageSrc = '', selectedRocketName = 'Explorer', hydrated = false, onAbandonMission,
   mission = null, target = null, rocket = STARTER_ROCKET, onInstallLoadout, cargoNeed, onRequestLaunch, launching = false, onLaunchComplete, launchTestId = 'launch-btn', launchDisabled = false, launchLabel,
-  missionsDone, guided = false, assembly, earthBiome, hasStagedRocket = false, onDismantle,
+  onOpenWorkshop, missionsDone, guided = false, assembly, earthBiome, hasStagedRocket = false, onDismantle,
 }: LaunchpadScreenProps) {
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
@@ -106,6 +107,7 @@ export default function LaunchpadScreen({
         onBack={onBack}
         onLaunch={launch}
         onInstall={onInstallLoadout}
+        onOpenWorkshop={onOpenWorkshop}
         cargoNeed={cargoNeed}
         onDismantle={onDismantle}
         launching={launching}

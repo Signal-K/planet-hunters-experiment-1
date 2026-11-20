@@ -1,0 +1,61 @@
+.root { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: auto; padding: 12px; gap: 12px; background: var(--ln-blueprint-bg); color: var(--ln-blueprint-ink); font: 14px/1.4 var(--ln-font-display); }
+.root button { min-height: 44px; border: 2px solid var(--ln-blueprint-ink); border-radius: 8px; padding: 8px 12px; background: var(--ln-blueprint-paper); color: var(--ln-blueprint-ink); font: inherit; cursor: pointer; }
+.root button:focus-visible { outline: 3px solid var(--ln-blueprint-blue); outline-offset: 2px; }
+.root button[aria-pressed=true] { border-color: var(--ln-blueprint-blue); background-color: var(--ln-blueprint-paper-2); }
+.root button:disabled { opacity: .65; cursor: default; }
+.header { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.header div { flex: 1; }
+.header h1 { font-size: 20px; margin: 0; }
+.header span { font-size: 14px; }
+.workbench { flex: 1; min-height: 330px; display: grid; grid-template-columns: minmax(240px, 1fr) minmax(280px, 1fr); gap: 16px; }
+.bay { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; overflow: hidden; background: repeating-linear-gradient(90deg, transparent 0 59px, var(--ln-blueprint-line-strong) 60px 61px), linear-gradient(var(--ln-blueprint-paper-2), var(--ln-blueprint-bg)); border-bottom: 12px solid var(--ln-blueprint-ink); }
+.gantry { position: absolute; left: 12%; top: 0; bottom: 0; width: 24px; border: 3px solid var(--ln-blueprint-ink); background: repeating-linear-gradient(45deg, transparent 0 22px, var(--ln-blueprint-line-strong) 23px 26px); }
+.stack { position: relative; width: min(60%, 220px); padding-top: 4px; }
+.nose { height: 54px; width: 62%; margin: auto; clip-path: polygon(50% 0, 100% 95%, 100% 100%, 0 100%, 0 95%); background: var(--hull); border-bottom: 8px solid var(--trim); display: flex; align-items: flex-end; justify-content: center; color: var(--trim); font-size: 24px; }
+.root .section { position: relative; display: block; width: 100%; height: 48px; min-height: 48px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.section svg { display: block; width: 100%; height: 100%; }
+.section[aria-pressed=true] svg { filter: drop-shadow(0 0 3px var(--ln-blueprint-blue)); }
+.sectionLabel { position: absolute; left: 82%; top: 3px; background: var(--ln-blueprint-paper); padding: 2px 6px; border-left: 3px solid var(--trim); font-size: 14px; text-align: left; white-space: nowrap; }
+.sectionLabel small { display: block; font-size: 14px; max-width: 135px; overflow: hidden; text-overflow: ellipsis; }
+.plinth { z-index: 1; width: 100%; padding: 8px; text-align: center; background: var(--ln-blueprint-ink); color: var(--ln-blueprint-paper); }
+.console { min-width: 0; overflow: auto; padding: 4px; max-height: 600px; }
+.console nav { display: flex; gap: 8px; }
+.console h2 { font-size: 18px; margin: 12px 0 4px; }
+.console p { margin: 4px 0 12px; }
+.root .link { border: none; background: transparent; color: var(--ln-blueprint-blue); text-decoration: underline; }
+.tray { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.tray button { display: grid; grid-template-columns: 56px 1fr; width: 100%; gap: 8px; text-align: left; }
+.tray img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+.tray strong, .tray small { display: block; font-size: 14px; }
+.tray b { grid-column: 2; color: var(--ln-blueprint-blue); }
+.tray [data-earned=true] { border-color: var(--ln-blueprint-blue); }
+.livery fieldset { margin: 12px 0; border: 1px solid var(--ln-blueprint-line-strong); }
+.livery fieldset div { display: flex; flex-wrap: wrap; gap: 8px; }
+.livery button { text-transform: capitalize; }
+.livery i { display: inline-block; width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; border: 1px solid var(--ln-blueprint-ink); }
+.notice { min-height: 20px; }
+.readout { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 14px; border-top: 2px solid var(--ln-blueprint-ink); background: var(--ln-blueprint-paper); }
+.readout strong { margin-right: 4px; }
+.readout div:first-child { flex: 1; min-width: 200px; }
+.readout ul, .readout p { margin: 4px 0 0; }
+@media (max-width: 600px) and (orientation: portrait) { .workbench { grid-template-columns: 1fr; } .bay { min-height: 330px; } .stack { width: 170px; } .console { overflow: visible; max-height: none; } .header { gap: 8px; } .header h1 { font-size: 18px; } }
+@media (orientation: landscape) and (max-height: 600px) { .root { gap: 8px; } .workbench { flex: none; } .console { max-height: 330px; } }
+/* Keep the live limits on screen while the bay and parts console scroll independently. */
+.root { overflow: hidden; }
+.workbench { min-height: 0; }
+.bay { overflow: auto; justify-content: flex-start; }
+.stack { flex-shrink: 0; }
+.plinth { margin-top: auto; }
+.console { max-height: none; }
+@media (orientation: landscape) and (max-height: 600px) { .workbench { flex: 1; } .console { max-height: none; } .sectionLabel small { display: none; } }
+@media (max-width: 600px) and (orientation: portrait) { .root { overflow: auto; } .workbench { flex: none; min-height: auto; } .readout { position: sticky; bottom: -12px; z-index: 3; flex-shrink: 0; } }
+@media (orientation: landscape) and (max-height: 600px) {
+  .root { padding: 8px; }
+  .header { min-height: 44px; }
+  .nose { height: 32px; }
+  .root .section { height: 44px; min-height: 44px; }
+  .plinth { padding: 2px; }
+  .readout { padding: 6px 10px; }
+}
+.bay { justify-content: safe flex-end; }
+.plinth { margin-top: 0; flex-shrink: 0; }
