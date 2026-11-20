@@ -449,7 +449,7 @@ export class MiningController extends ScriptBehaviour {
           const minLabelX = halfLabel + 20
           const maxLabelX = Math.max(minLabelX, this.opts.worldWidth - halfLabel - 20)
           ore.label.x = Math.min(maxLabelX, Math.max(minLabelX, oreX))
-          if (!ore.chip || (ore.phase !== 'fall' && ore.phase !== 'land')) {
+          if (ore.phase === undefined) {
             visibleChipLabels.push({ ore, center: ore.label.x, halfWidth: halfLabel })
           }
         }
@@ -595,18 +595,18 @@ export class MiningController extends ScriptBehaviour {
     if (!debris) return
     const spawn = debris.getSpawn()
     this.updateCatchBeam(dt, !!spawn?.catchable && (spawn.ratePerMinute ?? 0) > 0)
-    const oncePending = !!spawn?.onceMineral && !this.onceDebrisSpawned
-    if (!spawn || !(spawn.ratePerMinute > 0 || oncePending)) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
+    if (!spawn) { this.debrisAccumulator = 0; this.debrisPrimed = false; return }
     if (!this.debrisPrimed) {
       this.debrisPrimed = true
-      this.debrisAccumulator = Math.max(this.debrisAccumulator, 1)
+      this.debrisAccumulator = spawn.ratePerMinute > 0 ? Math.max(this.debrisAccumulator, 1) : 0
       this.streakAccumulator = Math.max(this.streakAccumulator, 1)
     }
     if (spawn.onceMineral && !this.onceDebrisSpawned) {
       this.onceDebrisSpawned = true
       this.spawnDebris(spawn.onceMineral, spawn.speedFactor, !!spawn.onceHero)
     }
-    const rate = spawn.ratePerMinute
+    const rate = Math.max(0, spawn.ratePerMinute)
+    if (rate === 0) this.debrisAccumulator = 0
     this.debrisAccumulator += (rate / 60) * dt
     this.streakAccumulator += STREAKS_PER_SECOND * dt
     let alive = this.ores.filter(o => o.phase !== undefined).length
@@ -737,7 +737,8 @@ export class MiningController extends ScriptBehaviour {
   private placeDebris(ore: OreEntity, y: number): void {
     ore.go.transform.position.y = y
     if (ore.sprite) ore.sprite.y = Math.round(y)
-    if (ore.label) ore.label.y = y
+    if (ore.label) ore.label.y = y - ore.radius - 24
+    if (ore.halo) ore.halo.y = y
   }
 
   private showFallFrame(ore: OreEntity, frame: number): void {
@@ -778,6 +779,13 @@ export class MiningController extends ScriptBehaviour {
     const art = this.opts.debrisArt
     const variant = art && art.intact.length > 0 ? Math.floor(Math.random() * art.intact.length) : 0
     const go = new GameObject(`debris-${this.debrisCounter++}`, 'Debris', { position: { x, y } })
+    // A dark backing and bright rim separate the fragment from patterned skies.
+    const radius = hero ? 56 : art ? DEBRIS_RADIUS : 16
+    const halo = new Graphics()
+    halo.circle(0, 0, radius + 4).fill({ color: parseInt(ORE_STROKE.slice(1), 16), alpha: 0.9 })
+    halo.circle(0, 0, radius + 4).stroke({ color: mixHex(mineralColor, ORE_LABEL_FILL, 0.6), width: 2.5 })
+    halo.x = x; halo.y = y
+    this.opts.container.addChild(halo)
     let renderer: ShapeRenderer | null = null
     let sprite: Sprite | null = null
     if (art && art.intact[variant]) {
@@ -793,8 +801,8 @@ export class MiningController extends ScriptBehaviour {
       renderer = new ShapeRenderer(
         {
           shape: this.opts.mineralShapes?.[mineral] ?? 'diamond',
-          width: hero ? 48 : 22,
-          height: hero ? 48 : 22,
+          width: hero ? 48 : 32,
+          height: hero ? 48 : 32,
           color: ORE_FILL,
           strokeColor: ORE_STROKE,
           strokeWidth: 1.5,
@@ -810,8 +818,8 @@ export class MiningController extends ScriptBehaviour {
     if (sprite && catchable) sprite.scale.set(0.45)
     this.gameObject.addChild(go)
     this.ores.push({
-      go, renderer, sprite, chip: null, label: art ? null : this.createLabel(mineral, x, y, hero ? 24 : 11), labelBaseY: y, mineral,
-      hp: 1, maxHp: 1, radius: hero ? 56 : (art ? DEBRIS_RADIUS : 11), flashTimer: 0, mineralColor,
+      go, renderer, sprite, chip: null, label: this.createLabel(mineral, x, y - radius - 24, 11), labelBaseY: y - radius - 24, mineral, halo,
+      hp: 1, maxHp: 1, radius, flashTimer: 0, mineralColor,
       fallSpeed,
       phase: 'fall', animTime: 0, variant, hero, catchable,
     })
@@ -1150,10 +1158,12 @@ export class MiningController extends ScriptBehaviour {
 
   private resolveCollisions(): void {
     for (const laser of this.lasers) {
+      if (!laser.go.active) continue
       const lx = laser.go.transform.position.x
       const ly = laser.go.transform.position.y
 
       for (const ore of this.ores) {
+        if (!ore.go.active) continue
         const ox = ore.go.transform.position.x
         const oy = ore.go.transform.position.y
 
@@ -1187,6 +1197,7 @@ export class MiningController extends ScriptBehaviour {
 
   /** A shower fragment that reached the ground uncaught breaks up and is gone. */
   private breakFragment(ore: OreEntity): void {
+    if (ore.halo) ore.halo.visible = false
     ore.go.active = false
     if (ore.sprite) ore.sprite.visible = false
     if (ore.label) ore.label.visible = false
@@ -1195,6 +1206,7 @@ export class MiningController extends ScriptBehaviour {
 
   /** Bank an ore: laser kill, or a shower fragment caught in the collector beam. */
   private collectOre(ore: OreEntity): void {
+    if (!ore.go.active) return
     ore.go.active = false
     if (ore.halo) ore.halo.visible = false
     if (ore.phase) this.playDebrisMine(ore)

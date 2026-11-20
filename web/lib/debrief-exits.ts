@@ -6,7 +6,7 @@ import type { Screen } from '@/lib/game-types'
  * left out until the message board exists in cycle 10; when it lands, each vote
  * and comment there will also add community research points.
  */
-export type DebriefExitId = 'explore' | 'again' | 'reposition'
+export type DebriefExitId = 'explore' | 'again' | 'reposition' | 'community'
 
 export interface DebriefExit {
   id: DebriefExitId
@@ -35,6 +35,7 @@ export function debriefExits({ showerRun, programOperation, hasInstrument, guide
 }
 
 export function debriefExitScreen(id: DebriefExitId | undefined, input: Omit<ExitInput, 'guided'>): Screen | null {
+  if (id === 'community') return 'community-research'
   if (!id) return null
   return debriefExits({ ...input, guided: false }).find(exit => exit.id === id)?.screen ?? null
 }

@@ -7,6 +7,7 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
+const WORKSHOP_MISSION = { ...(MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres') ?? FIRST_MISSION), id: 'qa-workshop-relay', title: 'Workshop relay fit check', targetId: 'lutetia', requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 8, drill_tier: 2, max_orbit: 6 } }
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
 // SSL-332 Transport lesson (guided mission 2) is the two-leg "mine then
 // deliver" client choice — Belt Courier Run (Bennu -> Vesta) is the authored
@@ -195,12 +196,19 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-community-research-geminids', label: 'Community research: Geminids', hint: 'Explorer path in the Geminids week. Open the stage with &at=2026-12-14T00:00:00Z so the shower is live', stage: 'free-ops' },
       { key: 'ui-community-research-orionids', label: 'Community research: Orionids 2 of 2', hint: 'Explorer path this week, on Orionids mission 2 with two ORI-1 recordings checked: the event step points at ORI-1 and the history shows the story items', stage: 'free-ops' },
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
+      { key: 'ui-signal-dialogue', label: 'Signals ready dismissal', hint: 'SSL-868: pointed space telescope with its live daily feed; dismiss the signal popup and leave and revisit the Base', stage: 'free-ops' },
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
+      { key: 'ui-research-passport', label: 'Research passport', hint: 'SSL-849: seven stamp places, earned current part and past passport page', stage: 'free-ops' },
+      { key: 'ui-research-passport-unconfirmed', label: 'Passport: waiting to sync', hint: 'Local stamp fills the bar but does not grant an unconfirmed part', stage: 'free-ops' },
+      { key: 'ui-research-passport-missed', label: 'Passport: no contribution', hint: 'Shared goal reached; player must contribute before earning the weekly part', stage: 'free-ops' },
+      { key: 'ui-research-passport-empty', label: 'Passport: open page', hint: 'No stamps yet; shared weekly progress below the goal', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
+      { key: 'hub-telescope-upgrades', label: 'Ground telescope upgrades', hint: 'SSL-855: owned unplaced telescope, 3 U iron for levels 2 and 3; open Build in Menu', stage: 'free-ops' },
       { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
       { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
+      { key: 'ui-surface-silo', label: 'Surface Silo contents', hint: 'Full contents page with mixed ore, overflow and Exchange access', stage: 'free-ops' },
       { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
       { key: 'hub-pad-worn', label: 'Base: launchpad needs service', hint: 'Level 1 pad after 10 launches: tap it to service for F1M, or launches stay held (SSL-693)', stage: 'free-ops' },
@@ -210,6 +218,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
       { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
+      { key: 'ui-rocket-workshop', label: 'Rocket workshop', hint: 'SSL-850: weekly parts, livery and mission limits', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -376,6 +385,11 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
+
+    case 'hub-telescope-upgrades': {
+      const base = fixture('hub-unplaced')!
+      return { ...base, player: { ...base.player!, stash: { iron: 3 }, groundTelescopeLevels: {}, groundTelescopeGrandfathered: false } }
+    }
 
     case 'hub-pad-l2':
     case 'hub-unplaced':
@@ -1121,6 +1135,13 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-surface-silo':
+      return {
+        screen: 'surface-silo',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'surface-silo', 'market'], stash: { iron: 18, aluminium: 9, silicon: 8, nickel: 6, carbon: 3, leonid_debris: 1 }, subsurfaceBuilt: ['mineral-vault'] },
+        tutorial: false, doneSteps: TRAINING_DONE, missionId: null, targetId: null, lastCargo: null, popup: null,
+      }
+
     case 'ui-market':
       return {
         screen: 'market',
@@ -1165,6 +1186,22 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-research-passport':
+    case 'ui-research-passport-unconfirmed':
+    case 'ui-research-passport-missed':
+    case 'ui-research-passport-empty': {
+      const now = Date.now()
+      const week = weekKey(now)
+      const start = Date.parse(`${week}T00:00:00Z`)
+      const today = new Date(now).toISOString().slice(0, 10)
+      const day = (offset: number) => new Date(start + offset * 86_400_000).toISOString().slice(0, 10)
+      const stamps = name === 'ui-research-passport' ? { [week]: ['survey', 'classification'], ...(day(1) <= today ? { [day(1)]: ['gift'] } : {}), [today]: ['review'], [day(-4)]: ['event'] } : name === 'ui-research-passport-unconfirmed' ? { [today]: ['classification'] } : {}
+      return {
+        ...fixture('ui-community-research')!,
+        player: { ...POST_ONBOARDING_PLAYER, researchStamps: stamps as Player['researchStamps'],
+          researchFirstStamps: name === 'ui-research-passport' ? { [week]: { kind: 'survey', at: start + 3_600_000 } } : {} },
+      }
+    }
     case 'ui-community-research':
       return {
         screen: 'community-research',
@@ -1197,6 +1234,11 @@ function fixture(name: string): Partial<GameState> | null {
           skyMap: Object.fromEntries(['18_8', '20_8', '19_7', '17_9', '5_6', '6_6', '12_3', '0_10'].map((id, i) => [id, { week: `2026-W${40 + i}`, instrument: i % 3 === 2 ? 'deep-space' as const : 'transit' as const }])),
         },
       }
+
+    case 'ui-signal-dialogue': {
+      const base = fixture('ui-sky-dialogue')!
+      return { ...base, player: { ...base.player!, telescopeAim: { transit: { week: weekKey(Date.now()), sector: 'band' }, 'deep-space': { week: weekKey(Date.now()), sector: 'band' }, saturn: { week: weekKey(Date.now()), sector: 'band' } } } }
+    }
 
     case 'ui-sky-dialogue': {
       const base = fixture('cp-late') as GameState
@@ -1281,6 +1323,19 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-rocket-workshop':
+      return {
+        screen: 'rocket-workshop',
+        player: { ...POST_ONBOARDING_PLAYER, francs: 12_000_000, missionsDone: 2,
+          researchPath: { week: '2026-11-16', path: 'explorer', claimedSteps: [2, 4, 5] },
+          researchRocketParts: ['storage-silo-t2', 'fusion-thruster-t2', 'ringed-laser-t3'],
+          dailyClientPool: { date: new Date().toISOString().slice(0, 10), missions: [WORKSHOP_MISSION], acceptedId: null, completedIds: [] },
+          shipCustomizerParts: {} },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: WORKSHOP_MISSION.id, targetId: WORKSHOP_MISSION.targetId,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
     case 'ui-launchpad':
       return {
         screen: 'launchpad',

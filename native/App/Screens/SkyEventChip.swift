@@ -97,7 +97,8 @@ struct SkyBadgeRow: View {
         let earned = badges.values.filter { SkyEvents.event($0.eventId) != nil || WswBadges.badge(id: $0.eventId) != nil }.sorted { $0.earnedAt < $1.earnedAt }
         if !earned.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Eyebrow(text: "Sky event badges")
+                Eyebrow(text: "Badge collection")
+                Text("Earned across all your missions.").font(AppFont.body(14)).foregroundStyle(Theme.ink)
                 ForEach(earned, id: \.eventId) { b in
                     let wsw = WswBadges.badge(id: b.eventId)
                     let badgeName = wsw?.name ?? SkyEvents.event(b.eventId)?.name

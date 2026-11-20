@@ -51,10 +51,10 @@ function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null)
     { kind: 'scroll', label: 'Steer', desc: 'The pad on the left flies the ship: up and down for height, left and right to move along the ground (arrow keys or W/A/S/D).' },
     { kind: 'fire', label: 'Fire', desc: 'The round button on the right fires the laser straight down. Line a labelled seam up under the ship, then fire (Space or F). Hold it to keep firing.' },
     { kind: 'charges', label: 'Charge', desc: 'The ring around Fire is your laser charge. Clipping a ridge costs one. Recharge from this menu.' },
-    { kind: 'order', label: 'Order', desc: 'The panel beside Fire shows what is still owed. When it turns solid, tap it to head home.' },
+    { kind: 'order', label: 'Order', desc: hasDelivery ? 'The panel beside Fire shows what is still owed. When it turns solid, tap it to start the delivery flight.' : 'The panel beside Fire shows what is still owed. When ready, tap Return to Earth there or in this menu.' },
     hasDelivery
       ? { kind: 'deliver', label: 'Deliver cargo', desc: 'The next leg drops this cargo off. Payout unlocks after delivery.' }
-      : { kind: 'return', label: 'Return home', desc: 'Return for recovery. Payout unlocks after landing.' },
+      : { kind: 'return', label: 'Return to Earth', desc: 'Use Return to Earth in this menu to start the flight with your cargo. Land on Earth to settle the haul. View Base only pauses mining.' },
   ]
   if (action) items.splice(1, 0, { kind: 'event', label: action.label, desc: action.howTo })
   return items
@@ -551,6 +551,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments`
     : isFreeOps ? 'Mine any seam, then head home'
     : `Collect ${orderLines.map(([id, amount]) => `${amount} ${minerals[id]?.name ?? id}`).join(', ')}`
+  const returnLabel = mission.deliveryTargetId ? `Fly to ${deliveryTargetName ?? 'delivery site'}` : 'Return to Earth'
+  const rechargeAction = !isFreeOps && needsRecharge && !orderFilled
 
   return (
     <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} data-scroll={pinScroll ? String(scrollScreens) : undefined} style={{ background: palette.skyCss }}>
@@ -615,7 +617,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 onClick={() => { dismissFreeOpsFirstSuccess(); handleReturn() }}
                 className="mining-success-primary"
               >
-                Return Now
+                Return to Earth
               </button>
             </div>
           </Panel>
@@ -761,7 +763,9 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               {onSwitchMission && (
                 <button type="button" className="mining-guide-close" data-testid="mining-switch-mission-btn" onClick={() => { setGuideOpen(false); onSwitchMission(cargoRef.current, laserChargesRef.current) }}>Switch mission</button>
               )}
-              <button type="button" className="mining-guide-close" data-testid="hub-btn" onClick={() => { setGuideOpen(false); onBack(cargoRef.current, laserChargesRef.current) }}>Return to hub</button>
+              <button type="button" className="mining-guide-close" data-testid="mining-return-btn" onClick={() => { setGuideOpen(false); handleReturn() }}>{returnLabel}</button>
+              <p>{mission.deliveryTargetId ? 'Starts the delivery flight with your cargo. Settle the delivery on arrival.' : 'Starts the flight home with your cargo. Land on Earth to settle the haul.'}</p>
+              <button type="button" className="mining-guide-close" data-testid="hub-btn" onClick={() => { setGuideOpen(false); onBack(cargoRef.current, laserChargesRef.current) }}>View Base · pause mining</button>
               <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
                 {rechargePrice > 0 ? `Recharge laser · ${rechargePrice} fr` : 'Recharge laser'}
               </button>
@@ -828,15 +832,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           className={controlStyles.progress}
           data-testid="return-home-btn"
           data-ready={orderFilled || undefined}
-          data-mode={!isFreeOps && needsRecharge && !orderFilled ? 'recharge' : 'return'}
-          onClick={!isFreeOps && needsRecharge && !orderFilled ? handleRecharge : handleReturn}
+          data-mode={rechargeAction ? 'recharge' : 'return'}
+          aria-label={rechargeAction ? 'Recharge laser' : returnLabel}
+          onClick={rechargeAction ? handleRecharge : handleReturn}
         >
           <span data-testid={isFreeOps ? 'freeops-cargo-progress' : 'mining-order-progress'}>
-            {orderFilled ? (nightRun ? 'Run complete · Return' : isFreeOps ? `Cargo ${freeOpsCargoUnits} · Return` : 'Order filled · Return')
+            {orderFilled ? (nightRun ? 'Run complete' : isFreeOps ? `Cargo ${freeOpsCargoUnits}` : 'Order filled')
               : nightRun ? `Fragments ${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)}/${ORIONIDS_FRAGMENT_GOAL}`
               : isFreeOps ? `Cargo ${freeOpsCargoUnits}`
               : orderLines.map(([id, amount]) => `${minerals[id]?.name ?? id} ${Math.min(cargo[id] ?? 0, amount)}/${amount}`).join(' · ')}
           </span>
+          {(orderFilled || isFreeOps) && <span>{returnLabel}</span>}
           {!orderFilled && !nightRun && targetCue ? (
             <span className={`${controlStyles.progressCue} ${styles.targetCueStatus}`} data-testid="mining-target-cue">
               {targetCue.mineral === FIREBALL_FRAGMENT_ID ? 'Fireball' : (minerals[targetCue.mineral]?.name ?? targetCue.mineral)} · {targetCue.inRange ? 'Fire now' : 'Line up'}

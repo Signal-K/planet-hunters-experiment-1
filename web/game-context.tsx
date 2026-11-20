@@ -1,5 +1,7 @@
 'use client'
 
+import { rocketBuilderStats, asLoadout } from '@/lib/launchpad/rocketBuilder'
+
 import { stampLedger } from '@/lib/sync/ledger'
 import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
@@ -437,7 +439,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       sceneScope,
       toasts: ui.toasts,
       addToast: ui.addToast,
-      laserChargeCap: BASE_LASER_CHARGES,
+      laserChargeCap: rocketBuilderStats(state.rocket, asLoadout(state.player.shipCustomizerParts)).laser,
       // UI
       go: ui.go,
       goBack: ui.goBack,

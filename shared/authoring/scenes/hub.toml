@@ -8,8 +8,8 @@ id = "hub"
 type = "base"
 name = "Earth Base"
 summary = "The home base. Structures stand on fixed sites, can be tapped, and the dock leads to Build, the Menu and the other places."
-tickets = ["SSL-345", "SSL-451", "SSL-615", "SSL-641"]
-qa = ["hub", "hub-structures", "transport-hub", "telescope-hub", "cp-early", "cp-mid", "cp-late"]
+tickets = ["SSL-345", "SSL-451", "SSL-615", "SSL-641", "SSL-868", "SSL-855"]
+qa = ["ground-telescope-upgrades", "signal-dialogue", "hub", "hub-structures", "transport-hub", "telescope-hub", "cp-early", "cp-mid", "cp-late"]
 
 [runtime]
 surface = "canvas"
@@ -121,3 +121,15 @@ kind = "ui"
 mechanics = ["training","mission-planning"]
 prefab = "base-dock"
 note = "Bottom centre: previous, Build, Menu, next. No shared slot fits it yet (see bottom-nav in shared/layout/base-hud-zones.json)."
+
+[[objects]]
+id = "signal-callout"
+kind = "ui"
+mechanics = ["persistence"]
+note = "Dismissal follows signal kind and candidate id across navigation, reload and sync. Render updates do not auto-open the same callout. New candidates may notify; Data hub access remains available."
+
+[[objects]]
+id = "ground-telescope-upgrades"
+kind = "ui"
+mechanics = ["construction", "persistence"]
+note = "Customize lists every owned ground telescope, including unplaced or off-screen ones. Each shows level and placement. Its upgrade rail shows current and next daily candidates, iron cost, shortfall or max-level reason. L2 costs 1 U iron; L3 costs 2 U. Each observing telescope supplies its level in candidates per day; unplaced scopes wait except the grandfathered first scope."

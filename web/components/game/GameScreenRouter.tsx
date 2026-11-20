@@ -1,5 +1,6 @@
 'use client'
 
+import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
@@ -23,6 +24,8 @@ import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import PageSurface from '@/components/ui/PageSurface'
+import { FLIGHT_ASSET_URLS } from '@/lib/offline/flight-assets'
+import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
@@ -38,6 +41,7 @@ const loadMissionOperationRoutes = () => import('@/components/game/MissionOperat
 const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
+const loadRocketWorkshopScreen = () => import('@/components/game/screens/RocketWorkshopScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
 const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
@@ -54,7 +58,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
-  loadHangarScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadHangarScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
   // Nested inside the mission plan's destination sheet (construction and contract runs).
@@ -66,6 +70,7 @@ const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: Sc
 const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
+const RocketWorkshopScreen = dynamic(loadRocketWorkshopScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
@@ -96,6 +101,8 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
+import { useResearchPassport } from '@/lib/research/useResearchPassport'
+import { withPassportRewards } from '@/lib/research/passport'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
@@ -146,6 +153,7 @@ function ScreenBody({
   // SSL-746: a review in progress, and the reviewer's own finished run waiting to be compared.
   const [reviewTarget, setReviewTarget] = useState<ConsensusQueueItem | null>(null)
   const [pointingTarget, setPointingTarget] = useState<InstrumentPointing>('transit')
+  const [pointingStep, setPointingStep] = useState(0)
   const [pendingReview, setPendingReview] = useState<PendingConsensusReview | null>(null)
   // One way out of every instrument screen: reviews go back to where they started, everything else to the Data hub.
   // The inspected subject is dropped with it so the next door does not open on a stale one.
@@ -169,6 +177,8 @@ function ScreenBody({
       .then(() => game.addToast('Asked the community to check it. See Community research > Review.', 'ok'))
       .catch(() => game.addToast('Could not send the request. Check your connection.', 'warn'))
   }
+  const passport = useResearchPassport(['hub', 'community-research', 'rocket-workshop'].includes(screen), game.player.researchStamps, game.authUserId)
+  useEffect(() => { if (passport.data) game.setPlayer(current => withPassportRewards(current, passport.data)) }, [passport.data]) // eslint-disable-line react-hooks/exhaustive-deps
   const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
 
   // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
@@ -189,7 +199,7 @@ function ScreenBody({
           .map(entry => entry.name)
           .filter(url => !seen.has(url))
           .filter(url => { try { return new URL(url).pathname.startsWith('/_next/static/') } catch { return false } })
-        if (urls.length > 0) controller.postMessage({ type: 'CACHE_URLS', urls })
+        controller.postMessage({ type: 'CACHE_URLS', urls: [...FLIGHT_ASSET_URLS, ...urls] })
       })
     }
     const idleWindow = window as Window & {
@@ -374,6 +384,7 @@ function ScreenBody({
           }}
           onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
+          onUpgradeGroundTelescope={id => game.setPlayer(current => applyGroundTelescopeUpgrade(current, id))}
           onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
@@ -444,6 +455,15 @@ function ScreenBody({
       )
       return hub
     }
+
+    case 'surface-silo':
+      return <SurfaceSiloPanel
+        stash={game.player.stash}
+        buildingLevels={game.player.buildingLevels}
+        subsurfaceBuilt={game.player.subsurfaceBuilt}
+        onClose={() => game.go('hub')}
+        onSell={game.player.placed.includes('market') ? () => game.go('market') : undefined}
+      />
 
     case 'mission-history':
       // Mission Log is its own page with its own panel, not a tray over the Base.
@@ -660,6 +680,13 @@ function ScreenBody({
         />
       )
 
+    case 'rocket-workshop':
+      return <RocketWorkshopScreen player={game.player} rocket={game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)?.rocket ?? game.rocket}
+        mission={game.mission} target={game.target} deliveryTarget={game.catalog.targets.find(target => target.id === game.mission?.deliveryTargetId)}
+        onBack={() => game.go(game.mission && game.target ? 'fab' : 'launchpad')}
+        onInstall={game.confirmShipCustomizerBuild}
+        onLivery={rocketLivery => game.setPlayer(player => ({ ...player, rocketLivery }))}
+        onResearch={() => game.go('community-research')} />
     case 'hangar':
       return (
         <HangarScreen
@@ -690,7 +717,7 @@ function ScreenBody({
     case 'sky-pointing':
       return (
         <SkyPointingScreen
-          key={pointingTarget}
+          key={`${pointingTarget}:${pointingStep}`}
           player={game.player}
           onOpenData={() => game.go('instrument-hub')}
           start={pointingTarget}
@@ -706,8 +733,12 @@ function ScreenBody({
             game.setPlayer(current => pointTelescope(current, instrument, now, aim, sector))
             // Each online telescope is aimed in turn: carry straight on to the next unpointed one.
             const rest = telescopesNeedingPointing(pointTelescope(game.player, instrument, now, aim, sector), now)
-            if (rest.length) setPointingTarget(rest[0])
-            else game.goBack('hub')
+            if (rest.length) {
+              setPointingTarget(rest[0])
+              // The operator may have switched tabs away from the route's starting instrument.
+              // Reset its confirmation even when the next instrument is that same starting one.
+              setPointingStep(step => step + 1)
+            } else game.goBack('hub')
           }}
         />
       )
@@ -715,6 +746,8 @@ function ScreenBody({
     case 'community-research':
       return (
         <CommunityResearchScreen
+          passportStatus={passport.status}
+          onWorkshop={() => game.go('rocket-workshop')}
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
@@ -836,6 +869,7 @@ function ScreenBody({
           hasStagedRocket={game.player.stagedRockets?.some(vehicle => vehicle.id === game.player.selectedStagedRocketId && vehicle.location === 'launchpad') ?? false}
           onDismantle={() => game.onDismantleStagedRocket()}
           guided={onboardingActive}
+          onOpenWorkshop={() => game.go('rocket-workshop')}
           onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
           onRequestLaunch={() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)

@@ -14,18 +14,13 @@ final class MiningScene: SKScene {
     /// Sky-fed fragments: resource and spawn rate per minute. Nil means no rain.
     var fragmentRain: (resourceId: String, perMinute: Double)?
     private var rainAccumulator = 0.0
-    /// Bracket on the ground under the ship: fragments landing inside it bank (web catch zone).
-    private lazy var catchZone: SKNode = {
-        let r = CGFloat(OrionidsRun.catchRadius), n = SKNode()
-        let bar = SKShapeNode(rect: CGRect(x: -r, y: -5, width: r * 2, height: 10))
-        bar.fillColor = PlatformColor(red: 0.5, green: 0.85, blue: 1, alpha: 0.85); bar.strokeColor = .clear
-        n.addChild(bar)
-        for x in [-r, r - 3] {
-            let tick = SKShapeNode(rect: CGRect(x: x, y: -10, width: 4, height: 34))
-            tick.fillColor = PlatformColor(red: 0.75, green: 0.94, blue: 1, alpha: 0.9); tick.strokeColor = .clear
-            n.addChild(tick)
-        }
+    var onCatchCue: ((Bool) -> Void)?
+    private var catchBuffered = 0.0
+    private lazy var catchZone: SKShapeNode = {
+        let n = SKShapeNode()
         n.zPosition = 29; n.isHidden = true
+        n.strokeColor = LaserPalette.sk(palette.beamCore)
+        n.lineWidth = 2
         world.addChild(n)
         return n
     }()
@@ -39,10 +34,8 @@ final class MiningScene: SKScene {
     var onBump: (() -> Void)?
     /// True while the laser recharges between shots (drives the gauge sweep).
     var onCharging: ((Bool) -> Void)?
-    private var triggerHeld = false
-    private var nextShotAt: TimeInterval = 0
+    private var trigger = MiningTrigger()
     private var wasCharging = false
-    private static let fireCooldown: TimeInterval = 0.42
     private var scrollX: CGFloat = 0
     private var clock: TimeInterval = 0
     private var lastTime: TimeInterval?
@@ -86,11 +79,10 @@ final class MiningScene: SKScene {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    private var baseBeamX: CGFloat { min(96, max(72, size.width * 0.18)) }
+    private var baseBeamX: CGFloat { max(110, min(320, size.width * 0.24)) }
     /// d-pad left/right slides the ship (and its beam) along the sky; the ground keeps scrolling at its own pace.
     private var shipShift: CGFloat = 0
     private var steerInput = 0.0
-    private var maxShift: CGFloat { max(0, min(260, size.width * 0.34)) }
     private var beamX: CGFloat { baseBeamX + shipShift }
     /// Ship centre limits: under the top HUD row, and a belly's clearance above the ground, so up and down always have room (phones included).
     private var ceilingCenterY: CGFloat { size.height - 64 }
@@ -107,6 +99,8 @@ final class MiningScene: SKScene {
     override func didMove(to view: SKView) {
         removeAllChildren()
         world.removeAllChildren()
+        falling.removeAll(); rainAccumulator = 0; catchBuffered = 0
+        if catchZone.parent == nil { world.addChild(catchZone) }
         nodeSprites = [:]
         laneX = [:]
         labelBaseY = [:]
@@ -628,7 +622,10 @@ final class MiningScene: SKScene {
     func setClimb(_ input: Double) { climbInput = max(-1, min(1, input)) }
     var isFiring: Bool { clock < flashUntil }
     /// Press-and-hold trigger: fires on press, then again each time the laser recharges, until release.
-    func setTrigger(_ held: Bool) { triggerHeld = held }
+    func setTrigger(_ held: Bool) { trigger.setHeld(held) }
+    func stopControls() {
+        trigger.cancelInput(); steerInput = 0; climbInput = 0; scrollInput = 0; catchBuffered = 0
+    }
 
     /// Dock arrows: a short burst of faster or slower scroll.
     func nudge(_ dir: Double) {
@@ -648,9 +645,10 @@ final class MiningScene: SKScene {
         onChange?(field)
     }
 
-    func fireLaser() { fire(at: CGPoint(x: beamX, y: surfaceY)) }
+    func fireLaser() { trigger.request() }
+    func fire(at _: CGPoint) { trigger.request() }
 
-    func fire(at _: CGPoint) {
+    private func fireShot() {
         let hit = nodeSprites.min { abs($0.value.position.x - beamX) < abs($1.value.position.x - beamX) }.flatMap { abs($0.value.position.x - beamX) < 56 ? $0 : nil }
         let outcome = field.strike(nodeId: hit?.key)
         flashBeam(hit: {
@@ -754,53 +752,88 @@ final class MiningScene: SKScene {
         tag.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
     }
 
-    /// Fragments fall with the shower, drift with the ground, and bank themselves on touching the surface.
+    /// A fragment is collected only by an explicit Catch press inside the visible beam.
+    private func fragmentInBeam() -> Int? {
+        let top = min(size.height - 4, ship.position.y + 150)
+        return falling.indices.filter { i in
+            let p = falling[i].node.position
+            return abs(p.x - beamX) <= 44 && p.y <= top && p.y >= ship.position.y - 12
+        }.min { falling[$0].node.position.y < falling[$1].node.position.y }
+    }
+
+    @discardableResult
+    func catchFragment() -> Bool {
+        guard let rain = fragmentRain, let i = fragmentInBeam() else {
+            catchBuffered = 0.25
+            return false
+        }
+        catchBuffered = 0
+        let (node, _) = falling.remove(at: i)
+        node.removeFromParent()
+        field.catchFragment(rain.resourceId)
+        SK.burst(at: node.position, color: LaserPalette.sk(palette.beamCore), count: 12, speed: 90, in: world)
+        onFeedback?("Caught +1")
+        onChange?(field)
+        onCatchCue?(fragmentInBeam() != nil)
+        return true
+    }
+
     private func updateRain(dt: TimeInterval, dx: CGFloat) {
         catchZone.isHidden = fragmentRain == nil
-        catchZone.position = CGPoint(x: beamX, y: surfaceY)
-        guard let rain = fragmentRain else { return }
+        guard let rain = fragmentRain else { onCatchCue?(false); return }
         rainAccumulator += rain.perMinute / 60 * dt
-        if falling.count == 0 && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }   // first fragment shows up straight away
+        if falling.isEmpty && rainAccumulator < 1 && clock < 1 { rainAccumulator = 1 }
         while rainAccumulator >= 1 {
             rainAccumulator -= 1
-            guard falling.count < 1 else { continue }   // web MAX_RAIN
-            let hex = Minerals.byId[rain.resourceId]?.colorHex ?? "#7fd8ff"
-            let node = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
-            node.setScale(px * 0.7)   // web draws shower fragments at 0.45
-            node.texture?.filteringMode = .nearest
+            guard falling.count < 3 else { continue }
+            let hex = Minerals.byId[rain.resourceId]?.colorHex ?? String(format: "#%06X", palette.beamCore)
+            let node = SKNode()
+            let rim = SKShapeNode(circleOfRadius: 20)
+            rim.fillColor = LaserPalette.sk(palette.groundDeep)
+            rim.strokeColor = LaserPalette.sk(palette.beamCore); rim.lineWidth = 2.5
+            node.addChild(rim)
+            let fragment = SKSpriteNode(texture: depositTexture(colorHex: hex, variant: falling.count, glint: true))
+            fragment.size = CGSize(width: 32, height: 32)
+            fragment.texture?.filteringMode = .nearest
+            node.addChild(fragment)
+            let tag = SKLabelNode(text: Minerals.byId[rain.resourceId]?.name ?? "Fragment")
+            tag.fontName = "Oxanium-ExtraBold"; tag.fontSize = 14
+            tag.fontColor = LaserPalette.sk(palette.beamCore)
+            tag.position = CGPoint(x: 0, y: 32)
+            let backing = SKShapeNode(rectOf: CGSize(width: tag.frame.width + 14, height: 24), cornerRadius: 8)
+            backing.position = CGPoint(x: 0, y: 37)
+            backing.fillColor = LaserPalette.sk(palette.groundDeep)
+            backing.strokeColor = LaserPalette.sk(palette.beamCore)
+            node.addChild(backing); node.addChild(tag)
             node.zPosition = 30
-            // Aim near the ship, shifted by the ground scroll during the fall, spread wide so the player has to weave.
-            let fallTime = (size.height + 20 - surfaceY) / 68
-            let aim = beamX + 36 * fallTime + CGFloat.random(in: -300...300)
-            // Not clamped to the right edge: on a narrow phone the aim sits past the screen and the fragment drifts in (web parity).
+            let speed = min(CGFloat(68), max(20, size.height - ship.position.y) / 3.2)
+            let fallTime = (size.height + 20 - ship.position.y) / speed
+            let aim = beamX + 36 * fallTime + CGFloat.random(in: -270...270)
             node.position = CGPoint(x: max(40, aim), y: size.height + 20)
             world.addChild(node)
-            falling.append((node, CGFloat.random(in: 64...72)))
+            falling.append((node, speed))
         }
-        var landed: [Int] = []
         for i in falling.indices {
             falling[i].node.position.x -= dx
             falling[i].node.position.y -= falling[i].vy * CGFloat(dt)
-            if falling[i].node.position.y <= surfaceY - 6 || falling[i].node.position.x < -40 { landed.append(i) }
         }
-        for i in landed.reversed() {
+        // Missing the beam never banks cargo: the fragment breaks up on the ground.
+        for i in falling.indices.reversed() where falling[i].node.position.y <= surfaceY - 6 || falling[i].node.position.x < -40 {
             let (node, _) = falling.remove(at: i)
-            if abs(node.position.x - beamX) <= CGFloat(OrionidsRun.catchRadius) {
-                field.catchFragment(rain.resourceId)
-                SK.burst(at: node.position, color: LaserPalette.sk(palette.beamCore), count: 12, speed: 90, in: world)
-                let tag = SKLabelNode(text: "+1 \(Minerals.byId[rain.resourceId]?.symbol ?? "")")
-                tag.fontName = "Oxanium-ExtraBold"
-                tag.fontSize = 14
-                tag.fontColor = LaserPalette.sk(palette.beamCore)
-                tag.position = CGPoint(x: node.position.x, y: node.position.y + 24)
-                tag.zPosition = 40
-                world.addChild(tag)
-                tag.run(.sequence([.group([.moveBy(x: 0, y: 28, duration: 0.6), .fadeOut(withDuration: 0.6)]), .removeFromParent()]))
-                onChange?(field)
-            }
-            else { SK.burst(at: node.position, color: LaserPalette.sk(palette.groundDeep), count: 6, speed: 50, in: world) }   // missed: breaks up on the surface
-            node.run(.sequence([.group([.scale(to: 0.2, duration: 0.15), .fadeOut(withDuration: 0.15)]), .removeFromParent()]))
+            SK.burst(at: node.position, color: LaserPalette.sk(palette.groundDeep), count: 6, speed: 50, in: world)
+            node.removeFromParent()
         }
+        catchBuffered = max(0, catchBuffered - dt)
+        if catchBuffered > 0 && fragmentInBeam() != nil { catchFragment() }
+        let ready = fragmentInBeam() != nil
+        onCatchCue?(ready)
+        let top = max(0, min(150, size.height - 4 - ship.position.y))
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: -10, y: 0)); path.addLine(to: CGPoint(x: -36, y: top))
+        path.addLine(to: CGPoint(x: 36, y: top)); path.addLine(to: CGPoint(x: 10, y: 0)); path.closeSubpath()
+        catchZone.path = path
+        catchZone.position = CGPoint(x: beamX, y: ship.position.y)
+        catchZone.fillColor = LaserPalette.sk(palette.beamCore).withAlphaComponent(ready ? 0.3 : 0.12)
     }
 
     private func placeChips() {
@@ -885,16 +918,13 @@ final class MiningScene: SKScene {
         altitude += CGFloat(-climbInput) * 110 * CGFloat(dt)
         let ceiling = ceilingCenterY - shipY   // stay under the HUD
         altitude = max(floorCenterY - shipY, min(ceiling, altitude))
-        shipShift = max(0, min(maxShift, shipShift + CGFloat(steerInput) * 90 * CGFloat(dt)))
+        shipShift = max(40 - baseBeamX, min(size.width - 40 - baseBeamX, shipShift + CGFloat(steerInput) * 100 * CGFloat(dt)))
         ship.position.x = beamX
         beam.position.x = beamX
         spark.position.x = beamX
         opsBrackets.position.x = shipShift
-        if triggerHeld, clock >= nextShotAt {
-            nextShotAt = clock + Self.fireCooldown
-            fireLaser()
-        }
-        let charging = clock < nextShotAt
+        if trigger.step(at: clock) { fireShot() }
+        let charging = trigger.charging(at: clock)
         if charging != wasCharging { wasCharging = charging; onCharging?(charging) }
         // Liam, 01.11: the hills behind the grey ridge are scenery, not solid (web MiningCanvas).
         // The flight floor keeps the hull above the grey foreground ridge.

@@ -334,6 +334,14 @@ public final class GameStore {
         apply(s)
     }
     public func transitArrived() { apply(Loop.transitArrived(state, catalog: catalog, now: now)) }
+    public func saveMiningProgress(_ field: MiningField) {
+        guard state.screen == .mining else { return }
+        var n = state
+        n.player.miningCargoInProgress = field.cargo
+        n.player.miningLaserCharges = field.charge
+        apply(n)
+    }
+
     public func miningDone(_ cargo: Cargo) { apply(Loop.miningDone(state, cargo: cargo, catalog: catalog, now: now)) }
     public func landingComplete() { apply(Loop.landingComplete(state, catalog: catalog, now: now)) }
     public func roverSurveyComplete() { apply(Loop.roverSurveyComplete(state)) }
@@ -412,6 +420,11 @@ public final class GameStore {
     }
     @discardableResult public func upgradeBuilding(_ id: String) -> Bool {
         let next = BuildingLevels.applyUpgrade(state, id: id)
+        guard next != state else { return false }
+        apply(next); return true
+    }
+    @discardableResult public func upgradeGroundTelescope(_ id: String) -> Bool {
+        let next = GroundTelescopeUpgrades.applyUpgrade(state, id: id)
         guard next != state else { return false }
         apply(next); return true
     }

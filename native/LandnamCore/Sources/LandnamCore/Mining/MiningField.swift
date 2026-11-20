@@ -51,7 +51,7 @@ public struct MiningField: Equatable, Sendable {
 
     /// Builds a field of ore nodes weighted toward the mission's required minerals so a
     /// contract is always completable, then sprinkled with the target's other minerals.
-    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is caught on landing (Orionids fragments).
+    /// `skyFed` names a mineral that never appears as a ground seam: it falls from the sky and is banked by an explicit Catch action (Orionids fragments).
     /// `debris` adds drifting shower particles of that resource on top of the normal field (SSL-475).
     public init(target: Target, required: Cargo, cargoCapacity: Int, laserTier: Int, chargeCap: Int = 30, seed: UInt64,
                 debris: (resourceId: String, count: Int)? = nil, skyFed: String? = nil) {
@@ -84,7 +84,18 @@ public struct MiningField: Equatable, Sendable {
         self.cargoCapacity = cargoCapacity; self.laserTier = laserTier; self.required = required
     }
 
-    /// A sky-fed fragment landed: it banks itself, with no charge and no hold limit (like web, fragments never block on a full hold).
+    /// Resume the existing run after visiting a menu or another Base service.
+    public mutating func restoreProgress(cargo saved: Cargo, charge savedCharge: Int?) {
+        cargo = saved.filter { $0.value > 0 && Minerals.byId[$0.key] != nil }
+        charge = min(chargeCap, max(0, savedCharge ?? chargeCap))
+        var remaining = cargo
+        for i in nodes.indices where remaining[nodes[i].mineralId, default: 0] > 0 {
+            nodes[i].hp = 0
+            remaining[nodes[i].mineralId, default: 0] -= 1
+        }
+    }
+
+    /// An explicit Catch action banks a sky-fed fragment, with no charge and no hold limit (like web, fragments never block on a full hold).
     public mutating func catchFragment(_ mineralId: String) {
         cargo[mineralId, default: 0] += 1
     }

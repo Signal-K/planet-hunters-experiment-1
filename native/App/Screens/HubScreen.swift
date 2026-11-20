@@ -23,7 +23,6 @@ struct HubScreen: View {
     /// Build mode: tapping a placed Launchpad or Silo opens its upgrade bar (web `ActionConfirmBar`).
     @State private var upgrading: String?
     /// Tapping the Surface Silo opens its contents above ground (web `SurfaceSiloPanel`). The Mineral Vault underground is a separate building.
-    @State private var siloOpen = false
     /// SSL-844: the Unplaced tray item being placed; while set, the free annex slots light up.
     @State private var placingAnnex: String?
     /// Measured dock height: on narrow phones it stacks into two rows, so overlays above it cannot use a fixed offset.
@@ -108,8 +107,10 @@ struct HubScreen: View {
                 topLeftHud(insets: insets, portrait: portrait)
                 topRightHud(insets: insets)
             }
-            if placing, let upgrading { upgradeBar(upgrading, insets: insets) }
-            else if siloOpen && !placing && store.screen != .hubSubsurface { siloPanel(insets: insets) }
+            if placing, let upgrading {
+                if ControlStation.isGroundTelescope(upgrading) { groundScopeUpgradeBar(upgrading, insets: insets) }
+                else { upgradeBar(upgrading, insets: insets) }
+            }
             else if placing { picker(width: size.width, insets: insets) }
             if !placing { BaseDock(tile: layout.tile, zones: zones.dock,
                      onPrev: { camera.pan(by: -size.width * 0.55, BaseWorld(w: size.width, h: size.height)) },
@@ -222,6 +223,18 @@ struct HubScreen: View {
 
     private func picker(width: CGFloat, insets: EdgeInsets) -> some View {
         VStack(spacing: 6) {
+            ForEach(ControlStation.ownedGroundTelescopes(store.player), id: \.self) { id in
+                Button {
+                    upgrading = id
+                } label: {
+                    Text("Ground telescope\(id.hasSuffix("-2") ? " 2" : "") · Level \(GroundTelescopeUpgrades.level(store.player, id)) · \(unplacedAnnex.contains(id) ? "Unplaced" : "On annex") · Upgrade")
+                        .font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
+                        .padding(.horizontal, 12).frame(minHeight: 44)
+                        .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("customize-\(id)")
+            }
             if let placeNote {
                 Text(placeNote).font(AppFont.display(14)).foregroundStyle(Theme.hudInk)
                     .padding(.horizontal, 12).padding(.vertical, 6)
@@ -275,6 +288,7 @@ struct HubScreen: View {
 
     /// In Build mode a finished upgradable building opens its upgrade bar instead of its screen.
     private func offerUpgrade(_ kind: String) -> Bool {
+        if placing && ControlStation.isGroundTelescope(kind) && store.player.placed.contains(kind) { upgrading = kind; return true }
         guard placing, BuildingLevels.ids.contains(kind), store.player.placed.contains(kind),
               Construction.progress(store.player.underConstruction[kind], now: store.now) >= 1 else { return false }
         upgrading = kind
@@ -324,65 +338,40 @@ struct HubScreen: View {
         .accessibilityIdentifier("action-confirm-bar")
     }
 
-    /// The Surface Silo's contents. Ore fills this silo first; anything past its capacity is in the Mineral Vault underground.
-    private func siloPanel(insets: EdgeInsets) -> some View {
-        let level = BuildingLevels.level(store.player, "surface-silo")
-        let capacity = Economy.surfaceSiloCapacity * BuildingLevels.siloCapacityMultiplier(level)
-        let stored = store.player.stash.filter { $0.value > 0 }
-            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
-        let total = stored.reduce(0) { $0 + $1.value }
-        // Fill the silo largest ore first; whatever is left lies past it.
-        var room = capacity
-        let minerals: [(key: String, value: Int)] = stored.compactMap { entry in
-            let amount = min(entry.value, room)
-            room -= amount
-            return amount > 0 ? (key: entry.key, value: amount) : nil
-        }
-        let held = capacity - room
-        let vault = store.player.subsurfaceBuilt.contains("mineral-vault")
+    private func groundScopeUpgradeBar(_ id: String, insets: EdgeInsets) -> some View {
+        let level = GroundTelescopeUpgrades.level(store.player, id)
+        let cost = GroundTelescopeUpgrades.cost(store.player, id)
+        let observing = ControlStation.groundTelescopeObserving(store.player, id)
+        let reason = GroundTelescopeUpgrades.reason(store.player, id)
+        let iron = store.player.stash["iron", default: 0]
         return VStack(alignment: .leading, spacing: 8) {
-            Text("LEVEL \(level) · ABOVE GROUND\(held >= capacity ? " · FULL" : "")").font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.textMuted)
-            Text("Surface Silo · \(held) / \(capacity) U").font(AppFont.display(18)).foregroundStyle(Theme.hudInk)
-            if minerals.isEmpty {
-                Text("Empty. Ore you bring home from a mission is stored here.").font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
-            } else {
-                ForEach(minerals, id: \.key) { entry in
-                    let meta = Minerals.byId[entry.key]
-                    HStack(spacing: 8) {
-                        Rectangle().fill(Color(hex: meta?.colorHex) ?? Theme.paper2).frame(width: 12, height: 12)
-                        Text((meta?.name ?? entry.key).capitalized).font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
-                        Spacer(minLength: 8)
-                        Text("\(entry.value) U").font(AppFont.body(14)).monospacedDigit().foregroundStyle(Theme.textMuted)
-                    }
-                }
-            }
-            if total > held {
-                Text(vault ? "\(total - held) U more is in the Mineral Vault underground."
-                     : "Full. \(total - held) U more is waiting with nowhere to go: sell it, or build a Mineral Vault underground.")
-                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk).fixedSize(horizontal: false, vertical: true)
+            Text("Level \(level) of 3 · \(observing ? "Observing" : "Unplaced")").font(AppFont.display(14)).foregroundStyle(Theme.textMuted)
+            Text("Upgrade ground telescope\(id.hasSuffix("-2") ? " 2" : "")").font(AppFont.display(18)).foregroundStyle(Theme.hudInk)
+            Text("Now: \(level) asteroid candidate\(level == 1 ? "" : "s") per day.")
+                .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            if let cost {
+                Text("Next: \(level + 1) candidates per day. Cost: \(cost) U iron; \(iron) U stored. \(reason ?? "Upgrades are permanent.")")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
+            } else { Text("Fully upgraded.").font(AppFont.body(14)).foregroundStyle(Theme.hudInk) }
+            if !observing {
+                Text("Place it on a free annex slot to observe. You can upgrade it here before placing it.")
+                    .font(AppFont.body(14)).foregroundStyle(Theme.hudInk)
             }
             HStack(spacing: 8) {
-                Button("CLOSE") { siloOpen = false }
-                    .font(AppFont.display(14)).tracking(1.1).foregroundStyle(Theme.hudInk)
-                    .frame(minWidth: 88, minHeight: 44)
-                    .background(Capsule().fill(Theme.hudPanel)).overlay(Capsule().stroke(Theme.hudInk, lineWidth: 2))
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("surface-silo-close")
-                if total > 0 && store.player.placed.contains("market") {
-                    PrimaryButton(title: "Sell at Exchange", enabled: true) { siloOpen = false; store.go(.market) }
-                        .accessibilityIdentifier("surface-silo-sell")
-                }
+                Button("CANCEL") { upgrading = nil }
+                    .font(AppFont.display(14)).foregroundStyle(Theme.hudInk).frame(minWidth: 88, minHeight: 44)
+                    .accessibilityIdentifier("confirm-action-dismiss")
+                PrimaryButton(title: cost.map { "Upgrade · \($0) U iron" } ?? "Max level", enabled: reason == nil) {
+                    store.upgradeGroundTelescope(id)
+                }.accessibilityIdentifier("confirm-action-confirm")
             }
         }
-        .padding(14)
-        .frame(maxWidth: 440, alignment: .leading)
+        .padding(14).frame(maxWidth: 440, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.hudPanel))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.hudInk, lineWidth: 2))
-        .padding(.horizontal, 16)
-        .padding(.top, insets.top < 10 ? 124 : insets.top + 68)
-        .padding(.bottom, insets.top < 10 ? 0 : aboveDock(insets))
+        .padding(.horizontal, 16).padding(.top, max(insets.top, 12)).padding(.bottom, aboveDock(insets))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: insets.top < 10 ? .top : .bottom)
-        .accessibilityIdentifier("surface-silo-panel")
+        .accessibilityIdentifier("action-confirm-bar")
     }
 
     private func openStructure(_ kind: String) {
@@ -393,7 +382,7 @@ struct HubScreen: View {
         case "hangar", "garage": store.go(store.mission != nil && store.target != nil ? .hangar : .missions)
         case "market": store.go(.market)
         case "control-station": store.go(.missionHistory) // SSL-834: the Agency Hub holds the mission log
-        case "surface-silo": siloOpen = true
+        case "surface-silo": store.go(.surfaceSilo)
         // SSL-844: the ground telescope on its annex slot opens the Data hub, as on web.
         case let k where ControlStation.isGroundTelescope(k): store.go(.instrumentHub)
         default: break
@@ -942,5 +931,97 @@ private struct OrbitingCraft: View {
             }
             .shadow(color: .white.opacity(0.6), radius: 5)
         }
+    }
+}
+
+/// Above-ground holdings, separate from the Mineral Vault and the Base dock.
+struct SurfaceSiloScreen: View {
+    @Environment(GameStore.self) private var store
+
+    var body: some View {
+        let level = BuildingLevels.level(store.player, "surface-silo")
+        let capacity = Economy.surfaceSiloCapacity * BuildingLevels.siloCapacityMultiplier(level)
+        let stored = store.player.stash.filter { $0.value > 0 }
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+        let total = stored.reduce(0) { $0 + $1.value }
+        var room = capacity
+        let minerals: [(key: String, held: Int, beyond: Int)] = stored.map { entry in
+            let held = min(entry.value, room)
+            room -= held
+            return (key: entry.key, held: held, beyond: entry.value - held)
+        }
+        let held = capacity - room
+        let beyond = total - held
+        let vault = store.player.subsurfaceBuilt.contains("mineral-vault")
+        return VStack(spacing: 0) {
+            HStack(spacing: 24) {
+                Button { store.go(.hub) } label: {
+                    Text("‹ BACK").font(AppFont.display(14)).padding(.horizontal, 16).frame(minHeight: 48)
+                        .background(Theme.tokenCyan.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain).accessibilityIdentifier("surface-silo-close")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("LEVEL \(level) · ABOVE GROUND\(held >= capacity ? " · FULL" : "")").font(AppFont.body(14))
+                    Text("Surface Silo").font(AppFont.display(28)).accessibilityAddTraits(.isHeader)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 16)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("STORAGE").font(AppFont.display(14)).foregroundStyle(Theme.tokenCyan)
+                        Spacer()
+                        Text("\(held) / \(capacity) U").monospacedDigit()
+                    }
+                    ProgressView(value: Double(held), total: Double(capacity)).tint(Theme.tokenCyan)
+                        .accessibilityLabel("Surface Silo fill")
+                    if minerals.isEmpty {
+                        Text("Empty. Ore you bring home from a mission is stored here.")
+                    } else {
+                        HStack {
+                            Text("MINERAL").frame(maxWidth: .infinity, alignment: .leading)
+                            Text("IN SILO").frame(width: 72, alignment: .trailing)
+                            if beyond > 0 { Text(vault ? "IN VAULT" : "WAITING").frame(width: 72, alignment: .trailing) }
+                        }
+                        .font(AppFont.display(14)).foregroundStyle(Theme.tokenCyan)
+                        ForEach(minerals, id: \.key) { entry in
+                            let meta = Minerals.byId[entry.key]
+                            HStack(spacing: 8) {
+                                Rectangle().fill(Color(hex: meta?.colorHex) ?? Theme.tokenCyan).frame(width: 12, height: 12)
+                                Text((meta?.name ?? entry.key).capitalized).frame(maxWidth: .infinity, alignment: .leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text("\(entry.held) U").monospacedDigit().frame(width: 72, alignment: .trailing)
+                                if beyond > 0 { Text("\(entry.beyond) U").monospacedDigit().frame(width: 72, alignment: .trailing) }
+                            }
+                            .padding(.vertical, 8)
+                            Divider().overlay(Theme.tokenCyan.opacity(0.3))
+                        }
+                    }
+                    if beyond > 0 {
+                        Text(vault ? "\(beyond) U more is in the Mineral Vault underground."
+                             : "Full. \(beyond) U more is waiting with nowhere to go: sell it, or build a Mineral Vault underground.")
+                    }
+                }
+                .padding(.vertical, 16)
+            }
+            VStack(spacing: 8) {
+                Text("\(total) U held across Earth storage").font(AppFont.body(14))
+                if total > 0 && store.player.placed.contains("market") {
+                    Button { store.go(.market) } label: {
+                        Text("SELL AT EXCHANGE").font(AppFont.display(14)).foregroundStyle(Theme.tokenPurpleDepth)
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                            .background(Theme.tokenMapSun, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain).accessibilityIdentifier("surface-silo-sell")
+                }
+            }
+            .padding(.vertical, 16)
+        }
+        .font(AppFont.body(16)).foregroundStyle(Theme.tokenMapSun)
+        .frame(maxWidth: 960).padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Theme.tokenPurpleDepth.ignoresSafeArea())
+        .accessibilityIdentifier("surface-silo-panel")
     }
 }

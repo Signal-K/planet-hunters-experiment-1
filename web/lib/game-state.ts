@@ -1,4 +1,7 @@
+import { mergePassportWeeks, mergeFirstStamps, sanitizeFirstStamps } from '@/lib/research/passport'
+import { earnedRocketParts, sanitizeLivery } from '@/lib/launchpad/workshop'
 import { mergeProbeObservations } from './probes/field-probe'
+import { sanitizeGroundTelescopeLevels } from './ground-telescope-upgrades'
 import { mergeClientSales } from './client-sales'
 import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
@@ -36,8 +39,8 @@ import { mergeSkyMaps } from '@/lib/research/sky-map'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'targets', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
 // Runs built at runtime by buildRuntimeCatalog, so a saved flight to one is not a lost mission on reload.
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, ...SHOWERS.map(shower => shower.runMissionId), RESOURCE_FOCUS_MISSION_ID])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID, ...SHOWERS.map(shower => shower.targetId)])
@@ -347,7 +350,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, probeObservations: mergeProbeObservations(player.probeObservations), baseArrangement: sanitizeArrangement(player.baseArrangement), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, rocketLivery: sanitizeLivery(player.rocketLivery), researchRocketParts: earnedRocketParts(player), probeObservations: mergeProbeObservations(player.probeObservations), baseArrangement: sanitizeArrangement(player.baseArrangement), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), groundTelescopeLevels: sanitizeGroundTelescopeLevels(player.groundTelescopeLevels), buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), researchFirstStamps: sanitizeFirstStamps(player.researchFirstStamps), researchPassportWeeks: mergePassportWeeks(player.researchPassportWeeks, undefined), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -466,7 +469,7 @@ function repairStateRoute(rawInput: GameState): GameState {
   // A Free Ops player's bare /game/fab (no mission, no target) is the Free Ops
   // Build objective screen, which owns that route (see canonicalGameRoute). It
   // is not a lost mission context, so it must survive a cold load.
-  const isBareFreeOpsBuild = input.screen === 'fab' && input.player.freeOperations
+  const isBareFreeOpsBuild = ((input.screen === 'fab' && input.player.freeOperations) || input.screen === 'rocket-workshop')
     && !input.missionId && !input.targetId
   // A run in flight is always valid. Its mission and target may come from the live catalog (PocketBase rows
   // and the daily pool), which this static check cannot see on a cold load. Clearing them stranded the
@@ -729,9 +732,17 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   merged.player.tessClassifications = mergeKeyed(current.player.tessClassifications, remoteState.player?.tessClassifications)
   merged.player.asteroidClassifications = mergeKeyed(current.player.asteroidClassifications, remoteState.player?.asteroidClassifications)
   merged.player.saturnClassifications = mergeKeyed(current.player.saturnClassifications, remoteState.player?.saturnClassifications)
+  merged.player.researchFirstStamps = mergeFirstStamps(current.player.researchFirstStamps, remoteState.player?.researchFirstStamps)
+  merged.player.researchPassportWeeks = mergePassportWeeks(current.player.researchPassportWeeks, remoteState.player?.researchPassportWeeks)
   merged.player.researchStamps = mergeStamps(current.player.researchStamps, remoteState.player?.researchStamps)
+  merged.player.researchRocketParts = [...new Set([...earnedRocketParts(current.player), ...earnedRocketParts(remoteState.player ?? {})])]
+  const localLivery = sanitizeLivery(current.player.rocketLivery)
+  const remoteLivery = sanitizeLivery(remoteState.player?.rocketLivery)
+  merged.player.rocketLivery = remoteLivery.updatedAt > localLivery.updatedAt ? remoteLivery : localLivery
   merged.player.researchPath = mergeResearchPath(current.player.researchPath, remoteState.player?.researchPath)
   merged.player.telescopeAim = mergeTelescopeAim(current.player.telescopeAim, remoteState.player?.telescopeAim)
+  merged.player.groundTelescopeLevels = sanitizeGroundTelescopeLevels(maxMergeRecord(current.player.groundTelescopeLevels, remoteState.player?.groundTelescopeLevels))
+  merged.player.dismissedHubPrompts = maxMergeRecord(current.player.dismissedHubPrompts, remoteState.player?.dismissedHubPrompts)
   merged.player.skyMap = mergeSkyMaps(current.player.skyMap, remoteState.player?.skyMap)
   merged.player.researchFragments = Math.max(current.player.researchFragments ?? 0, remoteState.player?.researchFragments ?? 0)
   merged.player.researchUniversalFragments = Math.max(current.player.researchUniversalFragments ?? 0, remoteState.player?.researchUniversalFragments ?? 0)

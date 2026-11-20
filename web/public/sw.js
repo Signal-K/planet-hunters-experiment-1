@@ -289,7 +289,7 @@ self.addEventListener('message', event => {
     .reduce((accepted, rawUrl) => {
       try {
         const url = new URL(rawUrl, self.location.origin)
-        if (url.origin === self.location.origin && url.pathname.startsWith('/_next/static/')) {
+        if (url.origin === self.location.origin && (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/game/assets/'))) {
           accepted.push(url.href)
         }
       } catch {

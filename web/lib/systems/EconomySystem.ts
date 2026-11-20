@@ -1,3 +1,5 @@
+import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
+import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
 import type { BuildingLevels } from '@/lib/data/building-levels'
 import { rocketPrice } from '@/lib/rockets'
 // Pure state-transition functions for the economy system.
@@ -617,14 +619,18 @@ export function applyConfirmShipCustomizerBuild(
   installed: Partial<Record<ShipRoomKind, string>>,
   prevInstalled: Partial<Record<ShipRoomKind, string>>,
 ): { state: GameState; ok: boolean } {
+  // Price from authoritative current state; a free earned part never creates a refund.
+  const current = s.player.shipCustomizerParts ?? {}
   let netCost = 0
-  for (const kind of Object.keys(installed) as ShipRoomKind[]) {
-    const nextId = installed[kind]
-    const prevId = prevInstalled[kind]
+  for (const kind of new Set([...Object.keys(current), ...Object.keys(installed)])) {
+    const nextId = (installed as Record<string, string | undefined>)[kind]
+    const prevId = (current as Record<string, string | undefined>)[kind]
     if (nextId === prevId) continue
-    const nextPrice = nextId ? customizerPartById(nextId)?.price ?? 0 : 0
-    const prevPrice = prevId ? customizerPartById(prevId)?.price ?? 0 : 0
-    netCost += nextPrice - prevPrice
+    const part = nextId ? customizerPartById(nextId) : undefined
+    if (nextId && weeklyRocketPartById(nextId) && !earnedRocketParts(s.player).includes(nextId)) return { state: s, ok: false }
+    if (nextId && (!part || (kind === 'mining-laser' ? !nextId.includes('laser') : part.kind !== kind))) return { state: s, ok: false }
+    if (part && (part.unlockedAtMissions ?? 0) > s.player.missionsDone && !earnedRocketParts(s.player).includes(part.id)) return { state: s, ok: false }
+    netCost += (nextId ? workshopPartPrice(nextId, s.player) : 0) - (prevId ? workshopPartPrice(prevId, s.player) : 0)
   }
   if (netCost > s.player.francs) return { state: s, ok: false }
   return {

@@ -2026,6 +2026,11 @@ body[data-pwa="standalone"]::before {
   padding-top: 20px;
   padding-bottom: 24px;
 }
+.mining-guide-scroll .mining-hold {
+  position: static; z-index: auto; box-sizing: border-box; min-width: 0; width: 100%;
+  background: var(--ln-blueprint-ink); border-color: var(--ln-cyan-border); box-shadow: none;
+}
+.mining-guide-actions p { margin: 0; font: 600 14px/1.4 var(--ln-font-body); }
 .mining-guide-card {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);

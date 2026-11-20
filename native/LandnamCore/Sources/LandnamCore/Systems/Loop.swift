@@ -63,6 +63,8 @@ public enum Loop {
         let delivery = mission.deliveryTargetId.flatMap(catalog.target)
         let suggested = catalog.parts.suggestBuild(mission: mission, target: target, deliveryTarget: delivery,
                                                    missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: BuildingLevels.level(s.player, "launchpad"))
+        base.player.miningCargoInProgress = nil
+        base.player.miningLaserCharges = nil
         base.missionId = id
         base.targetId = targetId
         base.deliveryTargetId = mission.deliveryTargetId

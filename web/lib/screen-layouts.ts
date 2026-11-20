@@ -74,6 +74,7 @@ export const GAME_ROUTES = [
   // Home
   { path: '/game/hub', screen: 'hub', surface: 'home' },
   { path: '/game/hub-subsurface', screen: 'hub-subsurface', surface: 'home' },
+  { path: '/game/surface-silo', screen: 'surface-silo', surface: 'home' },
   { path: '/game/build', screen: 'build', surface: 'home' },
   { path: '/game/market', screen: 'market', surface: 'home' },
 
@@ -106,6 +107,7 @@ export const GAME_ROUTES = [
   { path: '/game/radio-meteors', screen: 'radio-meteors', surface: 'instrument' },
   { path: '/game/probe-scan', screen: 'probe-scan', surface: 'instrument' },
   { path: '/game/probe-watch', screen: 'probe-watch', surface: 'takeon' },
+  { path: '/game/rocket-workshop', screen: 'rocket-workshop', surface: 'instrument' },
   { path: '/game/hangar', screen: 'hangar', surface: 'instrument' },
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },
   { path: '/game/launchpad', screen: 'launchpad', surface: 'instrument' },

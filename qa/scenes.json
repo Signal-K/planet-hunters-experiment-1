@@ -35,6 +35,18 @@
    ]
   },
   {
+   "id": "ground-telescope-upgrades",
+   "name": "Ground telescope upgrades",
+   "flow": "progression",
+   "web": "hub-telescope-upgrades",
+   "native": "ground-telescope-upgrades-phone",
+   "tickets": [
+    "SSL-855",
+    "SSL-802"
+   ],
+   "objective": "Open Menu > Build. Upgrade the unplaced telescope with 1 U iron, then 2 U; level 3 disables further upgrades. Place it to observe."
+  },
+  {
    "id": "hub",
    "name": "Earth Base",
    "flow": "core-loop",
@@ -94,6 +106,7 @@
    "native": "mining-laser-live",
    "tickets": [
     "SSL-411",
+    "SSL-709",
     "SSL-430"
    ]
   },
@@ -124,7 +137,8 @@
    "web": "ui-free-mining",
    "native": "mining-laser-live",
    "tickets": [
-    "SSL-711"
+    "SSL-711",
+    "SSL-863"
    ]
   },
   {
@@ -155,7 +169,8 @@
    "web": "ui-leonids-shower-mining-fresh",
    "native": "mining-shower-live",
    "tickets": [
-    "SSL-658"
+    "SSL-658",
+    "SSL-863"
    ]
   },
   {
@@ -318,10 +333,43 @@
    "tickets": []
   },
   {
+   "id": "research-passport",
+   "name": "Weekly research passport",
+   "flow": "progression",
+   "web": "ui-research-passport",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-unconfirmed",
+   "name": "Passport awaiting sync",
+   "flow": "progression",
+   "web": "ui-research-passport-unconfirmed",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-missed",
+   "name": "Passport without contribution",
+   "flow": "progression",
+   "web": "ui-research-passport-missed",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-empty",
+   "name": "Open passport page",
+   "flow": "progression",
+   "web": "ui-research-passport-empty",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
    "id": "community-research",
    "name": "Community research",
    "flow": "records",
    "web": "ui-community-research",
+   "nativeDeferred": "SSL-849 passport: iOS follows after web",
    "native": "community-research-phone",
    "tickets": [
     "SSL-691",
@@ -341,6 +389,17 @@
    ]
   },
   {
+   "id": "signal-dialogue",
+   "name": "Signals ready dismissal",
+   "flow": "records",
+   "web": "ui-signal-dialogue",
+   "native": "hub-phone",
+   "tickets": [
+    "SSL-868"
+   ],
+   "objective": "Dismiss the current signals, navigate away and back; the popup stays closed while the Data hub remains accessible."
+  },
+  {
    "id": "sky-dialogue",
    "name": "Sky dialogue",
    "flow": "records",
@@ -357,6 +416,14 @@
    "web": "ui-market",
    "native": "exchange-phone",
    "tickets": []
+  },
+  {
+   "id": "rocket-workshop",
+   "name": "Rocket workshop",
+   "flow": "core-loop",
+   "web": "ui-rocket-workshop",
+   "nativeDeferred": "iOS comes in cycle 13 — Liam, SSL-850 comment, 19 Nov 2026",
+   "tickets": ["SSL-850"]
   },
   {
    "id": "launchpad",
@@ -855,6 +922,16 @@
    "objective": "Aim the fixed lunar camera and confirm impacts in its field of view.",
    "complete": "Finish the one-minute watch; results show count and best sighting. Reload keeps confirmed sightings in the isolated fixture save.",
    "nativeDeferred": "iOS deferred until requested: notes/decisions/Sky events follow the real sky (2026-11-11).md"
+  },
+  {
+   "id": "surface-silo",
+   "name": "Surface Silo contents",
+   "flow": "core-loop",
+   "web": "ui-surface-silo",
+   "native": "surface-silo-live",
+   "tickets": [
+    "SSL-857"
+   ]
   }
  ],
  "missions": [

@@ -87,9 +87,9 @@ export interface PathStep {
 }
 
 export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title: string; explanation: string }> = {
-  'step-2': { fragments: 5, title: 'Field note', explanation: 'A small fragment for making the second connection.' },
-  'step-4': { fragments: 10, title: 'Research cache', explanation: 'A larger fragment bundle for keeping the chain moving.' },
-  breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge and 25 regular fragments. The badge stays in your collection.' },
+  'step-2': { fragments: 5, title: 'Field note', explanation: '5 fragments for making the second connection.' },
+  'step-4': { fragments: 10, title: 'Research cache', explanation: '10 fragments for keeping the chain moving.' },
+  breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge and 25 fragments. The shared passport goal awards this week’s rocket part.' },
 }
 
 /** SSL-714: a shower with a mission chain words its event step for where the player is in it. */
@@ -174,7 +174,7 @@ export function weeklyRewardKey(step: PathStep): keyof typeof WEEKLY_RESEARCH_RE
   return null
 }
 
-export function claimResearchReward<T extends { researchPath?: ResearchPathChoice; researchFragments?: number; badges?: Record<string, { eventId: string; tier: 'gold' | 'silver'; earnedAt: number }> }>(player: T, step: PathStep, progress: { have: number; need: number }, now: number): T {
+export function claimResearchReward<T extends { researchPath?: ResearchPathChoice; researchFragments?: number; researchRocketParts?: string[]; badges?: Record<string, { eventId: string; tier: 'gold' | 'silver'; earnedAt: number }> }>(player: T, step: PathStep, progress: { have: number; need: number }, now: number): T {
   const choice = player.researchPath
   const rewardKey = weeklyRewardKey(step)
   if (!choice || !rewardKey || progress.have < progress.need) return player

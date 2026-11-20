@@ -5,6 +5,9 @@ import { captureGameEvent } from '@/lib/posthog'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
+import GroundTelescopeUpgrade from '@/components/game/hub/GroundTelescopeUpgrade'
+import { groundTelescopeLevel } from '@/lib/ground-telescope-upgrades'
+import { ownedGroundTelescopes } from '@/lib/systems/InstrumentFeedSystem'
 import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
@@ -24,7 +27,7 @@ import { RocketRollout } from '@/components/game/hub/RocketRollout'
 import { consumeRocketRolloutPending } from '@/lib/rocket-rollout'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
-import { SurfaceSiloPanel, surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
+import { surfaceSiloCapacity } from '@/components/game/hub/SurfaceSiloPanel'
 import { Building } from '@/components/game/hub/Building'
 import { isGroundTelescopeId } from '@/lib/systems/InstrumentFeedSystem'
 import { AnnexStructures, UnplacedTray } from '@/components/game/hub/AnnexStructures'
@@ -39,7 +42,7 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
 import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
+import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, signalPromptKey, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
@@ -105,6 +108,7 @@ interface HubScreenProps {
   /** Opens the whole-sky pointing view on one telescope. */
   onPointTelescope?: (instrument: InstrumentPointing) => void
   onDismissHubPrompt?: (key: HubPromptKey) => void
+  onUpgradeGroundTelescope?: (id: string) => void
   onUpgradeBuilding?: (id: string) => void
   onServiceLaunchpad?: () => void
   onExcavateSubsurface?: () => void
@@ -123,7 +127,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onFocusResources, onOpenMarket, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onUpgradeGroundTelescope, onFocusResources, onOpenMarket, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -179,8 +183,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
   const [servicingPad, setServicingPad] = useState(false)
-  const [siloOpen, setSiloOpen] = useState(false)
   const [upgradingBuilding, setUpgradingBuilding] = useState<UpgradableBuildingId | null>(null)
+  const [upgradingGroundScope, setUpgradingGroundScope] = useState<string | null>(null)
   const { signals } = useInstrumentSignals(player)
   const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
@@ -337,13 +341,15 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       placement: 'viewport-clear',
       onCta: () => onPointTelescope(needsPointing[0]),
     }
-    : signals.length > 0
+    : signals.some(signal => !isHubPromptDismissed(player, signalPromptKey(signal)))
     ? {
+      id: signals.map(signalPromptKey).sort().join('|'),
       title: signals.length === 1 ? '1 signal ready' : `${signals.length} signals ready`,
       body: 'Your telescopes found something. Classify it and the research moves forward.',
       cta: 'Classify',
       placement: 'viewport-clear',
       onCta: () => onOpenScene('instrument-hub'),
+      onDismiss: onDismissHubPrompt ? () => signals.forEach(signal => onDismissHubPrompt(signalPromptKey(signal))) : undefined,
     }
     : undefined
 
@@ -425,7 +431,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         w: 62,
         // The Surface Silo stands above ground: it opens its own contents
         // here. The Mineral Vault underground is a separate building.
-        onClick: () => setSiloOpen(true),
+        onClick: () => onOpenScene('surface-silo'),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -566,7 +572,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
       onLeft={() => moveArranged(-1)}
       onRight={() => moveArranged(1)}
       onUpgrade={arrangeKind && onUpgradeBuilding && isUpgradableBuilding(arrangeKind) ? () => setUpgradingBuilding(arrangeKind) : undefined}
-      onDone={() => { setEditMode(false); setArrangeKind(null); setPlaceNote(null) }}
+      onDone={() => { setEditMode(false); setArrangeKind(null); setPlaceNote(null); setUpgradingGroundScope(null) }}
     />
   )
   const orbitalNetwork = !subsurface && !editMode && <SkyCraft craft={skyCraftItems} onPoint={openPointing} onOpenData={() => onOpenScene('instrument-hub')} />
@@ -636,7 +642,7 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                 camera.focusX(displayX(slot.x) * px)
               }
             }}
-            onOpen={kind => { if (isGroundTelescopeId(kind)) onOpenScene('instrument-hub') }}
+            onOpen={kind => { if (isGroundTelescopeId(kind)) { if (editMode) setUpgradingGroundScope(kind); else onOpenScene('instrument-hub') } }}
           />
 
           {/* Surface buildings — hit areas + labels.
@@ -740,16 +746,6 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
         </div>
       </div>
 
-      {siloOpen && !subsurface && (
-        <SurfaceSiloPanel
-          stash={player.stash}
-          buildingLevels={player.buildingLevels}
-          subsurfaceBuilt={player.subsurfaceBuilt}
-          onSell={player.placed?.includes('market') && onOpenMarket ? () => { setSiloOpen(false); onOpenMarket() } : undefined}
-          onClose={() => setSiloOpen(false)}
-        />
-      )}
-
       {servicingPad && onServiceLaunchpad && (
         <ActionConfirmBar
           eyebrow={`Level ${padLevel} launchpad`}
@@ -761,6 +757,8 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           onDismiss={() => setServicingPad(false)}
         />
       )}
+
+      {upgradingGroundScope && onUpgradeGroundTelescope && <GroundTelescopeUpgrade player={player} id={upgradingGroundScope} onUpgrade={onUpgradeGroundTelescope} onDismiss={() => setUpgradingGroundScope(null)} />}
 
       {upgradingBuilding && onUpgradeBuilding && (() => {
         const level = buildingLevel(player, upgradingBuilding)
@@ -819,6 +817,13 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
                 ))}
               </div>
             )}
+          {onUpgradeGroundTelescope && ownedGroundTelescopes(player).length > 0 && (
+            <div role="group" aria-label="Owned ground telescopes" style={{ pointerEvents: 'auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, maxWidth: 'calc(100vw - 24px)' }}>
+              {ownedGroundTelescopes(player).map((id, index) => <button key={id} type="button" data-testid={`customize-${id}`} onClick={() => { setUpgradingBuilding(null); setUpgradingGroundScope(id) }} style={{ minHeight: 44, padding: '8px 12px', border: '2px solid var(--ln-world-outline)', borderRadius: 8, background: 'var(--ln-world-hull-lit)', color: 'var(--ln-world-outline)', font: '700 14px/1.2 var(--ln-font-display)' }}>
+                Ground telescope{index ? ' 2' : ''} · Level {groundTelescopeLevel(player, id)} · {unplacedAnnex.includes(id) ? 'Unplaced' : 'On annex'} · Upgrade
+              </button>)}
+            </div>
+          )}
           {baseRow}
         </div>
       )}

@@ -90,6 +90,7 @@ export type Screen =
   | 'build'
   | 'hub'
   | 'hub-subsurface'
+  | 'surface-silo'
   | 'missions'
   | 'tess-discovery'
   | 'targets'
@@ -104,6 +105,7 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'launchpad'
+  | 'rocket-workshop'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'radio-meteors'
@@ -129,7 +131,9 @@ export type Screen =
 export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
   'hub-subsurface',
+  'surface-silo',
   'launchpad',
+  'rocket-workshop',
   'flight',
   'landing',
   'mining',
@@ -220,6 +224,8 @@ export interface Player {
   placementPlots: Record<string, number>
   /** SSL-802: owned a ground telescope before telescopes had to be placed to observe; that one observes from the tray. */
   groundTelescopeGrandfathered?: boolean
+  /** Ground telescope levels 1–3, independently upgraded with stored iron. */
+  groundTelescopeLevels?: Record<string, number>
   /** Left-to-right order of the movable structures along the Base (hangar, launchpad, control-station, market). Absent: authored order. */
   baseArrangement?: string[]
   /** kind -> startedAt ms. Absence means the structure is fully built. */
@@ -410,6 +416,8 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
+  researchFirstStamps?: Record<string, { kind: import('@/lib/research/stamps').StampKind; at: number }>
+  researchPassportWeeks?: Record<string, import('@/lib/research/passport').PassportWeek>
   researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
@@ -448,6 +456,8 @@ export interface Player {
   // Persisted ship-customiser loadout for the player's owned Explorer (sr1) —
   // part id installed per room slot. Confirmed builds deduct real francs and
   // survive across sessions instead of resetting to a fresh 3B mock budget.
+  rocketLivery?: import('@/lib/launchpad/workshop').RocketLivery
+  researchRocketParts?: string[]
   shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.

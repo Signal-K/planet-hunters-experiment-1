@@ -5,18 +5,18 @@ format = 1
 id = "community-research"
 type = "menu"
 name = "Community research"
-summary = "Daily stamps, the shared monthly bar, the live event week and the community votes."
-tickets = ["SSL-746", "SSL-757"]
-qa = ["community-research"]
+summary = "A weekly research passport: seven daily stamp places, the shared weekly goal and a permanent rocket part for contributors. Research activities, monthly bonuses, votes and reviews stay reachable."
+tickets = ["SSL-746", "SSL-757", "SSL-849"]
+qa = ["community-research", "research-passport", "passport-unconfirmed", "passport-missed", "passport-empty"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/CommunityResearchScreen.tsx"]
+web = ["web/components/game/screens/CommunityResearchScreen.tsx", "web/components/game/screens/ResearchPassport.tsx"]
 native = []
 
 [preview]
 route = "community-research"
-state = "ui-community-research"
+state = "ui-research-passport"
 
 
 # Source-backed hierarchy. Host-owned nodes are inspectable contracts, not migrated layouts.
@@ -33,7 +33,7 @@ id = "research-calendar"
 kind = "panel"
 layout = "host"
 mechanics = ["records"]
-note = "Daily stamps, the streak and the shared community bar."
+note = "SSL-849: Monday to Sunday, first activity inks each day once. The server counts one day per player toward the weekly goal; at least one confirmed day earns that week’s unique part when the goal reaches 100. Past pages retain stamped days, contribution status and reward. Local unsynced days are pending, never award a part. iOS follows after web."
 
 [[objects]]
 id = "back-action"

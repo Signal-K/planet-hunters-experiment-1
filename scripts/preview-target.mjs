@@ -18,6 +18,14 @@ const pending = `${out}.${process.pid}.tmp`
 // touched. These fixtures are deliberately representative rather than saved
 // campaign state; use `node scripts/scene.mjs <id>` for an authored scene.
 const SCREENS = [
+  ['research-passport', 'ui-research-passport'],
+  ['passport-unconfirmed', 'ui-research-passport-unconfirmed'],
+  ['passport-missed', 'ui-research-passport-missed'],
+  ['passport-empty', 'ui-research-passport-empty'],
+  ['rocket-workshop', 'ui-rocket-workshop'],
+  ['ground-telescope-upgrades', 'hub-telescope-upgrades'],
+  ['signal-dialogue', 'ui-signal-dialogue'],
+  ['surfacesilo', 'ui-surface-silo'],
   ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['agency', 'hub-first-run'], ['hub-first-run', 'hub-first-run'], ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
   ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
@@ -31,6 +39,7 @@ const SCREENS = [
 ]
 
 const ROUTE_PRESETS = {
+  'surface-silo': 'ui-surface-silo',
   hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
   'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',

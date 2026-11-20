@@ -1,0 +1,42 @@
+.desk { position: absolute; inset: 0; padding: 16px; overflow: auto; background: var(--ln-blueprint-ink); color: var(--ln-blueprint-ink); font: 14px/1.45 var(--ln-font-display); }
+.desk button { min-width: 44px; min-height: 44px; border: 2px solid var(--ln-blueprint-ink); border-radius: 8px; padding: 8px 12px; font: inherit; background: var(--ln-blueprint-paper); color: var(--ln-blueprint-ink); cursor: pointer; }
+.desk button:disabled { opacity: .4; cursor: default; }
+.desk button:focus-visible { outline: 3px solid var(--ln-blueprint-blue); outline-offset: 3px; }
+.header { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; color: var(--ln-blueprint-paper); margin-bottom: 16px; }
+.header div { flex: 1; min-width: 180px; }
+.header h1 { font-size: 24px; margin: 0; }
+.header span { font-size: 14px; }
+.book { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(240px, 1fr); max-width: 1200px; margin: auto; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 0 var(--ln-blueprint-line-strong); background: var(--ln-blueprint-paper); }
+.page, .rewardPage { padding: 24px; }
+.page { border-right: 4px double var(--ln-blueprint-line-strong); background: repeating-linear-gradient(0deg, transparent 0 31px, var(--ln-blueprint-bg) 32px); }
+.paging { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.paging div { text-align: center; }
+.paging h2, .rewardPage h2 { font-size: 20px; margin: 4px 0; }
+.paging span, .kicker { font-size: 14px; letter-spacing: var(--ln-tr-label); }
+.stamps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; padding: 0; margin: 24px 0; gap: 12px; }
+.stamp { text-align: center; }
+.stamp > span { display: block; margin-bottom: 4px; }
+.ink { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 112px; border: 2px dashed var(--ln-blueprint-line-strong); border-radius: 8px; background: var(--ln-blueprint-paper); }
+.ink b { font-size: 28px; line-height: 1.1; }
+.ink strong, .ink small { font-size: 14px; }
+.stamp[data-stamped=true] .ink { transform: rotate(-4deg); color: var(--ln-blueprint-blue); border: 3px double var(--ln-blueprint-blue); background: var(--ln-blueprint-bg); }
+.stamp:nth-child(even)[data-stamped=true] .ink { transform: rotate(4deg); }
+.stamp[data-today=true] > span { color: var(--ln-blueprint-blue); font-weight: bold; }
+.stamp[data-future=true] .ink { background: var(--ln-blueprint-bg); }
+.contribution { padding-top: 12px; border-top: 1px solid var(--ln-blueprint-line-strong); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rewardPage { display: flex; flex-direction: column; background: var(--ln-blueprint-bg); }
+.partDrawing { min-height: 160px; display: grid; place-items: center; background: repeating-linear-gradient(90deg, transparent 0 31px, var(--ln-blueprint-line-strong) 32px); margin: 16px 0; border-bottom: 2px solid var(--ln-blueprint-ink); }
+.partDrawing img { width: 144px; height: 144px; object-fit: contain; image-rendering: pixelated; }
+.bar { margin-top: 16px; }
+.bar > div { display: flex; gap: 8px; justify-content: space-between; }
+.bar progress { width: 100%; height: 16px; accent-color: var(--ln-blueprint-blue); }
+.bar small { font-size: 14px; display: block; }
+.rewardStatus { font-weight: bold; }
+.seal { align-self: flex-end; margin-top: auto; padding: 12px; border: 3px double var(--ln-blueprint-blue); color: var(--ln-blueprint-blue); transform: rotate(-5deg); text-align: center; }
+@media (max-width: 700px) { .book { grid-template-columns: 1fr; } .page { border-right: 0; border-bottom: 4px double var(--ln-blueprint-line-strong); } .page, .rewardPage { padding: 16px; } .stamps { gap: 8px; } .ink { min-height: 96px; } .header h1 { font-size: 20px; } }
+@media (orientation: landscape) and (max-height: 600px) { .desk { padding: 8px; } .header { margin-bottom: 8px; } .page, .rewardPage { padding: 16px; } .stamps { margin: 16px 0; } .partDrawing { min-height: 112px; } .partDrawing img { height: 96px; } }
+.bar progress { appearance: none; border: 0; border-radius: 4px; overflow: hidden; background: var(--ln-blueprint-paper-2); }
+.bar progress::-webkit-progress-bar { background: var(--ln-blueprint-paper-2); }
+.bar progress::-webkit-progress-value { background: var(--ln-blueprint-blue); }
+.bar progress::-moz-progress-bar { background: var(--ln-blueprint-blue); }

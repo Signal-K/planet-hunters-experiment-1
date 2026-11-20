@@ -695,6 +695,26 @@ struct DebriefScreen: View {
                         }
                     }
 
+                    if m != nil && !store.player.shipDestroyed {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("COMMUNITY SITE").font(AppFont.display(16))
+                            Text("A shared spaceport built by completed missions. Mining hauls, contracts and payload launches build different parts. You keep your cargo and earnings; construction credit is separate from research stamps.").font(AppFont.body(14))
+                            if store.player.freeOperations {
+                                Button("COMPLETE MISSION · VIEW COMMUNITY") {
+                                    guard !collecting else { return }
+                                    collecting = true; shownRun = run
+                                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil)
+                                    store.go(.communityResearch)
+                                }
+                                .font(AppFont.display(14)).frame(minHeight: 44)
+                                .accessibilityIdentifier("debrief-community-link")
+                            }
+                        }
+                        .foregroundStyle(Theme.tokenMapSun).padding(16)
+                        .background(Theme.tokenPurpleDepth, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    SkyBadgeRow(badges: store.player.badges)
+
                     if !orbital && isFreeHaul {
                         CreamCard {
                             Text("FREE OPS HAUL").font(AppFont.mono(14)).tracking(1.6).foregroundStyle(Theme.blue)

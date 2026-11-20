@@ -38,13 +38,14 @@ struct RouteMap: View {
             let size = geo.size
             ZStack {
                 Canvas { ctx, size in
+                    SkyMapBase.draw(ctx, size: size, time: 0, still: true)
                     let c = CGPoint(x: size.width / 2, y: size.height / 2)
                     ctx.fill(Path(ellipseIn: CGRect(x: c.x - 6, y: c.y - 6, width: 12, height: 12)), with: .color(Theme.blueBright))
                     for orbit in 1...rings {
                         let r = radius(orbit, in: size)
                         let reachable = orbit <= maxOrbit
                         ctx.stroke(Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2)),
-                                   with: .color(reachable ? Theme.blue.opacity(0.55) : Theme.ink.opacity(0.14)),
+                                   with: .color(reachable ? Theme.blue.opacity(0.55) : Theme.tokenMapSun.opacity(0.14)),
                                    lineWidth: reachable ? 1.5 : 1)
                     }
                     let reachableTargets = targets.filter { $0.orbit <= maxOrbit }
@@ -72,12 +73,12 @@ struct RouteMap: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Destination \(t.name)")
+                    .accessibilityAddTraits(picked ? [.isSelected] : [])
                     .position(x: p.x, y: min(max(p.y, 22), size.height - 22))
                 }
             }
         }
         .frame(height: 200)
-        .background(LinearGradient(colors: [Theme.ink, Theme.bluePress.opacity(0.9), Theme.ink], startPoint: .topLeading, endPoint: .bottomTrailing))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.blueBright.opacity(0.6), lineWidth: 2))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }

@@ -35,6 +35,7 @@ public struct Player: Codable, Equatable, Sendable {
     public var missionStartedAt: Double?
     public var missionPhase: MissionPhase?
     public var miningCargoInProgress: Cargo?
+    public var miningLaserCharges: Int?
     public var deliveryUnloadStartedAt: Double?
     public var landingStartedAt: Double?
     public var landingReturnStartedAt: Double?
@@ -102,6 +103,7 @@ public struct Player: Codable, Equatable, Sendable {
     public var launchpadUpgraded: Bool = false
     /// Levels 2-3 of upgradable buildings (`BuildingLevels`); absent means level 1. Same JSON key as web.
     public var buildingLevels: [String: Int] = [:]
+    public var groundTelescopeLevels: [String: Int] = [:]
     public var lastClient: String?
     public var arrivalAt: Double?
     public var transitStartedAt: Double?
@@ -152,7 +154,7 @@ public struct Player: Codable, Equatable, Sendable {
             if let value = try? c.decodeIfPresent(T.self, forKey: AnyKey(key)) { keep = value }
         }
         get("francs", &francs); getOpt("activeMission", &activeMission); getOpt("missionRunId", &missionRunId); getOpt("missionStartedAt", &missionStartedAt)
-        getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress)
+        getOpt("missionPhase", &missionPhase); getOpt("miningCargoInProgress", &miningCargoInProgress); getOpt("miningLaserCharges", &miningLaserCharges)
         getOpt("deliveryUnloadStartedAt", &deliveryUnloadStartedAt); getOpt("landingStartedAt", &landingStartedAt)
         getOpt("landingReturnStartedAt", &landingReturnStartedAt); getOpt("hasLanded", &hasLanded)
         get("missionCount", &missionCount); get("pendingLaunch", &pendingLaunch); get("stagedRockets", &stagedRockets)
@@ -182,7 +184,9 @@ public struct Player: Codable, Equatable, Sendable {
         get("underConstruction", &underConstruction); get("discoveredExoplanetTargets", &discoveredExoplanetTargets)
         getOpt("satelliteTargetId", &satelliteTargetId); get("pendingRepick", &pendingRepick); getOpt("lastSeenConfirmedAt", &lastSeenConfirmedAt); getOpt("transitSatelliteLevel", &transitSatelliteLevel); getOpt("deepSpaceTelescopeLaunchedAt", &deepSpaceTelescopeLaunchedAt); 
         get("refineryQueue", &refineryQueue); getOpt("refineryLastStartedAt", &refineryLastStartedAt); 
-        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient); 
+        get("launchpadUpgraded", &launchpadUpgraded); get("buildingLevels", &buildingLevels); getOpt("lastClient", &lastClient);
+        get("groundTelescopeLevels", &groundTelescopeLevels)
+        groundTelescopeLevels = GroundTelescopeUpgrades.sanitize(groundTelescopeLevels)
         getOpt("arrivalAt", &arrivalAt); getOpt("transitStartedAt", &transitStartedAt)
         get("seenPlanets", &seenPlanets); get("researchXP", &researchXP); get("subsurfaceExcavated", &subsurfaceExcavated)
         get("subsurfaceBuilt", &subsurfaceBuilt); get("landingResearched", &landingResearched)
@@ -218,7 +222,7 @@ public struct Player: Codable, Equatable, Sendable {
         func put<T: Encodable>(_ key: String, _ value: T) throws { try c.encode(value, forKey: AnyKey(Player.renamed[key] ?? key)) }
         func putOpt<T: Encodable>(_ key: String, _ value: T?) throws { if let value { try c.encode(value, forKey: AnyKey(key)) } }
         try put("francs", francs); try putOpt("activeMission", activeMission); try putOpt("missionRunId", missionRunId); try putOpt("missionStartedAt", missionStartedAt)
-        try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress)
+        try putOpt("missionPhase", missionPhase); try putOpt("miningCargoInProgress", miningCargoInProgress); try putOpt("miningLaserCharges", miningLaserCharges)
         try putOpt("deliveryUnloadStartedAt", deliveryUnloadStartedAt); try putOpt("landingStartedAt", landingStartedAt)
         try putOpt("landingReturnStartedAt", landingReturnStartedAt); try putOpt("hasLanded", hasLanded)
         try put("missionCount", missionCount); try put("pendingLaunch", pendingLaunch); try put("stagedRockets", stagedRockets)
@@ -246,7 +250,8 @@ public struct Player: Codable, Equatable, Sendable {
         try put("underConstruction", underConstruction); try put("discoveredExoplanetTargets", discoveredExoplanetTargets)
         try putOpt("satelliteTargetId", satelliteTargetId); try put("pendingRepick", pendingRepick); try putOpt("lastSeenConfirmedAt", lastSeenConfirmedAt); try putOpt("transitSatelliteLevel", transitSatelliteLevel); try putOpt("deepSpaceTelescopeLaunchedAt", deepSpaceTelescopeLaunchedAt); 
         try put("refineryQueue", refineryQueue); try putOpt("refineryLastStartedAt", refineryLastStartedAt); 
-        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient); 
+        try put("launchpadUpgraded", launchpadUpgraded || BuildingLevels.level(self, "launchpad") >= 2); try put("buildingLevels", BuildingLevels.sanitize(buildingLevels, launchpadUpgraded: launchpadUpgraded)); try putOpt("lastClient", lastClient);
+        try put("groundTelescopeLevels", GroundTelescopeUpgrades.sanitize(groundTelescopeLevels))
         try putOpt("arrivalAt", arrivalAt); try putOpt("transitStartedAt", transitStartedAt)
         try put("seenPlanets", seenPlanets); try put("researchXP", researchXP); try put("subsurfaceExcavated", subsurfaceExcavated)
         try put("subsurfaceBuilt", subsurfaceBuilt); try put("landingResearched", landingResearched)

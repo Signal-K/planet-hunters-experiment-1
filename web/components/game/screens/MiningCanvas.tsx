@@ -10,9 +10,8 @@ import type { MineralMeta } from '@/lib/data'
 import type { PlayerLocation } from '@/lib/game-types'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
-import { isInLocalEventBonusWindow } from '@/lib/data/sky-event-window'
-import { activeDebrisPreset, debrisRatePerMinute, DEBRIS_RESOURCE_IDS, ORIONIDS_PEAK_MULTIPLIER, ORIONIDS_RUN_FRAGMENTS_PER_MINUTE, type DebrisEventPreset } from '@/lib/data/sky-events'
-import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
+import { miningDebrisSpawn } from '@/lib/mining/debrisSpawn'
+import { activeDebrisPreset, DEBRIS_RESOURCE_IDS, type DebrisEventPreset } from '@/lib/data/sky-events'
 import { debrisNow } from '@/lib/hooks/useDebrisEvent'
 import { loadOrionidsArt } from '@/lib/orionids/loadArt'
 import { miningCanvasIsDark } from '@/lib/orionids/theme'
@@ -288,25 +287,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           reducedMotion: prefersReducedMotion(),
           debrisArt,
           debris: {
-            getSpawn: () => {
-              const preset = debrisPresetRef.current
-              if (!preset) return null
-              return {
-                mineral: preset.resourceId,
-                // Shower fragments drift down a little slower than other debris so there is time to line up under them, but not so slow the sky stays full.
-                speedFactor: preset.eventId === 'orionids-2026' ? 1.0 : preset.speedFactor,
-                // SSL-711: shower rain belongs to the shower run; ordinary mining keeps only the streaks and the fireball.
-                ratePerMinute: preset.eventId === 'orionids-2026' && !catchRain
-                  ? 0
-                  : preset.eventId === 'orionids-2026'
-                  ? ORIONIDS_RUN_FRAGMENTS_PER_MINUTE * (isInLocalEventBonusWindow(debrisNow(), skyEventLocation) ? ORIONIDS_PEAK_MULTIPLIER : 1)
-                  : debrisRatePerMinute(preset, debrisNow(), skyEventLocation),
-                onceMineral: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current) ? FIREBALL_FRAGMENT_ID : undefined,
-                onceHero: preset.eventId === 'orionids-2026' && fireballDue(debrisNow(), fireballCaughtRef.current),
-                // SSL-711: shower fragments are caught in the air with CATCH; the laser is for ore and the fireball.
-                catchable: catchRain,
-              }
-            },
+            getSpawn: () => miningDebrisSpawn(debrisPresetRef.current, catchRain, debrisNow(), fireballCaughtRef.current, skyEventLocation),
           },
         })
 

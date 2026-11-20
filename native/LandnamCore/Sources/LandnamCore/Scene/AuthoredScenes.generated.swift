@@ -546,7 +546,8 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/CommunityResearchScreen.tsx"
+          "web/components/game/screens/CommunityResearchScreen.tsx",
+          "web/components/game/screens/ResearchPassport.tsx"
         ],
         "native": []
       },
@@ -567,7 +568,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "records"
           ],
-          "note": "Daily stamps, the streak and the shared community bar."
+          "note": "SSL-849: Monday to Sunday, first activity inks each day once. The server counts one day per player toward the weekly goal; at least one confirmed day earns that week’s unique part when the goal reaches 100. Past pages retain stamped days, contribution status and reward. Local unsynced days are pending, never award a part. iOS follows after web."
         },
         {
           "id": "back-action",
@@ -1192,6 +1193,23 @@ enum AuthoredSceneDeclarations {
           ],
           "prefab": "base-dock",
           "note": "Bottom centre: previous, Build, Menu, next. No shared slot fits it yet (see bottom-nav in shared/layout/base-hud-zones.json)."
+        },
+        {
+          "id": "signal-callout",
+          "kind": "ui",
+          "mechanics": [
+            "persistence"
+          ],
+          "note": "Dismissal follows signal kind and candidate id across navigation, reload and sync. Render updates do not auto-open the same callout. New candidates may notify; Data hub access remains available."
+        },
+        {
+          "id": "ground-telescope-upgrades",
+          "kind": "ui",
+          "mechanics": [
+            "construction",
+            "persistence"
+          ],
+          "note": "Customize lists every owned ground telescope, including unplaced or off-screen ones. Each shows level and placement. Its upgrade rail shows current and next daily candidates, iron cost, shortfall or max-level reason. L2 costs 1 U iron; L3 costs 2 U. Each observing telescope supplies its level in candidates per day; unplaced scopes wait except the grandfathered first scope."
         }
       ]
     },
@@ -1827,7 +1845,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "laser-mining"
           ],
-          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped."
+          "note": "SSL-708: round FIRE bottom-right; its ring is the laser charge. A press during cooldown is buffered, never dropped, including a quick press-and-release. Native uses MiningTrigger for both button and canvas inputs."
         },
         {
           "id": "action-button",
@@ -1837,7 +1855,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "sky-events"
           ],
-          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (today: Catch, for the Orionids shower). It lights up when pressing now would work; an early press is buffered."
+          "note": "SSL-711: optional second action, up and to the left of FIRE. A run declares it in web/lib/mining/secondaryAction.ts (Catch, for shower runs). It lights up when a fragment is in the visible beam above the ship; an early press is buffered. Fragments have a bright rim and a separate label; uncaught fragments break up on the ground. Ordinary mining shows event streaks and the existing fireball, never shower rain."
         },
         {
           "id": "return-action",
@@ -1847,7 +1865,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "delivery"
           ],
-          "note": "Progress pill between the pad and FIRE (above FIRE on phone portrait). Turns solid when the order is filled; tap to finish mining and start the delivery or home leg."
+          "note": "Return to Earth (or Fly to the delivery site) in the mission menu starts travel with the current cargo. The progress pill also names that action when ready. View Base pauses mining without sending the rocket home."
         },
         {
           "id": "training-guide",
@@ -2293,6 +2311,58 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "rocket-workshop",
+      "type": "build",
+      "route": "rocket-workshop",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/RocketWorkshopScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "rocket-stack",
+          "kind": "vehicle",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Five independently tappable sections redraw from the fitted part tier and construction; hull, trim and decal persist. iOS follows in cycle 13 per Liam's SSL-850 comment."
+        },
+        {
+          "id": "parts-tray",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Shows mission-unlocked catalog parts and permanently earned weekly research parts. Weekly milestones 2, 4 and 5 grant the silo T2, engine T2 and laser T3. Earned parts refit for free."
+        },
+        {
+          "id": "livery",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly"
+          ],
+          "note": "Free hull and trim colours from shared tokens, plus none, star, orbit or stripes decal."
+        },
+        {
+          "id": "mission-readout",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "rocket-assembly",
+            "mission-planning"
+          ],
+          "note": "Live capacity, range and laser charges with named mission limits, including the farther delivery leg. Launch remains on the existing launchpad and keeps its validation."
+        }
+      ]
+    },
+    {
       "id": "saturn-storm-search",
       "type": "exchange-lab",
       "route": "saturn-storm-search",
@@ -2406,6 +2476,52 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "Return to the base."
+        }
+      ]
+    },
+    {
+      "id": "surface-silo",
+      "type": "base",
+      "route": "surface-silo",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/hub/SurfaceSiloPanel.tsx"
+        ],
+        "native": [
+          "native/App/Screens/HubScreen.swift"
+        ]
+      },
+      "objects": [
+        {
+          "id": "contents",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Full contents page: level, capacity and every mineral, split between silo and overflow."
+        },
+        {
+          "id": "back",
+          "kind": "button",
+          "parent": "contents",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Return to the Base above ground."
+        },
+        {
+          "id": "sell",
+          "kind": "button",
+          "parent": "contents",
+          "layout": "host",
+          "mechanics": [
+            "delivery"
+          ],
+          "note": "Open the Exchange without changing the held ore."
         }
       ]
     },

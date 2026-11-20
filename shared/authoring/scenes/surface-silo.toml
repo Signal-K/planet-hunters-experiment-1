@@ -1,0 +1,40 @@
+#:schema ../schema/scene.schema.json
+format = 1
+id = "surface-silo"
+type = "base"
+name = "Surface Silo"
+summary = "Above-ground ore holdings, capacity and overflow, separate from the Mineral Vault."
+tickets = ["SSL-857"]
+qa = ["surface-silo"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/hub/SurfaceSiloPanel.tsx"]
+native = ["native/App/Screens/HubScreen.swift"]
+
+[preview]
+route = "surface-silo"
+state = "ui-surface-silo"
+
+[[objects]]
+id = "contents"
+kind = "panel"
+layout = "host"
+mechanics = ["delivery"]
+note = "Full contents page: level, capacity and every mineral, split between silo and overflow."
+
+[[objects]]
+id = "back"
+kind = "button"
+parent = "contents"
+layout = "host"
+mechanics = ["delivery"]
+note = "Return to the Base above ground."
+
+[[objects]]
+id = "sell"
+kind = "button"
+parent = "contents"
+layout = "host"
+mechanics = ["delivery"]
+note = "Open the Exchange without changing the held ore."

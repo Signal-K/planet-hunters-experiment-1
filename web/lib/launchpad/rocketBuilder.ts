@@ -180,13 +180,14 @@ export function communityRangeBonus(baseRange: number, fuelFraction: number): nu
  * What the fitted customizer parts add on top of the chassis and propulsion. The Capacity and Range chips
  * show chassis + this, and launch review (`validateBuild`) must count the same numbers (SSL-647).
  */
-export function loadoutBonuses(installed: BuilderLoadout | null | undefined): { capacity: number; range: number } {
+export function loadoutBonuses(installed: BuilderLoadout | null | undefined): { capacity: number; range: number; laserTier?: number } {
   const fitted = installed ?? {}
   const engine = partIdForSlot(fitted, BUILDER_SLOTS[0])
   const fuel = partIdForSlot(fitted, BUILDER_SLOTS[1])
   const cargo = partIdForSlot(fitted, BUILDER_SLOTS[2])
   const booster = partIdForSlot(fitted, BUILDER_SLOTS[4])
   return {
+    ...(partIdForSlot(fitted, BUILDER_SLOTS[3]) ? { laserTier: bonus(partIdForSlot(fitted, BUILDER_SLOTS[3]), part => part.tier ?? 1) } : {}),
     capacity: Math.floor(bonus(cargo, part => part.successBonus) / 10),
     range: Math.floor(bonus(engine, part => part.power) / 5)
       + Math.floor(bonus(fuel, part => part.successBonus) / 7)

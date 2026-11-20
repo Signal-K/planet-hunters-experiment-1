@@ -5,7 +5,7 @@ export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'ev
 export type StampKind = typeof STAMP_KINDS[number]
 export type ResearchStamps = Record<string, StampKind[]>
 
-type StampPlayer = Pick<Player, 'researchStamps'>
+type StampPlayer = Pick<Player, 'researchStamps' | 'researchFirstStamps'>
 
 const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/
 const DAY_MS = 86_400_000
@@ -34,7 +34,7 @@ export function addStamp<T extends StampPlayer>(player: T, kind: StampKind, at: 
   const have = player.researchStamps?.[day] ?? []
   if (have.includes(kind)) return player
   const next = STAMP_KINDS.filter(k => k === kind || have.includes(k))
-  return { ...player, researchStamps: { ...(player.researchStamps ?? {}), [day]: next } }
+  return { ...player, researchStamps: { ...(player.researchStamps ?? {}), [day]: next }, researchFirstStamps: { ...(player.researchFirstStamps ?? {}), [day]: player.researchFirstStamps?.[day] ?? { kind: have[0] ?? kind, at } } }
 }
 
 /** Union per day, so two devices that stamped different tasks keep both. */

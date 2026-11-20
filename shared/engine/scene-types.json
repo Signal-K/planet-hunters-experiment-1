@@ -27,7 +27,7 @@
     "base": {
       "description": "Pan/zoom home world with buildings and fixed sites.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["build", "hub", "hub-subsurface", "launchpad"]
+      "routes": ["build", "hub", "hub-subsurface", "surface-silo", "launchpad"]
     },
     "travel": {
       "description": "Launch, transit, landing, delivery, return and debrief views.",
@@ -42,7 +42,7 @@
     "build": {
       "description": "Assembly and customisation around a physical vehicle or structure.",
       "slots": ["world", "hud", "objective", "primaryAction", "secondaryAction", "modal"],
-      "routes": ["hangar", "rocket-buy"]
+      "routes": ["hangar", "rocket-buy", "rocket-workshop"]
     },
     "exchange-lab": {
       "description": "In-world instruments, trading and processing surfaces.",

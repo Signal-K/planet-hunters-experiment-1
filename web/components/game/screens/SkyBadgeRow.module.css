@@ -14,3 +14,11 @@
 .badge[data-wsw-tone='crimson'] { border-left-color: var(--ln-crimson); }
 .badge[data-wsw-tone='dim'] { border-left-color: var(--ln-text-muted); }
 .badge[data-wsw-tone='ink'] { border-left-color: var(--ln-text); }
+
+.caption { display: grid; gap: 4px; min-width: 0; }
+.name { overflow-wrap: anywhere; }
+.history { position: static; display: flex; flex-direction: column; max-width: none; width: 100%; }
+.history .badge { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; width: 100%; box-sizing: border-box; background: var(--ln-blueprint-ink); color: var(--ln-map-sun); }
+.history .share { color: inherit; border-color: var(--ln-cyan-border); }
+.heading { margin: 0 0 4px; font: 800 16px/1.4 var(--ln-font-display); }
+.historyNote { margin: 0 0 12px; font: 600 14px/1.4 var(--ln-font-body); }

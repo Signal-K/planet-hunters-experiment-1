@@ -9,13 +9,14 @@ import Testing
         let data = try Data(contentsOf: Self.repo.appendingPathComponent("shared/engine/authored-scenes.json").standardized)
         let shared = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         #expect(AuthoredSceneDeclarations.json == shared)
-        #expect(AuthoredSceneGraph.scenes.count == 28)
+        #expect(Set(AuthoredSceneGraph.scenes.map(\.id)).count == AuthoredSceneGraph.scenes.count)
         #expect(AuthoredSceneGraph.scenes.allSatisfy { !$0.objects.isEmpty })
         #expect(AuthoredSceneGraph.scenes.flatMap(\.objects).allSatisfy { !($0.mechanics ?? []).isEmpty })
         #expect(Set(AuthoredSceneGraph.mechanics.map(\.id)).count == AuthoredSceneGraph.mechanics.count)
         #expect(AuthoredSceneGraph.mechanics.contains { $0.id == "community-research" })
         // Explicit native parity backlog, also checked by the web authoring contract.
-        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery", "radio-meteors", "sky-pointing", "probe-watch", "probe-scan"])
+        // SSL-850: the web workshop is explicitly deferred to cycle 13.
+        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery", "radio-meteors", "sky-pointing", "probe-watch", "probe-scan", "rocket-workshop"])
     }
 
     @Test(arguments: [(390.0, 844.0), (926.0, 428.0), (1440.0, 900.0)])

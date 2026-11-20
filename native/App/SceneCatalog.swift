@@ -28,6 +28,16 @@ enum SceneCatalog {
         CatalogScene(id: id, size: CGSize(width: w, height: h), make: { AnyView(build()) })
     }
 
+    private static func groundScopeState(level: Int = 1, iron: Int = 3) -> GameState {
+        var s = GameState()
+        s.player.freeOperations = true
+        s.player.placed = ["launchpad", "control-station", "ground-telescope"]
+        s.player.placementPlots = ["launchpad": 0, "control-station": 3]
+        s.player.stash = ["iron": iron]
+        s.player.groundTelescopeLevels = ["ground-telescope": level]
+        return s
+    }
+
     private static func settingsOverlay(focusBaseMove: Bool = false) -> some View {
         HubScreen(safeAreaOverride: EdgeInsets())
             .overlay { SettingsSheet(onClose: {}, initialScrollTarget: focusBaseMove ? "base-landscape-move" : nil) }
@@ -308,6 +318,15 @@ enum SceneCatalog {
     static let tess = TessCandidate(id: "tess-demo", ticId: "TIC 260004324", toi: "TOI 700.01", sector: "Sectors 1-3", periodDays: 3.4, transitEpoch: 1.1, depthPpm: 9000, signalToNoise: 14)
 
     static var all: [CatalogScene] { [
+        scene("surface-silo-live", 874) {
+            SurfaceSiloScreen().environment(GameStore(state: {
+                var gs = basePlayer(); gs.screen = .surfaceSilo
+                gs.player.placed = ["launchpad", "surface-silo", "market"]
+                gs.player.stash = ["iron": 18, "aluminium": 9, "silicon": 8, "nickel": 6, "carbon": 3, "leonid_debris": 1]
+                gs.player.subsurfaceBuilt = ["mineral-vault"]
+                return gs
+            }()))
+        },
         scene("intro-phone", 700) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-phone", 874) { IntroScreen().environment(GameStore(state: GameState())) },
         scene("intro-biome-landscape", 402, w: 874) { IntroScreen().environment(GameStore(state: GameState())) },
@@ -460,6 +479,21 @@ enum SceneCatalog {
             return ControlStationScreen(signals: sigs).environment(GameStore(state: gs, clock: { wswNoon })).environment(\.flatLayout, true).environment(\.coach, CoachController(topic: nil))
         },
         // SSL-802: one ground telescope on the West annex and ₣6M: Add a telescope buys the second into the Unplaced tray.
+        scene("ground-telescope-upgrades-phone", 874) {
+            HubScreen(placing: true).environment(GameStore(state: groundScopeState()))
+        },
+        scene("ground-telescope-upgrades-landscape", 402, w: 874) {
+            HubScreen(safeAreaOverride: EdgeInsets(top: 0, leading: 62, bottom: 21, trailing: 62), placing: true).environment(GameStore(state: groundScopeState()))
+        },
+        scene("ground-telescope-upgrade-l2", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(level: 2, iron: 2)))
+        },
+        scene("ground-telescope-upgrade-max", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(level: 3, iron: 0)))
+        },
+        scene("ground-telescope-upgrade-poor", 874) {
+            HubScreen(placing: true, upgrading: "ground-telescope").environment(GameStore(state: groundScopeState(iron: 0)))
+        },
         scene("second-ground-telescope-phone", 874) {
             var gs = GameState()
             gs.player.freeOperations = true; gs.player.francs = 6_000_000
@@ -731,8 +765,8 @@ enum SceneCatalog {
         scene("settings-base-move-live", 844, w: 390) { settingsOverlay(focusBaseMove: true) },
         scene("settings-base-move-landscape", 428, w: 926) { settingsOverlay(focusBaseMove: true) },
         scene("settings-base-move-desktop", 900, w: 1440) { settingsOverlay(focusBaseMove: true) },
-        scene("mining-guide-phone", 1250) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
-        scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
+        scene("mining-guide-phone", 1250) { MiningGuide(onReturn: {}, onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
+        scene("mining-guide-landscape", 402, w: 874) { MiningGuide(onReturn: {}, onRecharge: {}, onScrub: {}, onClose: {}).environment(\.flatLayout, true) },
         scene("exchange-phone", 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-landscape", 402, w: 874) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },
         scene("exchange-desktop", 900, w: 1440) { MarketScreen().environment(GameStore(state: exchangeState())).environment(\.flatLayout, true) },

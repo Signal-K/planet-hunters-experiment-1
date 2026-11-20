@@ -185,3 +185,58 @@ struct GlassGear: View {
         .buttonStyle(.plain).accessibilityLabel("Settings")
     }
 }
+
+/// Fixed touch target with the charge budget on the rim; every input uses the scene's buffered trigger.
+struct MiningFireButton: View {
+    let charge: Int
+    let cap: Int
+    var ready = false
+    var charging = false
+    var size: CGFloat = 96
+    let onHold: (Bool) -> Void
+    @State private var held = false
+    private var fraction: Double { cap > 0 ? max(0, min(1, Double(charge) / Double(cap))) : 0 }
+    var body: some View {
+        ZStack {
+            Circle().fill(ready ? Theme.blueBright : Theme.ink)
+            Circle().stroke(Theme.paper.opacity(0.25), lineWidth: 8)
+            Circle().trim(from: 0, to: fraction).stroke(Theme.blueBright, style: StrokeStyle(lineWidth: 8, lineCap: .round)).rotationEffect(.degrees(-90))
+            VStack(spacing: 2) {
+                Text(charge > 0 ? "FIRE" : "EMPTY").font(AppFont.display(16))
+                Text("\(charge)").font(AppFont.body(14)).monospacedDigit()
+            }.foregroundStyle(ready ? Theme.ink : Theme.paper)
+        }
+        .frame(width: size, height: size).contentShape(Circle())
+        .opacity(charging ? 0.8 : 1)
+        .gesture(DragGesture(minimumDistance: 0).onChanged { _ in
+            if !held && charge > 0 { held = true; onHold(true) }
+        }.onEnded { _ in held = false; onHold(false) })
+        .onDisappear { held = false; onHold(false) }
+        .accessibilityElement(children: .ignore).accessibilityAddTraits(.isButton)
+        .accessibilityLabel(charge > 0 ? "Fire laser" : "Laser empty")
+        .accessibilityValue("\(charge) of \(cap) charges")
+        .accessibilityAction { if charge > 0 { onHold(true); onHold(false) } }
+        .accessibilityIdentifier("fire-laser-btn")
+    }
+}
+
+/// One reusable secondary verb, positioned beside Fire by the mining HUD.
+struct MiningActionButton: View {
+    let title: String
+    var ready = false
+    let onPress: () -> Void
+    var body: some View {
+        Button(action: onPress) {
+            VStack(spacing: 4) {
+                Image(systemName: "arrow.down.to.line").font(.system(size: 20, weight: .bold))
+                Text(title).font(AppFont.display(14))
+            }
+            .frame(width: 76, height: 76)
+            .foregroundStyle(ready ? Theme.ink : Theme.paper)
+            .background(ready ? Theme.blueBright : Theme.ink, in: Circle())
+            .overlay(Circle().stroke(Theme.blueBright, lineWidth: 3))
+        }.buttonStyle(.plain)
+        .accessibilityLabel(ready ? "\(title), ready" : title)
+        .accessibilityIdentifier("mining-action-btn")
+    }
+}

@@ -121,6 +121,7 @@ func ensureCommunityCollections(app core.App) {
 	}
 
 	ensureResearchCollection(app)
+	ensurePassportCollection(app)
 	ensureBallotCollections(app)
 	ensureConsensusCollections(app)
 }
@@ -176,6 +177,7 @@ func registerCommunityRoutes(app core.App) {
 		g.POST("/report", communityReportHandler(app))
 		g.GET("/world/{friendId}", communityWorldHandler(app))
 		g.GET("/research", communityResearchHandler(app))
+		g.GET("/research/passport", communityPassportHandler(app))
 		g.GET("/ballots", communityBallotsHandler(app))
 		g.POST("/vote", communityVoteHandler(app))
 		g.GET("/consensus", consensusOverviewHandler(app))

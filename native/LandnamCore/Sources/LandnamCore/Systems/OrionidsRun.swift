@@ -27,10 +27,10 @@ public struct OrionidsFragments: Codable, Equatable, Sendable {
 /// from the moment the run is accepted, not from the lifetime ledger, and a filled run pays once.
 public enum OrionidsRun {
     public static let missionId = "self-directed-orionids-night-run"
-    /// Fragments that fall and bank on landing, per minute (web `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE`). A player weaving under
+    /// Fragments offered for manual Catch, per minute (web `ORIONIDS_RUN_FRAGMENTS_PER_MINUTE`). A player weaving under
     /// them fills the order in about a minute; parking in one spot catches roughly a quarter.
-    public static let fragmentsPerMinute = 18.0
-    /// Ground under the ship, either side, where a landing fragment banks (web `CATCH_RADIUS`).
+    public static let fragmentsPerMinute = 28.0
+    /// Legacy ground catch-zone radius; the scene now uses the visible beam above the ship.
     public static let catchRadius = 100.0
     public static func fragmentRate(at ms: Double, location: PlayerLocation?) -> Double {
         fragmentsPerMinute * (SkyEventWindows.isInOrionidsBonusWindow(ms, location: location) ? SkyEvents.orionidsPeakMultiplier : 1)

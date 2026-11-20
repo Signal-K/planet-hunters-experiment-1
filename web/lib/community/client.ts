@@ -42,6 +42,10 @@ export function visitFriendWorld(friendId: string): Promise<{ world: FriendWorld
 export { CommunityApiError }
 
 /** SSL-673: this month's community research total, without the caller's own stamps. */
+export function fetchResearchPassport(): Promise<import('@/lib/research/passport').PassportResponse> {
+  return communityFetch('/research/passport')
+}
+
 export function fetchCommunityResearch(): Promise<CommunityResearch> {
   // No sign-in (the account-free stage fixture, a guest): the route needs one, so skip the call.
   if (!pbLandnam.authStore.token) return Promise.reject(new CommunityApiError('not signed in', 401))

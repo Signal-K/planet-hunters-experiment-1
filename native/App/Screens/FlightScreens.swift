@@ -42,9 +42,15 @@ struct TransitScreen: View {
                 ZStack(alignment: .topLeading) {
                     FlightWorldScene(progress: p, returning: store.player.returningToEarth ?? false)
                     VStack(spacing: 24) {
+                        Text(store.player.returningToEarth == true ? "RETURNING TO EARTH" : "TO \(store.target?.name ?? "DESTINATION")")
+                            .font(AppFont.display(16)).foregroundStyle(Theme.tokenMapSun)
+                        if store.player.returningToEarth == true {
+                            Text("Land on Earth to settle cargo. Viewing Base keeps the flight running.")
+                                .font(AppFont.body(14)).foregroundStyle(Theme.tokenMapSun).multilineTextAlignment(.center)
+                        }
                         FlightProgressBar(value: p)
                         HStack(spacing: 8) {
-                            Button("BACK") { store.go(.hub) }.frame(minWidth: 44, minHeight: 44)
+                            Button("VIEW BASE") { store.go(.hub) }.frame(minWidth: 44, minHeight: 44).accessibilityIdentifier("transit-base-btn")
                             Button(p >= 1 ? "ARRIVE" : "BOOST") {
                                 if p >= 1 { store.transitArrived() }
                                 else if store.player.arrivalAt == nil { boost += 0.14 }
@@ -102,6 +108,8 @@ struct MiningScreen: View {
     @State private var obstacleAhead = false
     @State private var toast: String?
     @State private var laserCharging = false
+    @State private var catchReady = false
+    @State private var showStart = false
     /// Orionid fragments already added to the ledger from this field's cargo (SSL-651).
     @State private var fragmentsCounted = 0
     @FocusState private var keysFocused: Bool
@@ -110,7 +118,9 @@ struct MiningScreen: View {
     @State private var showGuide = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// SSL-411: Return stays tappable (a dead button reads as a bug) and says what is still missing.
+    private var returnLabel: String { store.mission?.deliveryTargetId == nil ? "Return to Earth" : "Deliver cargo" }
+
+    /// SSL-411: Return stays tappable and says what is still missing.
     private func handleReturn(_ f: MiningField) {
         // SSL-651: a shower run whose fragments are caught (launch plus mined) is filled; leaving early pays it.
         let showerFilled = store.mission?.id == OrionidsRun.missionId && OrionidsRun.filled(store.player)
@@ -144,18 +154,36 @@ struct MiningScreen: View {
                 if showGuide {
                     MiningGuide(
                         isOrionids: store.mission?.id == OrionidsRun.missionId,
+                        returnLabel: returnLabel,
+                        onReturn: { if let field { showGuide = false; handleReturn(field) } },
                         onRecharge: { showGuide = false; scene?.refill(); say("Laser refilled. Cargo kept.") },
                         onScrub: { showGuide = false; confirmingScrub = true },
-                        onClose: { showGuide = false }
+                        onClose: { showGuide = false },
+                        missionTitle: store.mission?.title ?? "Mining run",
+                        progress: progressSummary(field),
+                        cargo: field?.cargo ?? [:],
+                        onDrop: { scene?.jettison($0) },
+                        onSwitch: { store.go(.missions) },
+                        onBase: { store.go(.hub) },
+                        onSettings: { showSettings = true }
                     )
                 }
             }
-            .onAppear { if scene == nil { setup(geo.size) }; keysFocused = true }
+            .onAppear { if scene == nil { setup(geo.size) }; scene?.isPaused = false; keysFocused = true }
+            .onDisappear { scene?.stopControls(); scene?.isPaused = true }
+            .onChange(of: showGuide || showSettings) { _, paused in
+                scene?.stopControls(); scene?.isPaused = paused
+            }
+            .task {
+                try? await Task.sleep(for: .seconds(4))
+                showStart = false
+            }
             // Hardware keyboard (iOS keyboard / macOS): W/S or arrows steer altitude, A/D or arrows speed, Space/F fire while held.
             .focusable()
             .focused($keysFocused)
             .focusEffectDisabled()
             .onKeyPress(phases: [.down, .up]) { press in
+                guard !showGuide && !showSettings else { return .ignored }
                 let down = press.phase == .down
                 switch press.key {
                 case .upArrow: scene?.setClimb(down ? -1 : 0)
@@ -170,6 +198,7 @@ struct MiningScreen: View {
                     case "a": scene?.setSteer(down ? -1 : 0)
                     case "d": scene?.setSteer(down ? 1 : 0)
                     case "f": scene?.setTrigger(down)
+                    case "c": if down { scene?.catchFragment() }
                     default: return .ignored
                     }
                 }
@@ -186,81 +215,77 @@ struct MiningScreen: View {
         }
     }
 
-    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
-        let compact = narrow || short
-        let zones = HUDZones.standard
-        let showerRun = store.mission?.id == OrionidsRun.missionId
-        let trainingCue = store.player.flightPlan.currentTry == "mining" ? "Fire on a labelled seam" : nil
-        let order = VStack(alignment: .leading, spacing: 6) {
-            MiningActionRow(field: field, onReturn: { handleReturn(field) }, onScrub: { confirmingScrub = true }, showFire: false, targetCue: targetCue ?? trainingCue)
-                .onLongPressGesture { showGuide = true }
+    private func progressSummary(_ field: MiningField?) -> String {
+        guard let field else { return "Preparing mining field" }
+        if store.mission?.id == OrionidsRun.missionId {
+            return "Fragments \(min(OrionidsRun.fragmentGoal, OrionidsRun.catches(store.player)))/\(OrionidsRun.fragmentGoal)"
         }
-        .frame(maxWidth: 220)
-        let objective = OrionidsRunObjective(catches: OrionidsRun.catches(store.player), onReturn: { handleReturn(field) })
+        if store.mission?.isOwnProgram == true { return "Cargo \(field.cargoUnits)" }
+        let need = field.required.values.reduce(0, +)
+        let have = field.required.reduce(0) { $0 + min($1.value, field.cargo[$1.key, default: 0]) }
+        return "Order \(have)/\(need) · Cargo \(field.cargoUnits)"
+    }
+
+    private var startGoal: String {
+        if store.mission?.id == OrionidsRun.missionId { return "Catch \(OrionidsRun.fragmentGoal) fragments" }
+        let ore = store.mission?.requires.minerals.sorted { $0.key < $1.key }.map { "\($0.value) \(Minerals.byId[$0.key]?.name ?? $0.key)" }.joined(separator: " · ") ?? ""
+        return ore.isEmpty ? "Mine a haul and return to Earth" : "Collect \(ore)"
+    }
+
+    private func laserChrome(_ field: MiningField, insets: EdgeInsets, narrow: Bool, short: Bool = false) -> some View {
+        let portrait = !short && narrow
+        let showerRun = store.mission?.id == OrionidsRun.missionId
         return ZStack {
-            VStack(alignment: .leading, spacing: 8) {
-                if narrow {
-                    if showerRun { objective }
-                    else {
-                        order
-                        // Phones: the hold sits under the order line, so neither covers the other or the top-right buttons.
-                        CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
-                    }
-                }
-                // The shower run shows its count in the order line only; the chip stays on Base (matches web).
-                if !showerRun { SkyEventChip().frame(maxWidth: .infinity, alignment: .leading) }
-                Spacer()
-            }
-            .padding(.leading, insets.leading + zones.topLeft.inset).padding(.top, insets.top + zones.topLeft.inset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            Button { showGuide = true } label: {
+                Label("MENU", systemImage: "chevron.left")
+                    .font(AppFont.display(14)).foregroundStyle(Theme.paper)
+                    .frame(minWidth: 88, minHeight: 44)
+                    .background(Theme.ink, in: Capsule())
+                    .overlay(Capsule().stroke(Theme.paper.opacity(0.7), lineWidth: 1.5))
+            }.buttonStyle(.plain).accessibilityIdentifier("mining-back-btn")
+                .padding(.leading, insets.leading + 12).padding(.top, insets.top + 12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
-            if !narrow {
-                Group {
-                    if showerRun { objective }
-                    else { order }
-                }
-                    .padding(.top, insets.top + zones.topLeft.inset)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            }
-
-            if !narrow && !showerRun {
-                CargoMenu(field: field) { id, all in scene?.jettison(id, all: all) }
-                    .padding(.trailing, insets.trailing + zones.topRight.inset + 64).padding(.top, insets.top + zones.topRight.inset)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            }
-
-            // Phones: compact pad and gauge in the clear strip under the ground deposits.
-            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short ? 44 : compact ? 52 : 56)
-                .padding(.leading, insets.leading + 16)
-                .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 16))
+            MiningDPad(onAltitude: { scene?.setClimb($0) }, onSteer: { scene?.setSteer($0) }, obstacleAhead: obstacleAhead, tile: short || portrait ? 44 : 52)
+                .padding(.leading, insets.leading + 16).padding(.bottom, insets.bottom + 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
 
-            // Hint sits up top, clear of the d-pad, gauge and deposits (SSL-538 phone layout).
+            MiningFireButton(charge: field.charge, cap: field.chargeCap, ready: targetCue?.contains("FIRE NOW") == true, charging: laserCharging, size: short ? 80 : 96, onHold: { scene?.setTrigger($0) })
+                .padding(.trailing, insets.trailing + 16).padding(.bottom, insets.bottom + 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
+            if showerRun {
+                MiningActionButton(title: "CATCH", ready: catchReady) { scene?.catchFragment() }
+                    .padding(.trailing, insets.trailing + (portrait ? 16 : 128))
+                    .padding(.bottom, insets.bottom + (portrait ? 200 : 80))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            }
+            Button { handleReturn(field) } label: {
+                VStack(spacing: 3) {
+                    Text(progressSummary(field).uppercased()).font(AppFont.display(14))
+                    Text(returnLabel.uppercased()).font(AppFont.display(14))
+                    if let targetCue, !showerRun { Text(targetCue).font(AppFont.body(14)).foregroundStyle(Theme.blueBright) }
+                }.foregroundStyle(Theme.paper).multilineTextAlignment(.center)
+                    .padding(10).frame(maxWidth: portrait ? 190 : 240)
+                    .background(Theme.ink.opacity(0.94), in: RoundedRectangle(cornerRadius: 14))
+            }.buttonStyle(.plain).accessibilityIdentifier("return-home-btn")
+                .padding(.trailing, portrait ? insets.trailing + 16 : 0)
+                .padding(.bottom, insets.bottom + (portrait ? 128 : 20))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: portrait ? .bottomTrailing : .bottom)
+
+            if showStart {
+                VStack(spacing: 8) {
+                    Text(store.mission?.title ?? "Mining run").font(AppFont.display(20))
+                    Text(startGoal).font(AppFont.body(16))
+                }.foregroundStyle(Theme.paper).multilineTextAlignment(.center).padding(20)
+                    .background(Theme.ink.opacity(0.94), in: RoundedRectangle(cornerRadius: 16))
+                    .padding(24).allowsHitTesting(false).accessibilityIdentifier("mining-start-brief")
+            }
             if let toast {
-                Text(toast).font(AppFont.display(14)).foregroundStyle(Glass.ink)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .glowPanel(Capsule())
-                    .padding(.top, insets.top + zones.topLeft.inset + (narrow ? 168 : 64))
+                Text(toast).font(AppFont.display(14)).foregroundStyle(Theme.paper).padding(12)
+                    .background(Theme.ink, in: Capsule()).padding(.top, insets.top + 64)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
-
-            // Gauge: centred on wide screens; on phones it moves right, level with the d-pad, well above the ground.
-            if !showerRun {
-                LaserGauge(charge: field.charge, cap: field.chargeCap, charging: laserCharging, width: compact ? 160 : 260)
-                    .padding(.trailing, compact ? insets.trailing + 16 : 0)
-                    .padding(.bottom, insets.bottom + zones.dock.bottomInset + (short ? 8 : narrow ? 72 : 84))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: compact ? .bottomTrailing : .bottom)
-            }
-
-            VStack(spacing: 8) {
-                Spacer()
-                BaseDock(tile: 44, zones: zones.dock, items: [
-                    (showerRun ? "Mine" : "Fire", "bolt.fill", {}),
-                    ("Hub", "dot.radiowaves.left.and.right", { store.go(.instrumentHub) }),
-                ], onPrev: { scene?.nudge(-1) }, onNext: { scene?.nudge(1) }, holdFirst: { scene?.setTrigger($0) }, glass: true)
-            }
-            .padding(.bottom, insets.bottom + zones.dock.bottomInset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
     }
 
@@ -276,25 +301,27 @@ struct MiningScreen: View {
         let charges = 2 * (mission.sequence <= 2
             ? max(80, ore * 16)
             : max(Flight.baseLaserCharges, ore * 4) + LaserCapacitor.bonus(store.player.laserCapacitorLevel))
-        // Meteor-shower debris joins the field only inside its window and the player's local night (SSL-475).
-        let shower = mission.id == OrionidsRun.missionId ? nil : SkyEvents.activePreset(at: store.now).map { (resourceId: $0.resourceId, count: max(1, Int((SkyEvents.ratePerMinute($0, at: store.now, location: store.player.skyEventLocation) / 2).rounded(.up)))) }
+        // Shower fragments never join an ordinary mining field as seams or pickups.
         let required = mission.id == OrionidsRun.missionId ? ["orionid_debris": max(1, OrionidsRun.fragmentGoal - OrionidsRun.catches(store.player))] : mission.requires.minerals
-        let f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: shower, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
+        var f = MiningField(target: target, required: required, cargoCapacity: cap, laserTier: tier, chargeCap: charges, seed: mission.id.utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }, debris: nil, skyFed: mission.id == OrionidsRun.missionId ? "orionid_debris" : nil)
+        f.restoreProgress(cargo: store.player.miningCargoInProgress ?? [:], charge: store.player.miningLaserCharges)
+        showStart = f.cargo.isEmpty && f.charge == f.chargeCap
         let palette = LaserPalette.resolve(id: target.id, type: target.type, archetype: target.archetype)
         let s = MiningScene(field: f, size: size, palette: palette, landscapeKey: target.id)
-        if mission.id == OrionidsRun.missionId, let preset = SkyEvents.activePreset(at: store.now) {
-            // Shower fragments fall and bank on landing; the laser is for ore (matches web autoCollect).
-            s.fragmentRain = (preset.resourceId, OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
+        if mission.id == OrionidsRun.missionId {
+            s.fragmentRain = ("orionid_debris", OrionidsRun.fragmentRate(at: store.now, location: store.player.skyEventLocation))
         }
         s.showsOpsBrackets = !store.player.freeOperations && store.player.flightPlan.currentTry == "mining"
         s.onChange = { f in
             field = f
+            store.saveMiningProgress(f)
             for id in SkyEvents.debrisResourceIds where f.cargo[id, default: 0] > 0 { store.debrisMined(id) }
             let fragments = f.cargo["orionid_debris", default: 0]
             if fragments > fragmentsCounted { store.fragmentsMined(fragments - fragmentsCounted); fragmentsCounted = fragments }
         }
         s.onTargetCue = { cue in if mission.id != OrionidsRun.missionId { targetCue = cue } }
         s.onObstacleAhead = { obstacleAhead = $0 }
+        s.onCatchCue = { catchReady = $0 }
         s.reducedMotion = reduceMotion
         #if DEBUG
         // Simulator playtests have no tap driver: `-autofire` holds the real trigger so the laser path is exercised unattended.
@@ -318,6 +345,7 @@ struct MiningActionRow: View {
     var targetCue: String? = nil
     /// Shower run: the order reads caught fragments (launch plus mined) over the full goal, like web.
     var showerCaught: Int? = nil
+    var returnLabel = "Return to Earth"
 
     private var chargePct: Double { field.chargeCap > 0 ? Double(field.charge) / Double(field.chargeCap) : 0 }
 
@@ -332,6 +360,7 @@ struct MiningActionRow: View {
                         Text("\(Minerals.byId[id]?.name ?? id) \(have)/\(need)")
                             .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(1)
                     }
+                    if field.isComplete { Text(returnLabel.uppercased()).font(AppFont.display(14)).foregroundStyle(Glass.ink) }
                     if let targetCue {
                         Text(targetCue).font(AppFont.display(14)).foregroundStyle(Glass.cyan).lineLimit(1)
                     }
@@ -347,7 +376,7 @@ struct MiningActionRow: View {
                 .glowPanel(RoundedRectangle(cornerRadius: 6))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Order. Laser charge \(field.charge) of \(field.chargeCap).")
+            .accessibilityLabel("\(returnLabel). Order. Laser charge \(field.charge) of \(field.chargeCap).")
             .accessibilityAction(named: "Scrub mission", onScrub)
             if showFire {
             Button(action: onFire) {
@@ -386,7 +415,7 @@ struct OrionidsRunObjective: View {
                     Text("\(caught) / \(OrionidsRun.fragmentGoal)").font(AppFont.display(16)).monospacedDigit().foregroundStyle(Glass.cyan)
                 }
                 ProgressTrack(value: Double(caught) / Double(OrionidsRun.fragmentGoal))
-                Text(caught >= OrionidsRun.fragmentGoal ? "FRAGMENTS COMPLETE · RETURN" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
+                Text(caught >= OrionidsRun.fragmentGoal ? "COMPLETE · RETURN TO EARTH" : "STEER UNDER BLUE FRAGMENTS · MINING IS OPTIONAL")
                     .font(AppFont.mono(14)).foregroundStyle(Glass.ink).lineLimit(2)
             }
             .padding(12)
@@ -452,28 +481,57 @@ struct LaunchSequenceScreen: View {
 struct MiningGuide: View {
     @Environment(\.flatLayout) private var flat
     var isOrionids = false
+    var returnLabel = "Return to Earth"
+    var onReturn: (() -> Void)? = nil
     let onRecharge: () -> Void
     let onScrub: () -> Void
     let onClose: () -> Void
+    var missionTitle = ""
+    var progress = ""
+    var cargo: Cargo = [:]
+    var onDrop: ((String) -> Void)?
+    var onSwitch: (() -> Void)?
+    var onBase: (() -> Void)?
+    var onSettings: (() -> Void)?
 
     private static let baseItems: [(String, String)] = [
         ("Fire Laser", "Fires the vertical beam. Scroll ore under the beam, then fire."),
         ("Charges", "The fire button reads Depleted when the laser is empty. Empty, with the order unfinished, the run stops."),
         ("Order", "The order card lists each mineral still owed. Tap it to return once the order is filled, or while the laser is empty."),
-        ("Scroll", "The dock arrows change how fast the ground moves. They settle back to a steady crawl."),
+        ("Steer", "Use the d-pad: up/down changes height, left/right flies along the field. W/A/S/D or arrow keys work too."),
         ("Inventory", "The order lines show collected against required. Fill every line to unlock return."),
-        ("Return home", "Return for recovery. Payout unlocks after landing."),
+        ("Return to Earth", "Use Return to Earth in this menu to start the flight with your cargo. Land on Earth to settle the haul."),
     ]
 
     private var items: [(String, String)] {
-        guard isOrionids else { return Self.baseItems }
         var items = Self.baseItems
-        items.insert(("Catch Orionid debris", "Blue fragments fall from the shower. Steer under them: one counts only if the ship is below it when it lands. No laser needed. Catches count toward the shower run and cannot be dropped."), at: 1)
+        if returnLabel != "Return to Earth", let index = items.firstIndex(where: { $0.0 == "Return to Earth" }) {
+            items[index] = (returnLabel, "Starts the delivery flight with your cargo. Settle the delivery on arrival.")
+        }
+        guard isOrionids else { return items }
+        items.insert(("Catch Orionid debris", "Steer a blue fragment into the light beam above the ship, then press Catch when it lights up (C). A fragment that reaches the ground breaks up. Fire is only for ground seams. Catches count toward the shower run and cannot be dropped."), at: 1)
         return items
     }
 
     private var cards: some View {
         VStack(spacing: SetStyle.gap) {
+            if !missionTitle.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(missionTitle).font(AppFont.display(20))
+                    Text(progress).font(AppFont.body(16))
+                    Text("HOLD").font(AppFont.display(14))
+                    if cargo.isEmpty { Text("Empty").font(AppFont.body(14)) }
+                    ForEach(cargo.keys.sorted(), id: \.self) { id in
+                        HStack {
+                            Text("\(Minerals.byId[id]?.name ?? id) ×\(cargo[id, default: 0])").font(AppFont.body(14))
+                            Spacer()
+                            if !SkyEvents.protectedRewardIds.contains(id), let onDrop {
+                                Button("Drop 1") { onDrop(id) }.font(AppFont.display(14)).frame(minHeight: 44)
+                            }
+                        }
+                    }
+                }.foregroundStyle(SetStyle.ink).setCard()
+            }
             ForEach(items, id: \.0) { item in
                 VStack(alignment: .leading, spacing: 8) {
                     Text(item.0).font(AppFont.display(16, "Bold")).foregroundStyle(SetStyle.ink)
@@ -485,6 +543,11 @@ struct MiningGuide: View {
 
     private var buttons: some View {
         VStack(spacing: SetStyle.gap) {
+            SetButton(title: "Resume", solid: true, fill: true, action: onClose)
+            if let onSwitch { SetButton(title: "Switch mission", fill: true, action: onSwitch) }
+            if let onReturn { SetButton(title: returnLabel, solid: true, fill: true, action: onReturn).accessibilityIdentifier("mining-return-btn") }
+            if let onBase { SetButton(title: "View Base · pause mining", fill: true, action: onBase) }
+            if let onSettings { SetButton(title: "Settings", fill: true, action: onSettings) }
             SetButton(title: "Recharge laser", solid: true, fill: true, action: onRecharge)
             SetButton(title: "Scrub mission", color: SetStyle.danger, fill: true, action: onScrub)
         }.padding(16)
@@ -495,7 +558,7 @@ struct MiningGuide: View {
             let wide = geo.size.width > geo.size.height
             VStack(spacing: 0) {
                 HStack {
-                    Text("Controls".uppercased()).font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
+                    Text("MISSION MENU").font(AppFont.display(20)).tracking(20 * 0.14).foregroundStyle(SetStyle.ink)
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark").font(.system(size: 18, weight: .heavy)).foregroundStyle(SetStyle.ink)
@@ -507,11 +570,10 @@ struct MiningGuide: View {
                 if wide {
                     HStack(alignment: .top, spacing: 0) {
                         scroller { cards }
-                        buttons.frame(width: 300)
+                        ScrollView { buttons }.frame(width: 300)
                     }
                 } else {
-                    scroller { cards }
-                    buttons.setColumn()
+                    scroller { VStack(spacing: 0) { cards; buttons } }
                 }
             }
         }
