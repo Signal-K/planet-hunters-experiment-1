@@ -2,16 +2,46 @@
 // Its own module and build, served by Landnam's site at /minimal/. It imports
 // Landnam's real data and rules (@landnam = web/, @shared = shared/) instead of
 // copying them, and takes React from web/node_modules so there is one copy.
+import { createReadStream, statSync } from 'node:fs'
+import { extname, normalize } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { UserConfig } from 'vite' // type only: vite lives in web/node_modules
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url))
 const webModules = here('../web/node_modules/')
+const webPublic = here('../web/public')
+
+const TYPES: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json' }
+
+/**
+ * Landnam's static art and fonts straight from web/public, so the dev server
+ * draws them without Landnam's own dev server running (the proxy below only
+ * answers what is not a file there, e.g. generated scene data).
+ */
+const landnamPublic = {
+  name: 'landnam-public',
+  configureServer(server: { middlewares: { use: (fn: (req: { url?: string }, res: { setHeader: (k: string, v: string) => void }, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      const url = (req.url ?? '').split('?')[0]
+      if (!url.startsWith('/fonts/') && !url.startsWith('/game/assets/')) return next()
+      const file = normalize(webPublic + decodeURIComponent(url))
+      if (!file.startsWith(webPublic)) return next()
+      try {
+        if (!statSync(file).isFile()) return next()
+      } catch {
+        return next()
+      }
+      res.setHeader('Content-Type', TYPES[extname(file)] ?? 'application/octet-stream')
+      createReadStream(file).pipe(res as unknown as NodeJS.WritableStream)
+    })
+  },
+}
 
 const config: UserConfig = {
   root: here('.'),
   base: '/minimal/',
   publicDir: false,
+  plugins: [landnamPublic],
   resolve: {
     alias: [
       { find: /^@landnam\//, replacement: here('../web/') },
@@ -39,8 +69,9 @@ const config: UserConfig = {
     port: 4330,
     strictPort: true,
     fs: { allow: [here('..')] },
-    // Landnam's fonts, art and scene files (/game/...) come from Landnam's dev server;
-    // in production Minimal is served by the same site, so the paths resolve there.
+    // Fonts and art are served from web/public (landnamPublic); anything else under
+    // /game comes from Landnam's dev server. In production Minimal is served by the
+    // same site, so the paths resolve there.
     proxy: { '/fonts': 'http://localhost:4320', '/game': 'http://localhost:4320' },
   },
   build: {

@@ -220,21 +220,74 @@ function FlightRun({ chapter, base, onFinish, onQuit }: {
 
   // Home: what this run changed, then back to the route. The chapter's
   // building goes up in front of the player, its road laid after it.
-  const result = resultFor(chapter, cargo)
+  return <HomeScene chapter={chapter} base={base} result={resultFor(chapter, cargo)} onFinish={onFinish} />
+}
+
+/** What each base building is for, shown when the player taps it. */
+const BUILDING_ROLES: Record<string, string> = {
+  'agency-hq': 'Your agency. Every contract starts here.',
+  'launch-pad': 'Where every flight lifts off.',
+  'solar-farm': 'Powers the base. Its line runs along the roads.',
+  warehouse: 'Holds the crates your runs bring home.',
+  'fuel-depot': 'Fuels the rockets for longer flights.',
+  'comms-dish': 'Talks to your satellites in orbit.',
+  hangar: 'Builds and stores your survey probes.',
+  observatory: 'Watches for meteor showers and new worlds.',
+  silo: 'Stores raw materials for construction.',
+  'assembly-hall': 'Raises structures from what you haul.',
+  habitat: 'Where your crew lives between flights.',
+  'drill-rig': 'Drills the ground under the base.',
+}
+
+/**
+ * Home: what this run changed, then back to the route. The chapter's
+ * building goes up in front of the player, its road laid after it. Tap a
+ * building to see what it is.
+ */
+function HomeScene({ chapter, base, result, onFinish }: {
+  chapter: Chapter
+  base: MinimalBase
+  result: RunResult
+  onFinish: (result: RunResult) => void
+}) {
+  const scene = useRef<MinimalSceneHandle | null>(null)
+  const [picked, setPicked] = useState<{ id: string; asset: string; name: string } | null>(null)
   const fresh = chapter.builds && !base.buildings?.includes(chapter.builds) ? chapter.builds : undefined
+  const tap = (e: React.MouseEvent) => {
+    if (!(e.target instanceof HTMLCanvasElement)) return
+    const r = e.target.getBoundingClientRect()
+    const hit = scene.current?.pick(e.clientX - r.left, e.clientY - r.top) ?? null
+    const next = hit && hit.id !== picked?.id ? hit : null
+    scene.current?.select(next?.id ?? null)
+    setPicked(next)
+  }
   return (
-    <main className="mn-scene" data-scene="minimal-home">
-      <Scenery kind="outpost" base={base.stage === 'founded' ? base : { stage: 'founded' }} onReady={s => s && fresh && s.step(fresh)} />
+    <main className="mn-scene" data-scene="minimal-home" onClick={tap}>
+      <Scenery
+        kind="outpost"
+        base={base.stage === 'founded' ? base : { stage: 'founded' }}
+        onReady={s => {
+          scene.current = s
+          if (s && fresh) s.step(fresh)
+        }}
+      />
       <header className="mn-scene-top">
         <span className="mn-chip mn-place">Home</span>
       </header>
       <footer className="mn-scene-bottom">
-        <section className="mn-card">
-          <p className="mn-goal">{result.outcome}</p>
-          {fresh && <p className="mn-note">{getAsset(fresh)?.name ?? 'A new building'} going up.</p>}
-          {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
-          {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
-        </section>
+        {picked ? (
+          <section className="mn-card" data-picked={picked.asset}>
+            <p className="mn-goal">{picked.name}</p>
+            <p className="mn-note">{BUILDING_ROLES[picked.asset] ?? 'Part of your base.'}</p>
+          </section>
+        ) : (
+          <section className="mn-card">
+            <p className="mn-goal">{result.outcome}</p>
+            {fresh && <p className="mn-note">{getAsset(fresh)?.name ?? 'A new building'} going up.</p>}
+            {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
+            {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
+          </section>
+        )}
         <button className="mn-cta" onClick={() => onFinish(result)}>
           CONTINUE
         </button>
