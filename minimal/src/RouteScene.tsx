@@ -5,6 +5,7 @@ import { ROUTE_FRAMING, Scenery } from './scenes'
 import { useViewSize } from '@landnam/lib/hooks/useViewSize'
 import type { MinimalBase } from '@takeon/engine'
 import { CHAPTERS, francs, type Chapter } from './chapters'
+import { PickedCard, useBuildingPick } from './buildingPick'
 
 // Waypoints in screen percent, zig-zagging up the sky above the outpost. A
 // landscape view spreads them left to right instead.
@@ -27,14 +28,15 @@ export function RouteScene({ done, base, money, onboardedInLandnam, onOpen }: {
   onOpen: (chapter: Chapter) => void
 }) {
   const view = useViewSize()
+  const { scene, picked, tap } = useBuildingPick()
   const STOPS = stopsFor(view.w, view.h, CHAPTERS.length)
   const next = CHAPTERS.find(c => !done.has(c.number)) ?? CHAPTERS[CHAPTERS.length - 1]
   const reached = next.number
   const points = STOPS.map(p => `${p.x},${p.y}`).join(' ')
   const flown = STOPS.slice(0, reached).map(p => `${p.x},${p.y}`).join(' ')
   return (
-    <main className="mn-scene" data-scene="minimal-route">
-      <Scenery kind="outpost" rover={false} base={base} framing={ROUTE_FRAMING} />
+    <main className="mn-scene" data-scene="minimal-route" onClick={tap}>
+      <Scenery kind="outpost" rover={false} base={base} framing={ROUTE_FRAMING} onReady={s => { scene.current = s }} />
       <div className="mn-sky-scrim" aria-hidden />
       <svg className="mn-route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
         <polyline points={points} className="mn-route-ahead" vectorEffect="non-scaling-stroke" />
@@ -65,6 +67,7 @@ export function RouteScene({ done, base, money, onboardedInLandnam, onOpen }: {
         <span className="mn-chip mn-money" aria-label="Your francs">{francs(money)}</span>
       </header>
       <footer className="mn-scene-bottom">
+        {picked && <PickedCard picked={picked} />}
         <button className="mn-cta" onClick={() => onOpen(next)}>
           {next.name.toUpperCase()}
         </button>
