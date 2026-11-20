@@ -18,6 +18,7 @@ interface Props {
   rocketImageSrc?: string
   arrivalAt?: number | null
   transitStartedAt?: number | null
+  returnNote?: string
   returning?: boolean
   onArrive: () => void
   onBack: () => void
@@ -62,6 +63,7 @@ export default function TransitScreen({
   arrivalAt,
   transitStartedAt,
   returning = false,
+  returnNote,
   onArrive,
   onBack,
   isDelivery = false,
@@ -172,7 +174,7 @@ export default function TransitScreen({
         </div>
       </div>
 
-      {returning && <p className={styles.arrivalNote}>Next: land on Earth and settle cargo. Flight continues while you view Base.</p>}
+      {returning && <p className={styles.arrivalNote}>{returnNote ?? 'Next: land on Earth and settle cargo.'} Flight continues while you view Base.</p>}
       {/* The navigation button views Base without changing the rocket's flight. */}
       <div className={styles.controls}>
         <button type="button" className={styles.exit} data-testid="transit-base-btn" onClick={onBack}>View Base</button>

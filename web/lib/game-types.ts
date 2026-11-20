@@ -106,6 +106,7 @@ export type Screen =
   | 'rocket-buy'
   | 'launchpad'
   | 'rocket-workshop'
+  | 'mission-planner'
   | 'asteroid-discovery'
   | 'saturn-storm-search'
   | 'radio-meteors'
@@ -134,6 +135,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'surface-silo',
   'launchpad',
   'rocket-workshop',
+  'mission-planner',
   'flight',
   'landing',
   'mining',
@@ -210,6 +212,8 @@ export interface Player {
   /** The prepared vehicle currently being inspected in mission setup. */
   selectedStagedRocketId?: string
   /** The ore and amount chosen for the free mining run (applied to the authored run in game-context). */
+  missionPlans?: Record<string, import('@/lib/mission-planner').MissionPlan>
+  deliveryReceipts?: Record<string, import('@/lib/mission-planner').DeliveryReceipt>
   freeRunGoal?: import('@/lib/freeRunGoal').FreeRunGoal
   /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string

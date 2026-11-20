@@ -418,6 +418,30 @@
    "tickets": []
   },
   {
+   "id": "mission-planner",
+   "name": "Mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": ["SSL-851"]
+  },
+  {
+   "id": "planner-survey",
+   "name": "Survey mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner-survey",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": ["SSL-851"]
+  },
+  {
+   "id": "planner-delivery",
+   "name": "Delivery mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner-delivery",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": ["SSL-851"]
+  },
+  {
    "id": "rocket-workshop",
    "name": "Rocket workshop",
    "flow": "core-loop",

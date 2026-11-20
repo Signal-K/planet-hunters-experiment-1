@@ -1,3 +1,5 @@
+import { loadPlannedCargo } from '@/lib/mission-planner'
+import { MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
@@ -59,7 +61,7 @@ import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
 // the game for the whole leg.
-const ORBIT_MS_PER_UNIT = 42 * 1000
+const ORBIT_MS_PER_UNIT = MISSION_ORBIT_MS
 // First-time-only reward for classifying a TESS candidate — repeat looks at an
 // already-classified subject earn nothing (see submitTessClassification).
 const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
@@ -358,7 +360,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       const isOrionidsEntry = !!entryShower
-      if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
+      if (s.screen !== 'missions' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission
@@ -368,6 +370,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
       if (s.screen === 'launchpad' && !ownOperation) return s
+      if (s.screen === 'mission-planner' && (!s.player.freeOperations || !mission.customPlan)) return s
       // Park only once the new mission is actually accepted. A rejected pick
       // must leave the live run where it is.
       const prepared = s.player.activeMission ? parkOrDropActiveRun(s) : s
@@ -410,7 +413,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
-          destinationChosen: false,
+          destinationChosen: !!mission.customPlan,
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -563,6 +566,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
+    if (!loadPlannedCargo(current, currentMission)) { addToast('This plan no longer has its cargo or survey equipment available. Return to the planner.', 'warn'); return }
     // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
     const currentTarget = catalog.targets.find(t => t.id === current.targetId)
     if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
@@ -585,6 +589,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (!mission || !target) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       if (padNeedsService(s.player)) return s
+      const loaded = loadPlannedCargo(s, mission)
+      if (!loaded) return s
       const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
@@ -597,13 +603,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // debrief, so a flight inside the window stays gold.
       const at = skyEventNow(isDevLauncherEnabled())
       const beforeBadge = s.player.badges?.['rocket-revolution-2026']
-      const badged = grantSkyBadges(s.player, 'launch', at)
+      const badged = grantSkyBadges(loaded.player, 'launch', at)
       const earned = badged.badges?.['rocket-revolution-2026']
       if (earned && earned !== beforeBadge) earnedLaunchBadge = earned.tier
       const ascended = applyLaunchCatch(badged, at)
       ascentFragments = (ascended.orionidsFragments?.caught ?? 0) - (badged.orionidsFragments?.caught ?? 0)
       return {
-        ...s,
+        ...loaded,
         player: {
           ...ascended,
           padLaunches: (s.player.padLaunches ?? 0) + 1,
@@ -641,7 +647,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         target_id: current.targetId,
         status: 'in_progress',
         phase: 'transit',
-        cargo: {},
+        cargo: currentMission.customPlan?.work === 'deliver' ? { [currentMission.customPlan.mineral]: currentMission.customPlan.amount } : {},
         launched_at: new Date().toISOString(),
       })
       missionRunIdRef.current = runId

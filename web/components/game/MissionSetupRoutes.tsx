@@ -1,5 +1,6 @@
 'use client'
 
+import { planQuote } from '@/lib/mission-planner'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { useEffect, useRef, useState } from 'react'
@@ -65,6 +66,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       onSelectMission={relay.selectSignal}
       onAccept={(id, disposition) => game.onPickMission(id, disposition)}
       onClose={() => game.goBack()}
+      onOpenPlanner={() => game.go('mission-planner')}
       onOpenLog={() => game.go('mission-history')}
       onOpenBuild={() => game.go('build')}
       onOpenEvent={screen => game.go(screen)}
@@ -87,10 +89,11 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const flyingRocket = selectedVehicle?.rocket ?? game.rocket
   const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)), fuelFraction: communityBonusRate(game.player).fuel, launchpadLevel: buildingLevel(game.player, 'launchpad') })
   const padWorn = padNeedsService(game.player)
-  const launchReady = check.ok && !padWorn
+  const customHold = game.mission.customPlan ? planQuote(game.mission.customPlan, game.player, game.catalog).issues[0] : undefined
+  const launchReady = check.ok && !padWorn && !customHold
   const vehicleName = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId)?.name : null
   const hold = check.holds?.[0]
-  const blockedReason = launchReady ? null : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone, buildingLevel(game.player, 'launchpad')) : null) : (check.problems[0] ?? 'Mission requirements not met')
+  const blockedReason = launchReady ? null : customHold ? customHold : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone, buildingLevel(game.player, 'launchpad')) : null) : (check.problems[0] ?? 'Mission requirements not met')
   // Nothing is built or launched that cannot do the job (Liam, 02.11).
   // SSL-842: Launch stays on screen through the lift-off; a second tap must not launch again.
   const actionDisabled = launchPending || !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady

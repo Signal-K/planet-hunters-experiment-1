@@ -41,6 +41,7 @@ const loadMissionOperationRoutes = () => import('@/components/game/MissionOperat
 const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
+const loadMissionPlannerScreen = () => import('@/components/game/screens/MissionPlannerScreen')
 const loadRocketWorkshopScreen = () => import('@/components/game/screens/RocketWorkshopScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
@@ -58,7 +59,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
-  loadHangarScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadHangarScreen, loadMissionPlannerScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
   // Nested inside the mission plan's destination sheet (construction and contract runs).
@@ -70,6 +71,7 @@ const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: Sc
 const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
+const MissionPlannerScreen = dynamic(loadMissionPlannerScreen, { loading: ScreenLoading })
 const RocketWorkshopScreen = dynamic(loadRocketWorkshopScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
@@ -680,6 +682,11 @@ function ScreenBody({
         />
       )
 
+    case 'mission-planner':
+      return <MissionPlannerScreen player={game.player} catalog={game.catalog} initialPlan={game.mission?.customPlan}
+        onBack={() => game.go('missions')}
+        onSave={plan => game.setPlayer(player => ({ ...player, missionPlans: { ...player.missionPlans, [plan.id]: plan } }))}
+        onReview={id => game.onPickMission(id)} />
     case 'rocket-workshop':
       return <RocketWorkshopScreen player={game.player} rocket={game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)?.rocket ?? game.rocket}
         mission={game.mission} target={game.target} deliveryTarget={game.catalog.targets.find(target => target.id === game.mission?.deliveryTargetId)}

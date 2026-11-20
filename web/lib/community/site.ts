@@ -46,8 +46,8 @@ export interface SiteCredit { component: SiteComponent; units: number; minerals:
  * and a free mining haul the structure (only structural minerals, up to the per-run ceiling). Mining 2 aluminium
  * keeps 2 aluminium in the silo and also records 2 aluminium of credit.
  */
-export function missionSiteCredit(mission: Pick<Mission, 'payload' | 'client'> | null | undefined, cargo: Record<string, number> | null | undefined): SiteCredit | null {
-  if (!mission) return null
+export function missionSiteCredit(mission: Pick<Mission, 'payload' | 'client' | 'customPlan'> | null | undefined, cargo: Record<string, number> | null | undefined): SiteCredit | null {
+  if (!mission || mission.customPlan?.work === 'deliver') return null
   if (mission.payload) return { component: 'instrument', units: SITE_RULES.perRun.instrument, minerals: {} }
   if (mission.client) return { component: 'systems', units: SITE_RULES.perRun.systems, minerals: {} }
   const minerals: Record<string, number> = {}

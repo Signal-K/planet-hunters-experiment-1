@@ -58,6 +58,10 @@ export function applyDeliveryUnloadComplete(
     return state
   }
 
+  const plan = state.player.activeMission?.mission?.customPlan
+  const key = state.player.missionRunId ?? `${state.missionId}:${state.player.missionStartedAt ?? state.player.transitStartedAt ?? 'current'}`
+  const receipt = plan?.work === 'deliver' && !state.player.deliveryReceipts?.[key]
+    ? { [key]: { targetId: state.deliveryTargetId, cargo: { ...state.lastCargo }, at: transitStartedAt } } : {}
   return {
     ...state,
     lastCargo: {},
@@ -67,6 +71,7 @@ export function applyDeliveryUnloadComplete(
       ...state.player,
       arrivalAt,
       transitStartedAt: arrivalAt ? transitStartedAt : null,
+      deliveryReceipts: { ...state.player.deliveryReceipts, ...receipt },
       missionPhase: 'transit',
       deliveryUnloadStartedAt: undefined,
       headingToDelivery: false,

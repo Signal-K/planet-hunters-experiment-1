@@ -1,3 +1,4 @@
+import { missionFromPlan, sanitizeMissionPlans } from '@/lib/mission-planner'
 import { downloadedSurvey, probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
 import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import { MINERAL_META } from '@/lib/data/minerals'
@@ -316,9 +317,13 @@ export function buildRuntimeCatalog({
       }]
     : []
 
+  const plannedMissions = Object.values(sanitizeMissionPlans(player?.missionPlans)).flatMap(plan => {
+    const target = mergedTargets.find(target => target.id === plan.targetId)
+    return target ? [missionFromPlan(plan, target, catalog.minerals)] : []
+  })
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions, ...plannedMissions]),
   }
 }

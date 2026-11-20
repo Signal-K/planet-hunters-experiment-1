@@ -218,6 +218,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
       { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
+      { key: 'ui-mission-planner', label: 'Mission planner', hint: 'SSL-851: own destination, work and amount; save then normal Review and Launch', stage: 'free-ops' },
+      { key: 'ui-mission-planner-survey', label: 'Planner: survey coverage', hint: 'A six-sector survey probe plan', stage: 'free-ops' },
+      { key: 'ui-mission-planner-delivery', label: 'Planner: delivery', hint: 'Ore from Earth to Mercury; a vehicle is staged for this saved plan', stage: 'free-ops' },
       { key: 'ui-rocket-workshop', label: 'Rocket workshop', hint: 'SSL-850: weekly parts, livery and mission limits', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
@@ -1323,6 +1326,19 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-mission-planner':
+    case 'ui-mission-planner-survey':
+    case 'ui-mission-planner-delivery': {
+      const work = name.endsWith('delivery') ? 'deliver' as const : name.endsWith('survey') ? 'survey' as const : 'mine' as const
+      const plan = { id: `self-plan-fixture-${work}`, work, targetId: work === 'deliver' ? 'mercury' : 'eros', mineral: work === 'deliver' ? 'iron' : 'nickel', amount: work === 'survey' ? 6 : 3, createdAt: Date.now() }
+      const rocket = { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
+      return {
+        screen: 'mission-planner', missionId: plan.id, targetId: plan.targetId, rocket,
+        player: { ...POST_ONBOARDING_PLAYER, francs: 150_000_000, stash: { iron: 12, nickel: 6 }, placed: [...POST_ONBOARDING_PLAYER.placed, 'control-station'], missionPlans: { [plan.id]: plan },
+          ...(work === 'deliver' ? { pendingLaunch: true, selectedStagedRocketId: 'planner-fixture-rocket', stagedRockets: [{ id: 'planner-fixture-rocket', rocketId: ROCKET_IDS.explorer, rocket, location: 'launchpad' as const, source: 'company' as const, missionId: plan.id, targetId: plan.targetId }] } : {}) },
+        tutorial: false, doneSteps: TRAINING_DONE, lastCargo: null, popup: null,
+      }
+    }
     case 'ui-rocket-workshop':
       return {
         screen: 'rocket-workshop',

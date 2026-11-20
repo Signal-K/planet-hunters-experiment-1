@@ -16,7 +16,8 @@ import Testing
         #expect(AuthoredSceneGraph.mechanics.contains { $0.id == "community-research" })
         // Explicit native parity backlog, also checked by the web authoring contract.
         // SSL-850: the web workshop is explicitly deferred to cycle 13.
-        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery", "radio-meteors", "sky-pointing", "probe-watch", "probe-scan", "rocket-workshop"])
+        // SSL-851: the mission planner also explicitly ships web before iOS.
+        #expect(Set(AuthoredSceneGraph.scenes.map(\.route)).subtracting(Screen.allCases.map(\.rawValue)) == ["refinery", "radio-meteors", "sky-pointing", "probe-watch", "probe-scan", "rocket-workshop", "mission-planner"])
     }
 
     @Test(arguments: [(390.0, 844.0), (926.0, 428.0), (1440.0, 900.0)])

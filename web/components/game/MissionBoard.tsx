@@ -50,6 +50,7 @@ interface MissionBoardProps {
   onSelectMission: (id: string) => void
   onAccept: (id: string, disposition?: 'store' | 'sell') => void
   onClose: () => void
+  onOpenPlanner?: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
   onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors' | 'market') => void
@@ -382,7 +383,7 @@ function EventSpecials({ eventId, player, onStart }: { eventId: string; player: 
 }
 
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
+  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenPlanner, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
@@ -580,6 +581,7 @@ export default function MissionBoard({
         {tabButtons}
       </nav>
       <div className={styles.railHelp}>
+        {player.freeOperations && onOpenPlanner && <button type="button" className={styles.log} data-testid="mission-board-plan" onClick={onOpenPlanner}>Plan mission</button>}
         <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
         <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
           <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>

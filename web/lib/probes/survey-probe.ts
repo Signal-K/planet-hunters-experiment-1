@@ -33,6 +33,8 @@ export interface ProbeReading {
 }
 
 export interface ProbeRecord {
+  /** Optional coverage chosen in a self-planned survey. Existing probes map all 24 sectors. */
+  goalSectors?: number
   launchedAt: number
   /** Sectors downloaded to the console, keyed by sector id (`c_r`). */
   readings: Record<string, ProbeReading>
@@ -84,12 +86,13 @@ export function probeMission(target: Target, sequence: number): Mission {
 }
 
 /** The probe arrived: it is in orbit for good. Returns the same player when it already was. */
-export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number): T {
+export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number, goalSectors?: number): T {
   if (player.probes?.[targetId]) return player
   // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
   const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed'>>
   const hours = withLevels.placed?.includes('control-station') ? probeSectorHours(buildingLevel(withLevels, 'control-station')) : PROBE_SECTOR_HOURS
-  const record = hours === PROBE_SECTOR_HOURS ? { launchedAt: at, readings: {} } : { launchedAt: at, readings: {}, sectorMs: hours * 3_600_000 }
+  const base = hours === PROBE_SECTOR_HOURS ? { launchedAt: at, readings: {} } : { launchedAt: at, readings: {}, sectorMs: hours * 3_600_000 }
+  const record = goalSectors === undefined ? base : { ...base, goalSectors: Math.min(24, Math.max(1, Math.floor(goalSectors))) }
   return { ...player, probes: { ...(player.probes ?? {}), [targetId]: record } }
 }
 
@@ -182,18 +185,20 @@ export function scanOrder(): string[] {
   return sectorIds()
 }
 
+export const probeSectorGoal = (record: Pick<ProbeRecord, 'goalSectors'> | undefined) => Math.max(1, Math.min(24, Math.floor(record?.goalSectors ?? 24)))
+
 /** Sectors the probe has mapped by `now`: one every PROBE_SECTOR_HOURS since it arrived. */
-export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs'> | undefined, now: number): string[] {
+export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): string[] {
   if (!record) return []
-  const count = Math.max(0, Math.min(sectorIds().length, Math.floor((now - record.launchedAt) / sectorMsOf(record))))
+  const count = Math.max(0, Math.min(probeSectorGoal(record), Math.floor((now - record.launchedAt) / sectorMsOf(record))))
   return scanOrder().slice(0, count)
 }
 
 /** The sector being mapped now and when it is done, or null once the whole body is mapped. */
-export function nextSector(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs'> | undefined, now: number): { sector: string; at: number } | null {
+export function nextSector(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): { sector: string; at: number } | null {
   if (!record) return null
   const done = sectorsMapped(record, now).length
-  if (done >= sectorIds().length) return null
+  if (done >= probeSectorGoal(record)) return null
   return { sector: scanOrder()[done], at: record.launchedAt + (done + 1) * sectorMsOf(record) }
 }
 

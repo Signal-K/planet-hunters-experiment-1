@@ -1926,6 +1926,48 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "mission-planner",
+      "type": "menu",
+      "route": "mission-planner",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/MissionPlannerScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "destination-chart",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Reachable bodies only, with a touchable map and equivalent destination list. Surface work excludes gas giants, Venus and exoplanets."
+        },
+        {
+          "id": "work-console",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+        },
+        {
+          "id": "saved-plans",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Immutable saved versions survive reload and merge. A selected saved plan enters the standard rocket review and launch flow. iOS follows after web per SSL-851."
+        }
+      ]
+    },
+    {
       "id": "missions",
       "type": "menu",
       "route": "missions",

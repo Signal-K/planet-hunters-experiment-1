@@ -87,6 +87,7 @@ export interface ProgramReward {
 }
 
 export interface Mission {
+  customPlan?: import('@/lib/mission-planner').MissionPlan
   id: string
   title: string
   brief: string
