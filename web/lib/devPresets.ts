@@ -198,6 +198,10 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-sky-pointing', label: 'Sky pointing', hint: 'Space telescope and Saturn orbiter online: steer the sight anywhere on the sky with the stick and lock on', stage: 'free-ops' },
       { key: 'ui-signal-dialogue', label: 'Signals ready dismissal', hint: 'SSL-868: pointed space telescope with its live daily feed; dismiss the signal popup and leave and revisit the Base', stage: 'free-ops' },
       { key: 'ui-sky-dialogue', label: 'Sky dialogue', hint: 'Base with the control station and a launched space telescope that has no target this week: the sky asks you to point it', stage: 'free-ops' },
+      { key: 'ui-research-passport', label: 'Research passport', hint: 'SSL-849: seven stamp places, earned current part and past passport page', stage: 'free-ops' },
+      { key: 'ui-research-passport-unconfirmed', label: 'Passport: waiting to sync', hint: 'Local stamp fills the bar but does not grant an unconfirmed part', stage: 'free-ops' },
+      { key: 'ui-research-passport-missed', label: 'Passport: no contribution', hint: 'Shared goal reached; player must contribute before earning the weekly part', stage: 'free-ops' },
+      { key: 'ui-research-passport-empty', label: 'Passport: open page', hint: 'No stamps yet; shared weekly progress below the goal', stage: 'free-ops' },
       { key: 'ui-community-research', label: 'Community research', hint: 'Community research page: stamp calendar, community bar and the live Orionids week. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
@@ -1182,6 +1186,22 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-research-passport':
+    case 'ui-research-passport-unconfirmed':
+    case 'ui-research-passport-missed':
+    case 'ui-research-passport-empty': {
+      const now = Date.now()
+      const week = weekKey(now)
+      const start = Date.parse(`${week}T00:00:00Z`)
+      const today = new Date(now).toISOString().slice(0, 10)
+      const day = (offset: number) => new Date(start + offset * 86_400_000).toISOString().slice(0, 10)
+      const stamps = name === 'ui-research-passport' ? { [week]: ['survey', 'classification'], ...(day(1) <= today ? { [day(1)]: ['gift'] } : {}), [today]: ['review'], [day(-4)]: ['event'] } : name === 'ui-research-passport-unconfirmed' ? { [today]: ['classification'] } : {}
+      return {
+        ...fixture('ui-community-research')!,
+        player: { ...POST_ONBOARDING_PLAYER, researchStamps: stamps as Player['researchStamps'],
+          researchFirstStamps: name === 'ui-research-passport' ? { [week]: { kind: 'survey', at: start + 3_600_000 } } : {} },
+      }
+    }
     case 'ui-community-research':
       return {
         screen: 'community-research',

@@ -333,10 +333,43 @@
    "tickets": []
   },
   {
+   "id": "research-passport",
+   "name": "Weekly research passport",
+   "flow": "progression",
+   "web": "ui-research-passport",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-unconfirmed",
+   "name": "Passport awaiting sync",
+   "flow": "progression",
+   "web": "ui-research-passport-unconfirmed",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-missed",
+   "name": "Passport without contribution",
+   "flow": "progression",
+   "web": "ui-research-passport-missed",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
+   "id": "passport-empty",
+   "name": "Open passport page",
+   "flow": "progression",
+   "web": "ui-research-passport-empty",
+   "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+   "tickets": ["SSL-849"]
+  },
+  {
    "id": "community-research",
    "name": "Community research",
    "flow": "records",
    "web": "ui-community-research",
+   "nativeDeferred": "SSL-849 passport: iOS follows after web",
    "native": "community-research-phone",
    "tickets": [
     "SSL-691",

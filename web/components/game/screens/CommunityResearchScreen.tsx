@@ -1,5 +1,6 @@
 'use client'
 
+import ResearchPassport from './ResearchPassport'
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { countdown, eventPanel, liveEventWeek, type EventPanel } from '@/lib/research/event-week'
@@ -21,6 +22,8 @@ import board from '@/components/game/MissionBoard.module.css'
 import styles from './CommunityResearchScreen.module.css'
 
 interface CommunityResearchScreenProps {
+  passportStatus?: 'loading' | 'live' | 'offline' | 'signed-out'
+  onWorkshop?: () => void
   /** SSL-746: a reviewer back from the instrument with their own readout, or null. */
   pendingReview?: PendingConsensusReview | null
   /** Opens the instrument on a queued subject so the reviewer does their own work first. */
@@ -188,7 +191,7 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-export default function CommunityResearchScreen({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
+function ResearchActivities({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const panel = eventPanel(now)
@@ -353,4 +356,13 @@ export default function CommunityResearchScreen({ player, communityResearch, onB
       </section>
     </div>
   )
+}
+
+export default function CommunityResearchScreen(props: CommunityResearchScreenProps) {
+  const [activities, setActivities] = useState(!!props.pendingReview)
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' && new URLSearchParams(window.location.search).get('preset')?.startsWith('ui-community-research-')) setActivities(true)
+  }, [])
+  if (activities) return <ResearchActivities {...props} onBack={() => setActivities(false)} />
+  return <ResearchPassport player={props.player} status={props.passportStatus} onBack={props.onBack} onGo={kind => { if (kind === 'review') setActivities(true); else props.onGo(kind) }} onActivities={() => setActivities(true)} onWorkshop={() => props.onWorkshop?.()} />
 }

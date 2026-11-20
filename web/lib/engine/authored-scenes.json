@@ -541,7 +541,8 @@
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/CommunityResearchScreen.tsx"
+          "web/components/game/screens/CommunityResearchScreen.tsx",
+          "web/components/game/screens/ResearchPassport.tsx"
         ],
         "native": []
       },
@@ -562,7 +563,7 @@
           "mechanics": [
             "records"
           ],
-          "note": "Daily stamps, the streak and the shared community bar."
+          "note": "SSL-849: Monday to Sunday, first activity inks each day once. The server counts one day per player toward the weekly goal; at least one confirmed day earns that week’s unique part when the goal reaches 100. Past pages retain stamped days, contribution status and reward. Local unsynced days are pending, never award a part. iOS follows after web."
         },
         {
           "id": "back-action",

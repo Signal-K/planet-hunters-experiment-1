@@ -1,4 +1,3 @@
-import { WEEKLY_ROCKET_PARTS } from '@/lib/launchpad/workshop'
 import { stampDayKey, type ResearchStamps, type StampKind } from './stamps'
 import { asteroidFeedOnline } from '@/lib/systems/InstrumentFeedSystem'
 import { markMapped, type SkyAim, type SkyMap } from './sky-map'
@@ -88,9 +87,9 @@ export interface PathStep {
 }
 
 export const WEEKLY_RESEARCH_REWARDS: Record<string, { fragments: number; title: string; explanation: string }> = {
-  'step-2': { fragments: 5, title: 'Field note', explanation: '5 fragments and a permanent Storage Silo Bank T2 for your rocket workshop.' },
-  'step-4': { fragments: 10, title: 'Research cache', explanation: '10 fragments and a permanent Fusion Thruster T2 for your rocket workshop.' },
-  breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge, 25 fragments and a Ringed Mining Laser T3 for your rocket workshop.' },
+  'step-2': { fragments: 5, title: 'Field note', explanation: '5 fragments for making the second connection.' },
+  'step-4': { fragments: 10, title: 'Research cache', explanation: '10 fragments for keeping the chain moving.' },
+  breakthrough: { fragments: 25, title: 'Breakthrough', explanation: 'A permanent weekly badge and 25 fragments. The shared passport goal awards this week’s rocket part.' },
 }
 
 /** SSL-714: a shower with a mission chain words its event step for where the player is in it. */
@@ -184,8 +183,6 @@ export function claimResearchReward<T extends { researchPath?: ResearchPathChoic
   if (claimed.includes(marker)) return player
   const reward = WEEKLY_RESEARCH_REWARDS[rewardKey]
   const next = { ...player, researchPath: { ...choice, claimedSteps: [...claimed, marker] }, researchFragments: (player.researchFragments ?? 0) + reward.fragments }
-  const partId = WEEKLY_ROCKET_PARTS[marker]
-  if (partId) Object.assign(next, { researchRocketParts: [...new Set([...(player.researchRocketParts ?? []), partId])] })
   if (rewardKey === 'breakthrough') {
     const badgeId = `community-research-${choice.week}`
     next.badges = { ...(player.badges ?? {}), [badgeId]: { eventId: badgeId, tier: 'gold', earnedAt: now } }

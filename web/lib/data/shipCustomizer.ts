@@ -1,3 +1,4 @@
+import { weeklyRocketPartById } from './weeklyRocketParts'
 import type { ShipRoomKind } from './shipRooms'
 import { SHIP_ROOM_ASSETS, SHIP_ROOM_DETAIL_ASSETS } from './shipRooms'
 import { LANDER_MODULE_PRICE } from './economy'
@@ -474,7 +475,7 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
 ]
 
 export function customizerPartById(id: string): CustomizerPart | undefined {
-  return CUSTOMIZER_PARTS.find(part => part.id === id)
+  return CUSTOMIZER_PARTS.find(part => part.id === id) ?? weeklyRocketPartById(id)
 }
 
 export function partsForKind(kind: ShipRoomKind, missionsDone = 0): CustomizerPart[] {

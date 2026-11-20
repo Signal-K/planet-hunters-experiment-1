@@ -1,3 +1,4 @@
+import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
 import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
 import type { BuildingLevels } from '@/lib/data/building-levels'
 import { rocketPrice } from '@/lib/rockets'
@@ -626,6 +627,7 @@ export function applyConfirmShipCustomizerBuild(
     const prevId = (current as Record<string, string | undefined>)[kind]
     if (nextId === prevId) continue
     const part = nextId ? customizerPartById(nextId) : undefined
+    if (nextId && weeklyRocketPartById(nextId) && !earnedRocketParts(s.player).includes(nextId)) return { state: s, ok: false }
     if (nextId && (!part || (kind === 'mining-laser' ? !nextId.includes('laser') : part.kind !== kind))) return { state: s, ok: false }
     if (part && (part.unlockedAtMissions ?? 0) > s.player.missionsDone && !earnedRocketParts(s.player).includes(part.id)) return { state: s, ok: false }
     netCost += (nextId ? workshopPartPrice(nextId, s.player) : 0) - (prevId ? workshopPartPrice(prevId, s.player) : 0)

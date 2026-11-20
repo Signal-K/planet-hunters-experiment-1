@@ -101,6 +101,8 @@ import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import SceneTransition from '@/components/game/SceneTransition'
+import { useResearchPassport } from '@/lib/research/useResearchPassport'
+import { withPassportRewards } from '@/lib/research/passport'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
@@ -175,6 +177,8 @@ function ScreenBody({
       .then(() => game.addToast('Asked the community to check it. See Community research > Review.', 'ok'))
       .catch(() => game.addToast('Could not send the request. Check your connection.', 'warn'))
   }
+  const passport = useResearchPassport(['hub', 'community-research', 'rocket-workshop'].includes(screen), game.player.researchStamps, game.authUserId)
+  useEffect(() => { if (passport.data) game.setPlayer(current => withPassportRewards(current, passport.data)) }, [passport.data]) // eslint-disable-line react-hooks/exhaustive-deps
   const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
 
   // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
@@ -742,6 +746,8 @@ function ScreenBody({
     case 'community-research':
       return (
         <CommunityResearchScreen
+          passportStatus={passport.status}
+          onWorkshop={() => game.go('rocket-workshop')}
           player={game.player}
           communityResearch={communityResearch}
           onBack={() => game.goBack('hub')}
