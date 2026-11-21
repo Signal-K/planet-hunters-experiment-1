@@ -26,6 +26,16 @@ Liam, SSL-870, correcting a flat list of mission types.
 - **Classification scenes come from probes.** They are the data the player's probes and satellites send home. They never appear on the mission board as missions.
 - **Limited-time missions are forks.** A meteor shower run, for example, forks one of the templates above. It inherits that template's beats and changes or adds only what the event brings, such as catching fireballs.
 
+## Mining methods (added 2026-11-21)
+
+Liam asked about the scenes where you mine from space or orbit. Under `Mining missions follow one scene flow (2026-10-29).md`, mining has two methods, picked before launch, and the ship's laser from orbit is the default.
+
+- The mining templates list `methods = ["orbit-laser", "rover"]`: contract-mining, program-free-mining, and event-meteor-run through its fork. A beat with `method` plays only for that method.
+- Orbit laser: Survey (geoscan), then Laser on the `orbit` view. The ship flies a low pass with the ground below, the stick slides it, and the laser cuts only scanned ore.
+- Rover: Survey, Site, Land, Mine on the `field` view, Lift off.
+- Both views are TakeOn's 3D field (KES-543). Its camera never turns: it sits behind the vehicle looking north, so up on the stick is always north.
+- `beatsFor(template, method)` on web and `beats(for:)` on iOS give the beats played for a method.
+
 ## How it is built
 
 - Each type is a template in `shared/authoring/templates/*.toml`. A template has:

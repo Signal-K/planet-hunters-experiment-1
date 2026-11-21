@@ -17,6 +17,13 @@
     "window": { "type": "string", "description": "Events only: when the event runs, in plain language." },
     "summary": { "type": "string", "minLength": 1, "description": "One sentence: what the player does and why." },
     "vehicle": { "enum": ["lander", "rover", "satellite", "probe", "none"], "description": "What the player sends." },
+    "methods": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["orbit-laser", "rover"] },
+      "description": "How the work is done, picked before launch; the first is the default. Mining: the ship's laser from orbit (default) or a rover on the surface. Beats with a `method` play only for that method. Events inherit their fork's methods."
+    },
     "sources": { "type": "array", "items": { "type": "string" }, "description": "Feeds only: the templates whose hardware sends this data home." },
     "match": {
       "type": "object",
@@ -40,7 +47,7 @@
           "label": { "type": "string", "minLength": 1, "description": "One or two words shown as the step name." },
           "view": {
             "enum": ["board", "base", "hangar", "pad", "map", "orbit", "field", "dock", "feed", "debrief"],
-            "description": "Which kind of screen the beat plays on. field is the TakeOn top-down terrain (KES-541)."
+            "description": "Which kind of screen the beat plays on. orbit and field are the TakeOn 3D field (KES-543): orbit rides the ship on a low pass, field chases a rover or lander on the surface."
           },
           "goal": { "type": "string", "minLength": 1, "description": "The one line the player reads." },
           "controls": {
@@ -50,12 +57,13 @@
             "items": {
               "enum": [
                 "accept", "fit-loadout", "ignite", "stage", "hop", "choose", "geoscan", "pick-site", "burn", "release", "unfold",
-                "thrust", "tilt", "dock", "drive", "scan", "laser", "drill", "cargo", "drop-cargo", "unload", "feed-blueprint", "raise",
+                "thrust", "tilt", "dock", "drive", "steer", "scan", "laser", "drill", "cargo", "drop-cargo", "unload", "feed-blueprint", "raise",
                 "deploy-rover", "beacon", "observe", "classify", "submit", "catch", "take-off", "store", "sell"
               ]
             }
           },
-          "repeat": { "type": "boolean", "description": "The beat can loop (several hauls, several sectors)." }
+          "repeat": { "type": "boolean", "description": "The beat can loop (several hauls, several sectors)." },
+          "method": { "enum": ["orbit-laser", "rover"], "description": "Plays only when the player picked this method. Omit for beats every method shares." }
         }
       }
     },

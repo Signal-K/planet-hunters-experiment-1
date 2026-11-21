@@ -4,8 +4,9 @@ format = 1
 id = "program-free-mining"
 title = "Free mining"
 family = "program"
-summary = "Pick any reachable target, mine what is worth it and keep or sell the haul. Probe finds point you at the good spots."
+summary = "Pick any reachable target, mine what is worth it from orbit or with a rover, and keep or sell the haul. Probe finds point you at the good spots."
 vehicle = "lander"
+methods = ["orbit-laser", "rover"]
 
 [match]
 ids = ["freeops-self-directed-mining"]
@@ -34,11 +35,28 @@ goal = "Hop to the target."
 controls = ["hop", "choose"]
 
 [[beat]]
-id = "orbit"
-label = "Orbit"
+id = "survey"
+label = "Survey"
 view = "orbit"
-goal = "Geoscan and pick a landing site."
-controls = ["geoscan", "pick-site"]
+goal = "Geoscan the surface from orbit; only scanned ore can be cut."
+controls = ["geoscan"]
+
+[[beat]]
+id = "cut"
+label = "Laser"
+view = "orbit"
+goal = "Fly the pass: slide over scanned ore and hold the laser until the hold is full or the value is right."
+controls = ["steer", "scan", "laser", "cargo"]
+repeat = true
+method = "orbit-laser"
+
+[[beat]]
+id = "site"
+label = "Site"
+view = "orbit"
+goal = "Pick a landing site on a scanned vein."
+controls = ["pick-site"]
+method = "rover"
 
 [[beat]]
 id = "land"
@@ -46,21 +64,31 @@ label = "Land"
 view = "field"
 goal = "Hold to thrust and steer onto the pad ring."
 controls = ["thrust", "tilt"]
+method = "rover"
 
 [[beat]]
 id = "mine"
 label = "Mine"
 view = "field"
-goal = "Scan, drive and cut until the hold is full or the value is right."
+goal = "Drive to scanned ore and cut until the hold is full or the value is right."
 controls = ["drive", "scan", "laser", "cargo", "drop-cargo"]
 repeat = true
+method = "rover"
+
+[[beat]]
+id = "lift"
+label = "Lift off"
+view = "field"
+goal = "Drive back aboard and take off."
+controls = ["take-off"]
+method = "rover"
 
 [[beat]]
 id = "return"
 label = "Fly home"
 view = "map"
-goal = "Take off and hop home."
-controls = ["take-off", "hop"]
+goal = "Hop home."
+controls = ["hop"]
 
 [[beat]]
 id = "debrief"

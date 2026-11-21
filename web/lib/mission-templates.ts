@@ -13,7 +13,12 @@ export interface TemplateBeat {
   goal: string
   controls: string[]
   repeat: boolean
+  /** Plays only for this method; absent for beats every method shares. */
+  method?: MiningMethod
 }
+
+/** How the work is done, picked before launch. Mining: the ship's laser from orbit (the default) or a rover on the surface. */
+export type MiningMethod = 'orbit-laser' | 'rover'
 
 export interface MissionTemplate {
   id: string
@@ -23,6 +28,8 @@ export interface MissionTemplate {
   window?: string
   summary: string
   vehicle: 'lander' | 'rover' | 'satellite' | 'probe' | 'none'
+  /** The methods a player can pick, default first. Absent when there is only one way to play. */
+  methods?: MiningMethod[]
   sources?: string[]
   match: { ids: string[]; id_prefixes: string[]; tags: string[] }
   beats: TemplateBeat[]
@@ -62,4 +69,9 @@ export function templateForMission(mission: { id: string; tag?: string; template
   if (best) return best
   const tag = mission.tag?.toUpperCase()
   return tag ? playable.find(t => t.match.tags.includes(tag)) : undefined
+}
+
+/** The beats a player goes through for a method (default: the template's first). Shared beats always play. */
+export function beatsFor(template: MissionTemplate, method: MiningMethod | undefined = template.methods?.[0]): TemplateBeat[] {
+  return template.beats.filter(b => !b.method || b.method === method)
 }

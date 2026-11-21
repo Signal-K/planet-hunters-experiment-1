@@ -146,7 +146,10 @@ export interface TemplateBeat {
   goal: string
   controls: string[]
   repeat?: boolean
+  method?: MiningMethod
 }
+
+export type MiningMethod = 'orbit-laser' | 'rover'
 
 export interface TemplateDoc {
   format: 1
@@ -157,6 +160,7 @@ export interface TemplateDoc {
   window?: string
   summary: string
   vehicle: 'lander' | 'rover' | 'satellite' | 'probe' | 'none'
+  methods?: MiningMethod[]
   sources?: string[]
   match?: { ids?: string[]; id_prefixes?: string[]; tags?: string[] }
   beat?: TemplateBeat[]

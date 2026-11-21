@@ -1,11 +1,13 @@
 #:schema ../schema/template.schema.json
 # Contract: a client wants ore from a body. Fly out, find it, cut it, bring it home.
+# Two methods, picked before launch: the ship laser from orbit (default) or a rover on the surface.
 format = 1
 id = "contract-mining"
 title = "Mining contract"
 family = "contract"
-summary = "A client wants a set amount of minerals from one body. Scan for the ore, cut it with the laser and fly it home."
+summary = "A client wants a set amount of minerals from one body. Scan for the ore from orbit and cut it with the ship laser, or land a rover and cut it on the ground, then fly it home."
 vehicle = "lander"
+methods = ["orbit-laser", "rover"]
 
 [match]
 id_prefixes = ["probe-contract-"]
@@ -22,7 +24,7 @@ controls = ["accept"]
 id = "fit"
 label = "Fit out"
 view = "hangar"
-goal = "Load a laser, tanks and enough cargo pods for the order."
+goal = "Fit the ship laser and cargo pods for the order, or stow a rover to mine on the surface."
 controls = ["fit-loadout"]
 
 [[beat]]
@@ -40,11 +42,28 @@ goal = "Hop to the target; each hop costs fuel."
 controls = ["hop", "choose"]
 
 [[beat]]
-id = "orbit"
-label = "Orbit"
+id = "survey"
+label = "Survey"
 view = "orbit"
-goal = "Geoscan the surface and pick a landing site on a vein."
-controls = ["geoscan", "pick-site"]
+goal = "Geoscan the surface from orbit; only scanned ore can be cut."
+controls = ["geoscan"]
+
+[[beat]]
+id = "cut"
+label = "Laser"
+view = "orbit"
+goal = "Fly the pass: slide over scanned ore and hold the laser until the order is in the hold."
+controls = ["steer", "scan", "laser", "cargo"]
+repeat = true
+method = "orbit-laser"
+
+[[beat]]
+id = "site"
+label = "Site"
+view = "orbit"
+goal = "Pick a landing site on a scanned vein."
+controls = ["pick-site"]
+method = "rover"
 
 [[beat]]
 id = "land"
@@ -52,21 +71,31 @@ label = "Land"
 view = "field"
 goal = "Hold to thrust and steer onto the pad ring."
 controls = ["thrust", "tilt"]
+method = "rover"
 
 [[beat]]
 id = "mine"
 label = "Mine"
 view = "field"
-goal = "Scan, drive to the ore, cut it with the laser until the order is in the hold."
+goal = "Drive to the scanned ore and cut it with the rover laser until the order is in the hold."
 controls = ["drive", "scan", "laser", "cargo", "drop-cargo"]
 repeat = true
+method = "rover"
+
+[[beat]]
+id = "lift"
+label = "Lift off"
+view = "field"
+goal = "Drive back aboard and take off."
+controls = ["take-off"]
+method = "rover"
 
 [[beat]]
 id = "return"
 label = "Fly home"
 view = "map"
-goal = "Take off and hop home."
-controls = ["take-off", "hop"]
+goal = "Hop home."
+controls = ["hop"]
 
 [[beat]]
 id = "debrief"

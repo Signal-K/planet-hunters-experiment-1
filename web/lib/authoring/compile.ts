@@ -115,9 +115,11 @@ export function resolveTemplates(docs: TemplateDoc[]): Record<string, unknown>[]
     if (doc.window) out.window = doc.window
     out.summary = doc.summary
     out.vehicle = doc.vehicle
+    const methods = doc.methods ?? parent?.methods
+    if (methods) out.methods = methods
     if (doc.sources) out.sources = doc.sources
     out.match = { ids: doc.match?.ids ?? [], id_prefixes: doc.match?.id_prefixes ?? [], tags: doc.match?.tags ?? [] }
-    out.beats = beats.map(b => ({ id: b.id, label: b.label, view: b.view, goal: b.goal, controls: b.controls, repeat: b.repeat ?? false }))
+    out.beats = beats.map(b => ({ id: b.id, label: b.label, view: b.view, goal: b.goal, controls: b.controls, repeat: b.repeat ?? false, ...(b.method ? { method: b.method } : {}) }))
     out.controls = controls
     out.outcome = doc.outcome
     return out

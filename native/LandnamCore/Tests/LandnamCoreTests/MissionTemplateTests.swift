@@ -33,6 +33,14 @@ import Testing
         #expect(MissionTemplateCatalog.template(forMissionId: "x", tag: "FEED") == nil)
     }
 
+    @Test func miningDefaultsToTheOrbitLaser() throws {
+        let mining = try #require(MissionTemplateCatalog.template("contract-mining"))
+        #expect(mining.methods == [.orbitLaser, .rover])
+        #expect(mining.beats().map(\.id).contains("cut"))
+        #expect(!mining.beats().map(\.id).contains("land"))
+        #expect(mining.beats(for: .rover).map(\.id).contains("land"))
+    }
+
     @Test func everyBoardMissionHasATemplate() {
         for mission in AuthoredMissions.all {
             #expect(MissionTemplateCatalog.template(for: mission) != nil, "\(mission.id)")

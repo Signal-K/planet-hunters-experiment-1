@@ -13,12 +13,22 @@ vehicle = "lander"
 id_prefixes = ["self-directed-orionids", "self-directed-leonids", "self-directed-geminids", "self-directed-special-"]
 
 [[beat]]
+id = "cut"
+label = "Laser"
+view = "orbit"
+goal = "Laser the fresh impact sites on the pass; tap a fireball streaking below to catch it."
+controls = ["steer", "scan", "laser", "cargo", "catch"]
+repeat = true
+method = "orbit-laser"
+
+[[beat]]
 id = "mine"
 label = "Mine"
 view = "field"
-goal = "Mine the impact sites; tap a fireball before it lands to catch it."
+goal = "Drive to the impact sites and cut them; tap a fireball before it lands to catch it."
 controls = ["drive", "scan", "laser", "cargo", "catch"]
 repeat = true
+method = "rover"
 
 [outcome]
 success = "The haul is home; catches count toward the shower badge chain."

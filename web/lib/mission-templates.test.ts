@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MISSION_TEMPLATES, getMissionTemplate, templateForMission, templatesIn } from './mission-templates'
+import { MISSION_TEMPLATES, beatsFor, getMissionTemplate, templateForMission, templatesIn } from './mission-templates'
 import authored from './data/authored-missions.json'
 import { DEFAULT_MISSION_TEMPLATES as GENERATED } from './data/mission-generator'
 
@@ -17,6 +17,23 @@ describe('mission templates (SSL-870)', () => {
     expect(run.beats.map(b => b.id)).toEqual(parent.beats.map(b => b.id))
     expect(run.beats.find(b => b.id === 'mine')?.controls).toContain('catch')
     expect(parent.controls).not.toContain('catch')
+  })
+
+  it('mines with the ship laser from orbit by default, or a rover on the surface', () => {
+    for (const id of ['contract-mining', 'program-free-mining', 'event-meteor-run']) {
+      const t = getMissionTemplate(id)!
+      expect(t.methods).toEqual(['orbit-laser', 'rover'])
+      const orbit = beatsFor(t).map(b => b.id)
+      const rover = beatsFor(t, 'rover').map(b => b.id)
+      expect(orbit).toContain('cut')
+      expect(orbit).not.toContain('land')
+      expect(rover).toEqual(expect.arrayContaining(['site', 'land', 'mine', 'lift']))
+      expect(rover).not.toContain('cut')
+      expect(beatsFor(t).find(b => b.id === 'cut')?.view).toBe('orbit')
+    }
+    expect(getMissionTemplate('event-meteor-run')!.beats.find(b => b.id === 'cut')?.controls).toContain('catch')
+    expect(getMissionTemplate('contract-delivery')!.methods).toBeUndefined()
+    expect(beatsFor(getMissionTemplate('contract-delivery')!)).toEqual(getMissionTemplate('contract-delivery')!.beats)
   })
 
   it('gives every authored mission its named template', () => {

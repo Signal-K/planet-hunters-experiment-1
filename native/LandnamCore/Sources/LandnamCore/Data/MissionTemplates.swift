@@ -6,6 +6,8 @@ import Foundation
 /// template's match rules: an exact id beats the longest id prefix, which beats the board tag.
 public struct MissionTemplate: Decodable, Equatable, Sendable {
     public enum Family: String, Decodable, Sendable { case contract, program, feed, event }
+    /// How the work is done, picked before launch. Mining: the ship's laser from orbit (default) or a rover.
+    public enum Method: String, Decodable, Sendable { case orbitLaser = "orbit-laser", rover }
 
     public struct Beat: Decodable, Equatable, Sendable {
         public let id: String
@@ -14,6 +16,8 @@ public struct MissionTemplate: Decodable, Equatable, Sendable {
         public let goal: String
         public let controls: [String]
         public let `repeat`: Bool
+        /// Plays only for this method; nil for beats every method shares.
+        public let method: Method?
     }
 
     public struct Match: Decodable, Equatable, Sendable {
@@ -36,6 +40,7 @@ public struct MissionTemplate: Decodable, Equatable, Sendable {
     public let window: String?
     public let summary: String
     public let vehicle: String
+    public let methods: [Method]?
     public let sources: [String]?
     public let match: Match
     public let beats: [Beat]
@@ -43,7 +48,13 @@ public struct MissionTemplate: Decodable, Equatable, Sendable {
     public let outcome: Outcome
 
     enum CodingKeys: String, CodingKey {
-        case id, title, family, forkOf = "fork_of", window, summary, vehicle, sources, match, beats, controls, outcome
+        case id, title, family, forkOf = "fork_of", window, summary, vehicle, methods, sources, match, beats, controls, outcome
+    }
+
+    /// The beats played for a method (default: the template's first). Shared beats always play.
+    public func beats(for method: Method? = nil) -> [Beat] {
+        let picked = method ?? methods?.first
+        return beats.filter { $0.method == nil || $0.method == picked }
     }
 }
 

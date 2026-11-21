@@ -340,8 +340,12 @@ enum MissionTemplateDeclarations {
       "id": "contract-mining",
       "title": "Mining contract",
       "family": "contract",
-      "summary": "A client wants a set amount of minerals from one body. Scan for the ore, cut it with the laser and fly it home.",
+      "summary": "A client wants a set amount of minerals from one body. Scan for the ore from orbit and cut it with the ship laser, or land a rover and cut it on the ground, then fly it home.",
       "vehicle": "lander",
+      "methods": [
+        "orbit-laser",
+        "rover"
+      ],
       "match": {
         "ids": [],
         "id_prefixes": [
@@ -370,7 +374,7 @@ enum MissionTemplateDeclarations {
           "id": "fit",
           "label": "Fit out",
           "view": "hangar",
-          "goal": "Load a laser, tanks and enough cargo pods for the order.",
+          "goal": "Fit the ship laser and cargo pods for the order, or stow a rover to mine on the surface.",
           "controls": [
             "fit-loadout"
           ],
@@ -399,15 +403,39 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "orbit",
-          "label": "Orbit",
+          "id": "survey",
+          "label": "Survey",
           "view": "orbit",
-          "goal": "Geoscan the surface and pick a landing site on a vein.",
+          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
           "controls": [
-            "geoscan",
-            "pick-site"
+            "geoscan"
           ],
           "repeat": false
+        },
+        {
+          "id": "cut",
+          "label": "Laser",
+          "view": "orbit",
+          "goal": "Fly the pass: slide over scanned ore and hold the laser until the order is in the hold.",
+          "controls": [
+            "steer",
+            "scan",
+            "laser",
+            "cargo"
+          ],
+          "repeat": true,
+          "method": "orbit-laser"
+        },
+        {
+          "id": "site",
+          "label": "Site",
+          "view": "orbit",
+          "goal": "Pick a landing site on a scanned vein.",
+          "controls": [
+            "pick-site"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "land",
@@ -418,13 +446,14 @@ enum MissionTemplateDeclarations {
             "thrust",
             "tilt"
           ],
-          "repeat": false
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "mine",
           "label": "Mine",
           "view": "field",
-          "goal": "Scan, drive to the ore, cut it with the laser until the order is in the hold.",
+          "goal": "Drive to the scanned ore and cut it with the rover laser until the order is in the hold.",
           "controls": [
             "drive",
             "scan",
@@ -432,15 +461,26 @@ enum MissionTemplateDeclarations {
             "cargo",
             "drop-cargo"
           ],
-          "repeat": true
+          "repeat": true,
+          "method": "rover"
+        },
+        {
+          "id": "lift",
+          "label": "Lift off",
+          "view": "field",
+          "goal": "Drive back aboard and take off.",
+          "controls": [
+            "take-off"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "return",
           "label": "Fly home",
           "view": "map",
-          "goal": "Take off and hop home.",
+          "goal": "Hop home.",
           "controls": [
-            "take-off",
             "hop"
           ],
           "repeat": false
@@ -465,13 +505,14 @@ enum MissionTemplateDeclarations {
         "hop",
         "choose",
         "geoscan",
+        "steer",
+        "scan",
+        "laser",
+        "cargo",
         "pick-site",
         "thrust",
         "tilt",
         "drive",
-        "scan",
-        "laser",
-        "cargo",
         "drop-cargo",
         "take-off",
         "store",
@@ -491,6 +532,10 @@ enum MissionTemplateDeclarations {
       "window": "While a meteor shower is active (Orionids, Leonids, Geminids).",
       "summary": "Free mining during a shower: fly to the stream's debris field, mine the impact sites and catch fireballs before they land.",
       "vehicle": "lander",
+      "methods": [
+        "orbit-laser",
+        "rover"
+      ],
       "match": {
         "ids": [],
         "id_prefixes": [
@@ -535,15 +580,40 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "orbit",
-          "label": "Orbit",
+          "id": "survey",
+          "label": "Survey",
           "view": "orbit",
-          "goal": "Geoscan and pick a landing site.",
+          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
           "controls": [
-            "geoscan",
-            "pick-site"
+            "geoscan"
           ],
           "repeat": false
+        },
+        {
+          "id": "cut",
+          "label": "Laser",
+          "view": "orbit",
+          "goal": "Laser the fresh impact sites on the pass; tap a fireball streaking below to catch it.",
+          "controls": [
+            "steer",
+            "scan",
+            "laser",
+            "cargo",
+            "catch"
+          ],
+          "repeat": true,
+          "method": "orbit-laser"
+        },
+        {
+          "id": "site",
+          "label": "Site",
+          "view": "orbit",
+          "goal": "Pick a landing site on a scanned vein.",
+          "controls": [
+            "pick-site"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "land",
@@ -554,13 +624,14 @@ enum MissionTemplateDeclarations {
             "thrust",
             "tilt"
           ],
-          "repeat": false
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "mine",
           "label": "Mine",
           "view": "field",
-          "goal": "Mine the impact sites; tap a fireball before it lands to catch it.",
+          "goal": "Drive to the impact sites and cut them; tap a fireball before it lands to catch it.",
           "controls": [
             "drive",
             "scan",
@@ -568,15 +639,26 @@ enum MissionTemplateDeclarations {
             "cargo",
             "catch"
           ],
-          "repeat": true
+          "repeat": true,
+          "method": "rover"
+        },
+        {
+          "id": "lift",
+          "label": "Lift off",
+          "view": "field",
+          "goal": "Drive back aboard and take off.",
+          "controls": [
+            "take-off"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "return",
           "label": "Fly home",
           "view": "map",
-          "goal": "Take off and hop home.",
+          "goal": "Hop home.",
           "controls": [
-            "take-off",
             "hop"
           ],
           "repeat": false
@@ -599,14 +681,15 @@ enum MissionTemplateDeclarations {
         "stage",
         "choose",
         "geoscan",
-        "pick-site",
-        "thrust",
-        "tilt",
-        "drive",
+        "steer",
         "scan",
         "laser",
         "cargo",
         "catch",
+        "pick-site",
+        "thrust",
+        "tilt",
+        "drive",
         "take-off",
         "store",
         "sell"
@@ -769,8 +852,12 @@ enum MissionTemplateDeclarations {
       "id": "program-free-mining",
       "title": "Free mining",
       "family": "program",
-      "summary": "Pick any reachable target, mine what is worth it and keep or sell the haul. Probe finds point you at the good spots.",
+      "summary": "Pick any reachable target, mine what is worth it from orbit or with a rover, and keep or sell the haul. Probe finds point you at the good spots.",
       "vehicle": "lander",
+      "methods": [
+        "orbit-laser",
+        "rover"
+      ],
       "match": {
         "ids": [
           "freeops-self-directed-mining"
@@ -817,15 +904,39 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "orbit",
-          "label": "Orbit",
+          "id": "survey",
+          "label": "Survey",
           "view": "orbit",
-          "goal": "Geoscan and pick a landing site.",
+          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
           "controls": [
-            "geoscan",
-            "pick-site"
+            "geoscan"
           ],
           "repeat": false
+        },
+        {
+          "id": "cut",
+          "label": "Laser",
+          "view": "orbit",
+          "goal": "Fly the pass: slide over scanned ore and hold the laser until the hold is full or the value is right.",
+          "controls": [
+            "steer",
+            "scan",
+            "laser",
+            "cargo"
+          ],
+          "repeat": true,
+          "method": "orbit-laser"
+        },
+        {
+          "id": "site",
+          "label": "Site",
+          "view": "orbit",
+          "goal": "Pick a landing site on a scanned vein.",
+          "controls": [
+            "pick-site"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "land",
@@ -836,13 +947,14 @@ enum MissionTemplateDeclarations {
             "thrust",
             "tilt"
           ],
-          "repeat": false
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "mine",
           "label": "Mine",
           "view": "field",
-          "goal": "Scan, drive and cut until the hold is full or the value is right.",
+          "goal": "Drive to scanned ore and cut until the hold is full or the value is right.",
           "controls": [
             "drive",
             "scan",
@@ -850,15 +962,26 @@ enum MissionTemplateDeclarations {
             "cargo",
             "drop-cargo"
           ],
-          "repeat": true
+          "repeat": true,
+          "method": "rover"
+        },
+        {
+          "id": "lift",
+          "label": "Lift off",
+          "view": "field",
+          "goal": "Drive back aboard and take off.",
+          "controls": [
+            "take-off"
+          ],
+          "repeat": false,
+          "method": "rover"
         },
         {
           "id": "return",
           "label": "Fly home",
           "view": "map",
-          "goal": "Take off and hop home.",
+          "goal": "Hop home.",
           "controls": [
-            "take-off",
             "hop"
           ],
           "repeat": false
@@ -881,13 +1004,14 @@ enum MissionTemplateDeclarations {
         "stage",
         "choose",
         "geoscan",
+        "steer",
+        "scan",
+        "laser",
+        "cargo",
         "pick-site",
         "thrust",
         "tilt",
         "drive",
-        "scan",
-        "laser",
-        "cargo",
         "drop-cargo",
         "take-off",
         "store",

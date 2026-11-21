@@ -332,6 +332,21 @@ export function templateFamilies(root: string): Map<string, TemplateDoc['family'
   return out
 }
 
+/** Each template's methods (mining: orbit-laser, rover), for events checking the beats they override. */
+export function templateMethods(root: string): Map<string, NonNullable<TemplateDoc['methods']>> {
+  const out = new Map<string, NonNullable<TemplateDoc['methods']>>()
+  const dir = join(root, AUTHORING_DIR, 'templates')
+  if (!existsSync(dir)) return out
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith('.toml')) continue
+    const parsed = parseToml(readFileSync(join(dir, name), 'utf8'))
+    if (!parsed.ok) continue
+    const value = parsed.doc.value as Partial<TemplateDoc>
+    if (typeof value.id === 'string' && Array.isArray(value.methods)) out.set(value.id, value.methods)
+  }
+  return out
+}
+
 const templateRules: Rule<TemplateDoc> = ({ value, relPath, context, report }) => {
   const stem = basename(relPath, '.toml')
   if (value.id !== stem) report(['id'], 'id-file', `template id "${value.id}" must match the file name "${stem}"`)
@@ -350,10 +365,14 @@ const templateRules: Rule<TemplateDoc> = ({ value, relPath, context, report }) =
     value.sources?.forEach((source, i) => { if (!families.has(source)) report(['sources', i], 'template', `no template "${source}"`) })
   }
   const seen = new Set<string>()
+  const methods = value.methods ?? (value.fork_of ? templateMethods(context.root).get(value.fork_of) : undefined) ?? []
+  if (value.methods && value.fork_of) report(['methods'], 'methods', 'an event inherits its fork\'s methods; leave methods out')
   value.beat?.forEach((beat, i) => {
     if (seen.has(beat.id)) report(['beat', i, 'id'], 'duplicate-id', `beat id "${beat.id}" is used twice`)
     seen.add(beat.id)
+    if (beat.method && !methods.includes(beat.method)) report(['beat', i, 'method'], 'methods', methods.length ? `method "${beat.method}" is not one of this template's methods (${methods.join(', ')})` : 'a beat can name a method only when the template lists methods')
   })
+  for (const m of value.methods ?? []) if (!value.beat?.some(b => b.method === m)) report(['methods'], 'methods', `no beat plays the "${m}" method`)
 }
 
 const missionRules: Rule<MissionDoc> = ({ value, context, report }) => {
