@@ -1,3 +1,7 @@
+import { sharedDaily } from '@/lib/agency/community'
+import { type FleetPlayer } from '@/lib/agency/fleet'
+import { fleetDataCount, type ConditionPlayer } from '@/lib/agency/condition'
+import { SATURN_IMAGER_DAILY_COUNT } from '@/lib/data/saturn-candidates'
 import { dailyTessCandidates, dailyAsteroidCandidates, dailySaturnCandidates, type TessCandidate, type AsteroidCandidate, type SaturnCandidate } from '@/lib/data'
 import { isNewMoonDay } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
@@ -67,8 +71,8 @@ export function observingGroundTelescopes(player: GroundTelescopePlayer): number
  * or the orbiting Space Telescope. A ground telescope is cheaper and adds its
  * own candidates each day; the Space Telescope adds its level's worth.
  */
-export function asteroidFeedOnline(player: { freeOperations?: boolean; deepSpaceTelescopeBuilt?: boolean } & GroundTelescopePlayer): boolean {
-  return !!player.freeOperations && (!!player.deepSpaceTelescopeBuilt || observingGroundTelescopes(player) > 0)
+export function asteroidFeedOnline(player: { freeOperations?: boolean; deepSpaceTelescopeBuilt?: boolean } & GroundTelescopePlayer & Partial<Pick<Player, 'agencyCommunity'>>): boolean {
+  return !!player.freeOperations && (!!player.deepSpaceTelescopeBuilt || observingGroundTelescopes(player) > 0 || sharedDaily(player, 'asteroid-discovery') > 0)
 }
 
 export const SATURN_IMAGER_INSTRUMENT_ID = 'saturn-imager'
@@ -87,11 +91,10 @@ export interface InstrumentSignal {
 type InstrumentFeedPlayer = Pick<
   Player,
   | 'transitSatelliteLevel'
-  | 'transitSatelliteLevel'
   | 'satelliteTargetId'
   | 'tessClassifications'
   | 'instrumentDigestNotifiedOn'
->
+> & ConditionPlayer & FleetPlayer & Partial<Pick<Player, 'agencyCommunity'>>
 
 type DeepSpaceInstrumentFeedPlayer = Pick<
   Player,
@@ -100,7 +103,7 @@ type DeepSpaceInstrumentFeedPlayer = Pick<
   | 'deepSpaceTelescopeBuilt'
   | 'placed'
   | 'instrumentDigestNotifiedOn'
-> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'groundTelescopeLevels'>>
+> & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'groundTelescopeLevels'>> & FleetPlayer & Partial<Pick<Player, 'agencyCommunity'>>
 
 export function instrumentDigestDateKey(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
@@ -118,15 +121,28 @@ export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
  * Candidate selection remains deterministic and level-scaled; this wrapper
  * keeps the Hub badge, feed screen, and notification pipeline in agreement.
  */
+/** A daily feed is an allowance, not an endlessly refilling window. Older work never consumes today's data. */
+function remainingToday(count: number, records: Record<string, { submittedAt?: number; completedAt?: number; cells?: Record<string, unknown> }> | undefined, dateKey: string): number {
+  const done = Object.values(records ?? {}).filter(record => {
+    if (record.cells && Object.keys(record.cells).length < 9) return false
+    const at = record.completedAt ?? record.submittedAt
+    return typeof at === 'number' && Number.isFinite(at) && new Date(at).toISOString().slice(0, 10) === dateKey
+  }).length
+  return Math.max(0, count - done)
+}
+
 export function transitInstrumentDigest(
   candidates: TessCandidate[],
   player: InstrumentFeedPlayer,
   dateKey: string
 ): TessCandidate[] {
+  // SSL-852: a worn telescope sends half its light curves; a failed one sends none until it is serviced.
+  const count = remainingToday(((player.transitSatelliteLaunchedAt || !sharedDaily(player, 'exoplanet-hunters')) ? fleetDataCount(player, 'space-telescope', transitInstrumentLevel(player), Date.parse(`${dateKey}T23:59:59Z`)) : 0) + sharedDaily(player, 'exoplanet-hunters'), player.tessClassifications, dateKey)
+  if (count <= 0) return []
   return dailyTessCandidates(
     candidates,
     dateKey,
-    transitInstrumentLevel(player),
+    count,
     player.satelliteTargetId
   )
 }
@@ -167,10 +183,12 @@ export function deepSpaceInstrumentDigest(
   // extra asteroid candidate. Deterministic: same dateKey, same digest.
   const extra = isNewMoonDay(dateKey) ? NEW_MOON_EXTRA_ASTEROID_CANDIDATES : 0
   // A player with only a ground telescope has no Space Telescope share.
-  const space = player.deepSpaceTelescopeBuilt === false ? 0 : deepSpaceInstrumentLevel(player)
+  const space = player.deepSpaceTelescopeBuilt === false ? 0 : fleetDataCount(player, 'space-telescope', deepSpaceInstrumentLevel(player), Date.parse(`${dateKey}T23:59:59Z`))
   const ground = GROUND_TELESCOPE_IDS.reduce((sum, id) => sum + (groundTelescopeObserving(player, id) ? groundTelescopeLevel(player, id) : 0), 0)
-  if (space + ground === 0) return []
-  return dailyAsteroidCandidates(candidates, dateKey, space + ground + extra)
+  const shared = sharedDaily(player, 'asteroid-discovery')
+  if (space + ground + shared === 0) return []
+  const count = remainingToday(space + ground + shared + extra, player.asteroidClassifications, dateKey)
+  return count > 0 ? dailyAsteroidCandidates(candidates, dateKey, count) : []
 }
 
 export function unresolvedDeepSpaceInstrumentDigest(
@@ -188,16 +206,19 @@ export function unresolvedDeepSpaceInstrumentDigest(
 
 export function unresolvedSaturnInstrumentDigest(
   candidates: SaturnCandidate[],
-  player: Pick<Player, 'saturnClassifications'>,
+  player: Pick<Player, 'saturnClassifications'> & ConditionPlayer & FleetPlayer & Partial<Pick<Player, 'agencyCommunity'>>,
   dateKey: string
 ): SaturnCandidate[] {
   const classifications = player.saturnClassifications ?? {}
+  // SSL-852: a failed Saturn satellite sends no frames until it is serviced.
+  const count = remainingToday(((player.saturnImagerLaunchedAt || !sharedDaily(player, 'saturn-storms')) ? fleetDataCount(player, 'saturn-satellite', SATURN_IMAGER_DAILY_COUNT, Date.parse(`${dateKey}T23:59:59Z`)) : 0) + sharedDaily(player, 'saturn-storms'), player.saturnClassifications, dateKey)
+  if (count <= 0) return []
   return dailySaturnCandidates(candidates.filter(candidate => {
     const progress = classifications[candidate.id]
     // A legacy single-verdict record was the old whole-frame submission.
     // New records stay in the feed until all nine panes are complete.
     return !progress || (!!progress.cells && Object.keys(progress.cells).length < 9)
-  }), dateKey)
+  }), dateKey, count)
 }
 
 export function instrumentDigestWasNotified(
@@ -252,11 +273,11 @@ export function collectInstrumentSignals(opts: {
     | 'saturnImagerLaunchedAt'
     | 'saturnClassifications'
     | 'instrumentDigestNotifiedOn'
-  > & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered'>>
+  > & Partial<Pick<Player, 'placementPlots' | 'groundTelescopeGrandfathered' | 'groundTelescopeLevels' | 'agencyCommunity'>> & ConditionPlayer & FleetPlayer
   dateKey: string
 }): InstrumentSignal[] {
   const signals: InstrumentSignal[] = []
-  if (opts.player.freeOperations && opts.player.transitSatelliteLaunchedAt) {
+  if (opts.player.freeOperations && (opts.player.transitSatelliteLaunchedAt || sharedDaily(opts.player, 'exoplanet-hunters'))) {
     for (const item of unresolvedTransitInstrumentDigest(opts.tess, opts.player, opts.dateKey)) {
       signals.push({
         id: item.id,
@@ -280,7 +301,7 @@ export function collectInstrumentSignals(opts: {
       })
     }
   }
-  if (opts.player.freeOperations && opts.player.saturnImagerLaunchedAt) {
+  if (opts.player.freeOperations && (opts.player.saturnImagerLaunchedAt || sharedDaily(opts.player, 'saturn-storms'))) {
     for (const item of unresolvedSaturnInstrumentDigest(opts.saturn ?? [], opts.player, opts.dateKey)) {
       signals.push({
         id: item.id,

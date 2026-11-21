@@ -132,3 +132,5 @@ export async function castConsensusVote(request: string, verdict: ConsensusVerdi
     return { kind: 'queued' }
   }
 }
+
+export function fetchAgencyProgramme(): Promise<import('@/lib/agency/community').AgencyCommunity> { return communityFetch('/agency') }

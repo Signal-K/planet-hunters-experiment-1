@@ -1,0 +1,9 @@
+# Mission planner
+
+SSL-851 adds an owned Mission Planner scene, reached from the Mission Board or `/game/mission-planner`. Its saved plans use the normal rocket review, purchase, launch, work, return and debrief transitions. iOS explicitly follows after web in the ticket.
+
+Implementation choices: mining chooses an ore present at the body and a whole number of pieces; cargo uses that ore's cargo-unit weight. Survey amount means 1–24 sectors: one probe is left in orbit, maps only that coverage at the existing per-sector pace, and sends readings to the existing Data hub. It requires the control station and a body without a probe. Delivery takes a chosen amount of ore from Earth stash at launch and leaves it in a forward cache at the body. Delivery has no client payout; a per-sortie receipt records the cache exactly once and survives stale-save merges. Undelivered cargo in a scrubbed flight follows the existing cargo-loss rule.
+
+Only destinations within an available rocket's reach and pad capability appear. Mining and delivery exclude unsupported exoplanet surfaces, Venus and gas giants; orbital surveys can use them. The quote shows cargo, orbit, laser, outbound time using the flight engine's constant, a suggested available rocket/build price, and expected return. Mining value is an estimate before ship cost, not a promised payout. Survey returns data, delivery relocates stock, and neither invents francs or research XP. Delivery of existing stock does not count as a newly mined Community Site haul.
+
+Saved versions are immutable: editing and saving creates a new plan id, so the catalog or an active flight cannot silently change under the player. Plans survive reload/sync and are generated into the runtime catalog. Saving never charges francs or reserves cargo; Review checks the current stock/equipment again, and launch rechecks before loading. Normal launch guards, staging, outbox and mission-run snapshots remain in use.

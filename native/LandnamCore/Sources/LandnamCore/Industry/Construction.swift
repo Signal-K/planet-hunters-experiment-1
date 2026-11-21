@@ -85,6 +85,7 @@ public enum Construction {
         var n = s
         n.player.francs -= ControlStation.groundTelescopePrice
         n.player.placed.append(id)
+        ResearchStampRules.add(&n.player, .launch, at: Date().timeIntervalSince1970 * 1000)
         return n
     }
 

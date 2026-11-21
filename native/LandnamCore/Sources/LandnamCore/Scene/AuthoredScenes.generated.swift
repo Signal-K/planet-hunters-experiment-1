@@ -596,6 +596,15 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "SSL-746: the review area. Any player can ask for consensus on their own classification (ASK COMMUNITY key on the finished readout) and review others'. The reviewer runs the instrument first; only then is the requester's readout released and Support, Dispute (with a reason) or Unsure accepted. Reviewers never see running counts. Verified at ceil(log2(active players + 1)) supports, 3 to 9, with disputes under a third of supports. Reachable without choosing a weekly path. Stage fixtures: add &consensus=queue, &consensus=review or &consensus=settled to /game/stage?preset=ui-community-research. Transit only so far; asteroid and Saturn follow."
+        },
+        {
+          "id": "agency-path",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "records"
+          ],
+          "note": "SSL-852: the Agency path, third on the picker. Its steps come from the agency programme (web/lib/agency/programme.ts): launch or build the next craft (a `launch` stamp), work the fleet's data, clear the feed on 3 days, review a finding, Breakthrough. A line under the title lists the craft the agency has up, items of data a day and contributions. GO on the launch step opens the Data hub for a ground telescope and the Program tab for anything launched. The path links out to instruments; it holds no instrument tools."
         }
       ]
     },
@@ -1210,6 +1219,17 @@ enum AuthoredSceneDeclarations {
             "persistence"
           ],
           "note": "Customize lists every owned ground telescope, including unplaced or off-screen ones. Each shows level and placement. Its upgrade rail shows current and next daily candidates, iron cost, shortfall or max-level reason. L2 costs 1 U iron; L3 costs 2 U. Each observing telescope supplies its level in candidates per day; unplaced scopes wait except the grandfathered first scope."
+        },
+        {
+          "id": "next-flight",
+          "kind": "ui",
+          "mechanics": [
+            "training",
+            "mission-planning",
+            "persistence"
+          ],
+          "slot": "hud",
+          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button."
         }
       ]
     },
@@ -1926,6 +1946,48 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "mission-planner",
+      "type": "menu",
+      "route": "mission-planner",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/MissionPlannerScreen.tsx"
+        ],
+        "native": []
+      },
+      "objects": [
+        {
+          "id": "destination-chart",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Reachable bodies only, with a touchable map and equivalent destination list. Surface work excludes gas giants, Venus and exoplanets."
+        },
+        {
+          "id": "work-console",
+          "kind": "panel",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+        },
+        {
+          "id": "saved-plans",
+          "kind": "collection",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Immutable saved versions survive reload and merge. A selected saved plan enters the standard rocket review and launch flow. iOS follows after web per SSL-851."
+        }
+      ]
+    },
+    {
       "id": "missions",
       "type": "menu",
       "route": "missions",
@@ -2594,6 +2656,8 @@ enum AuthoredSceneDeclarations {
         "surface": "dom",
         "web": [
           "web/components/game/screens/TransitScreen.tsx",
+          "web/components/takeon/TakeOnFlight.tsx",
+          "web/lib/flight/looks.ts",
           "web/components/game/MissionOperationRoutes.tsx"
         ],
         "native": [
@@ -2608,7 +2672,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Target-specific flight environment; not the TESS light-curve scene."
+          "note": "Takeon flight view (@takeon/engine createFlightScene): sky, sun, corridor and the destination. Not the TESS light-curve scene."
         },
         {
           "id": "flight-rocket",
@@ -2618,7 +2682,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Vehicle moving through the current flight leg."
+          "note": "The player's rocket as hull sections (flightCraftLook): fitted parts change its proportions, the livery its paint."
         },
         {
           "id": "destination",
@@ -2628,7 +2692,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Catalog-driven destination visual."
+          "note": "A lit, turning globe generated from the body's mining palette (flightDestinationLook). Earth on the way home. It grows with the trip and becomes the limb below the rocket in orbit."
         },
         {
           "id": "flight-progress",
@@ -2638,7 +2702,40 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Persisted departure and arrival timestamps."
+          "note": "Persisted departure and arrival timestamps. The trip clock drives the scene (host-paced), never the other way round."
+        },
+        {
+          "id": "flight-corridor",
+          "kind": "collection",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Rocks to steer around and blue rings to fly through, generated from the trip's seed. Two rings charge one Boost. A rock slows the scene and ends a running Boost; it never costs trip time."
+        },
+        {
+          "id": "nudge-pad",
+          "kind": "ui",
+          "parent": "flight-world",
+          "slot": "secondaryAction",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Shared mining d-pad, bottom-left. A nudge moves the rocket inside the corridor; it cannot leave its course. Arrow keys, WASD and dragging on the scene do the same."
+        },
+        {
+          "id": "boost-action",
+          "kind": "button",
+          "parent": "flight-world",
+          "slot": "primaryAction",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "label": "Boost",
+          "note": "Shared round button, bottom-right, with the Boost charge as its ring. One charge at launch; a Boost cuts 22% of the time left (at least 2.5 s)."
         },
         {
           "id": "arrival-action",
@@ -2648,7 +2745,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Transition to landing, mining, survey or debrief according to the mission."
+          "note": "The rocket settles into orbit for about two seconds, then the trip hands over to landing, mining, survey or debrief according to the mission. Arrive skips the wait."
         },
         {
           "id": "return-action",

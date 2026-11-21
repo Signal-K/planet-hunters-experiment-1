@@ -1,3 +1,4 @@
+import { rocketConfigForModel } from '@/lib/data/rockets'
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
@@ -139,6 +140,7 @@ export const DEV_GROUPS: DevGroup[] = [
     shots: [
       { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, Free Ops unlocked, telescope built, story mission on the board', stage: 'free-ops' },
       { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-flight-return', label: '3D return flight', hint: 'SSL-847: timed cruise home, painted blue from the workshop, long enough to inspect every viewport and offline rendering', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Submit · Transit to see the result card', stage: 'free-ops' },
@@ -157,6 +159,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
       { key: 'ui-research-calendar-month-half', label: 'Research calendar, half month', hint: 'Control Station with stamps on most days so far this month', stage: 'free-ops' },
+      { key: 'ui-agency-programme', label: 'Agency programme', hint: 'SSL-852: two orbital telescopes, donated spare capacity, shared findings and a completed Community Site licence', stage: 'free-ops' },
+      { key: 'ui-agency-research', label: 'Agency research', hint: 'SSL-852: Agency path and shared frontier, behind the weekly passport', stage: 'free-ops' },
+      { key: 'ui-craft-service', label: 'Data hub, worn craft', hint: 'SSL-852: the space telescope is worn by use and a solar storm, the Saturn satellite has failed; both offer servicing', stage: 'free-ops' },
       { key: 'ui-instrument-hub', label: 'Control Station', hint: 'One hub for telescopes and satellites. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-radio-meteors', label: 'Meteor radio', hint: 'Real BRAMS radio spectrograms from Radio Meteor Zoo (live Panoptes queue): box the meteor echoes. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -218,6 +223,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'hub-biome-tundra', label: 'Base: tundra', hint: 'Base location fixture: tundra terrain', stage: 'free-ops' },
       { key: 'hub-biome-coast', label: 'Base: coast', hint: 'Base location fixture: coast terrain', stage: 'free-ops' },
       { key: 'hub-orionids-complete', label: 'Base: Orionids complete', hint: 'Orionids badge earned: the top-right event chip is hidden on the Base', stage: 'free-ops' },
+      { key: 'ui-mission-planner', label: 'Mission planner', hint: 'SSL-851: own destination, work and amount; save then normal Review and Launch', stage: 'free-ops' },
+      { key: 'ui-mission-planner-survey', label: 'Planner: survey coverage', hint: 'A six-sector survey probe plan', stage: 'free-ops' },
+      { key: 'ui-mission-planner-delivery', label: 'Planner: delivery', hint: 'Ore from Earth to Mercury; a vehicle is staged for this saved plan', stage: 'free-ops' },
       { key: 'ui-rocket-workshop', label: 'Rocket workshop', hint: 'SSL-850: weekly parts, livery and mission limits', stage: 'free-ops' },
       { key: 'ui-launchpad', label: 'Launchpad', hint: 'Launchpad with the contract board. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
@@ -488,6 +496,12 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'ui-flight-return': {
+      const base = resolvePresetState('m1-return')!
+      const now = Date.now()
+      return { ...base, tutorial: false, player: { ...base.player!, missionsDone: 3, freeOperations: true, transitStartedAt: now - 2 * 60_000, arrivalAt: now + 10 * 60_000, rocketLivery: { hull: 'blue', trim: 'cream', decal: 'none', updatedAt: now } } }
+    }
 
     case 'm1-return':
       return {
@@ -813,6 +827,42 @@ function fixture(name: string): Partial<GameState> | null {
       const hub = instrumentHubFixture()
       const p = hub.player!
       return { ...hub, player: { ...p, francs: 6_000_000, placed: [...p.placed, 'ground-telescope'], placementPlots: { ...p.placementPlots, 'ground-telescope': 10 }, groundTelescopeGrandfathered: false, scanFollowUp: null } }
+    }
+
+    // SSL-852: craft wear. Serviced 25 and 55 days ago, with a Kp 6.67 storm three days ago: the space telescope is
+    // worn (half data) and the Saturn satellite has failed. Both offer a servicing mission.
+    case 'ui-agency-programme':
+    case 'ui-agency-research': {
+      const hub = instrumentHubFixture()
+      const now = Date.now()
+      const world = { id: 'exo-shared-852', name: 'Community transit candidate', type: 'exoplanet' as const, orbit: 5, difficulty: 'L2' as const, minerals: ['iron', 'silicon'], brief: 'Stage fixture for a community-verified transit world.' }
+      return { ...hub, screen: name === 'ui-agency-research' ? 'community-research' : 'instrument-hub', player: {
+        ...hub.player!,
+        placed: ['launchpad', 'control-station', 'surface-silo', 'ground-telescope'], placementPlots: { launchpad: 0, 'control-station': 1, 'surface-silo': 6, 'ground-telescope': 10 }, groundTelescopeLevels: { 'ground-telescope': 2 },
+        transitSatelliteLaunchedAt: now - 86400000, saturnImagerLaunchedAt: now - 86400000,
+        telescopeAim: { transit: { week: weekKey(now) }, 'deep-space': { week: weekKey(now) }, saturn: { week: weekKey(now) } },
+        agencyLaunches: { 'fixture-1': { craft: 'space-telescope', at: now - 86400000 }, 'fixture-2': { craft: 'space-telescope', at: now - 3600000 } }, agencyDonations: { 'space-telescope': true },
+        agencyCommunity: { projects: { 'exoplanet-hunters': { contributions: 42, donatedPerDay: 1 }, 'asteroid-discovery': { contributions: 18, donatedPerDay: 1 }, 'saturn-storms': { contributions: 7, donatedPerDay: 0 }, 'deposit-survey': { contributions: 6, donatedPerDay: 0 }, 'meteor-echoes': { contributions: 9, donatedPerDay: 0 } }, surveys: { eros: ['0_0', '1_0'], [world.id]: ['0_0', '1_0', '2_0', '3_0'] }, worlds: { [world.id]: world }, siteUnlocks: ['community-site-2026-10:observatory-instrument'] },
+        stagedRockets: [{ id: 'qa-agency-vehicle', rocketId: 'explorer', location: 'launchpad', source: 'fabricated', rocket: rocketConfigForModel({ id: ROCKET_IDS.explorer }), missionId: '', targetId: '' }], selectedStagedRocketId: 'qa-agency-vehicle',
+      } }
+    }
+
+    case 'ui-craft-service': {
+      const hub = instrumentHubFixture()
+      const day = 86_400_000
+      const now = Date.now()
+      const stormDay = new Date(now - 3 * day).toISOString().slice(0, 10)
+      return {
+        ...hub,
+        player: {
+          ...hub.player!,
+          stagedRockets: [{ id: 'qa-service-vehicle', rocketId: 'explorer', location: 'launchpad', source: 'fabricated', rocket: rocketConfigForModel({ id: ROCKET_IDS.explorer }), missionId: '', targetId: '' }], selectedStagedRocketId: 'qa-service-vehicle',
+          transitSatelliteLaunchedAt: now - 90 * day,
+          saturnImagerLaunchedAt: now - 90 * day,
+          craftServicedAt: { 'space-telescope': now - 25 * day, 'saturn-satellite': now - 55 * day },
+          spaceStorms: { [stormDay]: 6.67 },
+        },
+      }
     }
 
     case 'ui-probe-hub': {
@@ -1323,6 +1373,19 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-mission-planner':
+    case 'ui-mission-planner-survey':
+    case 'ui-mission-planner-delivery': {
+      const work = name.endsWith('delivery') ? 'deliver' as const : name.endsWith('survey') ? 'survey' as const : 'mine' as const
+      const plan = { id: `self-plan-fixture-${work}`, work, targetId: work === 'deliver' ? 'mercury' : 'eros', mineral: work === 'deliver' ? 'iron' : 'nickel', amount: work === 'survey' ? 6 : 3, createdAt: Date.now() }
+      const rocket = { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
+      return {
+        screen: 'mission-planner', missionId: plan.id, targetId: plan.targetId, rocket,
+        player: { ...POST_ONBOARDING_PLAYER, francs: 150_000_000, stash: { iron: 12, nickel: 6 }, placed: [...POST_ONBOARDING_PLAYER.placed, 'control-station'], missionPlans: { [plan.id]: plan },
+          ...(work === 'deliver' ? { pendingLaunch: true, selectedStagedRocketId: 'planner-fixture-rocket', stagedRockets: [{ id: 'planner-fixture-rocket', rocketId: ROCKET_IDS.explorer, rocket, location: 'launchpad' as const, source: 'company' as const, missionId: plan.id, targetId: plan.targetId }] } : {}) },
+        tutorial: false, doneSteps: TRAINING_DONE, lastCargo: null, popup: null,
+      }
+    }
     case 'ui-rocket-workshop':
       return {
         screen: 'rocket-workshop',

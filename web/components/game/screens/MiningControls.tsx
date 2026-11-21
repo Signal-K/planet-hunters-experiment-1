@@ -65,7 +65,7 @@ export function MiningDPad({ disabled, onAltitude, onSpeed, obstacleAhead = fals
  * action button, like a controller. The ring shows laser charge, so there is
  * no separate gauge overlay. Hold re-fires as soon as the laser is ready.
  */
-export function MiningFireButton({ charges, max, charging, firing, ready = false, disabled, onPress, onRelease, onKeyFire, label = 'Fire', countText, ariaLabel, testId = 'fire-laser-btn' }: {
+export function MiningFireButton({ charges, max, charging, firing, ready = false, disabled, onPress, onRelease, onKeyFire, label = 'Fire', countText, ariaLabel, testId = 'fire-laser-btn', meter = false }: {
   charges: number
   max: number
   charging: boolean
@@ -81,6 +81,8 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
   countText?: string
   ariaLabel?: string
   testId?: string
+  /** The ring is a meter that fills toward one use (the flight's Boost), so a low or empty ring is not a warning. */
+  meter?: boolean
 }) {
   const pct = max > 0 ? Math.max(0, Math.min(1, charges / max)) : 0
   const state = charges <= 0 ? 'empty' : pct <= 0.25 ? 'low' : 'ok'
@@ -91,6 +93,7 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
       data-testid={testId}
       data-beacon="mining-fire-laser"
       data-state={state}
+      data-meter={meter || undefined}
       data-charging={charging || undefined}
       data-firing={firing || undefined}
       data-ready={(ready && charges > 0) || undefined}
@@ -105,7 +108,7 @@ export function MiningFireButton({ charges, max, charging, firing, ready = false
     >
       <span className={styles.fireRing} aria-hidden="true" />
       <span className={styles.fireFace}>
-        <span className={styles.fireLabel}>{charges <= 0 ? 'Empty' : label}</span>
+        <span className={styles.fireLabel}>{charges <= 0 && !meter ? 'Empty' : label}</span>
         <span className={styles.fireCount}>{countText ?? charges}</span>
       </span>
     </button>

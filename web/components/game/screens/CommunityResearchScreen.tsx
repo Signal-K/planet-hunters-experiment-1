@@ -1,13 +1,15 @@
 'use client'
 
 import ResearchPassport from './ResearchPassport'
+import AgencyFrontier from './AgencyFrontier'
 import { useEffect, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { countdown, eventPanel, liveEventWeek, type EventPanel } from '@/lib/research/event-week'
 import { COMMUNITY_REWARD_TEXT, communityBar, historicalContributionMonths, researchMonthHistory, stampDayKey, stampsInMonth, type CommunityResearch, type StampKind } from '@/lib/research/stamps'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import { explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
+import { agencySteps, explorerSteps, pathThisWeek, stepProgress, traderSteps, WEEKLY_RESEARCH_REWARDS, weekKey, type PathStep, type ResearchPathId } from '@/lib/research/paths'
 import type { Player } from '@/lib/game-types'
+import { agencySummary, type AgencySummary } from '@/lib/agency/programme'
 import CommunityBallots from './CommunityBallots'
 import { useBallots } from '@/lib/community/useBallots'
 import { useConsensus, consensusFixtureState } from '@/lib/community/useConsensus'
@@ -175,6 +177,26 @@ function EventPanelCard({ panel, now, player, step }: { panel: EventPanel; now: 
   )
 }
 
+const PATH_NAME: Record<ResearchPathId, string> = { explorer: 'Explorer', trader: 'Trader', agency: 'Agency' }
+const PATH_BLURB: Record<ResearchPathId, string> = {
+  explorer: 'Classify signals, review other players\u2019 findings, scan worlds and chase the sky. The research helps everyone.',
+  trader: 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.',
+  agency: 'Launch craft, work the data they send and have a finding checked. Every launch is more research for everyone.',
+}
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+/** SSL-852: what the agency has up, the data it brings a day and what the player has contributed, in one line. */
+function AgencyLine({ agency }: { agency: AgencySummary }) {
+  const craft = agency.owned.map(item => (item.owned > 1 ? `${item.name} \u00d7${item.owned}` : item.name)).join(' \u00b7 ')
+  return (
+    <p className={styles.fleet} data-testid="community-research-agency">
+      {agency.owned.length === 0
+        ? <>Your agency has nothing up yet.{agency.next ? ` A ${agency.next.name.toLowerCase()} opens ${agency.next.projects[0].name}.` : ''}</>
+        : <><b>{craft}</b><span>{plural(agency.dataPerDay, 'item')} a day · {plural(agency.contributed, 'contribution')}</span></>}
+    </p>
+  )
+}
+
 const HOW_IT_WORKS = [
   'Pick a path. It is locked for the week and resets on Monday.',
   'Finish its steps in any order. Missing a day costs nothing.',
@@ -209,9 +231,17 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
   const chain = getShowerChain(showerId)
   const eventStep = chain ? chainResearchStep(player, chain)
     : showerId && getShower(showerId) ? orionidsResearchStep(event?.id === 'orionids' ? player.orionidsEventStage : 0, showerId) : undefined
-  const steps = (path ?? selectedPath) === 'trader'
+  const agency = agencySummary(player)
+  const shownPath = path ?? selectedPath
+  const steps = shownPath === 'trader'
     ? traderSteps({ eventName: event?.name ?? null, eventStep, hasProbe })
-    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep, hasProbe })
+    : shownPath === 'agency'
+      ? agencySteps({
+          eventName: event?.name ?? null, eventStep, hasProbe, hasData: agency.hasClassifyData, launchedThisWeek: Object.entries(player.researchStamps ?? {}).some(([day, kinds]) => day >= weekKey(now) && kinds.includes('launch')), ownedNames: agency.owned.filter(item => item.id !== 'survey-probe').map(item => item.name),
+          service: agency.needsService?.condition ? { name: agency.needsService.name, percent: agency.needsService.condition.percent, failed: agency.needsService.condition.state === 'failed' } : null,
+          nextLaunch: agency.next ? { name: agency.next.name, how: agency.next.how, project: agency.next.projects[0].name, opensProject: !agency.owned.some(item => item.projects.some(project => project.id === agency.next?.projects[0].id)), adds: agency.next.adds } : null,
+        })
+    : explorerSteps({ hasDiscovery: Object.keys(player.discoveredExoplanetTargets ?? {}).length > 0, eventName: event?.name ?? null, eventStep, hasProbe, hasInstrument: agency.hasClassifyData })
   const stamps = player.researchStamps ?? {}
   // SSL-831: a chained shower's step counts its missions (1/2 after the run, done after LEO-1), not the day's stamp.
   const progress = steps.map(st => chain && st.id === 'event' ? { have: chainStage(player, chain.eventId), need: 2 } : stepProgress(st, stamps, week, now))
@@ -266,15 +296,17 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
-                  <button type="button" className={styles.path} disabled data-testid="research-path-agency" aria-label="Agency path, locked"><StepIcon icon="star" size={34} /><span>Agency</span><small>Locked</small></button>
+                  <button type="button" className={styles.path} data-selected={selectedPath === 'agency'} data-testid="research-path-agency" aria-label="Agency path" onClick={() => setSelectedPath('agency')}><StepIcon icon="star" size={34} /><span>Agency</span><small>Launches</small></button>
                 </div>
                 <div className={styles.focus}>
                   <span className={styles.eyebrow}>This week&apos;s path</span>
-                  <h2 data-testid="community-research-title">{selectedPath === 'trader' ? 'Trader' : 'Explorer'}</h2>
-                  <p>{selectedPath === 'trader' ? 'Trade, run contracts and watch prices. Five steps, and the research helps everyone.' : 'Classify signals, review other players\u2019 findings, scan worlds and chase the sky. The research helps everyone.'}</p>
+                  <h2 data-testid="community-research-title">{PATH_NAME[selectedPath]}</h2>
+                  <p>{PATH_BLURB[selectedPath]}</p>
+                  {selectedPath === 'agency' && <AgencyLine agency={agency} />}
                 </div>
               </section>
               <section className={styles.right}>
+                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
                 <h2>How it works</h2>
                 <ol className={styles.how} data-testid="community-research-how">
                   {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
@@ -288,9 +320,9 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
               {confirmingPath && (
                 <ActionConfirmBar
                   eyebrow="This week's path"
-                  title={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}?`}
+                  title={`Start ${PATH_NAME[selectedPath]}?`}
                   description="Your path is locked until Monday, when it resets and you can pick again."
-                  confirmLabel={`Start ${selectedPath === 'trader' ? 'Trader' : 'Explorer'}`}
+                  confirmLabel={`Start ${PATH_NAME[selectedPath]}`}
                   onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
                   onDismiss={() => setConfirmingPath(false)}
                 />
@@ -301,9 +333,11 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
               <section className={styles.left}>
                 {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
                 <div className={styles.pathHeader}>
-                  <span className={styles.eyebrow}>{path === 'trader' ? 'Trader' : 'Explorer'} pathway</span>
+                  <span className={styles.eyebrow}>{PATH_NAME[path]} pathway</span>
                   <span>{finished}/{steps.length} complete</span>
                 </div>
+                {path === 'agency' && <AgencyLine agency={agency} />}
+                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (
                     <button key={st.id} type="button" className={styles.pathStep} data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
@@ -338,8 +372,8 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
                 </> : <>
                   <h2>Your rewards</h2>
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
-                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract', 'launch')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales', 'fleet-watch')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
                     <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>

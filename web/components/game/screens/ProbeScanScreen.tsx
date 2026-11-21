@@ -6,6 +6,7 @@ import { MINERAL_META, type Target } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import {
+  probeSectorGoal,
   PROBE_COLS,
   PROBE_ROWS,
   sectorMsOf,
@@ -100,8 +101,8 @@ function Satellite() {
 export default function ProbeScanScreen({ player, targets, onBack, onCollect, onHub, onPlanRun, onViewContracts }: ProbeScanScreenProps) {
   const [now] = useState(() => Date.now())
   const bodies = useMemo(
-    () => Object.keys(player.probes ?? {}).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
-    [player.probes, targets],
+    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
+    [player.probes, player.agencyCommunity, targets],
   )
   const [bodyId, setBodyId] = useState<string | null>(bodies[0]?.id ?? null)
   const body = bodies.find(target => target.id === bodyId) ?? bodies[0] ?? null
@@ -165,7 +166,8 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
     return () => cancelAnimationFrame(frame)
   }, [!!body]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shownSectors = scanOrder().slice(0, shown)
+  const sharedSectors = (body ? player.agencyCommunity?.surveys[body.id] ?? [] : []).filter(id => scanOrder().includes(id))
+  const shownSectors = [...new Set([...scanOrder().slice(0, shown), ...sharedSectors])]
   const shownSet = new Set(shownSectors)
   const scanningId = playing ? scanOrder()[shown] : next?.sector ?? null
   const freshSet = new Set(freshHere)
@@ -176,14 +178,14 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const run = body && !playing ? probeRunMission(body, survey) : null
   const contracts = body && !playing ? probeContracts(body, survey, flown) : []
   const newContracts = contracts.filter(contract => newTypes.some(mineral => contract.requires.minerals[mineral])).length
-  const total = PROBE_COLS * PROBE_ROWS
+  const total = probeSectorGoal(record)
   const [tone, shade] = body ? BODY_TONES[body.id] ?? ASTEROID_TONE : ASTEROID_TONE
 
   const line = !body ? 'No probe in orbit yet. Launch one from the Program tab and it starts mapping as soon as it arrives.'
     : playing ? `Receiving sector ${sectorName(scanOrder()[shown])}…`
     : freshHere.length ? `${freshHere.length} new sector${freshHere.length === 1 ? '' : 's'} mapped since you last looked${newTypes.length ? `: ${newTypes.length} new mineral type${newTypes.length === 1 ? '' : 's'} found` : ''}.`
     : mapped.length === 0 ? `Probe in orbit at ${body.name}. The first sector is mapped in ${next ? inTime(next.at - now) : 'a moment'}.`
-    : !next ? `${body.name} is fully mapped. Every deposit is on file.`
+    : !next ? `${body.name}: the planned ${total} sectors are mapped. Their deposits are on file.`
     : `Nothing new since you last looked. Sector ${sectorName(next.sector)} is done in ${inTime(next.at - now)}.`
 
   return (
@@ -273,7 +275,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                   <i style={{ width: `${(shown / total) * 100}%` }} />
                   {next && !playing && <i className={styles.barNext} style={{ left: `${(shown / total) * 100}%`, width: `${(1 / total) * 100}%`, ['--part' as string]: 1 - (next.at - now) / sectorMsOf(record) }} />}
                 </div>
-                <small>{playing ? `Sector ${sectorName(scanOrder()[shown])}` : next ? `Next sector ${sectorName(next.sector)} in ${inTime(next.at - now)}` : 'Every sector mapped'}</small>
+                <small>{playing ? `Sector ${sectorName(scanOrder()[shown])}` : next ? `Next sector ${sectorName(next.sector)} in ${inTime(next.at - now)}` : 'Planned sectors mapped'}</small>
               </div>
             )}
           </section>
@@ -301,6 +303,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                 </div>
               )}
             </div>
+            <p className={styles.meta} data-testid="probe-community-survey">{sharedSectors.length}/24 sectors shared by the community. Your probe downloads earn your own observation stamp.</p>
             <div className={styles.actions}>
               {playing ? (
                 <button type="button" className={styles.ghost} data-testid="probe-skip" onClick={() => body && setPlayed(p => ({ ...p, [body.id]: mapped.length }))}>Skip</button>

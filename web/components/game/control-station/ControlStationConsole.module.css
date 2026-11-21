@@ -168,6 +168,17 @@
   font: 600 14px/1.3 var(--ln-font-body, inherit);
 }
 
+/* SSL-852: wear on an orbiting craft, and its servicing mission. */
+.condition { display: grid; gap: 6px; margin: 0 8px 6px; }
+.conditionBar { display: block; height: 6px; border-radius: 3px; background: rgba(244, 239, 228, 0.16); overflow: hidden; }
+.conditionBar i { display: block; height: 100%; background: var(--cyan); }
+.condition[data-state='worn'] .conditionBar i { background: var(--gold); }
+.condition[data-state='failed'] .conditionBar i { background: var(--ln-crimson); }
+.conditionText { color: var(--mute); font: 600 14px/1.3 var(--ln-font-body, inherit); }
+.condition[data-state='worn'] .conditionText { color: var(--gold); }
+.condition[data-state='failed'] .conditionText { color: var(--ln-crimson); }
+.condition .build { margin: 0; }
+
 /* History: the tally and the last few things classified. */
 .history { margin-top: auto; display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(244, 239, 228, 0.22); }
 .tally { display: flex; align-items: baseline; gap: 8px; }
@@ -488,3 +499,6 @@
 .anomaly[data-focus='true'] { width: 80px; height: 80px; color: var(--gold); }
 .anomaly[data-focus='true'] svg { width: 56px; height: 56px; stroke-width: 1; fill: currentColor; fill-opacity: 0.25; filter: drop-shadow(0 0 10px rgba(242, 194, 76, 0.55)); }
 .field[data-focus='saturn'] .bead { opacity: 0; }
+
+.programme { padding: var(--ln-s-2) var(--ln-s-3); font-size: var(--ln-fs-micro); line-height: 1.5; }
+.programme p { margin: 0 0 var(--ln-s-1); }

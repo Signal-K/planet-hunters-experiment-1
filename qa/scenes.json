@@ -54,7 +54,8 @@
    "native": "hub-phone",
    "tickets": [
     "SSL-345",
-    "SSL-451"
+    "SSL-451",
+    "SSL-873"
    ]
   },
   {
@@ -338,7 +339,9 @@
    "flow": "progression",
    "web": "ui-research-passport",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
-   "tickets": ["SSL-849"]
+   "tickets": [
+    "SSL-849"
+   ]
   },
   {
    "id": "passport-unconfirmed",
@@ -346,7 +349,9 @@
    "flow": "progression",
    "web": "ui-research-passport-unconfirmed",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
-   "tickets": ["SSL-849"]
+   "tickets": [
+    "SSL-849"
+   ]
   },
   {
    "id": "passport-missed",
@@ -354,7 +359,9 @@
    "flow": "progression",
    "web": "ui-research-passport-missed",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
-   "tickets": ["SSL-849"]
+   "tickets": [
+    "SSL-849"
+   ]
   },
   {
    "id": "passport-empty",
@@ -362,7 +369,9 @@
    "flow": "progression",
    "web": "ui-research-passport-empty",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
-   "tickets": ["SSL-849"]
+   "tickets": [
+    "SSL-849"
+   ]
   },
   {
    "id": "community-research",
@@ -418,12 +427,44 @@
    "tickets": []
   },
   {
+   "id": "mission-planner",
+   "name": "Mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": [
+    "SSL-851"
+   ]
+  },
+  {
+   "id": "planner-survey",
+   "name": "Survey mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner-survey",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": [
+    "SSL-851"
+   ]
+  },
+  {
+   "id": "planner-delivery",
+   "name": "Delivery mission planner",
+   "flow": "core-loop",
+   "web": "ui-mission-planner-delivery",
+   "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+   "tickets": [
+    "SSL-851"
+   ]
+  },
+  {
    "id": "rocket-workshop",
    "name": "Rocket workshop",
    "flow": "core-loop",
    "web": "ui-rocket-workshop",
-   "nativeDeferred": "iOS comes in cycle 13 — Liam, SSL-850 comment, 19 Nov 2026",
-   "tickets": ["SSL-850"]
+   "nativeDeferred": "iOS comes in cycle 13 \u2014 Liam, SSL-850 comment, 19 Nov 2026",
+   "tickets": [
+    "SSL-850"
+   ]
   },
   {
    "id": "launchpad",
@@ -853,6 +894,16 @@
    "native": "second-ground-telescope-phone"
   },
   {
+   "id": "craft-service",
+   "name": "Data hub: worn and failed craft",
+   "flow": "instruments",
+   "web": "ui-craft-service",
+   "tickets": [
+    "SSL-852"
+   ],
+   "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+  },
+  {
    "id": "probe-hub",
    "name": "Survey probe: data hub",
    "flow": "instruments",
@@ -878,7 +929,10 @@
    "flow": "core-loop",
    "web": "hub-first-run",
    "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
-   "tickets": ["SSL-785"]
+   "tickets": [
+    "SSL-785",
+    "SSL-873"
+   ]
   },
   {
    "id": "hub-unplaced",
@@ -931,6 +985,39 @@
    "native": "surface-silo-live",
    "tickets": [
     "SSL-857"
+   ]
+  },
+  {
+   "id": "agency-programme",
+   "name": "Agency Programme",
+   "flow": "instruments",
+   "web": "ui-agency-programme",
+   "tickets": [
+    "SSL-852"
+   ],
+   "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+  },
+  {
+   "id": "agency-research",
+   "name": "Agency Research",
+   "flow": "instruments",
+   "web": "ui-agency-research",
+   "tickets": [
+    "SSL-852"
+   ],
+   "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+  },
+  {
+   "id": "flight-return",
+   "name": "3D return flight, offline and livery",
+   "flow": "core-loop",
+   "web": "ui-flight-return",
+   "native": "return-live",
+   "nativeDeferred": "SSL-848 explicitly schedules the native 3D renderer after web; KES-529 supplies the later shared draw-list API.",
+   "tickets": [
+    "SSL-847",
+    "SSL-848",
+    "SSL-861"
    ]
   }
  ],

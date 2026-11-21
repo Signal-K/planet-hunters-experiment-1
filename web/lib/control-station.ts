@@ -3,7 +3,7 @@ import type { PlayerBadge } from '@/lib/data/sky-events'
 import { WSW_EVENT_IDS, wswChip, wswEventIdsForInstrument, type WswChip } from '@/lib/wsw'
 
 /**
- * Control Station registry (SSL-496).
+ * Data hub registry (SSL-496).
  *
  * Equipment, locations, and projects are data. A piece of equipment lists the
  * projects it feeds, and a project can be listed on more than one piece.
@@ -20,10 +20,8 @@ import { WSW_EVENT_IDS, wswChip, wswEventIdsForInstrument, type WswChip } from '
  * is in `player.placed`). Until then the station shows a build prompt in their
  * place, not a standing row. A built ground telescope reads the same unresolved
  * NEOCP digest the Space Telescope publishes after the player launches it
- * (signal kind `deep-space`), and Open on its row forwards the first ready
- * signal to the existing asteroid-discovery screen. The digest stays gated on
- * that launch because the classify screen will not review candidates before
- * then, and this station does not change those screens.
+ * (signal kind `deep-space`). Observing ground scopes, launched orbital craft and donated
+ * community capacity feed the same project; programme.ts supplies fleet and contribution summaries.
  */
 
 export const MAP_WIDTH = 640

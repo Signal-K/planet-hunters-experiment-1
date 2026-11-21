@@ -162,7 +162,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <p className="debrief-result-panel__kicker">Program Outcome</p>
             <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
             <p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
-              ? `The probe stays in orbit at ${target.name} and does not come home. It maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and its finds land in your data hub.`
+              ? mission.customPlan ? `The probe stays in orbit at ${target.name} and maps the planned ${mission.customPlan.amount} sectors. Download its readings at the Data hub as they arrive.` : `The probe stays in orbit at ${target.name} and does not come home. It maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and its finds land in your data hub.`
               : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p>
           </section>
         ) : (

@@ -17,17 +17,17 @@ function player(patch: Partial<Player> = {}): Player {
     ...DEFAULT_STATE.player,
     freeOperations: true,
     missionsDone: 3,
-    placed: ['launchpad', 'surface-silo'],
+    placed: ['launchpad', 'surface-silo', 'control-station'],
     ...patch,
   }
 }
 
 describe('mission board view', () => {
-  it('marks a launched instrument done and the next open step current', () => {
+  it('keeps launches available after a craft is already up', () => {
     const current = player({ transitSatelliteLaunchedAt: 1 })
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: current })
     const steps = programChain(catalog, current, NOW)
-    expect(steps.find(step => step.id === TRANSIT_TELESCOPE_MISSION_ID)?.state).toBe('done')
+    expect(steps.find(step => step.id === TRANSIT_TELESCOPE_MISSION_ID)?.state).toBe('available')
     expect(steps.find(step => step.id === SATURN_IMAGER_MISSION_ID)?.state).toBe('current')
     expect(steps.find(step => step.kind === 'mining')?.state).toBe('available')
     expect(steps.filter(step => step.state === 'current')).toHaveLength(1)

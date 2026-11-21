@@ -1,3 +1,4 @@
+import { agencyProgramme } from '@/lib/agency/programme'
 import type { Catalog } from '@/lib/catalog'
 import type { Mission } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
@@ -131,20 +132,34 @@ function gateProgress(step: Omit<ProgramStep, 'progress'> & { progress?: Program
  */
 export function programChain(catalog: Catalog, player: Player, now = Date.now()): ProgramStep[] {
   const free = !!player.freeOperations
+  const programme = agencyProgramme(player, now)
   const steps: Array<Omit<ProgramStep, 'progress'> & { progress?: ProgramStep['progress'] }> = INSTRUMENTS.map(spec => {
     const mission = missionById(catalog, spec.id)
     const done = instrumentDone(player, spec.id)
-    const locked = !done && !free
+    const locked = !free || !mission
     return {
       id: spec.id,
       title: mission?.title ?? spec.title,
-      detail: mission?.programReward?.outcome ?? spec.detail,
+      detail: (() => { const craft = programme.find(item => item.id === (spec.id === TRANSIT_TELESCOPE_MISSION_ID ? 'space-telescope' : 'saturn-satellite'))!; return `${craft.projects.map(project => project.name).join(' · ')} · ${craft.adds}${done ? ` · ${craft.owned} in your fleet` : ''}` })(),
       brief: mission?.brief ?? spec.brief,
-      lockLine: locked ? (mission?.unlockAt ?? spec.unlockAt) : null,
-      state: done ? 'done' : locked ? 'locked' : 'available',
+      lockLine: locked ? (!free ? spec.unlockAt : 'Build the Agency Hub first') : null,
+      state: locked ? 'locked' : 'available',
       kind: 'instrument',
     }
   })
+
+  // SSL-852: servicing a worn craft comes straight after the craft themselves, before new probes.
+  for (const mission of catalog.missions.filter(item => item.payload?.service || item.id === 'community-science-launch').reverse()) {
+    steps.unshift({
+      id: mission.id,
+      title: mission.title,
+      detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief,
+      lockLine: null,
+      state: 'available',
+      kind: 'instrument',
+    })
+  }
 
   // SSL-773: survey probes to the nearest bodies without one, after the telescopes.
   for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
@@ -183,6 +198,14 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
     })
   }
 
+  const rank = (step: { id: string; kind: ProgramStepKind }) => {
+    if (missionById(catalog, step.id)?.payload?.service) return 0
+    if (step.id === 'community-science-launch') return 1
+    if (probeTargetForMission(step.id)) return 2
+    if (step.kind !== 'instrument') return 4
+    return instrumentDone(player, step.id) ? 3 : 1
+  }
+  steps.sort((a, b) => rank(a) - rank(b))
   let marked = false
   return steps.map(raw => {
     const step = { ...raw, progress: raw.progress ?? gateProgress(raw, player) }

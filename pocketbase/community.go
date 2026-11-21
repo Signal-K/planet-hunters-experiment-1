@@ -124,6 +124,7 @@ func ensureCommunityCollections(app core.App) {
 	ensurePassportCollection(app)
 	ensureBallotCollections(app)
 	ensureConsensusCollections(app)
+	ensureAgencyWorlds(app)
 }
 
 // ensureCommentModerationFields adds the report/hide columns to a

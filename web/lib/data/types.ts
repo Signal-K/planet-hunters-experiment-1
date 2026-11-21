@@ -5,6 +5,8 @@ export interface MissionPayload {
   name: string
   cargoCost: number
   instrumentId?: 'transit-telescope' | 'deep-space-telescope' | 'saturn-imager' | 'survey-probe'
+  /** SSL-852: a servicing mission puts this craft back to full condition instead of launching a new one. */
+  service?: 'space-telescope' | 'saturn-satellite'
 }
 
 export interface MissionSurveyPlan {
@@ -87,6 +89,7 @@ export interface ProgramReward {
 }
 
 export interface Mission {
+  customPlan?: import('@/lib/mission-planner').MissionPlan
   id: string
   title: string
   brief: string

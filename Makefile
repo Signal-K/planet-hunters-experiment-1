@@ -60,11 +60,11 @@ ensure:
 check:
 	@node scripts/dev-check.mjs $(NAME)
 
-# All source tests, ~10s: authoring contracts + colocated unit tests (dot reporter).
+# All source tests: authoring contracts + colocated unit tests (dot reporter).
 test:
-	@node scripts/authoring.mjs check | tail -1
-	@cd web && npx vitest run --reporter=dot 2>&1 | grep -v '^$$' | tail -15
-	@cd shared/core && go test ./... 2>&1 | grep -v 'no test files'
+	@bash -o pipefail -c 'node scripts/authoring.mjs check | tail -1'
+	@cd web && bash -o pipefail -c 'npx vitest run --reporter=dot 2>&1 | tail -15'
+	@cd shared/core && bash -o pipefail -c 'go test ./... 2>&1 | tail -15'
 
 scene:
 	@node scripts/scene.mjs $(NAME) $(CHECK)

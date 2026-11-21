@@ -1,3 +1,6 @@
+import { recordAgencyLaunch } from '@/lib/agency/fleet'
+import { loadPlannedCargo } from '@/lib/mission-planner'
+import { MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
@@ -41,6 +44,8 @@ import { grantOrionidsPlanetFind } from '@/lib/orionids/finds'
 import { queueMeteoriteMastery, queueOrionidsFind } from '@/lib/orionids/persist'
 import { applyClientSale } from '@/lib/client-sales'
 import { dataSiteCredit, missionSiteCredit, queueSiteContribution } from '@/lib/community/site'
+import { isAgencyLaunch } from '@/lib/agency/programme'
+import { serviceCraft } from '@/lib/agency/condition'
 import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL } from '@/lib/orionids/fragments'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
@@ -59,7 +64,7 @@ import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
 // the game for the whole leg.
-const ORBIT_MS_PER_UNIT = 42 * 1000
+const ORBIT_MS_PER_UNIT = MISSION_ORBIT_MS
 // First-time-only reward for classifying a TESS candidate — repeat looks at an
 // already-classified subject earn nothing (see submitTessClassification).
 const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
@@ -358,7 +363,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       const isOrionidsEntry = !!entryShower
-      if (s.screen !== 'missions' && s.screen !== 'launchpad' && !isOrionidsEntry) return s
+      if (s.screen !== 'missions' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission
@@ -368,6 +373,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
       if (s.screen === 'launchpad' && !ownOperation) return s
+      if (s.screen === 'mission-planner' && (!s.player.freeOperations || !mission.customPlan)) return s
       // Park only once the new mission is actually accepted. A rejected pick
       // must leave the live run where it is.
       const prepared = s.player.activeMission ? parkOrDropActiveRun(s) : s
@@ -410,7 +416,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
-          destinationChosen: false,
+          destinationChosen: !!mission.customPlan || mission.payload?.type === 'satellite',
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -558,11 +564,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onLaunch = useCallback(() => {
     const current = stateRef.current
     const selectedVehicle = current.player.stagedRockets?.find(vehicle => vehicle.id === current.player.selectedStagedRocketId)
-    if ((current.screen !== 'fab' && current.screen !== 'launchpad') || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
+    if ((current.screen !== 'fab' && current.screen !== 'launchpad' && current.screen !== 'rocket-buy') || !current.missionId || !current.targetId || current.player.activeMission || !selectedVehicle || selectedVehicle.location === 'hangar') return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
+    if (!loadPlannedCargo(current, currentMission)) { addToast('This plan no longer has its cargo or survey equipment available. Return to the planner.', 'warn'); return }
     // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
     const currentTarget = catalog.targets.find(t => t.id === current.targetId)
     if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
@@ -575,7 +582,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     let ascentFragments = 0
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
-      if ((s.screen !== 'fab' && s.screen !== 'launchpad') || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
+      if ((s.screen !== 'fab' && s.screen !== 'launchpad' && s.screen !== 'rocket-buy') || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
            ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
@@ -585,6 +592,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (!mission || !target) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       if (padNeedsService(s.player)) return s
+      const loaded = loadPlannedCargo(s, mission)
+      if (!loaded) return s
       const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
@@ -597,13 +606,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // debrief, so a flight inside the window stays gold.
       const at = skyEventNow(isDevLauncherEnabled())
       const beforeBadge = s.player.badges?.['rocket-revolution-2026']
-      const badged = grantSkyBadges(s.player, 'launch', at)
+      const badged = grantSkyBadges(loaded.player, 'launch', at)
       const earned = badged.badges?.['rocket-revolution-2026']
       if (earned && earned !== beforeBadge) earnedLaunchBadge = earned.tier
       const ascended = applyLaunchCatch(badged, at)
       ascentFragments = (ascended.orionidsFragments?.caught ?? 0) - (badged.orionidsFragments?.caught ?? 0)
       return {
-        ...s,
+        ...loaded,
         player: {
           ...ascended,
           padLaunches: (s.player.padLaunches ?? 0) + 1,
@@ -641,7 +650,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         target_id: current.targetId,
         status: 'in_progress',
         phase: 'transit',
-        cargo: {},
+        cargo: currentMission.customPlan?.work === 'deliver' ? { [currentMission.customPlan.mineral]: currentMission.customPlan.amount } : {},
         launched_at: new Date().toISOString(),
       })
       missionRunIdRef.current = runId
@@ -787,11 +796,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [setState])
 
   // SSL-663: one stamp per research task kind per UTC day, for the calendar in the Control Station.
-  const stampResearch = useCallback((kind: StampKind) => {
+  const stampResearch = useCallback((kind: StampKind, project?: string) => {
     // SSL-758: a classification or survey day feeds the Community Site's data, once per kind per day.
     if (kind === 'classification' || kind === 'survey') queueSiteContribution(`data:${kind}:${stampDayKey(Date.now())}`, dataSiteCredit())
     setState(s => {
-      const player = addStamp(s.player, kind, Date.now())
+      const player = addStamp(s.player, kind, Date.now(), project)
       return player === s.player ? s : { ...s, player }
     })
   }, [setState])
@@ -863,7 +872,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const submitTessClassification = useCallback((subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => {
     const submittedAt = Date.now()
-    stampResearch('classification')
+    if (!stateRef.current.player.tessClassifications?.[subjectId]) stampResearch('classification', subjectId.startsWith(TRAINING_ID_PREFIX) ? undefined : 'exoplanet-hunters')
     payScanFollowUp('tess')
     const roundedRanges = ranges
       .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
@@ -994,7 +1003,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // verdict record itself.
   const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
-    stampResearch('classification')
+    if (!stateRef.current.player.asteroidClassifications?.[candidateId]) stampResearch('classification', 'asteroid-discovery')
     payScanFollowUp('asteroid')
 
     if (!stateRef.current.player.asteroidClassifications?.[candidateId]) {
@@ -1036,7 +1045,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // tier comes from the SSL-491 sky event config.
   const submitSaturnClassification = useCallback((candidateId: string, cellIndex: number, verdict: SaturnVerdict, storm: boolean) => {
     const submittedAt = skyEventNow(isDevLauncherEnabled())
-    stampResearch('classification')
+    const prior = stateRef.current.player.saturnClassifications?.[candidateId]
+    if (prior && (!prior.cells || prior.cells[cellIndex])) return
+    stampResearch('classification', 'saturn-storms')
     payScanFollowUp('saturn')
     setState(s => {
       const existing = s.player.saturnClassifications?.[candidateId]
@@ -1124,7 +1135,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   // radio_meteor_classifications; never posted to Zooniverse.
   const submitRadioMeteorClassification = useCallback((classification: RadioMeteorClassification) => {
     if (stateRef.current.player.radioMeteorClassifications?.[classification.subjectId]) return
-    stampResearch('classification')
+    stampResearch('classification', 'meteor-echoes')
     const at = skyEventNow(isDevLauncherEnabled())
     // Checking ORI-1 recordings during the shower is the community's event research too.
     if (isOrionidsWindow(at)) stampResearch('event')
@@ -1132,8 +1143,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...stateRef.current.player,
       radioMeteorClassifications: { ...(stateRef.current.player.radioMeteorClassifications ?? {}), [classification.subjectId]: classification },
     }
-    // The receiver the desk is tuned to: LEO-1 once the Leonids run is home (SSL-831), else ORI-1.
-    const receiver = receiverEventId(stateRef.current.player)
+    // The receiver the desk is tuned to: LEO-1 while the Leonids are live (SSL-852) or once its run is home, else ORI-1.
+    const receiver = receiverEventId(stateRef.current.player, at)
     const chain = getShowerChain(receiver)
     // Checking LEO-1 recordings during the Leonids is the community's event research too.
     if (chain && !isOrionidsWindow(at) && badgeTierFor(chain.eventId, at) === 'gold') stampResearch('event')
@@ -1348,7 +1359,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ? addStamp(wswGraded, 'event', Date.now())
         : wswGraded
       const stampedPlayer = isProgramOperation ? eventStampedPlayer : addStamp(eventStampedPlayer, 'contract-run', Date.now())
-      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(stampedPlayer, 'discovery-mission', Date.now()) : stampedPlayer
+      // SSL-852: putting an agency craft up is research.
+      const fleetPlayer = mission?.payload?.instrumentId === 'transit-telescope' ? recordAgencyLaunch(stampedPlayer, 'space-telescope', historyRunId, Date.now())
+        : mission?.payload?.instrumentId === 'saturn-imager' ? recordAgencyLaunch(stampedPlayer, 'saturn-satellite', historyRunId, Date.now()) : stampedPlayer
+      const launchStampedPlayer = isAgencyLaunch(mission) ? addStamp(fleetPlayer, 'launch', Date.now(), mission?.payload?.instrumentId === 'saturn-imager' || mission?.payload?.service === 'saturn-satellite' ? 'saturn-storms' : mission?.payload?.instrumentId === 'survey-probe' ? 'deposit-survey' : 'exoplanet-hunters') : fleetPlayer
+      const wswBadgedPlayer = isDiscoveryMission(mission?.id ?? s.missionId) ? addStamp(launchStampedPlayer, 'discovery-mission', Date.now()) : launchStampedPlayer
       // The shower run is the whole event: finishing it records the fragments and grades the badge.
       // SSL-831: a shower with a mission chain (Leonids) finishes mission 1 here; the badge waits for its receiver step.
       const completedChain = getShowerChain(completedShower?.id)
@@ -1404,7 +1419,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
             : s.player.transitSatelliteLaunchedAt,
           transitSatelliteLevel: mission?.payload?.instrumentId === 'transit-telescope'
-            ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
+            ? Math.max(1, s.player.transitSatelliteLevel ?? 1)
             : s.player.transitSatelliteLevel,
           // One telescope: launching it brings the transit and asteroid feeds online together.
           deepSpaceTelescopeBuilt: mission?.payload?.instrumentId === 'transit-telescope' || s.player.deepSpaceTelescopeBuilt,
@@ -1414,6 +1429,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           saturnImagerLaunchedAt: mission?.payload?.instrumentId === 'saturn-imager'
             ? (s.player.saturnImagerLaunchedAt ?? Date.now())
             : s.player.saturnImagerLaunchedAt,
+          // SSL-852: a servicing mission puts its craft back to full condition.
+          craftServicedAt: mission?.payload?.service
+            ? serviceCraft(s.player, mission.payload.service, Date.now()).craftServicedAt
+            : s.player.craftServicedAt,
         },
         lastCargo: null,
         deliveredCargo: null,

@@ -1,0 +1,33 @@
+#:schema ../schema/scene.schema.json
+format = 1
+id = "mission-planner"
+type = "menu"
+name = "Mission planner"
+summary = "Own-program flight planning around the reachable-body map: mine ore, survey a chosen number of sectors, or carry Earth-side ore to a forward cache."
+tickets = ["SSL-851"]
+qa = ["mission-planner", "planner-survey", "planner-delivery"]
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/MissionPlannerScreen.tsx"]
+native = []
+[preview]
+route = "mission-planner"
+state = "ui-mission-planner"
+[[objects]]
+id = "destination-chart"
+kind = "panel"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Reachable bodies only, with a touchable map and equivalent destination list. Surface work excludes gas giants, Venus and exoplanets."
+[[objects]]
+id = "work-console"
+kind = "panel"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+[[objects]]
+id = "saved-plans"
+kind = "collection"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Immutable saved versions survive reload and merge. A selected saved plan enters the standard rocket review and launch flow. iOS follows after web per SSL-851."

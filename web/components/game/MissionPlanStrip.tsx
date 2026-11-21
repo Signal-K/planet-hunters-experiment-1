@@ -72,7 +72,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   const pay = mission.payout?.francs ? formatCurrency(mission.payout.francs, { compact: true }) : null
   const flyingRocket = selectedVehicle?.rocket ?? game.rocket
   const drill = game.catalog.parts.drill.find(part => part.id === flyingRocket.drill)
-  const payloadName = mission.payload?.name
+  const payloadName = mission.customPlan?.work === 'deliver' ? 'Ore from Earth stash' : mission.payload?.name
     ?? (Object.keys(mission.requires.minerals).length > 0
       // Every drill flies as the mining laser in the laser scene; the tier is the drill's.
       ? (drill && drill.id !== 'cargo-module-t1' ? `Mining laser T${drill.tier ?? 1}` : drill?.name ?? 'Mining laser')
@@ -84,11 +84,11 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   // SSL-714: the shower field labels belong to Orionids mission 1 only; mission 2 is a rover trip to Eros.
   const runShower = showerForRunMission(mission?.id)
   const showerRun = !!runShower
-  const getting = showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
-  const noSilo = !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
+  const getting = mission.customPlan?.work === 'survey' ? `Probe mapping ${mission.customPlan.amount} sectors` : mission.customPlan?.work === 'deliver' ? `Forward cache at ${target.name}` : showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
+  const noSilo = mission.payload?.type !== 'satellite' && mission.customPlan?.work !== 'survey' && !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   // Liam, 10.11: a free mining run lets the player choose the ore and how much, up to what the rocket's hold carries.
-  const goalEditable = !launched && !showerRun && mission.id !== RESOURCE_FOCUS_MISSION_ID && isFreeHaulEligibleMission(mission)
+  const goalEditable = !mission.customPlan && !launched && !showerRun && mission.id !== RESOURCE_FOCUS_MISSION_ID && isFreeHaulEligibleMission(mission)
   const holdUnits = selectedRocket?.stats.cargo ?? 6
   const drillTier = drill?.tier ?? 1
   const goalMineralId = Object.keys(mission.requires.minerals)[0]
@@ -144,7 +144,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
             <>
               <span>Cargo</span>
               <span className={styles.cargoRows}>
-                <span className={styles.cargoRow} data-testid="plan-cargo-getting"><b>Getting</b>{getting}</span>
+                <span className={styles.cargoRow} data-testid="plan-cargo-getting"><b>{mission.customPlan?.work === 'deliver' ? 'Delivering' : 'Getting'}</b>{mission.customPlan?.work === 'deliver' ? haul.join(', ') : getting}</span>
                 {payloadName && <span className={styles.cargoRow} data-testid="plan-cargo-payload"><b>Payload</b>{payloadName}</span>}
               </span>
               {goalEditable && <em>Change</em>}

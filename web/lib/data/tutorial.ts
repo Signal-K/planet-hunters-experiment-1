@@ -26,7 +26,8 @@ export interface TrainingTryStep {
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it. The launchpad comes next.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
   { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
-  // Wildcard: the hub, the launchpad and any unlisted screen all point at the tower.
+  { id: 'mine-prepare', try: 'mining', screen: 'hub', objective: 'Prepare your first flight', radio: 'A short contract, destination and loadout are selected. Review them, then build the rocket and launch.', beacon: 'base-next-flight', doneOn: 'mining-debriefed' },
+  // The launchpad and other unlisted screens retain their normal contracts entry.
   { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },

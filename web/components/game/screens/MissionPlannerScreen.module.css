@@ -1,0 +1,46 @@
+.root { display: flex; flex-direction: column; overflow: auto; background: var(--ln-blueprint-ink); color: var(--ln-blueprint-paper); padding: 16px; gap: 16px; font: 14px/1.45 var(--ln-font-display); }
+.root button, .root input, .root select { min-height: 44px; border: 1px solid var(--ln-cyan-border); border-radius: 8px; padding: 8px 12px; background: var(--ln-blueprint-ink); color: var(--ln-blueprint-paper); font: inherit; }
+.root button { cursor: pointer; }
+.root button:disabled { opacity: .45; cursor: default; }
+.root button:focus-visible, .root select:focus-visible, .root input:focus-visible { outline: 3px solid var(--ln-cyan); outline-offset: 2px; }
+.root button[aria-pressed=true], .root .primary { background: var(--ln-cyan); color: var(--ln-blueprint-ink); }
+.header { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.header h1 { margin: 0; font-size: 24px; }
+.header span { font-size: 14px; letter-spacing: var(--ln-tr-label); }
+.layout { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(300px, 1fr); flex: 1; min-height: 0; gap: 16px; }
+.chart { position: relative; min-height: 400px; overflow: hidden; border-radius: 16px; background: var(--ln-blueprint-ink); border: 1px solid var(--ln-cyan-border); }
+.mapLabel { position: absolute; bottom: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; background: var(--ln-blueprint-ink); border-radius: 8px; pointer-events: none; }
+.console { min-width: 0; padding: 16px; overflow: auto; border-radius: 16px; background: color-mix(in srgb, var(--ln-blueprint-blue) 24%, var(--ln-blueprint-ink)); }
+.console label { display: flex; flex-direction: column; margin-bottom: 12px; gap: 4px; }
+.console select { width: 100%; }
+.console fieldset { padding: 0; border: 0; margin: 0 0 12px; }
+.work { display: flex; gap: 8px; margin-top: 4px; }
+.work button { flex: 1; text-transform: capitalize; }
+.amount { display: flex; gap: 8px; }
+.amount input { width: 100%; min-width: 0; }
+.amount button { min-width: 44px; }
+.readout { border-top: 1px solid var(--ln-cyan-border); padding-top: 12px; margin-top: 16px; }
+.readout h2 { font-size: 18px; margin: 0 0 8px; }
+.readout dl { margin: 0; }
+.readout dl div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 4px 0; }
+.readout dd { margin: 0; text-align: right; font-weight: bold; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions button { flex: 1; }
+.issues { padding-left: 20px; }
+@media (max-width: 650px) and (orientation: portrait) { .layout { display: flex; flex-direction: column; flex: none; } .chart { min-height: 320px; } .console { overflow: visible; } .header h1 { font-size: 20px; } }
+@media (orientation: landscape) and (max-height: 600px) { .root { padding: 8px; gap: 8px; } .header h1 { font-size: 20px; } .chart { min-height: 270px; } }
+/* The board's chart is narrower here: stack each label under its touch target. */
+.chart button[data-testid^='map-node-'] { width: 80px; min-height: 56px; padding: 0; gap: 4px; flex-direction: column; justify-content: center; transform: translate(-50%, -50%); background: transparent; border: 0; color: var(--ln-blueprint-paper); }
+.chart button[data-testid^='map-node-'] > i { margin-left: 0; }
+.chart button[data-testid^='map-node-'] > span { max-width: 88px; overflow: hidden; text-overflow: ellipsis; font-size: 14px; letter-spacing: 0; padding: 4px; }
+.chart button[data-testid='map-back'] { top: 12px; }
+
+/* Override the full-screen board's viewport positions inside this compact chart. */
+.chart [data-view='belt'] button[data-testid='map-node-bennu'] { left: 20% !important; top: 30% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-itokawa'] { left: 50% !important; top: 30% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-eros'] { left: 80% !important; top: 30% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-ryugu'] { left: 20% !important; top: 49% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-vesta'] { left: 50% !important; top: 49% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-psyche'] { left: 80% !important; top: 49% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-ceres'] { left: 20% !important; top: 68% !important; }
+.chart [data-view='belt'] button[data-testid='map-node-lutetia'] { left: 50% !important; top: 68% !important; }

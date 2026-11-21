@@ -5,6 +5,7 @@ import Foundation
 public enum StampKind: String, CaseIterable, Codable, Sendable {
     case classification, survey, discoveryMission = "discovery-mission", event
     case exchangeSale = "exchange-sale", contractRun = "contract-run", priceAlert = "price-alert"
+    case gift, review, probeObservation = "probe-observation", launch
 }
 
 public struct ResearchPathChoice: Codable, Equatable, Sendable {
@@ -63,7 +64,7 @@ public enum ResearchFragments {
     }
 }
 
-public enum ResearchPathID: String, Codable, CaseIterable, Sendable { case explorer, trader }
+public enum ResearchPathID: String, Codable, CaseIterable, Sendable { case explorer, trader, agency }
 
 public struct ResearchPathStep: Equatable, Identifiable, Sendable {
     public let id: String
@@ -98,6 +99,14 @@ public enum ResearchPathRules {
                 .init(id: "scan-again", kind: .survey, days: 3, icon: "viewfinder", title: "Scan on 3 days", brief: "Finish a survey scan on three different days this week.", why: "More scans reveal more of the picture."),
                 .init(id: "breakthrough", kind: .classification, days: 0, icon: "star", title: "Breakthrough", brief: "Stamp research on five different days this week.", why: "Steady research turns scattered reports into a result."),
             ]
+        case .agency:
+            return [
+                .init(id: "launch", kind: .launch, days: 1, icon: "antenna.radiowaves.left.and.right", title: "Launch or build a craft", brief: "Add an instrument from Program, or build a ground telescope in the Data hub.", why: "Each instrument brings a project and daily data to your agency."),
+                .init(id: "fleet-classify", kind: .classification, days: 1, icon: "waveform.path.ecg", title: "Work your fleet’s data", brief: "Pick a data item in the Data hub and classify it.", why: "A classification is a contribution to the instrument’s project."),
+                .init(id: "fleet-watch", kind: .classification, days: 3, icon: "waveform.path.ecg", title: "Work data on 3 days", brief: "Classify data on three different days this week.", why: "Regular observations turn scattered data into findings."),
+                .init(id: "review", kind: .review, days: 1, icon: "viewfinder", title: "Review a finding", brief: "Use Community research on the web to review another agency’s finding.", why: "Independent reviews help the community decide what is real."),
+                .init(id: "breakthrough", kind: .classification, days: 0, icon: "star", title: "Breakthrough", brief: "Stamp research on five days this week.", why: "Every research day helps the shared programme."),
+            ]
         case .trader:
             return [
                 .init(id: "sale", kind: .exchangeSale, days: 1, icon: "chart.line.uptrend.xyaxis", title: "Make an Exchange sale", brief: "Sell an eligible mineral or refined good at the Exchange.", why: "Real prices tell the community which resources are moving."),
@@ -116,8 +125,8 @@ public enum ResearchPathRules {
     }
     public static func rewardStep(_ step: ResearchPathStep) -> Int? {
         if step.id == "breakthrough" { return 5 }
-        if step.id == "scan" || step.id == "contract" { return 2 }
-        if step.id == "sales" || step.id == "scan-again" || step.id == "world" { return 4 }
+        if step.id == "scan" || step.id == "contract" || step.id == "launch" { return 2 }
+        if step.id == "sales" || step.id == "scan-again" || step.id == "world" || step.id == "fleet-watch" { return 4 }
         return nil
     }
     @discardableResult public static func claim(_ p: inout Player, step: ResearchPathStep, progress: (have: Int, need: Int), now: Double) -> Bool {

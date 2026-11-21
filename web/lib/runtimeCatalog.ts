@@ -1,3 +1,5 @@
+import { communityWorlds } from '@/lib/agency/community'
+import { missionFromPlan, sanitizeMissionPlans } from '@/lib/mission-planner'
 import { downloadedSurvey, probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
 import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import { MINERAL_META } from '@/lib/data/minerals'
@@ -11,6 +13,7 @@ import { specialMissions } from './orionids/special-missions'
 import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun, showerRunMission } from './data/missions'
 import { SHOWERS, ORIONIDS_SHOWER_ID, showerForRunMission } from './data/showers'
 import { DEBRIS_PRESETS, isDebrisEventActive } from './data/sky-events'
+import { fleetCondition, SERVICED_CRAFT, type ServicedCraftId } from './agency/condition'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -49,7 +52,7 @@ export const SATURN_IMAGER_MISSION_ID = 'story-saturn-imager-launch'
 
 export const SATURN_IMAGER_TARGET: Target = {
   id: SATURN_IMAGER_TARGET_ID,
-  name: 'Earth Orbit',
+  name: 'Saturn observation lane',
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
@@ -58,6 +61,39 @@ export const SATURN_IMAGER_TARGET: Target = {
 }
 
 export const ORIONIDS_SHOWER_TARGET: Target = showerTarget(ORIONIDS_SHOWER_ID)
+
+/** SSL-852: servicing missions fly to the craft's orbit and put it back to full condition. */
+export const SERVICE_MISSION_ID: Record<ServicedCraftId, string> = {
+  'space-telescope': 'service-space-telescope',
+  'saturn-satellite': 'service-saturn-satellite',
+}
+
+const SERVICE_TARGET: Record<ServicedCraftId, string> = {
+  'space-telescope': TRANSIT_TELESCOPE_TARGET_ID,
+  'saturn-satellite': SATURN_IMAGER_TARGET_ID,
+}
+
+export function serviceMission(craft: ServicedCraftId, percent: number | null, sequence: number): Mission {
+  const name = craft === 'space-telescope' ? 'Space telescope' : 'Saturn satellite'
+  const named = craft === 'space-telescope' ? 'space telescope' : 'Saturn satellite'
+  const feed = craft === 'space-telescope' ? 'light curves and asteroid candidates' : 'Cassini frames'
+  const state = percent === null ? '' : percent < 15 ? ' It has failed and sends nothing.' : percent < 50 ? ` It is at ${percent}% and sends half its ${feed}.` : ` It is at ${percent}%.`
+  return {
+    id: SERVICE_MISSION_ID[craft],
+    title: `Service the ${named}`,
+    brief: `Fly a servicing crew up to your ${named} and put it right.${state} Use and solar storms wear it down.`,
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence,
+    unlockAt: 'Own the craft',
+    targetId: SERVICE_TARGET[craft],
+    payload: { type: 'satellite', name: `${name} servicing`, cargoCost: 0, service: craft },
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
+    programReward: { researchXP: 10, outcome: `${name} serviced · back to 100%, full data restored` },
+    payout: { francs: 0, affinity: 0 },
+  }
+}
 
 /** The field a shower run flies to (SSL-658, SSL-774). */
 export function showerTarget(showerId: string): Target {
@@ -104,16 +140,24 @@ export function buildRuntimeCatalog({
   missionsDone,
   player,
 }: RuntimeCatalogOpts): Catalog {
-  const discoveredTargetList = Object.values(discoveredTargets)
+  const discoveredTargetList = [...Object.values(discoveredTargets), ...communityWorlds(player?.agencyCommunity).filter(target => !discoveredTargets[target.id])]
   // A satellite or telescope is run from the control station, so none is offered until one is built.
   const hasControlStation = !!player?.placed?.includes('control-station')
-  const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation && !transitSatelliteLaunchedAt
+  const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-  const shouldOfferSaturnImagerMission = freeOperations && hasControlStation && !player?.saturnImagerLaunchedAt
+  const shouldOfferSaturnImagerMission = freeOperations && hasControlStation
   const hasActiveSaturnImagerMission = missionId === SATURN_IMAGER_MISSION_ID || targetId === SATURN_IMAGER_TARGET_ID
   const shouldIncludeSaturnImagerMission = shouldOfferSaturnImagerMission || hasActiveSaturnImagerMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
+  // SSL-852: a craft below 75% is offered a servicing mission; the one in flight stays so the run can finish.
+  const servicing = SERVICED_CRAFT.flatMap(craft => {
+    const condition = player ? fleetCondition(player, craft, Date.now()) : null
+    const inFlight = missionId === SERVICE_MISSION_ID[craft]
+    // The craft is already up, so no Agency Hub is needed to fly to it.
+    return (freeOperations && condition?.needsService) || inFlight ? [{ craft, percent: condition?.percent ?? null }] : []
+  })
+  const serviceTargetIds = new Set(servicing.map(item => SERVICE_TARGET[item.craft]))
   const skyRead = player?.fireballSpotter?.passedAt != null
   // The event is over: outside its window only participants and archive buyers are offered the run.
   const orionidsOpen = orionidsRunAvailable(player as Parameters<typeof orionidsRunAvailable>[0], Date.now())
@@ -128,8 +172,8 @@ export function buildRuntimeCatalog({
     ...catalog.targets,
     ...liveShowers.filter(id => !existingTargetIds.has(showerTarget(id).id)).map(showerTarget),
     ...(shouldIncludeOrionidsTarget && !existingTargetIds.has(ORIONIDS_SHOWER_TARGET.id) ? [ORIONIDS_SHOWER_TARGET] : []),
-    ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
-    ...(shouldIncludeSaturnImagerMission && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
+    ...((shouldIncludeTransitTelescopeMission || serviceTargetIds.has(TRANSIT_TELESCOPE_TARGET_ID)) && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
+    ...((shouldIncludeSaturnImagerMission || serviceTargetIds.has(SATURN_IMAGER_TARGET_ID)) && !existingTargetIds.has(SATURN_IMAGER_TARGET.id) ? [SATURN_IMAGER_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
   // A client contract pays its stated fee. The prior academy/diplomacy
@@ -174,7 +218,7 @@ export function buildRuntimeCatalog({
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
         title: 'Launch Space Telescope',
-        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.',
+        brief: 'Launch a space telescope for Exoplanet Hunters and Asteroid discovery. Each craft adds light curves and moving-object candidates every day; extra capacity can be shared from the Data hub.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -204,7 +248,7 @@ export function buildRuntimeCatalog({
     ? [{
         id: SATURN_IMAGER_MISSION_ID,
         title: 'Launch Saturn satellite',
-        brief: 'Deploy a Saturn satellite into Earth orbit. Its daily feed delivers real Cassini frames to check for storm clouds.',
+        brief: 'Launch a Saturn observation satellite for Saturn storms. Each craft adds one Cassini archive frame a day to the Data hub; extra capacity can be shared.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -230,6 +274,13 @@ export function buildRuntimeCatalog({
         payout: { francs: 0, affinity: 0 },
       }]
     : []
+  const siteMission: Mission[] = (player?.agencyCommunity?.siteUnlocks ?? []).some(id => /^community-site-\d{4}-\d{2}:(spaceport-launch-site|observatory-instrument)$/.test(id)) && freeOperations && hasControlStation
+    ? [{ ...transitTelescopeMission[0], id: 'community-science-launch', title: 'Launch the community research telescope', brief: 'The completed Community Site opened this shared launch programme for every agency. Fly a space telescope for Exoplanet Hunters and Asteroid discovery; share its spare capacity from the Data hub.', targetId: TRANSIT_TELESCOPE_TARGET_ID, tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: missionsDone + 1, unlockAt: 'Complete a Community Site', payload: { type: 'satellite', name: 'Community research telescope', cargoCost: 0, instrumentId: 'transit-telescope' }, requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 }, payout: { francs: 0, affinity: 0 } }]
+    : []
+  // The worst-worn craft comes first.
+  const serviceMissions: Mission[] = [...servicing].sort((a, b) => (a.percent ?? 100) - (b.percent ?? 100))
+    .map(item => serviceMission(item.craft, item.percent, missionsDone + 1))
+    .filter(mission => !existingMissionIds.has(mission.id))
   // SSL-773: survey probes, from the control station like the satellites. The nearest bodies without a probe are
   // offered; a probe already in flight keeps its mission so the run can finish.
   const probeFlightTarget = probeTargetForMission(missionId)
@@ -316,9 +367,13 @@ export function buildRuntimeCatalog({
       }]
     : []
 
+  const plannedMissions = Object.values(sanitizeMissionPlans(player?.missionPlans)).flatMap(plan => {
+    const target = mergedTargets.find(target => target.id === plan.targetId)
+    return target ? [missionFromPlan(plan, target, catalog.minerals)] : []
+  })
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...serviceMissions, ...siteMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions, ...plannedMissions]),
   }
 }

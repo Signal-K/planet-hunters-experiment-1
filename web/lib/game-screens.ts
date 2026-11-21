@@ -26,6 +26,7 @@ const SCREEN_LIST = {
   'rocket-buy': true,
   launchpad: true,
   'rocket-workshop': true,
+  'mission-planner': true,
   'asteroid-discovery': true,
   'saturn-storm-search': true,
   'radio-meteors': true,
