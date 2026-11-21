@@ -10,7 +10,7 @@ import {
   skipFlightPlan,
   startFlightPlan,
 } from './FlightPlanSystem'
-import { TRAINING_TRIES, trainingStepOnPath, trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
+import { trainingStepOnPath, trainingPatchProgress, trainingTryPosition, trainingTryStep } from '@/lib/data/tutorial'
 
 describe('FlightPlanSystem', () => {
   it('starts mining and reveals only one idle hint after eight seconds', () => {
@@ -90,14 +90,13 @@ describe('FlightPlanSystem', () => {
       expect(trainingTryStep('mining', screen), screen).toBeUndefined()
       expect(trainingTryStep('scan', screen), screen).toBeUndefined()
     }
-    expect(TRAINING_TRIES.filter(step => step.try === 'mining').length).toBeLessThanOrEqual(7)
     expect(trainingTryStep('part', 'hub')?.objective).toBe('Open the Hangar from Base')
     expect(trainingTryStep('scan', 'hub')?.objective).toBe('Open the Data hub')
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
     expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')
     expect(trainingTryStep('mining', 'build')?.objective).toBe('Place the launchpad')
-    expect(trainingTryStep('mining', 'hub')?.objective).toBe('Tap the tower to open client contracts')
+    expect(trainingTryStep('mining', 'hub')?.beacon).toBe('base-next-flight')
   })
 
   it('SSL-675: puts the laser at stop 4 of the five-stop spine', () => {

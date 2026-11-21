@@ -29,6 +29,7 @@ import PageSurface from '@/components/ui/PageSurface'
 import { FLIGHT_ASSET_URLS } from '@/lib/offline/flight-assets'
 import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
+import BaseNextFlight from '@/components/game/hub/BaseNextFlight'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 
@@ -376,6 +377,7 @@ function ScreenBody({
       }
       const hub = (
         <HubScreen
+          nextFlight={onService => <BaseNextFlight game={game} onService={onService} />}
           player={game.player}
           placementMode={screen === 'build'}
           buildOptions={buildOptions}

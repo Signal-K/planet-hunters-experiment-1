@@ -1219,6 +1219,17 @@ enum AuthoredSceneDeclarations {
             "persistence"
           ],
           "note": "Customize lists every owned ground telescope, including unplaced or off-screen ones. Each shows level and placement. Its upgrade rail shows current and next daily candidates, iron cost, shortfall or max-level reason. L2 costs 1 U iron; L3 costs 2 U. Each observing telescope supplies its level in candidates per day; unplaced scopes wait except the grandfathered first scope."
+        },
+        {
+          "id": "next-flight",
+          "kind": "ui",
+          "mechanics": [
+            "training",
+            "mission-planning",
+            "persistence"
+          ],
+          "slot": "hud",
+          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button."
         }
       ]
     },

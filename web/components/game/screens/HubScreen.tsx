@@ -47,6 +47,7 @@ import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
+import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import SkyEventChip from '@/components/game/SkyEventChip'
@@ -88,6 +89,7 @@ export interface HubBuildOption {
 const TELESCOPE_NAMES: Record<InstrumentPointing, string> = { transit: 'space telescope', 'deep-space': 'ground telescope', saturn: 'Saturn orbiter' }
 
 interface HubScreenProps {
+  nextFlight?: (onService: () => void) => React.ReactNode
   player: Player
   onBuild?: () => void
   /** Saves a new left-to-right order of the movable structures. */
@@ -127,7 +129,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onUpgradeGroundTelescope, onFocusResources, onOpenMarket, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
+export default function HubScreen({ nextFlight, player, onBuild, onArrange, placementMode = false, buildOptions = [], onPlaceStructure, onPlaceAnnex, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onUpgradeGroundTelescope, onFocusResources, onOpenMarket, onOpenEvents, communityResearch, onOpenCommunity, onUpgradeBuilding, onServiceLaunchpad, onExcavateSubsurface, onExcavateSubsurfaceUnavailable, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange, padLanding = false, homecoming = false }: HubScreenProps) {
   const { phase: skyPhase, grade: skyGrade } = useTimeOfDay()
   const skySeason = useBaseSeason()
   // Kit scale and strip width from the shared site map: the world is the 520-unit strip, the camera pans along it
@@ -826,6 +828,11 @@ export default function HubScreen({ player, onBuild, onArrange, placementMode = 
           )}
           {baseRow}
         </div>
+      )}
+
+      {!homecoming && !editMode && !subsurface && !placingAnnex && !menuOpen && !servicingPad && (!coachVisible || currentTrainingTry(player.flightPlan) === 'mining')
+        && !(launchpadCallout || (!agencyLandmark && stationCallout)) && (
+        <div className={layoutStyles.nextFlightSlot}>{nextFlight?.(() => setServicingPad(true))}</div>
       )}
 
       {/* The surface dock is reserved for all-scene navigation only. Base-only

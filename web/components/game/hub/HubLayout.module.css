@@ -206,3 +206,36 @@
   
   .root .badges { top: 56px; }
 }
+
+/* One ongoing task, carried above the navigation rather than opened as a coach. */
+.nextFlightSlot {
+  position: absolute; top: 88px; left: 16px; z-index: 19;
+  width: min(380px, calc(100vw - 32px));
+}
+@media (max-width: 600px) and (min-height: 650px) {
+  .nextFlightSlot { top: 30%; }
+}
+.nextFlight {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 12px;
+  background: var(--ln-surface-2);
+  color: var(--ln-text);
+  font: 14px var(--ln-font-display);
+  text-align: left;
+  cursor: pointer;
+}
+.nextFlightCopy { display: grid; gap: 4px; min-width: 0; }
+.nextFlightCopy strong { font-size: 16px; }
+.nextFlightCopy > span { color: var(--ln-text); }
+.nextFlightCta { flex: 0 0 auto; max-width: 125px; color: var(--ln-text); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-height: 500px) {
+  .nextFlight { min-height: 56px; padding: 8px 12px; }
+}

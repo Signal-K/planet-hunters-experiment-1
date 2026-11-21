@@ -80,6 +80,7 @@ public enum FlightPlan {
                          go: screen == .build ? nil : .init(label: "OPEN BUILD", screen: .build))
             }
             switch screen {
+            case .hub: return c("Prepare your first flight", "A short contract, destination and loadout are selected. Review them, then build the rocket and launch.")
             case .missions: return c("Accept a mining contract", "A client order funds this first field run.")
             // Target choice and the rover survey are not first-run stops (SSL-675).
             case .fab, .rocketBuy, .targets, .roverSurvey: return c("Prepare the vehicle and launch", "Check the target, cargo and vehicle, then launch.")

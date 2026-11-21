@@ -43,7 +43,10 @@ and cargo settlement. The separate SSL-852 and SSL-848 closeouts record the
 service/data loop and offline flight checks in more depth.
 
 The remaining problem is guidance and coherence rather than a shortage of
-systems. The first-run Base offers several destinations without one next task.
+systems. SSL-873 now gives the first-run Base one next task: prepare a short
+reachable contract, continue setup, or resume the active run. A first mission
+with the standard free Explorer reaches launch review in one tap, then launches
+on the next; normal paid-vehicle choices remain explicit.
 Free Run chooses a mineral goal before the player deliberately edits it.
 Telescope upgrades work, but are reached through Menu → Build, while tapping
 the telescope opens the Data hub. The planner has a long phone form and the
@@ -93,3 +96,34 @@ feature commits are SSL-851, SSL-852 and SSL-847/848, plus this SSL-872 cleanup.
 A read-only merge-tree check against main completed without conflicts before
 the cleanup commit. Merge these as the next incremental release after CI;
 do not describe the cycle's new story/mission redesign as complete.
+
+
+## Guidance follow-up (SSL-873)
+
+Reviewed Haphazard Martians' mission menu, expedition setup, screen-local tutorial
+and result handoff in `/workspace/Bad-Martians/game/`. The useful pattern is a
+self-contained job with its objective and equipment available, then a clear
+next attempt. This is the first application to the existing Landnam Base.
+
+Played the `hub` / `m1-hub` stage by hand: Prepare flight selected Baseline
+Extraction, Eros and the normal free Explorer; Launch played the ascent and 3D
+flight, then entered mining with the five-platinum order. Back through the
+mission board retained Continue setup. Pausing mining via Menu → View Base
+showed Resume mining, which returned to the same order. No paid vehicle was
+purchased by the new control. Free Ops `hub-first-run` offered a shorter
+three-hydrogen Bennu contract and opened its normal build review.
+
+Inspected the guidance on phone portrait/landscape, both iPad orientations and
+desktop. Screenshots 480–481 show the first preparation and launch-ready rocket;
+487–492 show the paused run; 496 onward show the final progress wording. Local
+browser action logs reported no page errors. A late attempt to tap View Base
+after flight had already ended timed out; the mining menu path was used instead.
+These remain disposable fixtures, not a signed-in campaign or user study.
+
+iOS mirrors the recommendation, review and resume behavior and updates its
+coach. This Linux environment has no Swift/Xcode or Simulator, so native build
+and execution remain hosted-check work. Native does not yet have web's pad wear
+and service feature; the new web action opens the existing service confirmation.
+The decision is saved under `notes/decisions/Flights start with a clear prepared
+job (2026-11-21).md`; copying its body to Craft was blocked by automatic approval
+review and remains undone.
