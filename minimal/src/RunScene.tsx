@@ -4,18 +4,16 @@
 // phone. The shower run keeps Landnam's own mining scene for its CATCH beam
 // until the pass learns to catch. Every other step stands on a TakeOn
 // minimal scene.
-import { useEffect, useRef, useState } from 'react'
-import type { MinimalBase, MinimalBuildStep, MinimalSceneHandle } from '@takeon/engine'
-import { getAsset } from '@takeon/engine/kit'
+import { useRef, useState } from 'react'
+import type { MinimalSceneHandle } from '@takeon/engine'
 import MiningScreen from '@landnam/components/game/screens/MiningScreen'
 import MineralChip from '@landnam/components/game/MineralChip'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
 import { francs, type Chapter, type Verb } from './chapters'
 import { resultFor, type RunResult } from './progress'
-import { FOUND_FRAMING, Scenery } from './scenes'
+import { Scenery } from './scenes'
 import { MineScene } from './MineScene'
 import { OrbitScene } from './OrbitScene'
-import { PickedCard, useBuildingPick } from './buildingPick'
 
 type Step = 'launch' | 'mine' | 'deliver' | 'build' | 'deploy' | 'survey' | 'home'
 
@@ -25,8 +23,6 @@ const STEPS: Record<Verb, Step[]> = {
   build: ['launch', 'build', 'home'],
   deploy: ['launch', 'deploy', 'home'],
   survey: ['launch', 'survey', 'home'],
-  // Groundbreaking plays on one scene of its own (FoundRun).
-  found: ['home'],
 }
 
 /** How long the rocket climbs before the next scene (drawLaunch fades at 3 s). */
@@ -35,23 +31,11 @@ const BUILD_MS = 2400
 /** The payload drifts clear and opens its panels before home. */
 const RELEASE_MS = 2600
 
-export function RunScene({ chapter, base, onFinish, onQuit }: {
+export function RunScene({ chapter, onFinish, onQuit }: {
   chapter: Chapter
-  /** The home base before this run (it gains the chapter's building on the way home). */
-  base: MinimalBase
   /** The run is over: bank this result and go back to the route. */
   onFinish: (result: RunResult) => void
   /** Left before the end: nothing is banked. */
-  onQuit: () => void
-}) {
-  if (chapter.verb === 'found') return <FoundRun chapter={chapter} onFinish={onFinish} onQuit={onQuit} />
-  return <FlightRun chapter={chapter} base={base} onFinish={onFinish} onQuit={onQuit} />
-}
-
-function FlightRun({ chapter, base, onFinish, onQuit }: {
-  chapter: Chapter
-  base: MinimalBase
-  onFinish: (result: RunResult) => void
   onQuit: () => void
 }) {
   const steps = STEPS[chapter.verb]
@@ -111,7 +95,7 @@ function FlightRun({ chapter, base, onFinish, onQuit }: {
   if (step === 'launch') {
     return (
       <main className="mn-scene" data-scene="minimal-launch">
-        <Scenery kind="launch" base={base.stage === 'founded' ? base : { stage: 'founded' }} autoLaunch={false} onReady={s => (scene.current = s)} />
+        <Scenery kind="launch" autoLaunch={false} onReady={s => (scene.current = s)} />
         {header}
         <footer className="mn-scene-bottom">
           <button
@@ -219,48 +203,20 @@ function FlightRun({ chapter, base, onFinish, onQuit }: {
     )
   }
 
-  // Home: what this run changed, then back to the route. The chapter's
-  // building goes up in front of the player, its road laid after it.
-  return <HomeScene chapter={chapter} base={base} result={resultFor(chapter, cargo)} onFinish={onFinish} />
-}
-
-/**
- * Home: what this run changed, then back to the route. The chapter's
- * building goes up in front of the player, its road laid after it. Tap a
- * building to see what it is.
- */
-function HomeScene({ chapter, base, result, onFinish }: {
-  chapter: Chapter
-  base: MinimalBase
-  result: RunResult
-  onFinish: (result: RunResult) => void
-}) {
-  const { scene, picked, tap } = useBuildingPick()
-  const fresh = chapter.builds && !base.buildings?.includes(chapter.builds) ? chapter.builds : undefined
+  // Home: what this run changed, then back to the route.
+  const result = resultFor(chapter, cargo)
   return (
-    <main className="mn-scene" data-scene="minimal-home" onClick={tap}>
-      <Scenery
-        kind="outpost"
-        base={base.stage === 'founded' ? base : { stage: 'founded' }}
-        onReady={s => {
-          scene.current = s
-          if (s && fresh) s.step(fresh)
-        }}
-      />
+    <main className="mn-scene" data-scene="minimal-home">
+      <Scenery kind="outpost" />
       <header className="mn-scene-top">
         <span className="mn-chip mn-place">Home</span>
       </header>
       <footer className="mn-scene-bottom">
-        {picked ? (
-          <PickedCard picked={picked} />
-        ) : (
-          <section className="mn-card">
-            <p className="mn-goal">{result.outcome}</p>
-            {fresh && <p className="mn-note">{getAsset(fresh)?.name ?? 'A new building'} going up.</p>}
-            {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
-            {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
-          </section>
-        )}
+        <section className="mn-card">
+          <p className="mn-goal">{result.outcome}</p>
+          {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
+          {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
+        </section>
         <button className="mn-cta" onClick={() => onFinish(result)}>
           CONTINUE
         </button>
@@ -285,54 +241,5 @@ function Steps({ count, at }: { count: number; at: number }) {
     <span className="mn-steps" aria-label={`Step ${at + 1} of ${count}`}>
       {Array.from({ length: count }, (_, i) => <i key={i} className={i < at ? 'mn-step-done' : i === at ? 'mn-step-now' : ''} />)}
     </span>
-  )
-}
-
-/** Groundbreaking: four quick actions on one scene, each played out in front of the player. */
-const FOUND_STEPS: { step: MinimalBuildStep; title: string; action: string; working: string }[] = [
-  { step: 'clear', title: 'Clear the site', action: 'CLEAR GROUND', working: 'CLEARING' },
-  { step: 'flatten', title: 'Level the ground', action: 'FLATTEN', working: 'GRADING' },
-  { step: 'agency', title: 'Raise your agency', action: 'PLACE AGENCY', working: 'BUILDING' },
-  { step: 'pad', title: 'Build the launch pad', action: 'BUILD LAUNCH PAD', working: 'BUILDING' },
-]
-
-function FoundRun({ chapter, onFinish, onQuit }: {
-  chapter: Chapter
-  onFinish: (result: RunResult) => void
-  onQuit: () => void
-}) {
-  const [index, setIndex] = useState(0)
-  const [busy, setBusy] = useState(false)
-  const scene = useRef<MinimalSceneHandle | null>(null)
-  const timer = useRef(0)
-  useEffect(() => () => window.clearTimeout(timer.current), [])
-  const done = index >= FOUND_STEPS.length
-  const current = FOUND_STEPS[Math.min(index, FOUND_STEPS.length - 1)]
-  const play = () => {
-    const ms = scene.current?.step(current.step) ?? 0
-    setBusy(true)
-    timer.current = window.setTimeout(() => {
-      setBusy(false)
-      setIndex(i => i + 1)
-    }, ms + 250)
-  }
-  const result = resultFor(chapter, {})
-  return (
-    <main className="mn-scene" data-scene="minimal-found" data-step={done ? 'done' : current.step}>
-      <Scenery kind="outpost" base={{ stage: 'raw' }} framing={FOUND_FRAMING} onReady={s => (scene.current = s)} />
-      <header className="mn-scene-top">
-        <button className="mn-chip mn-back" onClick={onQuit}>‹ LEAVE</button>
-        <Steps count={FOUND_STEPS.length} at={Math.min(index, FOUND_STEPS.length)} />
-        <span className="mn-chip mn-place">Home</span>
-      </header>
-      <footer className="mn-scene-bottom">
-        <section className="mn-card">
-          <p className="mn-goal">{done ? result.outcome : current.title}</p>
-        </section>
-        {done
-          ? <button className="mn-cta" onClick={() => onFinish(result)}>CONTINUE</button>
-          : <button className="mn-cta" disabled={busy} onClick={play}>{busy ? current.working : current.action}</button>}
-      </footer>
-    </main>
   )
 }

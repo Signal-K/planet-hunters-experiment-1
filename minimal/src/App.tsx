@@ -5,7 +5,7 @@ import { RouteScene } from './RouteScene'
 import { BriefingScene } from './BriefingScene'
 import { Scenery } from './scenes'
 import { readSharedSave } from './sharedSave'
-import { applyResult, baseFor, missingMaterials, readProgress, writeProgress } from './progress'
+import { applyResult, missingMaterials, readProgress, writeProgress } from './progress'
 
 // A run pulls in Landnam's mining scene (Pixi): load it when START is pressed.
 const RunScene = lazy(() => import('./RunScene').then(m => ({ default: m.RunScene })))
@@ -16,7 +16,7 @@ type View = { kind: 'route' } | { kind: 'briefing'; chapter: Chapter } | { kind:
 function devView(): View {
   if (!import.meta.env.DEV) return { kind: 'route' }
   const q = new URLSearchParams(location.search)
-  const chapter = q.has('chapter') ? CHAPTERS.find(c => c.number === Number(q.get('chapter'))) : undefined
+  const chapter = CHAPTERS.find(c => c.number === Number(q.get('chapter')))
   if (!chapter) return { kind: 'route' }
   return q.get('run') ? { kind: 'run', chapter } : { kind: 'briefing', chapter }
 }
@@ -30,7 +30,7 @@ export function App() {
   if (!pilot || !progress) {
     return (
       <main className="mn-scene" data-scene="minimal-sign-in">
-        <Scenery kind="launch" base={{ stage: 'founded', buildings: ['solar-farm', 'fuel-depot', 'comms-dish'] }} />
+        <Scenery kind="launch" />
         <section className="mn-card mn-sign-in">
           <p className="mn-eyebrow">LANDNAM MINIMAL</p>
           <h1>Run a space agency, one step at a time.</h1>
@@ -41,24 +41,11 @@ export function App() {
     )
   }
 
-  // Shared with Landnam: francs, and whether its onboarding is done. Finishing it
-  // there counts as chapter 1 (First light) here. Chapter progress itself is Minimal's.
-  const save = readSharedSave(pilot.id)
-  const done = new Set(progress.done)
-  if (save.onboardingDone) done.add(1)
-  // Dev only: `?built=N` marks chapters 0..N done (storyboard captures of a grown base).
-  if (import.meta.env.DEV) {
-    const built = Number(new URLSearchParams(location.search).get('built') ?? NaN)
-    for (let i = 0; i <= built; i++) done.add(i)
-  }
-  const base = baseFor(done)
-
   if (view.kind === 'run') {
     return (
       <Suspense fallback={<main className="mn-scene"><div className="mn-sky" aria-hidden /></main>}>
       <RunScene
         chapter={view.chapter}
-        base={base}
         onQuit={() => setView({ kind: 'briefing', chapter: view.chapter })}
         onFinish={result => {
           const next = applyResult(progress, view.chapter, result)
@@ -82,10 +69,14 @@ export function App() {
     )
   }
 
+  // Shared with Landnam: francs, and whether its onboarding is done. Finishing it
+  // there counts as chapter 1 (First light) here. Chapter progress itself is Minimal's.
+  const save = readSharedSave(pilot.id)
+  const done = new Set(progress.done)
+  if (save.onboardingDone) done.add(1)
   return (
     <RouteScene
       done={done}
-      base={base}
       money={save.francs + progress.earned}
       onboardedInLandnam={save.onboardingDone}
       onOpen={chapter => setView({ kind: 'briefing', chapter })}

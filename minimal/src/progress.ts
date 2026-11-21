@@ -3,8 +3,7 @@
 // Writing francs back into the Landnam save is still open (decision note).
 import { openMarketSellPrice } from '@landnam/lib/systems/EconomySystem'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
-import type { MinimalBase } from '@takeon/engine'
-import { CHAPTERS, type Chapter } from './chapters'
+import type { Chapter } from './chapters'
 
 export interface MinimalProgress {
   /** Chapter numbers finished in Minimal. */
@@ -61,8 +60,6 @@ export function resultFor(chapter: Chapter, cargo: Record<string, number>): RunR
     case 'shower-run':
       // Landnam pays the run's stated payout for the fragments (showerRunMission).
       return { ...none, francs: mission?.payout.francs ?? 0, outcome: 'Fragments handed in.' }
-    case 'founding':
-      return { ...none, outcome: 'Your agency is open for business.' }
     case 'self-directed':
       return { ...none, francs: marketValue(cargo), outcome: 'Sold at market.' }
     case 'materials-haul':
@@ -94,16 +91,6 @@ export function missingMaterials(chapter: Chapter, stash: Record<string, number>
     if (short > 0) missing[id] = short
   }
   return missing
-}
-
-/**
- * The home base as the finished chapters have built it: unbroken ground until
- * Groundbreaking (chapter 0) is done, then the agency and pad plus one
- * building per finished chapter, in story order.
- */
-export function baseFor(done: ReadonlySet<number>): MinimalBase {
-  if (!done.has(0)) return { stage: 'raw' }
-  return { stage: 'founded', buildings: CHAPTERS.filter(c => c.builds && done.has(c.number)).map(c => c.builds!) }
 }
 
 function shortOutcome(text?: string): string {
