@@ -8,7 +8,7 @@ import { requestConsensus } from '@/lib/community/client'
 import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/lib/community/consensus'
 import type { PendingConsensusReview } from '@/components/game/screens/CommunityConsensus'
 import { useGame } from '@/game-context'
-import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
@@ -364,7 +364,6 @@ function ScreenBody({
           buildOptions={buildOptions}
           onPlaceStructure={placeStructureFromBase}
           onPlaceAnnex={(kind, plot) => game.placeAnnex(kind, plot)}
-          rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           onboardingActive={onboardingActive}
           coachVisible={coachVisible}
           onOpenScene={s => {

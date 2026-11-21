@@ -100,6 +100,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
       { key: 'ui-field-orbit', label: 'Field: orbit', hint: 'Mining contract on Mars, ship laser from orbit (TakeOn field)', stage: 'tutorial' },
+      { key: 'ui-field-orbit-prospector', label: 'Field: orbit, Prospector', hint: 'The orbit pass flown in the Prospector (TakeOn field)', stage: 'tutorial' },
+      { key: 'ui-field-orbit-surveyor', label: 'Field: orbit, Surveyor', hint: 'The orbit pass flown in the Surveyor (TakeOn field)', stage: 'tutorial' },
       { key: 'ui-field-rover', label: 'Field: rover', hint: 'Mining contract on Mars, rover on the ground (TakeOn field)', stage: 'tutorial' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
       { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
@@ -479,6 +481,8 @@ function fixture(name: string): Partial<GameState> | null {
 
     // KES-543: a mining contract's cut/mine beats in TakeOn's 3D field, on real HiRISE terrain at Mars.
     case 'ui-field-orbit':
+    case 'ui-field-orbit-prospector':
+    case 'ui-field-orbit-surveyor':
     case 'ui-field-rover':
       return {
         screen: 'mining',
@@ -492,7 +496,10 @@ function fixture(name: string): Partial<GameState> | null {
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: FIRST_MISSION.id, targetId: 'mars',
-        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        // The orbit pass flies the run's own rocket type.
+        rocket: name === 'ui-field-orbit-prospector' ? { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }
+          : name === 'ui-field-orbit-surveyor' ? { chassis: 'hull-mk3', propulsion: 'ion-a3', drill: 'plasma-t3' }
+          : { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
 

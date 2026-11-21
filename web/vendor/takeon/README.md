@@ -96,3 +96,10 @@ Same repack as 0.2.5 with a fresh `dist/field/`: the field rover is built from
 Haphazard Martians blocks (hex nodes, braced girders, wheels on the end columns,
 a blue Navcam mast) and is 1.8 m over the wheels, and `ship` picks Landnam's
 rocket type for the orbit pass (`explorer`, `prospector`, `surveyor`).
+
+## 2026-11-21: `@takeon/engine` 0.2.6 → 0.2.7 (off-screen pointers, KES-543)
+
+Same repack with a fresh `dist/field/`: off-screen ore pointers that point the
+same way share one arrow, labelled with the nearest distance and a count of the
+rest (`70 m +2`), ore already in view gets no pointer unless it sits under the
+HUD, and labels stay fully on screen, so they no longer overlap.

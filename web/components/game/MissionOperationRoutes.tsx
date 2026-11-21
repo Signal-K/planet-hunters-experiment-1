@@ -282,6 +282,9 @@ export default function MissionOperationRoutes({
       const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis
         ? (chassis.cargo ?? 0) + loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity
         : undefined
+      // The field's hold is the ship's own (hull plus loadout), never smaller than the order it flew out for.
+      const shipHold = chassis ? (chassis.cargo ?? 0) + loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity : 0
+      const fieldHold = shipHold > 0 ? Math.max(shipHold, Object.values(game.mission.requires.minerals).reduce((a, b) => a + b, 0)) : undefined
       // KES-543: mining contracts and free mining play their cut/mine beats in TakeOn's 3D field.
       // Onboarding tries, shower runs and free hauls keep the 2D scene, which carries their guide, catch rules
       // and the store-or-sell gate (KES-283).
@@ -305,7 +308,7 @@ export default function MissionOperationRoutes({
             ship={fieldShipFor(game.rocket)}
             minerals={game.catalog.minerals}
             initialCargo={game.player.miningCargoInProgress}
-            cargoCapacity={limitedHold}
+            cargoCapacity={fieldHold}
             deliveryTargetName={deliveryTargetName}
             onPersist={cargo => game.setPlayer(player => ({ ...player, miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined }))}
             onBack={cargo => {

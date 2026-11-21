@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 28,
     "nativeScreenCases": 24,
-    "qaScenes": 91,
+    "qaScenes": 93,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 28,
     "authoringSources": 75,
@@ -348,6 +348,28 @@
         "name": "Field mining, ship laser from orbit",
         "flow": "core-loop",
         "web": "ui-field-orbit",
+        "nativeDeferred": "The TakeOn 3D field is web only so far; iOS keeps the 2D mining scene.",
+        "tickets": [
+          "KES-543",
+          "SSL-870"
+        ]
+      },
+      {
+        "id": "field-orbit-prospector",
+        "name": "Field mining from orbit, flown in the Prospector",
+        "flow": "core-loop",
+        "web": "ui-field-orbit-prospector",
+        "nativeDeferred": "The TakeOn 3D field is web only so far; iOS keeps the 2D mining scene.",
+        "tickets": [
+          "KES-543",
+          "SSL-870"
+        ]
+      },
+      {
+        "id": "field-orbit-surveyor",
+        "name": "Field mining from orbit, flown in the Surveyor",
+        "flow": "core-loop",
+        "web": "ui-field-orbit-surveyor",
         "nativeDeferred": "The TakeOn 3D field is web only so far; iOS keeps the 2D mining scene.",
         "tickets": [
           "KES-543",

@@ -18,7 +18,6 @@ export interface HubBuildingDef {
   dimmed?: boolean
   /** SSL-785: the first-run Agency landmark draws the line-art agency building in the Control Station's place. */
   landmark?: boolean
-  rocketVariant?: 'explorer' | 'prospector'
   active?: boolean
   /** When still under construction, the timestamp it started. Drives the build-reveal animation. */
   buildStartedAt?: number
