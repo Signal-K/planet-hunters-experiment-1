@@ -122,8 +122,18 @@ These remain disposable fixtures, not a signed-in campaign or user study.
 
 iOS mirrors the recommendation, review and resume behavior and updates its
 coach. This Linux environment has no Swift/Xcode or Simulator, so native build
-and execution remain hosted-check work. Native does not yet have web's pad wear
+and execution were verified separately on hosted Macs: Cycle validation
+44892439034 passed its native core suite, full web tests/build and both Go jobs;
+the iOS review app-build step on 44892439102 passed. Simulator app tests were
+still running at closeout. Native does not yet have web's pad wear
 and service feature; the new web action opens the existing service confirmation.
 The decision is saved under `notes/decisions/Flights start with a clear prepared
-job (2026-11-21).md`; copying its body to Craft was blocked by automatic approval
-review and remains undone.
+job (2026-11-21).md`. Automatic approval review initially blocked the Craft
+mirror and detailed Linear comment. Liam explicitly approved both, and they
+were synced on 21 November: Craft page “Flights start with a clear prepared
+job (2026-11-21)” and SSL-873 comment `8bde8fd3-6f9e-4910-a633-329047a7f178`.
+SSL-873 is Done; SSL-864 and SSL-870 remain open.
+
+The final `hub-pad-worn` check opened the existing ₣1M service confirmation
+from the guidance action. Confirming reduced the fixture balance from ₣150M
+to ₣149M and replaced Service pad with Prepare flight (screenshots 502–504).
