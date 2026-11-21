@@ -77,3 +77,15 @@ Landnam-local repack of the 0.2.1 engine: the flat map backdrop uses the body's 
 draws no rover (iso and flat views), and `showRover` overrides. The same change
 is on the `landnam/show-rover` branch of signal-k/takeon. The 0.2.2 build was
 ahead of that repo's `main`, so it was patched in place rather than rebuilt.
+
+## 2026-11-21: `@takeon/engine` 0.2.4 → 0.2.5 (the 3D field, KES-543)
+
+Landnam-local repack, same pattern as 0.2.3: the vendored 0.2.4 build plus
+`dist/field/` from signal-k/takeon (`packages/engine/src/field`) and a
+`./field` entry in `exports`. Landnam imports it as `@takeon/engine/field`
+(dynamically, client only) for `FieldMiningScreen`. The field only depends on
+`util/rng`, `util/noise` and `types`, which are byte-identical between the two
+builds, so nothing else in 0.2.4 changed. To refresh the field: build the
+engine in takeon, replace `package/dist/field` in the unpacked tarball, repack,
+and update the `integrity` of `node_modules/@takeon/engine` in
+`package-lock.json` (npm reuses the cached tarball otherwise).

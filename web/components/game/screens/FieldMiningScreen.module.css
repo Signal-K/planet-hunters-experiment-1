@@ -1,0 +1,180 @@
+/* KES-543: field HUD per "Field HUD is light and flat": flat discs with a thin charge ring, a frosted gauge strip, Menu only. */
+.root {
+  --glass: rgba(236, 242, 250, 0.16);
+  --glass-edge: rgba(255, 255, 255, 0.34);
+  --shade: 0 2px 10px rgba(0, 0, 0, 0.22);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #120c1c;
+  color: #fff;
+  font-family: var(--ln-font-display, system-ui);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .root { --glass: rgba(40, 52, 70, 0.46); }
+}
+.canvas, .overlay { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+.overlay { pointer-events: none; z-index: 1; }
+/* The HUD sits over the field canvas, which takes taps everywhere else. */
+.topLeft, .menu, .credit, .thumbs, .finish, .sheet { z-index: 2; }
+
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shade);
+}
+
+.topLeft {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  right: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+.gauges {
+  composes: glass;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  pointer-events: none;
+}
+.gauge { --tone: #3fd487; display: grid; grid-template-columns: 10px auto 1fr auto; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.6); }
+.gaugeLabel { font-size: 14px; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); white-space: nowrap; }
+.bar { position: relative; width: 72px; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.32); overflow: hidden; }
+.bar > span { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--tone); transition: width 160ms linear; }
+.num { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55); }
+
+.menu {
+  composes: glass;
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  min-width: 72px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 22px;
+  color: #fff;
+  font: 700 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.hint { margin: 0; font-size: 14px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); font-weight: 600; }
+.credit {
+  position: absolute;
+  left: 12px;
+  margin: 0;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+.credit { bottom: calc(12px + env(safe-area-inset-bottom)); max-width: 52%; opacity: 0.85; }
+
+.thumbs {
+  position: absolute;
+  right: 16px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.btn {
+  --size: 60px;
+  --tone: #1f97dc;
+  --charge: 1;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(rgba(255, 255, 255, 0.95) calc(var(--charge) * 360deg), rgba(0, 0, 0, 0.35) 0);
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+}
+.face {
+  position: absolute;
+  inset: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: var(--shade);
+  color: #fff;
+  font: 800 14px/1 var(--ln-font-display, system-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 80ms ease-out;
+}
+.btn:active .face { transform: scale(0.94); }
+.btn:disabled { cursor: default; }
+.btn:disabled .face { filter: saturate(0.5) brightness(0.85); }
+.btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.scan { --tone: #1f97dc; margin-bottom: 36px; }
+.laser { --size: 76px; --tone: #e8612c; }
+.held { --tone: #3fd487; }
+.held .face { animation: pulse 0.9s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(63, 212, 135, 0.35), var(--shade); } }
+
+.finish {
+  position: absolute;
+  left: 50%;
+  bottom: calc(110px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  min-height: 48px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 24px;
+  background: #25a868;
+  color: #fff;
+  font: 800 16px/1 var(--ln-font-display, system-ui);
+  box-shadow: var(--shade);
+  cursor: pointer;
+}
+
+.sheet {
+  composes: glass;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: calc(72px + env(safe-area-inset-top));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(20, 26, 38, 0.82);
+}
+.sheetTitle { margin: 0; font-size: 18px; font-weight: 800; }
+.sheetBody { margin: 0; font-size: 15px; line-height: 1.4; }
+.sheetBtn {
+  min-height: 44px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font: 700 15px/1 var(--ln-font-display, system-ui);
+  cursor: pointer;
+}

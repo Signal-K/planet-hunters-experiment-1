@@ -99,6 +99,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, Extraction coach active', stage: 'tutorial' },
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
+      { key: 'ui-field-orbit', label: 'Field: orbit', hint: 'Mining contract on Mars, ship laser from orbit (TakeOn field)', stage: 'tutorial' },
+      { key: 'ui-field-rover', label: 'Field: rover', hint: 'Mining contract on Mars, rover on the ground (TakeOn field)', stage: 'tutorial' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
       { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
       { key: 'm1-home',   label: 'Home',    hint: 'Touchdown on the pad, delivery sheet', stage: 'tutorial' },
@@ -471,6 +473,25 @@ function fixture(name: string): Partial<GameState> | null {
         player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` } },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
         missionId: FIRST_MISSION.id, targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
+    // KES-543: a mining contract's cut/mine beats in TakeOn's 3D field, on real HiRISE terrain at Mars.
+    case 'ui-field-orbit':
+    case 'ui-field-rover':
+      return {
+        screen: 'mining',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Mars` },
+          missionPhase: 'mining',
+          flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: true },
+          ...(name === 'ui-field-rover' ? { landingResearched: true, shipCustomizerParts: { lander: 'lander-module-t1' } } : {}),
+        },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id, targetId: 'mars',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }

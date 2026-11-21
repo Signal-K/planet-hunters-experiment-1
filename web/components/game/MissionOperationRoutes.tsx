@@ -10,6 +10,9 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/mis
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
+import FieldMiningScreen from '@/components/game/screens/FieldMiningScreen'
+import { miningMethodFor, playsInField } from '@/lib/field/fieldMission'
+import { templateForMission } from '@/lib/mission-templates'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
@@ -279,6 +282,39 @@ export default function MissionOperationRoutes({
       const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis
         ? (chassis.cargo ?? 0) + loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).capacity
         : undefined
+      // KES-543: mining contracts and free mining play their cut/mine beats in TakeOn's 3D field.
+      // Onboarding tries, shower runs and free hauls keep the 2D scene, which carries their guide, catch rules
+      // and the store-or-sell gate (KES-283).
+      if (!trainingMiningTry && !isFreeHaulEligibleMission(game.mission) && playsInField(game.mission, !!showerForRunMission(game.mission.id))) {
+        const method = miningMethodFor(game.player.shipCustomizerParts, templateForMission(game.mission)?.id)
+        const finishField = (cargo: Record<string, number>) => {
+          game.completeStep(6)
+          if (method === 'rover' || game.player.shipCustomizerParts?.lander) {
+            game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
+            game.go('landing')
+            return
+          }
+          game.onMiningDone(cargo)
+        }
+        return (
+          <FieldMiningScreen
+            key={`${game.mission.id}:${method}`}
+            mission={game.mission}
+            target={game.target}
+            method={method}
+            minerals={game.catalog.minerals}
+            initialCargo={game.player.miningCargoInProgress}
+            cargoCapacity={limitedHold}
+            deliveryTargetName={deliveryTargetName}
+            onPersist={cargo => game.setPlayer(player => ({ ...player, miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined }))}
+            onBack={cargo => {
+              game.setPlayer(player => ({ ...player, missionPhase: 'mining', miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined }))
+              game.go('hub')
+            }}
+            onComplete={finishField}
+          />
+        )
+      }
       return (
         <MiningScreen
           mission={game.mission}
