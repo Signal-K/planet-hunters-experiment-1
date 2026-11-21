@@ -20,8 +20,9 @@ sessions" in AGENTS.md). There is no e2e suite or separate test stack.
 5. When iOS changes, build the iOS Simulator target and launch its matching
    `SceneCatalog` id with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
 
-`make test` runs everything source-level in about 10 seconds: the authoring
-check plus the colocated Vitest suite. Run it before a commit; for one file use
+`make test` runs the authoring check, the colocated Vitest suite and shared Go
+core tests. Its output filters preserve failure exit codes. Run it before a
+commit; for one file use
 `cd web && npm run test:file -- <path>`.
 
 Use a small source check only when it protects changed logic. The acceptance
@@ -32,3 +33,22 @@ handoff.
 ## Mining timing checks (local only)
 
 The scene driver takes 3 to 5 seconds per action, longer than the laser window (about 2 seconds at ground speed 56). To test a timed hit by hand, open `/game/stage?preset=m1-mining&miningSpeed=0.1` (ground at a tenth speed; `off` clears it; dev server on loopback only), poll `look` until the cue says FIRE NOW, then `tap 864 366` (the Fire button; a `click` never settles because the button pulses). `&scroll=0` holds the field still instead.
+
+## Keep tests proportional
+
+Keep behavioral checks for saves/migrations, offline queues, allocation and
+payments, mission transitions, telescope production, reward eligibility and
+shared authoring contracts. Use focused tests while editing; the full suite is
+a commit/merge check, not a substitute for playing a scene.
+
+Do not add tests that only search a component for a JSX tag, button label,
+class name, exact font shorthand or the absence of retired files. They couple
+refactors to implementation spelling and do not prove the screen works. Check
+those changes in the playable fixture. Keep architecture/contract checks when
+they protect a specific failure (for example, server/client import boundaries
+or authored fixture coverage).
+
+SSL-872 retired five such test files; Git history is their archive. Route
+behavior remains covered by game-route, game-screens and screen-layouts tests.
+The cycle-validation workflow runs the complete web suite once, including the
+mission subset, and runs the authoring check in that same job.
