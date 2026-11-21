@@ -101,8 +101,8 @@ function Satellite() {
 export default function ProbeScanScreen({ player, targets, onBack, onCollect, onHub, onPlanRun, onViewContracts }: ProbeScanScreenProps) {
   const [now] = useState(() => Date.now())
   const bodies = useMemo(
-    () => Object.keys(player.probes ?? {}).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
-    [player.probes, targets],
+    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
+    [player.probes, player.agencyCommunity, targets],
   )
   const [bodyId, setBodyId] = useState<string | null>(bodies[0]?.id ?? null)
   const body = bodies.find(target => target.id === bodyId) ?? bodies[0] ?? null
@@ -166,7 +166,8 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
     return () => cancelAnimationFrame(frame)
   }, [!!body]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const shownSectors = scanOrder().slice(0, shown)
+  const sharedSectors = (body ? player.agencyCommunity?.surveys[body.id] ?? [] : []).filter(id => scanOrder().includes(id))
+  const shownSectors = [...new Set([...scanOrder().slice(0, shown), ...sharedSectors])]
   const shownSet = new Set(shownSectors)
   const scanningId = playing ? scanOrder()[shown] : next?.sector ?? null
   const freshSet = new Set(freshHere)
@@ -302,6 +303,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                 </div>
               )}
             </div>
+            <p className={styles.meta} data-testid="probe-community-survey">{sharedSectors.length}/24 sectors shared by the community. Your probe downloads earn your own observation stamp.</p>
             <div className={styles.actions}>
               {playing ? (
                 <button type="button" className={styles.ghost} data-testid="probe-skip" onClick={() => body && setPlayed(p => ({ ...p, [body.id]: mapped.length }))}>Skip</button>

@@ -228,7 +228,7 @@ export function collectProbeData<T extends ProbePlayer>(player: T, targets: read
     probes = { ...(probes ?? {}), [id]: { ...record, readings } }
     changed = true
   }
-  return changed ? addStamp({ ...player, probes }, 'probe-observation', at) : player
+  return changed ? addStamp({ ...player, probes }, 'probe-observation', at, 'deposit-survey') : player
 }
 
 export interface SurveyTotal { mineral: string; tonnes: number; sectors: number }

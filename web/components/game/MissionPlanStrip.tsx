@@ -85,7 +85,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   const runShower = showerForRunMission(mission?.id)
   const showerRun = !!runShower
   const getting = mission.customPlan?.work === 'survey' ? `Probe mapping ${mission.customPlan.amount} sectors` : mission.customPlan?.work === 'deliver' ? `Forward cache at ${target.name}` : showerRun ? 'Fragments + minerals' : [haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing'
-  const noSilo = mission.customPlan?.work !== 'survey' && !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
+  const noSilo = mission.payload?.type !== 'satellite' && mission.customPlan?.work !== 'survey' && !isOrionidsEventMission(mission) && isOwnProgramMission(mission) && !mission.construction && !mission.deliveryTargetId && !siloRoomFor(player, {}).built
 
   // Liam, 10.11: a free mining run lets the player choose the ore and how much, up to what the rocket's hold carries.
   const goalEditable = !mission.customPlan && !launched && !showerRun && mission.id !== RESOURCE_FOCUS_MISSION_ID && isFreeHaulEligibleMission(mission)

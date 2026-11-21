@@ -1,5 +1,7 @@
 'use client'
 
+import { agencySummary } from '@/lib/agency/programme'
+
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { formatCurrency } from '@/lib/format'
 import { useHelp } from '@/components/ui/useHelp'
@@ -394,6 +396,7 @@ export default function MissionBoard({
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
+  const fleet = agencySummary(player, now)
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
@@ -699,11 +702,9 @@ export default function MissionBoard({
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
                 <h2>Your space program</h2>
-                <p>Build your agency through self-directed work · {steps.filter(step => step.state === 'done').length} of {steps.length} steps complete</p>
+                <p>{fleet.owned.reduce((sum, craft) => sum + craft.owned, 0)} craft · {fleet.dataPerDay} items/day · {fleet.contributed} project contributions</p>
               </div>
-              <div className={styles.meter} role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={steps.filter(step => step.state === 'done').length} aria-label="Program progress">
-                <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
-              </div>
+
             </header>
             <div className={styles.skillTree} role="list" aria-label="Program skill tree">
               {steps.map((step, stepIndex) => <button key={step.id} type="button" role="listitem" className={styles.skillNode}

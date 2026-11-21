@@ -6,7 +6,7 @@ import { STAMP_KINDS, stampDayKey, type StampKind } from './stamps'
 export interface PassportWeek { week: string; total: number; mine: number; goal: number; reachedAt: number | null; earned: boolean }
 export interface PassportResponse { weeks: PassportWeek[] }
 const DAY = 86_400_000
-export const STAMP_LABELS: Record<StampKind, string> = { classification: 'Signal', survey: 'Survey', 'discovery-mission': 'Discovery', event: 'Sky event', 'exchange-sale': 'Trade', 'contract-run': 'Contract', 'price-alert': 'Alert', gift: 'Gift', review: 'Review', 'probe-observation': 'Probe' }
+export const STAMP_LABELS: Record<StampKind, string> = { launch: 'Launch', classification: 'Signal', survey: 'Survey', 'discovery-mission': 'Discovery', event: 'Sky event', 'exchange-sale': 'Trade', 'contract-run': 'Contract', 'price-alert': 'Alert', gift: 'Gift', review: 'Review', 'probe-observation': 'Probe' }
 export function passportDays(player: Pick<Player, 'researchStamps' | 'researchFirstStamps'>, week: string, now: number) {
   const start = Date.parse(`${week}T00:00:00Z`)
   const today = stampDayKey(now)

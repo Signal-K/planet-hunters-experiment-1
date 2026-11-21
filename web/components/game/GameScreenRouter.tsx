@@ -1,5 +1,7 @@
 'use client'
 
+import { scienceAccessPlayer } from '@/lib/agency/community'
+
 import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { addStamp } from '@/lib/research/stamps'
@@ -110,6 +112,9 @@ import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
+import { skyEventNow } from '@/lib/data'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { agencySummary } from '@/lib/agency/programme'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -492,6 +497,8 @@ function ScreenBody({
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
           onBuildGroundTelescope={() => game.buildGroundTelescope()}
+          onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
+          onDonation={(craft, donate) => game.setPlayer(player => ({ ...player, agencyDonations: { ...player.agencyDonations, [craft]: donate } }))}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
@@ -517,7 +524,7 @@ function ScreenBody({
       // Inspect still arrives here until the plate owns real TESS verdicts.
       return (
         <TessDiscoveryScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'transit' ? inspectSignal.id : undefined}
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
@@ -536,7 +543,7 @@ function ScreenBody({
     case 'asteroid-discovery':
       return (
         <AsteroidDiscoveryScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
           onBack={() => leaveInstrument('asteroid')}
@@ -550,7 +557,7 @@ function ScreenBody({
     case 'saturn-storm-search':
       return (
         <SaturnStormSearchScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
           onBack={() => leaveInstrument('saturn')}
           onLaunchImager={() => game.go('launchpad')}
@@ -565,7 +572,7 @@ function ScreenBody({
       return (
         <RadioMeteorScreen
           player={game.player}
-          eventId={receiverEventId(game.player)}
+          eventId={receiverEventId(game.player, skyEventNow(isDevLauncherEnabled()))}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
         />
@@ -788,10 +795,19 @@ function ScreenBody({
             else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
             else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'probe-observation') return game.go('probe-scan')
+            // SSL-852: a craft is launched from the Program tab; a ground telescope is built in the Data hub.
+            else if (kind === 'launch') {
+              if (!agencySummary(game.player).needsService && agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
+              requestMissionBoardTab('program')
+            }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')
-            else if (kind === 'classification' || kind === 'survey') {
+            else if (kind === 'survey') {
+              if (Object.keys(game.player.probes ?? {}).length || Object.keys(game.player.agencyCommunity?.surveys ?? {}).length) return game.go('probe-scan')
+              requestMissionBoardTab('program')
+            }
+            else if (kind === 'classification') {
               const hasInstruments = game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt
               if (hasInstruments) return game.go('instrument-hub')
               requestMissionBoardTab('program')

@@ -4,10 +4,10 @@
 format = 1
 id = "instrument-hub"
 type = "exchange-lab"
-name = "Control Station"
-summary = "One hub for investigative equipment, grouped by location. Open hands a ready item to the classify screen."
-tickets = ["SSL-496", "SSL-663"]
-qa = ["control-station"]
+name = "Data hub"
+summary = "Agency instruments, projects, daily data, contributions, shared capacity and craft condition. Open a waiting item on its instrument."
+tickets = ["SSL-496", "SSL-663", "SSL-852"]
+qa = ["control-station", "agency-programme", "craft-service"]
 
 [runtime]
 surface = "dom"

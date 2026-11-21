@@ -1,5 +1,7 @@
 'use client'
 
+import { sharedDaily } from '@/lib/agency/community'
+
 import { useEffect, useState } from 'react'
 import type { Player } from '@/lib/game-types'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
@@ -21,9 +23,9 @@ export function useInstrumentSignals(player: Player): {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const transitOnline = !!player.freeOperations && !!player.transitSatelliteLaunchedAt
+    const transitOnline = !!player.freeOperations && !!(player.transitSatelliteLaunchedAt || sharedDaily(player, 'exoplanet-hunters'))
     const deepSpaceOnline = asteroidFeedOnline(player)
-    const saturnOnline = !!player.freeOperations && !!player.saturnImagerLaunchedAt
+    const saturnOnline = !!player.freeOperations && !!(player.saturnImagerLaunchedAt || sharedDaily(player, 'saturn-storms'))
     if (!transitOnline && !deepSpaceOnline && !saturnOnline) {
       setSignals([])
       setLoading(false)
@@ -72,6 +74,11 @@ export function useInstrumentSignals(player: Player): {
     player.saturnClassifications,
     player.transitSatelliteLevel,
     player.deepSpaceTelescopeLevel,
+    player.agencyCommunity,
+    player.agencyLaunches,
+    player.agencyDonations,
+    player.craftServicedAt,
+    player.spaceStorms,
     player.satelliteTargetId,
     player.telescopeAim,
   ])

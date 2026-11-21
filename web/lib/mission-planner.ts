@@ -77,7 +77,7 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
 export function loadPlannedCargo(state: GameState, mission: Mission): GameState | null {
   const plan = mission.customPlan
   if (!plan) return state
-  if (!state.player.freeOperations || state.player.activeMission || (state.screen !== 'fab' && state.screen !== 'launchpad')) return null
+  if (!state.player.freeOperations || state.player.activeMission || (state.screen !== 'fab' && state.screen !== 'launchpad' && !(state.screen === 'rocket-buy' && state.player.stagedRockets?.some(vehicle => vehicle.id === state.player.selectedStagedRocketId && vehicle.location === 'launchpad')))) return null
   if (plan.work === 'survey' && !state.player.placed.includes('control-station')) return null
   if (plan.work === 'survey' && state.player.probes?.[plan.targetId]) return null
   const stash = { ...(state.player.stash ?? {}) }

@@ -11,6 +11,9 @@ import {
   type StationHistory,
   type StationTelescope,
 } from '@/lib/control-station-sky'
+import type { AgencyCraft } from '@/lib/agency/programme'
+import type { OrbitalCraft } from '@/lib/agency/fleet'
+import type { CraftCondition } from '@/lib/agency/condition'
 import styles from './ControlStationConsole.module.css'
 import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 
@@ -47,7 +50,14 @@ interface ControlStationConsoleProps {
   /** Opens the logbook sheet (daily research, survey scan, charts, badges). */
   onLogbook: () => void
   /** Opens the scan sheet. Present once a telescope is launched (SSL-807). */
-  scan?: { scanning: boolean; onOpen: () => void }
+  scan?: { scanning: boolean; onOpen: () => void; label?: string }
+  /** SSL-852: wear on each orbiting craft, by telescope id ('space', 'saturn'). */
+  programme?: Record<string, AgencyCraft>
+  donations?: Partial<Record<OrbitalCraft, boolean>>
+  onDonation?: (craft: OrbitalCraft, donate: boolean) => void
+  conditions?: Partial<Record<string, CraftCondition>>
+  /** Opens the servicing mission for a worn craft (the Program tab). */
+  onService?: () => void
 }
 
 const EMPTY: Record<SkyView, string> = {
@@ -101,6 +111,15 @@ const HORIZON_SPOT: Record<StationTelescope['place'], { left: number; top: numbe
   offworld: { left: 88, top: 18 },
   relay: { left: 10, top: 30 },
   probe: { left: 74, top: 44 },
+}
+
+/** Shower receivers share the relay place; a second one up at once stands high between the dome and orbit. */
+const RELAY_SPOTS: readonly { left: number; top: number }[] = [HORIZON_SPOT.relay, { left: 42, top: 12 }]
+
+function horizonSpot(scope: StationTelescope, all: readonly StationTelescope[]): { left: number; top: number } {
+  if (scope.place !== 'relay') return HORIZON_SPOT[scope.place]
+  const nth = all.filter(t => t.place === 'relay').indexOf(scope)
+  return RELAY_SPOTS[Math.min(nth, RELAY_SPOTS.length - 1)]
 }
 
 /** SSL-748: where each telescope stands, shown on its desk card next to the same icon as on the horizon. */
@@ -172,6 +191,11 @@ export function ControlStationConsole({
   notice,
   onLogbook,
   scan,
+  conditions,
+  programme,
+  donations,
+  onDonation,
+  onService,
 }: ControlStationConsoleProps) {
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
@@ -256,7 +280,7 @@ export function ControlStationConsole({
               aria-pressed={scope.id === telescopeId}
               aria-label={`${scope.name}, ${scope.status}`}
               disabled={!scope.built}
-              style={{ left: `${HORIZON_SPOT[scope.place].left}%`, top: `${HORIZON_SPOT[scope.place].top}%` }}
+              style={{ left: `${horizonSpot(scope, telescopes).left}%`, top: `${horizonSpot(scope, telescopes).top}%` }}
               onClick={() => toggle(scope.id)}
             >
               <TelescopeIcon place={scope.place} />
@@ -303,6 +327,32 @@ export function ControlStationConsole({
                 </span>
                 {scope.built && <span className={styles.counter} data-ready={scope.readyCount > 0} aria-label={`${scope.readyCount} ready`}>{String(scope.readyCount).padStart(2, '0')}</span>}
               </button>
+              {programme?.[scope.id] && (() => {
+                const craft = programme[scope.id]
+                return <div className={styles.programme} data-testid={`agency-craft-${craft.id}`}>
+                  <p>{craft.projects.map(project => project.name).join(' · ')}</p>
+                  <p>{craft.owned} craft · {craft.dataPerDay} items/day · {scope.readyCount} waiting</p>
+                  <p>{craft.contributed} project contributions{craft.id === 'ground-telescope' || craft.id === 'space-telescope' ? ' · asteroid totals shared across telescopes' : ''}</p>
+                  {(craft.id === 'space-telescope' || craft.id === 'saturn-satellite') && craft.owned > 1 && onDonation && <button type="button" className={styles.build} aria-pressed={!!donations?.[craft.id]} onClick={() => onDonation(craft.id as OrbitalCraft, !donations?.[craft.id as OrbitalCraft])}>{donations?.[craft.id] ? 'Keep extra capacity' : 'Share extra capacity'}</button>}
+                  {(craft.id === 'space-telescope' || craft.id === 'saturn-satellite') && donations?.[craft.id] && <p>Extra craft feed the community queue. Your first craft keeps sending your data. Sharing grants no stamp until someone works the data.</p>}
+                </div>
+              })()}
+              {scope.community && <p className={styles.placeNote}>Meteor echoes · shared receiver · classify recordings to contribute</p>}
+              {conditions?.[scope.id] && (() => {
+                const condition = conditions[scope.id]!
+                const label = condition.state === 'failed' ? 'A craft has failed' : condition.state === 'worn' ? 'A craft sends half data' : 'Good'
+                return (
+                  <div className={styles.condition} data-testid="control-station-condition" data-state={condition.state}>
+                    <span className={styles.conditionBar} aria-hidden="true"><i style={{ width: `${condition.percent}%` }} /></span>
+                    <span className={styles.conditionText}>
+                      Lowest condition {condition.percent}% · {label}{condition.storms > 0 ? ` · ${condition.storms} solar storm${condition.storms === 1 ? '' : 's'}` : ''}
+                    </span>
+                    {condition.needsService && onService && (
+                      <button type="button" className={styles.build} data-testid="control-station-service" onClick={onService}>Service</button>
+                    )}
+                  </div>
+                )
+              })()}
               {scope.id === 'ground' && scope.built && ground && ground.unplaced > 0 && (
                 <p className={styles.placeNote} data-testid="control-station-place-note">
                   {ground.unplaced === 1 ? 'One telescope waits' : `${ground.unplaced} telescopes wait`} in the Base's Unplaced tray. Place it to observe.
@@ -333,7 +383,7 @@ export function ControlStationConsole({
             <span>classified</span>
           </div>
           <div className={styles.historyKeys}>
-            {scan && <button type="button" className={`${styles.logbook} ${styles.scanKey}`} data-testid="control-station-scan" data-scanning={scan.scanning || undefined} onClick={scan.onOpen}>{scan.scanning ? 'Scanning…' : 'Scan a body'}</button>}
+            {scan && <button type="button" className={`${styles.logbook} ${styles.scanKey}`} data-testid="control-station-scan" data-scanning={scan.scanning || undefined} onClick={scan.onOpen}>{scan.scanning ? 'Scanning…' : scan.label ?? 'Scan a body'}</button>}
             <button type="button" className={styles.logbook} data-testid="control-station-logbook" onClick={onLogbook}>Logbook</button>
           </div>
         </div>

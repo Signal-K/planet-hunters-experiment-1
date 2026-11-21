@@ -359,6 +359,10 @@ export interface Player {
   // Saturn imager (SSL-492): a third launched instrument. It has no hub
   // building or level; launching it opens the Cassini storm-cloud feed.
   saturnImagerLaunchedAt?: number | null
+  /** SSL-852: when each orbiting craft was last put right by a servicing mission (lib/agency/condition.ts). */
+  craftServicedAt?: Partial<Record<'space-telescope' | 'saturn-satellite', number>>
+  /** SSL-852: geomagnetic storm days seen in NOAA's K-index feed, UTC day → highest Kp (5 and above only). */
+  spaceStorms?: Record<string, number>
   saturnClassifications?: Record<string, SaturnClassification>
   /** SSL-714: Radio Meteor Zoo spectrograms this player boxed, keyed by Panoptes subject id. Kept on Landnam's side only. */
   radioMeteorClassifications?: Record<string, import('@/lib/radio-meteors').RadioMeteorClassification>
@@ -418,15 +422,19 @@ export interface Player {
    * Last UTC digest date notified per owned instrument. Persisting this keeps
    * the daily downlink from re-notifying after reloads or React remounts.
    */
+  agencyCommunity?: import('@/lib/agency/community').AgencyCommunity
+  agencyLaunches?: Record<string, import('@/lib/agency/fleet').AgencyLaunch>
+  agencyDonations?: Partial<Record<import('@/lib/agency/fleet').OrbitalCraft, boolean>>
   instrumentDigestNotifiedOn?: Record<string, string>
   /** UTC day -> research tasks done that day (SSL-663). Drives the stamp calendar. */
+  researchStampProjects?: Record<string, Partial<Record<import('@/lib/research/stamps').StampKind, string>>>
   researchFirstStamps?: Record<string, { kind: import('@/lib/research/stamps').StampKind; at: number }>
   researchPassportWeeks?: Record<string, import('@/lib/research/passport').PassportWeek>
-  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation')[]>
+  researchStamps?: Record<string, ('classification' | 'survey' | 'discovery-mission' | 'event' | 'exchange-sale' | 'contract-run' | 'price-alert' | 'gift' | 'review' | 'probe-observation' | 'launch')[]>
   /** Community research path locked for one UTC week (SSL-694). Resets when the week changes. */
   /** Where each launched telescope was pointed this week (the sky asks again every Monday). */
   telescopeAim?: Partial<Record<'transit' | 'deep-space' | 'saturn', { week: string; aim?: { ra: number; dec: number }; sector?: string }>>
-  researchPath?: { week: string; path: 'explorer' | 'trader'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
+  researchPath?: { week: string; path: 'explorer' | 'trader' | 'agency'; claimedSteps?: number[]; pointing?: 'transit' | 'deep-space' | 'saturn'; aim?: { ra: number; dec: number } }
   /** Sky fields the player's telescopes have mapped, by field id (SSL-788). */
   skyMap?: Record<string, { week: string; instrument: 'transit' | 'deep-space' | 'saturn' }>
   /** Permanent regular fragments earned from completed weekly research paths. */

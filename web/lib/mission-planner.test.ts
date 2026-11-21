@@ -60,6 +60,15 @@ describe('self-planned missions', () => {
     expect(deliveryCache(merged.player, target.id)).toEqual({ iron: 3 })
     expect(loadPlannedCargo({ ...state, player: { ...state.player, stash: { iron: 2 } } }, mission)).toBeNull()
   })
+  it('loads a plan from review only when a real selected vehicle is already on the pad', () => {
+    const mission = missionFromPlan(plan, target, STATIC_CATALOG.minerals)
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'rocket-buy' as const, missionId: plan.id, targetId: target.id, player: player() }
+    expect(loadPlannedCargo(state, mission)).toBeNull()
+    const vehicle = { id: 'owned-pad', rocketId: 'explorer', rocket: state.rocket, location: 'launchpad' as const, source: 'company' as const, missionId: plan.id, targetId: target.id }
+    const ready = { ...state, player: { ...state.player, stagedRockets: [vehicle], selectedStagedRocketId: vehicle.id } }
+    expect(loadPlannedCargo(ready, mission)?.player.stash?.iron).toBe(9)
+    expect(loadPlannedCargo({ ...ready, player: { ...ready.player, stagedRockets: [{ ...vehicle, location: 'hangar' }] } }, mission)).toBeNull()
+  })
   it('limits a planned survey to its chosen coverage and keeps ordinary probes mapping all 24 sectors', () => {
     const at = 1000
     const limited = placeProbe(player(), target.id, at, 6)
