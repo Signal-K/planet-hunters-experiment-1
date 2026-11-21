@@ -31,4 +31,6 @@ don't seem to be working on portrait mode."
   pause is a round button at the top right. The palette stays Out There's: ink, paper
   white, green for go and red for low.
 
+> The button and gauge styling above is replaced by *Field HUD is light and flat (2026-11-21)*: flat discs, no lips, and a frosted strip instead of a dark panel.
+
 Built in TakeOn `FieldRenderer` and the `@takeon/ui` field HUD (`tk-ot-*`).
