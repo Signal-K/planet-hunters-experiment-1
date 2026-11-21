@@ -1,7 +1,7 @@
 // Validation for every authoring document. Problems carry a file, line and column so the Studio, the CLI and the editor
 // can all point at the exact bytes. Schema checks come from shared/authoring/schema/; cross-reference rules live here
 // and only run once a document has passed its schema, so they can rely on the shapes in docs.ts.
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { withDials } from './dials.ts'
 import { readSceneText } from './fixtures-merge.ts'
 import { basename, join } from 'node:path'
@@ -9,9 +9,10 @@ import { closest, validateSchema } from './schema.ts'
 import type { Schema } from './schema.ts'
 import { parseToml, spanForPath } from './toml.ts'
 import type { ParsedToml, Path } from './toml.ts'
+import type { TemplateDoc } from './docs.ts'
 import type { FeedbackDoc, FlowDoc, JourneyContract, MechanicContract, MissionDoc, SceneDoc, SceneObject, WorldDoc, WorldEntity } from './docs.ts'
 
-export type DocKind = 'world' | 'scene' | 'mission' | 'feedback' | 'flow'
+export type DocKind = 'world' | 'scene' | 'mission' | 'feedback' | 'flow' | 'template'
 
 export interface Diagnostic {
   file: string
@@ -45,10 +46,10 @@ export interface AuthoringContext {
 
 export const AUTHORING_DIR = 'shared/authoring'
 
-const KIND_DIRS = { worlds: 'world', scenes: 'scene', missions: 'mission', feedback: 'feedback', flows: 'flow' } as const
+const KIND_DIRS = { worlds: 'world', scenes: 'scene', missions: 'mission', feedback: 'feedback', flows: 'flow', templates: 'template' } as const
 
 export function docKindOf(relPath: string): DocKind | null {
-  const match = relPath.replaceAll('\\', '/').match(/^shared\/authoring\/(worlds|scenes|missions|feedback|flows)\/[^/]+\.toml$/)
+  const match = relPath.replaceAll('\\', '/').match(/^shared\/authoring\/(worlds|scenes|missions|feedback|flows|templates)\/[^/]+\.toml$/)
   return match ? KIND_DIRS[match[1] as keyof typeof KIND_DIRS] : null
 }
 
@@ -316,7 +317,50 @@ const flowRules: Rule<FlowDoc> = ({ value, relPath, context, report }) => {
   })
 }
 
-const missionRules: Rule<MissionDoc> = ({ value, report }) => {
+/** Template id → family, read straight from shared/authoring/templates so missions and forks can be checked against it. */
+export function templateFamilies(root: string): Map<string, TemplateDoc['family']> {
+  const out = new Map<string, TemplateDoc['family']>()
+  const dir = join(root, AUTHORING_DIR, 'templates')
+  if (!existsSync(dir)) return out
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith('.toml')) continue
+    const parsed = parseToml(readFileSync(join(dir, name), 'utf8'))
+    if (!parsed.ok) continue
+    const value = parsed.doc.value as Partial<TemplateDoc>
+    if (typeof value.id === 'string' && typeof value.family === 'string') out.set(value.id, value.family)
+  }
+  return out
+}
+
+const templateRules: Rule<TemplateDoc> = ({ value, relPath, context, report }) => {
+  const stem = basename(relPath, '.toml')
+  if (value.id !== stem) report(['id'], 'id-file', `template id "${value.id}" must match the file name "${stem}"`)
+  const families = templateFamilies(context.root)
+  if (value.family === 'event') {
+    if (!value.fork_of) report(['family'], 'event-fork', 'an event must fork another template (fork_of)')
+    else if (!families.has(value.fork_of)) report(['fork_of'], 'template', `no template "${value.fork_of}"; known: ${[...families.keys()].join(', ')}`)
+    else if (families.get(value.fork_of) === 'event') report(['fork_of'], 'event-fork', 'an event forks a contract or program, not another event')
+    if (!value.window) report(['family'], 'event-window', 'an event says when it runs (window)')
+  } else {
+    if (value.fork_of) report(['fork_of'], 'event-fork', 'only events fork other templates')
+    if (!value.beat?.length) report(['beat'], 'beats', 'a template needs its beats')
+  }
+  if (value.family === 'feed') {
+    if (!value.sources?.length) report(['family'], 'feed-source', 'a feed names the templates whose hardware sends it (sources)')
+    value.sources?.forEach((source, i) => { if (!families.has(source)) report(['sources', i], 'template', `no template "${source}"`) })
+  }
+  const seen = new Set<string>()
+  value.beat?.forEach((beat, i) => {
+    if (seen.has(beat.id)) report(['beat', i, 'id'], 'duplicate-id', `beat id "${beat.id}" is used twice`)
+    seen.add(beat.id)
+  })
+}
+
+const missionRules: Rule<MissionDoc> = ({ value, context, report }) => {
+  const families = templateFamilies(context.root)
+  if (!families.has(value.template)) report(['template'], 'template', `no template "${value.template}"; known: ${[...families.keys()].join(', ')}`)
+  else if (families.get(value.template) === 'feed') report(['template'], 'template', 'feeds are classification work from probes, not missions on the board')
+  else if (value.client !== undefined && families.get(value.template) === 'program') report(['template'], 'template-client', 'program templates are the player\'s own work; a mission with a client needs a contract template', 'warning')
   if (value.payout.francs !== undefined && value.payout.floor_sequence !== undefined) report(['payout'], 'payout-form', 'give only one of francs or floor_sequence')
   if (value.delivery_target !== undefined && value.target === undefined) report(['delivery_target'], 'delivery-target', 'a delivery leg needs a target to mine at first')
 }
@@ -370,7 +414,7 @@ export function validateDocument(text: string, relPath: string, context: Authori
     diagnostics.push({ file, severity, code, message, line: span.line, column: span.column, endLine: span.endLine, endColumn: span.endColumn, path })
   }
   if (!kind) {
-    report([], 'location', `${file} is not in worlds/, scenes/, missions/, flows/ or feedback/ under ${AUTHORING_DIR}/`)
+    report([], 'location', `${file} is not in worlds/, scenes/, missions/, flows/, templates/ or feedback/ under ${AUTHORING_DIR}/`)
     return { doc, diagnostics }
   }
   const issues = validateSchema(doc.value, loadSchema(context.root, kind))
@@ -382,6 +426,7 @@ export function validateDocument(text: string, relPath: string, context: Authori
     else if (kind === 'mission') missionRules({ ...scope, value: doc.value as unknown as MissionDoc })
     else if (kind === 'world') worldRules({ ...scope, value: doc.value as unknown as WorldDoc })
     else if (kind === 'flow') flowRules({ ...scope, value: doc.value as unknown as FlowDoc })
+    else if (kind === 'template') templateRules({ ...scope, value: doc.value as unknown as TemplateDoc })
     else feedbackRules({ ...scope, value: doc.value as unknown as FeedbackDoc })
   }
   diagnostics.sort((a, b) => a.line - b.line || a.column - b.column)

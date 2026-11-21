@@ -6,6 +6,7 @@ id = "freeops-self-directed-mining"
 title = "Self-Directed Mining Run"
 brief = "No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price."
 tag = "FREE OPS"
+template = "program-free-mining"
 difficulty = "L2"
 locked = false
 sequence = "free-ops"

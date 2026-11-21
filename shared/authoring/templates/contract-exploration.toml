@@ -1,0 +1,59 @@
+#:schema ../schema/template.schema.json
+# Contract: a client pays for knowledge of a place: mapped sectors, deposits, landmarks.
+format = 1
+id = "contract-exploration"
+title = "Exploration contract"
+family = "contract"
+summary = "A client wants a body surveyed: geoscan its sectors from orbit, land to confirm what the scan found, report back."
+vehicle = "lander"
+
+[match]
+tags = ["SURVEY", "EXPLORE"]
+
+[[beat]]
+id = "brief"
+label = "Contract"
+view = "board"
+goal = "See which body and how many sectors the client wants mapped."
+controls = ["accept"]
+
+[[beat]]
+id = "launch"
+label = "Launch"
+view = "pad"
+goal = "Ignite, then drop each stage as it burns out."
+controls = ["ignite", "stage"]
+
+[[beat]]
+id = "transit"
+label = "Transit"
+view = "map"
+goal = "Hop to the target."
+controls = ["hop", "choose"]
+
+[[beat]]
+id = "survey"
+label = "Survey"
+view = "orbit"
+goal = "Tap each sector to geoscan it; each scan costs power."
+controls = ["geoscan", "pick-site"]
+repeat = true
+
+[[beat]]
+id = "confirm"
+label = "Confirm"
+view = "field"
+goal = "Land and drive to the marked find to sample it."
+controls = ["thrust", "tilt", "drive", "scan", "drill"]
+
+[[beat]]
+id = "debrief"
+label = "Report"
+view = "debrief"
+goal = "Fly home and hand in the survey."
+controls = ["take-off", "hop", "submit"]
+
+[outcome]
+success = "Every requested sector is mapped and the find is confirmed."
+fail = "Power runs out before the sectors are mapped."
+unlocks = "Mapped deposits become mining offers."

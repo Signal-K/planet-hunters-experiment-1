@@ -40,13 +40,19 @@ describe('compileAll in a scratch repo', () => {
     mkdirSync(join(root, 'web/lib'), { recursive: true })
     writeFileSync(join(root, 'web/lib/devPresets.ts'), "case 'cp-mid':\ncase 'transport-hub':\n")
     for (const name of ['client-contract', 'free-mining']) cpSync(join(REPO, `shared/authoring/missions/${name}.toml`), join(root, `shared/authoring/missions/${name}.toml`))
+    cpSync(join(REPO, 'shared/authoring/templates'), join(root, 'shared/authoring/templates'), { recursive: true })
   })
   afterEach(() => rmSync(root, { recursive: true, force: true }))
+  const declared0 = (r: string) => JSON.parse(readFileSync(join(r, 'shared/missions/authored-missions.json'), 'utf8'))
 
   it('writes the mission declarations for web and native, then reports them current', () => {
     const first = compileAll({ root, write: true })
     expect(first.ok).toBe(true)
-    expect(first.files.map(f => f.status)).toEqual(['written', 'written', 'written'])
+    // Three mission outputs and three template outputs (SSL-870).
+    expect(first.files.map(f => f.status)).toEqual(['written', 'written', 'written', 'written', 'written', 'written'])
+    expect(declared0(root).missions.map((m: { template: string }) => m.template)).toEqual(['contract-delivery', 'program-free-mining'])
+    const templates = JSON.parse(readFileSync(join(root, 'shared/missions/mission-templates.json'), 'utf8'))
+    expect(templates.templates.find((t: { id: string }) => t.id === 'event-meteor-run').beats.length).toBeGreaterThan(1)
     const declared = JSON.parse(readFileSync(join(root, 'shared/missions/authored-missions.json'), 'utf8'))
     expect(declared.missions.map((m: { id: string }) => m.id)).toEqual(['lnm_m3_relay_bennu_vesta', 'freeops-self-directed-mining'])
     expect(declared.missions[0].payout).toEqual({ floor_sequence: 3, affinity: 3 })

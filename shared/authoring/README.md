@@ -9,6 +9,10 @@ start fixture, one objective, and an observable completion state.
 - Edit `scenes/<id>.toml` for scene objects and the web/iOS implementation map.
 - Edit `missions/<id>.toml` for the shared mission declaration. Its mandatory
   `[harness]` points to the independent web preset and iOS `SceneCatalog` id.
+- Edit `templates/<id>.toml` for a mission type: family (contract, program,
+  feed, event), beats with their view, goal and controls, and the outcome.
+  Every mission names one in its `template` field; events fork another
+  template with `fork_of`.
 - Register player-facing scene and mission fixtures in `qa/scenes.json`.
 - Run `node scripts/authoring.mjs check` after source changes. Use `compile`
   only to regenerate the runtime manifests.

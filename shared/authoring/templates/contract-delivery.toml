@@ -1,0 +1,72 @@
+#:schema ../schema/template.schema.json
+# Contract: carry cargo to a depot, either loaded at home or mined on the way (a relay).
+format = 1
+id = "contract-delivery"
+title = "Delivery and relay contract"
+family = "contract"
+summary = "A client needs cargo dropped at a depot on another body. Straight deliveries load at home; relays mine at one body and drop at a second."
+vehicle = "lander"
+
+[match]
+id_prefixes = ["lnm_m3_relay_", "lnm_relay_"]
+tags = ["DELIVERY", "TRANSPORT"]
+
+[[beat]]
+id = "brief"
+label = "Contract"
+view = "board"
+goal = "Read the pickup, the drop and the pay."
+controls = ["accept"]
+
+[[beat]]
+id = "fit"
+label = "Fit out"
+view = "hangar"
+goal = "Load cargo pods and enough fuel for both legs."
+controls = ["fit-loadout", "cargo"]
+
+[[beat]]
+id = "launch"
+label = "Launch"
+view = "pad"
+goal = "Ignite, then drop each stage as it burns out."
+controls = ["ignite", "stage"]
+
+[[beat]]
+id = "pickup"
+label = "Pick up"
+view = "field"
+goal = "Relays only: land at the pickup body and mine the cargo."
+controls = ["thrust", "tilt", "drive", "scan", "laser", "cargo"]
+
+[[beat]]
+id = "transit"
+label = "Transit"
+view = "map"
+goal = "Hop to the depot; the map warns before a hop you can't fuel home from."
+controls = ["hop", "choose"]
+
+[[beat]]
+id = "dock"
+label = "Dock"
+view = "dock"
+goal = "Line up with the depot port and close slowly."
+controls = ["thrust", "tilt", "dock"]
+
+[[beat]]
+id = "drop"
+label = "Unload"
+view = "dock"
+goal = "Drag every crate to the depot hatch."
+controls = ["unload"]
+
+[[beat]]
+id = "debrief"
+label = "Debrief"
+view = "debrief"
+goal = "Fly home and get paid for both jobs."
+controls = ["take-off", "hop", "store"]
+
+[outcome]
+success = "Every crate reaches the depot and the vehicle gets home."
+fail = "Out of fuel between legs, or hard docking cracks the cargo."

@@ -1,0 +1,38 @@
+#:schema ../schema/template.schema.json
+# Feed: data your probes and satellites send home. Classification scenes live here, not on the mission board.
+format = 1
+id = "feed-classification"
+title = "Classify a feed"
+family = "feed"
+summary = "Your satellites and probes send data home; classify it to find planets, storms, asteroids and meteors."
+vehicle = "none"
+sources = ["program-launch"]
+
+[match]
+tags = ["CITIZEN SCIENCE", "FEED"]
+
+[[beat]]
+id = "open"
+label = "Feed"
+view = "feed"
+goal = "Open today's frames from your hardware."
+controls = ["accept"]
+
+[[beat]]
+id = "classify"
+label = "Classify"
+view = "feed"
+goal = "Mark what you see in each frame."
+controls = ["classify"]
+repeat = true
+
+[[beat]]
+id = "submit"
+label = "Submit"
+view = "debrief"
+goal = "Send the classifications; finds unlock new targets."
+controls = ["submit"]
+
+[outcome]
+success = "The day's frames are classified."
+unlocks = "Discoveries become survey and exploration targets."

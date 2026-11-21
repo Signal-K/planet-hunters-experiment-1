@@ -1,0 +1,25 @@
+#:schema ../schema/template.schema.json
+# Event: a meteor shower window forks free mining. Fireballs streak over the field; catch them while you mine.
+format = 1
+id = "event-meteor-run"
+title = "Meteor shower run"
+family = "event"
+fork_of = "program-free-mining"
+window = "While a meteor shower is active (Orionids, Leonids, Geminids)."
+summary = "Free mining during a shower: fly to the stream's debris field, mine the impact sites and catch fireballs before they land."
+vehicle = "lander"
+
+[match]
+id_prefixes = ["self-directed-orionids", "self-directed-leonids", "self-directed-geminids", "self-directed-special-"]
+
+[[beat]]
+id = "mine"
+label = "Mine"
+view = "field"
+goal = "Mine the impact sites; tap a fireball before it lands to catch it."
+controls = ["drive", "scan", "laser", "cargo", "catch"]
+repeat = true
+
+[outcome]
+success = "The haul is home; catches count toward the shower badge chain."
+fail = "The window closes before you launch."

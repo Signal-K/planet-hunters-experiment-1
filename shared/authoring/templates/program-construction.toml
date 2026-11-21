@@ -1,0 +1,47 @@
+#:schema ../schema/template.schema.json
+# Program: grow your own base. Gather materials, then raise the next structure.
+format = 1
+id = "program-construction"
+title = "Build your base"
+family = "program"
+summary = "Gather what the next structure needs over as many runs as it takes, then raise it at your base."
+vehicle = "lander"
+
+[match]
+ids = ["focus-resource-mining"]
+id_prefixes = ["program-build-"]
+tags = ["RESOURCE", "BUILD", "PROGRAM"]
+
+[[beat]]
+id = "plan"
+label = "Plan"
+view = "base"
+goal = "Pick the structure; its blueprint shows what is missing."
+controls = ["accept"]
+
+[[beat]]
+id = "gather"
+label = "Gather"
+view = "field"
+goal = "Fly out and mine the missing materials."
+controls = ["ignite", "stage", "hop", "thrust", "tilt", "drive", "scan", "laser", "cargo"]
+repeat = true
+
+[[beat]]
+id = "store"
+label = "Store"
+view = "debrief"
+goal = "Store each haul; the blueprint strip fills."
+controls = ["store"]
+repeat = true
+
+[[beat]]
+id = "build"
+label = "Build"
+view = "base"
+goal = "Drag materials onto the blueprint, then raise it."
+controls = ["feed-blueprint", "raise"]
+
+[outcome]
+success = "The structure stands at your base for good."
+unlocks = "What the structure does: storage, fuel, power, fabrication, a launch pad."

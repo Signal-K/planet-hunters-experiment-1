@@ -1,0 +1,1221 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "contract-construction",
+      "title": "Construction contract",
+      "family": "contract",
+      "summary": "A client wants a structure raised: haul the materials, feed the blueprint, raise it.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [],
+        "tags": [
+          "CONSTRUCT"
+        ]
+      },
+      "beats": [
+        {
+          "id": "brief",
+          "label": "Contract",
+          "view": "board",
+          "goal": "See the blueprint, the materials it needs and the pay.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "gather",
+          "label": "Gather",
+          "view": "field",
+          "goal": "Mine the materials over as many runs as it takes.",
+          "controls": [
+            "drive",
+            "scan",
+            "laser",
+            "cargo"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "haul",
+          "label": "Haul",
+          "view": "map",
+          "goal": "Fly the materials to the build site.",
+          "controls": [
+            "ignite",
+            "stage",
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "build",
+          "label": "Build",
+          "view": "base",
+          "goal": "Drag materials onto the glowing parts of the blueprint, then raise it.",
+          "controls": [
+            "feed-blueprint",
+            "raise"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief",
+          "view": "debrief",
+          "goal": "Hand over the structure and get paid.",
+          "controls": [
+            "store"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "drive",
+        "scan",
+        "laser",
+        "cargo",
+        "ignite",
+        "stage",
+        "hop",
+        "feed-blueprint",
+        "raise",
+        "store"
+      ],
+      "outcome": {
+        "success": "The structure stands at the client's site.",
+        "fail": "The contract window closes before it is raised."
+      }
+    },
+    {
+      "id": "contract-delivery",
+      "title": "Delivery and relay contract",
+      "family": "contract",
+      "summary": "A client needs cargo dropped at a depot on another body. Straight deliveries load at home; relays mine at one body and drop at a second.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [
+          "lnm_m3_relay_",
+          "lnm_relay_"
+        ],
+        "tags": [
+          "DELIVERY",
+          "TRANSPORT"
+        ]
+      },
+      "beats": [
+        {
+          "id": "brief",
+          "label": "Contract",
+          "view": "board",
+          "goal": "Read the pickup, the drop and the pay.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "fit",
+          "label": "Fit out",
+          "view": "hangar",
+          "goal": "Load cargo pods and enough fuel for both legs.",
+          "controls": [
+            "fit-loadout",
+            "cargo"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "pickup",
+          "label": "Pick up",
+          "view": "field",
+          "goal": "Relays only: land at the pickup body and mine the cargo.",
+          "controls": [
+            "thrust",
+            "tilt",
+            "drive",
+            "scan",
+            "laser",
+            "cargo"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the depot; the map warns before a hop you can't fuel home from.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "dock",
+          "label": "Dock",
+          "view": "dock",
+          "goal": "Line up with the depot port and close slowly.",
+          "controls": [
+            "thrust",
+            "tilt",
+            "dock"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "drop",
+          "label": "Unload",
+          "view": "dock",
+          "goal": "Drag every crate to the depot hatch.",
+          "controls": [
+            "unload"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief",
+          "view": "debrief",
+          "goal": "Fly home and get paid for both jobs.",
+          "controls": [
+            "take-off",
+            "hop",
+            "store"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "fit-loadout",
+        "cargo",
+        "ignite",
+        "stage",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "laser",
+        "hop",
+        "choose",
+        "dock",
+        "unload",
+        "take-off",
+        "store"
+      ],
+      "outcome": {
+        "success": "Every crate reaches the depot and the vehicle gets home.",
+        "fail": "Out of fuel between legs, or hard docking cracks the cargo."
+      }
+    },
+    {
+      "id": "contract-exploration",
+      "title": "Exploration contract",
+      "family": "contract",
+      "summary": "A client wants a body surveyed: geoscan its sectors from orbit, land to confirm what the scan found, report back.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [],
+        "tags": [
+          "SURVEY",
+          "EXPLORE"
+        ]
+      },
+      "beats": [
+        {
+          "id": "brief",
+          "label": "Contract",
+          "view": "board",
+          "goal": "See which body and how many sectors the client wants mapped.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "survey",
+          "label": "Survey",
+          "view": "orbit",
+          "goal": "Tap each sector to geoscan it; each scan costs power.",
+          "controls": [
+            "geoscan",
+            "pick-site"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "confirm",
+          "label": "Confirm",
+          "view": "field",
+          "goal": "Land and drive to the marked find to sample it.",
+          "controls": [
+            "thrust",
+            "tilt",
+            "drive",
+            "scan",
+            "drill"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Report",
+          "view": "debrief",
+          "goal": "Fly home and hand in the survey.",
+          "controls": [
+            "take-off",
+            "hop",
+            "submit"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "ignite",
+        "stage",
+        "hop",
+        "choose",
+        "geoscan",
+        "pick-site",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "drill",
+        "take-off",
+        "submit"
+      ],
+      "outcome": {
+        "success": "Every requested sector is mapped and the find is confirmed.",
+        "fail": "Power runs out before the sectors are mapped.",
+        "unlocks": "Mapped deposits become mining offers."
+      }
+    },
+    {
+      "id": "contract-mining",
+      "title": "Mining contract",
+      "family": "contract",
+      "summary": "A client wants a set amount of minerals from one body. Scan for the ore, cut it with the laser and fly it home.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [
+          "probe-contract-"
+        ],
+        "tags": [
+          "STARTER",
+          "BULK",
+          "PROSPECT",
+          "COMMAND",
+          "MINING"
+        ]
+      },
+      "beats": [
+        {
+          "id": "brief",
+          "label": "Contract",
+          "view": "board",
+          "goal": "Read what the client wants and what it pays.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "fit",
+          "label": "Fit out",
+          "view": "hangar",
+          "goal": "Load a laser, tanks and enough cargo pods for the order.",
+          "controls": [
+            "fit-loadout"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target; each hop costs fuel.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "orbit",
+          "label": "Orbit",
+          "view": "orbit",
+          "goal": "Geoscan the surface and pick a landing site on a vein.",
+          "controls": [
+            "geoscan",
+            "pick-site"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "land",
+          "label": "Land",
+          "view": "field",
+          "goal": "Hold to thrust and steer onto the pad ring.",
+          "controls": [
+            "thrust",
+            "tilt"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "mine",
+          "label": "Mine",
+          "view": "field",
+          "goal": "Scan, drive to the ore, cut it with the laser until the order is in the hold.",
+          "controls": [
+            "drive",
+            "scan",
+            "laser",
+            "cargo",
+            "drop-cargo"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "return",
+          "label": "Fly home",
+          "view": "map",
+          "goal": "Take off and hop home.",
+          "controls": [
+            "take-off",
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief",
+          "view": "debrief",
+          "goal": "Hand over the order and get paid.",
+          "controls": [
+            "store",
+            "sell"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "fit-loadout",
+        "ignite",
+        "stage",
+        "hop",
+        "choose",
+        "geoscan",
+        "pick-site",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "laser",
+        "cargo",
+        "drop-cargo",
+        "take-off",
+        "store",
+        "sell"
+      ],
+      "outcome": {
+        "success": "The ordered minerals reach the client.",
+        "fail": "Hull reaches zero or the player aborts; the cargo is lost.",
+        "unlocks": "Client affinity and larger orders."
+      }
+    },
+    {
+      "id": "event-meteor-run",
+      "title": "Meteor shower run",
+      "family": "event",
+      "fork_of": "program-free-mining",
+      "window": "While a meteor shower is active (Orionids, Leonids, Geminids).",
+      "summary": "Free mining during a shower: fly to the stream's debris field, mine the impact sites and catch fireballs before they land.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [
+          "self-directed-orionids",
+          "self-directed-leonids",
+          "self-directed-geminids",
+          "self-directed-special-"
+        ],
+        "tags": []
+      },
+      "beats": [
+        {
+          "id": "pick",
+          "label": "Target",
+          "view": "map",
+          "goal": "Pick a target; probe finds are marked.",
+          "controls": [
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "orbit",
+          "label": "Orbit",
+          "view": "orbit",
+          "goal": "Geoscan and pick a landing site.",
+          "controls": [
+            "geoscan",
+            "pick-site"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "land",
+          "label": "Land",
+          "view": "field",
+          "goal": "Hold to thrust and steer onto the pad ring.",
+          "controls": [
+            "thrust",
+            "tilt"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "mine",
+          "label": "Mine",
+          "view": "field",
+          "goal": "Mine the impact sites; tap a fireball before it lands to catch it.",
+          "controls": [
+            "drive",
+            "scan",
+            "laser",
+            "cargo",
+            "catch"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "return",
+          "label": "Fly home",
+          "view": "map",
+          "goal": "Take off and hop home.",
+          "controls": [
+            "take-off",
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Haul",
+          "view": "debrief",
+          "goal": "Store the haul at base or sell it.",
+          "controls": [
+            "store",
+            "sell"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "hop",
+        "ignite",
+        "stage",
+        "choose",
+        "geoscan",
+        "pick-site",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "laser",
+        "cargo",
+        "catch",
+        "take-off",
+        "store",
+        "sell"
+      ],
+      "outcome": {
+        "success": "The haul is home; catches count toward the shower badge chain.",
+        "fail": "The window closes before you launch."
+      }
+    },
+    {
+      "id": "feed-classification",
+      "title": "Classify a feed",
+      "family": "feed",
+      "summary": "Your satellites and probes send data home; classify it to find planets, storms, asteroids and meteors.",
+      "vehicle": "none",
+      "sources": [
+        "program-launch"
+      ],
+      "match": {
+        "ids": [],
+        "id_prefixes": [],
+        "tags": [
+          "CITIZEN SCIENCE",
+          "FEED"
+        ]
+      },
+      "beats": [
+        {
+          "id": "open",
+          "label": "Feed",
+          "view": "feed",
+          "goal": "Open today's frames from your hardware.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "classify",
+          "label": "Classify",
+          "view": "feed",
+          "goal": "Mark what you see in each frame.",
+          "controls": [
+            "classify"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "submit",
+          "label": "Submit",
+          "view": "debrief",
+          "goal": "Send the classifications; finds unlock new targets.",
+          "controls": [
+            "submit"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "classify",
+        "submit"
+      ],
+      "outcome": {
+        "success": "The day's frames are classified.",
+        "unlocks": "Discoveries become survey and exploration targets."
+      }
+    },
+    {
+      "id": "program-construction",
+      "title": "Build your base",
+      "family": "program",
+      "summary": "Gather what the next structure needs over as many runs as it takes, then raise it at your base.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [
+          "focus-resource-mining"
+        ],
+        "id_prefixes": [
+          "program-build-"
+        ],
+        "tags": [
+          "RESOURCE",
+          "BUILD",
+          "PROGRAM"
+        ]
+      },
+      "beats": [
+        {
+          "id": "plan",
+          "label": "Plan",
+          "view": "base",
+          "goal": "Pick the structure; its blueprint shows what is missing.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "gather",
+          "label": "Gather",
+          "view": "field",
+          "goal": "Fly out and mine the missing materials.",
+          "controls": [
+            "ignite",
+            "stage",
+            "hop",
+            "thrust",
+            "tilt",
+            "drive",
+            "scan",
+            "laser",
+            "cargo"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "store",
+          "label": "Store",
+          "view": "debrief",
+          "goal": "Store each haul; the blueprint strip fills.",
+          "controls": [
+            "store"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "build",
+          "label": "Build",
+          "view": "base",
+          "goal": "Drag materials onto the blueprint, then raise it.",
+          "controls": [
+            "feed-blueprint",
+            "raise"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "ignite",
+        "stage",
+        "hop",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "laser",
+        "cargo",
+        "store",
+        "feed-blueprint",
+        "raise"
+      ],
+      "outcome": {
+        "success": "The structure stands at your base for good.",
+        "unlocks": "What the structure does: storage, fuel, power, fabrication, a launch pad."
+      }
+    },
+    {
+      "id": "program-free-mining",
+      "title": "Free mining",
+      "family": "program",
+      "summary": "Pick any reachable target, mine what is worth it and keep or sell the haul. Probe finds point you at the good spots.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [
+          "freeops-self-directed-mining"
+        ],
+        "id_prefixes": [
+          "self-directed-",
+          "freeops-self-directed-"
+        ],
+        "tags": [
+          "FREE OPS"
+        ]
+      },
+      "beats": [
+        {
+          "id": "pick",
+          "label": "Target",
+          "view": "map",
+          "goal": "Pick a target; probe finds are marked.",
+          "controls": [
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "orbit",
+          "label": "Orbit",
+          "view": "orbit",
+          "goal": "Geoscan and pick a landing site.",
+          "controls": [
+            "geoscan",
+            "pick-site"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "land",
+          "label": "Land",
+          "view": "field",
+          "goal": "Hold to thrust and steer onto the pad ring.",
+          "controls": [
+            "thrust",
+            "tilt"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "mine",
+          "label": "Mine",
+          "view": "field",
+          "goal": "Scan, drive and cut until the hold is full or the value is right.",
+          "controls": [
+            "drive",
+            "scan",
+            "laser",
+            "cargo",
+            "drop-cargo"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "return",
+          "label": "Fly home",
+          "view": "map",
+          "goal": "Take off and hop home.",
+          "controls": [
+            "take-off",
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Haul",
+          "view": "debrief",
+          "goal": "Store the haul at base or sell it.",
+          "controls": [
+            "store",
+            "sell"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "hop",
+        "ignite",
+        "stage",
+        "choose",
+        "geoscan",
+        "pick-site",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "laser",
+        "cargo",
+        "drop-cargo",
+        "take-off",
+        "store",
+        "sell"
+      ],
+      "outcome": {
+        "success": "Anything brought home is kept or sold.",
+        "fail": "Hull reaches zero; the haul is lost."
+      }
+    },
+    {
+      "id": "program-launch",
+      "title": "Launch a satellite or probe",
+      "family": "program",
+      "summary": "Launch your own satellite or probe, put it on the right orbit and switch it on. It keeps working after you leave.",
+      "vehicle": "satellite",
+      "match": {
+        "ids": [],
+        "id_prefixes": [
+          "story-",
+          "probe-launch-"
+        ],
+        "tags": [
+          "STORY"
+        ]
+      },
+      "beats": [
+        {
+          "id": "pick",
+          "label": "Choose",
+          "view": "base",
+          "goal": "Pick the satellite or probe and where it goes.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "fit",
+          "label": "Payload",
+          "view": "hangar",
+          "goal": "Mount it in the payload bay.",
+          "controls": [
+            "fit-loadout"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Probes only: hop to the body it will map.",
+          "controls": [
+            "hop"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "insert",
+          "label": "Orbit",
+          "view": "orbit",
+          "goal": "Burn at the marker and hold until the predicted orbit sits on the ring.",
+          "controls": [
+            "burn"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "deploy",
+          "label": "Deploy",
+          "view": "orbit",
+          "goal": "Release it and unfold its panels.",
+          "controls": [
+            "release",
+            "unfold"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Online",
+          "view": "debrief",
+          "goal": "See what it will send home and when.",
+          "controls": [
+            "store"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "fit-loadout",
+        "ignite",
+        "stage",
+        "hop",
+        "burn",
+        "release",
+        "unfold",
+        "store"
+      ],
+      "outcome": {
+        "success": "The hardware is on orbit and switched on.",
+        "unlocks": "Satellites add a daily feed to classify; probes map one sector at a time and turn finds into runs and offers."
+      }
+    },
+    {
+      "id": "program-survey",
+      "title": "Scan and explore",
+      "family": "program",
+      "summary": "Follow up a discovery with your own flight: hold the target in the instrument, take the readings, explore the surface.",
+      "vehicle": "lander",
+      "match": {
+        "ids": [],
+        "id_prefixes": [
+          "exo-survey-"
+        ],
+        "tags": [
+          "SCIENCE"
+        ]
+      },
+      "beats": [
+        {
+          "id": "pick",
+          "label": "Target",
+          "view": "base",
+          "goal": "Pick the discovery to follow up.",
+          "controls": [
+            "accept"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "observe",
+          "label": "Observe",
+          "view": "orbit",
+          "goal": "Keep the target in the reticle while the readings fill.",
+          "controls": [
+            "observe",
+            "geoscan"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "explore",
+          "label": "Explore",
+          "view": "field",
+          "goal": "Land and drive to the landmarks the scan marked.",
+          "controls": [
+            "thrust",
+            "tilt",
+            "drive",
+            "scan",
+            "beacon"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "debrief",
+          "label": "Results",
+          "view": "debrief",
+          "goal": "Fly home with the readings.",
+          "controls": [
+            "take-off",
+            "hop",
+            "submit"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "ignite",
+        "stage",
+        "hop",
+        "choose",
+        "observe",
+        "geoscan",
+        "thrust",
+        "tilt",
+        "drive",
+        "scan",
+        "beacon",
+        "take-off",
+        "submit"
+      ],
+      "outcome": {
+        "success": "The readings are home.",
+        "unlocks": "Target intelligence: richer deposits and new targets on the map."
+      }
+    },
+    {
+      "id": "program-vehicle",
+      "title": "Send a rover",
+      "family": "program",
+      "summary": "Land a rover, drive it to the marked beacons and work each site.",
+      "vehicle": "rover",
+      "match": {
+        "ids": [],
+        "id_prefixes": [],
+        "tags": [
+          "ROVER"
+        ]
+      },
+      "beats": [
+        {
+          "id": "pick",
+          "label": "Target",
+          "view": "base",
+          "goal": "Pick the body and the rover.",
+          "controls": [
+            "accept",
+            "fit-loadout"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "launch",
+          "label": "Launch",
+          "view": "pad",
+          "goal": "Ignite, then drop each stage as it burns out.",
+          "controls": [
+            "ignite",
+            "stage"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "transit",
+          "label": "Transit",
+          "view": "map",
+          "goal": "Hop to the target.",
+          "controls": [
+            "hop",
+            "choose"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "land",
+          "label": "Land",
+          "view": "field",
+          "goal": "Set down softly; speed, tilt and distance to the ring each earn a star.",
+          "controls": [
+            "thrust",
+            "tilt"
+          ],
+          "repeat": false
+        },
+        {
+          "id": "drive",
+          "label": "Drive",
+          "view": "field",
+          "goal": "Deploy the rover and drive to each beacon; work each site.",
+          "controls": [
+            "deploy-rover",
+            "drive",
+            "scan",
+            "beacon",
+            "laser",
+            "cargo"
+          ],
+          "repeat": true
+        },
+        {
+          "id": "debrief",
+          "label": "Debrief",
+          "view": "debrief",
+          "goal": "Fly home with what the rover gathered.",
+          "controls": [
+            "take-off",
+            "hop",
+            "store",
+            "sell"
+          ],
+          "repeat": false
+        }
+      ],
+      "controls": [
+        "accept",
+        "fit-loadout",
+        "ignite",
+        "stage",
+        "hop",
+        "choose",
+        "thrust",
+        "tilt",
+        "deploy-rover",
+        "drive",
+        "scan",
+        "beacon",
+        "laser",
+        "cargo",
+        "take-off",
+        "store",
+        "sell"
+      ],
+      "outcome": {
+        "success": "Every beacon is reached and the vehicle gets home.",
+        "fail": "The rover is stranded on a slope it cannot climb out of."
+      }
+    }
+  ]
+}

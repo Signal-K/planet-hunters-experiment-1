@@ -1,0 +1,58 @@
+#:schema ../schema/template.schema.json
+# Program: send a vehicle (a rover) to work a body on the ground.
+format = 1
+id = "program-vehicle"
+title = "Send a rover"
+family = "program"
+summary = "Land a rover, drive it to the marked beacons and work each site."
+vehicle = "rover"
+
+[match]
+tags = ["ROVER"]
+
+[[beat]]
+id = "pick"
+label = "Target"
+view = "base"
+goal = "Pick the body and the rover."
+controls = ["accept", "fit-loadout"]
+
+[[beat]]
+id = "launch"
+label = "Launch"
+view = "pad"
+goal = "Ignite, then drop each stage as it burns out."
+controls = ["ignite", "stage"]
+
+[[beat]]
+id = "transit"
+label = "Transit"
+view = "map"
+goal = "Hop to the target."
+controls = ["hop", "choose"]
+
+[[beat]]
+id = "land"
+label = "Land"
+view = "field"
+goal = "Set down softly; speed, tilt and distance to the ring each earn a star."
+controls = ["thrust", "tilt"]
+
+[[beat]]
+id = "drive"
+label = "Drive"
+view = "field"
+goal = "Deploy the rover and drive to each beacon; work each site."
+controls = ["deploy-rover", "drive", "scan", "beacon", "laser", "cargo"]
+repeat = true
+
+[[beat]]
+id = "debrief"
+label = "Debrief"
+view = "debrief"
+goal = "Fly home with what the rover gathered."
+controls = ["take-off", "hop", "store", "sell"]
+
+[outcome]
+success = "Every beacon is reached and the vehicle gets home."
+fail = "The rover is stranded on a slope it cannot climb out of."

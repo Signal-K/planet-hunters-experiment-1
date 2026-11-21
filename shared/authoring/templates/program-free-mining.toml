@@ -1,0 +1,74 @@
+#:schema ../schema/template.schema.json
+# Program: no client. Pick a target, mine what looks valuable, keep or sell it.
+format = 1
+id = "program-free-mining"
+title = "Free mining"
+family = "program"
+summary = "Pick any reachable target, mine what is worth it and keep or sell the haul. Probe finds point you at the good spots."
+vehicle = "lander"
+
+[match]
+ids = ["freeops-self-directed-mining"]
+id_prefixes = ["self-directed-", "freeops-self-directed-"]
+tags = ["FREE OPS"]
+
+[[beat]]
+id = "pick"
+label = "Target"
+view = "map"
+goal = "Pick a target; probe finds are marked."
+controls = ["hop"]
+
+[[beat]]
+id = "launch"
+label = "Launch"
+view = "pad"
+goal = "Ignite, then drop each stage as it burns out."
+controls = ["ignite", "stage"]
+
+[[beat]]
+id = "transit"
+label = "Transit"
+view = "map"
+goal = "Hop to the target."
+controls = ["hop", "choose"]
+
+[[beat]]
+id = "orbit"
+label = "Orbit"
+view = "orbit"
+goal = "Geoscan and pick a landing site."
+controls = ["geoscan", "pick-site"]
+
+[[beat]]
+id = "land"
+label = "Land"
+view = "field"
+goal = "Hold to thrust and steer onto the pad ring."
+controls = ["thrust", "tilt"]
+
+[[beat]]
+id = "mine"
+label = "Mine"
+view = "field"
+goal = "Scan, drive and cut until the hold is full or the value is right."
+controls = ["drive", "scan", "laser", "cargo", "drop-cargo"]
+repeat = true
+
+[[beat]]
+id = "return"
+label = "Fly home"
+view = "map"
+goal = "Take off and hop home."
+controls = ["take-off", "hop"]
+
+[[beat]]
+id = "debrief"
+label = "Haul"
+view = "debrief"
+goal = "Store the haul at base or sell it."
+controls = ["store", "sell"]
+
+[outcome]
+success = "Anything brought home is kept or sold."
+fail = "Hull reaches zero; the haul is lost."

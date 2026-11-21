@@ -6,6 +6,7 @@ id = "lnm_m3_relay_bennu_vesta"
 title = "Belt Courier Run"
 brief = "Atlas Aggregate needs iron and carbon lifted from Bennu, then dropped at their Vesta depot for off-world construction. Bulk metals like these are too plentiful on Earth to ship home, but Vesta has none. You're paid for both jobs: mining the ore and running the relay to Vesta."
 tag = "TRANSPORT"
+template = "contract-delivery"
 difficulty = "L1"
 client = "atlas-aggregate"
 locked = false

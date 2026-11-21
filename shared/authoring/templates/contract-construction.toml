@@ -1,0 +1,51 @@
+#:schema ../schema/template.schema.json
+# Contract: a client pays you to raise a structure for them.
+format = 1
+id = "contract-construction"
+title = "Construction contract"
+family = "contract"
+summary = "A client wants a structure raised: haul the materials, feed the blueprint, raise it."
+vehicle = "lander"
+
+[match]
+tags = ["CONSTRUCT"]
+
+[[beat]]
+id = "brief"
+label = "Contract"
+view = "board"
+goal = "See the blueprint, the materials it needs and the pay."
+controls = ["accept"]
+
+[[beat]]
+id = "gather"
+label = "Gather"
+view = "field"
+goal = "Mine the materials over as many runs as it takes."
+controls = ["drive", "scan", "laser", "cargo"]
+repeat = true
+
+[[beat]]
+id = "haul"
+label = "Haul"
+view = "map"
+goal = "Fly the materials to the build site."
+controls = ["ignite", "stage", "hop"]
+
+[[beat]]
+id = "build"
+label = "Build"
+view = "base"
+goal = "Drag materials onto the glowing parts of the blueprint, then raise it."
+controls = ["feed-blueprint", "raise"]
+
+[[beat]]
+id = "debrief"
+label = "Debrief"
+view = "debrief"
+goal = "Hand over the structure and get paid."
+controls = ["store"]
+
+[outcome]
+success = "The structure stands at the client's site."
+fail = "The contract window closes before it is raised."

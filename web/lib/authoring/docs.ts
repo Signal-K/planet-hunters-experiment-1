@@ -132,7 +132,35 @@ export interface MissionDoc {
   tickets?: string[]
   preview?: { route?: string; state?: string }
   harness: { scene: string; web: string; native: string; objective: string; complete: string }
+  /** The mission template this mission plays (shared/authoring/templates). */
+  template: string
   note?: string
+}
+
+export type TemplateFamily = 'contract' | 'program' | 'feed' | 'event'
+
+export interface TemplateBeat {
+  id: string
+  label: string
+  view: 'board' | 'base' | 'hangar' | 'pad' | 'map' | 'orbit' | 'field' | 'dock' | 'feed' | 'debrief'
+  goal: string
+  controls: string[]
+  repeat?: boolean
+}
+
+export interface TemplateDoc {
+  format: 1
+  id: string
+  title: string
+  family: TemplateFamily
+  fork_of?: string
+  window?: string
+  summary: string
+  vehicle: 'lander' | 'rover' | 'satellite' | 'probe' | 'none'
+  sources?: string[]
+  match?: { ids?: string[]; id_prefixes?: string[]; tags?: string[] }
+  beat?: TemplateBeat[]
+  outcome: { success: string; fail?: string; unlocks?: string }
 }
 
 export interface WorldEntity {

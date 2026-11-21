@@ -1,0 +1,58 @@
+#:schema ../schema/template.schema.json
+# Program: fly out yourself to scan and explore something your hardware found.
+format = 1
+id = "program-survey"
+title = "Scan and explore"
+family = "program"
+summary = "Follow up a discovery with your own flight: hold the target in the instrument, take the readings, explore the surface."
+vehicle = "lander"
+
+[match]
+id_prefixes = ["exo-survey-"]
+tags = ["SCIENCE"]
+
+[[beat]]
+id = "pick"
+label = "Target"
+view = "base"
+goal = "Pick the discovery to follow up."
+controls = ["accept"]
+
+[[beat]]
+id = "launch"
+label = "Launch"
+view = "pad"
+goal = "Ignite, then drop each stage as it burns out."
+controls = ["ignite", "stage"]
+
+[[beat]]
+id = "transit"
+label = "Transit"
+view = "map"
+goal = "Hop to the target."
+controls = ["hop", "choose"]
+
+[[beat]]
+id = "observe"
+label = "Observe"
+view = "orbit"
+goal = "Keep the target in the reticle while the readings fill."
+controls = ["observe", "geoscan"]
+
+[[beat]]
+id = "explore"
+label = "Explore"
+view = "field"
+goal = "Land and drive to the landmarks the scan marked."
+controls = ["thrust", "tilt", "drive", "scan", "beacon"]
+
+[[beat]]
+id = "debrief"
+label = "Results"
+view = "debrief"
+goal = "Fly home with the readings."
+controls = ["take-off", "hop", "submit"]
+
+[outcome]
+success = "The readings are home."
+unlocks = "Target intelligence: richer deposits and new targets on the map."
