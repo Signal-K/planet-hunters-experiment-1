@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { cargoFrom, fieldResources, fieldSeed, fieldStyleFor, miningMethodFor, orderLeft, playsInField } from './fieldMission'
+import { rocketConfigForModel } from '@/lib/data'
+import { cargoFrom, fieldResources, fieldSeed, fieldShipFor, fieldStyleFor, miningMethodFor, orderLeft, playsInField } from './fieldMission'
 
 describe('field mission helpers (KES-543)', () => {
   it('picks the look and real terrain by body', () => {
@@ -12,6 +13,11 @@ describe('field mission helpers (KES-543)', () => {
     expect(playsInField({ id: 'generated-s1-starter-bulk-1', tag: 'STARTER' }, false)).toBe(true)
     expect(playsInField({ id: 'generated-s1-starter-bulk-1', tag: 'STARTER' }, true)).toBe(false)
     expect(playsInField({ id: 'x', tag: 'DELIVERY' }, false)).toBe(false)
+  })
+
+  it('flies the run\'s own rocket type', () => {
+    for (const id of ['explorer', 'prospector', 'surveyor'] as const) expect(fieldShipFor(rocketConfigForModel({ id }))).toBe(id)
+    expect(fieldShipFor(null)).toBe('explorer')
   })
 
   it('takes the rover when a lander is fitted, the ship laser otherwise', () => {

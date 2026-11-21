@@ -44,7 +44,7 @@ Orange budget: at most 3% of a structure's visible area and at most one orange e
 | `--ln-world-soil` | `#8a7a64` | natural verge, dirt |
 | `--ln-world-rock` | `#7c8088` | outcrops, cliff faces |
 | `--ln-world-concrete` | `#b9b7b0` | pads, aprons, roads |
-| `--ln-world-asphalt` | `#4b4f57` | service road |
+| `--ln-world-asphalt` | `#4b4f57` | paved apron |
 | `--ln-world-grass` | `#7f9a68` | natural verge |
 | `--ln-world-tree` | `#4f6f52` | treeline |
 | `--ln-world-underground` | `#4a3f38` | subsurface soil base |
@@ -233,7 +233,6 @@ All loops pause when the tab is hidden or the screen is not active. Reduced moti
 | Launchpad gantry | warning light blink; steam venting at the base | blink 1 s; vent every 6 s |
 | Hangar door | idle ajar crack of light breathing | 5 s sine |
 | Exchange | ticker strip scroll | 20 s per wrap |
-| Road vehicles (no people) | rover crossing at ground band (`RoadRover`) | 30 to 45 s crossing, every 20 to 40 s |
 | Dust motes | `AmbientMotes` drift | 8 to 14 s per mote |
 | Underground | dust falling in cells, lift car idle bob, wiring pulse | dust 5 s; bob 3 s; pulse 2.4 s |
 
@@ -269,7 +268,7 @@ Web screens are routed by `web/components/game/GameScreenRouter.tsx`; screen com
 
 | Screen | Web | Native | Layers and notes |
 |---|---|---|---|
-| Earth Base (hub) | `HubScreen.tsx`, `hub/HubWorldBackground.tsx`, `hub/TerrainScene.tsx`, `hub/EarthBaseModules.tsx`, `hub/Building.tsx`, `hub/AmbientMotes.tsx`, `hub/RoadRover.tsx` | `HubScreen.swift`, `BaseLayout.swift`, `Terrain.swift`, `Biome.swift` | Layers 1 to 9, base kit, edit mode, bird's-eye. Remove the sky planet: `HubWorldBackground.PlanetBackdrop` (web) and `Planet` and `showsPlanet` in `Terrain.swift` (native) violate "no planets in sky". Dock: `« »`, Build, Hub. |
+| Earth Base (hub) | `HubScreen.tsx`, `hub/HubWorldBackground.tsx`, `hub/TerrainScene.tsx`, `hub/EarthBaseModules.tsx`, `hub/Building.tsx`, `hub/AmbientMotes.tsx` | `HubScreen.swift`, `BaseLayout.swift`, `Terrain.swift`, `Biome.swift` | Layers 1 to 9, base kit, edit mode, bird's-eye. Remove the sky planet: `HubWorldBackground.PlanetBackdrop` (web) and `Planet` and `showsPlanet` in `Terrain.swift` (native) violate "no planets in sky". Dock: `« »`, Build, Hub. |
 | Subsurface | `hub/HubSubsurfaceView.tsx`, `hub/SoilCrossSection.tsx` (`hub-subsurface`) | no dedicated file today (planned, via `HubScreen.swift`) | section 7 states |
 | Build / place | `BuildPlaceScreen.tsx`, `FreeOpsBuildScreen.tsx` | `BuildScreen.swift` | becomes the edit-mode shelf plus placement flow (section 8); no from-scratch building |
 | Mission board | `MissionSetupRoutes.tsx` (`missions`, `targets`, `rocket-buy`, `fab`), `previews/MissionFlowPreview.tsx` | `CoreLoop.swift` (`MissionsScreen`), `RouteMap.swift` | dusk grade, whole landscape, one contract card |

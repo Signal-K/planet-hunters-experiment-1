@@ -89,3 +89,10 @@ builds, so nothing else in 0.2.4 changed. To refresh the field: build the
 engine in takeon, replace `package/dist/field` in the unpacked tarball, repack,
 and update the `integrity` of `node_modules/@takeon/engine` in
 `package-lock.json` (npm reuses the cached tarball otherwise).
+
+## 2026-11-21: `@takeon/engine` 0.2.5 → 0.2.6 (block rovers, rocket types, KES-543)
+
+Same repack as 0.2.5 with a fresh `dist/field/`: the field rover is built from
+Haphazard Martians blocks (hex nodes, braced girders, wheels on the end columns,
+a blue Navcam mast) and is 1.8 m over the wheels, and `ship` picks Landnam's
+rocket type for the orbit pass (`explorer`, `prospector`, `surveyor`).

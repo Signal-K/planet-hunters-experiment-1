@@ -10,25 +10,25 @@
   "counts": {
     "webRoutes": 28,
     "nativeScreenCases": 24,
-    "qaScenes": 87,
+    "qaScenes": 91,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 28,
-    "authoringSources": 64,
-    "authoredObjectNodes": 156,
+    "authoringSources": 75,
+    "authoredObjectNodes": 157,
     "authoredGameObjects": 79,
-    "authoredUiElements": 77,
+    "authoredUiElements": 78,
     "authoredPrefabInstances": 5,
     "compiledScenes": 28,
-    "compiledObjectNodes": 156,
+    "compiledObjectNodes": 157,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 151,
+    "hostLayoutObjects": 152,
     "webGameComponents": 117,
-    "nativeAppComponents": 57
+    "nativeAppComponents": 58
   },
   "scenes": {
     "routed": [
@@ -344,6 +344,28 @@
         ]
       },
       {
+        "id": "field-orbit",
+        "name": "Field mining, ship laser from orbit",
+        "flow": "core-loop",
+        "web": "ui-field-orbit",
+        "nativeDeferred": "The TakeOn 3D field is web only so far; iOS keeps the 2D mining scene.",
+        "tickets": [
+          "KES-543",
+          "SSL-870"
+        ]
+      },
+      {
+        "id": "field-rover",
+        "name": "Field mining, rover on the ground",
+        "flow": "core-loop",
+        "web": "ui-field-rover",
+        "nativeDeferred": "The TakeOn 3D field is web only so far; iOS keeps the 2D mining scene.",
+        "tickets": [
+          "KES-543",
+          "SSL-870"
+        ]
+      },
+      {
         "id": "mining-actions",
         "name": "Mining action row",
         "flow": "core-loop",
@@ -372,6 +394,17 @@
         "tickets": [
           "SSL-711"
         ]
+      },
+      {
+        "id": "focus-run",
+        "name": "Materials focus run",
+        "flow": "core-loop",
+        "web": "ui-focus-run",
+        "native": "mining-focus-run",
+        "tickets": [
+          "SSL-840"
+        ],
+        "note": "A construction goal bigger than the hold: return a partial haul, store it, and the next trip asks only for the rest. iOS board view: mission-focus-run-phone."
       },
       {
         "id": "radio-meteors",
@@ -1011,6 +1044,16 @@
         "native": "radio-meteors"
       },
       {
+        "id": "second-ground-telescope",
+        "name": "Control Station: second ground telescope",
+        "flow": "instruments",
+        "web": "ui-second-ground-telescope",
+        "tickets": [
+          "SSL-802"
+        ],
+        "native": "second-ground-telescope-phone"
+      },
+      {
         "id": "probe-hub",
         "name": "Survey probe: data hub",
         "flow": "instruments",
@@ -1045,9 +1088,10 @@
         "name": "Base: unplaced structures tray",
         "flow": "core-loop",
         "web": "hub-unplaced",
-        "nativeDeferred": "iOS Base has no annex slots yet: SSL-844.",
+        "native": "hub-unplaced-phone",
         "tickets": [
-          "SSL-843"
+          "SSL-843",
+          "SSL-844"
         ]
       },
       {
@@ -1457,12 +1501,12 @@
       {
         "id": "mining",
         "path": "shared/authoring/scenes/mining.toml",
-        "objects": 10,
+        "objects": 11,
         "gameObjects": 4,
-        "uiElements": 6,
+        "uiElements": 7,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 10,
+        "hostLayoutObjects": 11,
         "mechanics": [
           "delivery",
           "laser-mining",
@@ -1770,7 +1814,7 @@
       },
       {
         "id": "mining",
-        "objects": 10
+        "objects": 11
       },
       {
         "id": "mission-history",
@@ -2321,7 +2365,6 @@
       "web/components/game/hub/KitRocket.tsx",
       "web/components/game/hub/MeteorShowerWeather.tsx",
       "web/components/game/hub/PixelStructure.tsx",
-      "web/components/game/hub/RoadRover.tsx",
       "web/components/game/hub/RocketRollout.tsx",
       "web/components/game/hub/SiteMarker.tsx",
       "web/components/game/hub/SkyCraft.tsx",
@@ -2344,6 +2387,7 @@
       "web/components/game/screens/DeliveryScreen.tsx",
       "web/components/game/screens/DestinationLandscape.tsx",
       "web/components/game/screens/DownlinkControlDesk.tsx",
+      "web/components/game/screens/FieldMiningScreen.tsx",
       "web/components/game/screens/FlightBody.tsx",
       "web/components/game/screens/FlightFlame.tsx",
       "web/components/game/screens/FlightSky.tsx",
@@ -2391,6 +2435,7 @@
       "native/App/Scenes/SceneKit+Landnam.swift",
       "native/App/Screens/ArchiveScreen.swift",
       "native/App/Screens/AsteroidDiscoveryScreen.swift",
+      "native/App/Screens/BaseAnnex.swift",
       "native/App/Screens/BaseCamera.swift",
       "native/App/Screens/BaseDock.swift",
       "native/App/Screens/BaseMenu.swift",
@@ -2513,6 +2558,17 @@
       "shared/authoring/scenes/sky-pointing.toml",
       "shared/authoring/scenes/targets.toml",
       "shared/authoring/scenes/transit.toml",
+      "shared/authoring/templates/contract-construction.toml",
+      "shared/authoring/templates/contract-delivery.toml",
+      "shared/authoring/templates/contract-exploration.toml",
+      "shared/authoring/templates/contract-mining.toml",
+      "shared/authoring/templates/event-meteor-run.toml",
+      "shared/authoring/templates/feed-classification.toml",
+      "shared/authoring/templates/program-construction.toml",
+      "shared/authoring/templates/program-free-mining.toml",
+      "shared/authoring/templates/program-launch.toml",
+      "shared/authoring/templates/program-survey.toml",
+      "shared/authoring/templates/program-vehicle.toml",
       "shared/authoring/worlds/base-world.toml",
       "shared/layout/base-hud-zones.json",
       "shared/layout/base-site.json",
@@ -2538,7 +2594,9 @@
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
-    "unownedDomainFiles": [],
+    "unownedDomainFiles": [
+      "native/LandnamCore/Sources/LandnamCore/Systems/ResourceFocusRun.swift"
+    ],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
       "build",

@@ -84,7 +84,7 @@ struct RoverFieldScreen: View {
             ForEach(Prospecting.outcrops) { o in
                 outcropButton(o).position(at(o.x, o.y))
             }
-            Art.view("actors/road_rover.png").resizable().aspectRatio(1.5, contentMode: .fit).frame(width: 64)
+            Art.view("actors/rover.png").resizable().aspectRatio(1.0, contentMode: .fit).frame(width: 64)
                 .position(at(prospecting.rover.x, prospecting.rover.y + 0.0))
                 .offset(y: 52)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: prospecting.rover.x)

@@ -9,7 +9,7 @@ import type { MineralMeta, Mission, Target } from '@/lib/data'
 import type { RoverSpec } from '@takeon/engine'
 import type { FieldSceneHandle } from '@takeon/engine/field'
 import type { MiningMethod } from '@/lib/mission-templates'
-import { cargoFrom, fieldResources, fieldSeed, fieldStyleFor, orderLeft } from '@/lib/field/fieldMission'
+import { cargoFrom, fieldResources, fieldSeed, fieldStyleFor, orderLeft, type FieldShipKind } from '@/lib/field/fieldMission'
 import styles from './FieldMiningScreen.module.css'
 
 const SCAN_COOLDOWN = 4
@@ -19,8 +19,10 @@ export interface FieldMiningScreenProps {
   target: Target
   method: MiningMethod
   minerals: Record<string, MineralMeta>
-  /** The player's rover build, so the field rover matches the garage. */
+  /** The player's rover build, so the field rover matches the hangar build. */
   roverSpec?: RoverSpec
+  /** The run's rocket type, flown on the orbit pass. */
+  ship?: FieldShipKind
   initialCargo?: Record<string, number>
   /** Hold size in units; unset means the order size plus room for extras. */
   cargoCapacity?: number
@@ -32,7 +34,7 @@ export interface FieldMiningScreenProps {
 }
 
 export default function FieldMiningScreen({
-  mission, target, method, minerals, roverSpec, initialCargo, cargoCapacity, onPersist, onBack, onComplete, deliveryTargetName,
+  mission, target, method, minerals, roverSpec, ship, initialCargo, cargoCapacity, onPersist, onBack, onComplete, deliveryTargetName,
 }: FieldMiningScreenProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
@@ -71,6 +73,7 @@ export default function FieldMiningScreen({
           depositScale: method === 'rover' ? 1 : 1.8,
           resources: fieldResources(order, target.minerals),
           rover: roverSpec ?? true,
+          ship: ship ?? 'explorer',
           overlay,
           capacity: Math.max(0, capacity - startTotal),
         })
@@ -104,7 +107,7 @@ export default function FieldMiningScreen({
     }
     // The field is built once per run; cargo flows out through onFrame.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mission.id, target.id, method])
+  }, [mission.id, target.id, method, ship])
 
   // Write the hold while the run is open, so a reload does not drop ore.
   useEffect(() => {

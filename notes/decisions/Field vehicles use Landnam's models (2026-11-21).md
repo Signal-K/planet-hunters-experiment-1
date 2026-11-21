@@ -24,10 +24,12 @@ least something that is similar, that Landnam uses."
   - a camera mast, a scanner whip, a tool arm and a cargo bed when fitted;
   - the tank, dish, charge strip and beacon on every build.
 
-  A part you fit in the garage shows up in the field. There is no orange on the rover.
+  A part you fit in the hangar shows up in the field. There is no orange on the rover.
 - **The mining ship is Landnam's miner:** a cream hull with blue stripes, a blue-framed
   cockpit, a grey nozzle and landing legs (`laser/ship.png`, the minimal mine pass).
 - **New vehicles get their look from the Landnam art first,** and any other scene follows it.
+
+> The rover body and the mining ship above are replaced by *Rovers are built from blocks, ships are the run's rocket, and there are no cars (2026-11-21)*.
 
 ## Where it lives
 

@@ -11,7 +11,7 @@ import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import FieldMiningScreen from '@/components/game/screens/FieldMiningScreen'
-import { miningMethodFor, playsInField } from '@/lib/field/fieldMission'
+import { fieldShipFor, miningMethodFor, playsInField } from '@/lib/field/fieldMission'
 import { templateForMission } from '@/lib/mission-templates'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
@@ -302,6 +302,7 @@ export default function MissionOperationRoutes({
             mission={game.mission}
             target={game.target}
             method={method}
+            ship={fieldShipFor(game.rocket)}
             minerals={game.catalog.minerals}
             initialCargo={game.player.miningCargoInProgress}
             cargoCapacity={limitedHold}

@@ -1,6 +1,6 @@
 // KES-543 / SSL-870: a mining template's cut and mine beats play in TakeOn's 3D field.
 // Pure helpers that turn a Landnam mission, target and fit-out into field options, and the field's hold back into cargo.
-import type { Mission, Target } from '@/lib/data'
+import { rocketModelForConfig, type Mission, type RocketConfig, type Target } from '@/lib/data'
 import { getMissionTemplate, templateForMission, type MiningMethod } from '@/lib/mission-templates'
 
 export type FieldStyleId = 'regolith' | 'rust' | 'carbon' | 'metal' | 'ice'
@@ -15,6 +15,14 @@ export function fieldStyleFor(target: Pick<Target, 'id' | 'type' | 'archetype'>)
     case 'icy': return 'ice'
     default: return 'regolith'
   }
+}
+
+export type FieldShipKind = 'explorer' | 'prospector' | 'surveyor'
+
+/** The field ship is the run's rocket: Explorer, Prospector or Surveyor. Unannounced tiers fall back to the Explorer. */
+export function fieldShipFor(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): FieldShipKind {
+  const id = rocketModelForConfig(rocket).id
+  return id === 'prospector' || id === 'surveyor' ? id : 'explorer'
 }
 
 /** Templates whose cut/mine beats the field plays. Shower runs keep the 2D catch scene. */
