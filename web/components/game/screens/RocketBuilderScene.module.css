@@ -610,3 +610,45 @@
   /* Chip, mission and Customize sit together on the right; only the first of them takes the free space. */
   .root:not([data-assembly='idle']) .actions > .target ~ :last-child { margin-left: 0; }
 }
+
+/* SSL-848: launch in place. The rocket the player built leaves its own mount; the pad, tower and camera stay put. */
+.root[data-launching='true'] .stage > :not(.body),
+.root[data-launching='true'] .body > :not(.pad),
+.root[data-launching='true'] .pad > :not(.complex),
+.root[data-launching='true'] .weld { opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.root[data-launching='true'] .serviceMotion { animation: none; }
+.root[data-launching='true'] .rocketSlot { z-index: 3; animation: builder-liftoff 3.7s linear 0.9s forwards; }
+.root[data-launching='true'] .rocketSlot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 97%;
+  width: 46%;
+  height: 46%;
+  margin-left: -23%;
+  background: linear-gradient(to bottom, #fff4c2 0%, #ffb23e 28%, #ff6a2a 62%, rgba(255, 106, 42, 0) 100%);
+  clip-path: polygon(8% 0, 92% 0, 74% 58%, 50% 100%, 26% 58%);
+  transform-origin: top center;
+  opacity: 0;
+  animation: builder-flame 0.18s steps(3, end) 0.9s infinite, builder-flame-on 0.25s linear 0.9s forwards;
+}
+
+@keyframes builder-liftoff {
+  0% { transform: translate3d(0, 0, 0); }
+  5% { transform: translate3d(-2px, 0, 0); }
+  10% { transform: translate3d(2px, 0, 0); }
+  15% { transform: translate3d(-2px, 0, 0); }
+  20% { transform: translate3d(1px, 0, 0); }
+  26% { transform: translate3d(0, 0, 0); }
+  42% { transform: translate3d(0, -6%, 0); }
+  62% { transform: translate3d(0, -34%, 0); }
+  80% { transform: translate3d(0, -95%, 0); }
+  100% { transform: translate3d(0, -230%, 0); }
+}
+@keyframes builder-flame { 0%, 100% { transform: scale(1, 1); } 35% { transform: scale(0.88, 1.18); } 70% { transform: scale(1.1, 0.9); } }
+@keyframes builder-flame-on { to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-launching='true'] .rocketSlot,
+  .root[data-launching='true'] .rocketSlot::after { animation: none; }
+}

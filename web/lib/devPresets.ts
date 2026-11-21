@@ -140,6 +140,7 @@ export const DEV_GROUPS: DevGroup[] = [
     shots: [
       { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, Free Ops unlocked, telescope built, story mission on the board', stage: 'free-ops' },
       { key: 'telescope-fab',      label: 'Fab',      hint: 'Space telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-flight-return', label: '3D return flight', hint: 'SSL-847: timed cruise home, painted blue from the workshop, long enough to inspect every viewport and offline rendering', stage: 'free-ops' },
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Submit · Transit to see the result card', stage: 'free-ops' },
@@ -495,6 +496,12 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'ui-flight-return': {
+      const base = resolvePresetState('m1-return')!
+      const now = Date.now()
+      return { ...base, tutorial: false, player: { ...base.player!, missionsDone: 3, freeOperations: true, transitStartedAt: now - 2 * 60_000, arrivalAt: now + 10 * 60_000, rocketLivery: { hull: 'blue', trim: 'cream', decal: 'none', updatedAt: now } } }
+    }
 
     case 'm1-return':
       return {

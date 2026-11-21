@@ -195,6 +195,7 @@ export default function MissionOperationRoutes({
           francs={game.player.francs}
           fragmentCount={Math.max(0, Math.floor(game.player.stash?.orionid_debris ?? 0))}
           parts={game.player.shipCustomizerParts}
+          livery={game.player.rocketLivery}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}
           onNext={() => stepFlightDock(game, 1)}

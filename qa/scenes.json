@@ -1004,6 +1004,19 @@
     "SSL-852"
    ],
    "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+  },
+  {
+   "id": "flight-return",
+   "name": "3D return flight, offline and livery",
+   "flow": "core-loop",
+   "web": "ui-flight-return",
+   "native": "return-live",
+   "nativeDeferred": "SSL-848 explicitly schedules the native 3D renderer after web; KES-529 supplies the later shared draw-list API.",
+   "tickets": [
+    "SSL-847",
+    "SSL-848",
+    "SSL-861"
+   ]
   }
  ],
  "missions": [

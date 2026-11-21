@@ -2645,6 +2645,8 @@ enum AuthoredSceneDeclarations {
         "surface": "dom",
         "web": [
           "web/components/game/screens/TransitScreen.tsx",
+          "web/components/takeon/TakeOnFlight.tsx",
+          "web/lib/flight/looks.ts",
           "web/components/game/MissionOperationRoutes.tsx"
         ],
         "native": [
@@ -2659,7 +2661,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Target-specific flight environment; not the TESS light-curve scene."
+          "note": "Takeon flight view (@takeon/engine createFlightScene): sky, sun, corridor and the destination. Not the TESS light-curve scene."
         },
         {
           "id": "flight-rocket",
@@ -2669,7 +2671,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Vehicle moving through the current flight leg."
+          "note": "The player's rocket as hull sections (flightCraftLook): fitted parts change its proportions, the livery its paint."
         },
         {
           "id": "destination",
@@ -2679,7 +2681,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Catalog-driven destination visual."
+          "note": "A lit, turning globe generated from the body's mining palette (flightDestinationLook). Earth on the way home. It grows with the trip and becomes the limb below the rocket in orbit."
         },
         {
           "id": "flight-progress",
@@ -2689,7 +2691,40 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Persisted departure and arrival timestamps."
+          "note": "Persisted departure and arrival timestamps. The trip clock drives the scene (host-paced), never the other way round."
+        },
+        {
+          "id": "flight-corridor",
+          "kind": "collection",
+          "parent": "flight-world",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Rocks to steer around and blue rings to fly through, generated from the trip's seed. Two rings charge one Boost. A rock slows the scene and ends a running Boost; it never costs trip time."
+        },
+        {
+          "id": "nudge-pad",
+          "kind": "ui",
+          "parent": "flight-world",
+          "slot": "secondaryAction",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "note": "Shared mining d-pad, bottom-left. A nudge moves the rocket inside the corridor; it cannot leave its course. Arrow keys, WASD and dragging on the scene do the same."
+        },
+        {
+          "id": "boost-action",
+          "kind": "button",
+          "parent": "flight-world",
+          "slot": "primaryAction",
+          "layout": "host",
+          "mechanics": [
+            "flight"
+          ],
+          "label": "Boost",
+          "note": "Shared round button, bottom-right, with the Boost charge as its ring. One charge at launch; a Boost cuts 22% of the time left (at least 2.5 s)."
         },
         {
           "id": "arrival-action",
@@ -2699,7 +2734,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "flight"
           ],
-          "note": "Transition to landing, mining, survey or debrief according to the mission."
+          "note": "The rocket settles into orbit for about two seconds, then the trip hands over to landing, mining, survey or debrief according to the mission. Arrive skips the wait."
         },
         {
           "id": "return-action",

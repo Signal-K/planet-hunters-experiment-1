@@ -1,17 +1,23 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { FlightEvent, FlightSnapshot } from '@takeon/engine'
 import type { Target } from '@/lib/data'
-import { transitBodyShiftPercent } from '@/lib/pixi/transitFlight'
-import { FlightBody } from '@/components/game/screens/FlightBody'
-import { FlightFlame } from '@/components/game/screens/FlightFlame'
-import { FlightSky } from '@/components/game/screens/FlightSky'
-import { KitRocket } from '@/components/game/hub/KitRocket'
 import type { InstalledCustomizerPartsByKind } from '@/lib/data'
+import TakeOnFlight, { type TakeOnFlightHandle } from '@/components/takeon/TakeOnFlight'
+import { MiningDPad, MiningFireButton } from '@/components/game/screens/MiningControls'
+import { DEFAULT_LIVERY, flightCraftLook, flightDestinationLook, seedFromText, type RocketLivery as FlightLivery } from '@/lib/flight/looks'
+import { LIVERY_COLORS, sanitizeLivery, type RocketLivery } from '@/lib/launchpad/workshop'
 import styles from './FlightScene.module.css'
+
 const FAKE_PROGRESS_START = 12
-const FAKE_PROGRESS_DURATION_MS = 4400
-const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
+// An un-timed hop is still a flight the player steers: long enough to nudge, collect a ring and fire the boost.
+const FAKE_PROGRESS_DURATION_MS = 18_000
+const DELIVERY_FAKE_PROGRESS_DURATION_MS = 18_000
+/** How long the rocket is shown settling into orbit before the trip hands over. Arrive skips it. */
+const ORBIT_HOLD_MS = 2400
+/** How long the flight states its goal before clearing (the mining rule: once, in the middle, then gone). */
+const GOAL_MS = 5000
 
 interface Props {
   target: Target
@@ -29,35 +35,17 @@ interface Props {
   isDelivery?: boolean
   francs?: number
   parts?: InstalledCustomizerPartsByKind | null
+  livery?: RocketLivery
   fragmentCount?: number
 }
 
-function CogIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51-1z" />
-    </svg>
-  )
-}
-
-function CubeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
-      <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
-    </svg>
-  )
-}
-
-function BoostIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z" />
-    </svg>
-  )
-}
-
+/**
+ * The physical flight between Earth and a target (not TESS transit photometry).
+ *
+ * SSL-848: the scene is Takeon's 3D flight view. The rocket keeps its course; the player nudges it through blue
+ * rings to charge Boost and around rocks, and a Boost shortens the trip. The persisted departure and arrival times
+ * still decide when the trip ends: the flight scene is told where the clock is, never the other way round.
+ */
 export default function TransitScreen({
   target,
   arrivalAt,
@@ -68,7 +56,17 @@ export default function TransitScreen({
   onBack,
   isDelivery = false,
   parts,
+  livery,
 }: Props) {
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const [paint, setPaint] = useState<FlightLivery>(DEFAULT_LIVERY)
+  useEffect(() => {
+    if (!rootRef.current || !livery) return
+    const saved = sanitizeLivery(livery)
+    const style = getComputedStyle(rootRef.current)
+    const color = (id: keyof typeof LIVERY_COLORS, fallback: string) => style.getPropertyValue(LIVERY_COLORS[id].slice(4, -1)).trim() || fallback
+    setPaint({ hull: color(saved.hull, DEFAULT_LIVERY.hull), trim: color(saved.trim, DEFAULT_LIVERY.trim) })
+  }, [livery?.hull, livery?.trim])
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
@@ -76,7 +74,9 @@ export default function TransitScreen({
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
   const [boostMs, setBoostMs] = useState(0)
   const [boostExtra, setBoostExtra] = useState(0)
-  const [boosting, setBoosting] = useState(false)
+  const [snapshot, setSnapshot] = useState<FlightSnapshot | null>(null)
+  const [goalShown, setGoalShown] = useState(true)
+  const flightRef = useRef<TakeOnFlightHandle | null>(null)
   const onArriveRef = useRef(onArrive)
   onArriveRef.current = onArrive
 
@@ -122,26 +122,31 @@ export default function TransitScreen({
     }
   }, [isTimed, fakeStartedAt, fakeDurationMs])
 
+  useEffect(() => {
+    const id = window.setTimeout(() => setGoalShown(false), GOAL_MS)
+    return () => window.clearTimeout(id)
+  }, [])
+
   const liveNow = (now > 0 ? now : Date.now()) + boostMs
   const stableTransitStartedAt = isTimed
     ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : liveNow))
     : fakeStartedAt
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
   const arrived = isTimed ? liveNow >= arrivalAt! : fakeProgress + boostExtra >= 100
-  const progress = isTimed
-    ? (arrived ? 100 : Math.min(100, Math.max(0, Math.round(((liveNow - stableTransitStartedAt) / totalMs) * 100))))
-    : Math.min(100, Math.round(fakeProgress + boostExtra))
+  const exact = isTimed
+    ? (arrived ? 100 : Math.min(100, Math.max(0, ((liveNow - stableTransitStartedAt) / totalMs) * 100)))
+    : Math.min(100, fakeProgress + boostExtra)
+  const progress = Math.round(exact)
 
   useEffect(() => {
     if (!arrived) return
-    const timer = window.setTimeout(arriveOnce, 350)
+    const timer = window.setTimeout(arriveOnce, ORBIT_HOLD_MS)
     return () => window.clearTimeout(timer)
   }, [arrived, arriveOnce])
 
-  const boost = () => {
-    if (arrived) return
-    setBoosting(true)
-    window.setTimeout(() => setBoosting(false), 720)
+  // A boost charge spent in the scene (button, Space) is worth the same trip time a Boost press always was.
+  const onFlightEvent = useCallback((event: FlightEvent) => {
+    if (event.kind !== 'boost') return
     if (isTimed && arrivalAt) {
       setBoostMs(spent => {
         const remain = Math.max(0, arrivalAt - (Date.now() + spent))
@@ -150,33 +155,52 @@ export default function TransitScreen({
       return
     }
     setBoostExtra(extra => extra + 14)
+  }, [isTimed, arrivalAt])
+
+  const config = useMemo(() => ({
+    seed: seedFromText(`${target.id}:${returning ? 'home' : 'out'}:${transitStartedAt ?? 0}`),
+    hostPaced: true,
+    debris: 0.38,
+    pickups: 0.45,
+    // Two rings charge one Boost; the flight carries no samples.
+    samples: 0,
+    boostGain: 0.5,
+    boostCharges: 1,
+  }), [target.id, returning, transitStartedAt])
+  const destination = useMemo(() => flightDestinationLook(target, returning), [target, returning])
+  const craft = useMemo(() => flightCraftLook(parts, paint), [parts, paint])
+
+  const steer = useRef({ x: 0, y: 0 })
+  const nudge = (axis: 'x' | 'y', value: number) => {
+    steer.current[axis] = value
+    flightRef.current?.steer(steer.current.x, steer.current.y)
   }
 
-  const shift = `${transitBodyShiftPercent(progress)}%`
   const remainingMs = isTimed && arrivalAt ? Math.max(0, arrivalAt - liveNow) : null
   const remainingLabel = remainingMs == null ? null
     : remainingMs >= 3_600_000 ? `${Math.floor(remainingMs / 3_600_000)}h ${Math.round((remainingMs % 3_600_000) / 60_000)}m left`
     : remainingMs >= 60_000 ? `${Math.floor(remainingMs / 60_000)}m ${Math.round((remainingMs % 60_000) / 1000)}s left`
     : `${Math.ceil(remainingMs / 1000)}s left`
 
-  return (
-    <div className={styles.screen} data-screen="transit" data-testid="transit-screen" aria-label="Flight">
-      <FlightSky />
-      <div className={styles.stage}>
-        <div className={styles.ship} data-boosting={boosting ? 'true' : 'false'}>
-          <FlightFlame boosting={boosting} />
-          <div className={styles.rocketWrap}>
-            <KitRocket parts={parts} space className={styles.rocket} testId="transit-rocket" />
-          </div>
-        </div>
-        <div className={styles.body} style={{ ['--shift' as string]: shift }}>
-          <FlightBody target={target} returning={returning} />
-        </div>
-      </div>
+  const boosts = snapshot?.boosts ?? 1
+  const charge = Math.min(1, boosts + (snapshot?.boostCharge ?? 0))
+  const inCruise = snapshot?.phase === 'cruise'
 
-      {returning && <p className={styles.arrivalNote}>{returnNote ?? 'Next: land on Earth and settle cargo.'} Flight continues while you view Base.</p>}
-      {/* The navigation button views Base without changing the rocket's flight. */}
-      <div className={styles.controls}>
+  return (
+    <div ref={rootRef} className={styles.screen} data-screen="transit" data-testid="transit-screen" data-phase={snapshot?.phase ?? 'departure'} aria-label="Flight">
+      <TakeOnFlight
+        ref={flightRef}
+        className={styles.canvas}
+        testId="transit-flight"
+        config={config}
+        destination={destination}
+        craft={craft}
+        progress={exact / 100}
+        onEvent={onFlightEvent}
+        onSnapshot={setSnapshot}
+      />
+
+      <div className={styles.top}>
         <button type="button" className={styles.exit} data-testid="transit-base-btn" onClick={onBack}>View Base</button>
         <div className={styles.route}>
           <span className={styles.routeName} data-testid="transit-destination">{returning ? 'Returning to Earth' : `To ${target.name}`}</span>
@@ -191,12 +215,43 @@ export default function TransitScreen({
           >
             <span style={{ width: `${progress}%` }} />
           </div>
-          <span className={styles.routeEta}>{arrived ? 'Arrived' : remainingLabel ?? `${progress}%`}</span>
+          <span className={styles.routeEta}>{arrived ? 'In orbit' : remainingLabel ?? `${progress}%`}</span>
         </div>
-        <button type="button" className={styles.boost} data-testid="transit-boost-btn" data-arrived={arrived || undefined} disabled={arrived} onClick={arrived ? onArrive : boost}>
-          {arrived ? 'Arrive' : 'Boost'}
-        </button>
       </div>
+
+      {returning && <p className={styles.arrivalNote}>{returnNote ?? 'Next: land on Earth and settle cargo.'} Flight continues while you view Base.</p>}
+
+      {goalShown && !arrived && (
+        <p className={styles.goal} data-testid="transit-goal" role="status">Fly through the blue rings to charge Boost. Steer around rocks.</p>
+      )}
+
+      {!arrived && (
+        <MiningDPad
+          onAltitude={dir => nudge('y', dir === 0 ? 0 : -dir)}
+          onSpeed={dir => nudge('x', dir)}
+          labels={{ up: 'Nudge up', down: 'Nudge down', left: 'Nudge left', right: 'Nudge right' }}
+        />
+      )}
+
+      {arrived ? (
+        <button type="button" className={styles.arrive} data-testid="transit-boost-btn" data-arrived="true" onClick={arriveOnce}>Arrive</button>
+      ) : (
+        <MiningFireButton
+          testId="transit-boost-btn"
+          meter
+          label="Boost"
+          charges={charge}
+          max={1}
+          charging={boosts < 1 && inCruise}
+          firing={!!snapshot?.boosting}
+          ready={boosts >= 1 && !snapshot?.boosting}
+          countText={boosts >= 1 ? `×${boosts}` : `${Math.round((snapshot?.boostCharge ?? 0) * 100)}%`}
+          ariaLabel={boosts >= 1 ? `Boost, ${boosts} ready` : 'Boost, charging. Fly through blue rings.'}
+          onPress={() => flightRef.current?.boost()}
+          onRelease={() => {}}
+          onKeyFire={() => flightRef.current?.boost()}
+        />
+      )}
     </div>
   )
 }
