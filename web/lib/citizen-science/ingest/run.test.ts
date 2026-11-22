@@ -6,11 +6,11 @@ import { ASTEROID_CANDIDATES_COLLECTION, TESS_SUBJECTS_COLLECTION } from './type
 describe('shared subject ingest runner', () => {
   it('resolves shared-backend env aliases without inventing credentials', () => {
     const env = resolveIngestEnv({
-      PB_STARSAILORS_URL: 'https://signal-k-starsailors.fly.dev',
+      PB_STARSAILORS_URL: 'https://signal-k-pocketbase.fly.dev',
       PB_ADMIN_EMAIL: '',
       PB_ADMIN_PASSWORD: '',
     } as unknown as NodeJS.ProcessEnv)
-    expect(env.sharedPbUrl).toBe('https://signal-k-starsailors.fly.dev')
+    expect(env.sharedPbUrl).toBe('https://signal-k-pocketbase.fly.dev')
     expect(canWriteToSharedPool(env)).toBe(false)
   })
 
@@ -33,7 +33,7 @@ describe('shared subject ingest runner', () => {
     })
 
     const result = await runSharedSubjectIngest({
-      env: { sharedPbUrl: 'https://signal-k-starsailors.fly.dev' },
+      env: { sharedPbUrl: 'https://signal-k-pocketbase.fly.dev' },
       fetch: fetchImpl as unknown as typeof fetch,
     })
 

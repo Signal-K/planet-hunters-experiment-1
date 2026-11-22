@@ -15,7 +15,7 @@
  * Never updates or deletes existing rows. Never invents a Spectra ingest.
  *
  * Required to actually write (GitHub Actions secrets / local env):
- *   SHARED_PB_URL or PB_STARSAILORS_URL   default https://signal-k-starsailors.fly.dev
+ *   SHARED_PB_URL or PB_STARSAILORS_URL   default https://signal-k-pocketbase.fly.dev
  *   SHARED_PB_ADMIN_EMAIL or PB_ADMIN_EMAIL
  *   SHARED_PB_ADMIN_PASSWORD or PB_ADMIN_PASSWORD
  *

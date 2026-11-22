@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isLoopbackPbUrl, resolvePocketBaseUrl } from './pb-config'
 
-const deployed = 'https://signal-k-landnam.fly.dev'
+const deployed = 'https://signal-k-pocketbase.fly.dev'
 const devFallback = 'http://localhost:8093'
 
 describe('resolvePocketBaseUrl', () => {
@@ -71,7 +71,7 @@ describe('resolvePocketBaseUrl', () => {
   it('recognises loopback hosts only', () => {
     expect(isLoopbackPbUrl('http://localhost:8095')).toBe(true)
     expect(isLoopbackPbUrl('http://127.0.0.1:8090/')).toBe(true)
-    expect(isLoopbackPbUrl('https://signal-k-landnam.fly.dev')).toBe(false)
+    expect(isLoopbackPbUrl('https://signal-k-pocketbase.fly.dev')).toBe(false)
     expect(isLoopbackPbUrl('http://host.docker.internal:8095')).toBe(false)
   })
 })

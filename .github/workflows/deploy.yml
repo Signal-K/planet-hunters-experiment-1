@@ -51,8 +51,8 @@ jobs:
           node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
           NEXT_TELEMETRY_DISABLED: 1
-          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
-          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-pocketbase.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-pocketbase.fly.dev
           NEXT_PUBLIC_LANDNAM_ENV: production
           # Landnam's Clerk production instance (SSL-668). Empty keeps the
           # PocketBase sign-in until the repository variable is set.
@@ -103,8 +103,8 @@ jobs:
           node scripts/verify-deployed-pb-urls.mjs .open-next
         env:
           NEXT_TELEMETRY_DISABLED: 1
-          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
-          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-pocketbase.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-pocketbase.fly.dev
           NEXT_PUBLIC_LANDNAM_ENV: staging
           # Same Clerk production instance as playlandnam.space; staging is
           # served at staging.playlandnam.space so the instance accepts it.

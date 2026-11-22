@@ -1,7 +1,7 @@
 name: Shared TESS/NEOCP ingest
 
 # SSL-323: one scheduled runner into the shared PocketBase pool
-# (https://signal-k-starsailors.fly.dev), not Landnam PocketBase and not a
+# (https://signal-k-pocketbase.fly.dev), not Landnam PocketBase and not a
 # per-game job. Spectra is not ingested here.
 #
 # Required repository secrets to actually write:

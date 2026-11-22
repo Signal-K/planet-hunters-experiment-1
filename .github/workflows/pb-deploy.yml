@@ -7,11 +7,11 @@ name: PocketBase Deploy
 # the moment this deploys. The validate job exists to keep an unbuildable or
 # test-failing branch from ever reaching that step.
 
+# RETIRED: Landnam's server now compiles into the shared backend
+# (Signal-K/tickets-please backend/landnam) and runs on signal-k-pocketbase.
+# This legacy deploy targets the old signal-k-landnam app and is manual-only so
+# a push can no longer overwrite it or run migrations against stale data.
 on:
-  push:
-    paths:
-      - "pocketbase/**"
-      - ".github/workflows/pb-deploy.yml"
   workflow_dispatch:
 
 permissions:
