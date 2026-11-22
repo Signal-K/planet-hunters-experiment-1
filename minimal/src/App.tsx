@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { currentPilot, SIGN_IN_URL } from './auth'
 import { CHAPTERS, type Chapter } from './chapters'
 import { BaseScene, outOfReach } from './BaseScene'
@@ -6,6 +6,7 @@ import { BriefingScene } from './BriefingScene'
 import { Scenery } from './scenes'
 import { readSharedSave } from './sharedSave'
 import { applyResult, missingMaterials, readProgress, writeProgress, type MinimalProgress } from './progress'
+import { pushProgress, syncProgress } from './progressSync'
 import { base as baseFor, levelUps, type RunCounts, type StructureId } from './structures'
 import type { Target } from '@landnam/lib/data/types'
 
@@ -44,6 +45,25 @@ export function App() {
   const [progress, setProgress] = useState(() => (pilot ? devRuns(readProgress(pilot.id)) : null))
   const [picked, setPicked] = useState<Target | undefined>()
   const [fresh, setFresh] = useState<ReadonlySet<StructureId>>(new Set())
+
+  // Progress is saved to the account (SSL-877): merge it with this device's copy
+  // on load, and again whenever the connection comes back.
+  const pilotId = pilot?.id
+  useEffect(() => {
+    if (!pilot) return
+    let live = true
+    const sync = () => {
+      void syncProgress(pilot, readProgress(pilot.id)).then(merged => {
+        if (!live || !merged) return
+        writeProgress(pilot.id, merged)
+        setProgress(merged)
+      })
+    }
+    sync()
+    window.addEventListener('online', sync)
+    return () => { live = false; window.removeEventListener('online', sync) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run per pilot, not per render
+  }, [pilotId])
 
   // Shared with Landnam: francs, and whether its onboarding is done. Finishing it
   // there counts as one client contract here (chapter 1, First light).
@@ -91,6 +111,7 @@ export function App() {
         onFinish={result => {
           const next = applyResult(progress, chapter, result)
           writeProgress(pilot.id, next)
+          void pushProgress(pilot, next)
           setProgress(next)
           setFresh(new Set(upgrades.map(u => u.def.id)))
           setView({ kind: 'base' })

@@ -35,4 +35,15 @@ export function currentPilot(): Pilot | null {
   }
 }
 
+/** The shared backend session token, for saving progress to the account (progressSync.ts). */
+export function authToken(): string | null {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY)
+    const token = raw ? (JSON.parse(raw) as { token?: string }).token : undefined
+    return token && !tokenExpired(token) ? token : null
+  } catch {
+    return null
+  }
+}
+
 export const SIGN_IN_URL = '/game?return=/minimal/'

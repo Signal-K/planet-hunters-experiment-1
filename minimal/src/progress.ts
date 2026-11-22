@@ -1,5 +1,6 @@
 // Minimal's own progress (Liam, 2026-11-19: chapter progress is Minimal's; only
-// francs and onboarding are shared with Landnam). Kept per pilot on this device.
+// francs and onboarding are shared with Landnam). Kept per pilot on this device
+// and mirrored to the player's account (progressSync.ts, SSL-877).
 // Writing francs back into the Landnam save is still open (decision note).
 import { openMarketSellPrice } from '@landnam/lib/systems/EconomySystem'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
