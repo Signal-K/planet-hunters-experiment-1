@@ -59,6 +59,11 @@ problem; the shell around them is.**
 
 ## Proposal: Minimal is a story
 
+> **Superseded for the home screen (2026-11-22).** The numbered route is replaced by an
+> incremental base: four structures that level up from missions flown, with every unlocked
+> mission replayable. See `notes/decisions/Minimal base levels up from missions (2026-11-22).md`.
+> The chapters below remain the missions the base unlocks.
+
 Minimal is a short, numbered chapter route over Landnam's real missions. The full agency
 (contract tabs, clients, probes, data hub, votes, upgrades) stays in Landnam; the last chapter
 points there for players who want more.

@@ -3,7 +3,8 @@
 // Writing francs back into the Landnam save is still open (decision note).
 import { openMarketSellPrice } from '@landnam/lib/systems/EconomySystem'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
-import type { Chapter } from './chapters'
+import { CHAPTERS, type Chapter } from './chapters'
+import type { RunCounts } from './structures'
 
 export interface MinimalProgress {
   /** Chapter numbers finished in Minimal. */
@@ -12,15 +13,21 @@ export interface MinimalProgress {
   earned: number
   /** Materials stored at home (the Stockpile chapter fills it; Build spends it). */
   stash: Record<string, number>
+  /** Finished runs per mission type: the base's structures level up from these (structures.ts). */
+  runs: RunCounts
 }
 
-const EMPTY: MinimalProgress = { done: [], earned: 0, stash: {} }
+const EMPTY: MinimalProgress = { done: [], earned: 0, stash: {}, runs: {} }
 const key = (pilotId: string) => `landnam-minimal-v1:user:${pilotId}`
 
 export function readProgress(pilotId: string): MinimalProgress {
   try {
     const raw = localStorage.getItem(key(pilotId))
-    return raw ? { ...EMPTY, ...(JSON.parse(raw) as Partial<MinimalProgress>) } : EMPTY
+    if (!raw) return EMPTY
+    const saved = { ...EMPTY, ...(JSON.parse(raw) as Partial<MinimalProgress>) }
+    // Saves from before the base counted runs: each finished chapter counts once.
+    if (!raw.includes('"runs"')) saved.runs = runsFromChapters(saved.done)
+    return saved
   } catch {
     return EMPTY
   }
@@ -79,7 +86,18 @@ export function applyResult(progress: MinimalProgress, chapter: Chapter, result:
     done: [...new Set([...progress.done, chapter.number])].sort((a, b) => a - b),
     earned: progress.earned + result.francs,
     stash,
+    runs: { ...progress.runs, [chapter.type]: (progress.runs[chapter.type] ?? 0) + 1 },
   }
+}
+
+/** One run per finished chapter, for saves (and the Landnam onboarding) from before run counts. */
+export function runsFromChapters(done: readonly number[]): RunCounts {
+  const runs: RunCounts = {}
+  for (const n of done) {
+    const type = CHAPTERS.find(c => c.number === n)?.type
+    if (type) runs[type] = (runs[type] ?? 0) + 1
+  }
+  return runs
 }
 
 /** Materials a build still lacks from the home stash; empty when it can start. */

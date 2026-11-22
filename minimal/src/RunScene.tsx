@@ -15,6 +15,7 @@ import { resultFor, type RunResult } from './progress'
 import { Scenery } from './scenes'
 import { MineScene } from './MineScene'
 import { OrbitScene } from './OrbitScene'
+import type { Base, levelUps } from './structures'
 
 type Step = 'launch' | 'mine' | 'deliver' | 'build' | 'deploy' | 'survey' | 'home'
 
@@ -32,8 +33,12 @@ const BUILD_MS = 2400
 /** The payload drifts clear and opens its panels before home. */
 const RELEASE_MS = 2600
 
-export function RunScene({ chapter, onFinish, onQuit }: {
+export function RunScene({ chapter, base, upgrades, onFinish, onQuit }: {
   chapter: Chapter
+  /** The base's rocket and laser for this run. */
+  base: Base
+  /** What finishing this run levels up at the base, shown on the home screen. */
+  upgrades: ReturnType<typeof levelUps>
   /** The run is over: bank this result and go back to the route. */
   onFinish: (result: RunResult) => void
   /** Left before the end: nothing is banked. */
@@ -64,6 +69,8 @@ export function RunScene({ chapter, onFinish, onQuit }: {
       <MineScene
         mission={mission}
         target={target}
+        hold={base.rocket.hold}
+        laser={base.laser}
         header={header}
         onComplete={haul => {
           setCargo(haul)
@@ -219,6 +226,15 @@ export function RunScene({ chapter, onFinish, onQuit }: {
           {Object.keys(result.stored).length > 0 && <Haul minerals={result.stored} />}
           {result.francs > 0 && <div className="mn-haul"><span className="mn-chip mn-reward">+{francs(result.francs)}</span></div>}
         </section>
+        {upgrades.map(u => (
+          <section key={u.def.id} className="mn-card mn-upgrade">
+            <img src={u.def.art[u.level - 1]} alt="" draggable={false} />
+            <div>
+              <p className="mn-eyebrow">{u.def.name.toUpperCase()} · LEVEL {u.level}</p>
+              <p className="mn-goal">{u.unlock.line}</p>
+            </div>
+          </section>
+        ))}
         <button className="mn-cta" onClick={() => onFinish(result)}>
           CONTINUE
         </button>

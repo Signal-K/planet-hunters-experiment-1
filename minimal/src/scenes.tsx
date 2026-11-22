@@ -25,11 +25,6 @@ export const FRAMING: Record<MinimalSceneKind, Framing> = {
     landscape: { focus: { x: 0.72, y: 0.5 }, zoom: 2.4 },
   },
 }
-/** The route draws its chapters in the sky above the outpost, so the outpost sits low. */
-export const ROUTE_FRAMING: Framing = {
-  portrait: { focus: { x: 0.5, y: 0.74 }, zoom: 1.9 },
-  landscape: { focus: { x: 0.5, y: 0.7 }, zoom: 1.7 },
-}
 
 /** Landnam minerals as the TakeOn resources that stand in for them (platinum shows as crystal). */
 export function takeonResources(minerals: readonly string[]): ResourceKey[] {

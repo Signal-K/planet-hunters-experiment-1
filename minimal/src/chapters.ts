@@ -49,6 +49,8 @@ export interface Chapter {
   target?: Target
   /** Second stop for a delivery run. */
   deliveryTarget?: Target
+  /** Worlds the player may pick for this run, nearest first (market mining: go wherever the rocket reaches). */
+  destinations?: Target[]
 }
 
 const nearest = (mission: Mission | undefined): Target | undefined =>
@@ -82,8 +84,11 @@ const runtimeTarget = (id: string | undefined) => runtime.targets.find(t => t.id
 
 // 1. The first onboarding client contract (Landnam's first sequence-1 client job).
 const contract = MISSIONS.find(m => m.sequence === 1 && !!m.client && !m.locked)
-// 2. Self-directed mining: no client, sell the haul at market.
-const selfDirected = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)
+// 2. Self-directed mining: no client, sell the haul at market. Landnam's run carries a token
+// order (1 nickel); Minimal flies it as an open run that fills the rocket's hold, so a
+// bigger rocket from the Launchpad means a bigger sale.
+const selfDirectedBase = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)
+const selfDirected = selfDirectedBase && { ...selfDirectedBase, requires: { ...selfDirectedBase.requires, minerals: {} } }
 // 3. A two-leg delivery contract.
 const delivery = MISSIONS.find(m => !!m.deliveryTargetId && !m.locked)
 // 4. The space telescope launch from the control station.
@@ -99,9 +104,15 @@ const haul = runtimeMission(m => m.id === RESOURCE_FOCUS_MISSION_ID)
 // 9. A survey flight following up a satellite discovery.
 const surveyFlight = runtimeMission(m => m.id.startsWith('exo-survey-'))
 
+/** Every world with ore, nearest first: the rocket's reach, not the mission, decides where a market run may go. */
+function destinationsFor(mission: Mission | undefined): Target[] {
+  if (!mission) return []
+  return TARGETS.filter(t => t.minerals?.length && t.type !== 'exoplanet' && t.type !== 'event-field').sort((a, b) => a.orbit - b.orbit)
+}
+
 export const CHAPTERS: Chapter[] = [
   { number: 1, name: 'First light', goal: 'Fly out, mine with the laser, come home.', teaches: 'Fly and fire', type: 'client-contract', verb: 'mine', mission: contract, target: nearest(contract) },
-  { number: 2, name: 'First sale', goal: 'Mine what you like and sell it at market.', teaches: 'Francs', type: 'self-directed', verb: 'mine', mission: selfDirected, target: nearest(selfDirected) },
+  { number: 2, name: 'First sale', goal: 'Mine what you like and sell it at market.', teaches: 'Francs', type: 'self-directed', verb: 'mine', mission: selfDirected, target: nearest(selfDirectedBase), destinations: destinationsFor(selfDirected) },
   { number: 3, name: 'Courier', goal: 'Mine an order, then drop it at a second world.', teaches: 'Deliveries', type: 'delivery', verb: 'deliver', mission: delivery, target: nearest(delivery), deliveryTarget: TARGETS.find(t => t.id === delivery?.deliveryTargetId) },
   { number: 4, name: 'Eyes on the sky', goal: 'Launch a space telescope into orbit.', teaches: 'Satellites', type: 'satellite', verb: 'deploy', mission: telescope, target: runtimeTarget(telescope?.targetId) },
   { number: 5, name: 'Probe', goal: 'Leave a survey probe in orbit to map a world.', teaches: 'Probes', type: 'survey-probe', verb: 'deploy', mission: probe, target: runtimeTarget(probe?.targetId) },

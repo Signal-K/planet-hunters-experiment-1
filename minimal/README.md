@@ -12,9 +12,15 @@ It is its own module in this repo, not part of the Landnam app:
   site serves. `npm run typecheck:minimal` type-checks it.
 - It imports Landnam's sources instead of copying them: `@landnam/*` is `web/`, `@shared/*`
   is `shared/`. React comes from `web/node_modules`. Change a mission or rule in Landnam.
-- Every screen stands on a TakeOn minimal scene (`createMinimalScene`, signal-k/takeon, KES-530),
-  a read-only diorama: sign-in watches a `launch` from the home outpost, the chapter route sits
-  over the `outpost`, and a briefing shows the destination's `deposit` with the rover parked by
+- Home is the agency's base (`src/BaseScene.tsx`), drawn side-on from Landnam's base-site map
+  (`web/lib/scene/base-site.json`): sky, far plain, paved apron and the four v7 structures at
+  their authored size and footing (art stays in the perspective it was drawn for). Each starts at
+  level 1 and levels up from missions flown (`src/structures.ts`), with a counter of what its
+  next level needs; levels open missions, bigger rockets and laser tiers. The tray lists every
+  unlocked mission (all replayable); NEXT suggests one. In dev, `&runs=client-contract:1,…`
+  seeds finished runs.
+- The other screens stand on a TakeOn minimal scene (`createMinimalScene`, signal-k/takeon, KES-530),
+  a read-only diorama: sign-in watches a `launch` from the home outpost, and a briefing shows the destination's `deposit` with the rover parked by
   ore of the kind the contract wants (Landnam minerals map to TakeOn resources through
   `LANDNAM_TO_TAKEON_MINERAL`, so platinum shows as crystal). Worlds are dressed with Landnam's
   own biomes and colours (`src/takeonWorlds.ts`, reusing `lib/takeon/sandbox.ts` and
@@ -23,7 +29,7 @@ It is its own module in this repo, not part of the Landnam app:
   TakeOn is unchanged) and loads lazily after the first paint. To update it from a TakeOn
   checkout: `minimal/scripts/update-takeon.sh [path-to-takeon]` (default `../takeon`).
 
-- START plays the chapter's run (`src/RunScene.tsx`): one chapter per Landnam mission type
+- A mission's briefing plays its run (`src/RunScene.tsx`): one chapter per Landnam mission type
   (`src/chapters.ts`). Mining is Minimal's own top-down pass (`src/MineScene.tsx`, SSL-865):
   drag to steer and FIRE at the deposits; the probe survey already marked them, because ships never scan. The
   shower chapter still uses Landnam's mining scene for CATCH. With `&dev=1`, P pauses the

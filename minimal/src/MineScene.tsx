@@ -15,16 +15,12 @@ import { terrainLookForTarget } from '@landnam/lib/takeon/terrainColour'
 import MineralChip from '@landnam/components/game/MineralChip'
 import type { Mission, Target } from '@landnam/lib/data/types'
 
-/** The starting laser cuts minerals up to this laserAccess (Landnam level 1). */
-const LASER_LEVEL = 1
 /** Ground speed as a share of the screen height per second: ~4 s of look-ahead. */
 const SPEED_SHARE = 0.17
 /** Ship height and reticle reach, as shares of the screen height. */
 const SHIP_AT = 0.7
 const REACH_SHARE = 0.17
 const FIRE_COOLDOWN = 0.4
-/** A free-mining run with no order fills a hold of this many deposits. */
-const OPEN_HOLD = 6
 /** Share of deposits that are a mineral the order still needs. */
 const WANTED_SHARE = 0.5
 /** Dev only (`&dev=1`): P pauses the field so a run can be checked by hand. */
@@ -40,9 +36,13 @@ interface Ore {
 
 interface Pop { x: number; y: number; text: string; life: number }
 
-export function MineScene({ mission, target, header, onComplete }: {
+export function MineScene({ mission, target, hold = 6, laser = 1, header, onComplete }: {
   mission: Mission
   target: Target
+  /** A free-mining run with no order fills a hold of this many deposits: the rocket's cargo (the Launchpad's level). */
+  hold?: number
+  /** The laser cuts minerals up to this laserAccess (the Hangar's level). */
+  laser?: number
   /** Minimal's own top row (LEAVE, step dots, place). */
   header: React.ReactNode
   onComplete: (haul: Record<string, number>) => void
@@ -70,7 +70,7 @@ export function MineScene({ mission, target, header, onComplete }: {
     const pool = bodyMinerals.length > 0 ? bodyMinerals : Object.keys(order)
     const got: Record<string, number> = {}
     const need = (id: string) => (order[id] ?? 0) - (got[id] ?? 0)
-    const isDone = () => (openRun ? Object.values(got).reduce((a, b) => a + b, 0) >= OPEN_HOLD : Object.keys(order).every(id => need(id) <= 0))
+    const isDone = () => (openRun ? Object.values(got).reduce((a, b) => a + b, 0) >= hold : Object.keys(order).every(id => need(id) <= 0))
     const pickMineral = () => {
       const wanted = Object.keys(order).filter(id => need(id) > 0)
       if (wanted.length > 0 && Math.random() < WANTED_SHARE) return wanted[Math.floor(Math.random() * wanted.length)]
@@ -124,7 +124,7 @@ export function MineScene({ mission, target, header, onComplete }: {
         s.nextY -= H * (0.15 + Math.random() * 0.09)
       }
     }
-    const cuttable = (o: Ore) => (MINERAL_META[o.mineral]?.laserAccess ?? 1) <= LASER_LEVEL
+    const cuttable = (o: Ore) => (MINERAL_META[o.mineral]?.laserAccess ?? 1) <= laser
     const underReticle = () => {
       const r = reticle()
       // A reticle (radius 14) touching the seam's rim counts as on it.
@@ -218,7 +218,7 @@ export function MineScene({ mission, target, header, onComplete }: {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); api.current = null }
     // The run is set up once per mission and target.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mission.id, target.id])
+  }, [mission.id, target.id, hold, laser])
 
   // Keyboard: arrows steer, Space fires.
   useEffect(() => {
@@ -235,7 +235,7 @@ export function MineScene({ mission, target, header, onComplete }: {
 
   const steering = useRef<number | null>(null)
   const goal = openRun
-    ? [{ id: 'hold', label: `HOLD ${Object.values(haul).reduce((a, b) => a + b, 0)}/${OPEN_HOLD}` }]
+    ? [{ id: 'hold', label: `HOLD ${Object.values(haul).reduce((a, b) => a + b, 0)}/${hold}` }]
     : Object.entries(order).map(([id, n]) => ({ id, label: `${MINERAL_META[id]?.name ?? id} ${Math.min(haul[id] ?? 0, n)}/${n}` }))
 
   return (

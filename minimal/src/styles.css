@@ -51,20 +51,6 @@ button.mn-chip { cursor: pointer; }
 
 /* Route: chapters as a flight route over the live base. */
 .mn-sky-scrim { inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(14, 22, 38, .78) 0%, rgba(14, 22, 38, .42) 42%, rgba(14, 22, 38, 0) 68%); }
-.mn-route-line { inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-.mn-route-ahead { fill: none; stroke: rgba(243,234,216,.45); stroke-width: 2; stroke-dasharray: 6 8; }
-.mn-route-flown { fill: none; stroke: var(--cyan); stroke-width: 3; }
-.mn-waypoints { inset: 0; margin: 0; padding: 0; list-style: none; z-index: 3; pointer-events: none; }
-.mn-waypoint { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: auto; }
-.mn-waypoint-hit { position: relative; width: 56px; height: 56px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
-.mn-waypoint-hit:disabled { cursor: default; }
-.mn-waypoint-hit img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
-.mn-waypoint-num { position: relative; font-weight: 700; font-size: 16px; color: var(--cream); text-shadow: 0 1px 2px #000; }
-.mn-waypoint-name { font-size: 14px; font-weight: 700; color: var(--cream); white-space: nowrap; padding: 2px 8px; border-radius: 999px; background: rgba(10, 14, 24, .72); }
-.mn-waypoint-tag { font-size: 14px; letter-spacing: .14em; color: var(--cyan); text-shadow: 0 1px 3px #000; }
-.mn-waypoint.mn-locked { opacity: .55; }
-.mn-waypoint.mn-now .mn-waypoint-hit { animation: beacon 1.6s ease-in-out infinite; }
-@keyframes beacon { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 var(--cyan)); } 50% { transform: scale(1.12); filter: drop-shadow(0 0 12px var(--cyan)); } }
 
 /* Briefing: the destination's TakeOn diorama. */
 .mn-world { inset: 0; width: 100%; height: 100%; display: block; }
@@ -111,3 +97,58 @@ button.mn-chip { cursor: pointer; }
 .mn-orbit[data-released] .mn-orbit-panel { transform: scaleX(1); }
 @keyframes mn-orbit-bob { 50% { translate: 0 -4px; } }
 @keyframes mn-orbit-release { to { translate: 40px -70px; scale: 1.25; } }
+
+/* The base (structures.ts): four structures that level up as missions are flown. */
+/* The base, side-on: Landnam's base-site strip (sky, far plain, paved apron), scrolled sideways on a narrow phone. */
+.mn-site { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; z-index: 0; scrollbar-width: none; overscroll-behavior-x: contain; background: var(--deep, #a39d92); }
+.mn-site::-webkit-scrollbar { display: none; }
+.mn-site-strip { position: relative; height: 100%; min-width: 100%; }
+.mn-site-sky { position: absolute; left: 0; right: 0; top: 0; height: var(--ground); background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-horizon) 100%); }
+.mn-site-plain, .mn-site-ground { position: absolute; left: 0; right: 0; background-repeat: repeat-x; background-position: center bottom; background-size: auto 100%; }
+.mn-site-cloud { position: absolute; height: auto; pointer-events: none; animation: mn-cloud linear infinite alternate; }
+@keyframes mn-cloud { to { transform: translateX(120px); } }
+@media (prefers-reduced-motion: reduce) { .mn-site-cloud { animation: none; } }
+.mn-site-deep { position: absolute; left: 0; right: 0; bottom: 0; background: var(--deep); }
+.mn-base { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; z-index: 1; }
+.mn-structure-spot { position: absolute; top: var(--ground); width: 0; height: 0; }
+.mn-structure { position: absolute; left: 0; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; color: var(--cream); font: inherit; cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+.mn-structure img { position: absolute; left: 50%; transform: translate(-50%, -8px); display: block; max-width: none; }
+.mn-plate { min-height: 50px; min-width: 128px; box-sizing: border-box; display: grid; grid-template-columns: max-content auto; grid-template-areas: 'name lv' 'bar count'; align-items: center; column-gap: 10px; row-gap: 4px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(6px); text-align: left; }
+.mn-structure-name { grid-area: name; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.mn-structure-level { grid-area: lv; font: 700 14px 'Oxanium', system-ui, sans-serif; color: var(--gold); letter-spacing: .08em; white-space: nowrap; }
+.mn-structure-count { grid-area: count; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.mn-bar { grid-area: bar; height: 6px; min-width: 56px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.mn-bar i { display: block; height: 100%; background: var(--cyan); border-radius: 3px; }
+.mn-structure.mn-fresh .mn-plate { border-color: var(--gold); animation: mn-fresh 1.4s ease-in-out 3; }
+@keyframes mn-fresh { 50% { box-shadow: 0 0 0 4px rgba(241,196,107,.45); } }
+.mn-structure:focus-visible, .mn-mission:focus-visible, .mn-destination:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+
+.mn-missions { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
+.mn-mission { flex: none; min-height: 56px; min-width: 128px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--cream); font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); }
+.mn-mission-name { font-weight: 700; font-size: 16px; }
+.mn-mission-verb { font-size: 14px; color: var(--muted); }
+.mn-mission-next { border-color: var(--cyan); }
+.mn-mission:disabled { opacity: .55; cursor: default; }
+
+.mn-sheet-backdrop { inset: 0; z-index: 20; background: rgba(5, 8, 15, .6); display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.mn-sheet { width: 100%; max-width: 480px; gap: 12px; }
+.mn-sheet-head { display: flex; align-items: center; gap: 12px; }
+.mn-sheet-head img { width: 88px; height: 72px; object-fit: contain; image-rendering: pixelated; }
+.mn-levels { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.mn-levels li { display: flex; gap: 10px; align-items: baseline; font-size: 15px; color: var(--muted); }
+.mn-levels li.mn-level-have { color: var(--cream); }
+.mn-levels li.mn-level-next { color: var(--cyan); }
+.mn-level-num { flex: none; width: 44px; font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: .08em; }
+
+.mn-upgrade { flex-direction: row; align-items: center; gap: 12px; border-color: var(--gold); }
+.mn-upgrade img { width: 72px; height: 56px; object-fit: contain; image-rendering: pixelated; }
+.mn-destinations { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.mn-destination { flex: none; white-space: nowrap; }
+.mn-destination[aria-checked='true'] { background: var(--cream); color: var(--ink); }
+.mn-destination:disabled { opacity: .5; }
+.mn-note-dim { font-size: 14px; color: var(--muted); margin: 0; }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .mn-scene-bottom:has(.mn-missions) { max-width: 900px; }
+  .mn-scene-bottom:has(.mn-missions) .mn-cta { max-width: 560px; align-self: center; }
+}
