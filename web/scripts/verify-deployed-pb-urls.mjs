@@ -9,8 +9,8 @@ import path from 'node:path'
 
 const root = path.resolve(process.argv[2] ?? '.open-next')
 const required = [
-  'https://signal-k-starsailors.fly.dev',
-  'https://signal-k-landnam.fly.dev',
+  'https://signal-k-pocketbase.fly.dev',
+  'https://signal-k-pocketbase.fly.dev',
 ]
 // The resolver may still mention the loopback strings as inputs. These
 // patterns are the broken staging bundle: a PocketBase client or fetch

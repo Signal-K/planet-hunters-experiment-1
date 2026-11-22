@@ -1,5 +1,5 @@
 // shared-dev is a local stand-in for the shared Star Sailors PocketBase
-// (signal-k/tickets-please backend/, deployed as signal-k-starsailors.fly.dev)
+// (signal-k/tickets-please backend/, deployed as signal-k-pocketbase.fly.dev)
 // so Landnam runs and tests on its own, with no Docker and no sibling repo.
 //
 // It carries only what Landnam calls on the shared backend:

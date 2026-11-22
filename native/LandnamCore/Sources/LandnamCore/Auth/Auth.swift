@@ -47,8 +47,8 @@ public struct AuthAPI: Sendable {
         let landnam = env["LANDNAM_PB_URL"] ?? "http://localhost:8095"
         let shared = env["LANDNAM_SHARED_PB_URL"] ?? "http://localhost:8090"
         #else
-        let landnam = env["LANDNAM_PB_URL"] ?? "https://signal-k-landnam.fly.dev"
-        let shared = env["LANDNAM_SHARED_PB_URL"] ?? "https://signal-k-starsailors.fly.dev"
+        let landnam = env["LANDNAM_PB_URL"] ?? "https://signal-k-pocketbase.fly.dev"
+        let shared = env["LANDNAM_SHARED_PB_URL"] ?? "https://signal-k-pocketbase.fly.dev"
         #endif
         return AuthAPI(baseURL: URL(string: landnam)!, sharedURL: URL(string: shared)!, session: session)
     }
@@ -110,14 +110,23 @@ public struct AuthAPI: Sendable {
         return fresh
     }
 
+    /// The server (Fly) stops when idle and takes a few seconds to wake, so a
+    /// network failure or 502/503/504 is retried with backoff before it counts
+    /// as unreachable. 400/401/403 are real rejections and are never retried.
     private func send(_ req: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        let data: Data, resp: URLResponse
-        do { (data, resp) = try await session.data(for: req) }
-        catch { throw AuthError.unreachable(error.localizedDescription) }
-        guard let http = resp as? HTTPURLResponse else { throw AuthError.malformed }
-        if [400, 401, 403].contains(http.statusCode) { throw AuthError.rejected }
-        guard (200..<300).contains(http.statusCode) else { throw AuthError.unreachable("HTTP \(http.statusCode)") }
-        return (data, http)
+        var lastError: AuthError = .unreachable("no response")
+        for attempt in 0..<5 {
+            if attempt > 0 { try? await Task.sleep(nanoseconds: UInt64(600_000_000 * (1 << (attempt - 1)))) }
+            let data: Data, resp: URLResponse
+            do { (data, resp) = try await session.data(for: req) }
+            catch { lastError = .unreachable(error.localizedDescription); continue }
+            guard let http = resp as? HTTPURLResponse else { throw AuthError.malformed }
+            if [400, 401, 403].contains(http.statusCode) { throw AuthError.rejected }
+            if [502, 503, 504].contains(http.statusCode) { lastError = .unreachable("HTTP \(http.statusCode)"); continue }
+            guard (200..<300).contains(http.statusCode) else { throw AuthError.unreachable("HTTP \(http.statusCode)") }
+            return (data, http)
+        }
+        throw lastError
     }
 
     private static func decodeSession(_ data: Data) throws -> AuthSession {

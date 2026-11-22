@@ -36,7 +36,7 @@ jobs:
       - name: Resolve authoritative daily snapshot
         env:
           LANDNAM_DAILY_ECONOMY_INPUT_JSON: ${{ vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON }}
-          LANDNAM_PB_URL: ${{ vars.LANDNAM_PB_URL || secrets.PB_LANDNAM_URL || 'https://signal-k-landnam.fly.dev' }}
+          LANDNAM_PB_URL: ${{ vars.LANDNAM_PB_URL || secrets.PB_LANDNAM_URL || 'https://signal-k-pocketbase.fly.dev' }}
           LANDNAM_PB_SERVICE_EMAIL: ${{ secrets.LANDNAM_PB_SERVICE_EMAIL || secrets.PB_ADMIN_EMAIL }}
           LANDNAM_PB_SERVICE_PASSWORD: ${{ secrets.LANDNAM_PB_SERVICE_PASSWORD || secrets.PB_ADMIN_PASSWORD }}
         run: node --experimental-strip-types scripts/run-daily-economy.ts --output daily-economy-snapshot.json --publish-url "$LANDNAM_PB_URL"

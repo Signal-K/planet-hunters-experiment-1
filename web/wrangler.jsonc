@@ -16,8 +16,8 @@
     "enabled": true
   },
   "vars": {
-    "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-starsailors.fly.dev",
-    "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-landnam.fly.dev",
+    "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-pocketbase.fly.dev",
+    "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-pocketbase.fly.dev",
     "NEXT_PUBLIC_LANDNAM_ENV": "production"
   },
   "env": {
@@ -30,8 +30,8 @@
         { "pattern": "staging.playlandnam.space", "custom_domain": true }
       ],
       "vars": {
-        "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-starsailors.fly.dev",
-        "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-landnam.fly.dev",
+        "NEXT_PUBLIC_SHARED_PB_URL": "https://signal-k-pocketbase.fly.dev",
+        "NEXT_PUBLIC_LANDNAM_PB_URL": "https://signal-k-pocketbase.fly.dev",
         "NEXT_PUBLIC_LANDNAM_ENV": "staging"
       }
     }

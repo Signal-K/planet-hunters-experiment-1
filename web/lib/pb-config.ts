@@ -12,8 +12,8 @@
 // compile check do not set that env, so they keep talking to localhost.
 // Set NEXT_PUBLIC_PB_ALLOW_LOOPBACK=1 to force loopback even on a deployed build.
 
-const DEPLOYED_SHARED_PB_URL = 'https://signal-k-starsailors.fly.dev'
-const DEPLOYED_LANDNAM_PB_URL = 'https://signal-k-landnam.fly.dev'
+const DEPLOYED_SHARED_PB_URL = 'https://signal-k-pocketbase.fly.dev'
+const DEPLOYED_LANDNAM_PB_URL = 'https://signal-k-pocketbase.fly.dev'
 
 const DEV_SHARED_PB_URL = 'http://localhost:8090'
 const DEV_LANDNAM_PB_URL = 'http://localhost:8096'

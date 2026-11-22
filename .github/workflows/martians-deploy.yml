@@ -50,7 +50,7 @@ jobs:
       - name: Build dist
         run: scripts/build-dist.sh
         env:
-          HM_API_URL: https://signal-k-starsailors.fly.dev
+          HM_API_URL: https://signal-k-pocketbase.fly.dev
           # Landnam's Clerk production instance accepts playlandnam.space subdomains.
           HM_CLERK_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 

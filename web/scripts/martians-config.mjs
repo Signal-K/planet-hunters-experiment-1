@@ -7,7 +7,7 @@ import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const config = {
-  api: process.env.NEXT_PUBLIC_SHARED_PB_URL?.trim() || 'https://signal-k-starsailors.fly.dev',
+  api: process.env.NEXT_PUBLIC_SHARED_PB_URL?.trim() || 'https://signal-k-pocketbase.fly.dev',
   clerk: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || '',
   shareAuth: 'pocketbase_auth', // Landnam's pocketbase-js auth: signed in there is signed in here
   wasm: 'game.wasm.gz',

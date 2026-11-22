@@ -29,7 +29,7 @@ export interface IngestRunResult {
   skippedWriteReason: string | null
 }
 
-const DEFAULT_SHARED_PB_URL = 'https://signal-k-starsailors.fly.dev'
+const DEFAULT_SHARED_PB_URL = 'https://signal-k-pocketbase.fly.dev'
 
 export function resolveIngestEnv(env: NodeJS.ProcessEnv = process.env): IngestEnv {
   const writeFlag = env.INGEST_WRITE ?? env.INGEST_DRY_RUN
