@@ -1382,6 +1382,7 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'mission-planner', missionId: plan.id, targetId: plan.targetId, rocket,
         player: { ...POST_ONBOARDING_PLAYER, francs: 150_000_000, stash: { iron: 12, nickel: 6 }, placed: [...POST_ONBOARDING_PLAYER.placed, 'control-station'], missionPlans: { [plan.id]: plan },
+          ...(work === 'mine' ? { probes: { eros: { launchedAt: Date.now() - 12 * 3_600_000, readings: Object.fromEntries(['0_0', '1_0'].map(id => [id, { at: Date.now(), marked: [], deposits: sectorDeposits(TARGETS.find(target => target.id === 'eros')!, id) }])) } } } : {}),
           ...(work === 'deliver' ? { pendingLaunch: true, selectedStagedRocketId: 'planner-fixture-rocket', stagedRockets: [{ id: 'planner-fixture-rocket', rocketId: ROCKET_IDS.explorer, rocket, location: 'launchpad' as const, source: 'company' as const, missionId: plan.id, targetId: plan.targetId }] } : {}) },
         tutorial: false, doneSteps: TRAINING_DONE, lastCargo: null, popup: null,
       }

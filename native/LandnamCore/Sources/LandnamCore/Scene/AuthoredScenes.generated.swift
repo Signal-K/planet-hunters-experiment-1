@@ -1983,7 +1983,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "mission-planning"
           ],
-          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Mining shows downloaded and community survey coverage, estimated tonnes and composition-only choices separately. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
         },
         {
           "id": "saved-plans",
