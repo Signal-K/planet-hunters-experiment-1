@@ -55,7 +55,8 @@
    "tickets": [
     "SSL-345",
     "SSL-451",
-    "SSL-873"
+    "SSL-873",
+    "SSL-875"
    ]
   },
   {
@@ -197,7 +198,8 @@
    "web": "m1-debrief",
    "native": "debrief-phone",
    "tickets": [
-    "SSL-462"
+    "SSL-462",
+    "SSL-874"
    ]
   },
   {
@@ -706,7 +708,9 @@
    "flow": "core-loop",
    "web": "ui-mission-board",
    "native": "mission-board-live",
-   "tickets": []
+   "tickets": [
+    "SSL-876"
+   ]
   },
   {
    "id": "saturn-storm-search",
@@ -931,7 +935,8 @@
    "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
    "tickets": [
     "SSL-785",
-    "SSL-873"
+    "SSL-873",
+    "SSL-875"
    ]
   },
   {

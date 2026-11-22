@@ -6,7 +6,7 @@ id = "debrief"
 type = "travel"
 name = "Debrief"
 summary = "Payout and cargo settlement after a run, and the touchdown at home."
-tickets = ["SSL-462"]
+tickets = ["SSL-462", "SSL-874"]
 qa = ["debrief", "debrief-capacitor", "first-home", "transport-debrief", "telescope-debrief"]
 
 [runtime]
@@ -71,3 +71,9 @@ mechanics = ["mission-planning"]
 note = "Return to the same canonical base state."
 
 # ---- fixtures: shared/authoring/fixtures/debrief.toml (edit them here, they save to that file) ----
+
+[[objects]]
+id = "next-activity"
+kind = "ui"
+mechanics = ["mission-planning", "persistence"]
+note = "After any flight, including the first, the player can settle and choose another flight directly, or explicitly return to Base. Free Ops on web also offers own-flight planning; available instruments offer data review. Every action uses the same once-per-run settlement. The agency's purpose belongs to the player; suggestions are optional."

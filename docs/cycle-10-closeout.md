@@ -137,3 +137,70 @@ SSL-873 is Done; SSL-864 and SSL-870 remain open.
 The final `hub-pad-worn` check opened the existing ₣1M service confirmation
 from the guidance action. Confirming reduced the fixture balance from ₣150M
 to ₣149M and replaced Service pad with Prepare flight (screenshots 502–504).
+
+
+## Cycle 10 guidance hotfixes (22 November)
+
+PR #240 merged to main at `4c243af2` after all checks, including Simulator tests,
+passed. The explicitly requested follow-up branch is `hotfix/cycle-10-guidance`.
+Liam clarified that the agency belongs to the player: guidance explains choices
+and consequences, rather than assigning the agency a purpose or a mandatory
+campaign. The decision is in the repository and mirrored in Craft.
+
+SSL-874 gives even the first debrief a persistent Choose next flight action.
+Each next-activity action completes the same settlement once. Free Ops offers
+Plan my own flight; available telescopes offer data review. The Base action
+explicitly returns to Base, and the next mission board uses Earth scope.
+Rocket recycling is a separate optional action. iOS mirrors next-flight, Base
+and instrument exits; the web Mission Planner remains deferred on iOS.
+
+Played the first debrief to Choose next flight: the board opened directly at
+₣166.7M from ₣150M. The survey-probe debrief opened the player's own Mission
+Planner directly. The explicit Base button returned the first completed run
+to Base with the same payout. The final debrief was inspected at 390×844,
+926×428, 1180×820, 820×1180 and 1440×900 (screenshots 518–523). Successful actions
+reported no page errors. These are disposable fixtures, not a fresh user study.
+Local web suite: 1,347 passed, one skipped; shared Go and authoring checks passed.
+Web typecheck passed. No local Swift/Xcode/Simulator is available; native changes
+are verified by the PR's hosted Mac checks.
+
+SSL-875 marks a new Base recommendation as Suggested flight and exposes Choose
+another flight plus Plan my own flight on web in Free Ops. Existing active runs,
+unfinished setup and service states keep their continuation actions. iOS offers
+the alternate board route; native custom planning remains deferred.
+
+Played `hub-first-run`: own-flight planning opened directly, the alternate
+route opened the board with ₣150M unchanged and no contract accepted, and the
+suggested preparation still opened the normal review. Back through the board
+to Base retained Continue setup with no new-job choices (screenshots 525–537).
+Inspected phone, landscape, both iPad orientations and desktop. No new tests
+were added for these reversible UI changes; existing state/resource guards
+remain. The full local suite again passed 1,347 tests (one skipped), plus
+shared Go/authoring and typecheck.
+
+SSL-876 fixes a phone layout defect found on those routes: Plan mission and Log
+shared one grid cell. Planning, Log and balance now have distinct cells; the
+short Plan flight label keeps the actions readable. Free Run uses a compact
+44px Solar system back control with an accessible name, clear of the toolbar
+and Bennu. Native does not share this web grid or have the web planner.
+
+Clicked planning and Log separately on the phone, then selected Bennu in Free
+Run. Inspected 375×812, 390×844, landscape, both iPad orientations and desktop
+(screenshots 539–542 and 559–564). The final 375px view shows all header controls
+and Bennu clearly. Successful actions reported no page errors. One attempted
+Free Run click after the Log's Back action timed out because Back had returned
+to Base; the Mission Board fixture was reopened for the map check.
+
+The 1,347-test local suite, shared Go checks and authoring passed; typecheck and
+manual views were repeated after the final CSS refinement. No CSS-spelling or
+snapshot tests were added. Hosted native domain tests and the iOS app build
+passed for the functional hotfix code at `76075c54`; Simulator app tests and the
+final PR checks continue separately. The initial Cycle 10 changes remain merged
+in main; these guidance follow-ups are in draft PR #241.
+
+The portrait-tablet check also exposed toolbar crowding at 820px. The final
+header keeps the current tab's name and other tab icons on narrow portrait
+tablets; smaller widths use the two-row toolbar. Verified the corrected 820px
+view directly (screenshot 565), with planning, Log, balance and help all clear.
+The 768px Program view was also checked (572); its panel starts below the
+two-row toolbar. The final standard viewport matrix is 566–570.

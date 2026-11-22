@@ -8,7 +8,7 @@ id = "hub"
 type = "base"
 name = "Earth Base"
 summary = "The home base. Structures stand on fixed sites, can be tapped, and the dock leads to Build, the Menu and the other places."
-tickets = ["SSL-345", "SSL-451", "SSL-615", "SSL-641", "SSL-868", "SSL-855", "SSL-873"]
+tickets = ["SSL-345", "SSL-451", "SSL-615", "SSL-641", "SSL-868", "SSL-855", "SSL-873", "SSL-875"]
 qa = ["hub-first-run", "ground-telescope-upgrades", "signal-dialogue", "hub", "hub-structures", "transport-hub", "telescope-hub", "cp-early", "cp-mid", "cp-late"]
 
 [runtime]
@@ -139,4 +139,4 @@ id = "next-flight"
 kind = "ui"
 mechanics = ["training", "mission-planning", "persistence"]
 slot = "hud"
-note = "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button."
+note = "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button. Idle recommendations are labelled Suggested flight and include Choose another flight, plus Plan my own flight on web when Free Ops permits. These alternatives appear only for a new suggestion; active runs, unfinished setup and service states keep their existing continuation actions."

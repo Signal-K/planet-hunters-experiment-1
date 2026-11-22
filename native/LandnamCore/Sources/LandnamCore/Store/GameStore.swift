@@ -352,10 +352,10 @@ public final class GameStore {
     public func landingComplete() { apply(Loop.landingComplete(state, catalog: catalog, now: now)) }
     public func roverSurveyComplete() { apply(Loop.roverSurveyComplete(state)) }
     public func deliveryUnloadComplete() { apply(Loop.deliveryUnloadComplete(state, catalog: catalog, now: now)) }
-    public func debriefDone(payout: Int, affinity: Int, consumed: Cargo = [:], disposition: HaulDisposition? = nil) {
+    public func debriefDone(payout: Int, affinity: Int, consumed: Cargo = [:], disposition: HaulDisposition? = nil, next: Screen? = nil) {
         pendingPayout = payout
         if state.missionId == OrionidsRun.missionId { requestedMissionBoardTab = 2 }
-        apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, catalog: catalog, now: now))
+        apply(Loop.debriefDone(state, payout: payout, affinity: affinity, consumed: consumed, disposition: disposition, next: next, catalog: catalog, now: now))
     }
     /// SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger.
     public func homeDelivery(_ split: HomeDelivery.Split) {

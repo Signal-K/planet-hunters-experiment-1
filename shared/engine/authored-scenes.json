@@ -678,6 +678,15 @@
             "mission-planning"
           ],
           "note": "Return to the same canonical base state."
+        },
+        {
+          "id": "next-activity",
+          "kind": "ui",
+          "mechanics": [
+            "mission-planning",
+            "persistence"
+          ],
+          "note": "After any flight, including the first, the player can settle and choose another flight directly, or explicitly return to Base. Free Ops on web also offers own-flight planning; available instruments offer data review. Every action uses the same once-per-run settlement. The agency's purpose belongs to the player; suggestions are optional."
         }
       ]
     },
@@ -1224,7 +1233,7 @@
             "persistence"
           ],
           "slot": "hud",
-          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button."
+          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button. Idle recommendations are labelled Suggested flight and include Choose another flight, plus Plan my own flight on web when Free Ops permits. These alternatives appear only for a new suggestion; active runs, unfinished setup and service states keep their existing continuation actions."
         }
       ]
     },
@@ -2056,6 +2065,14 @@
             "training"
           ],
           "note": "Optional training, never a Free Ops gate."
+        },
+        {
+          "id": "planning-and-log",
+          "kind": "ui",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "On portrait phones, own-flight planning, mission log and balance have distinct grid cells and 44px controls. Narrow portrait tablets retain the current tab name and other tab icons so their toolbar cannot overlap these controls. Free Run keeps a compact, accessible Solar system back control at the left of the second row, clear of planning and destination nodes. Other viewports retain their normal toolbar."
         }
       ]
     },

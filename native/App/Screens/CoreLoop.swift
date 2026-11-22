@@ -776,6 +776,23 @@ struct DebriefScreen: View {
                         }
                     }
 
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("COMPLETE FLIGHT AND GO TO").font(AppFont.display(14)).foregroundStyle(Theme.ink)
+                        Text("Choose your next activity, or return to Base. Every option completes this flight first.")
+                            .font(AppFont.body(14)).foregroundStyle(Theme.ink)
+                        if orbital || store.player.transitSatelliteLaunchedAt != nil || store.player.deepSpaceTelescopeBuilt || store.player.saturnImagerLaunchedAt != nil || ControlStation.observingGroundTelescopes(store.player) > 0 {
+                            RecordDockButton(title: "Review telescope data", filled: false, enabled: !collecting) {
+                                guard !collecting else { return }
+                                collecting = true; shownRun = run
+                                store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil, next: .instrumentHub)
+                            }.accessibilityIdentifier("debrief-exit-explore")
+                        }
+                    }.accessibilityIdentifier("debrief-exits")
+
+                    if !orbital && !store.player.shipDestroyed && !scrapped {
+                        RecordDockButton(title: "Recycle rocket", filled: false) { scrapped = true }
+                    }
+
                     if showLaser, let m {
                         LaserCapacitorPanel(
                             level: store.player.laserCapacitorLevel,
@@ -815,14 +832,16 @@ struct DebriefScreen: View {
         }
         .overlay(alignment: .bottom) {
             HStack(spacing: 8) {
-                if !orbital && !store.player.shipDestroyed && !scrapped {
-                    RecordDockButton(title: "Teardown", filled: false) { scrapped = true }
-                }
-                RecordDockButton(title: run.map { "COMPLETE MISSION · RETURN TO BASE · \(Economy.format(francs: $0.francs + (willStore ? 0 : sale)))" } ?? collectTitle(free: isFreeHaul, store: willStore, overflow: overflow, sale: sale, program: program || orbital, payout: payout), filled: true, enabled: !collecting) {
+                RecordDockButton(title: "Choose next flight", filled: false, enabled: !collecting) {
+                    guard !collecting else { return }
+                    collecting = true; shownRun = run
+                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil, next: .missions)
+                }.accessibilityIdentifier("debrief-exit-again")
+                RecordDockButton(title: "Complete flight · return to Base", filled: true, enabled: !collecting) {
                     guard !collecting else { return }
                     collecting = true
                     shownRun = run
-                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil)
+                    store.debriefDone(payout: payout, affinity: m?.payout.affinity ?? 0, consumed: cargo, disposition: isFreeHaul ? disposition : nil, next: .hub)
                 }
             }
             .padding(8)
@@ -832,15 +851,6 @@ struct DebriefScreen: View {
         }
         .helpable(.debrief)
         .overlay { if showSettings { SettingsSheet(onClose: { showSettings = false }) } }
-    }
-
-    private func collectTitle(free: Bool, store: Bool, overflow: Int, sale: Int, program: Bool, payout: Int) -> String {
-        if free {
-            if store { return overflow > 0 ? "Complete mission · sell \(overflow) over cap" : "Complete mission · keep haul" }
-            return "Complete mission · collect \(Economy.format(francs: sale))"
-        }
-        if program { return "Complete mission · log outcome" }
-        return "Complete mission · collect \(Economy.format(francs: payout))"
     }
 
     private func statusLine(_ text: String, crit: Bool) -> some View {
