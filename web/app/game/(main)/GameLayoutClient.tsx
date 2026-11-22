@@ -54,6 +54,13 @@ function GameChrome({ children }: { children: ReactNode }) {
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
   useEffect(() => {
+    if (!game.hydrated || !game.authUserId || game.authGateOpen || game.awaitingRemoteState) return
+    if (window.sessionStorage.getItem('landnam-return-to-minimal') !== '1') return
+    window.sessionStorage.removeItem('landnam-return-to-minimal')
+    window.location.replace('/minimal/')
+  }, [game.hydrated, game.authUserId, game.authGateOpen, game.awaitingRemoteState])
+
+  useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get('entry') === 'orionids'
       || window.sessionStorage.getItem('landnam-entry') === 'orionids'
     if (!requested) return
