@@ -302,6 +302,12 @@ public final class GameStore {
         apply(n)
         onClassified?(.asteroid(candidate: candidateId, verdict: verdict))
     }
+    public func openNextFlight() {
+        var next = BaseNextFlight.open(state, catalog: catalog, now: now)
+        if let id = next.missionId, DailyClientMissions.isPoolId(id) { next.player.dailyClientPool?.acceptedId = id }
+        apply(next)
+    }
+
     public func pickMission(_ id: String) {
         var n = Loop.pickMission(state, id: id, catalog: catalog)
         if DailyClientMissions.isPoolId(id), n.missionId == id { n.player.dailyClientPool?.acceptedId = id }

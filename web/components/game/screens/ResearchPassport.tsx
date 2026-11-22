@@ -7,6 +7,7 @@ import { weekKey } from '@/lib/research/paths'
 import { passportDays, passportWeekRange, STAMP_LABELS } from '@/lib/research/passport'
 import type { StampKind } from '@/lib/research/stamps'
 import styles from './ResearchPassport.module.css'
+const PROJECT_LABEL: Record<string, string> = { 'exoplanet-hunters': 'Transit', 'asteroid-discovery': 'Asteroid', 'saturn-storms': 'Saturn', 'deposit-survey': 'Probe', 'meteor-echoes': 'Meteor' }
 
 export default function ResearchPassport({ player, onBack, onActivities, onGo, onWorkshop, status }: {
   player: Player; onBack: () => void; onActivities: () => void; onGo: (kind: StampKind) => void; onWorkshop: () => void
@@ -19,6 +20,7 @@ export default function ResearchPassport({ player, onBack, onActivities, onGo, o
   const index = weeks.indexOf(week)
   const current = week === weekKey(now)
   const days = passportDays(player, week, now)
+  const label = (day: typeof days[number]) => day.kind === 'classification' ? PROJECT_LABEL[player.researchStampProjects?.[day.key]?.[day.kind] ?? ''] ?? STAMP_LABELS[day.kind] : day.kind ? STAMP_LABELS[day.kind] : ''
   const mine = days.filter(day => !!day.kind).length
   const confirmed = player.researchPassportWeeks?.[week]
   const pending = current ? Math.max(0, mine - (confirmed?.mine ?? 0)) : 0
@@ -46,9 +48,9 @@ export default function ResearchPassport({ player, onBack, onActivities, onGo, o
         </nav>
         <p>One place for each day. Your first research action inks the day; extra work keeps helping.</p>
         <ol className={styles.stamps} aria-label="Seven daily stamp places" data-testid="community-research-week">
-          {days.map((day, i) => <li key={day.key} className={styles.stamp} data-stamped={!!day.kind} data-today={day.today} data-future={day.future} aria-label={`${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i]}, ${date(day.key)}: ${day.kind ? STAMP_LABELS[day.kind] : day.future ? 'not yet open' : 'empty'}`}>
+          {days.map((day, i) => <li key={day.key} className={styles.stamp} data-stamped={!!day.kind} data-today={day.today} data-future={day.future} title={day.kind ? player.researchStampProjects?.[day.key]?.[day.kind]?.replaceAll('-', ' ') : undefined} aria-label={`${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i]}, ${date(day.key)}: ${day.kind ? label(day) : day.future ? 'not yet open' : 'empty'}`}>
             <span>{['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][i]}</span>
-            <div className={styles.ink}>{day.kind ? <><b aria-hidden="true">{day.kind === 'event' ? '☄' : day.kind === 'survey' ? '◎' : day.kind === 'gift' ? '◇' : '✦'}</b><strong>{STAMP_LABELS[day.kind]}</strong><small>{date(day.key)}</small></> : <><b aria-hidden="true">{day.future ? '·' : '○'}</b><small>{day.today ? 'Today' : day.future ? 'To come' : 'Open'}</small></>}</div>
+            <div className={styles.ink}>{day.kind ? <><b aria-hidden="true">{day.kind === 'event' ? '☄' : day.kind === 'survey' ? '◎' : day.kind === 'gift' ? '◇' : '✦'}</b><strong>{label(day)}</strong><small>{date(day.key)}</small></> : <><b aria-hidden="true">{day.future ? '·' : '○'}</b><small>{day.today ? 'Today' : day.future ? 'To come' : 'Open'}</small></>}</div>
           </li>)}
         </ol>
         <p className={styles.contribution} data-testid="passport-contribution">{contributed ? `You contributed · ${Math.max(mine, confirmed?.mine ?? 0)} of 7 days inked` : current ? 'No contribution yet this week.' : 'No contribution recorded for this week.'}{pending > 0 && <span> {pending} day{pending === 1 ? '' : 's'} waiting to sync.</span>}</p>

@@ -1,11 +1,11 @@
 import type { Player } from '@/lib/game-types'
 
-/** What earned a stamp. Citizen science is an instrument feed, so every kind is an instrument or survey result, never a mission type. */
-export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event', 'exchange-sale', 'contract-run', 'price-alert', 'gift', 'review', 'probe-observation'] as const
+/** What earned a stamp. SSL-852: `launch` is putting an agency craft up (a telescope, satellite or probe launched, or a ground telescope built). */
+export const STAMP_KINDS = ['classification', 'survey', 'discovery-mission', 'event', 'exchange-sale', 'contract-run', 'price-alert', 'gift', 'review', 'probe-observation', 'launch'] as const
 export type StampKind = typeof STAMP_KINDS[number]
 export type ResearchStamps = Record<string, StampKind[]>
 
-type StampPlayer = Pick<Player, 'researchStamps' | 'researchFirstStamps'>
+type StampPlayer = Pick<Player, 'researchStamps' | 'researchFirstStamps' | 'researchStampProjects'>
 
 const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/
 const DAY_MS = 86_400_000
@@ -29,12 +29,12 @@ export function sanitizeStamps(raw: unknown): ResearchStamps {
 }
 
 /** Stamp the day `at` for this kind. Returns the same player when nothing changes. */
-export function addStamp<T extends StampPlayer>(player: T, kind: StampKind, at: number): T {
+export function addStamp<T extends StampPlayer>(player: T, kind: StampKind, at: number, project?: string): T {
   const day = stampDayKey(at)
   const have = player.researchStamps?.[day] ?? []
-  if (have.includes(kind)) return player
+  if (have.includes(kind) && (!project || player.researchStampProjects?.[day]?.[kind])) return player
   const next = STAMP_KINDS.filter(k => k === kind || have.includes(k))
-  return { ...player, researchStamps: { ...(player.researchStamps ?? {}), [day]: next }, researchFirstStamps: { ...(player.researchFirstStamps ?? {}), [day]: player.researchFirstStamps?.[day] ?? { kind: have[0] ?? kind, at } } }
+  return { ...player, ...(project ? { researchStampProjects: { ...player.researchStampProjects, [day]: { ...player.researchStampProjects?.[day], [kind]: player.researchStampProjects?.[day]?.[kind] ?? project } } } : {}), researchStamps: { ...(player.researchStamps ?? {}), [day]: next }, researchFirstStamps: { ...(player.researchFirstStamps ?? {}), [day]: player.researchFirstStamps?.[day] ?? { kind: have[0] ?? kind, at } } }
 }
 
 /** Union per day, so two devices that stamped different tasks keep both. */

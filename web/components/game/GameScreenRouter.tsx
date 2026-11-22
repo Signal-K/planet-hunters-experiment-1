@@ -1,5 +1,7 @@
 'use client'
 
+import { scienceAccessPlayer } from '@/lib/agency/community'
+
 import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { addStamp } from '@/lib/research/stamps'
@@ -27,6 +29,7 @@ import PageSurface from '@/components/ui/PageSurface'
 import { FLIGHT_ASSET_URLS } from '@/lib/offline/flight-assets'
 import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
+import BaseNextFlight from '@/components/game/hub/BaseNextFlight'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
 import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 
@@ -41,6 +44,7 @@ const loadMissionOperationRoutes = () => import('@/components/game/MissionOperat
 const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
+const loadMissionPlannerScreen = () => import('@/components/game/screens/MissionPlannerScreen')
 const loadRocketWorkshopScreen = () => import('@/components/game/screens/RocketWorkshopScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
@@ -58,7 +62,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
-  loadHangarScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadHangarScreen, loadMissionPlannerScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
   // Nested inside the mission plan's destination sheet (construction and contract runs).
@@ -70,6 +74,7 @@ const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: Sc
 const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
+const MissionPlannerScreen = dynamic(loadMissionPlannerScreen, { loading: ScreenLoading })
 const RocketWorkshopScreen = dynamic(loadRocketWorkshopScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
@@ -108,6 +113,9 @@ import { withCommunityBonus } from '@/lib/research/marketplace'
 import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
+import { skyEventNow } from '@/lib/data'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { agencySummary } from '@/lib/agency/programme'
 import { choosePath, claimResearchReward, onlineTelescopes, pointTelescope, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 export { VALID_SCREENS } from '@/lib/game-screens'
 
@@ -369,6 +377,7 @@ function ScreenBody({
       }
       const hub = (
         <HubScreen
+          nextFlight={onService => <BaseNextFlight game={game} onService={onService} />}
           player={game.player}
           placementMode={screen === 'build'}
           buildOptions={buildOptions}
@@ -490,6 +499,8 @@ function ScreenBody({
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}
           onBuildGroundTelescope={() => game.buildGroundTelescope()}
+          onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
+          onDonation={(craft, donate) => game.setPlayer(player => ({ ...player, agencyDonations: { ...player.agencyDonations, [craft]: donate } }))}
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
@@ -515,7 +526,7 @@ function ScreenBody({
       // Inspect still arrives here until the plate owns real TESS verdicts.
       return (
         <TessDiscoveryScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'transit' ? inspectSignal.id : undefined}
           visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
             ? TRAINING_TESS_CANDIDATE
@@ -534,7 +545,7 @@ function ScreenBody({
     case 'asteroid-discovery':
       return (
         <AsteroidDiscoveryScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
           onBack={() => leaveInstrument('asteroid')}
@@ -548,7 +559,7 @@ function ScreenBody({
     case 'saturn-storm-search':
       return (
         <SaturnStormSearchScreen
-          player={game.player}
+          player={scienceAccessPlayer(game.player)}
           inspectSubjectId={inspectSignal?.kind === 'saturn' ? inspectSignal.id : undefined}
           onBack={() => leaveInstrument('saturn')}
           onLaunchImager={() => game.go('launchpad')}
@@ -563,7 +574,7 @@ function ScreenBody({
       return (
         <RadioMeteorScreen
           player={game.player}
-          eventId={receiverEventId(game.player)}
+          eventId={receiverEventId(game.player, skyEventNow(isDevLauncherEnabled()))}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
         />
@@ -680,6 +691,11 @@ function ScreenBody({
         />
       )
 
+    case 'mission-planner':
+      return <MissionPlannerScreen player={game.player} catalog={game.catalog} initialPlan={game.mission?.customPlan}
+        onBack={() => game.go('missions')}
+        onSave={plan => game.setPlayer(player => ({ ...player, missionPlans: { ...player.missionPlans, [plan.id]: plan } }))}
+        onReview={id => game.onPickMission(id)} />
     case 'rocket-workshop':
       return <RocketWorkshopScreen player={game.player} rocket={game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)?.rocket ?? game.rocket}
         mission={game.mission} target={game.target} deliveryTarget={game.catalog.targets.find(target => target.id === game.mission?.deliveryTargetId)}
@@ -781,10 +797,19 @@ function ScreenBody({
             else if (kind === 'event' && (game.player.orionidsEventStage ?? 0) >= 2) return game.go('radio-meteors')
             else if (kind === 'event') requestMissionBoardEvent('orionids-2026')
             else if (kind === 'probe-observation') return game.go('probe-scan')
+            // SSL-852: a craft is launched from the Program tab; a ground telescope is built in the Data hub.
+            else if (kind === 'launch') {
+              if (!agencySummary(game.player).needsService && agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
+              requestMissionBoardTab('program')
+            }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
             else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')
-            else if (kind === 'classification' || kind === 'survey') {
+            else if (kind === 'survey') {
+              if (Object.keys(game.player.probes ?? {}).length || Object.keys(game.player.agencyCommunity?.surveys ?? {}).length) return game.go('probe-scan')
+              requestMissionBoardTab('program')
+            }
+            else if (kind === 'classification') {
               const hasInstruments = game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt
               if (hasInstruments) return game.go('instrument-hub')
               requestMissionBoardTab('program')

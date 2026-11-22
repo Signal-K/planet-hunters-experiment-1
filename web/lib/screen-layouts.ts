@@ -79,6 +79,7 @@ export const GAME_ROUTES = [
   { path: '/game/market', screen: 'market', surface: 'home' },
 
   // Mission setup
+  { path: '/game/mission-planner', screen: 'mission-planner', surface: 'mission-setup' },
   { path: '/game/missions', screen: 'missions', surface: 'mission-setup' },
   { path: '/game/rocket-buy', screen: 'rocket-buy', surface: 'mission-setup' },
   { path: '/game/fab', screen: 'fab', surface: 'mission-setup' },

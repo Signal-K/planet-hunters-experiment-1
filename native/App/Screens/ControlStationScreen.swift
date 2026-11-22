@@ -568,6 +568,7 @@ private struct TelescopeGlyph: View {
 
 /// Weekly path board, kept on the same native save model as the web CommunityResearchScreen.
 struct CommunityResearchScreen: View {
+    @Environment(\.openURL) private var openURL
     @Environment(GameStore.self) private var store
     @State private var selectedPath: ResearchPathID = .explorer
     @State private var selectedStep = 0
@@ -603,7 +604,7 @@ struct CommunityResearchScreen: View {
                 pathButton(.explorer, title: "EXPLORER", detail: "Signals and scans", icon: "viewfinder")
                 pathButton(.trader, title: "TRADER", detail: "Exchange and contracts", icon: "chart.line.uptrend.xyaxis")
             }
-            lockedTile
+            pathButton(.agency, title: "AGENCY", detail: "Craft, projects and data", icon: "antenna.radiowaves.left.and.right")
             console(title: "HOW IT WORKS") {
                 Text("1  Pick a path. It is locked for the week.")
                 Text("2  Finish its five steps in any order.")
@@ -637,20 +638,6 @@ struct CommunityResearchScreen: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("research-path-\(path.rawValue)")
-    }
-
-    private var lockedTile: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "star").font(.system(size: 24, weight: .light))
-            VStack(alignment: .leading, spacing: 3) {
-                Text("AGENCY").font(AppFont.display(14, "ExtraBold")).tracking(1.2)
-                Text("Locked · finish more weekly paths").font(AppFont.body(14))
-            }
-            Spacer()
-        }
-        .foregroundStyle(Theme.ink.opacity(0.62))
-        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.paper.opacity(0.72), in: RoundedRectangle(cornerRadius: 18)).overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.ink.opacity(0.55), lineWidth: 2))
     }
 
     private var board: some View {
@@ -692,7 +679,7 @@ struct CommunityResearchScreen: View {
                 Text(step.brief).font(AppFont.body(16)).foregroundStyle(Theme.ink)
                 Text(step.why).font(AppFont.body(14)).foregroundStyle(Theme.ink.opacity(0.78))
             }
-            console(title: activePath == .trader ? "TRADER WEEK" : "EXPLORER WEEK") {
+            console(title: "\(activePath.rawValue.uppercased()) WEEK") {
                 Text("Research days stamped: \(stampedDays) of 7").font(AppFont.body(16))
                 HStack(spacing: 6) {
                     ForEach(0..<7, id: \.self) { index in
@@ -842,6 +829,8 @@ struct CommunityResearchScreen: View {
         switch kind {
         case .exchangeSale, .priceAlert: store.go(.market)
         case .contractRun: store.openMissionBoard(tab: 0)
+        case .launch: store.openMissionBoard(tab: 1)
+        case .review: if let url = URL(string: "https://playlandnam.space/game/community-research") { openURL(url) }
         default: store.go(.instrumentHub)
         }
     }

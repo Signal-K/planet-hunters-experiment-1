@@ -523,11 +523,12 @@ export function applyBuildGroundTelescope(s: GameState): GameState {
   if (s.player.francs < STRUCTURE_PRICES.groundTelescope) return s
   return {
     ...s,
-    player: {
+    // SSL-852: building a telescope is putting an agency craft up, the same research stamp as a launch.
+    player: addStamp({
       ...s.player,
       francs: s.player.francs - STRUCTURE_PRICES.groundTelescope,
       placed: [...s.player.placed, id],
-    },
+    }, 'launch', Date.now(), 'asteroid-discovery'),
   }
 }
 

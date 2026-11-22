@@ -1,0 +1,48 @@
+/* Launch captions and the closing sky, laid over the launchpad scene (SSL-848). */
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.fade {
+  position: absolute;
+  inset: 0;
+  background: var(--ln-world-night-top);
+  pointer-events: none;
+}
+
+.caption,
+.route {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  color: var(--ln-blueprint-paper);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 var(--ln-blueprint-ink);
+}
+
+.caption { top: 28px; display: grid; gap: 8px; }
+.route { bottom: 24px; }
+
+.skip {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  min-height: 44px;
+  padding: 8px 16px;
+  color: var(--ln-blueprint-ink);
+  background: var(--ln-blueprint-paper);
+  border: 2px solid var(--ln-blueprint-ink);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 var(--ln-cyan);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

@@ -2,7 +2,6 @@
 
 import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
 import { useEffect, useMemo, useState } from 'react'
-import { scanInstrumentLaunched } from '@/lib/systems/SurveyScanSystem'
 import ScenePanel from '@/components/game/ScenePanel'
 import { ControlStationConsole } from '@/components/game/control-station/ControlStationConsole'
 import consoleStyles from '@/components/game/control-station/ControlStationConsole.module.css'
@@ -17,7 +16,6 @@ import { GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES, GROUND_TELESCOPE_IDS, groun
 import { STRUCTURE_PRICES } from '@/lib/data/economy'
 import { formatCurrency } from '@/lib/format'
 import EnceladusSurveyChart from '@/components/game/EnceladusSurveyChart'
-import SurveyScanConsole from '@/components/game/control-station/SurveyScanConsole'
 import type { Target } from '@/lib/data'
 import { ResearchCalendar } from '@/components/game/control-station/ResearchCalendar'
 import type { CommunityResearch } from '@/lib/research/stamps'
@@ -25,10 +23,15 @@ import { SkyBadgeRow } from './SkyBadgeRow'
 import { skyEventNow } from '@/lib/data/sky-events'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { wswBanner } from '@/lib/wsw'
+import { fleetCondition, type CraftCondition } from '@/lib/agency/condition'
+import { agencyProgramme } from '@/lib/agency/programme'
+import { scienceAccessPlayer } from '@/lib/agency/community'
+import type { OrbitalCraft } from '@/lib/agency/fleet'
 import styles from './InstrumentHubScreen.module.css'
 
 interface InstrumentHubScreenProps {
   player: Player
+  onDonation?: (craft: OrbitalCraft, donate: boolean) => void
   onBack: () => void
   onInspect: (signal: InstrumentSignal) => void
   /** Opens a community instrument's screen (ORI-1's meteor radio). */
@@ -43,18 +46,19 @@ interface InstrumentHubScreenProps {
   onResolveScan?: () => void
   /** SSL-673: the shared monthly total, null until it loads or when offline. */
   communityResearch?: CommunityResearch | null
+  /** SSL-852: opens the Program tab, where a worn craft's servicing mission waits. */
+  onOpenProgram?: () => void
 }
 
 /**
- * Control Station. The route id stays `instrument-hub` so existing entry
+ * Data hub. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch, onOpenProgram, onDonation }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [view, setView] = useState<SkyView>('all')
   const [telescopeId, setTelescopeId] = useState<string | null>(null)
   const [logbookOpen, setLogbookOpen] = useState(false)
-  const [scanOpen, setScanOpen] = useState(false)
   const help = useHelp('instrument-hub', { firstVisit: !onboardingMissionDone(player.flightPlan) })
   const [justBuilt, setJustBuilt] = useState(false)
   const groundCost = STRUCTURE_PRICES.groundTelescope
@@ -63,7 +67,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
   const now = useMemo(() => skyEventNow(isDevLauncherEnabled()), [])
   const model = useMemo(
     () => buildControlStation({
-      player,
+      player: scienceAccessPlayer(player),
       signals,
       bodyId: 'all',
       loading: awaitingFeed,
@@ -71,14 +75,24 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
     }),
     [player, signals, awaitingFeed, now],
   )
-  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player)], [model, player, now])
+  // SSL-852: wear runs on the real clock, not the dev event clock.
+  const conditions = useMemo(() => {
+    const at = Date.now()
+    const space = fleetCondition(player, 'space-telescope', at)
+    const saturn = fleetCondition(player, 'saturn-satellite', at)
+    return { ...(space ? { space } : {}), ...(saturn ? { saturn } : {}) } as Partial<Record<string, CraftCondition>>
+  }, [player])
+  const telescopes = useMemo(() => [...stationTelescopes(model), ...probeTelescopes(player, now), ...communityTelescopes(player, now)]
+    // A failed craft is dark until it is serviced.
+    .map(scope => conditions[scope.id]?.state === 'failed' && scope.readyCount === 0 ? { ...scope, status: 'Service needed' } : scope), [model, player, now, conditions])
   const activeTelescope = telescopes.find(scope => scope.id === telescopeId && scope.built) ?? null
   const anomalies = useMemo(
     () => buildStationSky({ player, signals: awaitingFeed ? [] : signals, view, telescope: activeTelescope, now }),
     [player, signals, awaitingFeed, view, activeTelescope, now],
   )
+  const programme = agencyProgramme(player)
+  const fleet = Object.fromEntries(programme.map(craft => [({ 'ground-telescope': 'ground', 'space-telescope': 'space', 'saturn-satellite': 'saturn', 'survey-probe': 'survey-probes' } as const)[craft.id], craft]))
   const history = useMemo(() => stationHistory(player), [player])
-  const canScan = !!(onStartScan && onResolveScan && player.freeOperations && scanInstrumentLaunched(player))
   const scanning = !!player.activeScan
   // The scan finishes even when the sheet is closed.
   useEffect(() => {
@@ -116,7 +130,12 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
             unplaced: ownedGroundTelescopes(player).filter(id => !groundTelescopeObserving(player, id)).length,
           }}
           onLogbook={() => setLogbookOpen(true)}
-          scan={canScan ? { scanning, onOpen: () => setScanOpen(true) } : undefined}
+          scan={{ scanning: false, onOpen: () => Object.keys(player.probes ?? {}).length || Object.keys(player.agencyCommunity?.surveys ?? {}).length ? onOpenScreen('probe-scan') : onOpenProgram?.(), label: 'Survey probe data' }}
+          conditions={conditions}
+          programme={fleet}
+          donations={player.agencyDonations}
+          onDonation={onDonation}
+          onService={onOpenProgram}
           notice={player.scanFollowUp ? (() => {
             const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
             const screen = ({ tess: 'tess-discovery', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]
@@ -132,7 +151,6 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
               <button type="button" data-testid="control-station-back" aria-label="Back" onClick={onBack}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
               </button>
-              <button type="button" aria-label="Watch the meteor shower with the field probe" onClick={() => onOpenScreen('probe-watch')}>WATCH</button>
               {help.button}
             </nav>
           )}
@@ -141,19 +159,6 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
         <p className={styles.toast} role="status" data-testid="ground-telescope-built">
           Ground telescope built. Place it on the Base and it adds {GROUND_TELESCOPE_EXTRA_ASTEROID_CANDIDATES} asteroid candidate to your feed every day.
         </p>
-      )}
-      {scanOpen && onStartScan && onResolveScan && (
-        <div className={styles.sheetBackdrop} aria-label="Scan a body" data-testid="control-station-scan-sheet" onClick={event => { if (event.target === event.currentTarget) setScanOpen(false) }}>
-          <section className={styles.sheet}>
-            <header className={styles.sheetHead}>
-              <h2>Scan a body</h2>
-              <button type="button" aria-label="Close scan" onClick={() => setScanOpen(false)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-              </button>
-            </header>
-            <SurveyScanConsole player={player} targets={targets} onStart={onStartScan} onResolve={onResolveScan} />
-          </section>
-        </div>
       )}
       {logbookOpen && (
         <div className={styles.sheetBackdrop} aria-label="Logbook" data-testid="control-station-logbook-sheet" onClick={event => { if (event.target === event.currentTarget) setLogbookOpen(false) }}>

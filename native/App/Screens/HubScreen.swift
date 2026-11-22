@@ -126,8 +126,34 @@ struct HubScreen: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom) }
             if !placing { subsurfaceArrow(insets: insets, aboveDock: portrait && size.width < 1040) }
             if !placing && store.screen != .hubSubsurface { unplacedTray(insets: insets, aboveDock: portrait && size.width < 1040, size: size) }
+            if !placing && !homecoming && !menuOpen && store.screen == .hub {
+                nextFlight(size: size, insets: insets)
+            }
             if menuOpen { BaseMenu(onClose: { menuOpen = false }, onBuild: { placeNote = nil; placing = true }) }
         }
+    }
+
+    private func nextFlight(size: CGSize, insets: EdgeInsets) -> some View {
+        let next = BaseNextFlight.current(store.state, catalog: store.catalog, now: store.now)
+        return Button { store.openNextFlight() } label: {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(next.title).font(AppFont.display(16))
+                    Text(next.detail).font(AppFont.body(14))
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                Text(next.cta + " →").font(AppFont.display(14)).foregroundStyle(Theme.blue)
+                    .frame(maxWidth: 125)
+            }
+            .foregroundStyle(Theme.hudInk).padding(12).frame(minHeight: 64)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.hudPanel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .frame(width: min(380, size.width - insets.leading - insets.trailing - 32))
+        .padding(.leading, insets.leading + 16)
+        .padding(.top, size.width < 600 && size.height > 650 ? size.height * 0.22 : insets.top + 88)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityIdentifier("base-next-flight")
     }
 
     /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.

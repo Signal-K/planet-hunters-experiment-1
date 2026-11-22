@@ -337,6 +337,7 @@ public enum Loop {
         let isStory = mission?.tag == "STORY" && mission?.deliveryTargetId == nil
         let program = mission?.isOwnProgram ?? false
         let isDiscoverySurvey = missionId.hasPrefix("exo-survey-")
+        if mission?.payload?.type == .satellite { ResearchStampRules.add(&n.player, .launch, at: now) }
         if mission?.client != nil && !isStory && !isDiscoverySurvey { ResearchStampRules.add(&n.player, .contractRun, at: now) }
         if let client = mission?.client, !isStory { n.player.clientMissions[client, default: 0] += max(1, affinity) }
         if mission?.deliveryTargetId == nil {

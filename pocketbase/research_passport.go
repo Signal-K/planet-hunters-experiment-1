@@ -18,7 +18,7 @@ const passportStart = "2026-10-05"
 const passportGoal = 100
 
 var passportMu sync.Mutex
-var passportKinds = map[string]bool{"classification": true, "survey": true, "discovery-mission": true, "event": true, "exchange-sale": true, "contract-run": true, "price-alert": true, "gift": true, "review": true, "probe-observation": true}
+var passportKinds = map[string]bool{"classification": true, "survey": true, "discovery-mission": true, "event": true, "exchange-sale": true, "contract-run": true, "price-alert": true, "gift": true, "review": true, "probe-observation": true, "launch": true}
 
 type passportWeek struct {
 	Week      string `json:"week"`

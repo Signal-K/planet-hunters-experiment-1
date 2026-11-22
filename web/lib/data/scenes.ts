@@ -112,7 +112,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'missions', name: 'Mission Board', surface: 'dom', location: 'earth-base', screen: 'missions', entityTypes: [], description: 'Live client contract list.' },
   { id: 'rocket-buy', name: 'Rocket Purchase', surface: 'dom', location: 'earth-base', screen: 'rocket-buy', entityTypes: [], description: 'Buy the rocket model for this run.' },
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
-  { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'flight', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
+  { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'flight', entityTypes: [], description: 'Physical rocket flight, drawn in 3D by Takeon with a steerable rocket (SSL-848). Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },

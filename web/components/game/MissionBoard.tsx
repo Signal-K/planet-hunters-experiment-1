@@ -1,5 +1,7 @@
 'use client'
 
+import { agencySummary } from '@/lib/agency/programme'
+
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { formatCurrency } from '@/lib/format'
 import { useHelp } from '@/components/ui/useHelp'
@@ -50,6 +52,7 @@ interface MissionBoardProps {
   onSelectMission: (id: string) => void
   onAccept: (id: string, disposition?: 'store' | 'sell') => void
   onClose: () => void
+  onOpenPlanner?: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
   onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors' | 'market') => void
@@ -382,7 +385,7 @@ function EventSpecials({ eventId, player, onStart }: { eventId: string; player: 
 }
 
 export default function MissionBoard({
-  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
+  catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenPlanner, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [requestedEventId] = useState(() => pendingMissionBoardEvent())
@@ -393,6 +396,7 @@ export default function MissionBoard({
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
+  const fleet = agencySummary(player, now)
   const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
   const events = useMemo(
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
@@ -580,6 +584,7 @@ export default function MissionBoard({
         {tabButtons}
       </nav>
       <div className={styles.railHelp}>
+        {player.freeOperations && onOpenPlanner && <button type="button" className={styles.log} data-testid="mission-board-plan" onClick={onOpenPlanner}>Plan mission</button>}
         <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
         <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
           <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>
@@ -697,11 +702,9 @@ export default function MissionBoard({
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
                 <h2>Your space program</h2>
-                <p>Build your agency through self-directed work · {steps.filter(step => step.state === 'done').length} of {steps.length} steps complete</p>
+                <p>{fleet.owned.reduce((sum, craft) => sum + craft.owned, 0)} craft · {fleet.dataPerDay} items/day · {fleet.contributed} project contributions</p>
               </div>
-              <div className={styles.meter} role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={steps.filter(step => step.state === 'done').length} aria-label="Program progress">
-                <i style={{ width: `${(steps.filter(step => step.state === 'done').length / Math.max(steps.length, 1)) * 100}%` }} />
-              </div>
+
             </header>
             <div className={styles.skillTree} role="list" aria-label="Program skill tree">
               {steps.map((step, stepIndex) => <button key={step.id} type="button" role="listitem" className={styles.skillNode}

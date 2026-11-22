@@ -4,6 +4,8 @@ import { buildStationSky, communityTelescopes, spreadSpots, stationHistory, stat
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
 const NOW = Date.UTC(2026, 10, 1, 12)
+// Before any shower receiver is up, so the sky holds only the player's own instruments.
+const QUIET = Date.UTC(2026, 8, 1)
 const signals: InstrumentSignal[] = [
   { id: 'toi-1', kind: 'transit', instrumentId: 'transit-telescope', title: 'TOI 1', subtitle: '', inspectorScreen: 'tess-discovery' },
   { id: 'frame-1', kind: 'saturn', instrumentId: 'saturn-imager', title: 'F1', subtitle: '', inspectorScreen: 'saturn-storm-search' },
@@ -28,12 +30,12 @@ describe('control station sky', () => {
   })
 
   it('splits explored, unexplored and all, and only unexplored ones open a tool', () => {
-    const open = buildStationSky({ player, signals, view: 'unexplored', telescope: null })
+    const open = buildStationSky({ player, signals, view: 'unexplored', telescope: null, now: QUIET })
     expect(open.map(a => a.state)).toEqual(['unexplored', 'unexplored'])
     expect(open.every(a => a.signal)).toBe(true)
-    const done = buildStationSky({ player, signals, view: 'explored', telescope: null })
+    const done = buildStationSky({ player, signals, view: 'explored', telescope: null, now: QUIET })
     expect(done.map(a => a.detail)).toEqual(['Classified · Likely real', 'Classified · Planet candidate'])
-    const all = buildStationSky({ player, signals, view: 'all', telescope: null })
+    const all = buildStationSky({ player, signals, view: 'all', telescope: null, now: QUIET })
     expect(all.some(a => a.state === 'catalogue' && a.label === 'Saturn')).toBe(true)
     expect(all).toHaveLength(5)
   })
@@ -51,16 +53,17 @@ describe('control station sky', () => {
   })
 
   it('adds ORI-1 once the community launches it, and its queue opens the meteor radio', () => {
-    expect(communityTelescopes({ orionidsEventStage: 1 })).toEqual([])
+    const beforeShowers = Date.UTC(2026, 8, 1)
+    expect(communityTelescopes({ orionidsEventStage: 1 }, beforeShowers)).toEqual([])
     const radio = { ...player, orionidsEventStage: 2, radioMeteorClassifications: { s1: { filename: 'RAD_BEDOUR_20261021_0215_BEECON_SYS001.png', boxes: [{}, {}], submittedAt: 20 } } }
-    const [ori] = communityTelescopes(radio)
+    const [ori] = communityTelescopes(radio, beforeShowers)
     expect(ori).toMatchObject({ id: 'ori-1', name: 'ORI-1', community: true, readyCount: 2, status: '2 to check', kinds: ['radio'] })
-    const only = buildStationSky({ player: radio, signals, view: 'all', telescope: ori })
+    const only = buildStationSky({ player: radio, signals, view: 'all', telescope: ori, now: beforeShowers })
     expect(only.map(a => [a.label, a.state, a.screen])).toEqual([
       ['Echo · Dourbes', 'explored', null],
       ['ORI-1 recordings', 'unexplored', 'radio-meteors'],
     ])
-    expect(communityTelescopes({ orionidsEventStage: 3 })[0]).toMatchObject({ readyCount: 0, status: 'Listening' })
+    expect(communityTelescopes({ orionidsEventStage: 3 }, beforeShowers)[0]).toMatchObject({ readyCount: 0, status: 'Listening' })
   })
 
   it('parts targets that would sit on top of each other, and leaves spaced ones alone', () => {
@@ -87,14 +90,31 @@ describe('control station sky', () => {
 
 describe('LEO-1 (SSL-831)', () => {
   it('joins the station when the Leonids run is home, owing 3 recordings counted from the run', () => {
-    expect(communityTelescopes({}).some(t => t.id === 'leo-1')).toBe(false)
+    const beforeLeonids = Date.UTC(2026, 10, 1)
+    expect(communityTelescopes({}, beforeLeonids).some(t => t.id === 'leo-1')).toBe(false)
     const at = Date.UTC(2026, 10, 17, 10)
     const leo = communityTelescopes({
       showerChains: { 'leonids-2026': { stage: 1, at } },
       radioMeteorClassifications: { old: { submittedAt: at - 1 }, a: { submittedAt: at + 1 } },
-    }).find(t => t.id === 'leo-1')
+    }, beforeLeonids).find(t => t.id === 'leo-1')
     expect(leo?.name).toBe('LEO-1')
     expect(leo?.status).toBe('2 to check')
-    expect(communityTelescopes({ showerChains: { 'leonids-2026': { stage: 2, at } } }).find(t => t.id === 'leo-1')?.status).toBe('Listening')
+    expect(communityTelescopes({ showerChains: { 'leonids-2026': { stage: 2, at } } }, beforeLeonids).find(t => t.id === 'leo-1')?.status).toBe('Listening')
+  })
+})
+
+describe('Receivers go up on the real shower dates (SSL-852)', () => {
+  it('puts ORI-1 and LEO-1 up when their showers start, for a player who has flown nothing', () => {
+    const ids = (now: number) => communityTelescopes({}, now).map(t => t.id)
+    expect(ids(Date.UTC(2026, 9, 18, 23))).toEqual([])
+    expect(ids(Date.UTC(2026, 9, 19, 1))).toEqual(['ori-1'])
+    expect(ids(Date.UTC(2026, 10, 6, 1))).toEqual(['ori-1', 'leo-1'])
+    // A receiver keeps listening after its shower ends.
+    expect(ids(Date.UTC(2026, 11, 5))).toEqual(['ori-1', 'leo-1'])
+  })
+
+  it('owes nothing on LEO-1 until the run is home: the badge still needs the run first', () => {
+    const leo = communityTelescopes({}, Date.UTC(2026, 10, 17)).find(t => t.id === 'leo-1')
+    expect(leo).toMatchObject({ status: 'Listening', readyCount: 0 })
   })
 })

@@ -43,19 +43,22 @@ const (
 
 // The stamp kinds Landnam already uses, trader kinds included. Mirrors
 // STAMP_KINDS in web/lib/research/stamps.ts. research.go counts the first
-// four, review and probe-observation toward the community bar; the ledger takes all of them.
+// four, review, probe-observation and launch toward the community bar; the ledger takes all of them.
 var ledgerStampKinds = map[string]bool{
 	"classification": true, "survey": true, "discovery-mission": true, "event": true,
 	"exchange-sale": true, "contract-run": true, "price-alert": true, "gift": true, "review": true,
 	// SSL-773: a logged survey-probe scan. platform_contributions.kind is free text, so no migration.
 	"probe-observation": true,
+	// SSL-852: an agency craft launched or built.
+	"launch": true,
 }
 
 type ledgerRow struct {
-	UserID string `json:"userId"`
-	Game   string `json:"game"`
-	Kind   string `json:"kind"`
-	Day    string `json:"day"`
+	UserID  string `json:"userId"`
+	Game    string `json:"game"`
+	Kind    string `json:"kind"`
+	Day     string `json:"day"`
+	Project string `json:"project,omitempty"`
 }
 
 type ledgerReporter struct {
@@ -111,7 +114,8 @@ func (r *ledgerReporter) pendingStamps(userID, stateJSON string) []ledgerRow {
 	}
 	var state struct {
 		Player struct {
-			ResearchStamps map[string][]string `json:"researchStamps"`
+			ResearchStamps        map[string][]string          `json:"researchStamps"`
+			ResearchStampProjects map[string]map[string]string `json:"researchStampProjects"`
 		} `json:"player"`
 	}
 	if json.Unmarshal([]byte(stateJSON), &state) != nil {
@@ -148,7 +152,13 @@ func (r *ledgerReporter) pendingStamps(userID, stateJSON string) []ledgerRow {
 			if _, ok := done[kind+"|"+day]; ok {
 				continue
 			}
-			rows = append(rows, ledgerRow{Game: ledgerGame, Kind: kind, Day: day})
+			project := state.Player.ResearchStampProjects[day][kind]
+			switch project {
+			case "exoplanet-hunters", "asteroid-discovery", "saturn-storms", "deposit-survey", "meteor-echoes":
+			default:
+				project = ""
+			}
+			rows = append(rows, ledgerRow{Game: ledgerGame, Kind: kind, Day: day, Project: project})
 		}
 	}
 	sort.Slice(rows, func(i, j int) bool {

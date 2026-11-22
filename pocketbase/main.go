@@ -51,6 +51,7 @@ func main() {
 	registerNotificationRoutes(app)
 	registerCommunityRoutes(app)
 	registerSiteLedger(app)
+	registerAgencyProgramme(app)
 	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {

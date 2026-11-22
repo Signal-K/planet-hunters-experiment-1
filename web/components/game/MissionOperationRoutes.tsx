@@ -190,10 +190,12 @@ export default function MissionOperationRoutes({
           arrivalAt={game.player.arrivalAt}
           transitStartedAt={game.player.transitStartedAt}
           returning={!!game.player.returningToEarth}
+          returnNote={game.mission?.customPlan?.work === 'deliver' ? 'Cargo is in your forward cache. Next: return to Earth for the receipt.' : undefined}
           isDelivery={!!game.player.headingToDelivery}
           francs={game.player.francs}
           fragmentCount={Math.max(0, Math.floor(game.player.stash?.orionid_debris ?? 0))}
           parts={game.player.shipCustomizerParts}
+          livery={game.player.rocketLivery}
           onBack={() => game.go('hub')}
           onPrev={() => stepFlightDock(game, -1)}
           onNext={() => stepFlightDock(game, 1)}
@@ -211,7 +213,7 @@ export default function MissionOperationRoutes({
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               // SSL-773: a survey probe is released into orbit at the body and stays there.
               const probeAt = game.mission?.payload?.instrumentId === 'survey-probe' ? game.mission.targetId : null
-              if (probeAt) game.setPlayer(current => placeProbe(current, probeAt, Date.now()))
+              if (probeAt) game.setPlayer(current => placeProbe(current, probeAt, Date.now(), game.mission?.customPlan?.amount))
               game.setPlayer(player => ({
                 ...player,
                 missionPhase: 'debrief',

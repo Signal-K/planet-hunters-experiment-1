@@ -20,6 +20,7 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   'surface-silo': 'hub',
   launchpad: 'hub',
   'rocket-workshop': 'launchpad',
+  'mission-planner': 'missions',
   hangar: 'hub',
   missions: 'launchpad',
   targets: 'missions',

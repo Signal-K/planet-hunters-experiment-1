@@ -23,10 +23,13 @@
 .readoutTabs button { min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: #c9d0c2; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .readoutTabs button[aria-selected='true'] { background: #f4efe4; color: #142840; box-shadow: 0 2px 8px rgba(8, 16, 34, .28); }
 .readoutCopy { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 17px/1.35 var(--ln-font-body); }
-.focus { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+.focus { flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
 .focus h2 { margin: 0; max-width: 20ch; color: #f4efe4; font: 800 clamp(24px, 3vw, 34px)/1.1 var(--ln-font-display); }
 .focus p { margin: 0; max-width: 36ch; font: 600 16px/1.35 var(--ln-font-body); }
 .focus small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
+.fleet { margin: 0 auto; display: grid; gap: 4px; justify-items: center; max-width: 100%; color: #f4efe4; font: 600 14px/1.35 var(--ln-font-body); text-align: center; }
+.fleet b { font: 800 14px/1.2 var(--ln-font-display); }
+.fleet span { color: #b8c8c0; font: 700 14px/1.2 var(--ln-font-mono); }
 .eyebrow { color: #b8c8c0; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .week { width: 100%; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .day { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #b8c8c0; font: 800 14px/1 var(--ln-font-display); }
@@ -147,3 +150,7 @@
 .siteParts li span { font: 700 14px/1 var(--ln-font-mono); }
 .siteParts li[data-full] span { color: #6fe39a; }
 .siteMine, .siteArchived { margin: 0; color: #c9d0c2; font: 600 14px/1.35 var(--ln-font-body); }
+
+.frontier { width: 100%; color: var(--ln-text); font: var(--ln-fs-micro)/1.5 var(--ln-font-body); text-align: left; }
+.frontier summary { min-height: 44px; cursor: pointer; padding: var(--ln-s-2) 0; font-weight: 700; }
+.frontier button { min-height: 44px; padding: var(--ln-s-2); margin: var(--ln-s-1); background: var(--ln-blueprint-ink); color: var(--ln-text); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-s-1); font: inherit; cursor: pointer; }

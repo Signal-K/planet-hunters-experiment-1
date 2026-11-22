@@ -1,171 +1,71 @@
+/* SSL-848: the flight is one full-bleed Takeon canvas. Controls follow the shared mining setup: Back and the route
+   on top, the nudge pad bottom-left and one round Boost button bottom-right. */
 .screen {
-  --k: 3px;
   position: absolute;
   inset: 0;
   overflow: hidden;
   background-color: var(--ln-world-night-top);
   background-image: radial-gradient(circle at 20% 30%, var(--ln-map-sun) 1px, transparent 1.5px), radial-gradient(circle at 80% 70%, var(--ln-cyan) 1px, transparent 1.5px);
   background-size: 160px 120px, 230px 190px;
-  color: var(--ln-world-outline);
+  color: var(--ln-blueprint-paper);
+  touch-action: none;
+  /* The shared round button reads its ink and paper from these; a dusk scene mounted behind must not flip them. */
+  --ln-bp-ink: var(--ln-blueprint-ink);
+  --ln-bp-paper: var(--ln-blueprint-paper);
 }
 
-.sky {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.bands {
+.canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill;
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
-.starTile {
-  position: absolute;
-  inset: 0;
-  background-repeat: repeat;
-  image-rendering: pixelated;
-  pointer-events: none;
-  animation: pan 140s linear infinite;
-}
-
-.starTile[data-speed='far'] {
-  background-image: url('/game/assets/base/kit/stars-far.png');
-  background-size: 256px 256px;
-  animation-duration: 140s;
-}
-
-.starTile[data-speed='mid'] {
-  background-image: url('/game/assets/base/kit/stars-mid.png');
-  background-size: 256px 256px;
-  animation-duration: 90s;
-}
-
-.starTile[data-speed='near'] {
-  background-image: url('/game/assets/base/kit/stars-near.png');
-  background-size: 384px 384px;
-  animation-duration: 50s;
-}
-
-.stage {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 64px;
-  bottom: 88px;
-}
-
-.ship {
-  position: absolute;
-  left: 36%;
-  top: 50%;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  transform: translate(-50%, -50%);
-  animation: bob 3.2s ease-in-out infinite;
-}
-
-.rocketWrap {
-  position: relative;
-  width: calc(72 * var(--k));
-  height: calc(44 * var(--k));
-  flex: 0 0 auto;
-}
-
-.rocket {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(44 * var(--k));
-  height: calc(72 * var(--k));
-  transform: translate(-50%, -50%) rotate(90deg);
-  image-rendering: pixelated;
-  pointer-events: none;
-}
-
-.flame {
-  width: calc(36 * var(--k));
-  height: calc(16 * var(--k));
-  image-rendering: pixelated;
-  flex: 0 0 auto;
-}
-
-.body {
-  position: absolute;
-  top: 50%;
-  right: 10%;
-  z-index: 2;
-  width: calc(72 * var(--k));
-  height: calc(60 * var(--k));
-  transform: translate(var(--shift), -50%);
-  animation: drift 9s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.bodySprite {
   display: block;
-  width: 100%;
-  height: 100%;
-  /* Earth is a 48x48 disc in the asteroid's 48x40 box: keep it round. */
-  object-fit: contain;
-  image-rendering: pixelated;
 }
 
-.progress {
-  flex: 1 1 auto;
-  min-width: 60px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(244, 239, 228, .18);
-  pointer-events: none;
-}
-
-.progress > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #58d0ea;
-}
-
-.cluster :global(.scene-chip) {
-  min-height: 44px;
-  height: 44px;
-  border-radius: 4px;
-  padding: 0 12px;
-  font-size: 16px;
-}
-
-.controls {
+.top {
   position: absolute;
-  left: 50%;
-  bottom: 12px;
+  top: calc(12px + env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
   z-index: 6;
-  width: min(720px, calc(100% - 24px));
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.exit,
+.route {
+  pointer-events: auto;
   border: 1px solid rgba(244, 239, 228, .4);
   border-radius: 999px;
   background: rgba(16, 24, 44, .84);
-  color: #f4efe4;
+  color: var(--ln-blueprint-paper);
+}
+
+.exit {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-width: 2px;
+  border-color: rgba(244, 239, 228, .6);
+  font: 800 14px var(--ln-font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
 .route {
   flex: 1 1 auto;
   min-width: 0;
+  max-width: 560px;
+  min-height: 48px;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 0 18px;
 }
 
 .routeName,
@@ -178,84 +78,82 @@
 
 .routeName { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .routeEta { color: #b8e4ea; font-variant-numeric: tabular-nums; }
-.arrivalNote {
-  position: absolute; z-index: 6; left: 50%; bottom: 88px; transform: translateX(-50%);
-  width: min(720px, calc(100% - 32px)); margin: 0; padding: 8px 16px;
-  color: var(--ln-map-sun); background: var(--ln-blueprint-ink); border-radius: 14px;
-  font: 600 14px/1.4 var(--ln-font-body); text-align: center;
+
+.progress {
+  flex: 1 1 auto;
+  min-width: 40px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(244, 239, 228, .18);
 }
 
-.exit,
-.boost {
-  flex: 0 0 auto;
-  min-width: 44px;
-  min-height: 48px;
-  padding: 0 18px;
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ln-cyan);
+}
+
+/* The goal is said once in the middle of the scene, then clears. */
+.goal {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  z-index: 5;
+  width: min(34ch, calc(100% - 48px));
+  margin: 0;
+  padding: 10px 16px;
+  transform: translateX(-50%);
+  border-radius: 14px;
+  background: rgba(16, 24, 44, .78);
+  color: var(--ln-blueprint-paper);
+  font: 600 16px/1.35 var(--ln-font-body, system-ui);
+  text-align: center;
+  pointer-events: none;
+  animation: goal 5s ease forwards;
+}
+
+@keyframes goal {
+  0% { opacity: 0; }
+  8%, 82% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.arrive {
+  position: absolute;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  z-index: 6;
+  min-width: 132px;
+  min-height: 56px;
+  padding: 0 24px;
+  border: 2px solid var(--ln-blueprint-paper);
   border-radius: 999px;
-  font: 800 14px var(--ln-font-display);
+  background: var(--ln-blueprint-paper);
+  color: var(--ln-blueprint-ink);
+  font: 800 16px var(--ln-font-display);
   letter-spacing: .1em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
-.exit { border: 2px solid rgba(244, 239, 228, .6); background: transparent; color: #f4efe4; }
-.boost { min-width: 112px; border: 2px solid #f4efe4; background: #f4efe4; color: #142840; }
-.boost:disabled { cursor: default; }
-.boost[data-arrived='true'] { border-color: #f2c24c; background: #f2c24c; }
-
-/* Phones held upright: the route reads on its own row above Back and Boost. */
-@media (orientation: portrait) and (max-width: 560px) {
-  .arrivalNote { bottom: 160px; }
-  .controls { flex-wrap: wrap; border-radius: 24px; padding: 10px; }
-  .route { order: -1; flex-basis: 100%; padding: 2px 6px 4px; }
-  .routeName { flex: 0 1 130px; white-space: normal; overflow: visible; line-height: 1.3; }
-  .exit { flex: 0 0 auto; }
-  .boost { flex: 1 1 auto; }
-}
-
-@keyframes pan {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@keyframes dust {
-  from { transform: translateX(8%); }
-  to { transform: translateX(-36%); }
-}
-
-@keyframes bob {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, calc(-50% - 6px)); }
-}
-
-@keyframes drift {
-  0%, 100% { transform: translate(var(--shift), -50%); }
-  50% { transform: translate(calc(var(--shift) - 8px), calc(-50% - 8px)); }
-}
-
-@media (orientation: portrait) and (max-width: 800px) {
-  .screen { --k: 2px; }
-  .stage { top: 72px; bottom: 112px; }
-  /* SSL-534: the ship rides high and the asteroid sits low and larger, so the tall phone screen is used and the body is never cut off at the edge. */
-  .ship { left: 42%; top: 30%; }
-  .body { right: 8%; top: 64%; width: calc(80 * var(--k)); height: calc(66 * var(--k)); }
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-  .screen { --k: 2px; }
-  
-  .stage { top: 56px; bottom: 96px; }
-  .ship { left: 36%; top: 46%; }
-  .body { right: 8%; top: 46%; }
-  
-}
-
-@media (min-width: 1024px) {
-  .screen { --k: 3px; }
-  .ship { left: 36%; }
-  .body { right: 12%; }
+/* A narrow phone keeps the whole destination name; the bar gives way first. */
+@media (max-width: 560px) {
+  .route { padding: 0 14px; gap: 8px; }
+  .routeName { flex: 0 0 auto; }
+  .progress { min-width: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .starTrack, .starTile, .dust, .ship, .body { animation: none; }
+  .goal { animation: none; }
+}
+
+.arrivalNote { position: absolute; z-index: 6; left: 50%; bottom: 28px; transform: translateX(-50%); width: min(560px, calc(100% - 360px)); margin: 0; padding: 8px 16px; color: var(--ln-blueprint-paper); background: var(--ln-blueprint-ink); border-radius: 12px; font: var(--ln-fs-micro)/1.4 var(--ln-font-body); text-align: center; pointer-events: none; }
+@media (max-width: 560px) { .arrivalNote { bottom: 208px; width: calc(100% - 32px); } }
+
+@media (max-width: 560px) {
+  .top { flex-wrap: wrap; gap: 8px; }
+  .route { order: 1; flex-basis: 100%; margin-left: 0; max-width: none; }
+  .routeName { flex: 1 1 150px; white-space: normal; line-height: 1.3; }
 }
