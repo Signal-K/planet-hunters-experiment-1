@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TARGETS, MINERAL_META } from '@/lib/data'
-import { miningIntelligence } from './mining-intelligence'
+import { miningIntelligence, miningSeamPool } from './mining-intelligence'
 import { sectorDeposits, surveyOf } from './survey-probe'
 import type { Player } from '@/lib/game-types'
 
@@ -38,5 +38,27 @@ describe('mining intelligence', () => {
     const evidence = miningIntelligence({ probes: { eros: { launchedAt: 0, readings: { '0_0': reading('0_0') } } } }, mercury)
     expect(evidence.sectors).toEqual([])
     expect(evidence.findings).toEqual([])
+  })
+
+  it('uses mapped mineral frequency while keeping an unmapped contract ore obtainable on every replay', () => {
+    const player = { probes: { eros: { launchedAt: 0, readings: { '0_0': reading('0_0'), '1_0': reading('1_0') } } } }
+    const before = structuredClone(player)
+    const evidence = miningIntelligence(player, eros)
+    const pool = miningSeamPool(player, eros, ['platinum'])
+    expect(pool).toMatchObject({ source: 'probe', coverage: 2 })
+    expect(pool.minerals[0]).toBe('platinum')
+    for (const row of evidence.findings.filter(row => row.mineral !== 'platinum')) {
+      expect(pool.minerals.filter(id => id === row.mineral)).toHaveLength(row.sectors)
+    }
+    expect(new Set(pool.minerals)).toEqual(new Set(['platinum', ...evidence.findings.map(row => row.mineral)]))
+    expect(miningSeamPool(JSON.parse(JSON.stringify(player)), eros, ['platinum'])).toEqual(pool)
+    expect(player).toEqual(before)
+  })
+
+  it('keeps the composition fallback playable and excludes sky fragments from the ground', () => {
+    expect(miningSeamPool({}, eros, ['iron'])).toEqual({ source: 'composition', coverage: 0, minerals: ['iron', ...eros.minerals.filter(id => id !== 'iron')] })
+    const pool = miningSeamPool({}, { ...eros, minerals: ['iron', 'orionid_debris'] }, ['orionid_debris'], ['orionid_debris'])
+    expect(pool.minerals).toEqual(['iron'])
+    expect(miningSeamPool({}, { ...eros, minerals: [] }, ['nickel']).minerals).toEqual(['nickel'])
   })
 })

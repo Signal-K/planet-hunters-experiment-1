@@ -285,6 +285,7 @@ export default function MissionOperationRoutes({
         <MiningScreen
           mission={game.mission}
           target={game.target}
+          probeEvidence={game.player}
           rocketImageSrc={rocketDisplay.img}
           initialCargo={game.player.miningCargoInProgress}
           initialCharges={game.player.miningLaserCharges}

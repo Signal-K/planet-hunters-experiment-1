@@ -1814,7 +1814,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "laser-mining"
           ],
-          "note": "Seeded target field; the ship laser remains canonical."
+          "note": "Downloaded/shared probe sectors supply the background seam mix, weighted by known sector frequency. Authored required ore stays obtainable; unmapped bodies use composition. No reserve depletion, scan action or research side effect. The ship laser remains canonical."
         },
         {
           "id": "mining-ship",

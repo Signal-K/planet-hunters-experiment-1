@@ -101,6 +101,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, Extraction coach active', stage: 'tutorial' },
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
+      { key: 'ui-mining-survey', label: 'Mining mapped finds', hint: 'SSL-879: two Eros sectors, one aluminium haul; mapped mix plus required ore', stage: 'free-ops' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
       { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
       { key: 'm1-home',   label: 'Home',    hint: 'Touchdown on the pad, delivery sheet', stage: 'tutorial' },
@@ -486,6 +487,15 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
+
+    case 'ui-mining-survey': {
+      const base = resolvePresetState('m1-mining')!
+      const plan = { id: 'self-plan-probe-field', targetId: 'eros', work: 'mine' as const, mineral: 'aluminium', amount: 1, createdAt: Date.now() }
+      const body = TARGETS.find(target => target.id === 'eros')!
+      const readings = Object.fromEntries(['0_0', '1_0'].map(id => [id, { at: Date.now(), deposits: sectorDeposits(body, id), marked: [] }]))
+      return { ...base, tutorial: false, doneSteps: TRAINING_DONE, missionId: plan.id,
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station', 'surface-silo'], missionPlans: { [plan.id]: plan }, probes: { eros: { launchedAt: Date.now(), readings } }, activeMission: { id: plan.id, label: 'Mine aluminium at Eros' } } }
+    }
 
     case 'm1-mining':
       return {

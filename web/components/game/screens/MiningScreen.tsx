@@ -24,6 +24,8 @@ import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
 import gateStyles from './MiningStorageGate.module.css'
 import styles from './MiningTargetCue.module.css'
+import type { Player } from '@/lib/game-types'
+import { miningSeamPool } from '@/lib/probes/mining-intelligence'
 
 // SSL-711: the no-client explanation lives in the start card (centre of the scene, fades), not a panel across the top.
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
@@ -61,9 +63,10 @@ function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null)
 }
 
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, storageFree, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, probeEvidence = {}, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, storageFree, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
+  probeEvidence?: Pick<Player, 'probes' | 'agencyCommunity'>
   rocketImageSrc?: string
   onComplete: (cargo: Record<string, number>, earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
@@ -457,18 +460,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     onComplete(cargoRef.current, earthDisposition ?? undefined)
   }
 
-  // Deposit contains the target's full mineral pool, not just the mission's objective —
-  // otherwise a single-mineral order (e.g. silicon) makes every ore in the field identical.
-  // The required mineral(s) lead the field (MiningController seeds and favours them); the rest is the body's mix.
-  // Shower fragments fall from the sky and collect themselves, so they are never ground seams.
+  // Downloaded/shared sectors supply the mix. Required ore still leads the field;
+  // unmapped bodies use composition, and shower fragments never become seams.
   const seamRequired = Object.keys(mission.requires.minerals).filter(id => !(nightRun && id === fragmentId))
-  const depositMinerals = (() => {
-    const required = seamRequired
-    const pool = (target.minerals && target.minerals.length > 0 ? target.minerals : required).filter(m => !(nightRun && m === fragmentId))
-    const others = pool.filter(m => !required.includes(m))
-    const weighted = [...required, ...others]
-    return weighted.length > 0 ? weighted : ['iron']
-  })()
+  const seamPool = miningSeamPool(probeEvidence, target, seamRequired, nightRun ? [fragmentId] : [])
+  const depositMinerals = seamPool.minerals
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
   const totalCollected = Object.entries(mission.requires.minerals).reduce(
@@ -750,6 +746,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               <span className="mining-menu-eyebrow">{nightRun ? `${showerName} shower` : isFreeOps ? 'Free mining' : 'Mission'}</span>
               <strong>{nightRun ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments` : mission.title}</strong>
               <span>{briefGoal} · {nightRun ? `${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL} caught` : isFreeOps ? `${freeOpsCargoUnits} in the hold` : `${totalCollected} of ${totalNeeded} collected`} · Laser {laserCharges}/{MAX_CHARGES}</span>
+              <span data-testid="mining-survey-source">{seamPool.source === 'probe' ? `Seam mix from ${seamPool.coverage}/24 downloaded or shared sectors. Required job ore is included.` : 'No mapped deposits on file: seam mix uses the body’s composition.'}</span>
             </div>
             <button type="button" className="mining-guide-x" aria-label="Close menu" onClick={() => setGuideOpen(false)}>
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">

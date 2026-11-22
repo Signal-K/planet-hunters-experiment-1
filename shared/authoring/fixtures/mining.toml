@@ -1,1 +1,3 @@
 # Named setups for mining. Keep scene structure in scenes/mining.toml.
+# SSL-879: mining-survey / ui-mining-survey starts a one-aluminium Eros haul
+# with sectors 0_0 and 1_0 downloaded. Ordinary mining remains the unmapped fallback.
