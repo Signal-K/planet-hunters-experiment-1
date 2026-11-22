@@ -2065,6 +2065,14 @@
             "training"
           ],
           "note": "Optional training, never a Free Ops gate."
+        },
+        {
+          "id": "planning-and-log",
+          "kind": "ui",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "On portrait phones, own-flight planning, mission log and balance have distinct grid cells and 44px controls. Free Run keeps a compact, accessible Solar system back control at the left of the second row, clear of planning and destination nodes. Other viewports retain their normal toolbar."
         }
       ]
     },

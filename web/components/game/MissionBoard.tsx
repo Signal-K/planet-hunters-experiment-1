@@ -265,7 +265,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
       <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
       {shownAsteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
-      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </> : <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="50" cy="44" rx="34" ry="27" className={styles.gxRegion} />
@@ -279,7 +279,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
       {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
       <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
-      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
+      {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </>}
   </div>
 }
@@ -584,7 +584,7 @@ export default function MissionBoard({
         {tabButtons}
       </nav>
       <div className={styles.railHelp}>
-        {player.freeOperations && onOpenPlanner && <button type="button" className={styles.log} data-testid="mission-board-plan" onClick={onOpenPlanner}>Plan mission</button>}
+        {player.freeOperations && onOpenPlanner && <button type="button" className={`${styles.log} ${styles.plan}`} data-testid="mission-board-plan" onClick={onOpenPlanner}>Plan flight</button>}
         <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
         <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
           <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>

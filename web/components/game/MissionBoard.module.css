@@ -961,12 +961,16 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .gxNode[data-testid='map-node-ceres'] { left: 58% !important; top: 52% !important; }
   .gxNode[data-testid='map-node-lutetia'] { left: 80% !important; top: 52% !important; }
 }
-/* Portrait phone: help stays on the tab row; log and balance sit on the second row, opposite Solar system. */
+/* Portrait phone: help stays on the tab row; planning, log and balance have
+   separate cells below. Free Run keeps a compact map-back control at left. */
 @media (orientation: portrait) and (max-width: 700px) {
-  .railHelp { display: grid; grid-template-columns: max-content max-content; gap: 8px; justify-items: end; align-items: center; }
-  .railHelp > :last-child { grid-column: 2; grid-row: 1; }
-  .railHelp button.log { grid-column: 1; grid-row: 2; }
-  .railHelp .balance { grid-column: 2; grid-row: 2; }
+  .railHelp { display: grid; grid-template-columns: max-content max-content max-content; gap: 8px; justify-items: end; align-items: center; }
+  .railHelp > :last-child { grid-column: 3; grid-row: 1; }
+  .railHelp button.log { grid-column: 2; grid-row: 2; }
+  .railHelp button.plan { grid-column: 1; }
+  .railHelp .balance { grid-column: 3; grid-row: 2; }
+  .scene[data-tab="free"] .gxBack { top: 64px; width: 44px; padding: 0; justify-content: center; }
+  .scene[data-tab="free"] .gxBackLabel { display: none; }
 }
 
 /* SSL-699: offers grouped by mining, construction and exploration (Liam, 01.11). The chips filter the strip; each

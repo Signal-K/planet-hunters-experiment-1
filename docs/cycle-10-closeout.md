@@ -177,3 +177,23 @@ Inspected phone, landscape, both iPad orientations and desktop. No new tests
 were added for these reversible UI changes; existing state/resource guards
 remain. The full local suite again passed 1,347 tests (one skipped), plus
 shared Go/authoring and typecheck.
+
+SSL-876 fixes a phone layout defect found on those routes: Plan mission and Log
+shared one grid cell. Planning, Log and balance now have distinct cells; the
+short Plan flight label keeps the actions readable. Free Run uses a compact
+44px Solar system back control with an accessible name, clear of the toolbar
+and Bennu. Native does not share this web grid or have the web planner.
+
+Clicked planning and Log separately on the phone, then selected Bennu in Free
+Run. Inspected 375×812, 390×844, landscape, both iPad orientations and desktop
+(screenshots 539–542 and 559–564). The final 375px view shows all header controls
+and Bennu clearly. Successful actions reported no page errors. One attempted
+Free Run click after the Log's Back action timed out because Back had returned
+to Base; the Mission Board fixture was reopened for the map check.
+
+The 1,347-test local suite, shared Go checks and authoring passed; typecheck and
+manual views were repeated after the final CSS refinement. No CSS-spelling or
+snapshot tests were added. Hosted native domain tests and the iOS app build
+passed for the functional hotfix code at `76075c54`; Simulator app tests and the
+final PR checks continue separately. The initial Cycle 10 changes remain merged
+in main; these guidance follow-ups are in draft PR #241.
