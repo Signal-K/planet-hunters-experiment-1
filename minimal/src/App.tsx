@@ -4,7 +4,7 @@ import { CHAPTERS, type Chapter } from './chapters'
 import { BaseScene, outOfReach } from './BaseScene'
 import { BriefingScene } from './BriefingScene'
 import { Scenery } from './scenes'
-import { readSharedSave } from './sharedSave'
+import { creditLandnam, readSharedSave } from './sharedSave'
 import { applyResult, missingMaterials, readProgress, writeProgress, type MinimalProgress } from './progress'
 import { pushProgress, syncProgress } from './progressSync'
 import { base as baseFor, levelUps, type RunCounts, type StructureId } from './structures'
@@ -54,6 +54,7 @@ export function App() {
     let live = true
     const sync = () => {
       void syncProgress(pilot, readProgress(pilot.id)).then(merged => {
+        creditLandnam(pilot.id, merged ?? readProgress(pilot.id))
         if (!live || !merged) return
         writeProgress(pilot.id, merged)
         setProgress(merged)
@@ -111,6 +112,7 @@ export function App() {
         onFinish={result => {
           const next = applyResult(progress, chapter, result)
           writeProgress(pilot.id, next)
+          creditLandnam(pilot.id, next)
           void pushProgress(pilot, next)
           setProgress(next)
           setFresh(new Set(upgrades.map(u => u.def.id)))
