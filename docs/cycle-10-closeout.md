@@ -197,3 +197,10 @@ snapshot tests were added. Hosted native domain tests and the iOS app build
 passed for the functional hotfix code at `76075c54`; Simulator app tests and the
 final PR checks continue separately. The initial Cycle 10 changes remain merged
 in main; these guidance follow-ups are in draft PR #241.
+
+The portrait-tablet check also exposed toolbar crowding at 820px. The final
+header keeps the current tab's name and other tab icons on narrow portrait
+tablets; smaller widths use the two-row toolbar. Verified the corrected 820px
+view directly (screenshot 565), with planning, Log, balance and help all clear.
+The 768px Program view was also checked (572); its panel starts below the
+two-row toolbar. The final standard viewport matrix is 566–570.

@@ -927,7 +927,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .sourceSites > button[data-on] { background: #ecebe8; color: #16171a; border-color: #ecebe8; }
 .sourceSites > button.sourceAll { margin-left: auto; background: transparent; border-style: dashed; }
 
-@media (orientation: portrait) and (max-width: 700px) {
+@media (orientation: portrait) and (max-width: 800px) {
   .rail button.tab, .rail button.tab[data-tab] { width: 44px; padding: 0; }
   .rail .tabLabel { display: none; }
   .gxBack, .gxBack[data-testid] { top: 64px; }
@@ -963,7 +963,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 }
 /* Portrait phone: help stays on the tab row; planning, log and balance have
    separate cells below. Free Run keeps a compact map-back control at left. */
-@media (orientation: portrait) and (max-width: 700px) {
+@media (orientation: portrait) and (max-width: 800px) {
   .railHelp { display: grid; grid-template-columns: max-content max-content max-content; gap: 8px; justify-items: end; align-items: center; }
   .railHelp > :last-child { grid-column: 3; grid-row: 1; }
   .railHelp button.log { grid-column: 2; grid-row: 2; }
@@ -1020,3 +1020,11 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .surplusRow small { color: #c9d0c2; font: 700 14px/1.1 var(--ln-font-body); }
 .surplusRow button { flex: none; min-height: 44px; padding: 0 14px; border: 2px solid #f2c24c; border-radius: 999px; background: #f2c24c; color: #142840; font: 800 14px/1 var(--ln-font-display); letter-spacing: .04em; cursor: pointer; }
 .surplusRow button:disabled { opacity: .5; cursor: default; }
+
+/* Narrow tablets keep the current tab's name and the remaining tabs' icons,
+   leaving room for planning, Log and balance without covering their targets. */
+@media (orientation: portrait) and (min-width: 801px) and (max-width: 1100px) {
+  .rail button.tab:not([data-active='true']) { width: 44px; padding: 0; }
+  .rail button.tab:not([data-active='true']) .tabLabel { display: none; }
+  .railHelp .balance i { display: none; }
+}
