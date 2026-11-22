@@ -55,7 +55,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   showerRun?: { francs: number; fragments: number } | null
   /** SSL-751: the Homecoming sheet's split, already settled for market and silo. The debrief shows it and closes the run. */
   homeSettlement?: HomeSettlement | null
-  /** SSL-818: the other places this run can end. The primary button still returns to the default. */
+  /** SSL-818: the other places this run can end. The primary button explicitly returns to Base. */
   exits?: DebriefExit[]
 }) {
   // SSL-758: what this run adds to the shared Community Site (the player keeps the haul).
@@ -238,6 +238,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
 
+        {result.canTeardown && (
+          <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
+            Recycle rocket
+          </GhostBtn>
+        )}
         </section>
 
         <section className={styles.settle} aria-label="Settle up">
@@ -247,8 +252,15 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               ? storyItem.unlocks
               : mission.payload?.instrumentId === 'survey-probe'
                 ? 'Probe released. It starts mapping the surface now; check the data hub to see the deposits it finds.'
-                : 'Mission complete. Return to Base, then open the mission board to choose your next flight.'}
+                : 'Choose your next activity, or return to Base. Every option completes this flight first.'}
           </p>
+          {exits.some(exit => exit.id !== 'again') && (
+            <nav className={styles.exits} aria-label="Other next activities" data-testid="debrief-exits">
+              {exits.filter(exit => exit.id !== 'again').map(exit => (
+                <button key={exit.id} type="button" className={styles.exit} data-testid={`debrief-exit-${exit.id}`} disabled={collecting} onClick={() => collect(exit.id)}>{exit.label}</button>
+              ))}
+            </nav>
+          )}
         </section>
 
         {settled ? (
@@ -319,40 +331,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </section>
         )}
         </section>
-        {exits.length > 0 && (
-          <nav className={styles.exits} aria-label="What next" data-testid="debrief-exits">
-            <p className={styles.exitsLabel}>Collect, then go to</p>
-            {exits.map(exit => (
-              <button key={exit.id} type="button" className={styles.exit} data-testid={`debrief-exit-${exit.id}`} disabled={collecting} onClick={() => collect(exit.id)}>{exit.label}</button>
-            ))}
-          </nav>
-        )}
         <div className={styles.dock} data-ui-zone={UI_ZONES.bottomActions}>
-        {result.canTeardown && (
-          <GhostBtn testId="debrief-teardown-btn" full={false} disabled={scrapping} onClick={() => setScrapping(true)}>
-            Teardown
+          <GhostBtn testId="debrief-exit-again" full={false} disabled={collecting} onClick={() => collect('again')}>
+            Choose next flight
           </GhostBtn>
-        )}
         <PrimaryBtn
           kind="cyan"
           full={false}
           testId="collect-reward-btn"
           disabled={collecting}
-          onClick={() => collect()}
+          onClick={() => collect('base')}
         >
-          {storyStep
-            ? 'Complete mission · continue research'
-            : settled
-            ? settled.payout > 0 ? `Complete mission · return to Base · ${formatCurrency(settled.payout)}` : 'Complete mission · return to Base'
-            : isFreeHaul
-            ? willStore
-              ? overflowUnits > 0 ? `Complete mission · sell ${overflowUnits} over cap` : shownRun ? `Complete mission · keep haul` : 'Complete mission · keep haul'
-              : `Complete mission · collect ${formatCurrency((haulMarketValue ?? 0) + (shownRun?.francs ?? 0))}`
-              : delivered
-                ? isProgramOperation
-                ? 'Complete mission · return to Base'
-                : `Complete mission · return to Base · ${formatCurrency(total)}`
-              : shownRun ? `Complete mission · return to Base · ${formatCurrency(shownRun.francs)}` : 'Complete mission · return to Base'}
+          Complete flight · return to Base
         </PrimaryBtn>
         </div>
       </article>

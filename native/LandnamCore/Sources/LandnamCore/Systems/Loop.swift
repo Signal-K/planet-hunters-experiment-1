@@ -303,7 +303,7 @@ public enum Loop {
     /// Settle a finished contract. `payout` is the figure the Debrief screen showed
     /// (already through the onboarding floor), so the ledger and screen agree.
     public static func debriefDone(_ s: GameState, payout rawTotal: Int, affinity: Int, consumed: Cargo = [:],
-                                   disposition: HaulDisposition? = nil, catalog: Catalog, now: Double) -> GameState {
+                                   disposition: HaulDisposition? = nil, next: Screen? = nil, catalog: Catalog, now: Double) -> GameState {
         guard s.screen == .debrief, let missionId = s.missionId, s.targetId != nil, let haulCargo = s.lastCargo else { return s }
         let mission = catalog.mission(missionId)
         var n = s
@@ -400,6 +400,7 @@ public enum Loop {
             : missionId == OrionidsRun.missionId
                 ? .missions
                 : program ? .launchpad : .hub
+        if let next, [.hub, .missions, .instrumentHub].contains(next) { n.screen = next }
         return n
     }
 

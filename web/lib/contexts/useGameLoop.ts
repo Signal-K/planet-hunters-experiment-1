@@ -57,6 +57,7 @@ import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 import { ORIONIDS_NIGHT_RUN_ID, showerRunMission } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
 import { onlineTelescopes } from '@/lib/research/paths'
+import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { debriefExitScreen, type DebriefExitId } from '@/lib/debrief-exits'
 import { settleShowerRun, showerRunFilled, startShowerRun, withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { requestMissionBoardTab } from '@/lib/mission-board-nav'
@@ -1440,6 +1441,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         targetId: null,
         deliveryTargetId: null,
         tutorial: stillInTutorial,
+        missionBoardScope: EARTH_BASE_SCOPE,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
           screen: debriefExitScreen(exitId, { showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })

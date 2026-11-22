@@ -137,3 +137,29 @@ SSL-873 is Done; SSL-864 and SSL-870 remain open.
 The final `hub-pad-worn` check opened the existing ₣1M service confirmation
 from the guidance action. Confirming reduced the fixture balance from ₣150M
 to ₣149M and replaced Service pad with Prepare flight (screenshots 502–504).
+
+
+## Cycle 10 guidance hotfixes (22 November)
+
+PR #240 merged to main at `4c243af2` after all checks, including Simulator tests,
+passed. The explicitly requested follow-up branch is `hotfix/cycle-10-guidance`.
+Liam clarified that the agency belongs to the player: guidance explains choices
+and consequences, rather than assigning the agency a purpose or a mandatory
+campaign. The decision is in the repository and mirrored in Craft.
+
+SSL-874 gives even the first debrief a persistent Choose next flight action.
+Each next-activity action completes the same settlement once. Free Ops offers
+Plan my own flight; available telescopes offer data review. The Base action
+explicitly returns to Base, and the next mission board uses Earth scope.
+Rocket recycling is a separate optional action. iOS mirrors next-flight, Base
+and instrument exits; the web Mission Planner remains deferred on iOS.
+
+Played the first debrief to Choose next flight: the board opened directly at
+₣166.7M from ₣150M. The survey-probe debrief opened the player's own Mission
+Planner directly. The explicit Base button returned the first completed run
+to Base with the same payout. The final debrief was inspected at 390×844,
+926×428, 1180×820, 820×1180 and 1440×900 (screenshots 518–523). Successful actions
+reported no page errors. These are disposable fixtures, not a fresh user study.
+Local web suite: 1,347 passed, one skipped; shared Go and authoring checks passed.
+Web typecheck passed. No local Swift/Xcode/Simulator is available; native changes
+are verified by the PR's hosted Mac checks.

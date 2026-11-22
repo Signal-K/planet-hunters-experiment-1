@@ -474,7 +474,7 @@ export default function MissionOperationRoutes({
             showerRun: !!showerRun,
             programOperation: isOwnProgramMission(game.mission),
             hasInstrument: onlineTelescopes(game.player).length > 0,
-            guided: !game.player.freeOperations || game.tutorial,
+            guided: !game.player.freeOperations,
           })}
         />
       )

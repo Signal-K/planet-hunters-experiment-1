@@ -197,7 +197,8 @@
    "web": "m1-debrief",
    "native": "debrief-phone",
    "tickets": [
-    "SSL-462"
+    "SSL-462",
+    "SSL-874"
    ]
   },
   {

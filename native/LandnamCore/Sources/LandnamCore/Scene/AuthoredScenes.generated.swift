@@ -683,6 +683,15 @@ enum AuthoredSceneDeclarations {
             "mission-planning"
           ],
           "note": "Return to the same canonical base state."
+        },
+        {
+          "id": "next-activity",
+          "kind": "ui",
+          "mechanics": [
+            "mission-planning",
+            "persistence"
+          ],
+          "note": "After any flight, including the first, the player can settle and choose another flight directly, or explicitly return to Base. Free Ops on web also offers own-flight planning; available instruments offer data review. Every action uses the same once-per-run settlement. The agency's purpose belongs to the player; suggestions are optional."
         }
       ]
     },

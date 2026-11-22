@@ -5,6 +5,15 @@ it('a completed run can view existing community progress without creating a new 
   expect(debriefExitScreen('community', { showerRun: false, programOperation: true, hasInstrument: false })).toBe('community-research')
 })
 
-it('guided debriefs retain their single default exit', () => {
-  expect(debriefExits({ showerRun: false, programOperation: false, hasInstrument: false, guided: true })).toEqual([])
+it('the first completed flight can go straight to another flight without offering advanced planning', () => {
+  const exits = debriefExits({ showerRun: false, programOperation: false, hasInstrument: false, guided: true })
+  expect(exits.map(exit => exit.screen)).toEqual(['missions'])
+})
+
+it('players can choose their own flight after any kind of completed run', () => {
+  const input = { showerRun: false, programOperation: true, hasInstrument: true }
+  expect(debriefExitScreen('again', input)).toBe('missions')
+  expect(debriefExitScreen('plan', input)).toBe('mission-planner')
+  expect(debriefExitScreen('base', input)).toBe('hub')
+  expect(debriefExits({ ...input, guided: false }).map(exit => exit.screen)).toContain('instrument-hub')
 })
