@@ -55,7 +55,8 @@
    "tickets": [
     "SSL-345",
     "SSL-451",
-    "SSL-873"
+    "SSL-873",
+    "SSL-875"
    ]
   },
   {
@@ -932,7 +933,8 @@
    "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
    "tickets": [
     "SSL-785",
-    "SSL-873"
+    "SSL-873",
+    "SSL-875"
    ]
   },
   {

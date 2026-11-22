@@ -210,10 +210,10 @@
 /* One ongoing task, carried above the navigation rather than opened as a coach. */
 .nextFlightSlot {
   position: absolute; top: 88px; left: 16px; z-index: 19;
-  width: min(380px, calc(100vw - 32px));
+  width: min(330px, calc(100vw - 32px));
 }
 @media (max-width: 600px) and (min-height: 650px) {
-  .nextFlightSlot { top: 30%; }
+  .nextFlightSlot { top: 30%; width: calc(100vw - 32px); }
 }
 .nextFlight {
   pointer-events: auto;
@@ -238,4 +238,26 @@
 .nextFlightCta { flex: 0 0 auto; max-width: 125px; color: var(--ln-text); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-height: 500px) {
   .nextFlight { min-height: 56px; padding: 8px 12px; }
+}
+
+.nextFlightPanel {
+  pointer-events: auto;
+  overflow: hidden;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 12px;
+  background: var(--ln-surface-2);
+  color: var(--ln-text);
+}
+.nextFlightPanel .nextFlight { border: 0; border-radius: 0; background: transparent; }
+.nextFlightSuggestion {
+  margin: 0;
+  padding: 10px 16px 0;
+  font: 800 14px var(--ln-font-display);
+}
+.nextFlightChoices { display: flex; gap: 8px; padding: 0 12px 12px; }
+.nextFlightChoices button {
+  flex: 1; min-width: 0; min-height: 44px; padding: 8px;
+  border: 1px solid var(--ln-text); border-radius: 6px;
+  color: var(--ln-text); background: transparent;
+  font: 700 14px var(--ln-font-display); cursor: pointer;
 }

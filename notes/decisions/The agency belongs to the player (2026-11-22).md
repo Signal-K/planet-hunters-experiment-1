@@ -9,3 +9,5 @@ A quick recommended flight is a convenience. The player can choose another contr
 After a flight, show clear next-activity actions. Every exit settles the same cargo and payout once, then opens the chosen activity directly. Returning to Base must actually return to Base. Recycling the rocket is an optional action, not the primary alternative to continuing.
 
 This applies to web and iOS. Existing native companion deferrals still apply; in particular the web Mission Planner is not an iOS feature yet.
+
+SSL-875 makes the Base recommendation visibly optional: Suggested flight sits beside Choose another flight and, on web in Free Ops, Plan my own flight. Active runs and unfinished setup keep Resume or Continue, without an invitation to overwrite the job.

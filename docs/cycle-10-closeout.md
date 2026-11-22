@@ -163,3 +163,17 @@ reported no page errors. These are disposable fixtures, not a fresh user study.
 Local web suite: 1,347 passed, one skipped; shared Go and authoring checks passed.
 Web typecheck passed. No local Swift/Xcode/Simulator is available; native changes
 are verified by the PR's hosted Mac checks.
+
+SSL-875 marks a new Base recommendation as Suggested flight and exposes Choose
+another flight plus Plan my own flight on web in Free Ops. Existing active runs,
+unfinished setup and service states keep their continuation actions. iOS offers
+the alternate board route; native custom planning remains deferred.
+
+Played `hub-first-run`: own-flight planning opened directly, the alternate
+route opened the board with ₣150M unchanged and no contract accepted, and the
+suggested preparation still opened the normal review. Back through the board
+to Base retained Continue setup with no new-job choices (screenshots 525–537).
+Inspected phone, landscape, both iPad orientations and desktop. No new tests
+were added for these reversible UI changes; existing state/resource guards
+remain. The full local suite again passed 1,347 tests (one skipped), plus
+shared Go/authoring and typecheck.

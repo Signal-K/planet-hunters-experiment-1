@@ -135,25 +135,39 @@ struct HubScreen: View {
 
     private func nextFlight(size: CGSize, insets: EdgeInsets) -> some View {
         let next = BaseNextFlight.current(store.state, catalog: store.catalog, now: store.now)
-        return Button { store.openNextFlight() } label: {
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(next.title).font(AppFont.display(16))
-                    Text(next.detail).font(AppFont.body(14))
-                }.frame(maxWidth: .infinity, alignment: .leading)
-                Text(next.cta + " →").font(AppFont.display(14)).foregroundStyle(Theme.blue)
-                    .frame(maxWidth: 125)
+        return VStack(alignment: .leading, spacing: 0) {
+            if next.missionId != nil {
+                Text("Suggested flight").font(AppFont.display(14)).padding(.horizontal, 12).padding(.top, 10)
             }
-            .foregroundStyle(Theme.hudInk).padding(12).frame(minHeight: 64)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.hudPanel))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 1))
+            Button { store.openNextFlight() } label: {
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(next.title).font(AppFont.display(16))
+                        Text(next.detail).font(AppFont.body(14))
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                    Text(next.cta + " →").font(AppFont.display(14)).foregroundStyle(Theme.blue)
+                        .frame(maxWidth: 125)
+                }.padding(12).frame(minHeight: 64)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("base-next-flight")
+            if next.missionId != nil {
+                Button { store.openMissionBoard(tab: 0) } label: {
+                    Text("Choose another flight").font(AppFont.display(14))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hudInk, lineWidth: 1))
+                }
+                .buttonStyle(.plain).padding(.horizontal, 12).padding(.bottom, 12)
+                .accessibilityIdentifier("base-choose-flight")
+            }
         }
-        .buttonStyle(.plain)
-        .frame(width: min(380, size.width - insets.leading - insets.trailing - 32))
+        .foregroundStyle(Theme.hudInk)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.hudPanel))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.blue, lineWidth: 1))
+        .frame(width: min(size.width < 600 ? 380 : 330, size.width - insets.leading - insets.trailing - 32))
         .padding(.leading, insets.leading + 16)
         .padding(.top, size.width < 600 && size.height > 650 ? size.height * 0.22 : insets.top + 88)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .accessibilityIdentifier("base-next-flight")
     }
 
     /// Share of the silo's capacity holding ore, for the stored-ore crates in the cutaway.

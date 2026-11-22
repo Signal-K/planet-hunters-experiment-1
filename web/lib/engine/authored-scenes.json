@@ -1233,7 +1233,7 @@
             "persistence"
           ],
           "slot": "hud",
-          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button."
+          "note": "One persistent Base action resumes the live run, continues unfinished setup, or prepares the shortest eligible single-stop mining contract using normal board eligibility. Destination and loadout are selected before launch review. Paid rockets and launch remain explicit; no progress or currency is granted. Hide during placement, homecoming, menus and competing telescope callouts. The first mining coach points to this actual button. Idle recommendations are labelled Suggested flight and include Choose another flight, plus Plan my own flight on web when Free Ops permits. These alternatives appear only for a new suggestion; active runs, unfinished setup and service states keep their existing continuation actions."
         }
       ]
     },
