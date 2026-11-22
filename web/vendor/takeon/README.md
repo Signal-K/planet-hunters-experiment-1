@@ -110,3 +110,11 @@ Same repack with a fresh `dist/field/`: the field has no `scan()` and no scan
 pulse. Rockets and rovers never scan; the seams the probe survey mapped
 (`surveyed`, every seam by default) are on the ground from the first frame,
 `surveyed()` lists them and `reveal(ids)` adds more.
+
+## 2026-11-22: `@takeon/engine` 0.2.8 → 0.2.9 (one light, no plum grade)
+
+Built from signal-k/takeon `claude/landnam-simplified-version-gggep2`. The field's
+comic pass no longer multiplies every dark pixel by violet and adds 25%
+saturation (Bennu read purple edge to edge, icy fields neon cyan); it keeps the
+ground's own hue with a slight cool/warm split. Also brings the KES-546/547 iso
+lighting: one sun, highlights that roll off, and cliff faces lit by that sun.
