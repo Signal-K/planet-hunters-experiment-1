@@ -2,8 +2,8 @@
    two-tone desk as the radio console (RadioMeteorScreen.module.css). */
 .workspace { position: absolute; z-index: 2; inset: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); color: #f4efe4; background: rgba(16, 24, 44, .55); }
 .stage { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; min-width: 0; min-height: 0; padding: 12px clamp(16px, 3vw, 40px) 18px; background: rgba(26, 66, 168, .58); }
-.desk { display: flex; flex-direction: column; justify-content: center; gap: 14px; min-width: 0; min-height: 0; padding: 72px clamp(16px, 3vw, 40px) 20px; background: rgba(168, 34, 52, .56); }
-.desk > * { width: 100%; max-width: 480px; align-self: center; }
+.desk { display: flex; flex-direction: column; justify-content: safe center; overflow-y: auto; gap: 14px; min-width: 0; min-height: 0; padding: 72px clamp(16px, 3vw, 40px) 20px; background: rgba(168, 34, 52, .56); }
+.desk > * { flex-shrink: 0; width: 100%; max-width: 480px; align-self: center; }
 
 /* Clears the back button in the top-left corner. */
 .head { min-height: 44px; margin-left: 60px; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
@@ -70,6 +70,8 @@
 .found li i { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #070b18; }
 .found li b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 14px/1 var(--ln-font-body); }
 .found li small { margin-left: auto; color: #c9d0c2; font: 700 14px/1 var(--ln-font-mono); white-space: nowrap; }
+.found .planMineral { min-height: 44px; padding: 8px; color: var(--ln-world-hull-lit); background: var(--ln-world-night-mid); border: 1px solid var(--ln-world-glass); border-radius: 8px; font: 700 14px var(--ln-font-body); cursor: pointer; }
+.found ul:has(.planMineral) { grid-template-columns: 1fr; }
 @keyframes probe-row { from { opacity: 0; transform: translateY(4px); } }
 
 /* The way on: a free targeted run, the contracts the finds opened, or back to the hub. */
@@ -90,9 +92,9 @@
 
 /* Phone portrait: the probe on top, the readout under it. */
 @media (orientation: portrait) and (max-width: 700px) {
-  .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .workspace { overflow-y: auto; grid-template-columns: 1fr; grid-template-rows: minmax(440px, 1fr) auto; }
   .stage { padding-bottom: 12px; }
-  .desk { justify-content: flex-start; gap: 10px; padding: 12px 16px 16px; }
+  .desk { overflow: visible; justify-content: flex-start; gap: 10px; padding: 12px 16px 16px; }
   .readout { padding: 12px 14px; gap: 8px; }
   .readout > p { font-size: 16px; }
 }

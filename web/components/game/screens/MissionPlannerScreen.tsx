@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { GalaxyMap } from '@/components/game/MissionBoard'
@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/format'
 import { plannerTargets, plannerMinerals, planQuote, deliveryCache, type MissionPlan, type PlannedWork } from '@/lib/mission-planner'
 import { probeSectorHours, buildingLevel } from '@/lib/data/building-levels'
 import { miningIntelligence } from '@/lib/probes/mining-intelligence'
+import { pendingMiningPlan, clearMiningPlan } from '@/lib/mission-planner-nav'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './MissionPlannerScreen.module.css'
 
@@ -15,8 +16,12 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
   player: Player; catalog: Catalog; initialPlan?: MissionPlan; onBack: () => void; onSave: (plan: MissionPlan) => void; onReview: (id: string) => void
 }) {
   const first = plannerTargets(player, catalog, 'mine')
-  const [draft, setDraft] = useState<MissionPlan>(() => initialPlan ?? { id: 'self-plan-draft', targetId: first.find(target => target.id === 'eros')?.id ?? first[0]?.id ?? '', work: 'mine', mineral: 'nickel', amount: 3, createdAt: Date.now() })
-  const [savedId, setSavedId] = useState<string | null>(initialPlan?.id ?? null)
+  const [selection] = useState(pendingMiningPlan)
+  useEffect(() => { clearMiningPlan() }, [])
+  const [draft, setDraft] = useState<MissionPlan>(() => selection
+    ? { id: 'self-plan-draft', ...selection, work: 'mine', amount: 3, createdAt: Date.now() }
+    : initialPlan ?? { id: 'self-plan-draft', targetId: first.find(target => target.id === 'eros')?.id ?? first[0]?.id ?? '', work: 'mine', mineral: 'nickel', amount: 3, createdAt: Date.now() })
+  const [savedId, setSavedId] = useState<string | null>(selection ? null : initialPlan?.id ?? null)
   const mapView = (id: string): 'inner' | 'outer' | 'belt' => { const body = catalog.targets.find(target => target.id === id); return body?.type === 'asteroid' ? 'belt' : (body?.orbit ?? 0) <= 4 ? 'inner' : 'outer' }
   const [view, setView] = useState<'system' | 'inner' | 'outer' | 'belt'>(() => mapView(draft.targetId))
   const targets = plannerTargets(player, catalog, draft.work)
@@ -67,6 +72,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
           <p data-testid="planner-return">{draft.work === 'mine' ? `${draft.amount} ${catalog.minerals[draft.mineral]?.name ?? 'ore'} home. Market estimate ${formatCurrency(quote.marketEstimate, { compact: true })}, before rocket cost; keep or sell on return.` : draft.work === 'survey' ? `One probe stays in orbit and maps ${draft.amount} sectors. First data in ${probeHours} h; coverage in ${probeHours * draft.amount} h. Download it at the Data hub. No franc payout.` : `${draft.amount} ${catalog.minerals[draft.mineral]?.name ?? 'ore'} moves from Earth to your forward cache at ${target?.name}. No franc payout. Cache now: ${Object.entries(cache).map(([id, n]) => `${n} ${catalog.minerals[id]?.name ?? id}`).join(', ') || 'empty'}.`}</p>
         </section>}
         {quote.issues.length > 0 && <ul className={styles.issues} role="status">{quote.issues.map(issue => <li key={issue}>{issue}</li>)}</ul>}
+        {player.activeMission && <p role="status">Your current flight stays active while you plan. Reviewing this saved plan parks that flight so you can resume it later.</p>}
         <footer className={styles.actions}><button data-testid="planner-save" disabled={!!quote.issues.length} onClick={save}>Save plan</button><button className={styles.primary} data-testid="planner-review" disabled={!savedId || !player.missionPlans?.[savedId] || !!quote.issues.length} onClick={() => savedId && onReview(savedId)}>Review & launch →</button></footer>
         {savedId && <p role="status">Plan saved. Review opens the usual rocket and launch checks.</p>}
       </section>

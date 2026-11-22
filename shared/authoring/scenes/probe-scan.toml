@@ -5,7 +5,7 @@ id = "probe-scan"
 type = "exchange-lab"
 name = "Survey probe"
 summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
-tickets = ["SSL-773"]
+tickets = ["SSL-773", "SSL-878"]
 qa = ["probe-scan"]
 
 [runtime]
@@ -29,4 +29,4 @@ id = "probe-readout"
 kind = "panel"
 layout = "host"
 mechanics = ["instruments", "community-research", "mission-planning"]
-note = "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted), then three ways on: Targeted run (free; opens the Free run tab on this body with the probe's run picked), Contracts (opens the Contracts tab on this body's offers; probe contracts come from clients who want what was found, web/lib/probes/probe-offers.ts) and Back to hub. Skip ends the playback early."
+note = "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early."
