@@ -10,6 +10,7 @@
 // Pure functions; the engine namespace is injected so this stays off the main bundle.
 
 import { biomeProfileForTarget, type BiomeId, type SurfaceTarget } from '@/lib/data'
+import { BIOME_META } from '@/lib/data/biomes'
 
 export type Ramp = readonly [top: string, side: string, shade: string]
 export type Atmosphere = 'none' | 'thin' | 'thick'
@@ -215,7 +216,8 @@ const stockColours = new WeakMap<object, Map<number, string[]>>()
 /**
  * Paint Takeon's stock materials for this body. The engine's material table is
  * shared, so the stock colours are kept on first use and every mount repaints
- * from them; biome materials (registered by Landnam) are left alone.
+ * from them; biome materials (registered by Landnam) keep their colour except
+ * where `dusted` evens the exposure on an airless world.
  */
 export function applyTerrainLook(engine: ColourableEngine, look: TerrainLook): void {
   const materials = engine.MATERIALS
@@ -225,12 +227,37 @@ export function applyTerrainLook(engine: ColourableEngine, look: TerrainLook): v
     stock = new Map(Object.entries(materials).map(([id, m]) => [Number(id), [...m.colors]]))
     stockColours.set(materials, stock)
   }
+  // Materials registered after the first mount (Landnam's biome skins) join the stock here.
+  for (const [id, m] of Object.entries(materials)) if (!stock.has(Number(id))) stock.set(Number(id), [...m.colors])
   for (const [id, m] of Object.entries(materials)) {
     const original = stock.get(Number(id))
     if (!original || m.name === 'Air') continue
     const mineral = MINERAL_RAMP[m.name]
-    if (mineral) m.colors = [...mineral]
+    if (mineral) m.colors = m.name === 'Snow' ? dusted(mineral, look) : [...mineral]
     else if (GROUND_MATERIALS.has(m.name)) m.colors = [...look.ground]
     else if (ROCK_MATERIALS.has(m.name)) m.colors = m.name === 'Basalt' ? look.rock.map(c => mixHex(c, '#000000', 0.18)) : [...look.rock]
+    else if (BIOME_LABELS.has(m.name)) m.colors = dusted(original, look)
   }
+}
+
+const BIOME_LABELS = new Set(Object.values(BIOME_META).map(b => b.label))
+
+function luma(hex: string): number {
+  const [r, g, b] = hexToRgb(hex)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+/**
+ * One exposure per scene (Liam, 2026-11-22: "fix the lighting"). On an airless
+ * world the sun is hard and the ground dark, so a pale biome skin (Bennu's
+ * icefield) painted at its Earth-snow colour sat beside near-black rubble as if
+ * lit by another sun. Such skins (and Snow, the icefield's surface; never ore) are dusted toward the ground colour, keeping
+ * their hue; skins close to the ground, and worlds with air, are untouched.
+ */
+function dusted(original: readonly string[], look: TerrainLook): string[] {
+  if (look.atmosphere !== 'none') return [...original]
+  const gap = luma(original[0]) - luma(look.ground[0])
+  if (gap <= 70) return [...original]
+  const t = Math.min(0.5, (gap - 70) / 260)
+  return original.map((c, i) => mixHex(c, look.ground[Math.min(i, look.ground.length - 1)], t))
 }
