@@ -1,0 +1,51 @@
+.sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bands {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.starTile {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: pan 140s linear infinite;
+}
+
+.starTile[data-speed='far'] {
+  background-image: url('/game/assets/base/kit/stars-far.png');
+  background-size: 256px 256px;
+  animation-duration: 140s;
+}
+
+.starTile[data-speed='mid'] {
+  background-image: url('/game/assets/base/kit/stars-mid.png');
+  background-size: 256px 256px;
+  animation-duration: 90s;
+}
+
+.starTile[data-speed='near'] {
+  background-image: url('/game/assets/base/kit/stars-near.png');
+  background-size: 384px 384px;
+  animation-duration: 50s;
+}
+@keyframes pan {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .starTile { animation: none; }
+}

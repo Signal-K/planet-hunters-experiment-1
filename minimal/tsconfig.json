@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "types": ["node"],
+    "typeRoots": ["../web/node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "@landnam/*": ["../web/*"],
+      "@takeon/engine": ["./node_modules/@takeon/engine/dist/index.d.ts"],
+      "@shared/*": ["../shared/*"],
+      "@/*": ["../web/*"],
+      "react": ["../web/node_modules/@types/react"],
+      "react/*": ["../web/node_modules/@types/react/*"],
+      "react-dom/*": ["../web/node_modules/@types/react-dom/*"],
+      "vite": ["../web/node_modules/vite/dist/node/index.d.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

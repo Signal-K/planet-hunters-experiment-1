@@ -28,6 +28,9 @@ function GameRouteBridge() {
     const presetName = searchParams.get('preset')
     const entry = searchParams.get('entry')
     if (entry === 'orionids') window.sessionStorage.setItem('landnam-entry', entry)
+    if (searchParams.get('return') === '/minimal/') {
+      window.sessionStorage.setItem('landnam-return-to-minimal', '1')
+    }
     const preset = presetName ? resolvePreset(presetName) : null
     // A saved deep screen (e.g. 'missions') only means something once this
     // device has an active authenticated session — otherwise the auth gate is
