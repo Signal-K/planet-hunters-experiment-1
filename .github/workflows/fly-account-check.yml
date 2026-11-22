@@ -1,0 +1,19 @@
+name: Fly · account check
+
+# Read-only: which Fly organisations and apps this repo's FLY_API_TOKEN sees.
+on:
+  push:
+    branches: [claude/landnam-simplified-version-gggep2]
+    paths:
+      - '.github/workflows/fly-account-check.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl orgs list || true
+      - run: flyctl apps list || true
