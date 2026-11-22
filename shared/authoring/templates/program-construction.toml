@@ -24,7 +24,7 @@ id = "gather"
 label = "Gather"
 view = "field"
 goal = "Fly out and mine the missing materials."
-controls = ["ignite", "stage", "hop", "thrust", "tilt", "drive", "scan", "laser", "cargo"]
+controls = ["ignite", "stage", "hop", "thrust", "tilt", "drive", "laser", "cargo"]
 repeat = true
 
 [[beat]]

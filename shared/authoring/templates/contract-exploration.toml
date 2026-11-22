@@ -1,11 +1,12 @@
 #:schema ../schema/template.schema.json
 # Contract: a client pays for knowledge of a place: mapped sectors, deposits, landmarks.
+# Only probes scan: you build and fly the probe, release it into orbit, and it maps the body.
 format = 1
 id = "contract-exploration"
 title = "Exploration contract"
 family = "contract"
-summary = "A client wants a body surveyed: geoscan its sectors from orbit, land to confirm what the scan found, report back."
-vehicle = "lander"
+summary = "A client wants a body surveyed: fly a survey probe there, release it into orbit, and let it map the sectors. Its map is what the client pays for."
+vehicle = "probe"
 
 [match]
 tags = ["SURVEY", "EXPLORE"]
@@ -32,28 +33,28 @@ goal = "Hop to the target."
 controls = ["hop", "choose"]
 
 [[beat]]
+id = "release"
+label = "Release"
+view = "orbit"
+goal = "Release the probe into orbit. The ship flies home empty."
+controls = ["release"]
+
+[[beat]]
 id = "survey"
 label = "Survey"
 view = "orbit"
-goal = "Tap each sector to geoscan it; each scan costs power."
-controls = ["geoscan", "pick-site"]
+goal = "The probe maps one sector at a time on its own. Watch the map fill."
+controls = ["observe"]
 repeat = true
-
-[[beat]]
-id = "confirm"
-label = "Confirm"
-view = "field"
-goal = "Land and drive to the marked find to sample it."
-controls = ["thrust", "tilt", "drive", "scan", "drill"]
 
 [[beat]]
 id = "debrief"
 label = "Report"
 view = "debrief"
-goal = "Fly home and hand in the survey."
-controls = ["take-off", "hop", "submit"]
+goal = "Hand the client the probe's map."
+controls = ["submit"]
 
 [outcome]
-success = "Every requested sector is mapped and the find is confirmed."
-fail = "Power runs out before the sectors are mapped."
+success = "Every requested sector is mapped."
+fail = "The probe never reaches orbit."
 unlocks = "Mapped deposits become mining offers."

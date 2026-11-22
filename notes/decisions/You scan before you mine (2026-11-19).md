@@ -2,11 +2,13 @@
 type: decision
 title: You scan before you mine
 project: Landnam
-status: decided
+status: superseded
 created: 2026-11-19
 ---
 
 # You scan before you mine (2026-11-19)
+
+> 2026-11-21: replaced by `Only probes scan (2026-11-21).md`. Rockets and rovers never scan; the probe already mapped the seams.
 
 Decided by Liam, SSL-865, while reviewing the portrait mining sketches: "you MUST scan the
 location/target before you can mine".

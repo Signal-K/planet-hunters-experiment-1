@@ -35,18 +35,11 @@ goal = "Hop to the target."
 controls = ["hop", "choose"]
 
 [[beat]]
-id = "survey"
-label = "Survey"
-view = "orbit"
-goal = "Geoscan the surface from orbit; only scanned ore can be cut."
-controls = ["geoscan"]
-
-[[beat]]
 id = "cut"
 label = "Laser"
 view = "orbit"
-goal = "Fly the pass: slide over scanned ore and hold the laser until the hold is full or the value is right."
-controls = ["steer", "scan", "laser", "cargo"]
+goal = "Fly the pass: slide over the seams the probe mapped and hold the laser until the hold is full or the value is right."
+controls = ["steer", "laser", "cargo"]
 repeat = true
 method = "orbit-laser"
 
@@ -54,7 +47,7 @@ method = "orbit-laser"
 id = "site"
 label = "Site"
 view = "orbit"
-goal = "Pick a landing site on a scanned vein."
+goal = "Pick a landing site on a vein the probe mapped."
 controls = ["pick-site"]
 method = "rover"
 
@@ -70,8 +63,8 @@ method = "rover"
 id = "mine"
 label = "Mine"
 view = "field"
-goal = "Drive to scanned ore and cut until the hold is full or the value is right."
-controls = ["drive", "scan", "laser", "cargo", "drop-cargo"]
+goal = "Drive to ore the probe mapped and cut until the hold is full or the value is right."
+controls = ["drive", "laser", "cargo", "drop-cargo"]
 repeat = true
 method = "rover"
 

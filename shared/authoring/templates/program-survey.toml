@@ -1,11 +1,11 @@
 #:schema ../schema/template.schema.json
-# Program: fly out yourself to scan and explore something your hardware found.
+# Program: follow up something your hardware found. Only probes scan: a probe reads the target, then you can design a ship for it.
 format = 1
 id = "program-survey"
-title = "Scan and explore"
+title = "Probe follow-up"
 family = "program"
-summary = "Follow up a discovery with your own flight: hold the target in the instrument, take the readings, explore the surface."
-vehicle = "lander"
+summary = "Follow up a discovery: send a probe to read the target. What it finds is what you design the next ship for."
+vehicle = "probe"
 
 [match]
 id_prefixes = ["exo-survey-"]
@@ -36,23 +36,16 @@ controls = ["hop", "choose"]
 id = "observe"
 label = "Observe"
 view = "orbit"
-goal = "Keep the target in the reticle while the readings fill."
-controls = ["observe", "geoscan"]
-
-[[beat]]
-id = "explore"
-label = "Explore"
-view = "field"
-goal = "Land and drive to the landmarks the scan marked."
-controls = ["thrust", "tilt", "drive", "scan", "beacon"]
+goal = "Release the probe. It takes the readings from orbit while you keep the target in its reticle."
+controls = ["release", "observe"]
 
 [[beat]]
 id = "debrief"
 label = "Results"
 view = "debrief"
-goal = "Fly home with the readings."
-controls = ["take-off", "hop", "submit"]
+goal = "The probe sends its readings home."
+controls = ["submit"]
 
 [outcome]
-success = "The readings are home."
+success = "The probe's readings are home."
 unlocks = "Target intelligence: richer deposits and new targets on the map."

@@ -103,3 +103,10 @@ Same repack with a fresh `dist/field/`: off-screen ore pointers that point the
 same way share one arrow, labelled with the nearest distance and a count of the
 rest (`70 m +2`), ore already in view gets no pointer unless it sits under the
 HUD, and labels stay fully on screen, so they no longer overlap.
+
+## 2026-11-21: `@takeon/engine` 0.2.7 → 0.2.8 (only probes scan, KES-543)
+
+Same repack with a fresh `dist/field/`: the field has no `scan()` and no scan
+pulse. Rockets and rovers never scan; the seams the probe survey mapped
+(`surveyed`, every seam by default) are on the ground from the first frame,
+`surveyed()` lists them and `reveal(ids)` adds more.

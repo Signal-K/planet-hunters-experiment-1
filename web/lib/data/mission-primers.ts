@@ -175,11 +175,13 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
     }
   }
 
-  if (mission.survey?.scanRequired) {
+  // Only probes scan. A mapping job flies a survey probe out and leaves it in orbit; the ship never scans.
+  // A rover landing that still carries the old scan flag reads as the rover mission it is.
+  if (mission.survey?.scanRequired && mission.survey.scanSource !== 'rover') {
     return {
-      label: 'Mapping scan',
-      summary: 'Fly out and scan the surface. The readings are the deliverable — no drill and no cargo needed.',
-      steps: ['Launch', 'Scan', 'Return'],
+      label: 'Probe survey',
+      summary: 'Fly a survey probe out and release it into orbit. It maps the surface on its own, and its readings are the deliverable. No drill and no cargo.',
+      steps: ['Launch', 'Release the probe', 'Readings'],
       owner,
     }
   }

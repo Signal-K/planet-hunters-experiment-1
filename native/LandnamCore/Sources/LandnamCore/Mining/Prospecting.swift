@@ -19,9 +19,9 @@ public struct Prospecting: Equatable, Sendable {
     public private(set) var logged: String?
     /// Every outcrop logged so far, in order. `logged` is the latest.
     public private(set) var observations: [String] = []
-    /// Formations the survey needs. The Orionids survey asks for three and the rover has to be driven within scanner range of each (web parity), which keeps it near a minute.
+    /// Formations the survey needs. The Orionids survey asks for three and the rover has to be driven up beside each (web parity), which keeps it near a minute.
     public var goal: Int
-    public static let scanRange = 0.2
+    public static let logRange = 0.2
 
     public static func == (a: Prospecting, b: Prospecting) -> Bool { a.rover == b.rover && a.logged == b.logged && a.observations == b.observations }
 
@@ -36,8 +36,8 @@ public struct Prospecting: Equatable, Sendable {
         rover = (min(0.96, max(0.04, rover.x + dx)), min(0.96, max(0.3, rover.y + dy)))
     }
 
-    /// Outcrop within scanner range of the rover right now.
-    public func inRange(_ o: Outcrop) -> Bool { ((rover.x - o.x) * (rover.x - o.x) + (rover.y - o.y) * (rover.y - o.y)).squareRoot() <= Self.scanRange }
+    /// Outcrop close enough for the rover to log right now. Rovers never scan; the probe already mapped the outcrops.
+    public func inRange(_ o: Outcrop) -> Bool { ((rover.x - o.x) * (rover.x - o.x) + (rover.y - o.y) * (rover.y - o.y)).squareRoot() <= Self.logRange }
 
     /// Tap on an outcrop. A single-formation survey parks the rover beside it and logs it. A multi-formation survey only logs what the rover has been driven up to, and never the same one twice. Returns whether it logged.
     @discardableResult

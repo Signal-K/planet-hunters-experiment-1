@@ -4,6 +4,8 @@
 // The field is TakeOn's (`@takeon/engine/field`): real HiRISE/Kaguya terrain on Mars and the Moon, tap-to-drive rover,
 // the cream-and-blue miner on a low pass. Landnam owns the HUD (flat thumb buttons, frosted gauge strip, Menu only)
 // and the cargo: what the laser cuts lands in the run's hold and settles through the usual onComplete path.
+// Rockets and rovers never scan: the body's survey probe mapped the seams before the ship was built, so every
+// seam is on the ground from the first frame.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MineralMeta, Mission, Target } from '@/lib/data'
 import type { RoverSpec } from '@takeon/engine'
@@ -11,8 +13,6 @@ import type { FieldSceneHandle } from '@takeon/engine/field'
 import type { MiningMethod } from '@/lib/mission-templates'
 import { cargoFrom, fieldResources, fieldSeed, fieldStyleFor, orderLeft, type FieldShipKind } from '@/lib/field/fieldMission'
 import styles from './FieldMiningScreen.module.css'
-
-const SCAN_COOLDOWN = 4
 
 export interface FieldMiningScreenProps {
   mission: Mission
@@ -45,13 +45,11 @@ export default function FieldMiningScreen({
   const startTotal = Object.values(startCargo.current).reduce((a, b) => a + b, 0)
   const capacity = Math.max(1, cargoCapacity ?? orderTotal + 6)
   const [cargo, setCargo] = useState<Record<string, number>>(startCargo.current)
-  const [scanReady, setScanReady] = useState(1)
   const [holding, setHolding] = useState(false)
   const [failed, setFailed] = useState<string | null>(null)
   const [credit, setCredit] = useState<string | null>(null)
-  const [hint, setHint] = useState(method === 'rover' ? 'Scan, then tap glowing ore to send the rover.' : 'Scan, then slide over glowing ore and hold the laser.')
+  const [hint, setHint] = useState(method === 'rover' ? 'Tap glowing ore to send the rover.' : 'Slide over glowing ore and hold the laser.')
   const [menu, setMenu] = useState(false)
-  const lastScan = useRef(-Infinity)
   const cargoRef = useRef(cargo)
   cargoRef.current = cargo
 
@@ -83,6 +81,9 @@ export default function FieldMiningScreen({
       }
       sceneRef.current = handle
       setCredit(handle.terrain.credits[0] ?? null)
+      const seams = handle.surveyed().length
+      const marked = `The probe survey marked ${seams} seam${seams === 1 ? '' : 's'}.`
+      setHint(method === 'rover' ? `${marked} Tap one to send the rover.` : `${marked} Slide over one and hold the laser.`)
       let acc = 0
       handle.onFrame = dt => {
         acc += dt
@@ -91,7 +92,6 @@ export default function FieldMiningScreen({
         const next = cargoFrom(startCargo.current, handle!.miner.hold)
         const prev = cargoRef.current
         if (Object.keys(next).some(k => next[k] !== prev[k])) setCargo(next)
-        setScanReady(Math.min(1, (performance.now() / 1000 - lastScan.current) / SCAN_COOLDOWN))
         if (handle!.order?.mining) setHint('Cutting. The rover stops when the seam is empty or the hold is full.')
       }
       handle.onOrder = (o, why) => {
@@ -115,18 +115,6 @@ export default function FieldMiningScreen({
     return () => window.clearInterval(id)
   }, [onPersist])
 
-  const scan = useCallback(() => {
-    const s = sceneRef.current
-    const now = performance.now() / 1000
-    if (!s || now - lastScan.current < SCAN_COOLDOWN) return
-    lastScan.current = now
-    setScanReady(0)
-    const found = s.scan()
-    setHint(found.length
-      ? method === 'rover' ? `${found.length} seam${found.length > 1 ? 's' : ''} found. Tap one to mine it.` : `${found.length} seam${found.length > 1 ? 's' : ''} found. Slide over and hold the laser.`
-      : 'Nothing in range. Move on and scan again.')
-  }, [method])
-
   const laser = useCallback((on: boolean) => {
     setHolding(on)
     sceneRef.current?.laser(on)
@@ -135,14 +123,13 @@ export default function FieldMiningScreen({
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.repeat) return
-      if (e.key === 'x' || e.key === 'X') scan()
       if (e.key === ' ' || e.key === 'f' || e.key === 'F') { e.preventDefault(); laser(true) }
     }
     const up = (e: KeyboardEvent) => { if (e.key === ' ' || e.key === 'f' || e.key === 'F') laser(false) }
     window.addEventListener('keydown', down)
     window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [scan, laser])
+  }, [laser])
 
   const { left, met } = orderLeft(order, cargo)
   const held = Object.values(cargo).reduce((a, b) => a + b, 0)
@@ -183,15 +170,6 @@ export default function FieldMiningScreen({
       {credit && <p className={styles.credit}>Real terrain · {credit}</p>}
 
       <div className={styles.thumbs}>
-        <button
-          type="button"
-          className={`${styles.btn} ${styles.scan}`}
-          style={{ '--charge': scanReady } as React.CSSProperties}
-          onClick={scan}
-          disabled={scanReady < 1}
-        >
-          <span className={styles.face}>Scan</span>
-        </button>
         {method === 'orbit-laser' && (
           <button
             type="button"

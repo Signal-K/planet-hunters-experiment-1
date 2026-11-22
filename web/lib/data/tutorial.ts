@@ -30,8 +30,8 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
-  // SSL-865, "You scan before you mine": seams start as "?" and the laser only cuts what a scan has shown.
-  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Scan the ground, then fire on a seam', radio: 'Seams start as "?". Press Scan to read the ground ahead, then fire when a scanned seam passes beneath the laser line.', hint: 'Scan first; Fire lights up when a scanned seam is under the ship.', beacon: 'mining-scan|mining-fire-laser', doneOn: 'mining-debriefed' },
+  // Ships never scan: the body's survey probe mapped the seams before launch, so they show from the start.
+  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire on a seam', radio: 'The survey probe already mapped these seams. Fire when one passes beneath the laser line.', hint: 'Fire lights up when a seam is under the ship.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
   { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Data hub', radio: 'Your telescope sends its signals to the Data hub. Open it from the hub.', doneOn: 'tess-classified' },
   { id: 'scan-classify', try: 'scan', screen: 'tess-discovery', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
@@ -170,10 +170,10 @@ export const EXTRACTION_STEPS: TutorialStep[] = [
   // guide is suppressed for the active training try),
   // so the correction has to live here, not just in that component.
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
-    body: 'Seams start as "?". Press SCAN to read the ground ahead and see what each one is. The laser always fires straight down from your ship and only cuts a scanned seam, so wait for one to line up, then fire.',
-    action: 'Tap SCAN, then FIRE when a scanned seam lines up',
-    anchor: 'top', spot: null, cta: 'Scan, then fire', coachId: 'mining-scan',
-    desktopAction: 'Press SCAN (E), then FIRE (Space) when a scanned seam lines up' },
+    body: 'The survey probe mapped these seams before you launched, so each one already shows its mineral. The laser always fires straight down from your ship, so wait for a seam to line up, then fire.',
+    action: 'Tap FIRE when a seam lines up',
+    anchor: 'top', spot: null, cta: 'Fire', coachId: 'mining-fire-laser',
+    desktopAction: 'Press FIRE (Space) when a seam lines up' },
 ]
 
 export const TRANSPORT_STEPS: TutorialStep[] = [

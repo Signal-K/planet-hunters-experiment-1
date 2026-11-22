@@ -37,7 +37,7 @@ id = "pickup"
 label = "Pick up"
 view = "field"
 goal = "Relays only: land at the pickup body and mine the cargo."
-controls = ["thrust", "tilt", "drive", "scan", "laser", "cargo"]
+controls = ["thrust", "tilt", "drive", "laser", "cargo"]
 
 [[beat]]
 id = "transit"

@@ -25,7 +25,7 @@ It is its own module in this repo, not part of the Landnam app:
 
 - START plays the chapter's run (`src/RunScene.tsx`): one chapter per Landnam mission type
   (`src/chapters.ts`). Mining is Minimal's own top-down pass (`src/MineScene.tsx`, SSL-865):
-  drag to steer, SCAN shows what the deposits ahead are, FIRE cuts only scanned ones. The
+  drag to steer and FIRE at the deposits; the probe survey already marked them, because ships never scan. The
   shower chapter still uses Landnam's mining scene for CATCH. With `&dev=1`, P pauses the
   ground (the ship still steers) so a shot can be lined up by hand. Progress, earnings and stored
   materials are Minimal's own, per pilot on the device (`src/progress.ts`). In dev,

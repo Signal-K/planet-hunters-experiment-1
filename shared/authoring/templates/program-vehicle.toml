@@ -43,7 +43,7 @@ id = "drive"
 label = "Drive"
 view = "field"
 goal = "Deploy the rover and drive to each beacon; work each site."
-controls = ["deploy-rover", "drive", "scan", "beacon", "laser", "cargo"]
+controls = ["deploy-rover", "drive", "beacon", "laser", "cargo"]
 repeat = true
 
 [[beat]]

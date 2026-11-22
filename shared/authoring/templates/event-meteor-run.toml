@@ -17,7 +17,7 @@ id = "cut"
 label = "Laser"
 view = "orbit"
 goal = "Laser the fresh impact sites on the pass; tap a fireball streaking below to catch it."
-controls = ["steer", "scan", "laser", "cargo", "catch"]
+controls = ["steer", "laser", "cargo", "catch"]
 repeat = true
 method = "orbit-laser"
 
@@ -26,7 +26,7 @@ id = "mine"
 label = "Mine"
 view = "field"
 goal = "Drive to the impact sites and cut them; tap a fireball before it lands to catch it."
-controls = ["drive", "scan", "laser", "cargo", "catch"]
+controls = ["drive", "laser", "cargo", "catch"]
 repeat = true
 method = "rover"
 

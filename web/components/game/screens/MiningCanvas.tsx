@@ -68,11 +68,6 @@ interface MiningCanvasProps {
   catchRef?: React.MutableRefObject<(() => boolean) | null>
   /** SSL-711: pushed true while a fragment is inside the collector beam. */
   onCatchCueRef?: React.MutableRefObject<((ready: boolean) => void) | null>
-  /** SSL-865: SCAN reads the seams ahead; returns false while cooling. */
-  scanRef?: React.MutableRefObject<(() => boolean) | null>
-  onScanReadyRef?: React.MutableRefObject<((ready: boolean) => void) | null>
-  /** SSL-865: FIRE over an unknown seam fires nothing and asks for a scan; true when it did. */
-  warnUnscannedRef?: React.MutableRefObject<(() => boolean) | null>
   /** SSL-475: sky-event debris. Omit (or event inactive) for the unchanged scene. */
   debrisPreset?: DebrisEventPreset | null
   /** Caught-at stamp. One fragment falls after local 22 Oct 02:00 until this is set. */
@@ -80,7 +75,7 @@ interface MiningCanvasProps {
   skyEventLocation?: PlayerLocation | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, scanRef, onScanReadyRef, warnUnscannedRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
   void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
@@ -250,7 +245,6 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           shipX: () => shipX,
           shipYNow: () => shipY + altitude,
           onCatchCue: ready => { onCatchCueRef?.current?.(ready) },
-          onScanReady: ready => { onScanReadyRef?.current?.(ready) },
           minerals,
           leadMinerals,
           scrollScreens,
@@ -372,8 +366,6 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         controllerObj?.addComponent(controller)
         controllerRef.current = controller
         if (catchRef) catchRef.current = () => controller.catchFragment()
-        if (scanRef) scanRef.current = () => controller.scanAhead()
-        if (warnUnscannedRef) warnUnscannedRef.current = () => controller.warnUnscanned()
 
         // Cooldown lives here, not in MiningScreen, because it must gate BOTH
         // entry points to controller.fireLaser(): the FIRE LASER button (via

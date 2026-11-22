@@ -196,13 +196,12 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
     id: 'mining',
     title: 'Mining operations',
     cards: [
-      { title: 'Scan, then fire', body: 'Seams start as "?". Scan reads the ground ahead and shows each mineral; the laser only cuts a scanned seam. The first seams are the mineral this run asked for.' },
+      { title: 'The seams are already mapped', body: 'Your ship does not scan. The body\'s survey probe mapped every seam before you launched, so each one shows its mineral. The first seams are the mineral this run asked for.' },
       { title: 'Charges and cargo stay', body: 'Shots spend laser charges. Leaving or reloading keeps the cargo and the charges you have left. Recharge spends francs.' },
       { title: 'Bring it home', body: 'Return when you are ready on a Free Ops haul. A client order waits until the requested ore is in the hold.' },
     ],
     coach: [
-      { id: 'scan', targets: ['mining-scan'], anchor: 'mining-scan', hint: 'Seams start as "?". Press Scan to read the ground ahead.', completeOn: 'scan' },
-      { id: 'laser', targets: ['mining-fire-laser'], anchor: 'mining-fire-laser', hint: 'Wait for a scanned seam to pass the fixed laser line, then fire.', completeOn: 'fire' },
+      { id: 'laser', targets: ['mining-fire-laser'], anchor: 'mining-fire-laser', hint: 'Wait for a seam to pass the fixed laser line, then fire.', completeOn: 'fire' },
     ],
   },
   debrief: {

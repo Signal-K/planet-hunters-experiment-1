@@ -56,8 +56,8 @@
             "uniqueItems": true,
             "items": {
               "enum": [
-                "accept", "fit-loadout", "ignite", "stage", "hop", "choose", "geoscan", "pick-site", "burn", "release", "unfold",
-                "thrust", "tilt", "dock", "drive", "steer", "scan", "laser", "drill", "cargo", "drop-cargo", "unload", "feed-blueprint", "raise",
+                "accept", "fit-loadout", "ignite", "stage", "hop", "choose", "pick-site", "burn", "release", "unfold",
+                "thrust", "tilt", "dock", "drive", "steer", "laser", "drill", "cargo", "drop-cargo", "unload", "feed-blueprint", "raise",
                 "deploy-rover", "beacon", "observe", "classify", "submit", "catch", "take-off", "store", "sell"
               ]
             }

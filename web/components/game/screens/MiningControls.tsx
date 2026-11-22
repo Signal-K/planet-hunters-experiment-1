@@ -121,13 +121,6 @@ const ACTION_ICONS: Record<string, ReactNode> = {
       <path d="M9 19 H15" />
     </>
   ),
-  scan: (
-    <>
-      <path d="M4 12 A8 8 0 0 1 20 12" />
-      <path d="M8 12 A4 4 0 0 1 16 12" />
-      <path d="M12 12 L12 19" />
-    </>
-  ),
 }
 
 /**
@@ -136,10 +129,8 @@ const ACTION_ICONS: Record<string, ReactNode> = {
  * lib/mining/secondaryAction.ts gets it; `ready` lights it when pressing now
  * would work.
  */
-export function MiningActionButton({ action, label, keyLabel, ready, pressed, disabled, onPress, slot = 1, testId = 'mining-action-btn' }: {
+export function MiningActionButton({ action, label, keyLabel, ready, pressed, disabled, onPress, testId = 'mining-action-btn' }: {
   action: string
-  /** SSL-865: 2 sits one step further from FIRE, for SCAN beside CATCH in a shower run. */
-  slot?: 1 | 2
   label: string
   keyLabel?: string
   ready: boolean
@@ -154,9 +145,6 @@ export function MiningActionButton({ action, label, keyLabel, ready, pressed, di
       className={styles.action}
       data-testid={testId}
       data-action={action}
-      data-slot={slot === 2 ? '2' : undefined}
-      data-beacon={action === 'scan' ? 'mining-scan' : undefined}
-      data-coach-target={action === 'scan' ? 'mining-scan' : undefined}
       data-ready={ready || undefined}
       data-pressed={pressed || undefined}
       disabled={disabled}
@@ -195,7 +183,6 @@ export function MiningGuideMark({ kind }: { kind: string }) {
     inventory: [[3, 4, 10, 1], [3, 4, 1, 9], [12, 4, 1, 9], [3, 12, 10, 1], [5, 7, 6, 1], [7, 7, 2, 4]],
     deliver: [[2, 4, 8, 1], [2, 4, 1, 8], [9, 4, 1, 8], [2, 11, 8, 1], [12, 6, 2, 2], [11, 4, 2, 2], [11, 8, 2, 2]],
     return: [[7, 1, 2, 2], [5, 3, 6, 2], [3, 5, 10, 2], [4, 7, 8, 7], [7, 10, 2, 4]],
-    scan: [[2, 6, 2, 2], [4, 4, 2, 2], [6, 3, 4, 1], [10, 4, 2, 2], [12, 6, 2, 2], [5, 8, 6, 1], [7, 7, 2, 7]],
   }
   return (
     <svg className="mining-guide-mark" viewBox="0 0 16 16" width="32" height="32" aria-hidden="true">

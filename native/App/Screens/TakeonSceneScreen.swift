@@ -114,7 +114,7 @@ final class TakeonSceneModel {
         guard let s = state else { return "OFFLINE" }
         if s.rover.mining != nil { return "ACTIVE: MINING" }
         if s.rover.moveFrom != nil { return "ACTIVE: DRIVING" }
-        return "ACTIVE: SCAN ORE"
+        return "ACTIVE: PICK ORE"
     }
     var objective: TakeonObjectiveProgress? { mission?.objectives.first { !$0.complete } ?? mission?.objectives.last }
     var canBank: Bool { state?.nearBase ?? false }

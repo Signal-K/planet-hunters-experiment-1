@@ -105,7 +105,7 @@ public enum OrionidsRun {
     /// The second event tier changes activity from mining to a rover observation.
     public static func surfaceResearchMission() -> Mission {
         Mission(id: surfaceResearchMissionId, title: "Orionids surface observation",
-                brief: "Drive the rover over the meteor, scan a rock formation, and log it for the community research record.",
+                brief: "Drive the rover over the meteor, pull up beside a rock formation, and log it for the community research record.",
                 client: nil, tag: "EVENT RESEARCH", difficulty: "L1", locked: false,
                 sequence: MissionGenerator.freeOpsMissionSequence,
                 unlockAt: "Complete the Orionids debris capture", targetId: "eros",

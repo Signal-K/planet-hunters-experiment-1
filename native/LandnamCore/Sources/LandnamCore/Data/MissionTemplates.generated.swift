@@ -37,7 +37,6 @@ enum MissionTemplateDeclarations {
           "goal": "Mine the materials over as many runs as it takes.",
           "controls": [
             "drive",
-            "scan",
             "laser",
             "cargo"
           ],
@@ -80,7 +79,6 @@ enum MissionTemplateDeclarations {
       "controls": [
         "accept",
         "drive",
-        "scan",
         "laser",
         "cargo",
         "ignite",
@@ -154,7 +152,6 @@ enum MissionTemplateDeclarations {
             "thrust",
             "tilt",
             "drive",
-            "scan",
             "laser",
             "cargo"
           ],
@@ -215,7 +212,6 @@ enum MissionTemplateDeclarations {
         "thrust",
         "tilt",
         "drive",
-        "scan",
         "laser",
         "hop",
         "choose",
@@ -233,8 +229,8 @@ enum MissionTemplateDeclarations {
       "id": "contract-exploration",
       "title": "Exploration contract",
       "family": "contract",
-      "summary": "A client wants a body surveyed: geoscan its sectors from orbit, land to confirm what the scan found, report back.",
-      "vehicle": "lander",
+      "summary": "A client wants a body surveyed: fly a survey probe there, release it into orbit, and let it map the sectors. Its map is what the client pays for.",
+      "vehicle": "probe",
       "match": {
         "ids": [],
         "id_prefixes": [],
@@ -277,38 +273,31 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
+          "id": "release",
+          "label": "Release",
+          "view": "orbit",
+          "goal": "Release the probe into orbit. The ship flies home empty.",
+          "controls": [
+            "release"
+          ],
+          "repeat": false
+        },
+        {
           "id": "survey",
           "label": "Survey",
           "view": "orbit",
-          "goal": "Tap each sector to geoscan it; each scan costs power.",
+          "goal": "The probe maps one sector at a time on its own. Watch the map fill.",
           "controls": [
-            "geoscan",
-            "pick-site"
+            "observe"
           ],
           "repeat": true
-        },
-        {
-          "id": "confirm",
-          "label": "Confirm",
-          "view": "field",
-          "goal": "Land and drive to the marked find to sample it.",
-          "controls": [
-            "thrust",
-            "tilt",
-            "drive",
-            "scan",
-            "drill"
-          ],
-          "repeat": false
         },
         {
           "id": "debrief",
           "label": "Report",
           "view": "debrief",
-          "goal": "Fly home and hand in the survey.",
+          "goal": "Hand the client the probe's map.",
           "controls": [
-            "take-off",
-            "hop",
             "submit"
           ],
           "repeat": false
@@ -320,19 +309,13 @@ enum MissionTemplateDeclarations {
         "stage",
         "hop",
         "choose",
-        "geoscan",
-        "pick-site",
-        "thrust",
-        "tilt",
-        "drive",
-        "scan",
-        "drill",
-        "take-off",
+        "release",
+        "observe",
         "submit"
       ],
       "outcome": {
-        "success": "Every requested sector is mapped and the find is confirmed.",
-        "fail": "Power runs out before the sectors are mapped.",
+        "success": "Every requested sector is mapped.",
+        "fail": "The probe never reaches orbit.",
         "unlocks": "Mapped deposits become mining offers."
       }
     },
@@ -340,7 +323,7 @@ enum MissionTemplateDeclarations {
       "id": "contract-mining",
       "title": "Mining contract",
       "family": "contract",
-      "summary": "A client wants a set amount of minerals from one body. Scan for the ore from orbit and cut it with the ship laser, or land a rover and cut it on the ground, then fly it home.",
+      "summary": "A client wants a set amount of minerals from one body. The body's survey probe has already mapped the seams: cut them with the ship laser from orbit, or land a rover and cut them on the ground, then fly the haul home.",
       "vehicle": "lander",
       "methods": [
         "orbit-laser",
@@ -403,23 +386,12 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "survey",
-          "label": "Survey",
-          "view": "orbit",
-          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
-          "controls": [
-            "geoscan"
-          ],
-          "repeat": false
-        },
-        {
           "id": "cut",
           "label": "Laser",
           "view": "orbit",
-          "goal": "Fly the pass: slide over scanned ore and hold the laser until the order is in the hold.",
+          "goal": "Fly the pass: slide over the seams the probe mapped and hold the laser until the order is in the hold.",
           "controls": [
             "steer",
-            "scan",
             "laser",
             "cargo"
           ],
@@ -430,7 +402,7 @@ enum MissionTemplateDeclarations {
           "id": "site",
           "label": "Site",
           "view": "orbit",
-          "goal": "Pick a landing site on a scanned vein.",
+          "goal": "Pick a landing site on a vein the probe mapped.",
           "controls": [
             "pick-site"
           ],
@@ -453,10 +425,9 @@ enum MissionTemplateDeclarations {
           "id": "mine",
           "label": "Mine",
           "view": "field",
-          "goal": "Drive to the scanned ore and cut it with the rover laser until the order is in the hold.",
+          "goal": "Drive to the ore the probe mapped and cut it with the rover laser until the order is in the hold.",
           "controls": [
             "drive",
-            "scan",
             "laser",
             "cargo",
             "drop-cargo"
@@ -504,9 +475,7 @@ enum MissionTemplateDeclarations {
         "stage",
         "hop",
         "choose",
-        "geoscan",
         "steer",
-        "scan",
         "laser",
         "cargo",
         "pick-site",
@@ -580,23 +549,12 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "survey",
-          "label": "Survey",
-          "view": "orbit",
-          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
-          "controls": [
-            "geoscan"
-          ],
-          "repeat": false
-        },
-        {
           "id": "cut",
           "label": "Laser",
           "view": "orbit",
           "goal": "Laser the fresh impact sites on the pass; tap a fireball streaking below to catch it.",
           "controls": [
             "steer",
-            "scan",
             "laser",
             "cargo",
             "catch"
@@ -608,7 +566,7 @@ enum MissionTemplateDeclarations {
           "id": "site",
           "label": "Site",
           "view": "orbit",
-          "goal": "Pick a landing site on a scanned vein.",
+          "goal": "Pick a landing site on a vein the probe mapped.",
           "controls": [
             "pick-site"
           ],
@@ -634,7 +592,6 @@ enum MissionTemplateDeclarations {
           "goal": "Drive to the impact sites and cut them; tap a fireball before it lands to catch it.",
           "controls": [
             "drive",
-            "scan",
             "laser",
             "cargo",
             "catch"
@@ -680,9 +637,7 @@ enum MissionTemplateDeclarations {
         "ignite",
         "stage",
         "choose",
-        "geoscan",
         "steer",
-        "scan",
         "laser",
         "cargo",
         "catch",
@@ -800,7 +755,6 @@ enum MissionTemplateDeclarations {
             "thrust",
             "tilt",
             "drive",
-            "scan",
             "laser",
             "cargo"
           ],
@@ -836,7 +790,6 @@ enum MissionTemplateDeclarations {
         "thrust",
         "tilt",
         "drive",
-        "scan",
         "laser",
         "cargo",
         "store",
@@ -904,23 +857,12 @@ enum MissionTemplateDeclarations {
           "repeat": false
         },
         {
-          "id": "survey",
-          "label": "Survey",
-          "view": "orbit",
-          "goal": "Geoscan the surface from orbit; only scanned ore can be cut.",
-          "controls": [
-            "geoscan"
-          ],
-          "repeat": false
-        },
-        {
           "id": "cut",
           "label": "Laser",
           "view": "orbit",
-          "goal": "Fly the pass: slide over scanned ore and hold the laser until the hold is full or the value is right.",
+          "goal": "Fly the pass: slide over the seams the probe mapped and hold the laser until the hold is full or the value is right.",
           "controls": [
             "steer",
-            "scan",
             "laser",
             "cargo"
           ],
@@ -931,7 +873,7 @@ enum MissionTemplateDeclarations {
           "id": "site",
           "label": "Site",
           "view": "orbit",
-          "goal": "Pick a landing site on a scanned vein.",
+          "goal": "Pick a landing site on a vein the probe mapped.",
           "controls": [
             "pick-site"
           ],
@@ -954,10 +896,9 @@ enum MissionTemplateDeclarations {
           "id": "mine",
           "label": "Mine",
           "view": "field",
-          "goal": "Drive to scanned ore and cut until the hold is full or the value is right.",
+          "goal": "Drive to ore the probe mapped and cut until the hold is full or the value is right.",
           "controls": [
             "drive",
-            "scan",
             "laser",
             "cargo",
             "drop-cargo"
@@ -1003,9 +944,7 @@ enum MissionTemplateDeclarations {
         "ignite",
         "stage",
         "choose",
-        "geoscan",
         "steer",
-        "scan",
         "laser",
         "cargo",
         "pick-site",
@@ -1130,10 +1069,10 @@ enum MissionTemplateDeclarations {
     },
     {
       "id": "program-survey",
-      "title": "Scan and explore",
+      "title": "Probe follow-up",
       "family": "program",
-      "summary": "Follow up a discovery with your own flight: hold the target in the instrument, take the readings, explore the surface.",
-      "vehicle": "lander",
+      "summary": "Follow up a discovery: send a probe to read the target. What it finds is what you design the next ship for.",
+      "vehicle": "probe",
       "match": {
         "ids": [],
         "id_prefixes": [
@@ -1180,24 +1119,10 @@ enum MissionTemplateDeclarations {
           "id": "observe",
           "label": "Observe",
           "view": "orbit",
-          "goal": "Keep the target in the reticle while the readings fill.",
+          "goal": "Release the probe. It takes the readings from orbit while you keep the target in its reticle.",
           "controls": [
-            "observe",
-            "geoscan"
-          ],
-          "repeat": false
-        },
-        {
-          "id": "explore",
-          "label": "Explore",
-          "view": "field",
-          "goal": "Land and drive to the landmarks the scan marked.",
-          "controls": [
-            "thrust",
-            "tilt",
-            "drive",
-            "scan",
-            "beacon"
+            "release",
+            "observe"
           ],
           "repeat": false
         },
@@ -1205,10 +1130,8 @@ enum MissionTemplateDeclarations {
           "id": "debrief",
           "label": "Results",
           "view": "debrief",
-          "goal": "Fly home with the readings.",
+          "goal": "The probe sends its readings home.",
           "controls": [
-            "take-off",
-            "hop",
             "submit"
           ],
           "repeat": false
@@ -1220,18 +1143,12 @@ enum MissionTemplateDeclarations {
         "stage",
         "hop",
         "choose",
+        "release",
         "observe",
-        "geoscan",
-        "thrust",
-        "tilt",
-        "drive",
-        "scan",
-        "beacon",
-        "take-off",
         "submit"
       ],
       "outcome": {
-        "success": "The readings are home.",
+        "success": "The probe's readings are home.",
         "unlocks": "Target intelligence: richer deposits and new targets on the map."
       }
     },
@@ -1301,7 +1218,6 @@ enum MissionTemplateDeclarations {
           "controls": [
             "deploy-rover",
             "drive",
-            "scan",
             "beacon",
             "laser",
             "cargo"
@@ -1333,7 +1249,6 @@ enum MissionTemplateDeclarations {
         "tilt",
         "deploy-rover",
         "drive",
-        "scan",
         "beacon",
         "laser",
         "cargo",

@@ -5,7 +5,7 @@ format = 1
 id = "contract-mining"
 title = "Mining contract"
 family = "contract"
-summary = "A client wants a set amount of minerals from one body. Scan for the ore from orbit and cut it with the ship laser, or land a rover and cut it on the ground, then fly it home."
+summary = "A client wants a set amount of minerals from one body. The body's survey probe has already mapped the seams: cut them with the ship laser from orbit, or land a rover and cut them on the ground, then fly the haul home."
 vehicle = "lander"
 methods = ["orbit-laser", "rover"]
 
@@ -42,18 +42,11 @@ goal = "Hop to the target; each hop costs fuel."
 controls = ["hop", "choose"]
 
 [[beat]]
-id = "survey"
-label = "Survey"
-view = "orbit"
-goal = "Geoscan the surface from orbit; only scanned ore can be cut."
-controls = ["geoscan"]
-
-[[beat]]
 id = "cut"
 label = "Laser"
 view = "orbit"
-goal = "Fly the pass: slide over scanned ore and hold the laser until the order is in the hold."
-controls = ["steer", "scan", "laser", "cargo"]
+goal = "Fly the pass: slide over the seams the probe mapped and hold the laser until the order is in the hold."
+controls = ["steer", "laser", "cargo"]
 repeat = true
 method = "orbit-laser"
 
@@ -61,7 +54,7 @@ method = "orbit-laser"
 id = "site"
 label = "Site"
 view = "orbit"
-goal = "Pick a landing site on a scanned vein."
+goal = "Pick a landing site on a vein the probe mapped."
 controls = ["pick-site"]
 method = "rover"
 
@@ -77,8 +70,8 @@ method = "rover"
 id = "mine"
 label = "Mine"
 view = "field"
-goal = "Drive to the scanned ore and cut it with the rover laser until the order is in the hold."
-controls = ["drive", "scan", "laser", "cargo", "drop-cargo"]
+goal = "Drive to the ore the probe mapped and cut it with the rover laser until the order is in the hold."
+controls = ["drive", "laser", "cargo", "drop-cargo"]
 repeat = true
 method = "rover"
 

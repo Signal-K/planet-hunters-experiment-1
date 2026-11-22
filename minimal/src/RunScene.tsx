@@ -1,7 +1,8 @@
 // A run, from START to home: one scene per step, one button per scene. The
 // steps follow the chapter's verb (chapters.ts). Mining is Minimal's top-down
-// laser pass (MineScene, SSL-865): scan, then fire, laid out for an upright
-// phone. The shower run keeps Landnam's own mining scene for its CATCH beam
+// laser pass (MineScene): the probe survey already marked the deposits, so
+// it is steer and fire, laid out for an upright phone. Ships never scan; the
+// survey step releases a probe, and the probe does the reading. The shower run keeps Landnam's own mining scene for its CATCH beam
 // until the pass learns to catch. Every other step stands on a TakeOn
 // minimal scene.
 import { useRef, useState } from 'react'
@@ -42,7 +43,7 @@ export function RunScene({ chapter, onFinish, onQuit }: {
   const [index, setIndex] = useState(0)
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const [busy, setBusy] = useState(false)
-  const [scanned, setScanned] = useState(false)
+  const [probeOut, setProbeOut] = useState(false)
   const scene = useRef<MinimalSceneHandle | null>(null)
   const step = steps[index]
   const next = () => {
@@ -190,13 +191,14 @@ export function RunScene({ chapter, onFinish, onQuit }: {
         <Scenery kind="deposit" target={target} minerals={target?.minerals} />
         {header}
         <footer className="mn-scene-bottom">
-          {scanned && (
+          {probeOut && (
             <section className="mn-card">
+              <p className="mn-title">The probe's first readings</p>
               <Haul minerals={Object.fromEntries((target?.minerals ?? []).slice(0, 4).map(id => [id, 0]))} />
             </section>
           )}
-          <button className="mn-cta" onClick={() => (scanned ? next() : setScanned(true))}>
-            {scanned ? 'HEAD HOME' : 'SCAN'}
+          <button className="mn-cta" onClick={() => (probeOut ? next() : setProbeOut(true))}>
+            {probeOut ? 'HEAD HOME' : 'RELEASE PROBE'}
           </button>
         </footer>
       </main>

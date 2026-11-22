@@ -1,10 +1,9 @@
 // Minimal's laser mining (SSL-865): a top-down pass made for an upright phone.
 // The ground flows down the screen under the ship, so the tall side of the
-// phone is look-ahead. You must scan before you can mine: SCAN sends a pulse
-// that reveals what the deposits ahead are, and FIRE only cuts a deposit that
-// has been scanned. The laser hits a reticle just ahead of the ship at once, so
-// there is nothing to lead. Drag anywhere to steer (arrow keys on a keyboard,
-// Space fires, S scans).
+// phone is look-ahead. Ships never scan: the body's survey probe mapped every
+// deposit before launch, so each one shows its mineral from the start. The
+// laser hits a reticle just ahead of the ship at once, so there is nothing to
+// lead. Drag anywhere to steer (arrow keys on a keyboard, Space fires).
 //
 // Ore, colours and laser levels are Landnam's (MINERAL_META, laserAccess), the
 // order is the mission's own `requires.minerals`, and the ground is the body's
@@ -24,9 +23,6 @@ const SPEED_SHARE = 0.17
 const SHIP_AT = 0.7
 const REACH_SHARE = 0.17
 const FIRE_COOLDOWN = 0.4
-const SCAN_COOLDOWN = 1.6
-/** How far ahead a scan pulse reaches, as a share of the screen height. */
-const SCAN_RANGE = 0.55
 /** A free-mining run with no order fills a hold of this many deposits. */
 const OPEN_HOLD = 6
 /** Share of deposits that are a mineral the order still needs. */
@@ -39,7 +35,6 @@ interface Ore {
   y: number
   r: number
   mineral: string
-  scanned: boolean
   cut: boolean
 }
 
@@ -57,8 +52,8 @@ export function MineScene({ mission, target, header, onComplete }: {
   const openRun = Object.keys(order).length === 0
   const [haul, setHaul] = useState<Record<string, number>>({})
   const [done, setDone] = useState(false)
-  const [ready, setReady] = useState({ fire: false, scan: true, unscannedAhead: false })
-  const api = useRef<{ fire(): void; scan(): void; steer(x: number): void; nudge(dir: number): void; pause(): void } | null>(null)
+  const [ready, setReady] = useState({ fire: false })
+  const api = useRef<{ fire(): void; steer(x: number): void; nudge(dir: number): void; pause(): void } | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -106,27 +101,26 @@ export function MineScene({ mission, target, header, onComplete }: {
     ro.observe(canvas)
     const s = {
       x: W / 2, tx: W / 2, tilt: 0, time: 0,
-      fireCd: 0, scanCd: 0, beam: 0, flash: 0,
-      pulse: -1, // scan ring radius while it expands, -1 when idle
+      fireCd: 0, beam: 0, flash: 0,
       ores: [] as Ore[], rocks: [] as { x: number; y: number; r: number }[], pops: [] as Pop[],
-      nextY: 0, hint: '', paused: false,
+      nextY: 0, paused: false,
     }
     const shipY = () => H * SHIP_AT
     const reticle = () => ({ x: s.x, y: shipY() - H * REACH_SHARE })
     for (let i = 0; i < 46; i++) s.rocks.push({ x: Math.random() * W, y: Math.random() * H, r: 2 + Math.random() * 6 })
     const radius = () => Math.max(22, Math.min(32, lane().w * 0.07))
-    // The opening: three wanted deposits straight ahead, so the first scan finds work.
+    // The opening: three wanted deposits straight ahead, so the first pass finds work.
     const first = Object.keys(order)[0] ?? pool[0] ?? 'iron'
     for (let i = 0; i < 3; i++) {
       const { left, w } = lane()
-      s.ores.push({ x: left + w * [0.32, 0.68, 0.45][i], y: reticle().y - H * 0.16 - i * H * 0.2, r: radius(), mineral: first, scanned: false, cut: false })
+      s.ores.push({ x: left + w * [0.32, 0.68, 0.45][i], y: reticle().y - H * 0.16 - i * H * 0.2, r: radius(), mineral: first, cut: false })
     }
     s.nextY = s.ores[s.ores.length - 1].y - H * 0.18
     const spawn = () => {
       while (s.nextY > -60) {
         const { left, w } = lane()
         const r = radius()
-        s.ores.push({ x: left + r + 12 + Math.random() * (w - 2 * r - 24), y: s.nextY, r, mineral: pickMineral(), scanned: false, cut: false })
+        s.ores.push({ x: left + r + 12 + Math.random() * (w - 2 * r - 24), y: s.nextY, r, mineral: pickMineral(), cut: false })
         s.nextY -= H * (0.15 + Math.random() * 0.09)
       }
     }
@@ -142,18 +136,12 @@ export function MineScene({ mission, target, header, onComplete }: {
       pause() { s.paused = !s.paused },
       steer(x) { const { left, w } = lane(); s.tx = Math.max(left + 28, Math.min(left + w - 28, x)) },
       nudge(dir) { const { left, w } = lane(); s.tx = Math.max(left + 28, Math.min(left + w - 28, s.x + dir * w * 0.12)) },
-      scan() {
-        if (s.scanCd > 0) return
-        s.scanCd = SCAN_COOLDOWN
-        s.pulse = 0
-      },
       fire() {
         if (s.fireCd > 0) return
         s.fireCd = FIRE_COOLDOWN
         s.beam = 0.12
         const o = underReticle()
         if (!o) return
-        if (!o.scanned) { s.hint = 'SCAN FIRST'; pop(o.x, o.y - o.r - 20, 'Scan it first'); return }
         if (!cuttable(o)) { pop(o.x, o.y - o.r - 20, 'Needs laser level 2'); return }
         o.cut = true
         s.flash = 0.14
@@ -182,24 +170,15 @@ export function MineScene({ mission, target, header, onComplete }: {
       s.x += (s.tx - s.x) * Math.min(1, dt * 10)
       s.tilt = Math.max(-0.35, Math.min(0.35, (s.x - prev) * 0.05))
       s.fireCd = Math.max(0, s.fireCd - dt)
-      s.scanCd = Math.max(0, s.scanCd - dt)
       s.beam = Math.max(0, s.beam - dt)
       s.flash = Math.max(0, s.flash - dt)
-      if (s.pulse >= 0) {
-        s.pulse += H * 1.1 * dt
-        for (const o of s.ores) if (!o.scanned && o.y < shipY() && Math.hypot(o.x - s.x, o.y - shipY()) <= s.pulse) o.scanned = true
-        if (s.pulse > H * SCAN_RANGE) s.pulse = -1
-      }
       s.pops.forEach(p => { p.life -= dt })
       s.pops = s.pops.filter(p => p.life > 0)
 
       const t = underReticle()
-      const fireReady = !!t && t.scanned && cuttable(t) && s.fireCd === 0
-      // Ask for a scan only when nothing known is left to aim at.
-      const ahead = s.ores.filter(o => !o.cut && o.y > 0 && o.y < shipY() - 20)
-      const unscannedAhead = ahead.length > 0 && !ahead.some(o => o.scanned && cuttable(o))
-      const key = `${fireReady}|${s.scanCd === 0}|${unscannedAhead}`
-      if (key !== lastReady) { lastReady = key; setReady({ fire: fireReady, scan: s.scanCd === 0, unscannedAhead }) }
+      const fireReady = !!t && cuttable(t) && s.fireCd === 0
+      const key = `${fireReady}`
+      if (key !== lastReady) { lastReady = key; setReady({ fire: fireReady }) }
 
       // Ground.
       ctx.fillStyle = ground
@@ -214,14 +193,6 @@ export function MineScene({ mission, target, header, onComplete }: {
           continue
         }
         drawOre(ctx, o, cuttable(o))
-      }
-      // Scan pulse.
-      if (s.pulse >= 0) {
-        ctx.save()
-        ctx.strokeStyle = `rgba(112,217,234,${1 - s.pulse / (H * SCAN_RANGE)})`
-        ctx.lineWidth = 3
-        ctx.beginPath(); ctx.arc(s.x, shipY(), s.pulse, Math.PI, Math.PI * 2); ctx.stroke()
-        ctx.restore()
       }
       // Aim line and reticle: solid on a deposit FIRE would cut now.
       const r = reticle()
@@ -249,13 +220,12 @@ export function MineScene({ mission, target, header, onComplete }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mission.id, target.id])
 
-  // Keyboard: arrows steer, Space fires, S scans.
+  // Keyboard: arrows steer, Space fires.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') api.current?.nudge(-1)
       else if (e.key === 'ArrowRight') api.current?.nudge(1)
       else if (e.key === ' ') { e.preventDefault(); api.current?.fire() }
-      else if (e.key === 's' || e.key === 'S') api.current?.scan()
       else if (DEV && (e.key === 'p' || e.key === 'P')) api.current?.pause()
       else return
     }
@@ -267,8 +237,6 @@ export function MineScene({ mission, target, header, onComplete }: {
   const goal = openRun
     ? [{ id: 'hold', label: `HOLD ${Object.values(haul).reduce((a, b) => a + b, 0)}/${OPEN_HOLD}` }]
     : Object.entries(order).map(([id, n]) => ({ id, label: `${MINERAL_META[id]?.name ?? id} ${Math.min(haul[id] ?? 0, n)}/${n}` }))
-  // FIRE lighting up is its own cue; words appear only to ask for a scan.
-  const prompt = !done && !ready.fire && ready.unscannedAhead && ready.scan ? 'SCAN AHEAD' : null
 
   return (
     <main className="mn-scene mn-mine" data-scene="minimal-mine">
@@ -297,8 +265,6 @@ export function MineScene({ mission, target, header, onComplete }: {
               {goal.map(g => <span key={g.id} className="mn-chip">{g.label}</span>)}
             </div>
             <div className="mn-mine-buttons">
-              <p className="mn-mine-prompt" aria-live="polite">{prompt ?? ''}</p>
-              <button className={`mn-round mn-scan${ready.scan ? ' mn-ready' : ''}`} onClick={() => api.current?.scan()} aria-label="Scan ahead">SCAN</button>
               <button className={`mn-round mn-fire${ready.fire ? ' mn-ready' : ''}`} onClick={() => api.current?.fire()} aria-label="Fire the laser">FIRE</button>
             </div>
           </>
@@ -316,15 +282,6 @@ function drawOre(ctx: CanvasRenderingContext2D, o: Ore, cuttable: boolean) {
   ctx.beginPath(); ctx.arc(o.x, o.y, o.r + 9, 0, Math.PI * 2); ctx.fill()
   ctx.fillStyle = '#0a0d16'
   ctx.beginPath(); ctx.arc(o.x, o.y, o.r + 5, 0, Math.PI * 2); ctx.fill()
-  if (!o.scanned) {
-    ctx.strokeStyle = 'rgba(243,234,216,.8)'; ctx.lineWidth = 2.5; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([])
-    ctx.fillStyle = 'rgba(243,234,216,.75)'
-    ctx.font = `700 ${Math.round(o.r * 0.9)}px Oxanium, system-ui, sans-serif`
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText('?', o.x, o.y + 1)
-    ctx.restore()
-    return
-  }
   const colour = meta?.color ?? '#cccccc'
   ctx.globalAlpha = cuttable ? 1 : 0.45
   ctx.strokeStyle = colour; ctx.lineWidth = 3

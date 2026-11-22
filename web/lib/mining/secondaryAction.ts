@@ -8,8 +8,8 @@ import { showerForRunMission } from '@/lib/data/showers'
  * instead of building another button.
  */
 export interface MiningSecondaryAction {
-  /** What the button does in the scene. `catch` takes falling debris out of the collector beam above the ship; `scan` reads the seams ahead so FIRE can cut them. */
-  kind: 'catch' | 'scan'
+  /** What the button does in the scene. `catch` takes falling debris out of the collector beam above the ship. Ships never scan: seams come from the probe survey. */
+  kind: 'catch'
   label: string
   /** KeyboardEvent.code that presses it on desktop. */
   key: string
@@ -32,18 +32,4 @@ export function miningSecondaryAction(missionId: string): MiningSecondaryAction 
     }
   }
   return null
-}
-
-/**
- * SSL-865, "You scan before you mine": every laser run has SCAN. Seams arrive
- * unknown; a scan reads the ones ahead of the ship and FIRE only cuts a seam a
- * scan has shown. It sits beside FIRE, or beside CATCH in a shower run.
- */
-export const MINING_SCAN: MiningSecondaryAction = {
-  kind: 'scan',
-  label: 'Scan',
-  key: 'KeyE',
-  keyLabel: 'E',
-  brief: 'Press Scan to read the ground ahead, then fire at a seam it shows.',
-  howTo: 'Seams start as "?". Scan (E) reads the ground ahead of the ship and shows what each seam is. Fire only cuts a seam a scan has shown; firing at a "?" does nothing. Scan again as new ground comes in.',
 }

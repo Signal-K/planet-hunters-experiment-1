@@ -275,8 +275,3 @@
   :global(.mining-start-brief) { top: 24%; }
 }
 
-/* SSL-865: SCAN beside CATCH in a shower run sits one step further from FIRE. */
-.action[data-slot='2'] { right: calc(max(20px, env(safe-area-inset-right)) + 196px); }
-@media (max-width: 600px) { .action[data-slot='2'] { right: 196px; } }
-@media (max-width: 600px) and (orientation: portrait) { .action[data-slot='2'] { right: calc(max(16px, env(safe-area-inset-right)) + 84px); } }
-@media (max-height: 520px) { .action[data-slot='2'] { right: calc(max(20px, env(safe-area-inset-right)) + 188px); } }

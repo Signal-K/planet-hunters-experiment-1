@@ -22,7 +22,7 @@ id = "gather"
 label = "Gather"
 view = "field"
 goal = "Mine the materials over as many runs as it takes."
-controls = ["drive", "scan", "laser", "cargo"]
+controls = ["drive", "laser", "cargo"]
 repeat = true
 
 [[beat]]

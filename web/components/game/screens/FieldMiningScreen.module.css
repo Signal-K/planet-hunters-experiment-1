@@ -132,7 +132,6 @@
 .btn:disabled { cursor: default; }
 .btn:disabled .face { filter: saturate(0.5) brightness(0.85); }
 .btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.scan { --tone: #1f97dc; margin-bottom: 36px; }
 .laser { --size: 76px; --tone: #e8612c; }
 .held { --tone: #3fd487; }
 .held .face { animation: pulse 0.9s ease-in-out infinite; }

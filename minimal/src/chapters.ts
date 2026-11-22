@@ -22,7 +22,7 @@ import type { Mission, Target } from '@landnam/lib/data/types'
  * - deliver: mine, then drop the cargo at a second body, then home.
  * - build: carry stored materials out and raise the structure on site.
  * - deploy: put a satellite or probe in orbit.
- * - survey: fly out and scan the body.
+ * - survey: carry a probe out and release it; the probe reads the body. Ships never scan.
  */
 export type Verb = 'mine' | 'deliver' | 'build' | 'deploy' | 'survey'
 
@@ -108,7 +108,7 @@ export const CHAPTERS: Chapter[] = [
   { number: 6, name: 'Shower', goal: 'Fly into the meteor shower and catch fragments.', teaches: 'Sky events', type: 'shower-run', verb: 'mine', mission: showerRun, target: shower && showerTarget(shower.id) },
   { number: 7, name: 'Stockpile', goal: 'Haul materials home and store them for building.', teaches: 'Storage', type: 'materials-haul', verb: 'mine', mission: haul, target: nearest(haul) },
   { number: 8, name: 'Build', goal: 'Carry your materials out and raise a structure.', teaches: 'Construction', type: 'construction', verb: 'build', mission: build, target: nearest(build) },
-  { number: 9, name: 'Follow-up', goal: 'Fly to the world your satellite found and scan it.', teaches: 'Research', type: 'survey-flight', verb: 'survey', mission: surveyFlight, target: runtimeTarget(surveyFlight?.targetId) },
+  { number: 9, name: 'Follow-up', goal: 'Send a probe to the world your satellite found.', teaches: 'Research', type: 'survey-flight', verb: 'survey', mission: surveyFlight, target: runtimeTarget(surveyFlight?.targetId) },
 ]
 
 export function mineralName(id: string): string {
