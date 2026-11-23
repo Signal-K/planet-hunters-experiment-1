@@ -97,17 +97,10 @@ export default function MissionPlanStrip({ game, blockedReason, launched, primar
     : []
   return (
     <div className={styles.host} data-testid="mission-plan-strip">
-      <ol className={styles.rail} aria-label={`Mission step ${step + 1} of 3`}>
-        {STEPS.map((label, i) => <li key={label} data-state={i < step ? 'done' : i === step ? 'now' : 'next'}><i />{label}</li>)}
-      </ol>
       <div className={styles.slots}>
         <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched || !!mission.targetId} onClick={() => setSheet('destination')}>
           <span>Destination</span><strong>{runShower ? `${runShower.name} field` : target.name}</strong>{!mission.targetId && <em>Change</em>}
         </button>
-        <div className={styles.slot} data-testid="plan-vehicle">
-          <span>Agency rocket</span><strong>{selectedRocket?.name ?? 'Preparing'}</strong>
-          {selectedRocket && <small>{selectedRocket.stats.cargo} cargo · Range {selectedRocket.stats.maxOrbit}</small>}
-        </div>
         {(() => {
           const rows = (
             <>

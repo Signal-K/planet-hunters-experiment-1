@@ -200,11 +200,11 @@ export default function RocketBuilderScene({
               </button>
             )}
             {(phase === 'building' || phase === 'ready') && (
-              <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
+              <details className={styles.stats}><summary>Rocket details</summary><ul className={styles.detailStats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
                 <li data-stat="capacity"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Capacity</span><strong>{stats.capacity}</strong><i aria-hidden="true" /></li>
                 <li data-stat="range"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Range</span><strong>{stats.range}</strong><i aria-hidden="true" /></li>
                 <li data-stat="laser"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Laser</span><strong>{stats.laser}</strong><i aria-hidden="true" /></li>
-              </ul>
+              </ul></details>
             )}
             {confirmingDismantle && (
               <div className={styles.dismantleConfirm} role="alert">

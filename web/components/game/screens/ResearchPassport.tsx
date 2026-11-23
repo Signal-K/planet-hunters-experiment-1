@@ -10,8 +10,10 @@ import styles from './ResearchPassport.module.css'
 const PROJECT_LABEL: Record<string, string> = { 'exoplanet-hunters': 'Transit', 'asteroid-discovery': 'Asteroid', 'saturn-storms': 'Saturn', 'deposit-survey': 'Probe', 'meteor-echoes': 'Meteor' }
 
 /** This week in Community research: seven day stamps, this week's rocket part and the one shared weekly goal. It lives inside the research screen, not on a screen of its own. */
-export default function ResearchPassport({ player, onGo, onReview, onWorkshop, status }: {
+export default function ResearchPassport({ player, onGo, onReview, onWorkshop, status, calendarOnly = false, rewardOnly = false }: {
   player: Player; onGo: (kind: StampKind) => void; onReview?: () => void; onWorkshop: () => void
+  calendarOnly?: boolean
+  rewardOnly?: boolean
   status?: 'loading' | 'live' | 'offline' | 'signed-out'
 }) {
   const now = Date.now()
@@ -36,7 +38,7 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
       : current && pending > 0 && total >= goal ? 'Waiting for synced stamps. The shared goal and reward will be confirmed online.' : current ? 'The community goal unlocks this part for everyone who contributes at least one stamp this week.' : 'The community goal was not reached. This week’s part was not earned.'
   return <div className={styles.week} data-testid="research-passport">
     <main className={styles.book}>
-      <section className={styles.page} aria-label="Weekly passport page">
+      {!rewardOnly && <section className={styles.page} aria-label="Weekly passport page">
         <nav className={styles.paging} aria-label="Passport pages">
           <button aria-label="Previous week" disabled={index < 0 || index >= weeks.length - 1} onClick={() => setSelectedWeek(weeks[index + 1])}>‹</button>
           <div><span>{current ? 'THIS WEEK' : 'PASSPORT ARCHIVE'}</span><h2>{date(week)} – {date(days[6].key)}</h2></div>
@@ -53,8 +55,8 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
         {current && <div className={styles.actions} aria-label="Earn a research stamp">
           <button onClick={() => onGo('classification')}>Classify a signal</button><button onClick={() => onGo('survey')}>Survey a world</button>{onReview && <button onClick={onReview}>Review a finding</button>}
         </div>}
-      </section>
-      <section className={styles.rewardPage} aria-label="Weekly community reward">
+      </section>}
+      {!calendarOnly && <section className={styles.rewardPage} aria-label="Weekly community reward">
         <span className={styles.kicker}>This week&apos;s rocket part</span>
         <div className={styles.partDrawing}>{part && <img src={customizerPartById(part.id)?.img} alt={part.name} />}</div>
         <h2 data-testid="passport-part">{part?.name.split(' · ')[0] ?? 'Research archive'}</h2>
@@ -68,7 +70,7 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
         {owned && <button onClick={onWorkshop} data-testid="passport-workshop">View agency rocket</button>}
         {status === 'offline' && confirmed && <p>Offline · showing the last confirmed page.</p>}
         <div className={styles.seal}>{owned ? 'PART EARNED' : contributed ? 'CONTRIBUTOR' : 'RESEARCH PASSPORT'}</div>
-      </section>
+      </section>}
     </main>
   </div>
 }

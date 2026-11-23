@@ -653,3 +653,6 @@
   .root[data-launching='true'] .rocketSlot,
   .root[data-launching='true'] .rocketSlot::after { animation: none; }
 }
+
+.detailStats { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.stats > summary { cursor: pointer; min-height: 44px; padding: 12px; }

@@ -1,5 +1,7 @@
 'use client'
 
+import BoardFrame from '@/components/layout/frame/BoardFrame'
+
 import ResearchPassport from './ResearchPassport'
 import AgencyFrontier from './AgencyFrontier'
 import { useEffect, useState } from 'react'
@@ -235,10 +237,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
   // One screen: This week (your stamps and the shared weekly goal) opens first; a reviewer back from the instrument lands on Votes.
-  const [readout, setReadout] = useState<'week' | 'mission' | 'rewards' | 'votes'>(pendingReview ? 'votes' : 'week')
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' && new URLSearchParams(window.location.search).get('preset')?.startsWith('ui-community-research-')) setReadout('mission')
-  }, [])
+  const [readout, setReadout] = useState<'week' | 'mission' | 'rewards' | 'votes'>(pendingReview ? 'votes' : 'mission')
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
   const consensus = useConsensus(true)
@@ -267,6 +266,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
+        <BoardFrame header={<div className={board.boardHeader}>
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
@@ -276,7 +276,8 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
             <span className={board.tabLabel}>Community research</span>
           </button>
         </nav>
-        <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
+        </div>}>
+
         <article className={styles.workspace} data-testid="community-research-board">
           {path === null ? (
             <>
@@ -294,29 +295,6 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   {selectedPath === 'agency' && <AgencyLine agency={agency} />}
                 </div>
               </section>
-              <section className={styles.right}>
-                <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} />
-                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
-                <h2>How it works</h2>
-                <ol className={styles.how} data-testid="community-research-how">
-                  {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
-                </ol>
-                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
-                {site && <CommunitySite site={site} archived={archived} />}
-                <CommunityBallots state={ballotState} />
-                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
-              </section>
-              {confirmingPath && (
-                <ActionConfirmBar
-                  eyebrow="This week's path"
-                  title={`Start ${PATH_NAME[selectedPath]}?`}
-                  description="Your path is locked until Monday, when it resets and you can pick again."
-                  confirmLabel={`Start ${PATH_NAME[selectedPath]}`}
-                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
-                  onDismiss={() => setConfirmingPath(false)}
-                />
-              )}
             </>
           ) : (
             <>
@@ -326,8 +304,8 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   <span className={styles.eyebrow}>{PATH_NAME[path]} pathway</span>
                   <span>{finished}/{steps.length} complete</span>
                 </div>
-                {path === 'agency' && <AgencyLine agency={agency} />}
-                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
+
+                <details><summary>Agency fleet and findings</summary><AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} /></details>
                 <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
                   {steps.map((st, i) => (
                     <button key={st.id} type="button" className={styles.pathStep} data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
@@ -339,26 +317,32 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   ))}
                 </div>
               </section>
+            </>
+          )}
               <section className={styles.right}>
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
-                  <button type="button" role="tab" aria-selected={readout === 'week'} data-testid="community-research-week-tab" onClick={() => setReadout('week')}>Week</button>
-                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Step</button>
+                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Next action</button>
+                  <button type="button" role="tab" aria-selected={readout === 'week'} data-testid="community-research-week-tab" onClick={() => setReadout('week')}>Progress</button>
                   <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
                   <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
-                {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} /> : readout === 'mission' ? <>
-                  <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
+                {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} calendarOnly /> : readout === 'mission' && path === null ? <>
+                  <h2>{PATH_NAME[selectedPath]}</h2>
+                  <p className={styles.readoutCopy}>{PATH_BLURB[selectedPath]}</p>
+                  <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>Start {PATH_NAME[selectedPath]}</button>
+                </> : readout === 'mission' ? <>
                   <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
                   <h2 data-testid="community-research-title">{step.title}</h2>
                   <p className={styles.readoutCopy}>{step.brief}</p>
-                  <p className={styles.why} data-testid="community-research-why">{step.why}</p>
-                  <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
+                  <details><summary>Why this helps</summary><p className={styles.why} data-testid="community-research-why">{step.why}</p></details>
+                  <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.title}</button>
                 </> : readout === 'votes' ? <>
                   <h2>Community votes</h2>
                   <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 </> : <>
                   <h2>Your rewards</h2>
+                  <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} rewardOnly />
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
                     <div className={styles.rewardCard} data-earned={doneById('scan', 'contract', 'launch')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
                     <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales', 'fleet-watch')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
@@ -372,9 +356,18 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}
               </section>
-            </>
-          )}
+              {confirmingPath && (
+                <ActionConfirmBar
+                  eyebrow="This week's path"
+                  title={`Start ${PATH_NAME[selectedPath]}?`}
+                  description="Your path is locked until Monday, when it resets and you can pick again."
+                  confirmLabel={`Start ${PATH_NAME[selectedPath]}`}
+                  onConfirm={() => { setConfirmingPath(false); onChoosePath(selectedPath) }}
+                  onDismiss={() => setConfirmingPath(false)}
+                />
+              )}
         </article>
+        </BoardFrame>
       </section>
     </div>
   )
