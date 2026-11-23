@@ -49,9 +49,9 @@
 @media (max-width: 899px) and (min-height: 521px) { .host { top: auto; bottom: 12px; gap: 4px; } .slots { flex-wrap: nowrap; width: 100%; min-width: 0; } .slot { flex: 1 1 0; min-width: 0; padding: 4px 8px; } .slot strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .slot span, .slot em { font-size: 14px; letter-spacing: .04em; } .hold { flex: 0 0 auto; width: 100%; max-width: 100%; text-align: center; } .primary { display: block; min-width: min(280px, 70vw); } }
 
 /* Desktop: ride the empty band between Launch and Target, above the part tabs. */
-@media (min-width: 900px) and (min-height: 600px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
+@media (min-width: 900px) and (min-height: 521px) { .host { top: 66px; left: 260px; right: 260px; flex-direction: row; justify-content: center; align-items: center; gap: 16px; } .slots { flex-wrap: nowrap; } .slot { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; } }
 @media (max-width: 899px) and (min-height: 521px) { .slot em { display: none; } .slot { min-height: 44px; } }
-@media (min-width: 900px) and (min-height: 600px) { .host { left: 290px; right: 270px; gap: 8px; flex-wrap: wrap; } .hold { flex: 0 0 100%; width: max-content; max-width: 100%; text-align: center; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
+@media (min-width: 900px) and (min-height: 521px) { .host { left: 290px; right: 270px; gap: 8px; flex-wrap: wrap; } .hold { flex: 0 0 100%; width: max-content; max-width: 100%; text-align: center; } .slot em { display: none; } button.slot:not(:disabled)::after { content: '\203A'; font-weight: 800; } .slot { padding: 0 12px; } .slot strong { white-space: nowrap; } }
 @media (max-width: 899px) and (min-height: 521px) { button.slot:not(:disabled)::after { content: '\203A'; position: absolute; right: 8px; top: 4px; font-weight: 800; } .slot { position: relative; } }
 
 /* Medium browser shells can report a compact CSS width while still showing the
@@ -97,9 +97,9 @@
 .mapList strong { font: 800 16px var(--ln-font-display); letter-spacing: .06em; text-transform: uppercase; }
 .mapList span { color: color-mix(in srgb, var(--ln-world-hull-lit) 78%, transparent); text-transform: capitalize; }
 @media (orientation: landscape) and (max-height: 520px) { .mapSheet { top: 8px; left: 64px; right: 64px; flex-direction: row; flex-wrap: wrap; align-items: flex-start; } .mapHead, .mapSheet > p { flex: 0 0 100%; } .mapField { flex: 1 1 55%; height: calc(100dvh - 140px); min-height: 180px; } .mapList { flex: 1 1 35%; } }
-@media (min-width: 900px) and (min-height: 600px) { .mapSheet { left: 50%; right: auto; bottom: 16px; width: min(880px, calc(100vw - 32px)); transform: translateX(-50%); } }
+@media (min-width: 900px) and (min-height: 521px) { .mapSheet { left: 50%; right: auto; bottom: 16px; width: min(880px, calc(100vw - 32px)); transform: translateX(-50%); } }
 .host:has(.mapSheet) .slots, .host:has(.mapSheet) .rail { visibility: hidden; }
-@media (min-width: 900px) and (min-height: 600px) { .sheet { left: 50%; right: auto; width: min(720px, calc(100% - 16px)); transform: translateX(-50%); } }
+@media (min-width: 900px) and (min-height: 521px) { .sheet { left: 50%; right: auto; width: min(720px, calc(100% - 16px)); transform: translateX(-50%); } }
 
 /* Cargo: what comes back and what flies out (Liam, 01.11). Two rows inside the slot at every size. */
 .cargoRows { display: grid; gap: 0; min-width: 0; font-size: 14px; letter-spacing: 0; text-transform: none; opacity: 1; }
@@ -116,7 +116,7 @@
 
 /* SSL-750: on iPad and desktop the cargo card sizes to its two lines instead of spanning the row, so it no longer
    covers the gantry head; Getting and Payload already say what the card is. */
-@media (min-width: 900px) and (min-height: 600px) {
+@media (min-width: 900px) and (min-height: 521px) {
   .cargoSlot { flex: 0 1 auto !important; max-width: 100%; }
   .cargoSlot > span:first-child { display: none; }
 }
@@ -126,7 +126,7 @@
 .holdFix { min-height: 44px; padding: 0 16px; color: var(--ln-blueprint-paper); font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; background: var(--ln-blueprint-ink); border: 0; border-radius: 8px; cursor: pointer; }
 .slot[data-blocked] { border: 2px solid var(--ln-warn); }
 .primary:disabled { border-style: dashed; box-shadow: none; opacity: .8; }
-@media (min-width: 900px) and (min-height: 600px) { .hold[data-blocked] { flex: 0 1 auto; width: auto; } }
+@media (min-width: 900px) and (min-height: 521px) { .hold[data-blocked] { flex: 0 1 auto; width: auto; } }
 
 /* SSL-750: a landscape phone reserves the plan's height above the pad, so the plan is one row there: destination,
    vehicle and the two cargo lines side by side. Three rows left the pad a thin strip at the bottom. */
