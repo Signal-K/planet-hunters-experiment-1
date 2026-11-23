@@ -151,3 +151,6 @@
 .sheet .goalGrid li button { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; min-height: 56px; }
 .sheet .goalGrid li button strong { font-size: 14px; letter-spacing: .04em; }
 .sheet .goalGrid li button small { color: var(--vs-cyan); font-size: 14px; text-transform: capitalize; }
+
+/* Short landscape: the picture banner is decoration; the pad needs the height more. */
+@media (orientation: landscape) and (max-height: 520px) { .showerField { display: none; } }

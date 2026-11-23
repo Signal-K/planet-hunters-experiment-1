@@ -522,11 +522,12 @@
 
 /* Portrait phones: the pad scene on top, choices below. */
 @media (orientation: portrait) {
-  .actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* Back, the sync dot and Customize share one row; the mission sits under them, and Dismantle only takes a row when a rocket is staged. */
+  .actions { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; }
   .back, .launch, .target, .dismantle { min-width: 0; padding-inline: 10px; }
   .target { grid-column: 1 / -1; grid-row: 2; max-width: none; margin-left: 0; }
-  .customize { grid-column: 1; grid-row: 3; }
-  .dismantle { grid-column: 2; grid-row: 3; }
+  .customize { grid-column: 3; grid-row: 1; padding-inline: 16px; }
+  .dismantle { grid-column: 1 / -1; grid-row: 3; }
   .body > .choices { top: auto; right: 8px; bottom: 8px; left: 8px; width: auto; height: min(54%, 480px); }
   .launchDock { bottom: 16px; }
   .stats { flex-direction: row; top: 0; left: 0; right: 0; justify-content: center; }

@@ -40,19 +40,6 @@ interface CommunityResearchScreenProps {
   onGo: (kind: StampKind) => void
 }
 
-const DAY_MS = 86_400_000
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
-/** The seven UTC days of the week containing `now`, Monday first. */
-function weekDays(now: number): { key: string; letter: string; today: boolean; future: boolean }[] {
-  const today = stampDayKey(now)
-  const offset = (new Date(now).getUTCDay() + 6) % 7
-  return Array.from({ length: 7 }, (_, i) => {
-    const key = stampDayKey(now - (offset - i) * DAY_MS)
-    return { key, letter: DOW[i], today: key === today, future: key > today }
-  })
-}
-
 function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }) {
   const art = {
     signal: <><path d="M2.5 12h3.8l2-5.5 4.1 11 2.1-5.5h6.9" /><circle cx="18.5" cy="6" r="1.5" fill="currentColor" stroke="none" /></>,
@@ -258,8 +245,6 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
   const { site, archived } = useSite(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
-  const days = weekDays(now)
-  const stampedDays = days.filter(d => (stamps[d.key] ?? []).length > 0).length
   const d = new Date(now)
   const ownThisMonth = stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth())
   const bar = communityBar(ownThisMonth, communityResearch)

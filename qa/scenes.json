@@ -345,42 +345,46 @@
   },
   {
    "id": "research-passport",
-   "name": "Weekly research passport",
+   "name": "Research: This week tab",
    "flow": "progression",
    "web": "ui-research-passport",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
    "tickets": [
-    "SSL-849"
+    "SSL-849",
+    "SSL-886"
    ]
   },
   {
    "id": "passport-unconfirmed",
-   "name": "Passport awaiting sync",
+   "name": "This week awaiting sync",
    "flow": "progression",
    "web": "ui-research-passport-unconfirmed",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
    "tickets": [
-    "SSL-849"
+    "SSL-849",
+    "SSL-886"
    ]
   },
   {
    "id": "passport-missed",
-   "name": "Passport without contribution",
+   "name": "This week without contribution",
    "flow": "progression",
    "web": "ui-research-passport-missed",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
    "tickets": [
-    "SSL-849"
+    "SSL-849",
+    "SSL-886"
    ]
   },
   {
    "id": "passport-empty",
-   "name": "Open passport page",
+   "name": "This week open page",
    "flow": "progression",
    "web": "ui-research-passport-empty",
    "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
    "tickets": [
-    "SSL-849"
+    "SSL-849",
+    "SSL-886"
    ]
   },
   {
