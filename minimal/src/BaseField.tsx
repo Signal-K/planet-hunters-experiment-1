@@ -138,6 +138,17 @@ export function BaseField({
       )
     else visit('routes', Math.max(0, routes.indexOf(next!)), s)
   }
+  let instrumentUrl = ''
+  if (instrument) {
+    const screen = instrument[2]
+    if (pilot?.id !== 'stage') instrumentUrl = '/game/' + screen
+    else if (screen === 'radio-meteors') {
+      // The generic sandbox freezes its clock in March, before the shower receivers open.
+      const at = station === 'sky' && event ? Date.parse(event.startUtc) + 86400000 : now
+      instrumentUrl =
+        '/game/stage?' + new URLSearchParams({ preset: 'ui-radio-meteors', at: new Date(at).toISOString() })
+    } else instrumentUrl = '/game/stage?preset=sandbox:ui-' + screen
+  }
   const specialMission = special && specialMissions(TARGETS, player || {}, flown).find((m) => m.id === special.id)
   const close = () => {
     select(null)
@@ -390,12 +401,7 @@ export function BaseField({
             <strong>{instrument[0]}</strong>
             <button onClick={() => setInstrument(null)}>Return to station</button>
           </header>
-          <iframe
-            title={instrument[0]}
-            src={
-              pilot?.id === 'stage' ? '/game/stage?preset=sandbox:ui-' + instrument[2] : '/game/' + instrument[2]
-            }
-          />
+          <iframe title={instrument[0]} src={instrumentUrl} />
         </div>
       )}
     </section>
