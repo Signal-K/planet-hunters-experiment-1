@@ -12,6 +12,7 @@ import { STAGE_TESS_FEED } from '@landnam/lib/stage-feed'
 import { CHAPTERS, PROGRAM, debrisFlight, discoveryFlight, eventFlight, francs, type Chapter } from './chapters'
 import { counterText, type Base, type StructureState, type StructureId } from './structures'
 import { researchPlayer } from './research'
+import { StoryRadio } from './StoryRadio'
 import { World } from './World'
 import { SIGN_IN_URL, type Pilot } from './auth'
 
@@ -174,16 +175,13 @@ export function BaseField({
             <i aria-hidden>☄</i>
             {events[0]?.name || 'Sky signals'}
           </button>
-          <div className="flight-caption">
-            <small>FLIGHT DIRECTOR</small>
-            <strong>{candidate?.name || 'Exoplanet follow-up'}</strong>
-            <span>
-              {candidate ? 'Select the beacon on your launchpad.' : 'Use the telescope at the control station.'}
-            </span>
-            {!pilot && (location.hostname === 'staging.playlandnam.space' || import.meta.env.DEV) && (
-              <a href="?stage=1">Enter practice flight ↗</a>
-            )}
-          </div>
+          <StoryRadio
+            chapter={candidate}
+            pilot={pilot}
+            done={done}
+            onFly={launch}
+            onObserve={() => desk(instruments[1])}
+          />
         </>
       )}
       {station && (

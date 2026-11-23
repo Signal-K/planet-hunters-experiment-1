@@ -356,7 +356,17 @@ export function App() {
           done={run.done}
           busy={run.payload !== undefined || run.raising !== undefined || run.phase === 'leaving'}
           survey={chapter.verb === 'survey'}
-          workLabel={mining ? 'Drive to an ore seam' : verb}
+          siteLabel={verb}
+          departureGoal={
+            run.stop === 0 && chapter.verb === 'deliver'
+              ? 'Order ready. Select the ship to fly to ' + chapter.deliveryTarget?.name
+              : 'Mission complete. Select the ship to return to Earth.'
+          }
+          workLabel={
+            mining
+              ? 'Select a deposit to drive over and collect ore'
+              : 'Select the marked site to ' + verb.toLowerCase()
+          }
           base={base}
           target={where}
           phase={run.phase === 'leaving' ? 'leaving' : 'away'}
@@ -370,7 +380,7 @@ export function App() {
         />
         <header className="mn-top">
           <button className="mn-chip" onClick={abandon}>
-            ‹ BASE
+            Abort flight
           </button>
           <span className="mn-chip">{where.name}</span>
         </header>

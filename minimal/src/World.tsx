@@ -27,6 +27,8 @@ type FieldProps = {
   done?: boolean
   busy?: boolean
   survey?: boolean
+  siteLabel?: string
+  departureGoal?: string
   workLabel?: string
   event?: boolean
   payload?: string
@@ -93,6 +95,8 @@ export function World(props: FieldProps) {
     [tool, setTool] = useState('launchpad'),
     [hint, say] = useState(''),
     [surveyed, setSurveyed] = useState(0)
+  const [landing, setLanding] = useState<'descent' | 'ready' | 'driving'>(props.target ? 'descent' : 'driving')
+  const deploy = useRef(() => {})
   const editor = useRef({ editing, tool })
   editor.current = { editing, tool }
   const key = 'landnam-minimal:takeon-base:' + props.pilotId
@@ -103,6 +107,11 @@ export function World(props: FieldProps) {
       ctx = ink.getContext('2d')!
     const target = props.target,
       home = !target
+    const arrival = !home && props.phase === 'away'
+    const descentTime = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 2.6
+    let driving = !arrival
+    setLanding(arrival ? 'descent' : 'driving')
+    const landed = arrival ? window.setTimeout(() => setLanding('ready'), descentTime * 1000) : undefined
     const raw = home
       ? engine.cloneBody(engine.getBody('terra')!)
       : buildLandnamBody(engine, takeonBodyForTarget(target), target)
@@ -231,7 +240,12 @@ export function World(props: FieldProps) {
         p = engine.project(v.x, v.y, game.iso.surfaceZ(Math.round(pos.x), Math.round(pos.y)))
       return game.camera.toScreen(p.sx, p.sy)
     }
-    const menuOpen = () => !!document.querySelector('dialog[open],.field-instrument,.op-desk')
+    deploy.current = () => {
+      driving = true
+      setLanding('driving')
+      game.walkTo(spawn.x + 1, spawn.y)
+    }
+    const menuOpen = () => !driving || !!document.querySelector('dialog[open],.field-instrument,.op-desk')
     let drag: { x: number; y: number; moved: boolean; startX: number; startY: number } | null = null
     const down = (e: PointerEvent) => {
       if (menuOpen()) return
@@ -344,7 +358,7 @@ export function World(props: FieldProps) {
     function render(now: number) {
       const p = live.current,
         zoom = game.camera.zoom,
-        t = (now - epoch) / 1000
+        t = Math.max(0, (now - epoch) / 1000)
       ctx.clearRect(0, 0, el.clientWidth, el.clientHeight)
       clickables.length = 0
       if (pending && distance(pending.pos, sim.rover.pos) <= 1) {
@@ -430,14 +444,64 @@ export function World(props: FieldProps) {
           }
         }
       } else {
-        drawImage(
-          ctx,
-          kit + 'space-rocket.png',
-          screen(spawn).x,
-          screen(spawn).y - (p.phase === 'leaving' ? t * t * el.clientHeight : 0),
-          15 * zoom,
-          40 * zoom,
-        )
+        const remaining = arrival && descentTime ? Math.max(0, 1 - t / descentTime) : 0
+        const lift =
+          p.phase === 'leaving' ? t * t * el.clientHeight : remaining * remaining * el.clientHeight * 0.82
+        if (arrival && !driving) {
+          game.iso.focusTile(spawn)
+          game.camera.cy -= (lift * 0.38) / zoom
+        }
+        const berth = screen(spawn)
+        if (p.target?.id === 'moon') {
+          for (const [i, j, size] of [
+            [-4, -2, 9],
+            [1, -4, 6],
+            [-2, 2, 4],
+            [4, 3, 11],
+            [-3, 4, 7],
+            [4, -2, 6],
+          ]) {
+            const rock = screen(at([i, j]))
+            drawImage(
+              ctx,
+              '/game/assets/terrain/rock_cluster.png',
+              rock.x,
+              rock.y,
+              size * zoom,
+              size * 0.64 * zoom,
+            )
+          }
+        }
+        const x = berth.x + remaining * el.clientWidth * 0.18,
+          y = berth.y - lift
+        ctx.fillStyle = 'rgba(8,16,22,' + 0.28 * (1 - remaining) + ')'
+        ctx.beginPath()
+        ctx.ellipse(berth.x, berth.y, (10 + remaining * 6) * zoom, 4 * zoom, 0, 0, Math.PI * 2)
+        ctx.fill()
+        if (remaining > 0 || p.phase === 'leaving')
+          drawImage(ctx, kit + 'flame-' + (Math.floor(t * 14) % 3) + '.png', x, y + 12 * zoom, 8 * zoom, 15 * zoom)
+        drawImage(ctx, kit + 'space-rocket.png', x, y, 15 * zoom, 40 * zoom)
+        if (arrival && descentTime && t > descentTime - 0.65 && t < descentTime + 0.6) {
+          const dust = (t - descentTime + 0.65) / 1.25
+          ctx.save()
+          ctx.globalAlpha = 0.65 * (1 - dust)
+          for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI) / 4
+            drawImage(
+              ctx,
+              kit + 'pad-smoke-' + (i % 4) + '.png',
+              berth.x + Math.cos(angle) * dust * 32 * zoom,
+              berth.y + Math.sin(angle) * dust * 7 * zoom,
+              15 * zoom,
+              9 * zoom,
+            )
+          }
+          ctx.restore()
+        }
+        if (!driving || p.phase === 'leaving') {
+          frame = requestAnimationFrame(render)
+          return
+        }
         drawVehicle()
         if (p.done) {
           flag(
@@ -497,7 +561,7 @@ export function World(props: FieldProps) {
             if (seen.has(i)) continue
             flag(
               pos,
-              p.survey ? '⌖ ' + (i + 1) : p.workLabel || 'Deploy',
+              p.survey ? '⌖ ' + (i + 1) : p.siteLabel || 'Deploy',
               () =>
                 approach(pos, () => {
                   if (seen.has(i)) return
@@ -536,6 +600,7 @@ export function World(props: FieldProps) {
     }
     frame = requestAnimationFrame(render)
     return () => {
+      window.clearTimeout(landed)
       cancelAnimationFrame(frame)
       ro.disconnect()
       el.removeEventListener('pointerdown', down)
@@ -548,7 +613,7 @@ export function World(props: FieldProps) {
     }
   }, [props.target?.id, props.pilotId, props.phase, key])
   return (
-    <div className={'takeon-field' + (props.target ? '' : ' earth-field')}>
+    <div data-body={props.target?.id} className={'takeon-field' + (props.target ? '' : ' earth-field')}>
       <canvas
         ref={canvas}
         tabIndex={0}
@@ -574,9 +639,36 @@ export function World(props: FieldProps) {
         )}
       </div>
       {editing && <p className="field-message">Tap an open tile to place {tool}.</p>}
-      {props.target && !props.done && (
-        <div className="field-job">{props.survey ? 'Survey sites · ' + surveyed + ' / 3' : props.workLabel}</div>
-      )}
+      {props.target &&
+        props.phase !== 'leaving' &&
+        (landing === 'driving' ? (
+          <div className="field-job" role="status">
+            {props.done
+              ? props.departureGoal
+              : props.survey
+                ? surveyed === 3
+                  ? 'Transmitting survey…'
+                  : 'Tap a numbered beacon to scan · ' + surveyed + ' / 3'
+                : props.workLabel}
+          </div>
+        ) : (
+          <div className="touchdown-radio" aria-live="polite">
+            <small>LANDER · {props.target.name}</small>
+            <strong>{landing === 'descent' ? 'Final approach' : 'Touchdown confirmed'}</strong>
+            {landing === 'ready' && (
+              <>
+                <p>
+                  {props.survey
+                    ? 'Three survey beacons are in range. Send the rover to each one, then bring it back to the ship.'
+                    : props.workLabel + '. Bring the rover back to the ship when the job is complete.'}
+                </p>
+                <button className="story-go" onClick={() => deploy.current()}>
+                  Deploy rover ▸
+                </button>
+              </>
+            )}
+          </div>
+        ))}
       {hint && (
         <p className="field-message" role="status">
           {hint}
