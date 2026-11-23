@@ -351,6 +351,22 @@ export function App() {
       <main className="mn" data-scene="minimal-away">
         <World
           key={chapter.number + ':' + run.stop}
+          cargo={
+            <>
+              {goal.length > 0 && (
+                <div className="mn-row" aria-label="Order">
+                  {goal.map((g) => (
+                    <span key={g.id} className={`mn-chip${g.met ? ' mn-met' : ''}`}>
+                      {g.text}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </>
+          }
+          readout={base.rocket.name}
+          onAbort={abandon}
+          notice={toast}
           onWork={act}
           onDepart={leave}
           done={run.done}
@@ -378,28 +394,6 @@ export function App() {
           event={chapter.type === 'shower-run'}
           onCut={cut}
         />
-        <header className="mn-top">
-          <button className="mn-chip" onClick={abandon}>
-            Abort flight
-          </button>
-          <span className="mn-chip">{where.name}</span>
-        </header>
-        <footer className="mn-bottom">
-          {goal.length > 0 && (
-            <div className="mn-row" aria-label="Order">
-              {goal.map((g) => (
-                <span key={g.id} className={`mn-chip${g.met ? ' mn-met' : ''}`}>
-                  {g.text}
-                </span>
-              ))}
-            </div>
-          )}
-        </footer>
-        {toast && (
-          <p className="mn-toast" role="status">
-            {toast}
-          </p>
-        )}
       </main>
     )
   }
@@ -410,12 +404,13 @@ export function App() {
     <main className="mn" data-scene="minimal-base">
       {run ? (
         <>
-          <World base={base} pilotId={pilot.id} phase={run.phase === 'launch' ? 'launch' : 'land'} />
-          <div className="mn-bottom">
-            <p className="mn-chip">
-              {run.phase === 'launch' ? 'Launching' : 'Landing'} · {run.chapter.name}
-            </p>
-          </div>
+          <World
+            base={base}
+            pilotId={pilot.id}
+            phase={run.phase === 'launch' ? 'launch' : 'land'}
+            readout={base.rocket.name}
+            objective={run.chapter.name}
+          />
         </>
       ) : (
         <BaseField
@@ -424,6 +419,7 @@ export function App() {
           done={done}
           money={money}
           fresh={fresh}
+          notice={toast}
           connected={connected}
           structure={(state) => setSheet({ kind: 'structure', state })}
           open={(chapter, direct) => {
@@ -535,12 +531,6 @@ export function App() {
             OK
           </button>
         </Modal>
-      )}
-
-      {toast && (
-        <p className="mn-toast" role="status">
-          {toast}
-        </p>
       )}
     </main>
   )

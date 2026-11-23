@@ -43,6 +43,13 @@ export function StoryRadio({
     )
   return (
     <aside className="story-radio" aria-label="Story mode">
+      {chapter?.target?.id === 'moon' && (
+        <img
+          className="dispatch-patch"
+          src={new URL('./art/flight-patch.png', import.meta.url).href}
+          alt="Lunar expedition patch"
+        />
+      )}
       <header>
         <small>
           FLIGHT DIRECTOR · {stage >= 0 ? 'CHAPTER ' + (stage + 1) + ' / ' + PROGRAM.length : 'DEEP SKY'}

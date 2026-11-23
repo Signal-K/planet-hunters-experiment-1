@@ -33,6 +33,7 @@ export function BaseField({
   open,
   structure,
   connected,
+  notice,
 }: {
   base: Base
   pilot: Pilot | null
@@ -41,6 +42,7 @@ export function BaseField({
   fresh: ReadonlySet<StructureId>
   open: (c: Chapter, direct?: boolean) => void
   structure: (s: StructureState) => void
+  notice?: string | null
   connected: boolean
 }) {
   const [station, select] = useState<Station | null>(null)
@@ -154,27 +156,56 @@ export function BaseField({
         base={base}
         pilotId={pilot?.id}
         inspect={inspect}
-        objective={candidate ? 'Launch · ' + (candidate.target?.name || candidate.name) : 'Launchpad'}
-      />
-      <header className="flight-hud">
-        <div>
-          <small>LANDNAM</small>
-          <strong>Earth station</strong>
-        </div>
-        {pilot ? (
-          <span>
-            {pilot.name} · {francs(money)}
-          </span>
-        ) : (
-          <a href={SIGN_IN_URL}>Sign in</a>
-        )}
-      </header>
-      {!station && (
-        <>
-          <button className="sky-signal" onClick={() => visit('sky')}>
-            <i aria-hidden>☄</i>
-            {events[0]?.name || 'Sky signals'}
-          </button>
+        notice={notice}
+        readout={pilot ? pilot.name + ' · ' + francs(money) : 'Visitor'}
+        objective={candidate ? 'Launch · ' + candidate.target?.name : 'Launchpad'}
+        navigation={
+          <>
+            <button aria-pressed={!station} onClick={close}>
+              <img
+                className="instrument-icon"
+                alt=""
+                src={new URL('./art/flight-patch.png', import.meta.url).href}
+              />{' '}
+              Story
+            </button>
+            <button
+              aria-pressed={station === 'routes'}
+              onClick={() =>
+                visit(
+                  'routes',
+                  Math.max(0, routes.indexOf(candidate!)),
+                  base.structures.find((s) => s.def.id === 'hangar'),
+                )
+              }
+            >
+              <img className="instrument-icon" alt="" src="/game/assets/base/kit/space-rocket.png" /> Navigation
+            </button>
+            <button
+              aria-pressed={station === 'research'}
+              onClick={() =>
+                visit(
+                  'research',
+                  0,
+                  base.structures.find((s) => s.def.id === 'control-station'),
+                )
+              }
+            >
+              <img className="instrument-icon" alt="" src="/game/assets/base/v7/structures/control-station.png" />{' '}
+              Research
+            </button>
+            <button aria-pressed={station === 'sky'} onClick={() => visit('sky')}>
+              <img className="instrument-icon" alt="" src="/game/assets/events/orionids/fx/streak-01.png" />{' '}
+              Signals{' '}
+              {events[0] && badgeTierFor(events[0].id, now) === 'gold' ? (
+                <i className="live-lamp" aria-label="Active event" />
+              ) : null}
+            </button>
+          </>
+        }
+        onPlace={() => select(null)}
+      >
+        {!station && (
           <StoryRadio
             chapter={candidate}
             pilot={pilot}
@@ -182,177 +213,177 @@ export function BaseField({
             onFly={launch}
             onObserve={() => desk(instruments[1])}
           />
-        </>
-      )}
-      {station && (
-        <section
-          className="field-instrument"
-          role="dialog"
-          aria-label={
-            station === 'routes' ? 'Navigation chart' : station === 'sky' ? 'Sky receiver' : 'Control station'
-          }
-        >
-          <button className="sheet-close" onClick={close} aria-label="Close instrument">
-            ×
-          </button>
-          <small>
-            {station === 'routes' ? 'NAVIGATION CHART' : station === 'sky' ? 'SKY RECEIVER' : 'RESEARCH STATION'} ·{' '}
-            {index + 1} / {count}
-          </small>
-          {station === 'routes' && (
-            <div className="orbit-chart" aria-label="Select a flight">
-              {routes.map((c, i) => (
-                <button
-                  key={c.number + ':' + c.target?.id}
-                  className={i === index ? 'selected' : ''}
-                  style={
-                    {
-                      '--tone': ['#d6d4c3', '#c0bca6', '#c36846', '#978976', '#b4ab93', '#aabec4'][i % 6],
-                    } as React.CSSProperties
-                  }
-                  onClick={() => choose(i)}
-                  aria-label={c.name}
-                />
-              ))}
-            </div>
-          )}
-          <div className="tuner">
-            <button aria-label="Previous" onClick={() => choose((index + count - 1) % count)}>
-              ‹
+        )}
+        {station && (
+          <section
+            className="field-instrument"
+            role="region"
+            aria-label={
+              station === 'routes' ? 'Navigation chart' : station === 'sky' ? 'Sky receiver' : 'Control station'
+            }
+          >
+            <button className="sheet-close" onClick={close} aria-label="Close instrument">
+              ×
             </button>
-            <div>
-              <h2>
-                {station === 'routes'
-                  ? route.name
-                  : station === 'research'
-                    ? item[0]
-                    : event?.name || special?.title}
-              </h2>
-              <p>
-                {station === 'routes'
-                  ? route.target?.name
-                  : station === 'research'
-                    ? item[1]
-                    : event
-                      ? grade === 'gold'
-                        ? 'Live observing window'
-                        : grade === 'silver'
-                          ? 'Archived window'
-                          : 'Opens ' + event.startUtc.slice(0, 10)
-                      : special?.needs}
-              </p>
-            </div>
-            <button aria-label="Next" onClick={() => choose((index + 1) % count)}>
-              ›
-            </button>
-          </div>
-          {station === 'routes' && (
-            <button className="engage" disabled={routeLocked} onClick={() => launch(route)}>
-              {routeLocked ? 'Complete ' + PROGRAM[PROGRAM.indexOf(route) - 1]?.name : 'Launch flight'}
-            </button>
-          )}
-          {station === 'research' && (
-            <>
-              {index === 0 && (
+            <small>
+              {station === 'routes' ? 'NAVIGATION CHART' : station === 'sky' ? 'SKY RECEIVER' : 'RESEARCH STATION'}{' '}
+              · {index + 1} / {count}
+            </small>
+            {station === 'routes' && (
+              <div className="orbit-chart" aria-label="Select a flight">
+                {routes.map((c, i) => (
+                  <button
+                    key={c.number + ':' + c.target?.id}
+                    className={i === index ? 'selected' : ''}
+                    style={
+                      {
+                        '--tone': ['#d6d4c3', '#c0bca6', '#c36846', '#978976', '#b4ab93', '#aabec4'][i % 6],
+                      } as React.CSSProperties
+                    }
+                    onClick={() => choose(i)}
+                    aria-label={c.name}
+                  />
+                ))}
+              </div>
+            )}
+            <div className="tuner">
+              <button aria-label="Previous" onClick={() => choose((index + count - 1) % count)}>
+                ‹
+              </button>
+              <div>
+                <h2>
+                  {station === 'routes'
+                    ? route.name
+                    : station === 'research'
+                      ? item[0]
+                      : event?.name || special?.title}
+                </h2>
                 <p>
-                  {monthly
-                    ? bar.total + ' / ' + bar.goal + ' research stamps'
-                    : pilot?.id === 'stage'
-                      ? 'Shared totals are available on your Landnam account.'
-                      : network}{' '}
-                  {site?.name} {site?.stage}
+                  {station === 'routes'
+                    ? route.target?.name
+                    : station === 'research'
+                      ? item[1]
+                      : event
+                        ? grade === 'gold'
+                          ? 'Live observing window'
+                          : grade === 'silver'
+                            ? 'Archived window'
+                            : 'Opens ' + event.startUtc.slice(0, 10)
+                        : special?.needs}
                 </p>
-              )}
-              {index === 0 ? (
-                <>
-                  {site && <progress aria-label="Community site construction" value={site.fill} max={1} />}
-                  {ballots.map((ballot) => (
-                    <label key={ballot.key}>
-                      {ballot.title}{' '}
-                      <select
-                        aria-label={ballot.title}
-                        defaultValue={ballot.myVote || ''}
-                        onChange={async (e) => {
-                          const option = e.target.value
-                          if (!option) return
-                          try {
-                            const result = await castVote(ballot.key, option)
-                            setVoteStatus(result.kind === 'saved' ? 'Vote recorded' : 'Vote queued')
-                          } catch {
-                            setVoteStatus('Vote could not be saved')
-                          }
-                        }}
-                      >
-                        <option value="">Choose a project</option>
-                        {ballot.options.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ))}
-                  {voteStatus && <p role="status">{voteStatus}</p>}
-                  <button className="engage" onClick={() => desk(instruments[1])}>
-                    Observe with the telescope
+              </div>
+              <button aria-label="Next" onClick={() => choose((index + 1) % count)}>
+                ›
+              </button>
+            </div>
+            {station === 'routes' && (
+              <button className="engage" disabled={routeLocked} onClick={() => launch(route)}>
+                {routeLocked ? 'Complete ' + PROGRAM[PROGRAM.indexOf(route) - 1]?.name : 'Launch flight'}
+              </button>
+            )}
+            {station === 'research' && (
+              <>
+                {index === 0 && (
+                  <p>
+                    {monthly
+                      ? bar.total + ' / ' + bar.goal + ' research stamps'
+                      : pilot?.id === 'stage'
+                        ? 'Shared totals are available on your Landnam account.'
+                        : network}{' '}
+                    {site?.name} {site?.stage}
+                  </p>
+                )}
+                {index === 0 ? (
+                  <>
+                    {site && <progress aria-label="Community site construction" value={site.fill} max={1} />}
+                    {ballots.map((ballot) => (
+                      <label key={ballot.key}>
+                        {ballot.title}{' '}
+                        <select
+                          aria-label={ballot.title}
+                          defaultValue={ballot.myVote || ''}
+                          onChange={async (e) => {
+                            const option = e.target.value
+                            if (!option) return
+                            try {
+                              const result = await castVote(ballot.key, option)
+                              setVoteStatus(result.kind === 'saved' ? 'Vote recorded' : 'Vote queued')
+                            } catch {
+                              setVoteStatus('Vote could not be saved')
+                            }
+                          }}
+                        >
+                          <option value="">Choose a project</option>
+                          {ballot.options.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+                    {voteStatus && <p role="status">{voteStatus}</p>}
+                    <button className="engage" onClick={() => desk(instruments[1])}>
+                      Observe with the telescope
+                    </button>
+                  </>
+                ) : (
+                  <button className="engage" onClick={() => desk(item)}>
+                    Use instrument
                   </button>
+                )}
+                {index === 0 && connected && network.includes('offline') && (
+                  <button onClick={() => retry((n) => n + 1)}>Reconnect</button>
+                )}
+              </>
+            )}
+            {station === 'sky' &&
+              (event ? (
+                <>
+                  <button
+                    className="engage"
+                    disabled={!grade}
+                    onClick={() => {
+                      const c = shower ? eventFlight(shower) : debrisFlight(event)
+                      if (c) launch(c)
+                      else if (event.activities.includes('launch')) launch(PROGRAM[6])
+                      else desk(instruments[event.activities.includes('saturn-classification') ? 3 : 2])
+                    }}
+                  >
+                    {grade ? 'Begin observation' : 'Scheduled'}
+                  </button>
+                  {shower && grade && <button onClick={() => desk(instruments[4])}>Tune radio receiver</button>}
                 </>
               ) : (
-                <button className="engage" onClick={() => desk(item)}>
-                  Use instrument
-                </button>
-              )}
-              {index === 0 && connected && network.includes('offline') && (
-                <button onClick={() => retry((n) => n + 1)}>Reconnect</button>
-              )}
-            </>
-          )}
-          {station === 'sky' &&
-            (event ? (
-              <>
                 <button
                   className="engage"
-                  disabled={!grade}
-                  onClick={() => {
-                    const c = shower ? eventFlight(shower) : debrisFlight(event)
-                    if (c) launch(c)
-                    else if (event.activities.includes('launch')) launch(PROGRAM[6])
-                    else desk(instruments[event.activities.includes('saturn-classification') ? 3 : 2])
-                  }}
+                  disabled={!specialMission || done.has(500 + index - events.length)}
+                  onClick={() =>
+                    specialMission &&
+                    launch({
+                      number: 500 + index - events.length,
+                      type: 'client-contract',
+                      verb: 'mine',
+                      name: specialMission.title,
+                      teaches: 'Special mission',
+                      goal: specialMission.brief,
+                      mission: specialMission,
+                      target: TARGETS.find((t) => t.id === specialMission.targetId),
+                    })
+                  }
                 >
-                  {grade ? 'Begin observation' : 'Scheduled'}
+                  {specialMission ? 'Fly special mission' : special?.state}
                 </button>
-                {shower && grade && <button onClick={() => desk(instruments[4])}>Tune radio receiver</button>}
-              </>
-            ) : (
-              <button
-                className="engage"
-                disabled={!specialMission || done.has(500 + index - events.length)}
-                onClick={() =>
-                  specialMission &&
-                  launch({
-                    number: 500 + index - events.length,
-                    type: 'client-contract',
-                    verb: 'mine',
-                    name: specialMission.title,
-                    teaches: 'Special mission',
-                    goal: specialMission.brief,
-                    mission: specialMission,
-                    target: TARGETS.find((t) => t.id === specialMission.targetId),
-                  })
-                }
-              >
-                {specialMission ? 'Fly special mission' : special?.state}
+              ))}
+            {facility && (
+              <button className="facility-level" onClick={() => structure(facility)}>
+                {fresh.has(facility.def.id) ? 'Upgraded · ' : ''}
+                {facility.def.name} · Lv {facility.level} · {counterText(facility)}
               </button>
-            ))}
-          {facility && (
-            <button className="facility-level" onClick={() => structure(facility)}>
-              {fresh.has(facility.def.id) ? 'Upgraded · ' : ''}
-              {facility.def.name} · Lv {facility.level} · {counterText(facility)}
-            </button>
-          )}
-        </section>
-      )}
+            )}
+          </section>
+        )}
+      </World>
       {instrument && (
         <div className="op-desk" role="dialog" aria-label={instrument[0]}>
           <header>

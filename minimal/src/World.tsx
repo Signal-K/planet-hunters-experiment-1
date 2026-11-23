@@ -15,6 +15,13 @@ export interface Deposit {
   locked: boolean
 }
 type FieldProps = {
+  children?: React.ReactNode
+  navigation?: React.ReactNode
+  readout?: string
+  notice?: string | null
+  cargo?: React.ReactNode
+  onAbort?: () => void
+  onPlace?: () => void
   base: Base
   pilotId?: string
   target?: Target
@@ -245,7 +252,7 @@ export function World(props: FieldProps) {
       setLanding('driving')
       game.walkTo(spawn.x + 1, spawn.y)
     }
-    const menuOpen = () => !driving || !!document.querySelector('dialog[open],.field-instrument,.op-desk')
+    const menuOpen = () => !driving || !!document.querySelector('dialog[open],.op-desk')
     let drag: { x: number; y: number; moved: boolean; startX: number; startY: number } | null = null
     const down = (e: PointerEvent) => {
       if (menuOpen()) return
@@ -612,68 +619,190 @@ export function World(props: FieldProps) {
       game.dispose()
     }
   }, [props.target?.id, props.pilotId, props.phase, key])
+  const aircraft = props.target ? 'Rover operations' : 'Agency operations'
+  const underway = props.phase === 'launch' || props.phase === 'land' || props.phase === 'leaving'
+  const activity =
+    props.phase === 'launch'
+      ? 'Liftoff'
+      : props.phase === 'land'
+        ? 'Homecoming'
+        : props.phase === 'leaving'
+          ? 'Departing'
+          : editing
+            ? 'Site planning'
+            : props.target
+              ? landing === 'driving'
+                ? 'Surface operations'
+                : 'Landing sequence'
+              : aircraft
   return (
-    <div data-body={props.target?.id} className={'takeon-field' + (props.target ? '' : ' earth-field')}>
-      <canvas
-        ref={canvas}
-        tabIndex={0}
-        aria-label="TakeOn terrain. Tap to drive, use arrow keys to steer, and press Space to interact."
-      />
-      <canvas ref={overlay} aria-hidden="true" className="terrain-objects" />
-      <div className="field-tools">
-        <button title="Centre camera" aria-label="Centre camera" onClick={() => ops.current.centre()}>
-          ⌖
-        </button>
-        {props.pilotId && !props.target && !props.phase && (
-          <button onClick={() => setEditing(!editing)}>{editing ? 'Done' : 'Place'}</button>
-        )}
-        {editing && (
-          <>
-            <select aria-label="Object to place" value={tool} onChange={(e) => setTool(e.target.value)}>
-              {[...order, ...Object.keys(decor)].map((id) => (
-                <option key={id}>{id}</option>
-              ))}
-            </select>
-            <button onClick={() => ops.current.undo()}>Undo prop</button>
-          </>
-        )}
+    <section className="play-shell" aria-label="Landnam flight deck">
+      <div className="world-window">
+        <div data-body={props.target?.id} className={'takeon-field' + (props.target ? '' : ' earth-field')}>
+          <canvas
+            ref={canvas}
+            tabIndex={0}
+            aria-label="TakeOn terrain. Tap to drive, use arrow keys to steer, and press Space to interact."
+          />
+          <canvas ref={overlay} aria-hidden="true" className="terrain-objects" />
+        </div>
       </div>
-      {editing && <p className="field-message">Tap an open tile to place {tool}.</p>}
-      {props.target &&
-        props.phase !== 'leaving' &&
-        (landing === 'driving' ? (
-          <div className="field-job" role="status">
-            {props.done
-              ? props.departureGoal
-              : props.survey
-                ? surveyed === 3
-                  ? 'Transmitting survey…'
-                  : 'Tap a numbered beacon to scan · ' + surveyed + ' / 3'
-                : props.workLabel}
+      <section data-editing={editing} className="cockpit" aria-label="Flight controls">
+        <header className="deck-header">
+          <div className="deck-location">
+            <span className="deck-roundel" aria-hidden>
+              ◈
+            </span>
+            <strong>{props.target?.name || 'Earth station'}</strong>
+            <span className="deck-phase">{activity}</span>
           </div>
-        ) : (
-          <div className="touchdown-radio" aria-live="polite">
-            <small>LANDER · {props.target.name}</small>
-            <strong>{landing === 'descent' ? 'Final approach' : 'Touchdown confirmed'}</strong>
-            {landing === 'ready' && (
-              <>
-                <p>
-                  {props.survey
-                    ? 'Three survey beacons are in range. Send the rover to each one, then bring it back to the ship.'
-                    : props.workLabel + '. Bring the rover back to the ship when the job is complete.'}
+          <span className="deck-account">{props.readout}</span>
+        </header>
+        <div className="deck-body">
+          {editing ? (
+            <section className="deck-placement">
+              <small>GROUND CREW</small>
+              <h2>Place an object</h2>
+              <p>Choose an object, then select an open tile in the terrain.</p>
+              <div>
+                <select aria-label="Object to place" value={tool} onChange={(e) => setTool(e.target.value)}>
+                  {[...order, ...Object.keys(decor)].map((id) => (
+                    <option key={id}>{id}</option>
+                  ))}
+                </select>
+                <button onClick={() => ops.current.undo()}>Undo prop</button>
+              </div>
+            </section>
+          ) : (
+            props.children
+          )}
+          {props.target &&
+            !underway &&
+            (landing === 'driving' ? (
+              <section className="rover-job">
+                <small>ROVER TELEMETRY</small>
+                <h2>
+                  {props.done
+                    ? 'Ready for departure'
+                    : props.survey
+                      ? 'Survey the landing zone'
+                      : props.deposits
+                        ? 'Recover cargo'
+                        : props.siteLabel}
+                </h2>
+                <p className="field-job" role="status">
+                  {props.done
+                    ? props.departureGoal
+                    : props.survey
+                      ? surveyed === 3
+                        ? 'Transmitting survey…'
+                        : 'Tap a numbered beacon to scan · ' + surveyed + ' / 3'
+                      : props.workLabel}
                 </p>
-                <button className="story-go" onClick={() => deploy.current()}>
-                  Deploy rover ▸
-                </button>
-              </>
-            )}
-          </div>
-        ))}
-      {hint && (
-        <p className="field-message" role="status">
-          {hint}
-        </p>
-      )}
-    </div>
+                {props.survey && (
+                  <div className="beacon-strip" aria-label={surveyed + ' of 3 sites scanned'}>
+                    {[0, 1, 2].map((i) => (
+                      <i key={i} className={surveyed > i ? 'lit' : ''} />
+                    ))}
+                  </div>
+                )}
+                {props.cargo}
+                <div className="rover-controls">
+                  <div className="steering" role="group" aria-label="Steer rover">
+                    {(['East', 'South', 'West', 'North'] as const).map((dir, i) => (
+                      <button
+                        key={dir}
+                        data-dir={dir}
+                        aria-label={'Drive ' + dir.toLowerCase()}
+                        onClick={() => ops.current.move(i as 0 | 1 | 2 | 3)}
+                      >
+                        <i />
+                      </button>
+                    ))}
+                  </div>
+                  {(props.done || !props.deposits?.length) && (
+                    <button
+                      className="story-go"
+                      disabled={!!props.busy && !props.done}
+                      onClick={() => ops.current.activate()}
+                    >
+                      {props.done ? 'Board ship' : props.survey ? 'Drive to next beacon' : 'Drive to work site'}
+                    </button>
+                  )}
+                </div>
+              </section>
+            ) : (
+              <div className="touchdown-radio" aria-live="polite">
+                <small>LANDER · {props.target.name}</small>
+                <h2>{landing === 'descent' ? 'Final approach' : 'Touchdown confirmed'}</h2>
+                {landing === 'descent' ? (
+                  <p>Retrorockets firing. Stand by for rover release.</p>
+                ) : (
+                  <>
+                    <p>
+                      {props.survey
+                        ? 'Send the rover to each of the three survey beacons, then return to the ship.'
+                        : props.workLabel + '. Return to the ship when the job is complete.'}
+                    </p>
+                    <button className="story-go" onClick={() => deploy.current()}>
+                      Deploy rover ▸
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          {underway && (
+            <section className="rover-job">
+              <small>FLIGHT DIRECTOR</small>
+              <h2>{activity}</h2>
+              <p>{props.objective || 'On course for the next landing.'}</p>
+            </section>
+          )}
+          {(props.notice || hint) && (
+            <p className="deck-notice" role="status">
+              {props.notice || hint}
+            </p>
+          )}
+        </div>
+        <div className="deck-controls">
+          {props.navigation && (
+            <nav
+              aria-label="Station instruments"
+              onClickCapture={() => {
+                setEditing(false)
+                say('')
+              }}
+            >
+              {props.navigation}
+            </nav>
+          )}
+          {props.pilotId && !props.target && !props.phase && (
+            <button
+              aria-pressed={editing}
+              onClick={() => {
+                props.onPlace?.()
+                setEditing(!editing)
+                say('')
+              }}
+            >
+              {editing ? 'Finish placing' : 'Place'}
+            </button>
+          )}
+          <button
+            className="deck-camera"
+            aria-label="Centre camera"
+            title="Centre camera"
+            onClick={() => ops.current.centre()}
+          >
+            ⌖ <span>Centre</span>
+          </button>
+          {props.onAbort && (
+            <button className="deck-abort" onClick={props.onAbort}>
+              Abort flight
+            </button>
+          )}
+        </div>
+      </section>
+    </section>
   )
 }
