@@ -36,7 +36,7 @@ import {
 import { PROBE_CONTRACT_PREFIX, PROBE_RUN_PREFIX } from '@/lib/probes/probe-offers'
 import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardSite, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import ClientMark from '@/components/ui/ClientMark'
-import { CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
+import { CONTRACT_GROUPS, CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
@@ -411,10 +411,11 @@ export default function MissionBoard({
     [catalog.clients, player.clientMissions, cards],
   )
   const focusedStanding = roster.find(item => item.client.id === clientFocusId) ?? roster[0]
-  const [contractGroupFilter, setContractGroupFilter] = useState<ContractGroup | null>(null)
-  const groupCounts = useMemo(() => contractGroupCounts(cards.map(item => item.mission)), [cards])
-  const visibleCards = cards.filter(item => (!contractTargetId || item.targetIds.includes(contractTargetId))
-    && (!contractGroupFilter || contractGroup(item.mission) === contractGroupFilter))
+  const [requestedGroup, setContractGroupFilter] = useState<ContractGroup | null>(null)
+  const siteCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
+  const groupCounts = contractGroupCounts(siteCards.map(item => item.mission))
+  const contractGroupFilter = groupCounts.some(row => row.group === requestedGroup) ? requestedGroup : null
+  const visibleCards = contractGroupFilter ? siteCards.filter(item => contractGroup(item.mission) === contractGroupFilter) : siteCards
   const selectedCard = cards[Math.min(selectedIndex, Math.max(0, cards.length - 1))]
   const count = visibleCards.length
   const visibleSelectedIndex = selectedCard ? visibleCards.findIndex(item => item.mission.id === selectedCard.mission.id) : -1
@@ -426,12 +427,9 @@ export default function MissionBoard({
   // SSL-730: fixed pages of up to five offers. The strip used to re-centre on the selection, so a tapped tile jumped
   // to the middle and the others shuffled while the highlight seemed not to move. Tiles now hold their place; only
   // the highlight moves, and the page turns when the ‹ › counter steps past its edge.
-  const windowSize = Math.min(5, count)
-  const windowStart = paging ? Math.min(Math.floor(index / windowSize) * windowSize, count - windowSize) : 0
-  // A group can hold a single offer; its tile still shows, so the strip never goes blank under the group chips.
-  const offerWindow = tab === 'contracts' && count > 0
-    ? Array.from({ length: windowSize }, (_, offset) => ({ offer: visibleCards[windowStart + offset], offerIndex: windowStart + offset }))
-    : []
+  const windowSize = 5
+  const windowStart = Math.floor(index / windowSize) * windowSize
+  const offerWindow = visibleCards.slice(windowStart, windowStart + windowSize)
   const [view, setView] = useState<MapView>(() => {
     const site = requestedSite ? catalog.targets.find(target => target.id === requestedSite.targetId) : null
     return !site ? 'system' : site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer'
@@ -601,26 +599,30 @@ export default function MissionBoard({
         <article className={styles.contractWorkspace} aria-live="polite" data-testid="mission-board-section-client">
           <section className={styles.contractOffers} aria-label="Available contracts">
             <h2>Contracts</h2>
-            {groupCounts.length > 1 && (
-              <div className={styles.offerGroups} role="group" aria-label="Contract type" data-testid="mission-board-groups">
-                <button type="button" data-active={!contractGroupFilter || undefined} aria-pressed={!contractGroupFilter} data-testid="mission-board-group-all" onClick={() => pickContractGroup(null)}>All<b>{cards.length}</b></button>
-                {groupCounts.map(({ group, count: groupCount }) => (
-                  <button key={group} type="button" data-group={group} data-active={contractGroupFilter === group || undefined} aria-pressed={contractGroupFilter === group} data-testid={`mission-board-group-${group}`} onClick={() => pickContractGroup(group)}>
+            <div className={styles.offerGroups} role="group" aria-label="Contract type" data-testid="mission-board-groups">
+              <button type="button" data-active={!contractGroupFilter || undefined} aria-pressed={!contractGroupFilter} data-testid="mission-board-group-all" onClick={() => pickContractGroup(null)}>All<b>{siteCards.length}</b></button>
+              {CONTRACT_GROUPS.map(group => {
+                const groupCount = groupCounts.find(row => row.group === group)?.count ?? 0
+                return (
+                  <button key={group} type="button" disabled={!groupCount} data-group={group} data-active={contractGroupFilter === group || undefined} aria-pressed={contractGroupFilter === group} data-testid={`mission-board-group-${group}`} onClick={() => pickContractGroup(group)}>
                     <ContractGroupGlyph group={group} />{CONTRACT_GROUP_LABEL[group]}<b>{groupCount}</b>
                   </button>
-                ))}
-              </div>
-            )}
+                )
+              })}
+            </div>
             <div className={styles.offerStrip}>
-              {offerWindow.map(({ offer, offerIndex }) => {
+              {offerWindow.map((offer, slot) => {
                 const offerClient = offer.client
                 return <button key={offer.mission.id} type="button" data-selected={offer.mission.id === card.mission.id || undefined}
                   aria-label={`Select ${offer.mission.title}`} onClick={() => onSelectMission(offer.mission.id)}>
                   <ClientMark initial={offerClient?.initial ?? 'OP'} color={offerClient?.color ?? 'var(--ln-board-amber)'} uiRole={offerClient?.uiRole ?? 'starter'} clientId={offerClient?.id} size={34} />
-                  <span>{offerIndex + 1}</span>
+                  <span>{windowStart + slot + 1}</span>
                   <i className={styles.offerKind} data-group={contractGroup(offer.mission)} title={CONTRACT_GROUP_LABEL[contractGroup(offer.mission)]}><ContractGroupGlyph group={contractGroup(offer.mission)} /></i>
                 </button>
               })}
+              {Array.from({ length: windowSize - offerWindow.length }, (_, slot) => (
+                <button key={slot} type="button" disabled hidden aria-hidden="true" className={styles.emptyOffer} />
+              ))}
             </div>
           </section>
           <section className={styles.contractFocus}>
@@ -629,13 +631,12 @@ export default function MissionBoard({
             <h2>{card.mission.title}</h2>
             {card.mission.brief && <p data-testid="mission-brief">{card.mission.brief}</p>}
             {!card.unlocked && card.lockedDetail && <p>{card.lockedDetail}</p>}
-            {count > 1 ? (
               <span className={styles.offerPager} data-testid="mission-board-pager">
-                <button type="button" aria-label="Previous contract" data-testid="mission-board-prev" onClick={() => selectVisibleRelative(-1)}>‹</button>
+                <button type="button" disabled={count < 2} aria-label="Previous contract" data-testid="mission-board-prev" onClick={() => selectVisibleRelative(-1)}>‹</button>
                 <small>{index + 1} / {count}</small>
-                <button type="button" aria-label="Next contract" data-testid="mission-board-next" onClick={() => selectVisibleRelative(1)}>›</button>
+                <button type="button" disabled={count < 2} aria-label="Next contract" data-testid="mission-board-next" onClick={() => selectVisibleRelative(1)}>›</button>
               </span>
-            ) : <small>{index + 1} / {count}</small>}
+
           </section>
           <section className={styles.contractAction}>
             <h2>Requirements</h2>

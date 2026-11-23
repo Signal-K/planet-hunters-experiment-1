@@ -1028,3 +1028,6 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .rail button.tab:not([data-active='true']) .tabLabel { display: none; }
   .railHelp .balance i { display: none; }
 }
+
+.contractOffers .offerStrip .emptyOffer { display: block; visibility: hidden; }
+.offerGroups button:disabled, .offerPager button:disabled { opacity: .5; cursor: default; }
