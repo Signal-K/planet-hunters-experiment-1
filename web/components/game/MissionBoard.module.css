@@ -725,7 +725,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractFocus > p { max-width: 34ch; margin: 0; color: #f4efe4; font: 600 16px/1.35 var(--ln-font-body); }
 .contractFocus > small, .offerPager small { color: #b8c8c0; font: 700 14px/1 var(--ln-font-mono); }
 /* SSL-730: step through every offer from the counter; the strip's page follows the selection. */
-.offerPager { display: inline-flex; align-items: center; gap: 10px; }
+.offerPager { margin-top: auto; display: inline-flex; align-items: center; gap: 10px; }
 .offerPager button { width: 44px; height: 44px; display: grid; place-items: center; padding: 0 0 3px; border: 1.5px solid rgba(244, 239, 228, .58); border-radius: 999px; background: rgba(8, 16, 34, .4); color: #f4efe4; font: 800 24px/1 var(--ln-font-display); cursor: pointer; }
 .offerPager button:focus-visible { outline: 2px solid #58d0ea; outline-offset: 2px; }
 .contractAction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; overflow: hidden; text-align: center; }
@@ -737,7 +737,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .contractCargo em { color: #c9d0c2; font: 700 14px/1 var(--ln-font-body); font-style: normal; text-transform: uppercase; letter-spacing: .06em; }
 .contractPay { display: flex; align-items: center; gap: 10px; color: #f4efe4; font: 800 28px/1 var(--ln-font-display); }
 .contractPay i { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: #152033; background: #f4efe4; font: 800 18px/1 var(--ln-font-display); font-style: normal; }
-.contractTake { box-sizing: border-box; width: min(220px, 100%); max-width: 100%; min-height: 54px; padding: 0 12px; border: 0; border-radius: 4px; color: #152033; background: #f4efe4; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
+.contractTake { margin-top: auto; box-sizing: border-box; width: min(220px, 100%); max-width: 100%; min-height: 54px; padding: 0 12px; border: 0; border-radius: 4px; color: #152033; background: #f4efe4; font: 800 18px/1 var(--ln-font-display); letter-spacing: .08em; cursor: pointer; }
 .contractTake:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Contracts and the player's programme are one work control: two rows make
