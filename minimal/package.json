@@ -1,8 +1,5 @@
 {
   "name": "landnam-minimal",
   "private": true,
-  "description": "Landnam Minimal's own dependencies. React, Vite and Landnam's code come from ../web; only TakeOn's minimal-scene build is vendored here (KES-530).",
-  "dependencies": {
-    "@takeon/engine": "file:vendor/takeon/takeon-engine-kes530.tgz"
-  }
+  "description": "Landnam Minimal. React, Vite and Landnam's code come from ../web; Minimal has no dependencies of its own."
 }
