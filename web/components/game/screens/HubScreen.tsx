@@ -42,7 +42,7 @@ import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { SkyCraft, type SkyCraftItem } from '@/components/game/hub/SkyCraft'
 import { onlineTelescopes, pointedThisWeek, telescopesNeedingPointing, type InstrumentPointing } from '@/lib/research/paths'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, signalPromptKey, type HubPromptKey } from '@/lib/hub-prompts'
+import { HUB_PROMPT_POINT_TELESCOPE, HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, signalPromptKey, type HubPromptKey } from '@/lib/hub-prompts'
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
@@ -333,7 +333,7 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
   const pointedNames = alreadyPointed.map(id => TELESCOPE_NAMES[id])
   const stationQuiet = !onboardingActive && !coachVisible && !player.activeMission
   const stationCallout: BuildingCallout | undefined = !stationQuiet ? undefined
-    : needsPointing.length > 0 && onPointTelescope
+    : needsPointing.length > 0 && onPointTelescope && !isHubPromptDismissed(player, HUB_PROMPT_POINT_TELESCOPE)
     ? {
       title: `Point the ${TELESCOPE_NAMES[needsPointing[0]]}`,
       body: pointedNames.length
@@ -342,6 +342,7 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
       cta: 'Point',
       placement: 'viewport-clear',
       onCta: () => onPointTelescope(needsPointing[0]),
+      onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_POINT_TELESCOPE) : undefined,
     }
     : signals.some(signal => !isHubPromptDismissed(player, signalPromptKey(signal)))
     ? {

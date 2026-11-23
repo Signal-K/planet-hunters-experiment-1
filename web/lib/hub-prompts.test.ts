@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE } from '@/lib/game-state'
 import {
+  HUB_PROMPT_POINT_TELESCOPE,
   HUB_PROMPT_TRANSIT_TELESCOPE,
   dismissHubPrompt,
   isHubPromptDismissed,
@@ -22,6 +23,16 @@ describe('hub prompt dismissal', () => {
     expect(isHubPromptDismissed(merged.player, signalPromptKey({ kind: 'transit', id: 'candidate-2' }))).toBe(false)
     expect(isHubPromptDismissed(merged.player, signalPromptKey({ kind: 'deep-space', id: 'candidate-1' }))).toBe(false)
   })
+  it('preserves the pointing dismissal through reload and stale account sync', () => {
+    const online = player({ transitSatelliteLaunchedAt: 1 })
+    const dismissed = dismissHubPrompt(online, HUB_PROMPT_POINT_TELESCOPE)
+    const saved = normalizeState({ ...DEFAULT_STATE, player: dismissed })
+    const stale = { ...DEFAULT_STATE, player: online }
+    expect(isHubPromptDismissed(online, HUB_PROMPT_POINT_TELESCOPE)).toBe(false)
+    expect(isHubPromptDismissed(mergeRemoteState(saved, stale).player, HUB_PROMPT_POINT_TELESCOPE)).toBe(true)
+    expect(isHubPromptDismissed(mergeRemoteState(stale, saved).player, HUB_PROMPT_POINT_TELESCOPE)).toBe(true)
+  })
+
   it('keeps a dismissed telescope prompt hidden until the program launches', () => {
     const ready = player({ transitSatelliteLaunchedAt: null })
     const dismissed = dismissHubPrompt(ready, HUB_PROMPT_TRANSIT_TELESCOPE)
