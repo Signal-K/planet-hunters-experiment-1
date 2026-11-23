@@ -280,7 +280,7 @@ export function App() {
   }
 
   const leave = () => {
-    if (!run) return
+    if (!run || run.phase !== 'away' || !run.done) return
     const id = flightId.current
     setRun({ ...run, phase: 'leaving' })
     window.setTimeout(() => {

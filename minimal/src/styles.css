@@ -265,6 +265,7 @@ button.mn-chip:disabled {
   color: var(--cream);
 }
 .mn-toast {
+  pointer-events: none;
   position: absolute;
   left: 16px;
   right: 16px;

@@ -372,6 +372,7 @@ export function World(props: FieldProps) {
           ctx.fillStyle = color
           ctx.fillText(label, pt.x, y - 11)
         }
+        clickables.push({ x: pt.x, y: pt.y - lift / 2, r: Math.max(16, lift / 2), act, pos })
         clickables.push({
           x: pt.x,
           y: y - 10,
@@ -454,13 +455,26 @@ export function World(props: FieldProps) {
             )
             const pt = screen(pos),
               meta = MINERAL_META[d.mineral]
-            ctx.fillStyle = meta?.color || '#bcecff'
-            ctx.beginPath()
-            ctx.moveTo(pt.x, pt.y - 12 * zoom)
-            ctx.lineTo(pt.x + 7 * zoom, pt.y - 4 * zoom)
-            ctx.lineTo(pt.x, pt.y)
-            ctx.lineTo(pt.x - 7 * zoom, pt.y - 4 * zoom)
-            ctx.fill()
+            const oreArt = ['iron', 'nickel', 'gold', 'ice', 'cobalt', 'carbon', 'silicon'].includes(d.mineral)
+              ? d.mineral
+              : 'rare'
+            const fragment = d.mineral.endsWith('_debris')
+            const art = fragment
+              ? '/game/assets/events/orionids/debris/debris-0' + ((d.key % 4) + 1) + '.png'
+              : '/game/assets/ores/ore_' + oreArt + '.png'
+            drawImage(ctx, art, pt.x, pt.y, 18 * zoom, 16 * zoom)
+            if (fragment) {
+              const approach = Math.max(0, 1 - ((t + d.key * 0.67) % 4))
+              if (approach > 0)
+                drawImage(
+                  ctx,
+                  '/game/assets/events/orionids/fx/streak-01.png',
+                  pt.x - approach * 70 * zoom,
+                  pt.y - approach * 90 * zoom,
+                  19 * zoom,
+                  28 * zoom,
+                )
+            }
             flag(
               pos,
               meta?.sym || '✦',
@@ -477,8 +491,10 @@ export function World(props: FieldProps) {
         } else if (!p.busy) {
           const count = p.survey ? 3 : 1
           for (let i = 0; i < count; i++) {
-            if (seen.has(i)) continue
             const pos = at(fieldSites[i])
+            const pt = screen(pos)
+            drawImage(ctx, '/game/assets/terrain/far_mast.png', pt.x, pt.y, 9 * zoom, 17 * zoom)
+            if (seen.has(i)) continue
             flag(
               pos,
               p.survey ? '⌖ ' + (i + 1) : p.workLabel || 'Deploy',
@@ -492,7 +508,7 @@ export function World(props: FieldProps) {
                   if (seen.size === count) live.current.onWork?.()
                 }),
               '#9ff9e3',
-              12,
+              17 * zoom,
             )
           }
         }

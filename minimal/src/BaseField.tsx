@@ -64,7 +64,7 @@ export function BaseField({
     worlds.push(tessCandidateToExoplanetTarget(STAGE_TESS_FEED[0]))
   const discoveries = worlds.map(discoveryFlight).filter((c) => c.mission)
   const next = PROGRAM.find((c) => !done.has(c.number))
-  const candidate = next || discoveries[0]
+  const candidate = next || discoveries.find((c) => c.mission && !flown.has(c.mission.id))
   const date = new Date(now)
   const bar = communityBar(
     stampsInMonth(player?.researchStamps, date.getUTCFullYear(), date.getUTCMonth()),
@@ -122,6 +122,7 @@ export function BaseField({
     station === 'sky' ? events.length + specials.length : station === 'routes' ? routes.length : instruments.length
   const inspect = (s: StructureState) => {
     if (s.def.id === 'launchpad' && candidate) launch(candidate)
+    else if (s.def.id === 'launchpad') visit('research', 1, s)
     else if (s.def.id === 'control-station') visit('research', 0, s)
     else if (s.def.id === 'exchange')
       visit(
