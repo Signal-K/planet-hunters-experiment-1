@@ -60,7 +60,7 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
         <span className={styles.kicker}>This week&apos;s rocket part</span>
         <div className={styles.partDrawing}>{part && <img src={customizerPartById(part.id)?.img} alt={part.name} />}</div>
         <h2 data-testid="passport-part">{part?.name.split(' · ')[0] ?? 'Research archive'}</h2>
-        <p>One new issue each week. Earn it once, keep it, and fit it for free.</p>
+
         <div className={styles.bar} data-testid="research-community-bar">
           <div><strong>{confirmed?.reachedAt != null ? 'Weekly goal reached' : 'This week · everyone'}</strong><span>{total} / {goal}</span></div>
           <progress value={Math.min(total, goal)} max={goal} aria-label="Weekly community stamps" />
