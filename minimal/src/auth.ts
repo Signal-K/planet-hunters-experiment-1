@@ -19,9 +19,11 @@ function tokenExpired(token: string): boolean {
 }
 
 export function currentPilot(): Pilot | null {
-  // Local stage only (vite dev): ?stage=1 plays as a stand-in pilot, like Landnam's
-  // account-free stage fixture. Production builds drop this branch.
-  if (import.meta.env.DEV && new URLSearchParams(location.search).has('stage')) {
+  // Staging and local development can run flights with an isolated practice pilot.
+  if (
+    (import.meta.env.DEV || location.hostname === 'staging.playlandnam.space') &&
+    new URLSearchParams(location.search).has('stage')
+  ) {
     return { id: 'stage', name: 'Stage pilot' }
   }
   try {

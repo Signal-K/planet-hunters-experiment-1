@@ -1,38 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Scene } from '@landnam/lib/engine/Scene'
-import { GameObject } from '@landnam/lib/engine/GameObject'
-import { BaseWorldCanvas } from '@landnam/components/game/hub/BaseWorldCanvas'
-import { BASE_CAMERA_HOME } from '@landnam/lib/scene/base-camera'
-import { terrainLookForTarget } from '@landnam/lib/takeon/terrainColour'
-import { MINERAL_META } from '@landnam/lib/data/minerals'
+import * as engine from '@takeon/engine'
+import { buildLandnamBody } from '@landnam/lib/takeon/sandbox'
+import { takeonBodyForTarget } from '@landnam/lib/takeon/bodies'
 import type { Target } from '@landnam/lib/data/types'
+import { MINERAL_META } from '@landnam/lib/data/minerals'
 import type { Base, StructureState } from './structures'
 
-const kit = '/game/assets/base/kit/'
-const images = new Map<string, HTMLImageElement>()
-function texture(src: string) {
-  if (!images.has(src)) {
-    const img = new Image()
-    img.src = src
-    images.set(src, img)
-  }
-  return images.get(src)!
-}
-class Sprite extends GameObject {
-  constructor(
-    id: string,
-    public src: string,
-    x: number,
-    y: number,
-    public width: number,
-    public height: number,
-    public action?: () => void,
-    public drift = 0,
-    public tint?: string,
-  ) {
-    super(id, id, { position: { x, y } })
-  }
-}
 export interface Deposit {
   key: number
   mineral: string
@@ -41,413 +14,557 @@ export interface Deposit {
   cut: boolean
   locked: boolean
 }
-type Props = {
+type FieldProps = {
   base: Base
   pilotId?: string
-  phase?: 'launch' | 'land' | 'away' | 'leaving'
   target?: Target
+  phase?: string
   deposits?: Deposit[]
   onCut?: (key: number) => void
   inspect?: (s: StructureState) => void
+  onWork?: () => void
+  onDepart?: () => void
+  done?: boolean
+  busy?: boolean
+  survey?: boolean
+  workLabel?: string
+  event?: boolean
   payload?: string
   raising?: number
   crates?: boolean
   beam?: number
-  event?: boolean
+  objective?: string
 }
-const slots = [155, 345, 545, 740]
-const initial = ['hangar', 'control-station', 'launchpad', 'exchange']
-const furnishings = {
-  pine: { name: 'Pine', src: kit + 'prop-tree-a.png', w: 30, h: 52 },
-  rock: { name: 'Boulder', src: kit + 'prop-rock.png', w: 23, h: 14 },
-  pylon: { name: 'Power pylon', src: kit + 'pylon.png', w: 32, h: 50 },
-  tank: { name: 'Water tower', src: kit + 'water-tower.png', w: 42, h: 65 },
+type Tile = engine.Vec2
+type Landmark = { id: string; pos: Tile; kind: string }
+const kit = '/game/assets/base/kit/'
+const decor: Record<string, string> = {
+  pine: new URL('./art/props/pine.png', import.meta.url).href,
+  rock: kit + 'prop-rock.png',
+  pylon: kit + 'pylon.png',
+  tank: kit + 'water-tower.png',
 }
-type PropKind = keyof typeof furnishings
-type Placed = { id: string; kind: PropKind; x: number; y: number }
-function savedProps(id?: string): Placed[] {
+const order = ['hangar', 'launchpad', 'control-station', 'exchange']
+const sites = [
+  [-4, 1],
+  [0, -3],
+  [4, 1],
+  [0, 4],
+]
+const fieldSites = [
+  [2, -1],
+  [-3, 1],
+  [1, 3],
+  [3, 2],
+  [-1, -3],
+  [-2, 3],
+  [-4, 0],
+  [3, -3],
+  [2, 4],
+  [-3, -3],
+  [4, 0],
+  [-1, 4],
+]
+function load<T>(key: string, fallback: T): T {
   try {
-    const value = JSON.parse(localStorage.getItem('landnam-minimal:props:' + id) || '[]')
-    return Array.isArray(value)
-      ? value.filter((p) => p && p.kind in furnishings && Number.isFinite(p.x) && Number.isFinite(p.y))
-      : []
+    return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback
   } catch {
-    return []
+    return fallback
   }
 }
-const positionsKey = (id: string) => 'landnam-minimal:positions:' + id
-function placements(id?: string): string[] {
-  try {
-    const p = JSON.parse(localStorage.getItem(positionsKey(id || '')) || 'null')
-    if (Array.isArray(p) && p.length === 4 && initial.every((i) => p.includes(i))) return p
-  } catch {
-    /* Default authored layout. */
+const distance = (a: Tile, b: Tile) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+const textures = new Map<string, HTMLImageElement>()
+function drawImage(ctx: CanvasRenderingContext2D, src: string, x: number, y: number, w: number, h: number) {
+  let img = textures.get(src)
+  if (!img) {
+    img = new Image()
+    img.src = src
+    textures.set(src, img)
   }
-  return initial
+  if (img.complete && img.naturalWidth) ctx.drawImage(img, x - w / 2, y - h, w, h)
 }
-const propFiles = import.meta.glob('./art/props/*.png', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-}) as Record<string, string>
-export function World(props: Props) {
-  const ref = useRef<HTMLCanvasElement>(null),
-    latest = useRef(props)
-  latest.current = props
-  const [edit, setEdit] = useState(false),
-    [selected, select] = useState('launchpad')
-  const [layout, setLayout] = useState(() => placements(props.pilotId))
-  const [tool, setTool] = useState<PropKind | 'facilities'>('facilities')
-  const [propsList, setPropsList] = useState(() => savedProps(props.pilotId))
-  const commitProps = (next: Placed[]) => {
-    setPropsList(next)
-    try {
-      localStorage.setItem('landnam-minimal:props:' + props.pilotId, JSON.stringify(next))
-    } catch {
-      /* Session placement remains visible. */
-    }
-  }
-  const [scale, setScale] = useState(1)
-  const picking = useRef<(x: number, y: number) => void>(() => {})
-  function place(index: number) {
-    const current = layout.indexOf(selected)
-    if (current < 0 || index === current) return
-    const next = [...layout]
-    ;[next[current], next[index]] = [next[index], next[current]]
-    setLayout(next)
-    if (props.pilotId)
-      try {
-        localStorage.setItem(positionsKey(props.pilotId), JSON.stringify(next))
-      } catch {
-        /* session layout */
-      }
-  }
+export function World(props: FieldProps) {
+  const canvas = useRef<HTMLCanvasElement>(null),
+    overlay = useRef<HTMLCanvasElement>(null),
+    live = useRef(props)
+  live.current = props
+  const [editing, setEditing] = useState(false),
+    [tool, setTool] = useState('launchpad'),
+    [hint, say] = useState(''),
+    [surveyed, setSurveyed] = useState(0)
+  const editor = useRef({ editing, tool })
+  editor.current = { editing, tool }
+  const key = 'landnam-minimal:takeon-base:' + props.pilotId
+  const ops = useRef({ move: (_dir: 0 | 1 | 2 | 3) => {}, activate: () => {}, undo: () => {}, centre: () => {} })
   useEffect(() => {
-    const canvas = ref.current!,
-      ctx = canvas.getContext('2d')!
-    const root = new GameObject('world', 'Mission world')
-    const scene = new Scene(targetName())
-    function targetName() {
-      return props.target?.name || 'Earth station'
+    const el = canvas.current!,
+      ink = overlay.current!,
+      ctx = ink.getContext('2d')!
+    const target = props.target,
+      home = !target
+    const raw = home
+      ? engine.cloneBody(engine.getBody('terra')!)
+      : buildLandnamBody(engine, takeonBodyForTarget(target), target)
+    // Keep a contiguous landing zone for the rover. The relief beyond it is generated by TakeOn.
+    raw.size = 48
+    raw.dayLength = 0
+    if (home) {
+      raw.palette.tint = [0.66, 0.68, 0.79]
+      raw.terrain.iceCaps = 0
     }
-    scene.add(root)
-    const sprites: Sprite[] = []
-    function add(
-      id: string,
-      src: string,
-      x: number,
-      y: number,
-      w: number,
-      h: number,
-      action?: () => void,
-      drift = 0,
-      tint?: string,
-      parent: GameObject = root,
-    ) {
-      const s = new Sprite(id, src, x, y, w, h, action, drift, tint)
-      parent.addChild(s)
-      sprites.push(s)
-      return s
+    const game = engine.createRoverGame({
+      canvas: el,
+      body: raw,
+      spec: engine.defaultSpec(),
+      controls: false,
+      audio: false,
+      showRover: false,
+      startView: 'iso',
+    })
+    const sim = game.sim,
+      world = sim.world,
+      spawn = { ...sim.rover.pos }
+    const grade = world.height(spawn.x, spawn.y)
+    const surface = home
+      ? engine.Material.Grass
+      : world.surfaceMaterial(spawn.x, spawn.y) || engine.Material.Regolith
+    for (let i = -6; i <= 6; i++)
+      for (let j = -6; j <= 6; j++) {
+        const x = spawn.x + i,
+          y = spawn.y + j
+        if (!world.inBounds(x, y)) continue
+        const z = world.height(x, y)
+        for (let k = z; k > grade; k--) world.set(x, y, k, engine.Material.Air)
+        for (let k = Math.max(0, z); k <= grade; k++) world.set(x, y, k, surface)
+        if (home && (i === 0 || j === 1)) world.set(x, y, grade, engine.Material.Rock)
+      }
+    game.camera.follow = false
+    function centre() {
+      game.camera.follow = false
+      game.iso.focusTile(spawn)
     }
-    const target = props.target
-    let seed = 17
-    for (const c of target?.id || 'earth') seed = (seed * 31 + c.charCodeAt(0)) >>> 0
-    const random = () => (seed = (Math.imul(1664525, seed) + 1013904223) >>> 0) / 4294967296
-    const prop = (name: string) => propFiles['./art/props/' + name + '.png']
-    if (!target) {
-      const peaks = prop('mountain')
-      if (peaks) for (let i = 0; i < 7; i++) add('peak-' + i, peaks, i * 170 - 60, 197, 280, 100 + random() * 58)
-      const hill = prop('hill')
-      if (hill) for (let i = 0; i < 7; i++) add('hill-' + i, hill, i * 160, 209, 255, 55 + random() * 30)
-      for (let i = 0; i < 72; i++) {
-        const h = 10 + random() * 22
-        add(
-          'tree-' + i,
-          prop('pine') || kit + 'prop-tree-a.png',
-          random() * 1000 - 50,
-          199 + random() * 13,
-          h * 0.6,
-          h,
-        )
-      }
-      for (let i = 0; i < 20; i++) add('apron-' + i, kit + 'concrete.png', i * 51 - 25, 265, 52, 67)
-      for (let i = 0; i < 15; i++) add('road-' + i, kit + 'road-a.png', i * 73, 282, 74, 20)
-      for (let i = 0; i < 14; i++) add('verge-' + i, kit + 'grass.png', i * 80, 326, 82, 50)
-      for (const [i, id] of layout.entries()) {
-        const s = props.base.structures.find((x) => x.def.id === id)!
-        const pad = id === 'launchpad',
-          w = pad ? 175 : id === 'exchange' ? 165 : 125
-        const h = pad ? 153 : id === 'exchange' ? 73 : 86
-        const building = add(id, s.def.art[s.level - 1], slots[i], 227, w, h, () =>
-          edit ? select(id) : latest.current.inspect?.(s),
-        )
-        if (pad) {
-          const rocket = add(
-            'rocket',
-            kit + 'pad-rocket.png',
-            5,
-            -19,
-            41,
-            113,
-            building.action,
-            0,
-            undefined,
-            building,
-          )
-          if (props.phase) add('engine-plume', kit + 'flame-0.png', 0, 24, 20, 25, undefined, 0, undefined, rocket)
-        }
-      }
-      for (const entry of [...propsList].sort((a, b) => a.y - b.y)) {
-        const def = furnishings[entry.kind]
-        add(entry.id, entry.kind === 'pine' ? prop('pine') || def.src : def.src, entry.x, entry.y, def.w, def.h)
-      }
-      add('supply-truck', kit + 'truck-a.png', 80, 276, 37, 18)
-    } else {
-      const palette = terrainLookForTarget(target)
-      for (let i = 0; i < 60; i++)
-        add('star-' + i, 'star', random() * 900, random() * 130, 1 + random() * 2, 2, undefined, 0, '#d7eef1')
-      if (target.id === 'moon') add('earthrise', kit + 'earth-pixel.png', 692, 86, 54, 54)
-      for (let i = 0; i < 24; i++)
-        add('ridge-' + i, 'ridge', i * 46 - 20, 166, 90, 22 + random() * 33, undefined, 0, palette.ground[0])
-      for (let i = 0; i < 24; i++)
-        add('ground-' + i, 'tile', i * 43 - 20, 335, 44, 171, undefined, 0, palette.ground[1])
-      for (let i = 0; i < 66; i++)
-        add(
-          'rock-' + i,
-          kit + 'prop-rock.png',
-          random() * 940,
-          162 + random() * 160,
-          4 + random() * 14,
-          3 + random() * 7,
-        )
-      const ore = props.deposits || [],
-        cols = Math.max(3, ...ore.map((d) => d.col + 1))
-      for (const d of ore.filter((d) => !d.cut)) {
-        const meta = MINERAL_META[d.mineral]
-        add(
-          'ore-' + d.key,
-          props.event ? 'fragment' : 'ore',
-          70 + ((d.col + 0.5) * 760) / cols,
-          props.event ? 68 + 55 * d.row : 205 + d.row * 54,
-          46,
-          36,
-          () => latest.current.onCut?.(d.key),
-          0,
-          meta?.color || '#dde5eb',
-        )
-      }
-      add('ship', kit + 'space-rocket.png', 446, 133, 32, 76)
-      if (props.payload) add('payload', props.payload === 'satellite' ? 'satellite' : 'probe', 492, 100, 41, 16)
-      if (props.raising !== undefined)
-        add('outpost', kit + 'starter-cabin.png', 550, 169, 72, Math.max(1, props.raising * 57))
-      if (props.crates) add('cargo', 'tile', 550, 166, 40, 23, undefined, 0, '#d2a569')
+    function resize() {
+      const w = el.clientWidth,
+        h = el.clientHeight,
+        d = Math.min(1.5, devicePixelRatio || 1)
+      game.resize(w, h, d)
+      ink.width = w * d
+      ink.height = h * d
+      ctx.setTransform(d, 0, 0, d, 0, 0)
+      game.camera.minZoom = 0.7
+      game.camera.maxZoom = 4
+      game.camera.zoom = clamp(Math.min(w / 230, h / 215), 1, 2.6)
+      centre()
     }
-    scene.start()
-    let raf = 0,
-      last = performance.now(),
-      t = 0
-    let hits: { s: Sprite; x: number; y: number; w: number; h: number }[] = []
-    const resize = new ResizeObserver(() => setScale(Math.max(0.6, canvas.clientWidth / 520)))
-    resize.observe(canvas)
-    function draw(now: number) {
-      const dt = Math.min(0.05, (now - last) / 1000)
-      last = now
-      t += dt
-      scene.update(dt)
-      const w = canvas.clientWidth,
-        h = canvas.clientHeight,
-        dpr = Math.min(2, devicePixelRatio || 1)
-      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-        canvas.width = Math.round(w * dpr)
-        canvas.height = Math.round(h * dpr)
+    const at = (offset: number[]) => ({ x: spawn.x + offset[0], y: spawn.y + offset[1] })
+    const previous = load<string[]>('landnam-minimal:positions:' + props.pilotId, order)
+    const defaults = (previous.length === 4 && order.every((id) => previous.includes(id)) ? previous : order).map(
+      (id, i) => ({ id, kind: id, pos: at(sites[i]) }),
+    )
+    const legacy = load<{ id: string; kind: string; x: number; y: number }[]>(
+      'landnam-minimal:props:' + props.pilotId,
+      [],
+    )
+    const scenery: Landmark[] = []
+    for (let i = -12; i <= 12; i++)
+      for (let j = -12; j <= 12; j++) {
+        const rim = Math.max(Math.abs(i), Math.abs(j))
+        const n = ((Math.imul(i + 16, 73856093) ^ Math.imul(j + 16, 19349663)) >>> 0) % 101
+        if (rim < 5 || n > (rim > 6 ? 28 : 14) || !world.isSolid(spawn.x + i, spawn.y + j)) continue
+        scenery.push({ id: 'grove-' + i + '-' + j, kind: n % 7 === 0 ? 'rock' : 'pine', pos: at([i, j]) })
       }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.clearRect(0, 0, w, h)
-      const sx = w / 900,
-        sy = h / 310
-      const unit = Math.min(sx, sy * 1.18)
-      if (target) {
-        const look = terrainLookForTarget(target)
-        const grad = ctx.createLinearGradient(0, 0, 0, h)
-        grad.addColorStop(0, look.skyNight)
-        grad.addColorStop(1, look.sky)
-        ctx.fillStyle = grad
-        ctx.fillRect(0, 0, w, h)
-      }
-      hits = []
-      const origin = new Map<GameObject, { x: number; y: number }>()
-      for (const s of sprites) {
-        let { x, y } = s.transform.position
-        const p = s.parent && origin.get(s.parent)
-        x = p ? p.x + x * unit : x * sx
-        y = p ? p.y + y * unit : y * sy
-        if (s.id === 'supply-truck') x = (((t * 12 + 80) % 980) - 40) * sx
-        if (s.id === 'rocket' && props.phase === 'launch') y -= Math.pow(t / 1.5, 2) * h * 1.6
-        if (s.id === 'rocket' && props.phase === 'land') y -= Math.pow(Math.max(0, 1 - t / 1.5), 2) * h * 1.6
-        if (s.id === 'ship') y += props.phase === 'leaving' ? -Math.pow(t / 0.9, 2) * h : Math.sin(t * 2) * 3
-        if (s.id === 'payload') y -= Math.min(1, t / 1.6) * h * 0.34
-        if (s.src === 'fragment') {
-          x += Math.sin(t + s.transform.position.x) * 7
-          y += Math.sin(t * 1.2 + s.transform.position.x) * 5
-        }
-        origin.set(s, { x, y })
-        const tile = /^(apron|road|verge|ground|ridge)-/.test(s.id)
-        const sw = s.width * (tile ? sx : unit),
-          sh = s.height * (tile ? sy : unit),
-          left = x - sw / 2,
-          top = y - sh
-        ctx.fillStyle = s.tint || '#d2d9df'
-        if (s.src === 'star' || s.src === 'tile') ctx.fillRect(left, top, sw + 0.5, sh + 0.5)
-        else if (['ridge', 'ore', 'fragment'].includes(s.src)) {
-          ctx.beginPath()
-          ctx.moveTo(left, y)
-          ctx.lineTo(left + sw * 0.18, top + sh * 0.44)
-          ctx.lineTo(left + sw * 0.52, top)
-          ctx.lineTo(left + sw * 0.79, top + sh * 0.2)
-          ctx.lineTo(left + sw, y)
-          ctx.closePath()
-          ctx.fill()
-          if (s.src !== 'ridge') {
-            ctx.strokeStyle = '#f2f7da'
-            ctx.stroke()
-            ctx.fillStyle = '#ffffff7a'
-            ctx.fillRect(left + sw * 0.4, top + sh * 0.32, sw * 0.23, sh * 0.13)
-          }
-        } else if (s.src === 'satellite' || s.src === 'probe') {
-          ctx.fillStyle = '#8196ad'
-          ctx.fillRect(left, top + sh * 0.2, sw, sh * 0.6)
-          ctx.fillStyle = '#f1bd61'
-          ctx.fillRect(x - sw * 0.12, top, sw * 0.24, sh)
-        } else {
-          const img = texture(s.src)
-          if (img.complete && img.naturalWidth) ctx.drawImage(img, left, top, sw, sh)
-        }
-        if (s.action) hits.push({ s, x, y: y - sh / 2, w: Math.max(44, sw), h: Math.max(44, sh) })
-        if (edit && s.id === selected) {
-          ctx.strokeStyle = '#f9bf60'
-          ctx.setLineDash([4, 4])
-          ctx.strokeRect(left - 3, top - 3, sw + 6, sh + 6)
-          ctx.setLineDash([])
-        }
-        if (s.id === 'ore-' + props.beam) {
-          ctx.strokeStyle = '#90ecff'
-          ctx.lineWidth = 3
-          ctx.beginPath()
-          ctx.moveTo(w * 0.495, sy * 128)
-          ctx.lineTo(x, y - sh * 0.5)
-          ctx.stroke()
-        }
-      }
-      raf = requestAnimationFrame(draw)
+    for (const [i, j, k] of [
+      [-2, -3, 'pylon'],
+      [-3, -4, 'pylon'],
+      [5, 3, 'tank'],
+      [-3, 3, 'rock'],
+    ] as const)
+      scenery.push({ id: 'prop-' + i + '-' + j, kind: k, pos: at([i, j]) })
+    const landmarks = home
+      ? load<Landmark[]>(key, [
+          ...scenery,
+          ...defaults,
+          ...legacy
+            .filter((p) => decor[p.kind])
+            .map((p) => ({
+              id: p.id,
+              kind: p.kind,
+              pos: at([Math.round(p.x / 100) - 4, Math.round((p.y - 214) / 25) + 2]),
+            })),
+        ])
+      : []
+    const save = () => {
+      if (props.pilotId) localStorage.setItem(key, JSON.stringify(landmarks))
     }
-    picking.current = (x, y) => {
-      if (edit && tool !== 'facilities') {
-        const wx = Math.max(15, Math.min(885, (x / canvas.clientWidth) * 900))
-        const wy = Math.max(214, Math.min(302, (y / canvas.clientHeight) * 310))
-        commitProps([...propsList, { id: crypto.randomUUID(), kind: tool, x: wx, y: wy }])
+    const seen = new Set<number>()
+    setSurveyed(0)
+    say('')
+    let pending: { pos: Tile; action: () => void } | null = null
+    let pulse: { pos: Tile; start: number } | null = null
+    const clickables: { x: number; y: number; r: number; halfWidth?: number; act: () => void; pos: Tile }[] = []
+    function approach(pos: Tile, action: () => void) {
+      const current = sim.rover.pos
+      if (distance(current, pos) <= 1) {
+        game.cancelOrder()
+        pending = null
+        action()
         return
       }
-      const hit = hits
+      const adjacent = [
+        { x: pos.x + 1, y: pos.y },
+        { x: pos.x - 1, y: pos.y },
+        { x: pos.x, y: pos.y + 1 },
+        { x: pos.x, y: pos.y - 1 },
+      ].sort((a, b) => distance(a, current) - distance(b, current))
+      for (const t of adjacent) {
+        if (world.isSolid(t.x, t.y) && game.planPath([t])) {
+          pending = { pos, action }
+          say('Rover en route')
+          return
+        }
+      }
+      say('Route blocked · approach from another side')
+    }
+    const screen = (pos: Tile) => {
+      const v = game.iso.toView(pos.x, pos.y),
+        p = engine.project(v.x, v.y, game.iso.surfaceZ(Math.round(pos.x), Math.round(pos.y)))
+      return game.camera.toScreen(p.sx, p.sy)
+    }
+    const menuOpen = () => !!document.querySelector('dialog[open],.field-instrument,.op-desk')
+    let drag: { x: number; y: number; moved: boolean; startX: number; startY: number } | null = null
+    const down = (e: PointerEvent) => {
+      if (menuOpen()) return
+      el.focus({ preventScroll: true })
+      el.setPointerCapture(e.pointerId)
+      drag = { x: e.clientX, y: e.clientY, moved: false, startX: e.clientX, startY: e.clientY }
+    }
+    const move = (e: PointerEvent) => {
+      if (!drag) return
+      if (Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) > 5) drag.moved = true
+      if (drag.moved) game.camera.panBy(e.clientX - drag.x, e.clientY - drag.y)
+      drag.x = e.clientX
+      drag.y = e.clientY
+    }
+    const up = (e: PointerEvent) => {
+      if (!drag) return
+      const tap = !drag.moved
+      drag = null
+      if (!tap || menuOpen()) return
+      const b = el.getBoundingClientRect(),
+        x = e.clientX - b.left,
+        y = e.clientY - b.top,
+        tile = game.iso.pickTile(x, y)
+      if (editor.current.editing && home && tile) {
+        if (!world.isSolid(tile.x, tile.y) || landmarks.some((l) => distance(l.pos, tile) === 0)) {
+          say('Choose an open tile')
+          return
+        }
+        const kind = editor.current.tool
+        const existing = landmarks.find((l) => l.id === kind)
+        if (existing) existing.pos = tile
+        else landmarks.push({ id: crypto.randomUUID(), kind, pos: tile })
+        save()
+        say('Placed')
+        return
+      }
+      const hit = clickables
         .slice()
         .reverse()
-        .find((v) => Math.abs(v.x - x) < v.w / 2 && Math.abs(v.y - y) < v.h / 2)
-      hit?.s.action?.()
+        .find(
+          (c) =>
+            Math.hypot(c.x - x, c.y - y) < c.r ||
+            (c.halfWidth !== undefined && Math.abs(x - c.x) <= c.halfWidth && Math.abs(y - c.y) < 16),
+        )
+      if (hit) {
+        hit.act()
+        return
+      }
+      if (tile) {
+        pending = null
+        game.walkTo(tile.x, tile.y)
+        say('')
+      }
     }
-    raf = requestAnimationFrame(draw)
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const b = el.getBoundingClientRect()
+      game.camera.setZoom(game.camera.zoom * Math.exp(-e.deltaY * 0.001), e.clientX - b.left, e.clientY - b.top)
+    }
+    ops.current = {
+      centre,
+      move: (dir) => {
+        pending = null
+        game.move(dir)
+      },
+      activate: () => {
+        const h = clickables
+          .slice()
+          .sort((a, b) => distance(a.pos, sim.rover.pos) - distance(b.pos, sim.rover.pos))[0]
+        h?.act()
+      },
+      undo: () => {
+        const i = landmarks
+          .map((l) => !!decor[l.kind] && !l.id.startsWith('grove-') && !l.id.startsWith('prop-'))
+          .lastIndexOf(true)
+        if (i >= 0) {
+          landmarks.splice(i, 1)
+          save()
+        }
+      },
+    }
+    const keyboard = (e: KeyboardEvent) => {
+      if (menuOpen() || e.target instanceof HTMLSelectElement) return
+      const i = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].indexOf(e.key),
+        j = ['d', 's', 'a', 'w'].indexOf(e.key.toLowerCase())
+      if (i >= 0 || j >= 0) {
+        e.preventDefault()
+        ops.current.move((i >= 0 ? i : j) as 0 | 1 | 2 | 3)
+      }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target === el) {
+        e.preventDefault()
+        ops.current.activate()
+      }
+    }
+    el.addEventListener('pointerdown', down)
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerup', up)
+    const cancel = () => {
+      drag = null
+    }
+    el.addEventListener('pointercancel', cancel)
+    el.addEventListener('wheel', wheel, { passive: false })
+    window.addEventListener('keydown', keyboard)
+    const ro = new ResizeObserver(resize)
+    ro.observe(el)
+    resize()
+    game.start()
+    let frame = 0
+    const epoch = performance.now()
+    function render(now: number) {
+      const p = live.current,
+        zoom = game.camera.zoom,
+        t = (now - epoch) / 1000
+      ctx.clearRect(0, 0, el.clientWidth, el.clientHeight)
+      clickables.length = 0
+      if (pending && distance(pending.pos, sim.rover.pos) <= 1) {
+        const job = pending
+        pending = null
+        game.cancelOrder()
+        say('')
+        job.action()
+      }
+      function flag(pos: Tile, label: string, act: () => void, color = '#ffe2a5', lift = 0) {
+        const pt = screen(pos),
+          y = pt.y - lift,
+          r = Math.max(20, zoom * 7)
+        ctx.strokeStyle = color
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.ellipse(pt.x, pt.y, 13 * zoom, 6 * zoom, 0, 0, Math.PI * 2)
+        ctx.stroke()
+        if (label) {
+          ctx.font = '600 13px system-ui'
+          ctx.textAlign = 'center'
+          const width = ctx.measureText(label).width + 18
+          ctx.fillStyle = '#111e29e8'
+          ctx.fillRect(pt.x - width / 2, y - 26, width, 22)
+          ctx.fillStyle = color
+          ctx.fillText(label, pt.x, y - 11)
+        }
+        clickables.push({
+          x: pt.x,
+          y: y - 10,
+          r,
+          halfWidth: label ? ctx.measureText(label).width / 2 + 9 : undefined,
+          act,
+          pos,
+        })
+      }
+      const roverTile = sim.rover.renderPos
+      const drawVehicle = () => {
+        const pt = screen(roverTile)
+        engine.drawRover(ctx, pt.x, pt.y, zoom * 0.27, sim.rover, sim.daylight(), sim.rover.facing, t)
+      }
+      if (home) {
+        for (const l of [...landmarks, { id: 'rover', kind: 'rover', pos: roverTile }].sort(
+          (a, b) => a.pos.x + a.pos.y - b.pos.x - b.pos.y,
+        )) {
+          const pt = screen(l.pos),
+            s = p.base.structures.find((s) => s.def.id === l.kind)
+          if (l.kind === 'rover') {
+            drawVehicle()
+            continue
+          }
+          if (!s) {
+            const tree = l.kind === 'pine'
+            const size = tree ? 19 + ((l.pos.x * 3 + l.pos.y * 7) % 11) : l.kind === 'rock' ? 11 : 20
+            if (tree) {
+              ctx.fillStyle = '#152b284d'
+              ctx.beginPath()
+              ctx.ellipse(pt.x + 4 * zoom, pt.y, size * zoom * 0.47, 3 * zoom, -0.18, 0, Math.PI * 2)
+              ctx.fill()
+            }
+            if (pt.x > -100 && pt.x < el.clientWidth + 100 && pt.y > -40 && pt.y < el.clientHeight + 110)
+              drawImage(ctx, decor[l.kind], pt.x, pt.y, size * zoom, (tree ? size * 1.36 : size) * zoom)
+            continue
+          }
+          const pad = l.id === 'launchpad',
+            w = (pad ? 52 : 44) * zoom,
+            h = (pad ? 45 : 28) * zoom
+          drawImage(ctx, s.def.art[s.level - 1], pt.x, pt.y, w, h)
+          if (pad) {
+            const lift =
+              p.phase === 'launch'
+                ? t * t * el.clientHeight
+                : p.phase === 'land'
+                  ? Math.max(0, 1 - t / 1.5) ** 2 * el.clientHeight
+                  : 0
+            drawImage(ctx, kit + 'pad-rocket.png', pt.x + 2 * zoom, pt.y - 5 * zoom - lift, 13 * zoom, 37 * zoom)
+          }
+          const activate = () => p.inspect?.(s)
+          if (!p.phase) {
+            flag(l.pos, pad ? p.objective || 'Launch' : s.def.name, activate, pad ? '#ffbd65' : '#c0ebd4', h)
+            clickables.push({ x: pt.x, y: pt.y - h * 0.45, r: Math.max(22, w * 0.43), act: activate, pos: l.pos })
+          }
+        }
+      } else {
+        drawImage(
+          ctx,
+          kit + 'space-rocket.png',
+          screen(spawn).x,
+          screen(spawn).y - (p.phase === 'leaving' ? t * t * el.clientHeight : 0),
+          15 * zoom,
+          40 * zoom,
+        )
+        drawVehicle()
+        if (p.done) {
+          flag(
+            spawn,
+            'Return to ship',
+            () => approach(spawn, () => live.current.onDepart?.()),
+            '#ffbd65',
+            36 * zoom,
+          )
+        } else if (p.deposits?.length) {
+          const active = p.deposits.filter((d) => !d.cut)
+          active.forEach((d) => {
+            const pos = at(
+              fieldSites[(d.row * Math.max(3, ...p.deposits!.map((x) => x.col + 1)) + d.col) % fieldSites.length],
+            )
+            const pt = screen(pos),
+              meta = MINERAL_META[d.mineral]
+            ctx.fillStyle = meta?.color || '#bcecff'
+            ctx.beginPath()
+            ctx.moveTo(pt.x, pt.y - 12 * zoom)
+            ctx.lineTo(pt.x + 7 * zoom, pt.y - 4 * zoom)
+            ctx.lineTo(pt.x, pt.y)
+            ctx.lineTo(pt.x - 7 * zoom, pt.y - 4 * zoom)
+            ctx.fill()
+            flag(
+              pos,
+              meta?.sym || '✦',
+              () =>
+                approach(pos, () => {
+                  pulse = { pos, start: performance.now() }
+                  if (!d.locked && !p.event && world.height(pos.x, pos.y) >= grade) world.mineTop(pos.x, pos.y)
+                  live.current.onCut?.(d.key)
+                }),
+              meta?.color || '#ffe2a5',
+              8 * zoom,
+            )
+          })
+        } else if (!p.busy) {
+          const count = p.survey ? 3 : 1
+          for (let i = 0; i < count; i++) {
+            if (seen.has(i)) continue
+            const pos = at(fieldSites[i])
+            flag(
+              pos,
+              p.survey ? '⌖ ' + (i + 1) : p.workLabel || 'Deploy',
+              () =>
+                approach(pos, () => {
+                  if (seen.has(i)) return
+                  seen.add(i)
+                  pulse = { pos, start: performance.now() }
+                  game.scan()
+                  setSurveyed(seen.size)
+                  if (seen.size === count) live.current.onWork?.()
+                }),
+              '#9ff9e3',
+              12,
+            )
+          }
+        }
+        if (p.payload) {
+          const pos = at(fieldSites[p.survey ? 2 : 0])
+          drawImage(ctx, kit + 'pylon.png', screen(pos).x, screen(pos).y, 17 * zoom, 24 * zoom)
+        }
+        if (p.crates || p.raising !== undefined) {
+          const pos = screen(at(fieldSites[0]))
+          drawImage(ctx, kit + 'starter-cabin.png', pos.x, pos.y, 26 * zoom, 18 * zoom * (p.raising ?? 1))
+        }
+      }
+      if (pulse) {
+        const age = (now - pulse.start) / 900
+        if (age < 1) {
+          const pt = screen(pulse.pos)
+          ctx.strokeStyle = 'rgba(129,255,219,' + (1 - age) + ')'
+          ctx.lineWidth = 3
+          ctx.beginPath()
+          ctx.ellipse(pt.x, pt.y, Math.max(1, age * 80 * zoom), Math.max(1, age * 36 * zoom), 0, 0, Math.PI * 2)
+          ctx.stroke()
+        } else pulse = null
+      }
+      frame = requestAnimationFrame(render)
+    }
+    frame = requestAnimationFrame(render)
     return () => {
-      cancelAnimationFrame(raf)
-      resize.disconnect()
-      scene.destroy()
+      cancelAnimationFrame(frame)
+      ro.disconnect()
+      el.removeEventListener('pointerdown', down)
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerup', up)
+      el.removeEventListener('pointercancel', cancel)
+      el.removeEventListener('wheel', wheel)
+      window.removeEventListener('keydown', keyboard)
+      game.dispose()
     }
-  }, [
-    layout,
-    edit,
-    selected,
-    tool,
-    propsList,
-    props.base,
-    props.phase,
-    props.target,
-    props.deposits,
-    props.payload,
-    props.raising,
-    props.crates,
-    props.beam,
-    props.event,
-  ])
+  }, [props.target?.id, props.pilotId, props.phase, key])
   return (
-    <div className={'sim ' + (props.target ? 'sim-away' : '')}>
-      {!props.target && (
-        <BaseWorldCanvas px={scale} camera={BASE_CAMERA_HOME} time="morning" biome="mountains" groundLine={0.34} />
-      )}
+    <div className={'takeon-field' + (props.target ? '' : ' earth-field')}>
       <canvas
-        ref={ref}
-        aria-label={props.target ? 'Mission surface' : 'Spaceport. Select a facility to inspect it.'}
-        onClick={(e) => {
-          const b = e.currentTarget.getBoundingClientRect()
-          picking.current(e.clientX - b.left, e.clientY - b.top)
-        }}
+        ref={canvas}
+        tabIndex={0}
+        aria-label="TakeOn terrain. Tap to drive, use arrow keys to steer, and press Space to interact."
       />
-      {props.target && (
-        <div className="sr-controls">
-          {props.deposits
-            ?.filter((d) => !d.cut)
-            .map((d) => (
-              <button key={d.key} onClick={() => props.onCut?.(d.key)}>
-                {MINERAL_META[d.mineral]?.name || d.mineral}
-              </button>
-            ))}
-        </div>
+      <canvas ref={overlay} aria-hidden="true" className="terrain-objects" />
+      <div className="field-tools">
+        <button title="Centre camera" aria-label="Centre camera" onClick={() => ops.current.centre()}>
+          ⌖
+        </button>
+        {props.pilotId && !props.target && !props.phase && (
+          <button onClick={() => setEditing(!editing)}>{editing ? 'Done' : 'Place'}</button>
+        )}
+        {editing && (
+          <>
+            <select aria-label="Object to place" value={tool} onChange={(e) => setTool(e.target.value)}>
+              {[...order, ...Object.keys(decor)].map((id) => (
+                <option key={id}>{id}</option>
+              ))}
+            </select>
+            <button onClick={() => ops.current.undo()}>Undo prop</button>
+          </>
+        )}
+      </div>
+      {editing && <p className="field-message">Tap an open tile to place {tool}.</p>}
+      {props.target && !props.done && (
+        <div className="field-job">{props.survey ? 'Survey sites · ' + surveyed + ' / 3' : props.workLabel}</div>
       )}
-      {props.pilotId && !props.phase && !props.target && (
-        <div className="sim-tools">
-          {edit && (
-            <>
-              <select
-                aria-label="Placement tool"
-                value={tool}
-                onChange={(e) => setTool(e.target.value as typeof tool)}
-              >
-                <option value="facilities">Move facility</option>
-                {Object.entries(furnishings).map(([key, f]) => (
-                  <option key={key} value={key}>
-                    Place {f.name}
-                  </option>
-                ))}
-              </select>
-              {tool !== 'facilities' ? (
-                <>
-                  <span>Tap the ground</span>
-                  <button disabled={!propsList.length} onClick={() => commitProps(propsList.slice(0, -1))}>
-                    Undo last prop
-                  </button>
-                </>
-              ) : (
-                <>
-                  <select aria-label="Facility to place" value={selected} onChange={(e) => select(e.target.value)}>
-                    {props.base.structures.map((s) => (
-                      <option key={s.def.id} value={s.def.id}>
-                        {s.def.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Facility site"
-                    value={layout.indexOf(selected)}
-                    onChange={(e) => place(Number(e.target.value))}
-                  >
-                    {slots.map((_, i) => (
-                      <option key={i} value={i}>
-                        Site {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-            </>
-          )}
-          <button onClick={() => setEdit(!edit)}>{edit ? 'Finish placement' : 'Arrange base'}</button>
-        </div>
+      {hint && (
+        <p className="field-message" role="status">
+          {hint}
+        </p>
       )}
     </div>
   )
