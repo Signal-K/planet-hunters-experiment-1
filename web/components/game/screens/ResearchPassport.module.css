@@ -34,3 +34,9 @@
 .bar small { display: block; margin-top: 4px; color: #c9d0c2; font: 600 14px/1.25 var(--ln-font-body); }
 .rewardStatus { color: #f4efe4 !important; font-weight: 800 !important; }
 .seal { justify-self: end; padding: 6px 12px; border: 2px solid #f2c24c; border-radius: 8px; color: #f2c24c; font: 800 12px/1.1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+
+.week { max-width: none; }
+.rewardPage { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.partDrawing { min-height: 44px; justify-content: start; background: transparent; }
+.partDrawing img { width: 44px; height: 44px; }
+.seal { display: none; }

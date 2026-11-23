@@ -1,5 +1,6 @@
 'use client'
 
+import ResearchReadout from './ResearchReadout'
 import BoardFrame from '@/components/layout/frame/BoardFrame'
 
 import ResearchPassport from './ResearchPassport'
@@ -326,22 +327,24 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
                   <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
+                <ResearchReadout
+                  title={{ mission: 'Next action', week: 'Your progress', rewards: 'Your rewards', votes: 'Community decisions' }[readout]}
+                  description={{ mission: path ? step.title : 'Choose a weekly path to begin.', week: 'Your contributions during the selected week.', rewards: 'Earned parts, fragments and shared milestones.', votes: 'Vote on priorities and review community findings.' }[readout]}
+                  completed={finished}
+                  total={steps.length}
+                  action={path ? step.title : `Start ${PATH_NAME[selectedPath]}`}
+                  onAction={() => path ? onGo(step.kind) : setConfirmingPath(true)}
+                >
                 {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} calendarOnly /> : readout === 'mission' && path === null ? <>
-                  <h2>{PATH_NAME[selectedPath]}</h2>
                   <p className={styles.readoutCopy}>{PATH_BLURB[selectedPath]}</p>
-                  <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>Start {PATH_NAME[selectedPath]}</button>
                 </> : readout === 'mission' ? <>
                   <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
-                  <h2 data-testid="community-research-title">{step.title}</h2>
                   <p className={styles.readoutCopy}>{step.brief}</p>
                   <details><summary>Why this helps</summary><p className={styles.why} data-testid="community-research-why">{step.why}</p></details>
-                  <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.title}</button>
                 </> : readout === 'votes' ? <>
-                  <h2>Community votes</h2>
                   <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
                 </> : <>
-                  <h2>Your rewards</h2>
                   <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} rewardOnly />
                   <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
                     <div className={styles.rewardCard} data-earned={doneById('scan', 'contract', 'launch')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
@@ -355,6 +358,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
                   <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
                 </>}
+                </ResearchReadout>
               </section>
               {confirmingPath && (
                 <ActionConfirmBar

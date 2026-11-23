@@ -169,3 +169,17 @@
 }
 
 .workspace .right { scrollbar-gutter: stable both-edges; }
+
+.workspace .right { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.right .readoutTabs { position: relative; top: auto; margin: 12px auto; width: calc(100% - 24px); max-width: none; }
+.right > :not(.readoutTabs) { max-width: none; margin: 0; }
+.right .rewardShelf { display: flex; flex-direction: column; gap: 0; }
+.right .rewardCard { display: flex; flex-direction: row; justify-content: space-between; gap: 8px; min-height: 56px; padding: 8px; border: 0; border-bottom: 1px solid #58758b; border-radius: 0; background: transparent; box-shadow: none; }
+.right .rewardCard small { font-size: 18px; }
+.right .rewardIcon { width: 32px; height: 32px; }
+@media (orientation: portrait) and (max-width: 700px) {
+ .workspace .right { min-height: 580px; height: 75dvh; flex: none; }
+}
+.workspace .right { grid-template-columns: minmax(0, 1fr); }
+.right .rewardShelf, .right .ledger, .right .history, .right .record { width: 100%; max-width: none; }
+.right .ledger { border-radius: 8px; }
