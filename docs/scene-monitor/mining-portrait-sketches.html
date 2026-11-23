@@ -1,0 +1,454 @@
+<title>Portrait Mining Sketches</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of reasoning, then three playable phone frames side by side (stacked on a phone). Single dark look, matched to Landnam's night sky and the Scene Monitor. */
+:root {
+  --void: #05080f;
+  --panel: #0d1422;
+  --line: #22304b;
+  --ink: #e6ecf7;
+  --ink-dim: #93a0ba;
+  --signal: #5cc8ff;
+  --ore: #e8c46a;
+  --pick: #9ff0b0;
+  --font-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--void); color: var(--ink); }
+body {
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0.04em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 5vw, 38px); text-transform: uppercase; }
+h2 { font-size: 20px; text-transform: uppercase; color: var(--signal); letter-spacing: 0.12em; }
+h3 { font-size: 18px; text-transform: uppercase; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--ink-dim); font-size: 17px; }
+.why { display: grid; gap: 10px; }
+.why ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+.why b { color: var(--ink); font-weight: 500; }
+.num { font-family: var(--font-mono); color: var(--ore); font-size: 15px; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
+.concept { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.concept header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pickTag { font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--void); background: var(--pick); padding: 2px 8px; border-radius: 4px; }
+.phone {
+  position: relative; width: min(100%, 300px); aspect-ratio: 390 / 844; max-width: 100%;
+  border: 2px solid var(--line); border-radius: 22px; overflow: hidden; background: #000;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.phone canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.how { font-family: var(--font-mono); font-size: 14px; color: var(--signal); }
+.concept p { font-size: 15px; }
+.concept .tradeoff { color: var(--ink-dim); }
+.restart { justify-self: start; min-height: 44px; padding: 0 16px; background: transparent; color: var(--signal); border: 1px solid var(--signal); border-radius: 8px; font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; font-size: 13px; cursor: pointer; }
+.restart:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.rec { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+.rec ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+</style>
+
+<main>
+  <header style="display:grid;gap:10px">
+    <h1>Portrait mining sketches</h1>
+    <p class="lede">Three ways to rebuild laser mining so it is made for an upright phone, not squeezed into one. Each frame below is playable: drag inside it to steer, press its round button to fire. Rough sketches, not final art.</p>
+  </header>
+
+  <section class="why">
+    <h2>Why today's scene fails upright</h2>
+    <ul>
+      <li><b>It is a sideways scroller.</b> Ore arrives from the right, so the screen's narrow side is the look-ahead. At 390px you see about <span class="num">2</span> deposits and a new one roughly every <span class="num">5 s</span>.</li>
+      <li><b>The tall side is spent on sky.</b> The ship sits at the top and the ground near the bottom, so the beam crosses about <span class="num">430px</span> of empty space. That is why shots have to be led and why the aim line has to predict where the seam will be.</li>
+      <li><b>The controls take a quarter of the height</b> and need two thumbs, with a four-way d-pad where only left and right matter.</li>
+      <li><b>Labels crowd the action</b> ("Leonid Debris" floats over the ship).</li>
+    </ul>
+  </section>
+
+  <section class="concepts" aria-label="Concepts">
+    <article class="concept">
+      <header><h3>A · Top-down pass</h3><span class="pickTag">Recommended</span></header>
+      <div class="phone" id="phoneA"><canvas aria-label="Playable sketch: top-down pass"></canvas></div>
+      <span class="how">Drag to steer · FIRE hits the reticle</span>
+      <p>Look straight down. The ground flows down the screen under the ship, so the tall side becomes look-ahead: you see ore about 4 s before it reaches you. The beam hits a reticle just ahead of the ship, instantly, so there is nothing to lead. One thumb steers anywhere on the screen; the other fires.</p>
+      <p class="tradeoff">Keeps everything the current run has: flying, weaving, the one-minute goal, the CATCH button for showers (fragments fall in from the top). Level 2 ore shows as dim seams the starting laser cannot cut.</p>
+      <button class="restart" type="button" data-reset="A">Restart A</button>
+    </article>
+
+    <article class="concept">
+      <header><h3>B · Cutaway</h3></header>
+      <div class="phone" id="phoneB"><canvas aria-label="Playable sketch: cutaway"></canvas></div>
+      <span class="how">Drag to slide · hold CUT to burn down</span>
+      <p>The screen is a slice through the ground: surface near the top, rock below. The ship slides along the surface and holding the button burns a shaft straight down until it reaches ore or the laser's reach. The phone's height becomes depth, which is exactly what laser levels are about: the dashed line is how deep your laser reaches.</p>
+      <p class="tradeoff">Strong fit for laser upgrades and the "nothing is entered" rule. Slower and more deliberate, so it needs the heat limit to keep the minute busy. Least like today's scene.</p>
+      <button class="restart" type="button" data-reset="B">Restart B</button>
+    </article>
+
+    <article class="concept">
+      <header><h3>C · Spinning rock</h3></header>
+      <div class="phone" id="phoneC"><canvas aria-label="Playable sketch: spinning rock"></canvas></div>
+      <span class="how">One button · fire when a seam is under the beam</span>
+      <p>The ship holds over a small body that turns beneath it. Seams on the rim pass under the beam; fire as one lines up. The spin speeds up and reverses so it is not one rhythm. Fits any screen, works one-handed.</p>
+      <p class="tradeoff">Simplest to build and play, and a nice fit for asteroids. Loses steering, so the "weaving" rule becomes timing only, and it reads less like a planet's surface.</p>
+      <button class="restart" type="button" data-reset="C">Restart C</button>
+    </article>
+  </section>
+
+  <section class="rec">
+    <h2>What I'd do</h2>
+    <ol>
+      <li>Build A in the stage fixture as a new <span class="num">mining</span> layout, portrait first, reusing the controller's ore, mineral and charge rules. Landscape gets the same top-down view with the ship lower-centre.</li>
+      <li>Replace the d-pad with drag-to-steer in mining. That changes the shared mining and rover control rule (2026-10-30), so it needs your yes.</li>
+      <li>Keep B in mind for laser level 2 in cycle 9; its depth line could appear as a deeper seam band in A.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MINERALS = [
+    { sym: 'Pt', name: 'Platinum', col: '#d9dde6' },
+    { sym: 'Fe', name: 'Iron', col: '#c46a4e' },
+    { sym: 'Si', name: 'Silicon', col: '#8fb4d8' },
+    { sym: 'Ni', name: 'Nickel', col: '#b9c79a' },
+  ];
+  const L2 = { sym: 'Au', name: 'Gold', col: '#e8c46a' };
+  const W = 390, H = 844; // design space, matches the phone viewport
+  const GOAL = 5;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pickMineral = () => Math.random() < 0.45 ? MINERALS[0] : MINERALS[1 + Math.floor(Math.random() * 3)];
+
+  function roundBtn(ctx, x, y, r, label, ready, ring) {
+    ctx.save();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#22304b';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#5cc8ff';
+    ctx.beginPath(); ctx.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ring); ctx.stroke();
+    ctx.fillStyle = ready ? '#5cc8ff' : 'rgba(13,20,34,.85)';
+    ctx.beginPath(); ctx.arc(x, y, r - 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = ready ? '#05080f' : '#e6ecf7';
+    ctx.font = '700 22px "Chakra Petch", system-ui';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+    ctx.restore();
+  }
+  function menuChip(ctx) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(13,20,34,.85)'; ctx.strokeStyle = '#22304b'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(14, 14, 96, 44, 22); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e6ecf7'; ctx.font = '600 16px "Chakra Petch", system-ui';
+    ctx.textBaseline = 'middle'; ctx.fillText('‹  MENU', 30, 37);
+    ctx.restore();
+  }
+  function progress(ctx, got, x, y, w) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(13,20,34,.85)'; ctx.strokeStyle = '#22304b'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(x, y, w, 44, 22); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e6ecf7'; ctx.font = '600 16px "Chakra Petch", system-ui';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(got >= GOAL ? 'PLATINUM 5/5 · DONE' : `PLATINUM ${got}/${GOAL}`, x + w / 2, y + 23);
+    ctx.restore();
+  }
+  function ship(ctx, x, y, angle) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+    ctx.fillStyle = '#e6ecf7';
+    ctx.beginPath(); ctx.moveTo(0, -26); ctx.lineTo(16, 16); ctx.lineTo(0, 9); ctx.lineTo(-16, 16); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2f6fd6'; ctx.fillRect(-3, -10, 6, 12);
+    ctx.fillStyle = '#5cc8ff'; ctx.beginPath(); ctx.ellipse(0, 20, 5, 7 + Math.random() * 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  function oreBlob(ctx, x, y, r, col, dim) {
+    ctx.save();
+    ctx.globalAlpha = dim ? 0.4 : 1;
+    ctx.fillStyle = '#0a0d16';
+    ctx.beginPath(); ctx.arc(x, y, r + 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.setLineDash(dim ? [5, 5] : []); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = col;
+    for (let i = 0; i < 5; i++) {
+      const a = i * 1.26 + r, d = r * 0.45;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, r * 0.36, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function label(ctx, x, y, text) {
+    ctx.save();
+    ctx.font = '600 15px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 4; ctx.strokeStyle = '#05080f'; ctx.strokeText(text, x, y);
+    ctx.fillStyle = '#fff'; ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+  function toast(ctx, t) {
+    if (!t || t.life <= 0) return;
+    ctx.save(); ctx.globalAlpha = Math.min(1, t.life * 2);
+    label(ctx, t.x, t.y - (1 - t.life) * 30, t.text); ctx.restore();
+  }
+  function goalBanner(ctx, s) {
+    if (s.time > 2.4) return;
+    ctx.save(); ctx.globalAlpha = Math.min(1, (2.4 - s.time) * 1.5);
+    ctx.fillStyle = 'rgba(13,20,34,.9)'; ctx.strokeStyle = '#5cc8ff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(40, H * 0.36, W - 80, 70, 10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e6ecf7'; ctx.font = '700 20px "Chakra Petch", system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('MINE 5 PLATINUM', W / 2, H * 0.36 + 35);
+    ctx.restore();
+  }
+
+  // ---------- A: top-down pass ----------
+  function makeA() {
+    const s = { time: 0, x: W / 2, tx: W / 2, scroll: 0, ores: [], rocks: [], got: 0, cd: 0, flash: 0, beam: 0, toast: null, angle: 0 };
+    const SHIP_Y = H * 0.66, REACH = 150, SPEED = 150;
+    for (let i = 0; i < 40; i++) s.rocks.push({ x: rnd(0, W), y: rnd(-H, H), r: rnd(2, 7) });
+    let nextY = -40;
+    function spawnTo(top) {
+      while (nextY > top) {
+        const lvl2 = Math.random() < 0.15;
+        s.ores.push({ x: rnd(50, W - 50), y: nextY, r: rnd(22, 30), m: lvl2 ? L2 : pickMineral(), lvl2, dead: false });
+        nextY -= rnd(120, 190);
+      }
+    }
+    for (let i = 0; i < 3; i++) s.ores.push({ x: [W * 0.3, W * 0.7, W * 0.45][i], y: SHIP_Y - REACH - 160 - i * 170, r: 28, m: MINERALS[0], lvl2: false, dead: false });
+    nextY = SHIP_Y - REACH - 160 - 3 * 170 - 140;
+    const reticle = () => ({ x: s.x, y: SHIP_Y - REACH });
+    const target = () => {
+      const r = reticle();
+      return s.ores.find(o => !o.dead && !o.lvl2 && Math.hypot(o.x - r.x, o.y - r.y) < o.r + 8);
+    };
+    return {
+      s, fireBtn: { x: W - 66, y: H - 78, r: 46 },
+      update(dt) {
+        s.time += dt;
+        const dy = SPEED * dt;
+        s.ores.forEach(o => { o.y += dy; }); s.rocks.forEach(r => { r.y += dy; if (r.y > H + 10) { r.y -= H + 20; r.x = rnd(0, W); } });
+        nextY += dy;
+        s.ores = s.ores.filter(o => o.y < H + 60);
+        spawnTo(-60);
+        const prev = s.x;
+        s.x += (s.tx - s.x) * Math.min(1, dt * 10);
+        s.angle = Math.max(-0.35, Math.min(0.35, (s.x - prev) * 0.04));
+        s.cd = Math.max(0, s.cd - dt); s.flash = Math.max(0, s.flash - dt); s.beam = Math.max(0, s.beam - dt);
+        if (s.toast) s.toast.life -= dt;
+      },
+      steer(x) { s.tx = Math.max(30, Math.min(W - 30, x)); },
+      fire() {
+        if (s.cd > 0) return; s.cd = 0.4; s.beam = 0.12;
+        const o = target();
+        if (o) {
+          o.dead = true; s.flash = 0.15;
+          if (o.m === MINERALS[0]) s.got++;
+          s.toast = { x: o.x, y: o.y - 40, text: `+1 ${o.m.sym}`, life: 1 };
+        }
+      },
+      draw(ctx) {
+        ctx.fillStyle = '#4a4540'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#3d3934';
+        s.rocks.forEach(r => { ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.fill(); });
+        s.ores.forEach(o => {
+          if (o.dead) { ctx.fillStyle = '#2a2622'; ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 0.8, 0, Math.PI * 2); ctx.fill(); return; }
+          oreBlob(ctx, o.x, o.y, o.r, o.m.col, o.lvl2);
+          label(ctx, o.x, o.y + o.r + 18, o.lvl2 ? `${o.m.sym} · LEVEL 2` : o.m.sym);
+        });
+        const r = reticle(), t = target();
+        ctx.save();
+        ctx.strokeStyle = t ? '#5cc8ff' : 'rgba(230,236,247,.55)'; ctx.lineWidth = 2;
+        ctx.setLineDash(t ? [] : [6, 6]);
+        ctx.beginPath(); ctx.moveTo(s.x, SHIP_Y - 30); ctx.lineTo(r.x, r.y + 16); ctx.stroke();
+        ctx.setLineDash([]); ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(r.x, r.y, 14, 0, Math.PI * 2); ctx.stroke();
+        if (s.beam > 0) {
+          ctx.strokeStyle = '#9becff'; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.moveTo(s.x, SHIP_Y - 26); ctx.lineTo(r.x, r.y); ctx.stroke();
+        }
+        ctx.restore();
+        ship(ctx, s.x, SHIP_Y, s.angle);
+        if (s.flash > 0) { ctx.fillStyle = `rgba(155,236,255,${s.flash})`; ctx.fillRect(0, 0, W, H); }
+        toast(ctx, s.toast);
+        menuChip(ctx);
+        progress(ctx, s.got, 20, H - 100, 220);
+        roundBtn(ctx, this.fireBtn.x, this.fireBtn.y, this.fireBtn.r, 'FIRE', !!t && s.cd === 0, 1 - s.cd / 0.4);
+        goalBanner(ctx, s);
+      },
+    };
+  }
+
+  // ---------- B: cutaway ----------
+  function makeB() {
+    const SURF = H * 0.25, REACH = H * 0.62, SHIP_Y = SURF - 46;
+    const s = { time: 0, x: W / 2, tx: W / 2, ores: [], shafts: [], cutting: false, depth: 0, heat: 0, got: 0, toast: null, angle: 0 };
+    function addOre(first) {
+      const deep = !first && Math.random() < 0.25;
+      let x, y, tries = 0;
+      do { // keep seams apart so labels and blobs never pile up
+        x = rnd(40, W - 40);
+        y = deep ? rnd(REACH + 40, H - 150) : rnd(SURF + 60, REACH - 40);
+      } while (tries++ < 40 && s.ores.some(o => !o.dead && Math.hypot(o.x - x, o.y - y) < 90));
+      s.ores.push({ x, y, r: rnd(20, 26), m: deep ? L2 : (first ? MINERALS[0] : pickMineral()), lvl2: deep, dead: false });
+    }
+    for (let i = 0; i < 3; i++) addOre(true);
+    for (let i = 0; i < 6; i++) addOre(false);
+    let col = null;
+    return {
+      s, fireBtn: { x: W - 66, y: H - 78, r: 46 }, hold: true,
+      update(dt) {
+        s.time += dt;
+        const prev = s.x;
+        if (!s.cutting) s.x += (s.tx - s.x) * Math.min(1, dt * 8);
+        s.angle = Math.max(-0.3, Math.min(0.3, (s.x - prev) * 0.04));
+        if (s.cutting && s.heat < 1) {
+          if (!col) { col = { x: s.x, top: SURF, bottom: SURF }; s.shafts.push(col); }
+          col.bottom = Math.min(REACH, col.bottom + 260 * dt);
+          s.heat = Math.min(1, s.heat + dt * 0.55);
+          const hit = s.ores.find(o => !o.dead && Math.abs(o.x - col.x) < o.r && col.bottom >= o.y - o.r);
+          if (hit && !hit.lvl2) {
+            hit.dead = true; if (hit.m === MINERALS[0]) s.got++;
+            s.toast = { x: hit.x, y: hit.y - 36, text: `+1 ${hit.m.sym}`, life: 1 };
+            col.bottom = hit.y; s.cutting = false; col = null; setTimeout(() => addOre(false), 600);
+          }
+        } else {
+          s.heat = Math.max(0, s.heat - dt * (s.cutting ? 0 : 0.35));
+          if (!s.cutting) col = null;
+        }
+        if (s.toast) s.toast.life -= dt;
+        if (s.shafts.length > 14) s.shafts.shift();
+      },
+      steer(x) { s.tx = Math.max(30, Math.min(W - 30, x)); },
+      press() { s.cutting = true; }, release() { s.cutting = false; col = null; },
+      draw(ctx) {
+        const g = ctx.createLinearGradient(0, 0, 0, SURF); g.addColorStop(0, '#05080f'); g.addColorStop(1, '#141c2c');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, SURF);
+        const bands = ['#5a5148', '#4d453d', '#3f3832', '#332d29', '#28231f'];
+        bands.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, SURF + i * (H - SURF) / bands.length, W, (H - SURF) / bands.length + 1); });
+        ctx.fillStyle = '#7a6f62'; ctx.fillRect(0, SURF - 3, W, 6);
+        s.shafts.forEach(c => { ctx.fillStyle = '#120f0d'; ctx.fillRect(c.x - 7, c.top, 14, c.bottom - c.top); });
+        s.ores.forEach(o => { if (o.dead) return; oreBlob(ctx, o.x, o.y, o.r, o.m.col, o.lvl2); label(ctx, o.x, o.y + o.r + 18, o.lvl2 ? `${o.m.sym} · LEVEL 2` : o.m.sym); });
+        ctx.save(); ctx.strokeStyle = '#5cc8ff'; ctx.setLineDash([8, 8]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, REACH); ctx.lineTo(W, REACH); ctx.stroke(); ctx.restore();
+        label(ctx, 92, REACH - 14, 'LASER REACH');
+        if (s.cutting && s.heat < 1) {
+          const c = s.shafts[s.shafts.length - 1];
+          if (c) { ctx.strokeStyle = '#9becff'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(s.x, SHIP_Y + 20); ctx.lineTo(s.x, c.bottom); ctx.stroke(); }
+        } else {
+          ctx.save(); ctx.strokeStyle = 'rgba(230,236,247,.45)'; ctx.setLineDash([5, 6]); ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(s.x, SHIP_Y + 24); ctx.lineTo(s.x, REACH); ctx.stroke(); ctx.restore();
+        }
+        ship(ctx, s.x, SHIP_Y, Math.PI + s.angle);
+        toast(ctx, s.toast);
+        menuChip(ctx);
+        ctx.fillStyle = 'rgba(13,20,34,.85)'; ctx.beginPath(); ctx.roundRect(W - 170, 22, 150, 28, 14); ctx.fill();
+        ctx.fillStyle = s.heat > 0.8 ? '#ff6b81' : '#e8c46a'; ctx.beginPath(); ctx.roundRect(W - 166, 26, 142 * s.heat, 20, 10); ctx.fill();
+        label(ctx, W - 95, 64, s.heat >= 1 ? 'COOLING' : 'HEAT');
+        progress(ctx, s.got, 20, H - 100, 220);
+        roundBtn(ctx, this.fireBtn.x, this.fireBtn.y, this.fireBtn.r, 'CUT', s.cutting && s.heat < 1, 1 - s.heat);
+        goalBanner(ctx, s);
+      },
+    };
+  }
+
+  // ---------- C: spinning rock ----------
+  function makeC() {
+    const CX = W / 2, CY = H * 0.55, R = 150, SHIP_Y = CY - R - 120;
+    const s = { time: 0, rot: 0, spin: 0.9, seams: [], got: 0, cd: 0, beam: 0, flash: 0, toast: null };
+    const addSeam = (a, first) => s.seams.push({ a, m: first ? MINERALS[0] : (Math.random() < 0.18 ? L2 : pickMineral()), dead: false, inner: false });
+    for (let i = 0; i < 8; i++) addSeam(i * Math.PI / 4 + 0.3, i % 2 === 0);
+    s.seams.forEach(z => { z.lvl2 = z.m === L2; });
+    const under = () => s.seams.find(z => !z.dead && !z.lvl2 && Math.abs(Math.atan2(Math.sin(z.a + s.rot + Math.PI / 2), Math.cos(z.a + s.rot + Math.PI / 2))) < 0.16);
+    return {
+      s, fireBtn: { x: W / 2, y: H - 90, r: 50 }, noSteer: true,
+      update(dt) {
+        s.time += dt;
+        const phase = Math.floor(s.time / 6) % 4;
+        const want = [0.9, 1.4, -1.1, 1.8][phase];
+        s.spin += (want - s.spin) * Math.min(1, dt * 1.5);
+        s.rot += s.spin * dt;
+        s.cd = Math.max(0, s.cd - dt); s.beam = Math.max(0, s.beam - dt); s.flash = Math.max(0, s.flash - dt);
+        if (s.toast) s.toast.life -= dt;
+      },
+      fire() {
+        if (s.cd > 0) return; s.cd = 0.4; s.beam = 0.12;
+        const z = under();
+        if (z) {
+          z.dead = true; s.flash = 0.15; if (z.m === MINERALS[0]) s.got++;
+          s.toast = { x: CX, y: CY - R - 40, text: `+1 ${z.m.sym}`, life: 1 };
+          setTimeout(() => { z.dead = false; z.m = Math.random() < 0.5 ? MINERALS[0] : pickMineral(); z.lvl2 = false; }, 2500);
+        }
+      },
+      draw(ctx) {
+        ctx.fillStyle = '#05080f'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#ffffff22'; for (let i = 0; i < 50; i++) ctx.fillRect((i * 97) % W, (i * 211) % H, 2, 2);
+        ctx.save(); ctx.translate(CX, CY); ctx.rotate(s.rot);
+        ctx.fillStyle = '#4a4540'; ctx.beginPath();
+        for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * 2, rr = R + Math.sin(i * 2.7) * 8; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+        ctx.fill();
+        ctx.fillStyle = '#3a3530'; ctx.beginPath(); ctx.arc(0, 0, R * 0.55, 0, Math.PI * 2); ctx.fill();
+        s.seams.forEach(z => {
+          const x = Math.cos(z.a) * (R - 24), y = Math.sin(z.a) * (R - 24);
+          if (z.dead) { ctx.fillStyle = '#2a2622'; ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill(); return; }
+          oreBlob(ctx, x, y, 18, z.m.col, z.lvl2);
+        });
+        ctx.restore();
+        s.seams.forEach(z => { if (z.dead) return; const a = z.a + s.rot; label(ctx, CX + Math.cos(a) * (R + 26), CY + Math.sin(a) * (R + 26), z.lvl2 ? 'Au L2' : z.m.sym); });
+        const u = under();
+        ctx.save();
+        ctx.strokeStyle = u ? '#5cc8ff' : 'rgba(230,236,247,.5)'; ctx.lineWidth = 2; ctx.setLineDash(u ? [] : [6, 6]);
+        ctx.beginPath(); ctx.moveTo(CX, SHIP_Y + 26); ctx.lineTo(CX, CY - R + 8); ctx.stroke();
+        if (s.beam > 0) { ctx.setLineDash([]); ctx.strokeStyle = '#9becff'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(CX, SHIP_Y + 26); ctx.lineTo(CX, CY - R + 20); ctx.stroke(); }
+        ctx.restore();
+        ship(ctx, CX, SHIP_Y, Math.PI);
+        if (s.flash > 0) { ctx.fillStyle = `rgba(155,236,255,${s.flash})`; ctx.fillRect(0, 0, W, H); }
+        toast(ctx, s.toast);
+        menuChip(ctx);
+        progress(ctx, s.got, W / 2 - 110, H - 190, 220);
+        roundBtn(ctx, this.fireBtn.x, this.fireBtn.y, this.fireBtn.r, 'FIRE', !!u && s.cd === 0, 1 - s.cd / 0.4);
+        goalBanner(ctx, s);
+      },
+    };
+  }
+
+  const makers = { A: makeA, B: makeB, C: makeC };
+  const games = {};
+  function mount(key) {
+    const phone = document.getElementById('phone' + key);
+    const canvas = phone.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    games[key] = makers[key]();
+    const size = () => {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      canvas.width = Math.round(phone.clientWidth * dpr); canvas.height = Math.round(phone.clientHeight * dpr);
+    };
+    size(); new ResizeObserver(size).observe(phone);
+    const toDesign = e => { const b = canvas.getBoundingClientRect(); return { x: (e.clientX - b.left) / b.width * W, y: (e.clientY - b.top) / b.height * H }; };
+    const active = new Map();
+    canvas.addEventListener('pointerdown', e => {
+      canvas.setPointerCapture(e.pointerId);
+      const g = games[key], p = toDesign(e), f = g.fireBtn;
+      if (Math.hypot(p.x - f.x, p.y - f.y) < f.r + 14) { active.set(e.pointerId, 'fire'); g.hold ? g.press() : g.fire(); }
+      else if (!g.noSteer) { active.set(e.pointerId, 'steer'); g.steer(p.x); }
+      else { active.set(e.pointerId, 'fire'); g.fire(); }
+    });
+    canvas.addEventListener('pointermove', e => { if (active.get(e.pointerId) === 'steer') games[key].steer(toDesign(e).x); });
+    const up = e => { if (active.get(e.pointerId) === 'fire' && games[key].hold) games[key].release(); active.delete(e.pointerId); };
+    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+    let last = performance.now(), visible = true;
+    new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(phone);
+    const frame = now => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (visible) {
+        const g = games[key];
+        g.update(reduce ? dt * 0.6 : dt); // reduced motion plays slower, never frozen: these are games
+        ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
+        g.draw(ctx);
+      }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+  ['A', 'B', 'C'].forEach(mount);
+  document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { games[b.dataset.reset] = makers[b.dataset.reset](); }));
+})();
+</script>
