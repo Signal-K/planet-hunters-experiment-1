@@ -1,14 +1,17 @@
+import MissionTestFlow from './MissionTestFlow'
 import { DEV_GROUPS } from '@/lib/devPresets'
 
 export default function DevLauncher() {
   return (
     <main style={{ minHeight: '100dvh', background: '#060d18', padding: 24, fontFamily: 'var(--ln-font-mono)' }}>
       <h1 style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, letterSpacing: '0.08em', color: '#e8f0fe', marginBottom: 4 }}>
-        LAUNCH MISSION AND UI STATES
+        Mission test flights
       </h1>
       <p style={{ fontSize: 12, color: '#6b7fa3', marginBottom: 28 }}>
-        Local and staged only. Pick a state to reload the game with a dedicated preset.
+        Choose a play context, then a mission and location to inspect its checkpoints.
       </p>
+      <MissionTestFlow />
+      <details><summary style={{color:"white", padding:16}}>All scene presets</summary>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 560 }}>
         {DEV_GROUPS.map(group => {
           const primary = group.shots.find(s => s.key.endsWith('-hub')) ?? group.shots[0]
@@ -69,6 +72,7 @@ export default function DevLauncher() {
           )
         })}
       </div>
+      </details>
     </main>
   )
 }

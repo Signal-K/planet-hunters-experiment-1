@@ -115,6 +115,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
       { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
       { key: 'transport-delivery', label: 'Delivery', hint: 'Cargo transfer at Vesta with mixed cargo (ordered + leftover minerals)', stage: 'tutorial' },
+      { key: 'transport-delivery-timed', label: 'Timed delivery', hint: 'Regular two-leg delivery at Vesta with automated unloading', stage: 'free-ops' },
       { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
@@ -193,6 +194,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-launch', label: 'Survey probe: launch', hint: 'SSL-773: control station built, Free Ops. The Program tab offers survey probes to the two nearest bodies without one', stage: 'free-ops' },
       { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
+      { key: 'ui-probe-mars', label: 'Mars probe readings', hint: 'Survey deposits on Mars', stage: 'free-ops' },
+      { key: 'ui-probe-europa', label: 'Europa probe readings', hint: 'Survey deposits on Europa', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
       { key: 'ui-second-ground-telescope', label: 'Control Station: second ground telescope', hint: 'SSL-802: one ground telescope standing on the West annex and ₣6M in hand: Add a telescope buys the second one (₣2M) into the Unplaced tray', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
@@ -304,13 +307,13 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
 }
 
 /** SSL-773: a probe at Eros for 26 hours (13 sectors mapped, 9 downloaded before, so 4 are new) and one just arrived at Vesta. */
-function probeFixture(): NonNullable<Player['probes']> {
-  const eros = TARGETS.find(target => target.id === 'eros')!
+function probeFixture(targetId = 'eros'): NonNullable<Player['probes']> {
+  const body = TARGETS.find(target => target.id === targetId)!
   const launchedAt = Date.now() - 26 * 3_600_000
-  const readings = Object.fromEntries(sectorIds().slice(0, 9).map(id => [id, { at: launchedAt + 20 * 3_600_000, marked: [], deposits: sectorDeposits(eros, id) }]))
+  const readings = Object.fromEntries(sectorIds().slice(0, 9).map(id => [id, { at: launchedAt + 20 * 3_600_000, marked: [], deposits: sectorDeposits(body, id) }]))
   return {
-    eros: { launchedAt, readings },
-    vesta: { launchedAt: Date.now() - 600_000, readings: {} },
+    [targetId]: { launchedAt, readings },
+    ...(targetId === 'eros' ? { vesta: { launchedAt: Date.now() - 600_000, readings: {} } } : {}),
   }
 }
 
@@ -579,6 +582,11 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
+
+    case 'transport-delivery-timed': {
+      const delivery = fixture('transport-delivery')!
+      return { ...delivery, tutorial: false, player: { ...POST_ONBOARDING_PLAYER, activeMission: delivery.player!.activeMission, deliveryUnloadStartedAt: Date.now() } }
+    }
 
     case 'transport-delivery':
       return {
@@ -883,10 +891,12 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-probe-watch':
       return { screen: 'probe-watch', player: { ...POST_ONBOARDING_PLAYER }, tutorial: false, targetId: null, missionId: null, popup: null }
 
+    case 'ui-probe-mars':
+    case 'ui-probe-europa':
     case 'ui-probe-scan':
       return {
         screen: 'probe-scan',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 }, probes: probeFixture() },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 }, probes: probeFixture(name === 'ui-probe-scan' ? 'eros' : name.slice(9)) },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

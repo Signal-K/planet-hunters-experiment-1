@@ -135,6 +135,7 @@ export default function LandingScene({ target, progress, mode }: Props) {
         <TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
+          target={target}
           startView="iso"
           readOnly
           className={styles.field}

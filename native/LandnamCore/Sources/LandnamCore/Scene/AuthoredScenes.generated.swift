@@ -704,13 +704,10 @@ enum AuthoredSceneDeclarations {
         "surface": "canvas",
         "web": [
           "web/components/game/screens/DeliveryScreen.tsx",
-          "web/components/game/screens/DeliveryCanvas.tsx"
+          "web/components/takeon/TakeOnMount.tsx"
         ],
         "native": [
           "native/App/Screens/CoreLoop.swift"
-        ],
-        "engine": [
-          "web/public/game/scenes/delivery.scene.json"
         ]
       },
       "objects": [
@@ -916,8 +913,7 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/HangarScreen.tsx",
-          "web/components/game/screens/HangarBay.tsx"
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": [
           "native/App/Screens/HangarScreen.swift"
@@ -2397,47 +2393,19 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/RocketWorkshopScreen.tsx"
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": []
       },
       "objects": [
         {
-          "id": "rocket-stack",
-          "kind": "vehicle",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Five independently tappable sections redraw from the fitted part tier and construction; hull, trim and decal persist. iOS follows in cycle 13 per Liam's SSL-850 comment."
-        },
-        {
-          "id": "parts-tray",
-          "kind": "panel",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Shows mission-unlocked catalog parts and permanently earned weekly research parts. Weekly milestones 2, 4 and 5 grant the silo T2, engine T2 and laser T3. Earned parts refit for free."
-        },
-        {
-          "id": "livery",
-          "kind": "panel",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Free hull and trim colours from shared tokens, plus none, star, orbit or stripes decal."
-        },
-        {
           "id": "mission-readout",
           "kind": "panel",
           "layout": "host",
           "mechanics": [
-            "rocket-assembly",
             "mission-planning"
           ],
-          "note": "Live capacity, range and laser charges with named mission limits, including the farther delivery leg. Launch remains on the existing launchpad and keeps its validation."
+          "note": "Review the assigned hull, capacity, range and next unlock."
         }
       ]
     },

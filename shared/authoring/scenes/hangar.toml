@@ -5,13 +5,13 @@ format = 1
 id = "hangar"
 type = "build"
 name = "Hangar"
-summary = "Owned ships and the ship customiser interior view."
+summary = "Agency rocket review on web and the vehicle bay on iOS."
 tickets = ["SSL-427", "SSL-472", "SSL-611"]
 qa = ["customiser", "hangar-assembly", "hangar-surveyor"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/HangarScreen.tsx", "web/components/game/screens/HangarBay.tsx"]
+web = ["web/components/game/GameScreenRouter.tsx"]
 native = ["native/App/Screens/HangarScreen.swift"]
 
 [preview]

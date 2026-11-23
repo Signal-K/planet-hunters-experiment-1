@@ -1,0 +1,18 @@
+.flow { display:flex; flex-wrap:wrap; align-items:flex-start; gap:24px; color:#e8f0fe; margin-bottom:24px }
+.orbit { position:relative; width:250px; height:225px; flex:none; display:grid; place-items:center }
+.orbit::before { content:''; position:absolute; width:155px; height:155px; border:1px solid #6696ad; border-radius:50% }
+.flow button,.detail a { min-height:44px; padding:8px 12px; border:1px solid #6696ad; border-radius:24px; background:#142c40; color:#e8f0fe; font:inherit; font-size:14px; cursor:pointer }
+.flow button[aria-pressed=true] { background:#a0dfec; color:#10263a }
+.orbit button { position:absolute; z-index:1 }
+.orbit button:first-child { top:14px }
+.orbit button:nth-child(2) { left:0; bottom:37px }
+.orbit button:nth-child(3) { right:0; bottom:37px }
+.detail { flex:1 1 320px; max-width:670px }
+.detail fieldset { border:0; padding:4px 0 14px; margin:0 }
+.detail button { margin:3px }
+.detail h2,.detail legend { font-size:16px }
+.detail ol { display:flex; flex-wrap:wrap; gap:6px; padding:0; list-style:none; counter-reset:step }
+.detail li { counter-increment:step }
+.detail a { display:inline-flex; align-items:center; gap:8px }
+.detail a::before { content:counter(step); color:#a0dfec }
+.detail p { font-size:14px }

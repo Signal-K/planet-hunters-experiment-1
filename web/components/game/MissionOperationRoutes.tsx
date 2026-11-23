@@ -412,11 +412,12 @@ export default function MissionOperationRoutes({
       )
     }
 
-    case 'delivery':
-      if (!game.mission || !game.deliveryTargetId) return <MissionRunUnavailable game={game} />
+    case 'delivery': {
+      const berth = game.catalog.targets.find(body => body.id === game.deliveryTargetId)
+      if (!game.mission || !berth) return <MissionRunUnavailable game={game} />
       return (
         <DeliveryScreen
-          target={transitTarget}
+          target={berth}
           mission={game.mission}
           cargo={game.lastCargo ?? {}}
           minerals={game.catalog.minerals}
@@ -428,6 +429,8 @@ export default function MissionOperationRoutes({
           rocketImageSrc={rocketDisplay.img}
         />
       )
+
+    }
 
     case 'debrief':
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />

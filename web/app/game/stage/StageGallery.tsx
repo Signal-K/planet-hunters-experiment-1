@@ -27,6 +27,7 @@ export default function StageGallery() {
 
   return (
     <main style={{ padding: 16, background: '#eef4fa', color: INK, minHeight: '100vh', font: '16px system-ui' }}>
+      <a href="/game/launcher">Mission test flights</a>
       <h1 style={{ fontSize: 20, margin: '0 0 8px' }}>Stage gallery: every scene, live</h1>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
         {(Object.keys(SIZES) as Size[]).map(s => (

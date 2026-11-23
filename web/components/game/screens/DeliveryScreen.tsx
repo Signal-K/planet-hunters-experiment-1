@@ -8,7 +8,6 @@ import { deliveryUnloadProgress } from '@/lib/systems/DeliverySystem'
 import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 import { formatCurrency, formatCountdown } from '@/lib/format'
 import { SceneActions, SceneCard, SceneGhost, SceneMeter, SceneMeterHead, SceneNote, ScenePill, ScenePrimary, SceneRow, SceneRows, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
-import DeliveryCanvas from './DeliveryCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
 import { captureGameEvent } from '@/lib/posthog'
@@ -168,6 +167,7 @@ export default function DeliveryScreen({
             ref={takeonRef}
             missionId={`tutorial-delivery-${mission.id}`}
             bodyId={takeonBodyForTarget(target)}
+            target={target}
             rover={rover}
             roverName="Mule Field Rover"
             seedCargo={seedCargo}
@@ -218,7 +218,14 @@ export default function DeliveryScreen({
   return (
     <div className={`game-screen ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
       <div className={styles.stage}>
-        <DeliveryCanvas progress={progress} cargoUnits={cargoUnits} />
+        <TakeOnMount
+          missionId={`delivery-view-${mission.id}-${target.id}`}
+          bodyId={takeonBodyForTarget(target)}
+          target={target}
+          startView="iso"
+          readOnly
+          className={styles.takeonMount}
+        />
       </div>
       <SceneVignette />
 

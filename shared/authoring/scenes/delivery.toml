@@ -10,9 +10,8 @@ qa = ["transport-delivery"]
 
 [runtime]
 surface = "canvas"
-web = ["web/components/game/screens/DeliveryScreen.tsx", "web/components/game/screens/DeliveryCanvas.tsx"]
+web = ["web/components/game/screens/DeliveryScreen.tsx", "web/components/takeon/TakeOnMount.tsx"]
 native = ["native/App/Screens/CoreLoop.swift"]
-engine = ["web/public/game/scenes/delivery.scene.json"]
 
 [preview]
 route = "delivery"

@@ -3,13 +3,13 @@ format = 1
 id = "rocket-workshop"
 type = "build"
 name = "Rocket workshop"
-summary = "An upright rocket in its assembly bay. Tap a physical section, fit a catalog or earned weekly research part, and paint the hull, trim and decal."
+summary = "Agency rocket capacity, range and the next hull unlock."
 tickets = ["SSL-850"]
 qa = ["rocket-workshop"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/RocketWorkshopScreen.tsx"]
+web = ["web/components/game/GameScreenRouter.tsx"]
 native = []
 
 [preview]
@@ -17,29 +17,8 @@ route = "rocket-workshop"
 state = "ui-rocket-workshop"
 
 [[objects]]
-id = "rocket-stack"
-kind = "vehicle"
-layout = "host"
-mechanics = ["rocket-assembly"]
-note = "Five independently tappable sections redraw from the fitted part tier and construction; hull, trim and decal persist. iOS follows in cycle 13 per Liam's SSL-850 comment."
-
-[[objects]]
-id = "parts-tray"
-kind = "panel"
-layout = "host"
-mechanics = ["rocket-assembly"]
-note = "Shows mission-unlocked catalog parts and permanently earned weekly research parts. Weekly milestones 2, 4 and 5 grant the silo T2, engine T2 and laser T3. Earned parts refit for free."
-
-[[objects]]
-id = "livery"
-kind = "panel"
-layout = "host"
-mechanics = ["rocket-assembly"]
-note = "Free hull and trim colours from shared tokens, plus none, star, orbit or stripes decal."
-
-[[objects]]
 id = "mission-readout"
 kind = "panel"
 layout = "host"
-mechanics = ["rocket-assembly", "mission-planning"]
-note = "Live capacity, range and laser charges with named mission limits, including the farther delivery leg. Launch remains on the existing launchpad and keeps its validation."
+mechanics = ["mission-planning"]
+note = "Review the assigned hull, capacity, range and next unlock."
