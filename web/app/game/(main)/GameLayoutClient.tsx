@@ -1,5 +1,7 @@
 'use client'
 
+import { missionResumeScreen } from '@/lib/mission-resume'
+
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { trainingStepOnPath, trainingTryStep } from '@/lib/data'
@@ -354,8 +356,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const resumeOperations = () => {
     if (game.player.activeMission) {
-      const phase = game.player.missionPhase
-      game.go(phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'flight')
+      game.go(missionResumeScreen(game.player))
       return
     }
     game.goToMissions()
@@ -458,6 +459,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           {!game.authGateOpen && (
             <footer className="program-footer">
               <button onClick={() => programMenu.current?.showModal()}>Menu</button>
+              {currentScreen === 'hub' && <button className="program-new-mission" onClick={resumeOperations}>{game.player.activeMission ? 'Resume mission' : 'New mission'}</button>}
               <strong>{PROGRAM_PHASE[currentScreen]}</strong>
               <span>Missions completed · {game.player.missionsDone}</span>
               <dialog ref={programMenu} aria-label="Program menu">

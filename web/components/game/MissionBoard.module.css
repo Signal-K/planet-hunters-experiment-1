@@ -35,7 +35,7 @@ button.round {
   background-color: var(--ln-board-paper);
   color: var(--ln-board-ink);
   cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ln-board-ink);
+  box-shadow: none;
 }
 .round svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 button.round:disabled { opacity: 0.45; cursor: default; }
@@ -58,7 +58,7 @@ button.tab {
   color: var(--ln-board-ink);
   font: 800 14px/1.1 var(--ln-font-display);
   cursor: pointer;
-  box-shadow: 2px 2px 0 color-mix(in srgb, var(--ln-board-ink) 22%, transparent);
+  box-shadow: none;
 }
 .tab svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 button.tab[data-tab='contracts'] { background-color: var(--ln-board-teal); color: var(--ln-board-on-accent); }
@@ -66,7 +66,7 @@ button.tab[data-tab='program'] { background-color: var(--ln-board-amber); color:
 button.tab[data-tab='events'] { background-color: var(--ln-board-coral); color: var(--ln-board-on-accent); }
 button.tab[data-active='true'] {
   border-color: var(--ln-board-ink);
-  box-shadow: 3px 3px 0 var(--ln-board-ink);
+  box-shadow: none;
 }
 .dot {
   position: absolute;
@@ -167,7 +167,7 @@ button.start {
 .eventCard { display: grid; grid-template-columns: minmax(112px, .65fr) minmax(0, 1.35fr); flex: 0 0 auto; }
 .eventCard[data-event-focused='true'] {
   border-color: var(--ln-board-teal);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ln-board-teal) 24%, transparent), 4px 4px 0 var(--ln-board-ink);
+  box-shadow: none;
 }
 
 .heroArt, .eventArt {
@@ -468,10 +468,10 @@ button.start {
   gap: 8px;
   width: 88px;
 }
-.rail button.tab { min-height: 60px; box-shadow: 2px 2px 0 var(--ln-board-ink); border-color: var(--ln-board-ink); }
+.rail button.tab { min-height: 60px; box-shadow: none; border-color: var(--ln-board-ink); }
 .rail button.tab[data-active='false'] { opacity: 0.86; }
 .rail button.tab[data-tab='program'] { color: var(--ln-board-on-accent); }
-.rail button.log { margin-top: 0; box-shadow: 2px 2px 0 var(--ln-board-ink); }
+.rail button.log { margin-top: 0; box-shadow: none; }
 .rail button.railClose { width: 44px; }
 .railHelp { position: absolute; top: 12px; right: 12px; z-index: 6; display: flex; align-items: center; gap: 8px; pointer-events: none; }
 /* SSL-831: on a phone this box is two rows wide and covered the Events tab; only its own buttons take taps. */
@@ -501,7 +501,7 @@ button.take {
   font: 800 18px/1 var(--ln-font-display);
   letter-spacing: 0.1em;
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--ln-board-ink);
+  box-shadow: none;
 }
 button.take:disabled { background-color: var(--ln-board-silver); color: var(--ln-board-ink); cursor: default; }
 
@@ -803,7 +803,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   position: absolute; z-index: 2; left: 50%; bottom: 12px; transform: translateX(-50%);
   width: min(720px, calc(100% - 24px)); display: flex; flex-direction: column; gap: 6px; padding: 8px 14px 10px;
   color: #f4efe4; background: #152033; border: 2px solid rgba(250, 247, 240, .42); border-top: 4px solid var(--signal); border-radius: 8px;
-  box-shadow: 5px 5px 0 rgba(5, 16, 35, .68);
+  box-shadow: none;
 }
 .offerStrip { display: flex; justify-content: center; gap: 6px; overflow: hidden; padding: 0 2px 6px; border-bottom: 1px solid rgba(250, 247, 240, .22); }
 .offerStrip::-webkit-scrollbar { display: none; }

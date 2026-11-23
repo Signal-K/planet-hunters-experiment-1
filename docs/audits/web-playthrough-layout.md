@@ -69,3 +69,11 @@ Inspected the authored scene preview catalog at 390×844, repeating previews tha
 Research now opens the current task first, with other weekly steps, event detail, milestone rewards and history expandable. Data hub selects a single instrument while retaining all instruments in a selector, including those available to build. Instrument detail and fleet controls remain expandable. Its verified phone fixture decreased from 2,117px to 1,077px. The debrief now uses a measured header and puts deployment detail and alternate activities behind explicit expansions. Planner details and saved plans expand on demand; its map opens by default on desktop and starts collapsed on phones. Both verified phone fixtures now have no internal scroll region exceeding the available height by more than 80px.
 
 Refinery's recipe list still scrolls slightly and remains a follow-up. These observations cover fixture layout, not an end-to-end certification of every gameplay state.
+
+### Agency Hub and flat presentation
+
+The mission-history route now opens Agency Hub. Its left panel has a large New mission action and, for an active flight, Resume mission using the existing phase-aware resume resolver. The right panel retains all mission and transit records and expandable debriefs. The old raised white log shell, title plaque and oversized stat cards have been removed. Base's shared footer now exposes the same phase-aware New mission / Resume mission entry.
+
+Pointing replaces three instrument buttons with one selector. Sky coverage and already available observations expand on demand, leaving Back and the mapping/confirmation action visible. Steering, instrument switching, sector mapping and classification entry remain available.
+
+The shared blueprint palette now uses dark two-tone panels with cream text and cyan accents. Inset bevels and hard extrusion shadows have been removed from web game, shared UI and app styles. Physical scene artwork retains its material colours. Browser checks exercised the Agency Hub New mission button through to the Mission Board, opened log records on phone and desktop, and switched the pointing instrument to Saturn.

@@ -16,17 +16,17 @@
 /* The screen, its time bar and dials sit together in the middle; the screen keeps the recording's aspect in the space the controls leave. */
 .console { --controls: 178px; --pad: 14px; container-type: size; min-height: 0; display: grid; place-items: center; }
 /* The instrument's console window: a title bar, the screen, then the dials on the panel face. */
-.panel { position: relative; box-sizing: border-box; width: min(100cqw, (100cqh - var(--controls)) * 949 / 543 + 2 * var(--pad)); display: grid; gap: 10px; padding: 0 var(--pad) var(--pad); border: 2px solid #0a1022; border-radius: 16px; background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e); box-shadow: 0 0 0 1px rgba(244, 239, 228, .18), 6px 8px 0 rgba(8, 16, 34, .45), inset 0 1px 0 rgba(255, 255, 255, .14); }
+.panel { position: relative; box-sizing: border-box; width: min(100cqw, (100cqh - var(--controls)) * 949 / 543 + 2 * var(--pad)); display: grid; gap: 10px; padding: 0 var(--pad) var(--pad); border: 2px solid #0a1022; border-radius: 16px; background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e); box-shadow: none; }
 .titlebar { box-sizing: border-box; display: flex; align-items: center; gap: 10px; min-width: 0; height: 36px; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); border-bottom: 2px solid #0a1022; border-radius: 14px 14px 0 0; background: linear-gradient(180deg, #353f60, #262e48); color: #c9d0c2; font: 800 12px/1 var(--ln-font-display); letter-spacing: .12em; }
 .titlebar b { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 13px/1 var(--ln-font-mono); letter-spacing: 0; }
-.screw { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a93a8, #3a4258); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .4); pointer-events: none; }
+.screw { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a93a8, #3a4258); box-shadow: none; pointer-events: none; }
 .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 3.5px; height: 1px; background: rgba(0, 0, 0, .55); transform: rotate(35deg); }
 .screw:nth-of-type(1) { left: 6px; bottom: 6px; }
 .screw:nth-of-type(2) { right: 6px; bottom: 6px; }
 .screw:nth-of-type(3) { left: 6px; top: 50%; }
 .screw:nth-of-type(4) { right: 6px; top: 50%; }
 .well { display: grid; place-items: center; }
-.screen { position: relative; width: 100%; aspect-ratio: 949 / 543; overflow: hidden; border: 3px solid #070b18; border-radius: 8px; background: #0a1640; box-shadow: 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 24px rgba(0, 0, 0, .5); }
+.screen { position: relative; width: 100%; aspect-ratio: 949 / 543; overflow: hidden; border: 3px solid #070b18; border-radius: 8px; background: #0a1640; box-shadow: none; }
 .screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(160deg, rgba(255, 255, 255, .1), transparent 30%), repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .08) 3px 4px); }
 .strip { position: absolute; }
 .image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; transition: filter .12s ease; }
@@ -53,13 +53,13 @@
 .knob:focus-visible { box-shadow: 0 0 0 3px #9de7ef; }
 .dial[data-disabled] .knob { cursor: not-allowed; }
 .knob svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: rgba(244, 239, 228, .5); stroke-width: 2; stroke-linecap: round; }
-.cap { position: absolute; inset: 9px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4b5675, #1a2238 62%, #10182c); box-shadow: 0 3px 0 rgba(8, 16, 34, .6), inset 0 1px 0 rgba(255, 255, 255, .22); transition: transform .08s ease-out; }
+.cap { position: absolute; inset: 9px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4b5675, #1a2238 62%, #10182c); box-shadow: none; transition: transform .08s ease-out; }
 .cap i { position: absolute; left: 50%; top: 4px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: #f2c24c; }
 .dialLabel { color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; }
 .dialValue { color: #9de7ef; font: 700 14px/1 var(--ln-font-mono); }
 
 /* Radio desk. */
-.comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: none; }
 .speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .comms p { margin: 0; min-height: calc(3 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }

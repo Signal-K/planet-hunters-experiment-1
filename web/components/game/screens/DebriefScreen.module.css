@@ -100,7 +100,7 @@
   border-radius: 18px !important;
   background: var(--db-well) !important;
   color: var(--db-paper) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1) !important;
+  box-shadow: none;
 }
 
 .link {

@@ -474,16 +474,16 @@ function ScreenBody({
     case 'mission-history':
       // Mission Log is its own page with its own panel, not a tray over the Base.
       return (
-        <PageSurface testId="mission-history-page" ariaLabel="Mission Log">
           <MissionHistoryScreen
             records={game.player.completedMissions ?? []}
             clients={game.catalog.clients}
             targets={game.catalog.targets}
             missions={game.catalog.missions}
             player={game.player}
+            onNewMission={() => game.goToMissions()}
+            onResumeMission={game.player.activeMission ? () => game.go(missionResumeScreen(game.player)) : undefined}
             onBack={() => game.goBack('hub')}
           />
-        </PageSurface>
       )
 
     case 'instrument-hub':

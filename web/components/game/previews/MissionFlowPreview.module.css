@@ -102,7 +102,7 @@
   background:
     radial-gradient(circle at 50% 35%, var(--lime) 0 7px, transparent 8px),
     linear-gradient(135deg, var(--cyan), var(--pink));
-  box-shadow: 0 3px 0 #0d0818;
+  box-shadow: none;
 }
 
 .faceHelios {
@@ -195,7 +195,7 @@
   letter-spacing: 0.08em;
   text-align: right;
   text-transform: uppercase;
-  box-shadow: 0 2px 0 #0d0818;
+  box-shadow: none;
 }
 
 .stage {
@@ -255,7 +255,7 @@
 .tile {
   border: 2px solid rgba(19, 11, 32, 0.55);
   background: var(--tile-violet);
-  box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 .tileR { background: var(--tile-red); }
 .tileD { background: #163b52; }
@@ -279,7 +279,7 @@
   border: 3px solid rgba(19, 11, 32, 0.8);
   background: linear-gradient(90deg, var(--lime), var(--red));
   opacity: 0.78;
-  box-shadow: 0 4px 0 rgba(19, 11, 32, 0.65);
+  box-shadow: none;
   animation: routePulse 2.8s ease-in-out infinite;
 }
 .route::before {
@@ -291,7 +291,7 @@
   height: 160px;
   background: #245a7b;
   border: 3px solid rgba(19, 11, 32, 0.8);
-  box-shadow: 0 3px 0 rgba(19, 11, 32, 0.65);
+  box-shadow: none;
 }
 .biomeSpace .route {
   left: 58px;
@@ -323,7 +323,7 @@
   border-radius: 6px 6px 5px 5px;
   background: var(--pink);
   border: 3px solid var(--ink);
-  box-shadow: 0 4px 0 rgba(19, 11, 32, 0.45);
+  box-shadow: none;
   animation-name: markerScuttle;
   animation-duration: 5.6s;
   animation-timing-function: steps(5, end);
@@ -368,7 +368,7 @@
   transform: translate(-50%, -42%);
   border: 4px solid var(--ink);
   border-radius: 10px 10px 8px 8px;
-  box-shadow: 0 6px 0 rgba(19, 11, 32, 0.72);
+  box-shadow: none;
   animation: scenePatrol 6.2s steps(6, end) infinite;
 }
 .npc::before { left: 16px; top: 36px; width: 30px; height: 9px; }
@@ -393,7 +393,7 @@
   border: 3px solid var(--ink);
   background: var(--text);
   color: var(--ink);
-  box-shadow: 0 4px 0 rgba(19, 11, 32, 0.5);
+  box-shadow: none;
   font: 900 12px/1 var(--font-display);
   text-align: center;
   text-transform: uppercase;
@@ -463,11 +463,11 @@
   border-radius: 6px;
   background: var(--cyan);
   color: var(--ink);
-  box-shadow: 0 3px 0 var(--ink);
+  box-shadow: none;
   font: 900 12px/1 var(--font-display);
   text-transform: uppercase;
 }
-.infoBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.infoBtn:active { transform: translateY(2px); box-shadow: none; }
 
 .board {
   min-height: 0;
@@ -494,7 +494,7 @@
   text-align: left;
   transition: transform 180ms var(--ease), background 180ms var(--ease);
 }
-.contract:active { transform: translateY(2px); box-shadow: 0 3px 0 var(--ink); }
+.contract:active { transform: translateY(2px); box-shadow: none; }
 .contractSelected {
   background: linear-gradient(180deg, var(--panel-3), var(--panel-2));
   outline: 3px solid var(--cyan);
@@ -510,7 +510,7 @@
   border-radius: 7px;
   background: linear-gradient(160deg, var(--lime), #6bd945);
   color: var(--ink);
-  box-shadow: inset 0 -8px 0 rgba(19, 11, 32, 0.14);
+  box-shadow: none;
   font: 900 15px/1 var(--font-display);
   text-transform: uppercase;
 }
@@ -610,7 +610,7 @@
   border-radius: 8px;
   background: var(--cyan);
   color: transparent;
-  box-shadow: 0 3px 0 var(--ink);
+  box-shadow: none;
 }
 .selectedHead h2 {
   margin: 0;
@@ -643,7 +643,7 @@
   border-radius: 7px;
   background: var(--lime);
   color: var(--ink);
-  box-shadow: 0 4px 0 var(--ink);
+  box-shadow: none;
   font: 900 13px/1 var(--font-display);
   text-transform: uppercase;
 }
@@ -655,7 +655,7 @@
   border-radius: 7px;
   background: var(--panel-3);
   color: var(--text);
-  box-shadow: 0 4px 0 var(--ink);
+  box-shadow: none;
   font: 900 12px/1 var(--font-display);
   text-transform: uppercase;
 }
@@ -677,7 +677,7 @@
   border: 3px solid var(--ink);
   border-radius: 7px;
   background: var(--panel);
-  box-shadow: 0 3px 0 var(--ink);
+  box-shadow: none;
   color: var(--soft);
   font: 900 10px/1 var(--font-display);
   text-transform: uppercase;

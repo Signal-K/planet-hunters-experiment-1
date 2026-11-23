@@ -68,7 +68,7 @@
   background: #10182c;
   color: #f4efe4;
   border: 3px solid #16293b;
-  box-shadow: 4px 4px 0 #9fd6e4;
+  box-shadow: none;
   font: 800 22px/1 var(--ln-font-display);
   letter-spacing: 0.18em;
 }
@@ -122,7 +122,7 @@
   background: #152033;
   color: #f4efe4;
   border: 3px solid #16293b;
-  box-shadow: 6px 6px 0 #9fd6e4;
+  box-shadow: none;
   font: 700 14px/1.4 var(--ln-font-body);
 }
 

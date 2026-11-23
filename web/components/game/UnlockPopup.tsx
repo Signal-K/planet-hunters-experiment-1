@@ -185,7 +185,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             background: `linear-gradient(180deg, ${u.accent}, ${darkenColor(u.accent, 0.35)})`,
             color: 'var(--ln-text-on-cyan)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
             letterSpacing: '0.12em', textTransform: 'uppercase',
-            boxShadow: 'inset 0 1px 0 var(--ln-hairline-strong), 0 4px 0 var(--ln-overlay)',
+            boxShadow: 'none',
           }}>{u.cta}</button>
           {onDismiss && (
             <button data-testid="unlock-popup-secondary" onClick={onDismiss} style={{

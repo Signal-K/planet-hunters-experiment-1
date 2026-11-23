@@ -25,9 +25,7 @@
   border: 1px solid var(--ln-blueprint-line-strong);
   border-radius: 8px 8px 4px 4px;
   background: var(--ln-blueprint-paper-2);
-  box-shadow:
-    inset 0 2px 0 var(--ln-blueprint-paper),
-    0 16px 24px color-mix(in srgb, var(--ln-purple-depth) 76%, transparent);
+  box-shadow: none;
 }
 
 .bezel::before,
@@ -74,7 +72,7 @@
   border: 1px solid var(--ln-blueprint-line-strong);
   border-radius: 4px;
   background: var(--ln-blueprint-paper-2);
-  box-shadow: 0 8px 0 color-mix(in srgb, var(--ln-purple-depth) 84%, var(--ln-void));
+  box-shadow: none;
 }
 
 .roomSideLeft,

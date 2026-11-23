@@ -57,7 +57,7 @@
 .progress small { color: #c9d0c2; font: 700 14px/1.2 var(--ln-font-body); }
 
 /* The readout. */
-.readout { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.readout { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: none; }
 .speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .readout > p { margin: 0; min-height: calc(2 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }
