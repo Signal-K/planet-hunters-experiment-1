@@ -15,8 +15,8 @@
     "typeRoots": ["../web/node_modules/@types"],
     "baseUrl": ".",
     "paths": {
+      "@takeon/engine": ["../web/node_modules/@takeon/engine/dist/index.d.ts"],
       "@landnam/*": ["../web/*"],
-      "@takeon/engine": ["./node_modules/@takeon/engine/dist/index.d.ts"],
       "@shared/*": ["../shared/*"],
       "@/*": ["../web/*"],
       "react": ["../web/node_modules/@types/react"],

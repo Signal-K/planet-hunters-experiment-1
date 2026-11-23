@@ -61,7 +61,7 @@ export const STRUCTURES: readonly StructureDef[] = [
     unlocks: [
       { chapters: [1, 2], line: 'Client contracts and market sales' },
       { chapters: [3, 7], line: 'Deliveries and material hauls' },
-      { chapters: [6], line: 'Meteor shower runs' },
+      { line: 'Veteran trading facility' },
     ],
     art: art('exchange'),
   },
@@ -74,7 +74,7 @@ export const STRUCTURES: readonly StructureDef[] = [
     unlocks: [
       { chapters: [4], line: 'Space telescope launch' },
       { chapters: [5], line: 'Survey probes' },
-      { chapters: [9], line: 'Probe follow-ups to new worlds' },
+      { line: 'Veteran survey station' },
     ],
     art: art('control-station'),
   },

@@ -1,14 +1,21 @@
-/* Landnam's two-tone mission style: dark rounded panels, cream text, cyan accents,
-   gold rewards, cream CTA. Text >= 14px, taps >= 44px, 8pt rhythm.
-   Colours follow shared/tokens/tokens.json (cyan #70d9ea). */
-@font-face { font-family: 'Oxanium'; src: url('/fonts/Oxanium-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-@font-face { font-family: 'Oxanium'; src: url('/fonts/Oxanium-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+/* Landnam Minimal: one side-on stage, dark panels, cream text, cyan accents, gold money.
+   Text >= 14px, taps >= 44px. Colours follow shared/tokens (cyan #70d9ea). */
+@font-face {
+  font-family: 'Oxanium';
+  src: url('/fonts/Oxanium-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Oxanium';
+  src: url('/fonts/Oxanium-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
 
 :root {
-  --sky-top: #0f1524;
-  --sky-low: #2b3550;
-  --panel: rgba(13, 19, 33, 0.88);
-  --line: rgba(163, 236, 245, 0.18);
+  --panel: rgba(13, 19, 33, 0.9);
+  --line: rgba(163, 236, 245, 0.2);
   --cream: #f3ead8;
   --muted: #b9c0cf;
   --cyan: #70d9ea;
@@ -16,139 +23,967 @@
   --ink: #101521;
   color-scheme: dark;
 }
-
-* { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
 body {
-  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-low) 70%, #4a4436 100%);
+  background: #0f1524;
   color: var(--cream);
-  font: 400 16px/1.45 'Oxanium', system-ui, sans-serif;
+  font:
+    400 16px/1.45 'Oxanium',
+    system-ui,
+    sans-serif;
+  overscroll-behavior: none;
 }
-h1 { font-size: 28px; line-height: 1.15; margin: 0; font-weight: 700; }
-p { margin: 0; color: var(--muted); }
-
-.mn-scene { position: fixed; inset: 0; overflow: hidden; }
-.mn-scene > * { position: absolute; }
-.mn-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 64px; width: 100%; border: 0; border-radius: 12px; background: var(--cream); color: var(--ink); font: 700 16px 'Oxanium', system-ui, sans-serif; letter-spacing: 0.12em; text-decoration: none; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
-.mn-eyebrow { margin: 0; font-size: 14px; letter-spacing: 0.2em; color: var(--cyan); font-weight: 700; }
-.mn-goal { margin: 0; }
-.mn-cta-kicker { font-size: 14px; letter-spacing: 0.2em; opacity: .7; }
-.mn-cta:disabled { opacity: 0.6; cursor: default; }
-a.mn-cta { min-height: 56px; }
-
-.mn-scene-top { top: max(16px, env(safe-area-inset-top)); left: 16px; right: 16px; display: flex; justify-content: space-between; gap: 8px; z-index: 5; pointer-events: none; }
-.mn-scene-top > * { pointer-events: auto; }
-.mn-scene-top .mn-money { margin-left: auto; }
-.mn-scene-bottom { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; z-index: 5; max-width: 560px; margin: 0 auto; }
-
-.mn-chip { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); color: var(--cream); font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: .12em; backdrop-filter: blur(6px); }
-.mn-chip.mn-money, .mn-chip.mn-reward { color: var(--gold); font-size: 16px; letter-spacing: .04em; }
-button.mn-chip { cursor: pointer; }
-
-.mn-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; backdrop-filter: blur(8px); }
-.mn-card.mn-sign-in { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; padding: 24px; gap: 12px; z-index: 5; }
-.mn-card .mn-goal { font-size: 18px; color: var(--cream); }
-
-/* Route: chapters as a flight route over the live base. */
-.mn-sky-scrim { inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(14, 22, 38, .78) 0%, rgba(14, 22, 38, .42) 42%, rgba(14, 22, 38, 0) 68%); }
-
-/* Briefing: the destination's TakeOn diorama. */
-.mn-world { inset: 0; width: 100%; height: 100%; display: block; }
-/* Shown while TakeOn loads: a plain sky so the screen is never blank. */
-.mn-sky { inset: 0; background: linear-gradient(180deg, #2d3e63 0%, #6b7fa6 55%, #a8b59a 100%); }
-.mn-haul { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-@media (orientation: landscape) {
-  .mn-briefing-scene .mn-scene-bottom { right: auto; width: min(420px, 46vw); margin: 0; }
-  .mn-card.mn-sign-in { right: auto; width: min(420px, 46vw); margin: 0; }
+h1 {
+  font-size: 26px;
+  line-height: 1.15;
+  margin: 0;
 }
-@media (prefers-reduced-motion: reduce) { .mn-waypoint.mn-now .mn-waypoint-hit { animation: none; } }
-.mn-note { font-size: 14px; color: var(--amber, #f6c96a); margin: 0; }
-/* Landnam's mining scene, full screen, exactly as Landnam lays it out. */
-.mn-mining { position: fixed; inset: 0; }
-.mn-title { margin: 0; font-size: 20px; font-weight: 700; color: var(--cream); }
-.mn-steps { display: flex; align-items: center; gap: 8px; }
-.mn-steps i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); }
-.mn-steps i.mn-step-done { background: var(--cream); }
-.mn-steps i.mn-step-now { width: 22px; border-radius: 4px; background: var(--cream); }
+p {
+  margin: 0;
+  color: var(--muted);
+}
+button {
+  font: inherit;
+}
 
-/* Mining: Minimal's top-down pass. The field fills the screen; the order sits
-   bottom-left, FIRE bottom-right within one thumb's reach. */
-.mn-mine { touch-action: none; user-select: none; -webkit-user-select: none; background: #2a2622; }
-.mn-mine-field { inset: 0; width: 100%; height: 100%; display: block; }
-.mn-mine-bottom { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; pointer-events: none; max-width: 560px; margin: 0 auto; }
-.mn-mine-bottom > * { pointer-events: auto; }
-.mn-mine-bottom > .mn-cta, .mn-mine-bottom > .mn-mine-haul { flex: 1 1 100%; }
-.mn-mine-goal { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.mn-mine-buttons { position: relative; display: flex; align-items: flex-end; gap: 12px; }
-.mn-round { display: grid; place-items: center; border-radius: 50%; border: 4px solid var(--cyan); background: var(--panel); color: var(--cream); font: 700 16px 'Oxanium', system-ui, sans-serif; letter-spacing: .1em; cursor: pointer; backdrop-filter: blur(6px); }
-.mn-round.mn-ready { background: var(--cyan); color: var(--ink); }
-.mn-fire { width: 92px; height: 92px; }
-.mn-round:focus-visible, .mn-cta:focus-visible { outline: 3px solid var(--cream); outline-offset: 3px; }
-/* Orbit (deploy): world low in frame, upper stage centre, payload rides on its nose. */
-.mn-orbit { position: absolute; inset: 0; overflow: hidden; background: #0b0f1f; }
-.mn-orbit img { image-rendering: pixelated; position: absolute; }
-.mn-orbit-world { width: 150vmax; height: auto; left: 50%; top: 62%; transform: translateX(-50%); }
-.mn-orbit-stage { width: 88px; left: calc(50% - 44px); top: 30%; animation: mn-orbit-bob 4s ease-in-out infinite; transition: transform 2.4s ease-in; }
-.mn-orbit-payload { position: absolute; width: 72px; left: calc(50% - 36px); top: calc(30% - 22px); animation: mn-orbit-bob 4s ease-in-out infinite; }
-.mn-orbit-panel { transform-box: fill-box; transform-origin: center; transform: scaleX(0.15); transition: transform .8s ease-out 1s; }
-.mn-orbit[data-released] .mn-orbit-stage { animation: none; transform: translate(-60px, 120px) rotate(-18deg); }
-.mn-orbit[data-released] .mn-orbit-payload { animation: mn-orbit-release 2.6s ease-out forwards; }
-.mn-orbit[data-released] .mn-orbit-panel { transform: scaleX(1); }
-@keyframes mn-orbit-bob { 50% { translate: 0 -4px; } }
-@keyframes mn-orbit-release { to { translate: 40px -70px; scale: 1.25; } }
+.mn {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+.mn-chip {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 22px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--cream);
+  font:
+    700 14px 'Oxanium',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+button.mn-chip {
+  cursor: pointer;
+}
+button.mn-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.mn-money {
+  color: var(--gold);
+  font-size: 16px;
+}
+.mn-met {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.mn-chip-next {
+  border-color: var(--cyan);
+}
+.mn-pick[aria-checked='true'] {
+  background: var(--cream);
+  color: var(--ink);
+}
+.mn-ore-chip i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.mn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.mn-missions,
+.mn-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.mn-missions::-webkit-scrollbar,
+.mn-scroll::-webkit-scrollbar {
+  display: none;
+}
+.mn-hint {
+  color: var(--cream);
+  text-align: center;
+  text-shadow: 0 1px 3px #000;
+}
 
-/* The base (structures.ts): four structures that level up as missions are flown. */
-/* The base, side-on: Landnam's base-site strip (sky, far plain, paved apron), scrolled sideways on a narrow phone. */
-.mn-site { position: absolute; inset: 0; overflow-x: auto; overflow-y: hidden; z-index: 0; scrollbar-width: none; overscroll-behavior-x: contain; background: var(--deep, #a39d92); }
-.mn-site::-webkit-scrollbar { display: none; }
-.mn-site-strip { position: relative; height: 100%; min-width: 100%; }
-.mn-site-sky { position: absolute; left: 0; right: 0; top: 0; height: var(--ground); background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 55%, var(--sky-horizon) 100%); }
-.mn-site-plain, .mn-site-ground { position: absolute; left: 0; right: 0; background-repeat: repeat-x; background-position: center bottom; background-size: auto 100%; }
-.mn-site-cloud { position: absolute; height: auto; pointer-events: none; animation: mn-cloud linear infinite alternate; }
-@keyframes mn-cloud { to { transform: translateX(120px); } }
-@media (prefers-reduced-motion: reduce) { .mn-site-cloud { animation: none; } }
-.mn-site-deep { position: absolute; left: 0; right: 0; bottom: 0; background: var(--deep); }
-.mn-base { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; z-index: 1; }
-.mn-structure-spot { position: absolute; top: var(--ground); width: 0; height: 0; }
-.mn-structure { position: absolute; left: 0; top: 8px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; color: var(--cream); font: inherit; cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
-.mn-structure img { position: absolute; left: 50%; transform: translate(-50%, -8px); display: block; max-width: none; }
-.mn-plate { min-height: 50px; min-width: 128px; box-sizing: border-box; display: grid; grid-template-columns: max-content auto; grid-template-areas: 'name lv' 'bar count'; align-items: center; column-gap: 10px; row-gap: 4px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(6px); text-align: left; }
-.mn-structure-name { grid-area: name; font-weight: 700; font-size: 14px; white-space: nowrap; }
-.mn-structure-level { grid-area: lv; font: 700 14px 'Oxanium', system-ui, sans-serif; color: var(--gold); letter-spacing: .08em; white-space: nowrap; }
-.mn-structure-count { grid-area: count; font-size: 14px; color: var(--muted); white-space: nowrap; }
-.mn-bar { grid-area: bar; height: 6px; min-width: 56px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
-.mn-bar i { display: block; height: 100%; background: var(--cyan); border-radius: 3px; }
-.mn-structure.mn-fresh .mn-plate { border-color: var(--gold); animation: mn-fresh 1.4s ease-in-out 3; }
-@keyframes mn-fresh { 50% { box-shadow: 0 0 0 4px rgba(241,196,107,.45); } }
-.mn-structure:focus-visible, .mn-mission:focus-visible, .mn-destination:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+.mn-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cream);
+  color: var(--ink);
+  font:
+    700 17px 'Oxanium',
+    system-ui,
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+.mn-cta:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.mn-cta-kicker {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  opacity: 0.65;
+}
+.mn-cta:focus-visible,
+.mn-chip:focus-visible,
+.mn-plate:focus-visible,
+.mn-event:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 2px;
+}
 
-.mn-missions { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
-.mn-mission { flex: none; min-height: 56px; min-width: 128px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--cream); font: inherit; text-align: left; cursor: pointer; backdrop-filter: blur(6px); }
-.mn-mission-name { font-weight: 700; font-size: 16px; }
-.mn-mission-verb { font-size: 14px; color: var(--muted); }
-.mn-mission-next { border-color: var(--cyan); }
-.mn-mission:disabled { opacity: .55; cursor: default; }
-
-.mn-sheet-backdrop { inset: 0; z-index: 20; background: rgba(5, 8, 15, .6); display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-.mn-sheet { width: 100%; max-width: 480px; gap: 12px; }
-.mn-sheet-head { display: flex; align-items: center; gap: 12px; }
-.mn-sheet-head img { width: 88px; height: 72px; object-fit: contain; image-rendering: pixelated; }
-.mn-levels { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.mn-levels li { display: flex; gap: 10px; align-items: baseline; font-size: 15px; color: var(--muted); }
-.mn-levels li.mn-level-have { color: var(--cream); }
-.mn-levels li.mn-level-next { color: var(--cyan); }
-.mn-level-num { flex: none; width: 44px; font: 700 14px 'Oxanium', system-ui, sans-serif; letter-spacing: .08em; }
-
-.mn-upgrade { flex-direction: row; align-items: center; gap: 12px; border-color: var(--gold); }
-.mn-upgrade img { width: 72px; height: 56px; object-fit: contain; image-rendering: pixelated; }
-.mn-destinations { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
-.mn-destination { flex: none; white-space: nowrap; }
-.mn-destination[aria-checked='true'] { background: var(--cream); color: var(--ink); }
-.mn-destination:disabled { opacity: .5; }
-.mn-note-dim { font-size: 14px; color: var(--muted); margin: 0; }
-
+.mn-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mn-sheet {
+  width: 100%;
+  max-width: 480px;
+  animation: mn-rise 0.2s ease-out;
+}
+@keyframes mn-rise {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+.mn-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1.2;
+}
+.mn-eyebrow {
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  color: var(--cyan);
+  font-weight: 700;
+}
+.mn-warn {
+  color: var(--gold);
+  font-size: 15px;
+}
+.mn-levels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mn-levels li {
+  display: flex;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.mn-levels b {
+  flex: none;
+  width: 44px;
+  font-size: 14px;
+}
+.mn-levels .mn-have {
+  color: var(--cream);
+}
+.mn-levels .mn-next {
+  color: var(--cyan);
+}
+.mn-native-dialog {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--cream);
+  width: min(530px, 94vw);
+  max-height: 94dvh;
+  margin: auto;
+}
+.mn-native-dialog::backdrop {
+  background: #061015c9;
+}
+.mn-native-dialog .mn-sheet {
+  width: 100%;
+  position: relative;
+  background: #192327;
+  border-radius: 3px;
+  padding: 22px;
+  border: 1px solid #516269;
+}
+.mn-native-dialog .mn-title {
+  padding-right: 35px;
+}
+.sheet-close {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 44px;
+  height: 44px;
+  color: #cbd3cc;
+  background: none;
+  border: 0;
+  font-size: 24px;
+  cursor: pointer;
+}
+.base-field,
+.takeon-field,
+.takeon-field canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.takeon-field canvas {
+  touch-action: none;
+  image-rendering: pixelated;
+}
+.terrain-objects {
+  pointer-events: none;
+}
+.field-instrument button,
+.op-desk button {
+  background: #132228f5;
+  color: #e3ede8;
+  border: 1px solid #788b87;
+  border-radius: 4px;
+  min-height: 44px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.tuner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  text-align: center;
+}
+.tuner h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.tuner p,
+.field-instrument p {
+  font-size: 13px;
+}
+.field-instrument button.engage {
+  background: #efce99;
+  color: #172124;
+  font-weight: 700;
+}
+.field-instrument button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.facility-level {
+  font-size: 12px !important;
+}
+.orbit-chart {
+  display: flex;
+  overflow-x: auto;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(transparent 49%, #697b78 50%, transparent 52%);
+  padding: 3px 0;
+}
+.orbit-chart button {
+  min-width: 28px;
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  position: relative;
+}
+.orbit-chart button::before {
+  content: '';
+  display: block;
+  margin: auto;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 30%, #fff9, var(--tone) 38%, #27323a 98%);
+}
+.orbit-chart .selected::before {
+  outline: 1px solid #ffe0a1;
+  outline-offset: 3px;
+}
+.op-desk {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #111b20;
+  display: flex;
+  flex-direction: column;
+}
+.op-desk header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 12px;
+}
+.op-desk iframe {
+  border: 0;
+  width: 100%;
+  flex: 1;
+}
+.earth-field canvas:first-child {
+  filter: saturate(0.55);
+}
+.takeon-field::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 48%, #07152138);
+}
+.story-radio header,
+.story-gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+.story-radio small {
+  font-size: 10px;
+  color: #ebc58c;
+  letter-spacing: 0.16em;
+  font-weight: bold;
+}
+.story-radio header button {
+  background: none;
+  color: #dfcda9;
+  border: 0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+.story-radio h1 {
+  font-size: 22px;
+}
+.story-radio p {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #d0dbd8;
+}
+.story-route {
+  display: flex;
+  padding: 0;
+  margin: 2px 0 4px;
+  list-style: none;
+  background: linear-gradient(to bottom, transparent 8px, #6c7a7e 8px, #6c7a7e 9px, transparent 9px);
+}
+.story-route li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font-size: 10px;
+  flex: 1;
+  color: #bdc8c8;
+}
+.story-route li i {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 28% 26%, var(--planet), #293539);
+  border: 1px solid #758082;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-style: normal;
+}
+.story-route li[aria-current] i {
+  outline: 1px solid #ffd89e;
+  outline-offset: 2px;
+}
+.story-go,
+.story-resume {
+  min-height: 42px;
+  font: inherit;
+  cursor: pointer;
+}
+.story-go {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  background: #ebca95;
+  color: #172129;
+  border: 0;
+  border-radius: 3px;
+  text-decoration: none;
+  font-weight: bold;
+}
+.story-gate > a:not(.story-go) {
+  font-size: 13px;
+  color: #f5d59d;
+}
+.story-resume {
+  padding: 4px 12px;
+}
+.takeon-field[data-body='moon'] canvas:first-child {
+  filter: grayscale(0.96) brightness(1.06);
+}
+.story-go b {
+  font-family: system-ui, sans-serif;
+}
+/* The deck and camera share a layout so every projected marker stays in the playable area. */
+.play-shell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: #152326;
+}
+.world-window {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.cockpit {
+  --edge: #455a58;
+  position: relative;
+  z-index: 4;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: linear-gradient(165deg, #223335, #152426 62%);
+  color: #f2e9d5;
+  border-top: 3px solid #ba9c6d;
+  box-shadow:
+    0 -4px 0 #152021,
+    0 -6px 16px #09121666;
+  max-height: 47dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.deck-header,
+.deck-body,
+.deck-controls {
+  width: 100%;
+  padding-inline: max(16px, calc((100vw - 1060px) / 2), env(safe-area-inset-left));
+}
+.deck-header {
+  min-height: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: #102022;
+  border-bottom: 1px solid var(--edge);
+}
+.deck-location {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.deck-location strong {
+  font-size: 15px;
+  color: #f7ead5;
+}
+.deck-roundel {
+  font: 18px system-ui;
+  color: #f2c37f;
+}
+.deck-phase,
+.deck-account {
+  font-size: 12px;
+  color: #a8c4ba;
+}
+.deck-phase {
+  border-left: 1px solid var(--edge);
+  padding-left: 10px;
+}
+.deck-body {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-block: 12px;
+}
+.deck-body h1,
+.deck-body h2 {
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.16;
+  margin: 0;
+  color: #f4ecd7;
+}
+.deck-body p {
+  color: #c8d5cb;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.deck-body small {
+  color: #d9ba86;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.deck-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: #102022;
+  border-top: 1px solid var(--edge);
+  min-height: 42px;
+}
+.deck-controls nav {
+  display: flex;
+}
+.deck-controls button,
+.deck-placement button,
+.deck-placement select {
+  border: 0;
+  border-right: 1px solid #364c49;
+  background: transparent;
+  color: #b9d0c7;
+  padding: 6px 15px;
+  min-height: 42px;
+  font:
+    600 13px 'Oxanium',
+    system-ui;
+  cursor: pointer;
+}
+.deck-controls button[aria-pressed='true'] {
+  color: #ffdaa2;
+  background: #31423e;
+  box-shadow: inset 0 -3px #ebc180;
+}
+.deck-controls button:hover,
+.deck-controls button:focus-visible {
+  background: #354946;
+  color: #fff4de;
+}
+.deck-camera {
+  margin-left: auto;
+}
+.deck-controls .deck-abort {
+  font-size: 12px;
+  color: #d3b7a0;
+}
+.live-lamp {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a9d9ac;
+  box-shadow: 0 0 6px #a9d9ac;
+  margin-inline-start: 3px;
+  vertical-align: middle;
+}
+.deck-body .story-radio,
+.deck-body .touchdown-radio,
+.deck-body .field-instrument,
+.deck-body .story-resume,
+.deck-body .field-job {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+}
+.deck-body .story-radio {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(235px, 1fr);
+  column-gap: clamp(30px, 8vw, 110px);
+  row-gap: 5px;
+  align-items: center;
+}
+.story-radio header,
+.story-radio h1,
+.story-radio p {
+  grid-column: 1;
+}
+.deck-body .story-radio header {
+  justify-content: flex-start;
+  gap: 8px;
+}
+.deck-body .story-route {
+  grid-column: 2;
+  grid-row: 1/3;
+  margin: 0;
+}
+.deck-body .story-go,
+.deck-body .story-gate {
+  grid-column: 2;
+  grid-row: 3;
+}
+.deck-body .story-go,
+.deck-body .engage {
+  border-radius: 2px;
+  min-height: 42px;
+  letter-spacing: 0.02em;
+}
+.deck-body .story-gate {
+  flex-wrap: wrap;
+}
+.deck-body .field-instrument {
+  display: grid;
+  max-width: 800px;
+  gap: 7px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  overflow: visible;
+}
+.deck-body .field-instrument > small,
+.deck-body .field-instrument > .orbit-chart,
+.deck-body .field-instrument > .tuner,
+.deck-body .field-instrument > p,
+.deck-body .field-instrument > label {
+  grid-column: 1/-1;
+}
+.deck-body .field-instrument .sheet-close {
+  display: none;
+}
+.deck-body .field-instrument .tuner {
+  justify-content: flex-start;
+}
+.deck-body .field-instrument .tuner > div {
+  flex: 1;
+}
+.deck-body .touchdown-radio,
+.deck-body .rover-job,
+.deck-placement {
+  display: grid;
+  gap: 5px;
+}
+.deck-body .touchdown-radio .story-go {
+  grid-column: 1;
+  grid-row: auto;
+  max-width: 340px;
+}
+.deck-body .field-job {
+  color: #cadbd4;
+  pointer-events: none;
+}
+.deck-body .mn-chip {
+  min-height: 22px;
+  font-size: 12px;
+  border-radius: 2px;
+  padding: 3px 7px;
+}
+.deck-body .deck-notice {
+  color: #f7d496;
+  padding-top: 5px;
+  font-size: 13px;
+}
+.deck-placement button,
+.deck-placement select {
+  background: #18292b;
+  border: 1px solid var(--edge);
+}
+.beacon-strip {
+  display: flex;
+  gap: 5px;
+  max-width: 220px;
+}
+.beacon-strip i {
+  height: 5px;
+  flex: 1;
+  background: #435651;
+}
+.beacon-strip i.lit {
+  background: #b3d9ac;
+}
+@media (max-width: 620px) {
+  .cockpit {
+    max-height: 47dvh;
+  }
+  .deck-header,
+  .deck-controls,
+  .deck-body {
+    padding-inline: 12px;
+  }
+  .deck-account {
+    font-size: 10px;
+  }
+  .deck-phase {
+    display: none;
+  }
+  .deck-body {
+    padding-block: 8px;
+  }
+  .deck-body .story-radio {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .deck-body .story-radio > * {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .deck-body .story-route {
+    margin: 4px 0;
+  }
+  .deck-controls {
+    padding-inline: 0;
+  }
+  .deck-controls button {
+    padding-inline: 7px;
+    font-size: 12px;
+    min-width: 38px;
+  }
+  .deck-controls nav {
+    flex: 1;
+  }
+  .deck-controls nav button {
+    flex: 1;
+  }
+  .deck-camera span {
+    display: none;
+  }
+  .deck-body .field-instrument {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 @media (orientation: landscape) and (max-height: 520px) {
-  .mn-scene-bottom:has(.mn-missions) { max-width: 900px; }
-  .mn-scene-bottom:has(.mn-missions) .mn-cta { max-width: 560px; align-self: center; }
+  .play-shell {
+    grid-template-columns: minmax(0, 1fr) clamp(255px, 37%, 380px);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .cockpit {
+    max-height: 100%;
+    border-top: 0;
+    border-left: 3px solid #ba9c6d;
+  }
+  .deck-header,
+  .deck-body,
+  .deck-controls {
+    padding-inline: 10px;
+  }
+  .deck-phase {
+    display: none;
+  }
+  .deck-account {
+    font-size: 10px;
+  }
+  .deck-body .story-radio {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .deck-body .story-radio > * {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .deck-controls {
+    flex-wrap: wrap;
+    padding: 0;
+  }
+  .deck-controls nav {
+    width: 100%;
+  }
+  .deck-controls button {
+    padding-inline: 8px;
+    flex: 1;
+  }
+  .deck-body .field-instrument {
+    grid-template-columns: 1fr;
+  }
+  .deck-controls .deck-camera {
+    margin: 0;
+  }
+  .deck-body h1,
+  .deck-body h2 {
+    font-size: 18px;
+  }
+}
+.play-shell {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) clamp(208px, 29dvh, 245px);
+}
+.cockpit,
+.deck-body,
+.deck-controls,
+.deck-controls nav {
+  min-width: 0;
+}
+.deck-controls nav button {
+  white-space: nowrap;
+}
+.deck-body .story-radio {
+  height: 100%;
+  align-content: center;
+}
+.rover-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.rover-controls .story-go {
+  width: auto;
+  grid-column: auto;
+  grid-row: auto;
+}
+.steering {
+  display: grid;
+  grid-template-columns: repeat(4, 34px);
+  border: 1px solid #526660;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.steering button {
+  border: 0;
+  border-right: 1px solid #435653;
+  background: #263a39;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.steering button i {
+  border-top: 2px solid #dcc8a4;
+  border-right: 2px solid #dcc8a4;
+  width: 8px;
+  height: 8px;
+  transform: rotate(0);
+}
+.steering [data-dir='South'] i {
+  transform: rotate(90deg);
+}
+.steering [data-dir='West'] i {
+  transform: rotate(180deg);
+}
+.steering [data-dir='North'] i {
+  transform: rotate(270deg);
+}
+.cockpit[data-editing='true'] nav button[aria-pressed='true'] {
+  box-shadow: none;
+  background: transparent;
+  color: #b9d0c7;
+}
+.story-go b {
+  font-size: 0;
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(45deg);
+}
+@media (max-width: 620px) {
+  .play-shell {
+    grid-template-rows: minmax(0, 1fr) clamp(234px, 36dvh, 294px);
+  }
+  .deck-controls nav button {
+    padding-inline: 4px;
+  }
+  .deck-body .story-radio {
+    align-content: start;
+  }
+  .deck-controls > button {
+    padding-inline: 6px;
+  }
+  .deck-body {
+    max-width: 100vw;
+  }
+  .rover-controls {
+    gap: 6px;
+  }
+  .rover-controls .story-go {
+    font-size: 12px;
+  }
+}
+@media (max-width: 350px) {
+  .deck-controls button {
+    font-size: 11px;
+    min-width: 29px;
+  }
+  .deck-controls nav button {
+    padding-inline: 3px;
+  }
+  .deck-header {
+    padding-inline: 8px;
+  }
+  .deck-controls .deck-camera {
+    min-width: 24px;
+  }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .play-shell {
+    grid-template-columns: minmax(0, 1fr) clamp(255px, 37%, 380px);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .deck-body .story-radio {
+    align-content: center;
+  }
+  .steering {
+    grid-template-columns: repeat(4, 27px);
+  }
+  .rover-controls .story-go {
+    font-size: 12px;
+  }
+}
+.dispatch-patch {
+  display: none;
+}
+.instrument-icon {
+  width: 19px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 4px;
+  image-rendering: pixelated;
+}
+@media (min-width: 880px) and (min-height: 521px) {
+  .deck-body .story-radio:has(.dispatch-patch) {
+    position: relative;
+    padding-left: 84px;
+  }
+  .dispatch-patch {
+    display: block;
+    position: absolute;
+    width: 64px;
+    height: 76px;
+    object-fit: contain;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+@media (max-width: 620px), (orientation: landscape) and (max-height: 520px) {
+  .instrument-icon {
+    display: none;
+  }
 }

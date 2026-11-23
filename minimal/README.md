@@ -1,42 +1,17 @@
 # Landnam Minimal
 
-The simple, no-context version of Landnam (SSL-864, decided 2026-11-19): a standalone game
-with Landnam's mechanics, research, narrative and missions, told as a numbered story with one
-button per screen. Sign-in is required. Served at playlandnam.space/minimal.
+Minimal runs at `/minimal/` on Landnam’s origin and uses the existing Landnam account session.
 
-It is its own module in this repo, not part of the Landnam app:
+## Play
 
-- `cd web && npm run dev:minimal` serves it at http://localhost:4330/minimal/
-  (add `?stage=1` to play as a stand-in pilot locally; `make ensure` first for fonts).
-- `cd web && npm run build:minimal` builds it into `web/public/minimal/`, which Landnam's
-  site serves. `npm run typecheck:minimal` type-checks it.
-- It imports Landnam's sources instead of copying them: `@landnam/*` is `web/`, `@shared/*`
-  is `shared/`. React comes from `web/node_modules`. Change a mission or rule in Landnam.
-- Home is the agency's base (`src/BaseScene.tsx`), drawn side-on from Landnam's base-site map
-  (`web/lib/scene/base-site.json`): sky, far plain, paved apron and the four v7 structures at
-  their authored size and footing (art stays in the perspective it was drawn for). Each starts at
-  level 1 and levels up from missions flown (`src/structures.ts`), with a counter of what its
-  next level needs; levels open missions, bigger rockets and laser tiers. The tray lists every
-  unlocked mission (all replayable); NEXT suggests one. In dev, `&runs=client-contract:1,…`
-  seeds finished runs.
-- The other screens stand on a TakeOn minimal scene (`createMinimalScene`, signal-k/takeon, KES-530),
-  a read-only diorama: sign-in watches a `launch` from the home outpost, and a briefing shows the destination's `deposit` with the rover parked by
-  ore of the kind the contract wants (Landnam minerals map to TakeOn resources through
-  `LANDNAM_TO_TAKEON_MINERAL`, so platinum shows as crystal). Worlds are dressed with Landnam's
-  own biomes and colours (`src/takeonWorlds.ts`, reusing `lib/takeon/sandbox.ts` and
-  `terrainColour.ts`); home is a lichen-steppe outpost.
-- TakeOn's engine is vendored in `vendor/takeon/` (Minimal's only own dependency; Landnam's
-  TakeOn is unchanged) and loads lazily after the first paint. To update it from a TakeOn
-  checkout: `minimal/scripts/update-takeon.sh [path-to-takeon]` (default `../takeon`).
+The flight director opens with a story briefing and a route from the Moon to deep space. Launch from the briefing or select the illuminated launchpad. Watch the descent, then deploy the rover after touchdown. The next chapter opens on your return, and completed chapters persist across visits. On the surface, select a beacon or deposit to send the rover to it. Survey each beacon or collect the requested ore, then select the ship to return. Drag to pan, scroll to zoom, or use the arrow keys to drive. The crosshair recentres the camera.
 
-- A mission's briefing plays its run (`src/RunScene.tsx`): one chapter per Landnam mission type
-  (`src/chapters.ts`). Mining is Minimal's own top-down pass (`src/MineScene.tsx`, SSL-865):
-  drag to steer and FIRE at the deposits; the probe survey already marked them, because ships never scan. The
-  shower chapter still uses Landnam's mining scene for CATCH. With `&dev=1`, P pauses the
-  ground (the ship still steers) so a shot can be lined up by hand. Progress, earnings and stored
-  materials are Minimal's own, per pilot on the device (`src/progress.ts`). In dev,
-  `?stage=1&chapter=N` opens a briefing, `&run=1` starts it, and `&dev=1` shows Landnam's
-  SKIP MINING button.
+The cockpit groups the current objective, station instruments, placement tools and camera controls beside the terrain in short landscape views and below it in taller views. During surface operations it shows rover steering, load or survey progress and the ship boarding command.
 
-See `docs/simple-landnam.md` for why and the plan, and
-`notes/decisions/Landnam Minimal is a separate game at playlandnam.space-minimal (2026-11-19).md`.
+At the base, select the control station for community research and the scientific instruments, the hangar for the navigation chart, or the exchange for contracts. The sky receiver tunes into Landnam’s event calendar and special missions. Place mode lets you move facilities or add scenery on individual terrain tiles. Layouts are saved per pilot on the device.
+
+## Development
+
+From `web/`, run `npm run dev:minimal` with Landnam’s main web server on port 4320. Open `http://localhost:4330/minimal/`. Add `?stage=1` locally or on staging to use the practice pilot. Run `npm run typecheck:minimal` and `npm run build:minimal` to verify and build into `web/public/minimal/`.
+
+Earth and mission destinations use the vendored Signal-K/TakeOn engine for voxel terrain, projection, pathfinding and rover simulation. The game projects its placeable facilities, resources and mission markers into the same camera.

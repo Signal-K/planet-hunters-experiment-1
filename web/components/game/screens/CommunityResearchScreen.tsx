@@ -40,19 +40,6 @@ interface CommunityResearchScreenProps {
   onGo: (kind: StampKind) => void
 }
 
-const DAY_MS = 86_400_000
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
-/** The seven UTC days of the week containing `now`, Monday first. */
-function weekDays(now: number): { key: string; letter: string; today: boolean; future: boolean }[] {
-  const today = stampDayKey(now)
-  const offset = (new Date(now).getUTCDay() + 6) % 7
-  return Array.from({ length: 7 }, (_, i) => {
-    const key = stampDayKey(now - (offset - i) * DAY_MS)
-    return { key, letter: DOW[i], today: key === today, future: key > today }
-  })
-}
-
 function StepIcon({ icon, size = 28 }: { icon: PathStep['icon']; size?: number }) {
   const art = {
     signal: <><path d="M2.5 12h3.8l2-5.5 4.1 11 2.1-5.5h6.9" /><circle cx="18.5" cy="6" r="1.5" fill="currentColor" stroke="none" /></>,
@@ -213,7 +200,7 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-function ResearchActivities({ player, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
+function ResearchActivities({ player, passportStatus, onWorkshop, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const panel = eventPanel(now)
@@ -247,15 +234,17 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
   const progress = steps.map(st => chain && st.id === 'event' ? { have: chainStage(player, chain.eventId), need: 2 } : stepProgress(st, stamps, week, now))
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
-  const [readout, setReadout] = useState<'mission' | 'rewards' | 'votes'>('mission')
+  // One screen: This week (your stamps and the shared weekly goal) opens first; a reviewer back from the instrument lands on Votes.
+  const [readout, setReadout] = useState<'week' | 'mission' | 'rewards' | 'votes'>(pendingReview ? 'votes' : 'week')
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' && new URLSearchParams(window.location.search).get('preset')?.startsWith('ui-community-research-')) setReadout('mission')
+  }, [])
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
   const consensus = useConsensus(true)
   const { site, archived } = useSite(true)
   const at = Math.min(picked ?? firstOpen, steps.length - 1)
   const step = steps[at]
-  const days = weekDays(now)
-  const stampedDays = days.filter(d => (stamps[d.key] ?? []).length > 0).length
   const d = new Date(now)
   const ownThisMonth = stampsInMonth(stamps, d.getUTCFullYear(), d.getUTCMonth())
   const bar = communityBar(ownThisMonth, communityResearch)
@@ -306,6 +295,7 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
                 </div>
               </section>
               <section className={styles.right}>
+                <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} />
                 <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
                 <h2>How it works</h2>
                 <ol className={styles.how} data-testid="community-research-how">
@@ -351,19 +341,17 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
               </section>
               <section className={styles.right}>
                 <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
-                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Mission</button>
+                  <button type="button" role="tab" aria-selected={readout === 'week'} data-testid="community-research-week-tab" onClick={() => setReadout('week')}>Week</button>
+                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Step</button>
                   <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
                   <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
                 </div>
-                {readout === 'mission' ? <>
+                {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} /> : readout === 'mission' ? <>
                   <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
                   <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
                   <h2 data-testid="community-research-title">{step.title}</h2>
                   <p className={styles.readoutCopy}>{step.brief}</p>
                   <p className={styles.why} data-testid="community-research-why">{step.why}</p>
-                  <div className={styles.week} role="list" aria-label="This week" data-testid="community-research-week">
-                    {days.map(day => <div key={day.key} role="listitem" className={styles.day} data-stamped={(stamps[day.key] ?? []).length > 0} data-today={day.today} data-future={day.future}><i aria-hidden="true" /><span>{day.letter}</span></div>)}
-                  </div>
                   <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
                 </> : readout === 'votes' ? <>
                   <h2>Community votes</h2>
@@ -377,7 +365,7 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
                     <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
                   </div>
                   <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
-                  <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>Shared total</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>This month · everyone</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
                   {site && <CommunitySite site={site} archived={archived} />}
                   <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
                   <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
@@ -393,10 +381,5 @@ function ResearchActivities({ player, communityResearch, onBack, onChoosePath, o
 }
 
 export default function CommunityResearchScreen(props: CommunityResearchScreenProps) {
-  const [activities, setActivities] = useState(!!props.pendingReview)
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' && new URLSearchParams(window.location.search).get('preset')?.startsWith('ui-community-research-')) setActivities(true)
-  }, [])
-  if (activities) return <ResearchActivities {...props} onBack={() => setActivities(false)} />
-  return <ResearchPassport player={props.player} status={props.passportStatus} onBack={props.onBack} onGo={kind => { if (kind === 'review') setActivities(true); else props.onGo(kind) }} onActivities={() => setActivities(true)} onWorkshop={() => props.onWorkshop?.()} />
+  return <ResearchActivities {...props} />
 }

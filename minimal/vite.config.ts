@@ -14,6 +14,7 @@ const config: UserConfig = {
   publicDir: false,
   resolve: {
     alias: [
+      { find: /^@takeon\/engine$/, replacement: webModules + '@takeon/engine/dist/index.js' },
       { find: /^@landnam\//, replacement: here('../web/') },
       { find: /^@shared\//, replacement: here('../shared/') },
       // Landnam's own files import each other as @/… (web/tsconfig paths).

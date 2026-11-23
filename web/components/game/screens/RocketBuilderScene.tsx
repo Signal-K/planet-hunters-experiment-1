@@ -185,7 +185,7 @@ export default function RocketBuilderScene({
 
         <div className={styles.body} data-parts={showParts ? 'open' : 'closed'}>
           <section className={styles.pad} aria-label="Launchpad" data-phase={phase} data-fitted-count={fittedCount}>
-            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} rocketId={rocketId} showRocket={phase === 'building' || phase === 'ready'} />
+            <LaunchpadPrefab towerLabel={towerLabel} onChooseMission={onChooseMission} rocketId={rocketId} showRocket={phase !== 'idle'} />
             {missionPayload && phase !== 'idle' && (
               <aside className={styles.payloadManifest} data-testid="launchpad-payload-manifest">
                 <span className={styles.payloadKicker}>PAYLOAD LOADED</span>
