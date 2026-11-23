@@ -1,5 +1,6 @@
 'use client'
 
+import { requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { missionResumeScreen } from '@/lib/mission-resume'
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
@@ -359,6 +360,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       game.go(missionResumeScreen(game.player))
       return
     }
+    requestMissionBoardTab('contracts')
     game.goToMissions()
   }
 

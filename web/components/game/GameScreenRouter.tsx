@@ -480,7 +480,7 @@ function ScreenBody({
             targets={game.catalog.targets}
             missions={game.catalog.missions}
             player={game.player}
-            onNewMission={() => game.goToMissions()}
+            onNewMission={() => { requestMissionBoardTab('contracts'); game.goToMissions() }}
             onResumeMission={game.player.activeMission ? () => game.go(missionResumeScreen(game.player)) : undefined}
             onBack={() => game.goBack('hub')}
           />
