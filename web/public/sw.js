@@ -152,7 +152,8 @@ self.addEventListener('fetch', event => {
   // the common post-mission landing screen) would then be served forever
   // regardless of actual game state. Only match real static files (an
   // extension in the last path segment) under /game/.
-  const isGameStaticAsset = url.pathname.startsWith('/game/') && /\.[a-zA-Z0-9]+$/.test(url.pathname)
+  // The launchpad rocket and part art live under /art/; without them offline the pad stood empty.
+  const isGameStaticAsset = (url.pathname.startsWith('/game/') || url.pathname.startsWith('/art/')) && /\.[a-zA-Z0-9]+$/.test(url.pathname)
   // Self-hosted fonts and icons never change name either; without them an offline
   // load fell back to system fonts.
   const isSiteStaticAsset = /^\/(fonts|icons)\/[^/]+\.[a-zA-Z0-9]+$/.test(url.pathname)
@@ -289,7 +290,7 @@ self.addEventListener('message', event => {
     .reduce((accepted, rawUrl) => {
       try {
         const url = new URL(rawUrl, self.location.origin)
-        if (url.origin === self.location.origin && (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/game/assets/'))) {
+        if (url.origin === self.location.origin && (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/game/assets/') || url.pathname.startsWith('/art/'))) {
           accepted.push(url.href)
         }
       } catch {

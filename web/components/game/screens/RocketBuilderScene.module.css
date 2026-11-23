@@ -115,7 +115,7 @@
 }
 
 .target span { font: 700 14px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); }
-.target strong { font: 700 14px/1.2 var(--ln-font-body, var(--ln-font-display)); letter-spacing: 0; text-transform: none; }
+.target strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 14px/1.2 var(--ln-font-body, var(--ln-font-display)); letter-spacing: 0; text-transform: none; }
 .actions > .back:last-child { margin-left: auto; }
 .customize { margin-left: 0; }
 
