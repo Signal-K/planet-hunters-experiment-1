@@ -1,11 +1,13 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { formatCurrency } from '@/lib/format'
 import { plannerTargets, plannerMinerals, planQuote, deliveryCache, type MissionPlan, type PlannedWork } from '@/lib/mission-planner'
 import { probeSectorHours, buildingLevel } from '@/lib/data/building-levels'
+import { miningIntelligence } from '@/lib/probes/mining-intelligence'
+import { pendingMiningPlan, clearMiningPlan } from '@/lib/mission-planner-nav'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './MissionPlannerScreen.module.css'
 
@@ -14,13 +16,18 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
   player: Player; catalog: Catalog; initialPlan?: MissionPlan; onBack: () => void; onSave: (plan: MissionPlan) => void; onReview: (id: string) => void
 }) {
   const first = plannerTargets(player, catalog, 'mine')
-  const [draft, setDraft] = useState<MissionPlan>(() => initialPlan ?? { id: 'self-plan-draft', targetId: first.find(target => target.id === 'eros')?.id ?? first[0]?.id ?? '', work: 'mine', mineral: 'nickel', amount: 3, createdAt: Date.now() })
-  const [savedId, setSavedId] = useState<string | null>(initialPlan?.id ?? null)
+  const [selection] = useState(pendingMiningPlan)
+  useEffect(() => { clearMiningPlan() }, [])
+  const [draft, setDraft] = useState<MissionPlan>(() => selection
+    ? { id: 'self-plan-draft', ...selection, work: 'mine', amount: 3, createdAt: Date.now() }
+    : initialPlan ?? { id: 'self-plan-draft', targetId: first.find(target => target.id === 'eros')?.id ?? first[0]?.id ?? '', work: 'mine', mineral: 'nickel', amount: 3, createdAt: Date.now() })
+  const [savedId, setSavedId] = useState<string | null>(selection ? null : initialPlan?.id ?? null)
   const mapView = (id: string): 'inner' | 'outer' | 'belt' => { const body = catalog.targets.find(target => target.id === id); return body?.type === 'asteroid' ? 'belt' : (body?.orbit ?? 0) <= 4 ? 'inner' : 'outer' }
   const [view, setView] = useState<'system' | 'inner' | 'outer' | 'belt'>(() => mapView(draft.targetId))
   const targets = plannerTargets(player, catalog, draft.work)
   const target = targets.find(target => target.id === draft.targetId)
   const minerals = plannerMinerals(player, target, catalog, draft.work)
+  const intelligence = target ? miningIntelligence(player, target, id => catalog.minerals[id]?.rarity) : null
   const quote = planQuote(draft, player, catalog)
   const saved = Object.values(player.missionPlans ?? {}).sort((a, b) => b.createdAt - a.createdAt)
   const cache = deliveryCache(player, draft.targetId)
@@ -48,6 +55,16 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
         <label>Saved plans<select aria-label="Saved plans" value={savedId && player.missionPlans?.[savedId] ? savedId : ''} onChange={event => { const plan = player.missionPlans?.[event.target.value]; if (plan) { setDraft(plan); setSavedId(plan.id); setView(mapView(plan.targetId)) } else setSavedId(null) }}><option value="">New plan</option>{saved.map(plan => <option key={plan.id} value={plan.id}>{plan.work} · {catalog.targets.find(target => target.id === plan.targetId)?.name ?? plan.targetId} · {plan.amount}</option>)}</select></label>
         <fieldset><legend>Work</legend><div className={styles.work}>{(['mine', 'survey', 'deliver'] as PlannedWork[]).map(work => <button key={work} data-testid={`planner-work-${work}`} aria-pressed={draft.work === work} onClick={() => change({ work, amount: work === 'survey' ? 6 : 3 })}>{work}</button>)}</div></fieldset>
         <label>Destination<select aria-label="Destination" data-testid="planner-destination" value={draft.targetId} onChange={event => change({ targetId: event.target.value })}>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · orbit {target.orbit}</option>)}</select></label>
+        {draft.work === 'mine' && intelligence && <section className={styles.intelligence} aria-label="Probe findings" data-testid="planner-probe-findings">
+          <h2>Probe findings</h2>
+          {intelligence.sectors.length ? <>
+            <p>{intelligence.sectors.length}/{intelligence.totalSectors} sectors on file · {intelligence.personalSectors} downloaded by you · {intelligence.sharedSectors} shared by the community. Coverage counts overlapping sectors once.</p>
+            <ul>{intelligence.findings.map(row => <li key={row.mineral}><strong>{catalog.minerals[row.mineral]?.name ?? row.mineral}</strong> · about {row.tonnes.toLocaleString('en-GB')} t across {row.sectors} sector{row.sectors === 1 ? '' : 's'}</li>)}</ul>
+            {!intelligence.findings.length && <p>No mineral deposits found in these sectors.</p>}
+            <p>Survey estimates describe deposits, not the pieces your rocket can carry. Choose your ore and haul below.</p>
+          </> : <p>No probe readings on file for {target?.name}. Ore choices use the body's known composition; you can still plan a flight. Download a probe survey at the Data hub for mapped estimates.</p>}
+          {intelligence.sectors.length > 0 && !intelligence.findings.some(row => row.mineral === draft.mineral) && <p>The selected ore has not been found in the mapped sectors. It is listed in the body's composition.</p>}
+        </section>}
         {draft.work !== 'survey' && <label>{draft.work === 'deliver' ? 'Ore from Earth stash' : 'Ore to mine'}<select aria-label="Mineral" value={draft.mineral} onChange={event => change({ mineral: event.target.value })}>{minerals.length ? minerals.map(id => <option key={id} value={id}>{catalog.minerals[id].name}{draft.work === 'deliver' ? ` · ${player.stash?.[id] ?? 0} in stash` : ''}</option>) : <option value="">No ore available</option>}</select></label>}
         <label>{draft.work === 'survey' ? 'Sectors to map' : 'Pieces'}<div className={styles.amount}><button aria-label="Decrease amount" onClick={() => change({ amount: Math.max(1, draft.amount - 1) })}>−</button><input aria-label="Amount" type="number" min="1" max={draft.work === 'survey' ? 24 : 999} step="1" value={draft.amount} onChange={event => change({ amount: Number(event.target.value) })} /><button aria-label="Increase amount" onClick={() => change({ amount: draft.amount + 1 })}>+</button></div></label>
         {quote.mission && <section className={styles.readout} data-testid="planner-estimate" aria-label="Requirements and expected return">
@@ -55,6 +72,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
           <p data-testid="planner-return">{draft.work === 'mine' ? `${draft.amount} ${catalog.minerals[draft.mineral]?.name ?? 'ore'} home. Market estimate ${formatCurrency(quote.marketEstimate, { compact: true })}, before rocket cost; keep or sell on return.` : draft.work === 'survey' ? `One probe stays in orbit and maps ${draft.amount} sectors. First data in ${probeHours} h; coverage in ${probeHours * draft.amount} h. Download it at the Data hub. No franc payout.` : `${draft.amount} ${catalog.minerals[draft.mineral]?.name ?? 'ore'} moves from Earth to your forward cache at ${target?.name}. No franc payout. Cache now: ${Object.entries(cache).map(([id, n]) => `${n} ${catalog.minerals[id]?.name ?? id}`).join(', ') || 'empty'}.`}</p>
         </section>}
         {quote.issues.length > 0 && <ul className={styles.issues} role="status">{quote.issues.map(issue => <li key={issue}>{issue}</li>)}</ul>}
+        {player.activeMission && <p role="status">Your current flight stays active while you plan. Reviewing this saved plan parks that flight so you can resume it later.</p>}
         <footer className={styles.actions}><button data-testid="planner-save" disabled={!!quote.issues.length} onClick={save}>Save plan</button><button className={styles.primary} data-testid="planner-review" disabled={!savedId || !player.missionPlans?.[savedId] || !!quote.issues.length} onClick={() => savedId && onReview(savedId)}>Review & launch →</button></footer>
         {savedId && <p role="status">Plan saved. Review opens the usual rocket and launch checks.</p>}
       </section>

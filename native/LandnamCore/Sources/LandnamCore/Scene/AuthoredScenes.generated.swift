@@ -808,7 +808,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "mission-planning"
           ],
-          "note": "Review the chosen mission and destination."
+          "note": "Review the chosen mission and destination. Destination, haul and vehicle sheets show downloaded/shared probe coverage and deposit estimates for the selected body, or an honest composition-only fallback. Estimates never bypass normal cargo, laser or range checks."
         },
         {
           "id": "part-choices",
@@ -1814,7 +1814,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "laser-mining"
           ],
-          "note": "Seeded target field; the ship laser remains canonical."
+          "note": "Downloaded/shared probe sectors supply the background seam mix, weighted by known sector frequency. Authored required ore stays obtainable; unmapped bodies use composition. No reserve depletion, scan action or research side effect. The ship laser remains canonical."
         },
         {
           "id": "mining-ship",
@@ -1983,7 +1983,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "mission-planning"
           ],
-          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+          "note": "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Mining shows downloaded and community survey coverage, estimated tonnes and composition-only choices separately. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
         },
         {
           "id": "saved-plans",
@@ -2159,7 +2159,7 @@ enum AuthoredSceneDeclarations {
             "community-research",
             "mission-planning"
           ],
-          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted), then three ways on: Targeted run (free; opens the Free run tab on this body with the probe's run picked), Contracts (opens the Contracts tab on this body's offers; probe contracts come from clients who want what was found, web/lib/probes/probe-offers.ts) and Back to hub. Skip ends the playback early."
+          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early."
         }
       ]
     },

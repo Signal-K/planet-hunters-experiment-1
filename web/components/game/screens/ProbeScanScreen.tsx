@@ -30,6 +30,7 @@ interface ProbeScanScreenProps {
   onHub: () => void
   /** Open the Free run tab on this body with its targeted run picked. */
   onPlanRun: (targetId: string, runId: string) => void
+  onPlanMineral: (targetId: string, mineral: string) => void
   /** Open the Contracts tab showing only this body's offers. */
   onViewContracts: (targetId: string) => void
 }
@@ -98,7 +99,7 @@ function Satellite() {
  * and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit, then the
  * readout says what was found and offers a free targeted run there and the client contracts the finds opened.
  */
-export default function ProbeScanScreen({ player, targets, onBack, onCollect, onHub, onPlanRun, onViewContracts }: ProbeScanScreenProps) {
+export default function ProbeScanScreen({ player, targets, onBack, onCollect, onHub, onPlanRun, onPlanMineral, onViewContracts }: ProbeScanScreenProps) {
   const [now] = useState(() => Date.now())
   const bodies = useMemo(
     () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
@@ -296,6 +297,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                           <i style={{ background: mineralColor(row.mineral) }} />
                           <b>{mineralName(row.mineral)}</b>
                           <small>{tonnes(row.tonnes)}</small>
+                          {!playing && player.freeOperations && <button type="button" className={styles.planMineral} aria-label={`Plan a ${mineralName(row.mineral)} flight`} onClick={() => onPlanMineral(body.id, row.mineral)}>Plan flight</button>}
                         </li>
                       ))}
                     </ul>

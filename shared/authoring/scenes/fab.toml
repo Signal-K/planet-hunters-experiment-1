@@ -6,6 +6,7 @@ id = "fab"
 type = "travel"
 name = "Assembly"
 summary = "Relay and launch checklist before a mission flies."
+tickets = ["SSL-878"]
 qa = ["first-fab", "transport-fab", "telescope-fab"]
 
 [runtime]
@@ -43,7 +44,7 @@ kind = "panel"
 parent = "launchpad-preview"
 layout = "host"
 mechanics = ["mission-planning"]
-note = "Review the chosen mission and destination."
+note = "Review the chosen mission and destination. Destination, haul and vehicle sheets show downloaded/shared probe coverage and deposit estimates for the selected body, or an honest composition-only fallback. Estimates never bypass normal cargo, laser or range checks."
 
 [[objects]]
 id = "part-choices"

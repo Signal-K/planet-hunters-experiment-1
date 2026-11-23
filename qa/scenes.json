@@ -113,6 +113,14 @@
    ]
   },
   {
+   "id": "mining-survey",
+   "name": "Mining mapped probe findings",
+   "flow": "core-loop",
+   "web": "ui-mining-survey",
+   "nativeDeferred": "Probe readings are not yet in the native companion model (SSL-773/851 scope); ordinary native mining remains supported.",
+   "tickets": ["SSL-879"]
+  },
+  {
    "id": "mining-actions",
    "name": "Mining action row",
    "flow": "core-loop",

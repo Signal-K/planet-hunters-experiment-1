@@ -89,6 +89,7 @@ const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: 
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMiningPlan } from '@/lib/mission-planner-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -593,6 +594,7 @@ function ScreenBody({
           onCollect={game.collectProbeData}
           onHub={() => game.go('hub')}
           onPlanRun={(targetId, runId) => { requestMissionBoardSite('free', targetId, runId); game.goToMissions() }}
+          onPlanMineral={(targetId, mineral) => { requestMiningPlan(targetId, mineral); game.go('mission-planner') }}
           onViewContracts={targetId => { requestMissionBoardSite('contracts', targetId); game.goToMissions() }}
         />
       )

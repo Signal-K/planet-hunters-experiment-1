@@ -12,6 +12,7 @@ import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { applyFreeRunGoal, clampGoalAmount, maxGoalAmount } from '@/lib/freeRunGoal'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
+import { miningIntelligence } from '@/lib/probes/mining-intelligence'
 import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 import styles from './MissionPlanStrip.module.css'
 
@@ -93,6 +94,12 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
   const drillTier = drill?.tier ?? 1
   const goalMineralId = Object.keys(mission.requires.minerals)[0]
   const goalAmount = mission.requires.minerals[goalMineralId] ?? 1
+  const intelligence = miningIntelligence(player, target, id => game.catalog.minerals[id]?.rarity)
+  const evidence = Object.keys(mission.requires.minerals).length > 0 && !mission.deliveryTargetId && <p className={styles.sheetLead} data-testid="fitting-probe-findings">
+    <strong>Probe findings · {target.name}: </strong>
+    {intelligence.sectors.length ? <>{intelligence.sectors.length}/{intelligence.totalSectors} sectors on file. {intelligence.findings.map(row => `${game.catalog.minerals[row.mineral]?.name ?? row.mineral}: about ${row.tonnes.toLocaleString('en-GB')} t`).join(' · ') || 'No deposits found.'} These are deposit estimates; your haul still has to fit the hold.</>
+      : <>No downloaded or shared readings. This flight uses the body's known composition.</>}
+  </p>
   const setGoal = (mineral: string, amount: number) => {
     const meta = game.catalog.minerals[mineral]
     const next = { missionId: mission.id, mineral, amount: clampGoalAmount(amount, meta, holdUnits) }
@@ -190,6 +197,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
               : <button type="button" onClick={() => setSheet(null)}>Close</button>}
           </div>
           <p>{mustChoose ? 'Tap a lit body on the map to set the destination for ' + mission.title + '.' : 'Lit bodies suit this mission: the minerals it needs, in range, room in the hold.'}</p>
+          {evidence}
           <div className={styles.mapField} data-testid="plan-destination-map">
             <PixiGalaxyMap
               mission={mission}
@@ -218,6 +226,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
             <button type="button" onClick={() => setSheet(null)}>Done</button>
           </div>
           <p className={styles.sheetLead}>Pick the ore and how much. {selectedRocket?.name ?? 'The rocket'} holds {holdUnits} units a trip.</p>
+          {evidence}
           <div className={styles.goalAmount} data-testid="plan-goal-amount">
             <button type="button" aria-label="Less" disabled={goalAmount <= 1} onClick={() => setGoal(goalMineralId, goalAmount - 1)}>−</button>
             <strong>{goalAmount} × {game.catalog.minerals[goalMineralId]?.name ?? goalMineralId}</strong>
@@ -249,6 +258,7 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
           ) : (
             <p className={styles.sheetLead}>The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.</p>
           )}
+          {evidence}
           <ul>
             {rockets.map(model => {
               if (!rocketUnlocked(model, player)) {

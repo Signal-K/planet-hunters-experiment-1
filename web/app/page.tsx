@@ -1,8 +1,12 @@
 import Link from 'next/link'
 import { WorldBackdrop } from '@/components/game/hub/WorldBackdrop'
 import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
+import { isOrionidsWindow } from '@/lib/data/sky-events'
 import { SCENE_NAMES } from '@/lib/ui-strings'
 import styles from './landing.module.css'
+
+// Evaluate the event window on each request, including after a date boundary.
+export const dynamic = 'force-dynamic'
 
 const PILLARS = [
   { tag: '01', name: 'Build', line: 'Grow one launchpad into a hangar, an exchange and a fleet.' },
@@ -29,16 +33,18 @@ export default function Home() {
           <Link className={styles.primary} href="/game" data-testid="landing-enter-operations">Continue</Link>
           <Link className={styles.secondary} href="/game?gate=signup" data-testid="landing-create-account">Start new game</Link>
         </div>
-        <aside className={styles.event} aria-label="Orionids event">
-          <div>
-            <span>ORIONIDS LIVE</span>
-            <strong>Fly through the meteor shower</strong>
-            <p>Start with one guided launch, catch fragments and keep the badge in your full Landnam game.</p>
-          </div>
-          <Link className={styles.eventCta} href="/game?entry=orionids&amp;gate=signup" data-testid="landing-orionids">
-            FLY THE ORIONIDS
-          </Link>
-        </aside>
+        {isOrionidsWindow(Date.now()) && (
+          <aside className={styles.event} aria-label="Orionids event">
+            <div>
+              <span>ORIONIDS LIVE</span>
+              <strong>Fly through the meteor shower</strong>
+              <p>Start with one guided launch, catch fragments and keep the badge in your full Landnam game.</p>
+            </div>
+            <Link className={styles.eventCta} href="/game?entry=orionids&amp;gate=signup" data-testid="landing-orionids">
+              FLY THE ORIONIDS
+            </Link>
+          </aside>
+        )}
       </section>
 
       <ol className={styles.pillars}>

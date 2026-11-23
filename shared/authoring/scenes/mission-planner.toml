@@ -4,7 +4,7 @@ id = "mission-planner"
 type = "menu"
 name = "Mission planner"
 summary = "Own-program flight planning around the reachable-body map: mine ore, survey a chosen number of sectors, or carry Earth-side ore to a forward cache."
-tickets = ["SSL-851"]
+tickets = ["SSL-851", "SSL-878"]
 qa = ["mission-planner", "planner-survey", "planner-delivery"]
 [runtime]
 surface = "dom"
@@ -24,7 +24,7 @@ id = "work-console"
 kind = "panel"
 layout = "host"
 mechanics = ["mission-planning"]
-note = "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
+note = "Mine or deliver pieces of ore; survey 1–24 sectors with a persistent probe. Mining shows downloaded and community survey coverage, estimated tonnes and composition-only choices separately. Quotes cargo, orbit, laser, outbound time, ship cost and expected return."
 [[objects]]
 id = "saved-plans"
 kind = "collection"
