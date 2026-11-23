@@ -38,6 +38,7 @@ import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pen
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUPS, CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
+import BoardFrame from '@/components/layout/frame/BoardFrame'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 
@@ -577,6 +578,7 @@ export default function MissionBoard({
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
+      <BoardFrame header={<div className={styles.boardHeader}>
       <nav className={styles.rail} aria-label="Mission board">
         <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
         {tabButtons}
@@ -590,6 +592,7 @@ export default function MissionBoard({
         </span>
         {help.button}
       </div>
+      </div>}>
       <GalaxyMap targets={tab === 'contracts' ? [] : mapTargets} mode={tab === 'contracts' ? 'ambient' : mapMode} view={tab === 'contracts' ? 'belt' : view} onView={setView} stops={tab === 'contracts' ? [] : routeIds} candidates={tab === 'contracts' ? [] : candidateIds}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
@@ -821,6 +824,7 @@ export default function MissionBoard({
             {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">{atlasEventLink.label}</a>}
           </div>}
       </div>}
+      </BoardFrame>
     </section>
     {help.layer}
   </div>

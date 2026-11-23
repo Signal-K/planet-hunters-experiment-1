@@ -1,0 +1,1424 @@
+[
+  {
+    "file": "web/components/game/ActionConfirmBar.tsx",
+    "actions": [
+      "onClick",
+      "onConfirm",
+      "onDismiss"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/AuthGateSheet.test.tsx",
+    "actions": [
+      "onConfirmPasswordReset",
+      "onCreateAccount",
+      "onRequestPasswordReset",
+      "onSignIn",
+      "onVerifyAccount"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/AuthGateSheet.tsx",
+    "actions": [
+      "onChange",
+      "onClick",
+      "onConfirmPasswordReset",
+      "onCreateAccount",
+      "onFocus",
+      "onRequestPasswordReset",
+      "onSignIn",
+      "onSubmit",
+      "onVerifyAccount"
+    ],
+    "buttons": 5,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/BlankSceneDiagnostics.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/CommunityGoalChip.tsx",
+    "actions": [
+      "onClick",
+      "onOpen"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/DataReadyChip.tsx",
+    "actions": [
+      "onClick",
+      "onOpen"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/FlightPlan.tsx",
+    "actions": [
+      "onClick",
+      "onHiddenChange",
+      "onSkip"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/FriendsSheet.tsx",
+    "actions": [
+      "onChange",
+      "onClick",
+      "onClose",
+      "onKeyDown",
+      "onRemove",
+      "onSendGift",
+      "onViewBase",
+      "onVisitWorld"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/GameScreenRouter.tsx",
+    "actions": [
+      "onAbandonMission",
+      "onAim",
+      "onArrange",
+      "onBack",
+      "onBackFromHangar",
+      "onBegin",
+      "onBuild",
+      "onBuildGroundTelescope",
+      "onBuildStation",
+      "onBuildSubsurfaceRoom",
+      "onBuy",
+      "onBuyResearchItem",
+      "onCancel",
+      "onChoosePath",
+      "onClaimReward",
+      "onClick",
+      "onClose",
+      "onCollect",
+      "onConvertResearchFragments",
+      "onDismissHubPrompt",
+      "onDonation",
+      "onExcavateSubsurface",
+      "onExcavateSubsurfaceUnavailable",
+      "onFinishReview",
+      "onFocusBuilding",
+      "onFocusResources",
+      "onGo",
+      "onHub",
+      "onInspect",
+      "onLaunch",
+      "onLaunchComplete",
+      "onLaunchImager",
+      "onLaunchTelescope",
+      "onLaunchpadAction",
+      "onLock",
+      "onMissionMenuOpenChange",
+      "onNext",
+      "onOpenCommunity",
+      "onOpenControlStation",
+      "onOpenData",
+      "onOpenEvents",
+      "onOpenMarket",
+      "onOpenProgram",
+      "onOpenScene",
+      "onOpenScreen",
+      "onOpenSiloBuild",
+      "onPick",
+      "onPlaceAnnex",
+      "onPlaceStructure",
+      "onPlanMineral",
+      "onPlanRun",
+      "onPointTelescope",
+      "onRemoveAlert",
+      "onReplayTraining",
+      "onRequestLaunch",
+      "onResolveScan",
+      "onResumeMission",
+      "onResumeMissionRun",
+      "onReview",
+      "onSave",
+      "onSell",
+      "onSellRefined",
+      "onService",
+      "onServiceLaunchpad",
+      "onSetAlert",
+      "onShareReadout",
+      "onSnoozePing",
+      "onStartRefine",
+      "onStartReview",
+      "onStartScan",
+      "onSubmit",
+      "onSubsurfaceChange",
+      "onTrainingContinue",
+      "onTransferToLaunchpad",
+      "onUpgradeBuilding",
+      "onUpgradeGroundTelescope",
+      "onViewContracts",
+      "onWorkshop"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/LandnamSyncStatus.tsx",
+    "actions": [
+      "onClick",
+      "onClose",
+      "onResize"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/LaunchSequenceCanvas.test.tsx",
+    "actions": [
+      "onComplete"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/LaunchSequenceCanvas.tsx",
+    "actions": [
+      "onClick",
+      "onComplete"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/LaunchpadPrefab.tsx",
+    "actions": [
+      "onChooseMission",
+      "onClick"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/LightcurvePlot.tsx",
+    "actions": [
+      "onClick",
+      "onMarker"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/MissionBoard.tsx",
+    "actions": [
+      "onAccept",
+      "onClick",
+      "onClose",
+      "onCombineFragments",
+      "onOpenBuild",
+      "onOpenEvent",
+      "onOpenLog",
+      "onOpenPlanner",
+      "onPick",
+      "onPickTarget",
+      "onRedeemFragments",
+      "onSelectMission",
+      "onSelectRelative",
+      "onSell",
+      "onSellToClient",
+      "onStart",
+      "onView"
+    ],
+    "buttons": 36,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/MissionOperationRoutes.tsx",
+    "actions": [
+      "onAbandon",
+      "onArrive",
+      "onBack",
+      "onBuyLaserCapacitor",
+      "onClick",
+      "onComplete",
+      "onConfirm",
+      "onContinue",
+      "onDebrisMined",
+      "onDone",
+      "onEventProof",
+      "onFireballCaught",
+      "onHub",
+      "onNext",
+      "onPersist",
+      "onPrev",
+      "onSpendFrancs",
+      "onSwitchMission"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/MissionPlanStrip.tsx",
+    "actions": [
+      "onClick",
+      "onPick"
+    ],
+    "buttons": 10,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/MissionSetupRoutes.tsx",
+    "actions": [
+      "onAccept",
+      "onBack",
+      "onClose",
+      "onCombineFragments",
+      "onLaunch",
+      "onLaunchComplete",
+      "onLaunchpadAction",
+      "onOpenBuild",
+      "onOpenEvent",
+      "onOpenLog",
+      "onOpenPlanner",
+      "onPick",
+      "onPickTarget",
+      "onRedeemFragments",
+      "onRequestLaunch",
+      "onSelectMission",
+      "onSelectRelative",
+      "onSellToClient",
+      "onTransferToLaunchpad",
+      "onViewContracts"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/MissionTicker.tsx",
+    "actions": [
+      "onClick",
+      "onResume"
+    ],
+    "buttons": 1,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/NotificationBell.tsx",
+    "actions": [
+      "onClick",
+      "onMouseDown"
+    ],
+    "buttons": 4,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/ObservatoryChart.tsx",
+    "actions": [
+      "onRange",
+      "onRangeRef",
+      "onRemoveRange",
+      "onRemoveRef"
+    ],
+    "buttons": 0,
+    "absolutePositions": 4
+  },
+  {
+    "file": "web/components/game/OrionidsTeaser.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/PanHint.tsx",
+    "actions": [
+      "onClick",
+      "onLeft",
+      "onRight"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/PixiGalaxyStarMap.tsx",
+    "actions": [
+      "onOpenSol",
+      "onOpenSolRef",
+      "onSelect",
+      "onSelectRef"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/PushOptIn.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/RearrangeBar.tsx",
+    "actions": [
+      "onClick",
+      "onDone",
+      "onLeft",
+      "onRight",
+      "onUpgrade"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/SceneErrorBoundary.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/ScrapSequenceCanvas.tsx",
+    "actions": [
+      "onClick",
+      "onComplete"
+    ],
+    "buttons": 1,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/SettingsSheet.tsx",
+    "actions": [
+      "onChange",
+      "onClick",
+      "onClose"
+    ],
+    "buttons": 15,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/ShipInteriorPreview.tsx",
+    "actions": [
+      "onClick",
+      "onClickCapture",
+      "onClose",
+      "onConfirm",
+      "onPointerDown",
+      "onPointerUp",
+      "onSelect"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/SkyEventChip.tsx",
+    "actions": [
+      "onClick",
+      "onParticipate"
+    ],
+    "buttons": 8,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/SolSystemPreview.tsx",
+    "actions": [
+      "onBack",
+      "onClick",
+      "onPick"
+    ],
+    "buttons": 1,
+    "absolutePositions": 2
+  },
+  {
+    "file": "web/components/game/SyncTray.tsx",
+    "actions": [
+      "onClick",
+      "onClose",
+      "onKey",
+      "onPointer"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/TutorialCompleteSheet.test.tsx",
+    "actions": [
+      "onChoose",
+      "onClose"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/TutorialCompleteSheet.tsx",
+    "actions": [
+      "onChoose",
+      "onClick",
+      "onClose"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/UnlockPopup.tsx",
+    "actions": [
+      "onClick",
+      "onClose",
+      "onDismiss"
+    ],
+    "buttons": 2,
+    "absolutePositions": 3
+  },
+  {
+    "file": "web/components/game/control-station/ControlStationConsole.tsx",
+    "actions": [
+      "onBuild",
+      "onClick",
+      "onDonation",
+      "onKeyDown",
+      "onLogbook",
+      "onOpen",
+      "onOpenScreen",
+      "onService",
+      "onTelescope",
+      "onView"
+    ],
+    "buttons": 9,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/control-station/SurveyScanConsole.tsx",
+    "actions": [
+      "onClick",
+      "onResolve",
+      "onStart"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/AnnexStructures.tsx",
+    "actions": [
+      "onCancel",
+      "onClick",
+      "onOpen",
+      "onPick",
+      "onPlace"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseConstellations.tsx",
+    "actions": [
+      "onClick",
+      "onSelect"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseDock.test.tsx",
+    "actions": [
+      "onBuild",
+      "onHub",
+      "onMission",
+      "onNext",
+      "onPrev",
+      "onSubsurface"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseDock.tsx",
+    "actions": [
+      "onBuild",
+      "onBuildPointerCancel",
+      "onBuildPointerDown",
+      "onBuildPointerLeave",
+      "onBuildPointerUp",
+      "onClick",
+      "onHub",
+      "onMission",
+      "onNext",
+      "onPointerCancel",
+      "onPointerDown",
+      "onPointerLeave",
+      "onPointerUp",
+      "onPrev",
+      "onSubsurface"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseLayerScene.tsx",
+    "actions": [
+      "onClick",
+      "onOpenSilo"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseMenuSheet.tsx",
+    "actions": [
+      "onClick",
+      "onClose",
+      "onSelect"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseNextFlight.tsx",
+    "actions": [
+      "onClick",
+      "onService"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/BaseWorldCanvas.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/Building.callout.test.tsx",
+    "actions": [
+      "onClick",
+      "onCta",
+      "onDismiss"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/Building.tsx",
+    "actions": [
+      "onActiveChange",
+      "onClick",
+      "onCta",
+      "onDismiss",
+      "onMouseEnter",
+      "onMouseLeave",
+      "onTouchCancel",
+      "onTouchEnd",
+      "onTouchStart"
+    ],
+    "buttons": 6,
+    "absolutePositions": 7
+  },
+  {
+    "file": "web/components/game/hub/GroundTelescopeUpgrade.tsx",
+    "actions": [
+      "onConfirm",
+      "onDismiss",
+      "onUpgrade"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/HubSubsurfaceView.test.tsx",
+    "actions": [
+      "onBuildRoom",
+      "onExcavate",
+      "onExcavateUnavailable",
+      "onFocusResources"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/HubSubsurfaceView.tsx",
+    "actions": [
+      "onBuild",
+      "onBuildRoom",
+      "onClick",
+      "onExcavate",
+      "onExcavateUnavailable",
+      "onFocusResources",
+      "onOpenMarket"
+    ],
+    "buttons": 5,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/KitRocket.tsx",
+    "actions": [
+      "onClick",
+      "onError",
+      "onSelect"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/RocketRollout.tsx",
+    "actions": [
+      "onDone"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/SiteMarker.tsx",
+    "actions": [
+      "onClick",
+      "onPlace"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/SkyCraft.tsx",
+    "actions": [
+      "onClick",
+      "onOpenData",
+      "onPoint"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hub/SurfaceSiloPanel.tsx",
+    "actions": [
+      "onClick",
+      "onClose",
+      "onSell"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/hud/SceneChrome.tsx",
+    "actions": [
+      "onBack",
+      "onClick"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/instrument-viewport/InstrumentViewport.test.tsx",
+    "actions": [
+      "onBack",
+      "onClick"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/instrument-viewport/InstrumentViewport.tsx",
+    "actions": [
+      "onAdvance",
+      "onBack",
+      "onChange",
+      "onClick",
+      "onCommand",
+      "onDone",
+      "onReset",
+      "onSubmit",
+      "onToggle"
+    ],
+    "buttons": 15,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/orionids/OrionidsShowerChrome.tsx",
+    "actions": [
+      "onClick",
+      "onPass"
+    ],
+    "buttons": 10,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/previews/MissionFlowPreview.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 10,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/AgencyFrontier.tsx",
+    "actions": [
+      "onClick",
+      "onData",
+      "onLaunch"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/AsteroidDiscoveryScreen.tsx",
+    "actions": [
+      "onAdvance",
+      "onBack",
+      "onChange",
+      "onClick",
+      "onCommand",
+      "onLaunchTelescope",
+      "onReset",
+      "onShareReadout",
+      "onSubmit",
+      "onToggle"
+    ],
+    "buttons": 1,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/screens/CommunityBallots.tsx",
+    "actions": [
+      "onClick",
+      "onVote"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/CommunityConsensus.tsx",
+    "actions": [
+      "onChange",
+      "onClick",
+      "onFinish",
+      "onFinishReview",
+      "onStartReview"
+    ],
+    "buttons": 8,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/CommunityResearchScreen.tsx",
+    "actions": [
+      "onBack",
+      "onChoosePath",
+      "onClaimReward",
+      "onClick",
+      "onConfirm",
+      "onData",
+      "onDismiss",
+      "onFinishReview",
+      "onGo",
+      "onLaunch",
+      "onReview",
+      "onStartReview",
+      "onView",
+      "onWorkshop"
+    ],
+    "buttons": 12,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/DebriefScreen.tsx",
+    "actions": [
+      "onBuyLaserCapacitor",
+      "onClick",
+      "onComplete",
+      "onDone",
+      "onInstall"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/DeliveryScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick",
+      "onComplete",
+      "onReady",
+      "onVisible"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/DownlinkControlDesk.tsx",
+    "actions": [
+      "onChange",
+      "onClick",
+      "onInspect"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/HomecomingScreen.tsx",
+    "actions": [
+      "onClick",
+      "onConfirm",
+      "onFocusBuilding",
+      "onOpenScene"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/HubScreen.tsx",
+    "actions": [
+      "onActiveChange",
+      "onArrange",
+      "onBuild",
+      "onBuildRoom",
+      "onBuildSubsurfaceRoom",
+      "onCancel",
+      "onClick",
+      "onClose",
+      "onConfirm",
+      "onCta",
+      "onDismiss",
+      "onDismissHubPrompt",
+      "onDone",
+      "onExcavate",
+      "onExcavateSubsurface",
+      "onExcavateSubsurfaceUnavailable",
+      "onExcavateUnavailable",
+      "onFocusBuilding",
+      "onFocusResources",
+      "onHub",
+      "onLeft",
+      "onMission",
+      "onNext",
+      "onOpen",
+      "onOpenCommunity",
+      "onOpenData",
+      "onOpenEvents",
+      "onOpenMarket",
+      "onOpenScene",
+      "onOpenSilo",
+      "onParticipate",
+      "onPick",
+      "onPlace",
+      "onPlaceAnnex",
+      "onPlaceStructure",
+      "onPoint",
+      "onPointTelescope",
+      "onPrev",
+      "onRight",
+      "onSelect",
+      "onService",
+      "onServiceLaunchpad",
+      "onSubsurfaceChange",
+      "onUpgrade",
+      "onUpgradeBuilding",
+      "onUpgradeGroundTelescope"
+    ],
+    "buttons": 4,
+    "absolutePositions": 5
+  },
+  {
+    "file": "web/components/game/screens/InstrumentHubScreen.tsx",
+    "actions": [
+      "onBack",
+      "onBuild",
+      "onBuildGroundTelescope",
+      "onClick",
+      "onDonation",
+      "onInspect",
+      "onLogbook",
+      "onOpen",
+      "onOpenProgram",
+      "onOpenScreen",
+      "onResolveScan",
+      "onService",
+      "onSnoozePing",
+      "onStartScan",
+      "onTelescope",
+      "onView"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/IntroScreen.test.tsx",
+    "actions": [
+      "onBegin"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/IntroScreen.tsx",
+    "actions": [
+      "onBegin",
+      "onClick"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/LandingScreen.tsx",
+    "actions": [
+      "onBack",
+      "onContinue",
+      "onContinueRef",
+      "onVisible"
+    ],
+    "buttons": 0,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/screens/LaserCapacitorPanel.tsx",
+    "actions": [
+      "onClick",
+      "onInstall"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/LaunchpadScreen.tsx",
+    "actions": [
+      "onAbandonMission",
+      "onBack",
+      "onChooseMission",
+      "onClick",
+      "onConfirm",
+      "onDismantle",
+      "onDismiss",
+      "onInstall",
+      "onInstallLoadout",
+      "onLaunch",
+      "onLaunchComplete",
+      "onLaunchpadAction",
+      "onMissionMenuOpenChange",
+      "onOpenControlStation",
+      "onOpenSiloBuild",
+      "onOpenWorkshop",
+      "onPick",
+      "onRequestLaunch",
+      "onResumeMission",
+      "onResumeMissionRun",
+      "onViewContracts"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MarketScreen.tsx",
+    "actions": [
+      "onBack",
+      "onBuild",
+      "onBuy",
+      "onBuyResearchItem",
+      "onClick",
+      "onConvertResearchFragments",
+      "onHub",
+      "onNext",
+      "onRemoveAlert",
+      "onSell",
+      "onSellRefined",
+      "onSetAlert"
+    ],
+    "buttons": 19,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MiningCanvas.tsx",
+    "actions": [
+      "onBump",
+      "onBumpRef",
+      "onCatchCue",
+      "onCatchCueRef",
+      "onCollect",
+      "onCollectRef",
+      "onEventProof",
+      "onEventProofRef",
+      "onFailure",
+      "onFailureRef",
+      "onFireRequest",
+      "onFireRequestRef",
+      "onHit",
+      "onHitRef",
+      "onObstacleAheadRef",
+      "onOreNearby",
+      "onReady",
+      "onReadyRef",
+      "onScroll",
+      "onTargetCue",
+      "onTargetCueRef"
+    ],
+    "buttons": 0,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/screens/MiningControls.tsx",
+    "actions": [
+      "onAltitude",
+      "onClick",
+      "onKeyFire",
+      "onLostPointerCapture",
+      "onPointerCancel",
+      "onPointerDown",
+      "onPointerUp",
+      "onPress",
+      "onRelease",
+      "onSpeed"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MiningScreen.test.tsx",
+    "actions": [
+      "onBack",
+      "onComplete"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MiningScreen.tsx",
+    "actions": [
+      "onAbandon",
+      "onAltitude",
+      "onBack",
+      "onBump",
+      "onCatchCueRef",
+      "onClick",
+      "onCollect",
+      "onComplete",
+      "onConfirm",
+      "onDebrisMined",
+      "onDebrisMinedRef",
+      "onDismiss",
+      "onEventProof",
+      "onFailure",
+      "onFireRequest",
+      "onFireballCaught",
+      "onFireballCaughtRef",
+      "onKeyFire",
+      "onObstacleAheadRef",
+      "onPersist",
+      "onPersistRef",
+      "onPress",
+      "onReady",
+      "onRelease",
+      "onSpeed",
+      "onSpendFrancs",
+      "onSwitchMission",
+      "onTargetCueRef"
+    ],
+    "buttons": 22,
+    "absolutePositions": 3
+  },
+  {
+    "file": "web/components/game/screens/MissionHistoryScreen.test.tsx",
+    "actions": [
+      "onBack"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MissionHistoryScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/MissionPlannerScreen.tsx",
+    "actions": [
+      "onBack",
+      "onChange",
+      "onClick",
+      "onPick",
+      "onReview",
+      "onSave",
+      "onView"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/NarrativeLedgerScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick"
+    ],
+    "buttons": 3,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/ProbeScanScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick",
+      "onCollect",
+      "onHub",
+      "onPlanMineral",
+      "onPlanRun",
+      "onView",
+      "onViewContracts"
+    ],
+    "buttons": 7,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/ProbeWatchScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick",
+      "onError",
+      "onEvent",
+      "onReady",
+      "onSave"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/RadioMeteorScreen.tsx",
+    "actions": [
+      "onBack",
+      "onChange",
+      "onClick",
+      "onKeyDown",
+      "onLoad",
+      "onMission",
+      "onPointerCancel",
+      "onPointerDown",
+      "onPointerMove",
+      "onPointerUp",
+      "onSubmit",
+      "onView",
+      "onWheel"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/RefineryScreen.tsx",
+    "actions": [
+      "onBack",
+      "onClick",
+      "onCollect",
+      "onStartRefine"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/ResearchPassport.tsx",
+    "actions": [
+      "onClick",
+      "onGo",
+      "onReview",
+      "onWorkshop"
+    ],
+    "buttons": 6,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/RocketBuilderScene.tsx",
+    "actions": [
+      "onBack",
+      "onChooseMission",
+      "onClick",
+      "onComplete",
+      "onDismantle",
+      "onError",
+      "onInstall",
+      "onLaunch",
+      "onLaunchComplete",
+      "onOpenWorkshop",
+      "onResize"
+    ],
+    "buttons": 10,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/SaturnStormSearchScreen.tsx",
+    "actions": [
+      "onBack",
+      "onChange",
+      "onClick",
+      "onCommand",
+      "onLaunchImager",
+      "onShareReadout",
+      "onSubmit",
+      "onToggle"
+    ],
+    "buttons": 2,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/components/game/screens/SkyBadgeRow.tsx",
+    "actions": [
+      "onClick",
+      "onError"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/SkyChart.tsx",
+    "actions": [
+      "onJump",
+      "onPointerDown"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/SkyPointing.tsx",
+    "actions": [
+      "onAim",
+      "onBack",
+      "onCancel",
+      "onClick",
+      "onJump",
+      "onKey",
+      "onLock",
+      "onOpen",
+      "onOpenData",
+      "onPointerCancel",
+      "onPointerDown",
+      "onPointerMove",
+      "onPointerUp"
+    ],
+    "buttons": 1,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/game/screens/TessDiscoveryScreen.tsx",
+    "actions": [
+      "onAdvance",
+      "onBack",
+      "onBuildStation",
+      "onChange",
+      "onClick",
+      "onCommand",
+      "onOpenProgram",
+      "onRange",
+      "onRemoveRange",
+      "onReplayTraining",
+      "onReset",
+      "onScreen",
+      "onShareReadout",
+      "onSubmit",
+      "onToggle",
+      "onTrainingContinue"
+    ],
+    "buttons": 3,
+    "absolutePositions": 2
+  },
+  {
+    "file": "web/components/game/screens/TransitScreen.tsx",
+    "actions": [
+      "onAbandon",
+      "onAltitude",
+      "onArrive",
+      "onArriveRef",
+      "onBack",
+      "onClick",
+      "onEvent",
+      "onFlightEvent",
+      "onHub",
+      "onKeyFire",
+      "onNext",
+      "onPress",
+      "onPrev",
+      "onRelease",
+      "onSnapshot",
+      "onSpeed",
+      "onVisible"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/takeon/TakeOnFlight.tsx",
+    "actions": [
+      "onEvent",
+      "onSnapshot"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/components/takeon/TakeOnMount.tsx",
+    "actions": [
+      "onBlocked",
+      "onBlur",
+      "onError",
+      "onEvent",
+      "onKeyDown",
+      "onKeyUp",
+      "onMineKey",
+      "onReady",
+      "onRouteChange"
+    ],
+    "buttons": 0,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/app/game/(main)/GameLayoutClient.tsx",
+    "actions": [
+      "onChoose",
+      "onClick",
+      "onClose",
+      "onConfirmPasswordReset",
+      "onCreateAccount",
+      "onDismiss",
+      "onError",
+      "onHiddenChange",
+      "onRejection",
+      "onRequestPasswordReset",
+      "onSignIn",
+      "onSkip",
+      "onVerifyAccount"
+    ],
+    "buttons": 5,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/app/game/stage/StageClient.tsx",
+    "actions": [
+      "onClose",
+      "onSkip"
+    ],
+    "buttons": 0,
+    "absolutePositions": 1
+  },
+  {
+    "file": "web/app/game/stage/StageGallery.tsx",
+    "actions": [
+      "onClick"
+    ],
+    "buttons": 2,
+    "absolutePositions": 0
+  },
+  {
+    "file": "web/app/game/studio/StudioView.tsx",
+    "actions": [
+      "onChange",
+      "onClick"
+    ],
+    "buttons": 4,
+    "absolutePositions": 0
+  }
+]

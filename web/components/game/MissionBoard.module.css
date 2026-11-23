@@ -1031,3 +1031,32 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 
 .contractOffers .offerStrip .emptyOffer { display: block; visibility: hidden; }
 .offerGroups button:disabled, .offerPager button:disabled { opacity: .5; cursor: default; }
+
+/* Header controls occupy a measured frame row. Content never sits behind them. */
+.dispatch .boardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  background: var(--ln-board-ink);
+}
+.boardHeader .rail, .boardHeader .railHelp {
+  position: static;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  min-width: 0;
+  pointer-events: auto;
+}
+.boardHeader .railHelp { margin-left: auto; }
+.boardHeader .railHelp > * { grid-column: auto; grid-row: auto; }
+.dispatch .contractOffers { padding-top: 18px !important; }
+.dispatch .contractWorkspace { overflow: auto; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .dispatch .contractOffers { padding-top: 12px !important; }
+  .dispatch .contractWorkspace { position: relative; min-height: 100%; grid-template-rows: auto auto auto; }
+}
