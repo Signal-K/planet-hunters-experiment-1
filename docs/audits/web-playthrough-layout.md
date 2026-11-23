@@ -55,3 +55,9 @@ For each setup inspect phone portrait, phone landscape and desktop with short an
 The shared InstrumentViewport now reserves its TopBar in an InstrumentFrame row. This covers TESS, asteroid discovery, Saturn imaging and their standby variants through the same component. ProbeScanScreen and RadioMeteorScreen use that frame and no longer offset headings sideways to avoid a floating Back button. Their original scan, annotation, classification and submission callbacks remain attached. Telescope training copy now points to the agency rocket review.
 
 Browser geometry checks confirmed header bottom equals content top at 390×844, 926×428 and 1440×900 for probe and radio fixtures. The TESS browser check did not finish mounting within the inspection window, so its visual verification remains pending.
+
+### Landing and delivery migration
+
+Landing and both automatic and rover delivery now use SceneFrame. Navigation occupies a measured header row, the visual world uses the remaining viewport, and status plus actions share a wrapping operation row. Existing landing completion, unload timers, manual deposit and rover return handlers retain their original ownership. The operation row scrolls when its cargo details exceed 42% of viewport height.
+
+The previously pending TESS check passed at phone portrait, landscape and desktop after overriding TopBar's legacy inline absolute positioning. Landing and delivery header/content boundaries were checked at the same viewport sizes.

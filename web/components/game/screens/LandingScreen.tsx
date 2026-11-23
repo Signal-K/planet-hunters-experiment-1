@@ -1,5 +1,7 @@
 'use client'
 
+import SceneFrame from '@/components/layout/frame/SceneFrame'
+
 import { useEffect, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Target } from '@/lib/data'
@@ -95,20 +97,23 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
 
   return (
     <div className={`game-screen ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
+      <SceneFrame
+        surface="orbit"
+        header={<SceneTop onBack={onBack}>
+        <ScenePill>{copy.eyebrow}</ScenePill>
+        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>TARGET</i> {target.name}</ScenePill>
+        <span style={{ display: 'inline-flex' }}>{help.button}</span>
+      </SceneTop>}
+        status={<SceneCard solo label="Landing sequence status">
+        <SceneMeter kicker={ready ? copy.ready : stage} value={ready ? 'READY' : formatCountdown(remainingMs)} pct={progressPct} caption={copy.progressLabel} captionValue={`${progressPct}%`} testId="landing-progress" />
+      </SceneCard>}
+        overlay={help.layer}
+      >
       <LandingScene target={target} progress={progress} mode={mode} />
       <SceneVignette />
       <div aria-hidden="true" data-testid="landing-fade" style={{ position: 'absolute', inset: 0, background: '#02040b', opacity: leaving || !arrived ? 1 : 0, transition: `opacity ${leaving ? 1400 : 700}ms ease`, pointerEvents: 'none', zIndex: 5 }} />
 
-      <SceneTop onBack={onBack}>
-        <ScenePill>{copy.eyebrow}</ScenePill>
-        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>TARGET</i> {target.name}</ScenePill>
-        <span style={{ display: 'inline-flex' }}>{help.button}</span>
-      </SceneTop>
-      {help.layer}
-
-      <SceneCard solo label="Landing sequence status">
-        <SceneMeter kicker={ready ? copy.ready : stage} value={ready ? 'READY' : formatCountdown(remainingMs)} pct={progressPct} caption={copy.progressLabel} captionValue={`${progressPct}%`} testId="landing-progress" />
-      </SceneCard>
+      </SceneFrame>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 'use client'
 
+import SceneFrame from '@/components/layout/frame/SceneFrame'
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { defaultSpec, type ResourceKey } from '@takeon/engine'
@@ -162,6 +164,38 @@ export default function DeliveryScreen({
   if (useTakeonDropoff) {
     return (
       <div className={`game-screen ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+      <SceneFrame
+        surface="takeon"
+        header={<SceneTop onBack={onBack}>
+          <ScenePill>Cargo transfer</ScenePill>
+          <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>SITE</i> {target.name}</ScenePill>
+          <span style={{ display: 'inline-flex' }}>{help.button}</span>
+        </SceneTop>}
+        status={<SceneCard label="Cargo unload status">
+          <div className={styles.cardHead}>
+            {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
+            <SceneMeterHead kicker={roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'} value={roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'} />
+          </div>
+          {manifest}
+          {fee}
+          {dumpError && <SceneNote>{dumpError}</SceneNote>}
+          {dumped && !roverReturned && <SceneNote>Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.</SceneNote>}
+          {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth and settle the transport fee.</SceneNote>}
+        </SceneCard>}
+        actions={<SceneActions>
+          {!dumped ? (
+            <ScenePrimary testId="delivery-dump-cargo" disabled={!takeonReady} onClick={handleDump}>
+              {takeonReady ? 'Dump cargo at building site' : 'Preparing rover'}
+            </ScenePrimary>
+          ) : (
+            <ScenePrimary testId="delivery-return-rover" disabled={roverReturned} onClick={() => setRoverReturned(true)}>
+              {roverReturned ? 'Rover redocked · launch ready' : 'Return rover to ship'}
+            </ScenePrimary>
+          )}
+          <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
+        </SceneActions>}
+        overlay={help.layer}
+      >
         <div className={styles.stage}>
           <TakeOnMount
             ref={takeonRef}
@@ -180,43 +214,31 @@ export default function DeliveryScreen({
         </div>
         <SceneVignette />
 
-        <SceneTop onBack={onBack}>
-          <ScenePill>Cargo transfer</ScenePill>
-          <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>SITE</i> {target.name}</ScenePill>
-          <span style={{ display: 'inline-flex' }}>{help.button}</span>
-        </SceneTop>
-        {help.layer}
-
-        <SceneCard label="Cargo unload status">
-          <div className={styles.cardHead}>
-            {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="" />}
-            <SceneMeterHead kicker={roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'} value={roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'} />
-          </div>
-          {manifest}
-          {fee}
-          {dumpError && <SceneNote>{dumpError}</SceneNote>}
-          {dumped && !roverReturned && <SceneNote>Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.</SceneNote>}
-          {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth and settle the transport fee.</SceneNote>}
-        </SceneCard>
-
-        <SceneActions>
-          {!dumped ? (
-            <ScenePrimary testId="delivery-dump-cargo" disabled={!takeonReady} onClick={handleDump}>
-              {takeonReady ? 'Dump cargo at building site' : 'Preparing rover'}
-            </ScenePrimary>
-          ) : (
-            <ScenePrimary testId="delivery-return-rover" disabled={roverReturned} onClick={() => setRoverReturned(true)}>
-              {roverReturned ? 'Rover redocked · launch ready' : 'Return rover to ship'}
-            </ScenePrimary>
-          )}
-          <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
-        </SceneActions>
+      </SceneFrame>
       </div>
     )
   }
 
   return (
     <div className={`game-screen ln-scene-delivery ${styles.screen}`} data-testid="delivery-screen">
+      <SceneFrame
+        surface="takeon"
+        header={<SceneTop onBack={onBack}>
+        <ScenePill>Cargo transfer</ScenePill>
+        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>BERTH</i> {target.name}</ScenePill>
+        <span style={{ display: 'inline-flex' }}>{help.button}</span>
+      </SceneTop>}
+        status={<SceneCard label="Cargo unload status">
+        <SceneMeter kicker={progress >= 1 ? 'TRANSFER VERIFIED' : 'UNLOAD IN PROGRESS'} value={progress >= 1 ? 'SECURED' : formatCountdown(remainingMs)} pct={progressPct} caption="SHIP HOLD → CONTRACT DEPOT" captionValue={`${progressPct}%`} testId="delivery-progress" />
+        {manifest}
+        <SceneRows><SceneRow label="HOLD REMAINING" value={`${Math.max(0, Math.round(cargoUnits * (1 - progress)))} U`} /></SceneRows>
+        {fee}
+      </SceneCard>}
+        actions={<SceneActions>
+        <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
+      </SceneActions>}
+        overlay={help.layer}
+      >
       <div className={styles.stage}>
         <TakeOnMount
           missionId={`delivery-view-${mission.id}-${target.id}`}
@@ -229,23 +251,7 @@ export default function DeliveryScreen({
       </div>
       <SceneVignette />
 
-      <SceneTop onBack={onBack}>
-        <ScenePill>Cargo transfer</ScenePill>
-        <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>BERTH</i> {target.name}</ScenePill>
-        <span style={{ display: 'inline-flex' }}>{help.button}</span>
-      </SceneTop>
-      {help.layer}
-
-      <SceneCard label="Cargo unload status">
-        <SceneMeter kicker={progress >= 1 ? 'TRANSFER VERIFIED' : 'UNLOAD IN PROGRESS'} value={progress >= 1 ? 'SECURED' : formatCountdown(remainingMs)} pct={progressPct} caption="SHIP HOLD → CONTRACT DEPOT" captionValue={`${progressPct}%`} testId="delivery-progress" />
-        {manifest}
-        <SceneRows><SceneRow label="HOLD REMAINING" value={`${Math.max(0, Math.round(cargoUnits * (1 - progress)))} U`} /></SceneRows>
-        {fee}
-      </SceneCard>
-
-      <SceneActions>
-        <SceneGhost onClick={onBack}>PAUSE AT HUB</SceneGhost>
-      </SceneActions>
+      </SceneFrame>
     </div>
   )
 }

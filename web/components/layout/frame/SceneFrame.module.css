@@ -1,0 +1,5 @@
+.header { position: relative; padding: 8px 12px; background: #10182c; }
+.operations { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; padding: 12px; background: #10182c; max-height: 42dvh; overflow-y: auto; }
+.header > *, .operations > * { position: relative !important; inset: auto !important; width: auto !important; margin: 0; max-height: none !important; }
+.header > * { display: flex; flex-wrap: wrap; }
+.operations > * { flex: 1 1 260px; min-width: 0; }
