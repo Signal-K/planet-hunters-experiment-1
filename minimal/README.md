@@ -1,18 +1,14 @@
 # Landnam Minimal
 
-The simple, no-context version of Landnam (SSL-864), served at playlandnam.space/minimal.
-Sign-in is required. Rules: notes/decisions "Landnam Minimal is one side-on view of the base".
+Run the agency from Earth at /minimal/ on Landnam’s origin. Sign in through the existing Landnam account gate.
 
-- One side-on view. `src/Stage.tsx` draws home (the base, from Landnam's base-site map) and a
-  destination (the same frame in that world's colours, its ore in the ground). Only the rocket
-  travels between them.
-- `src/App.tsx` is the whole flow: the base with a counter under each structure, NEXT MISSION,
-  a briefing sheet, LAUNCH off the pad, one job at the destination (tap ore, or one button), the
-  rocket landing back on the pad, and a report sheet. The current meteor shower shows in the sky.
-- Rules and data are Landnam's: missions (`src/chapters.ts`), structure levels
-  (`src/structures.ts`), results (`src/progress.ts`). Progress syncs to the account
-  (`src/progressSync.ts`); francs are shared with Landnam (`src/sharedSave.ts`).
-- `cd web && npm run dev:minimal` serves it at http://localhost:4330/minimal/ (Landnam's dev
-  server on :4320 serves /game and /fonts). `?stage=1` plays as a stand-in pilot;
-  `&runs=client-contract:2,satellite:1` seeds finished runs.
-- `npm run build:minimal` builds into `web/public/minimal/`; `npm run typecheck:minimal` checks it.
+## Play locally
+
+Start Landnam’s web server on port 4320 for its assets, account gate and research instruments. From `web/`, run `npm run dev:minimal` and open http://localhost:4330/minimal/. Add `?stage=1` to play with the development fixture. Run `npm run typecheck:minimal` and `npm run build:minimal` before shipping. The build goes into `web/public/minimal/`.
+
+## The game
+
+- Select the next mission, launch, complete the job and return. The flight plan leads through the Moon, Mars, the asteroid belt and Europa to a telescope programme. Real discoveries in the pilot’s Landnam save become follow-up destinations.
+- Facilities gain levels from completed mission types. Arrange base moves facilities between sites and places individual scenery objects on the ground. The launchpad carries its attached rocket. Placement is saved per pilot on the device.
+- The Research console reads Landnam’s monthly project and opens the original scientific instruments on the same origin. The event board reads Landnam’s event definitions and badge-gated special missions. Survey, launch and mining flights use the shared research stamp, fleet and contribution rules.
+- World.tsx composes Landnam Scene and GameObject instances for both the spaceport and destinations. The Earth sky uses the shared world simulation. Structures, rockets, scenery, deposits and payloads have independent transforms. New transparent scenery assets live in src/art/props.

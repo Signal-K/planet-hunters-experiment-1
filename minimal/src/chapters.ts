@@ -7,13 +7,12 @@ import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID, s
 import { TARGETS, compatibleTargetsFor } from '@landnam/lib/data/targets'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
 import { CLIENT_SLOTS } from '@landnam/lib/data/clients'
-import { SHOWERS } from '@landnam/lib/data/showers'
+import { DEBRIS_PRESETS, type SkyEvent } from '@landnam/lib/data/sky-events'
+import { SHOWERS, type ShowerDeclaration } from '@landnam/lib/data/showers'
 import { generateDailyClientPool, todayDateKey } from '@landnam/lib/data/daily-client-missions'
 import { STATIC_CATALOG } from '@landnam/lib/catalog'
 import { buildRuntimeCatalog, showerTarget, TRANSIT_TELESCOPE_MISSION_ID } from '@landnam/lib/runtimeCatalog'
-import { probeMissionId } from '@landnam/lib/probes/survey-probe'
-import { tessCandidateToExoplanetTarget } from '@landnam/lib/data/tess-candidates'
-import { STAGE_TESS_FEED } from '@landnam/lib/stage-feed'
+import { probeMission, probeMissionId } from '@landnam/lib/probes/survey-probe'
 import type { Mission, Target } from '@landnam/lib/data/types'
 
 /**
@@ -39,6 +38,7 @@ export type MissionType =
   | 'survey-flight'
 
 export interface Chapter {
+  eventId?: string
   number: number
   name: string
   goal: string
@@ -56,10 +56,6 @@ export interface Chapter {
 const nearest = (mission: Mission | undefined): Target | undefined =>
   mission && (TARGETS.find(t => t.id === mission.targetId) ?? [...compatibleTargetsFor(mission, TARGETS)].sort((a, b) => a.orbit - b.orbit)[0])
 
-// The candidate the chapter 4 telescope turns up (Landnam's stage feed), as the
-// exoplanet target Landnam makes from a classified discovery.
-const discovered = STAGE_TESS_FEED[0] && tessCandidateToExoplanetTarget(STAGE_TESS_FEED[0])
-
 // A client build job from today's pool. Its materials are what the Stockpile
 // chapter hauls home, so the two chapters feed each other as in Landnam.
 const build = generateDailyClientPool(todayDateKey(), 4, CLIENT_SLOTS, MINERAL_META).find(m => !!m.construction)
@@ -72,7 +68,7 @@ const runtime = buildRuntimeCatalog({
   catalog: STATIC_CATALOG,
   freeOperations: true,
   missionsDone: 3,
-  discoveredTargets: discovered ? { [discovered.id]: discovered } : {},
+  discoveredTargets: {},
   player: {
     placed: ['control-station'],
     probes: {},
@@ -95,14 +91,11 @@ const delivery = MISSIONS.find(m => !!m.deliveryTargetId && !m.locked)
 const telescope = runtimeMission(m => m.id === TRANSIT_TELESCOPE_MISSION_ID)
 // 5. A survey probe to the nearest body without one.
 const probe = runtimeMission(m => m.id.startsWith(probeMissionId('')))
-// 6. A meteor shower run. The Leonids peak in November.
-const shower = SHOWERS.find(s => s.id.startsWith('leonids')) ?? SHOWERS[0]
-const showerRun = shower && showerRunMission(shower.id)
 // 7. A materials haul for the construction focus, into storage.
 const haul = runtimeMission(m => m.id === RESOURCE_FOCUS_MISSION_ID)
 // 8. The client build job above: carry the stored materials out and raise it.
 // 9. A survey flight following up a satellite discovery.
-const surveyFlight = runtimeMission(m => m.id.startsWith('exo-survey-'))
+
 
 /** Every world with ore, nearest first: the rocket's reach, not the mission, decides where a market run may go. */
 function destinationsFor(mission: Mission | undefined): Target[] {
@@ -116,12 +109,49 @@ export const CHAPTERS: Chapter[] = [
   { number: 3, name: 'Courier', goal: 'Mine an order, then drop it at a second world.', teaches: 'Deliveries', type: 'delivery', verb: 'deliver', mission: delivery, target: nearest(delivery), deliveryTarget: TARGETS.find(t => t.id === delivery?.deliveryTargetId) },
   { number: 4, name: 'Eyes on the sky', goal: 'Launch a space telescope into orbit.', teaches: 'Satellites', type: 'satellite', verb: 'deploy', mission: telescope, target: runtimeTarget(telescope?.targetId) },
   { number: 5, name: 'Probe', goal: 'Leave a survey probe in orbit to map a world.', teaches: 'Probes', type: 'survey-probe', verb: 'deploy', mission: probe, target: runtimeTarget(probe?.targetId) },
-  { number: 6, name: 'Shower', goal: 'Fly into the meteor shower and catch fragments.', teaches: 'Sky events', type: 'shower-run', verb: 'mine', mission: showerRun, target: shower && showerTarget(shower.id) },
   { number: 7, name: 'Stockpile', goal: 'Haul materials home and store them for building.', teaches: 'Storage', type: 'materials-haul', verb: 'mine', mission: haul, target: nearest(haul) },
   { number: 8, name: 'Build', goal: 'Carry your materials out and raise a structure.', teaches: 'Construction', type: 'construction', verb: 'build', mission: build, target: nearest(build) },
-  { number: 9, name: 'Follow-up', goal: 'Send a probe to the world your satellite found.', teaches: 'Research', type: 'survey-flight', verb: 'survey', mission: surveyFlight, target: runtimeTarget(surveyFlight?.targetId) },
 ]
 
+// New flight numbers leave the original nine save slots intact.
+const moon: Target = { id: 'moon', name: 'Moon', type: 'planet', orbit: 1, difficulty: 'L1', brief: 'Airless basalt plains and exposed highlands.', minerals: ['iron', 'silicon'] }
+const body = (id: string) => TARGETS.find(target => target.id === id)!
+function expedition(number: number, name: string, goal: string, target: Target, mining = false): Chapter {
+  const template = mining ? selfDirected : probeMission(target,number)
+  if (!template) throw new Error('Missing Landnam expedition template')
+  return { number, name, goal, target, teaches: mining ? 'Mineral recovery' : 'Orbital survey',
+    type: mining ? 'self-directed' : 'survey-probe', verb: mining ? 'mine' : 'survey',
+    mission: { ...template, id: `minimal-${target.id}-${number}`, title: name, targetId: target.id } }
+}
+export const PROGRAM = [
+  expedition(101, 'Lunar reconnaissance', 'Deploy a survey probe to chart the Moon’s surface and locate your first mineral deposits.', moon),
+  expedition(102, 'First lunar harvest', 'Recover lunar ore from the mapped deposits. Sell the first haul to fund your agency.', moon, true),
+  expedition(103, 'Survey the red planet', 'Map the iron-rich plains of Mars from orbit.', body('mars')),
+  expedition(104, 'Prospect the belt', 'Fill the hold with metals from the exposed surface of 433 Eros.', body('eros'), true),
+  expedition(105, 'Map the dwarf planet', 'Survey the ice-rich crust of Ceres for the next exploration programme.', body('ceres')),
+  expedition(106, 'Beyond the belt', 'Send a probe past Jupiter to survey Europa’s ice shell.', body('europa')),
+  CHAPTERS.find(c => c.type === 'satellite')!,
+]
+export function discoveryFlight(target: Target): Chapter {
+  const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3,
+    discoveredTargets: { [target.id]: target }, player: { placed: ['control-station'], probes: {} } as Parameters<typeof buildRuntimeCatalog>[0]['player'] })
+  return { number: 9, name: `Survey ${target.name}`, goal: target.brief, type: 'survey-flight', verb: 'survey',
+    teaches: 'Exoplanet follow-up', target, mission: catalog.missions.find(m => m.id.startsWith('exo-survey-') && m.targetId === target.id) }
+}
+export function eventFlight(shower: ShowerDeclaration): Chapter {
+  const mission = showerRunMission(shower.id)
+  return { number: shower.id === 'leonids-2026' ? 6 : 300 + SHOWERS.indexOf(shower), name: mission.title,
+    goal: mission.brief, teaches: 'Sky event', type: 'shower-run', verb: 'mine', mission, target: showerTarget(shower.id) }
+}
+
+export function debrisFlight(event:SkyEvent): Chapter | undefined {
+  const preset=DEBRIS_PRESETS.find(p=>p.eventId===event.id)
+  if(!preset || !selfDirected)return
+  const target={...body('eros'), minerals:[preset.resourceId]}
+  return {number:350+DEBRIS_PRESETS.indexOf(preset),eventId:event.id,name:event.name,goal:`Collect ${preset.label.toLowerCase()} from the field around ${target.name}.`,
+    teaches:'Debris recovery',type:'shower-run',verb:'mine',target,
+    mission:{...selfDirected,id:'minimal-'+event.id,title:event.name,targetId:target.id,requires:{...selfDirected.requires,minerals:{[preset.resourceId]:5}}}}
+}
 export function mineralName(id: string): string {
   return MINERAL_META[id]?.name ?? id
 }

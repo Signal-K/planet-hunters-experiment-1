@@ -6,7 +6,10 @@
 // view, and the rocket landing back on the pad, where the counters move.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MINERAL_META } from '@landnam/lib/data/minerals'
-import { SHOWERS } from '@landnam/lib/data/showers'
+import { showerForRunMission } from '@landnam/lib/data/showers'
+import { ORIONIDS_FRAGMENT_GOAL } from '@landnam/lib/data/missions'
+import { Console } from './Console'
+import { connectResearch, recordFlight } from './research'
 import type { Target } from '@landnam/lib/data/types'
 import { currentPilot, SIGN_IN_URL } from './auth'
 import { CHAPTERS, francs, mineralName, type Chapter } from './chapters'
@@ -14,14 +17,14 @@ import { applyResult, missingMaterials, readProgress, resultFor, writeProgress, 
 import { pushProgress, syncProgress } from './progressSync'
 import { creditLandnam, readSharedSave } from './sharedSave'
 import { base as baseFor, counterText, levelUps, rocketReaching, type Base, type RunCounts, type StructureId, type StructureState } from './structures'
-import { Away, Home, ORDER, groundLine, useView, type Deposit, type Rocket } from './Stage'
+import { World, type Deposit } from './World'
 
 const LIFTOFF_MS = 1500
 const LANDING_MS = 1500
 const LEAVE_MS = 900
 const RELEASE_MS = 1600
 const BUILD_MS = 1800
-const SHOWER_FRAGMENTS = 5
+const SHOWER_FRAGMENTS = ORIONIDS_FRAGMENT_GOAL
 
 type Run = {
   chapter: Chapter
@@ -44,8 +47,7 @@ type Sheet =
   | { kind: 'structure'; state: StructureState }
   | { kind: 'report'; result: RunResult; upgrades: ReturnType<typeof levelUps>; chapter: Chapter }
 
-const SHOWER = SHOWERS.find(s => s.id.startsWith('leonids')) ?? SHOWERS[0]
-const SHOWER_CHAPTER = CHAPTERS.find(c => c.type === 'shower-run')!
+
 
 /** Dev only: `?runs=client-contract:2,satellite:1` plays as a pilot with those runs flown. */
 function devRuns(progress: MinimalProgress): MinimalProgress {
@@ -67,21 +69,9 @@ function outOfReach(chapter: Chapter, base: Base): string | undefined {
   return far > base.rocket.maxOrbit ? rocketReaching(far) ?? 'a bigger rocket' : undefined
 }
 
-/** The mission to suggest: one never flown first, then whatever moves the closest structure up a level. */
-function suggested(base: Base, done: ReadonlySet<number>): Chapter {
-  const open = CHAPTERS.filter(c => base.chapters.has(c.number) && c.mission && !outOfReach(c, base))
-  const fresh = open.find(c => !done.has(c.number))
-  if (fresh) return fresh
-  for (const s of base.structures.filter(s => !s.max).sort((a, b) => (a.need - a.have) - (b.need - b.have))) {
-    const pick = open.find(c => !s.def.counts || s.def.counts.includes(c.type))
-    if (pick) return pick
-  }
-  return open[0] ?? CHAPTERS[0]
-}
-
 /** What this stop's ground holds, and whether a deposit can be cut with the base's laser. */
 function orePlan(chapter: Chapter, base: Base) {
-  const showerFragment = chapter.type === 'shower-run' ? SHOWER?.resourceId : undefined
+  const showerFragment = showerForRunMission(chapter.mission?.id)?.resourceId
   const order: Record<string, number> = showerFragment ? { [showerFragment]: SHOWER_FRAGMENTS } : { ...(chapter.mission?.requires.minerals ?? {}) }
   const open = Object.keys(order).length === 0
   const pool = (chapter.target?.minerals ?? []).filter(id => MINERAL_META[id] && !id.endsWith('_debris'))
@@ -97,8 +87,8 @@ export function App() {
   const [fresh, setFresh] = useState<ReadonlySet<StructureId>>(new Set())
   const [toast, setToast] = useState<string | null>(null)
   const nextKey = useRef(1)
-  const { w, h } = useView()
-  const groundVar = { '--ground': `${groundLine(h)}px` } as React.CSSProperties
+  const [connected,setConnected] = useState(false)
+  const flightId = useRef('')
 
   // Progress is saved to the account (SSL-877): merge with this device's copy on load and when back online.
   const pilotId = pilot?.id
@@ -106,6 +96,7 @@ export function App() {
     if (!pilot) return
     let live = true
     const sync = () => {
+      void connectResearch(pilot.id).then(()=>{if(live)setConnected(true)}).catch(()=>{if(live)setConnected(false)})
       void syncProgress(pilot, readProgress(pilot.id)).then(merged => {
         creditLandnam(pilot.id, merged ?? readProgress(pilot.id))
         if (!live || !merged) return
@@ -135,18 +126,8 @@ export function App() {
   const base = useMemo(() => baseFor(runs), [runs])
 
   if (!pilot || !progress || !save) {
-    return (
-      <main className="mn" data-scene="minimal-sign-in">
-        <Home base={base} rocket="parked" fresh={new Set()} />
-        <footer className="mn-bottom">
-          <section className="mn-card">
-            <h1>Run a space agency.</h1>
-            <p>Fly missions and your base grows. Sign in with your Landnam account; your francs come with you.</p>
-          </section>
-          <a className="mn-cta" href={SIGN_IN_URL}>SIGN IN TO PLAY</a>
-        </footer>
-      </main>
-    )
+    return <Console base={base} pilot={null} done={new Set()} money={0} fresh={fresh} open={()=>location.assign(SIGN_IN_URL)} structure={()=>location.assign(SIGN_IN_URL)} connected={false}/>
+
   }
 
   const done = new Set(progress.done)
@@ -174,16 +155,17 @@ export function App() {
   const field = (chapter: Chapter): Deposit[] => {
     if (chapter.verb !== 'mine' && chapter.verb !== 'deliver') return []
     const plan = orePlan(chapter, base)
-    const cols = Math.max(3, Math.min(6, Math.floor((Math.min(w, 640) - 24) / 72)))
+    const cols = Math.max(3, Math.min(6, Math.floor((Math.min(window.innerWidth, 640) - 24) / 72)))
     const list: Deposit[] = []
     for (let row = 0; row < 2; row++) for (let col = 0; col < cols; col++) list.push(deposit(plan, {}, list, col, row))
     return list
   }
 
   const start = (chapter: Chapter) => {
+    flightId.current = crypto.randomUUID()
     setSheet(null)
     setRun({ chapter, phase: 'launch', stop: 0, haul: {}, deposits: [], done: false })
-    window.setTimeout(() => setRun(r => r && { ...r, phase: 'away', deposits: field(chapter), done: chapter.verb === 'deliver' ? false : false }), LIFTOFF_MS)
+    window.setTimeout(() => setRun(r => r && { ...r, phase: 'away', deposits: field(chapter), done: false }), LIFTOFF_MS)
   }
 
   const cut = (key: number) => {
@@ -230,14 +212,16 @@ export function App() {
 
   const leave = () => {
     if (!run) return
+    const id = flightId.current
     setRun({ ...run, phase: 'leaving' })
     window.setTimeout(() => {
+      if(id!==flightId.current)return
       if (run.chapter.verb === 'deliver' && run.stop === 0) {
         setRun(r => r && { ...r, phase: 'away', stop: 1, deposits: [], done: false, beam: undefined })
         return
       }
       setRun(r => r && { ...r, phase: 'land' })
-      window.setTimeout(() => land(run.chapter, run.haul), LANDING_MS)
+      window.setTimeout(() => {if(id===flightId.current)land(run.chapter, run.haul)}, LANDING_MS)
     }, LEAVE_MS)
   }
 
@@ -248,6 +232,7 @@ export function App() {
     const next = applyResult(progress, chapter, result)
     writeProgress(pilot.id, next)
     creditLandnam(pilot.id, next)
+    recordFlight(pilot.id,chapter,haul,flightId.current)
     void pushProgress(pilot, next)
     setProgress(next)
     setFresh(new Set(upgrades.map(u => u.def.id)))
@@ -256,6 +241,7 @@ export function App() {
   }
 
   const abandon = () => {
+    flightId.current=''
     setRun(null)
     setToast('Back at base. Nothing banked.')
   }
@@ -275,21 +261,10 @@ export function App() {
       : chapter.verb === 'build' ? 'BUILD'
       : 'DELIVER'
     const onward = chapter.verb === 'deliver' && run.stop === 0 ? `FLY TO ${chapter.deliveryTarget?.name.toUpperCase() ?? 'DROP-OFF'}` : 'HEAD HOME'
-    const hint = mining ? (run.done ? null : plan.open ? 'Tap ore to cut it. Fill the hold.' : 'Tap the ore the order needs.') : null
+    const hint = mining ? (run.done ? null : chapter.type==='shower-run' ? 'Catch the bright fragments as they cross the field.' : plan.open ? 'Tap ore to cut it. Fill the hold.' : 'Tap the ore the order needs.') : null
     return (
       <main className="mn" data-scene="minimal-away">
-        <Away
-          key={run.stop}
-          target={where}
-          rocket={run.phase === 'leaving' ? 'leaving' : 'arriving'}
-          deposits={mining ? run.deposits : []}
-          beam={run.beam}
-          payload={run.payload}
-          raising={run.raising}
-          crates={run.crates}
-          event={chapter.type === 'shower-run'}
-          onCut={cut}
-        />
+        <World base={base} target={where} phase={run.phase==='leaving'?'leaving':'away'} deposits={mining?run.deposits:undefined} beam={run.beam} payload={run.payload} raising={run.raising} crates={run.crates} event={chapter.type==='shower-run'} onCut={cut}/>
         <header className="mn-top">
           <button className="mn-chip" onClick={abandon}>‹ BASE</button>
           <span className="mn-chip">{where.name}</span>
@@ -312,70 +287,13 @@ export function App() {
 
   // ---- The base -------------------------------------------------------------
 
-  const rocket: Rocket = run?.phase === 'launch' ? 'launching' : run?.phase === 'land' ? 'landing' : 'parked'
-  const next = suggested(base, done)
-  const open = CHAPTERS.filter(c => base.chapters.has(c.number) && c.mission && c.type !== 'shower-run')
-  const showerOpen = base.chapters.has(SHOWER_CHAPTER.number)
-  const exchange = base.structures.find(s => s.def.id === 'exchange')!
-  const busy = !!run
-
   return (
-    <main className="mn" data-scene="minimal-base" style={groundVar}>
-      <Home base={base} rocket={rocket} fresh={fresh} event={!!SHOWER} />
-      <header className="mn-top">
-        <span className="mn-chip mn-money" aria-label="Your francs">{francs(money)}</span>
-        <span className="mn-chip">{base.rocket.name} · hold {base.rocket.hold}</span>
-      </header>
-      {SHOWER && !busy && (
-        <button
-          className={`mn-event${showerOpen ? '' : ' mn-event-locked'}`}
-          onClick={() => (showerOpen ? setSheet({ kind: 'brief', chapter: SHOWER_CHAPTER }) : setToast(`Shower runs open at Exchange level 3. ${counterText(exchange)} to the next level.`))}
-        >
-          <span className="mn-event-name">☄ {SHOWER.name} meteor shower</span>
-          <span className="mn-event-sub">{showerOpen ? 'Live now · fly into it' : 'Live now · opens at Exchange LV 3'}</span>
-        </button>
-      )}
-      <div className="mn-plates" aria-label="Your base">
-        {ORDER.map(id => {
-          const s = base.structures.find(st => st.def.id === id)!
-          return (
-            <button
-              key={id}
-              className={`mn-plate${fresh.has(id) ? ' mn-fresh' : ''}`}
-              onClick={() => setSheet({ kind: 'structure', state: s })}
-              aria-label={`${s.def.name}, level ${s.level}. ${counterText(s)}.`}
-            >
-              <span className="mn-plate-name">{s.def.name.replace('Control Station', 'Control')}</span>
-              <span className="mn-plate-lv">LV {s.level}</span>
-              <span className="mn-bar"><i style={{ width: `${s.max ? 100 : (s.have / s.need) * 100}%` }} /></span>
-              <span className="mn-plate-count">{s.max ? 'MAX' : `${s.have}/${s.need}`}</span>
-            </button>
-          )
-        })}
-      </div>
-      {!busy && (
-        <footer className="mn-bottom">
-          {open.length > 1 && (
-            <nav className="mn-row mn-missions" aria-label="Missions">
-              {open.map(c => {
-                const needs = outOfReach(c, base)
-                return (
-                  <button key={c.number} className={`mn-chip${c === next ? ' mn-chip-next' : ''}`} disabled={!!needs} onClick={() => setSheet({ kind: 'brief', chapter: c })}>
-                    {c.name}{!done.has(c.number) && !needs ? ' ·  new' : ''}{needs ? ` · needs ${needs}` : ''}
-                  </button>
-                )
-              })}
-            </nav>
-          )}
-          <button className="mn-cta" onClick={() => setSheet({ kind: 'brief', chapter: next })}>
-            <span className="mn-cta-kicker">NEXT MISSION</span>
-            {next.name.toUpperCase()}
-          </button>
-        </footer>
-      )}
-
+    <main className={run ? "mn" : "mn-console"} data-scene="minimal-base">
+      {run ? <><World base={base} pilotId={pilot.id} phase={run.phase==='launch'?'launch':'land'}/><div className="mn-bottom"><p className="mn-chip">{run.phase==='launch'?'Launching':'Landing'} · {run.chapter.name}</p></div></> :
+        <Console base={base} pilot={pilot} done={done} money={money} fresh={fresh} connected={connected} structure={state=>setSheet({kind:'structure',state})} open={chapter=>{setPicked(undefined);setSheet({kind:'brief',chapter})}}/>}
       {sheet?.kind === 'brief' && (() => {
         const chapter = withTarget(sheet.chapter)
+        const hardOre = Object.keys(chapter.mission?.requires.minerals || {}).find(id=>(MINERAL_META[id]?.laserAccess||1)>base.laser)
         const blocked = outOfReach(chapter, base)
         const missing = Object.entries(missingMaterials(chapter, progress.stash))
         const asks = Object.entries(chapter.mission?.requires.minerals ?? {})
@@ -403,9 +321,10 @@ export function App() {
                 })}
               </div>
             )}
+            {hardOre && <p className="mn-warn">Upgrade the Hangar laser to cut {mineralName(hardOre)}.</p>}
             {blocked && <p className="mn-warn">Too far for the {base.rocket.name}. The Launchpad's next level brings the {blocked}.</p>}
             {missing.length > 0 && <p className="mn-warn">Store {missing.map(([id, n]) => `${n} ${mineralName(id)}`).join(' and ')} first (Stockpile).</p>}
-            <button className="mn-cta" disabled={!chapter.mission || !chapter.target || !!blocked || missing.length > 0} onClick={() => start(chapter)}>LAUNCH</button>
+            <button className="mn-cta" disabled={!chapter.mission || !chapter.target || !!blocked || !!hardOre || missing.length > 0} onClick={() => start(chapter)}>LAUNCH</button>
           </Modal>
         )
       })()}
@@ -450,13 +369,12 @@ export function App() {
 }
 
 function Modal({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="mn-backdrop" onClick={onClose}>
-      <section className="mn-card mn-sheet" role="dialog" aria-label={label} onClick={e => e.stopPropagation()}>
-        {children}
-      </section>
-    </div>
-  )
+  const dialog=useRef<HTMLDialogElement>(null)
+  useEffect(()=>{const el=dialog.current;el?.showModal();return ()=>el?.close()},[])
+  return <dialog ref={dialog} className="mn-native-dialog" aria-label={label} onCancel={onClose}
+    onClick={event=>{if(event.target===event.currentTarget)onClose()}}>
+    <section className="mn-card mn-sheet"><button className="sheet-close" onClick={onClose} aria-label="Close">×</button>{children}</section>
+  </dialog>
 }
 
 function Ore({ id, n }: { id: string; n?: number }) {
