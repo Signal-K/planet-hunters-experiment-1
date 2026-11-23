@@ -1,5 +1,7 @@
 'use client'
 
+import BoardFrame from '@/components/layout/frame/BoardFrame'
+
 import { useEffect, useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
@@ -139,6 +141,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         cargo={cargoEntries.map(([id, units]) => ({ id, units }))}
       />
 
+      <BoardFrame header={<div className={styles.navigation}>
       <div className={styles.hud}>
         <div className={styles.cluster}>
           <button type="button" aria-label="Settings" onClick={openSettings}><Settings size={20} /></button>
@@ -149,7 +152,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           {help.button}
         </div>
       </div>
-      {help.layer}
+      </div>} overlay={help.layer}>
 
       {/* Two tones like Community research: what the flight did on the left, settling up on the right. */}
       <article className={styles.workspace} data-ui-zone={UI_ZONES.screenContent}>
@@ -161,9 +164,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <h2 className="debrief-result-panel__title">{mission.title}</h2>
             <p className="debrief-result-panel__kicker">Program Outcome</p>
             <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
-            <p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
+            <details><summary>Deployment details</summary><p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
               ? mission.customPlan ? `The probe stays in orbit at ${target.name} and maps the planned ${mission.customPlan.amount} sectors. Download its readings at the Data hub as they arrive.` : `The probe stays in orbit at ${target.name} and does not come home. It maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and its finds land in your data hub.`
-              : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p>
+              : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p></details>
           </section>
         ) : (
           <section className={styles.card} aria-label="Mission result" data-surface="cream">
@@ -255,11 +258,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 : 'Choose your next activity, or return to Base. Every option completes this flight first.'}
           </p>
           {exits.some(exit => exit.id !== 'again') && (
-            <nav className={styles.exits} aria-label="Other next activities" data-testid="debrief-exits">
+            <details><summary>More activities</summary><nav className={styles.exits} aria-label="Other next activities" data-testid="debrief-exits">
               {exits.filter(exit => exit.id !== 'again').map(exit => (
                 <button key={exit.id} type="button" className={styles.exit} data-testid={`debrief-exit-${exit.id}`} disabled={collecting} onClick={() => collect(exit.id)}>{exit.label}</button>
               ))}
-            </nav>
+            </nav></details>
           )}
         </section>
 
@@ -353,6 +356,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           onComplete={() => { setDismantled(true); setScrapping(false) }}
         />
       )}
+      </BoardFrame>
     </div>
   )
 }

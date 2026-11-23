@@ -61,3 +61,11 @@ Browser geometry checks confirmed header bottom equals content top at 390×844, 
 Landing and both automatic and rover delivery now use SceneFrame. Navigation occupies a measured header row, the visual world uses the remaining viewport, and status plus actions share a wrapping operation row. Existing landing completion, unload timers, manual deposit and rover return handlers retain their original ownership. The operation row scrolls when its cargo details exceed 42% of viewport height.
 
 The previously pending TESS check passed at phone portrait, landscape and desktop after overriding TopBar's legacy inline absolute positioning. Landing and delivery header/content boundaries were checked at the same viewport sizes.
+
+### Scrolling audit
+
+Inspected the authored scene preview catalog at 390×844, repeating previews that initially failed to mount. Loading-only captures do not verify gameplay layout. The main long defaults were research, Data hub, mission planner, debrief and refinery recipes.
+
+Research now opens the current task first, with other weekly steps, event detail, milestone rewards and history expandable. Data hub selects a single instrument while retaining all instruments in a selector, including those available to build. Instrument detail and fleet controls remain expandable. Its verified phone fixture decreased from 2,117px to 1,077px. The debrief now uses a measured header and puts deployment detail and alternate activities behind explicit expansions. Planner details and saved plans expand on demand; its map opens by default on desktop and starts collapsed on phones. Both verified phone fixtures now have no internal scroll region exceeding the available height by more than 80px.
+
+Refinery's recipe list still scrolls slightly and remains a follow-up. These observations cover fixture layout, not an end-to-end certification of every gameplay state.

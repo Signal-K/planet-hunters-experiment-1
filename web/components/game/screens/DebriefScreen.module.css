@@ -327,3 +327,9 @@
 
 .siteLink { min-height: 44px; width: 100%; margin-top: 8px; padding: 8px 12px; border: 1px solid var(--ln-cyan-border); border-radius: 12px; background: var(--ln-blueprint-ink); color: var(--ln-map-sun); font: 800 14px/1.4 var(--ln-font-display); text-transform: uppercase; cursor: pointer; }
 .siteLink:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 3px; }
+
+.navigation .hud { position:relative; inset:auto; min-height:52px; padding:8px 12px; background:#10182c; }
+.workspace .story, .workspace .settle { padding-top:16px; }
+@media (orientation:portrait) and (max-width:700px) {
+ .workspace .story { flex:none; justify-content:flex-start; }
+}
