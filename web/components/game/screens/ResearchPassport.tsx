@@ -31,7 +31,7 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
   const owned = !!confirmed?.earned && !!part && (player.researchRocketParts ?? []).includes(part.id)
   const contributed = mine > 0 || (confirmed?.mine ?? 0) > 0
   const date = (key: string) => new Date(`${key}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-  const rewardLine = owned ? 'Part earned · ready in the workshop'
+  const rewardLine = owned ? 'Part earned · saved to your agency'
     : confirmed?.reachedAt != null ? (pending ? 'Your stamp is waiting to sync. The part unlocks after it is confirmed.' : contributed ? 'Confirming your part…' : current ? 'Goal reached. Add one research stamp this week to earn the part.' : 'Goal reached · you did not contribute this week.')
       : current && pending > 0 && total >= goal ? 'Waiting for synced stamps. The shared goal and reward will be confirmed online.' : current ? 'The community goal unlocks this part for everyone who contributes at least one stamp this week.' : 'The community goal was not reached. This week’s part was not earned.'
   return <div className={styles.week} data-testid="research-passport">
@@ -65,7 +65,7 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
           <small>{confirmed ? `${confirmed.total} confirmed stamps${pending ? ` + ${pending} waiting to sync` : ''}` : status === 'signed-out' ? 'Sign in to see the shared total.' : status === 'offline' ? 'Offline · shared total will refresh when connected.' : 'Waiting for the shared total…'}</small>
         </div>
         <p className={styles.rewardStatus} data-testid="passport-reward-status">{rewardLine}</p>
-        {owned && <button onClick={onWorkshop} data-testid="passport-workshop">Fit in rocket workshop →</button>}
+        {owned && <button onClick={onWorkshop} data-testid="passport-workshop">View agency rocket</button>}
         {status === 'offline' && confirmed && <p>Offline · showing the last confirmed page.</p>}
         <div className={styles.seal}>{owned ? 'PART EARNED' : contributed ? 'CONTRIBUTOR' : 'RESEARCH PASSPORT'}</div>
       </section>

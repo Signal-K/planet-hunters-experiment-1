@@ -571,6 +571,7 @@ export interface GameActions {
   setSubsurfaceView: (v: boolean) => void
   onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onPickTarget: (id: string) => void
+  prepareAgencyRocket: () => void
   onPurchaseRocket: (rocketId: string) => void
   onMoveStagedRocket: (stagedRocketId: string) => void
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
@@ -629,6 +630,7 @@ export interface GameActions {
   collectProbeData: () => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
+  reviewAgencyRocket: () => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   gainResearchXP: (amount: number) => void
   /** SSL-512: point an owned telescope at a body. */

@@ -1,3 +1,10 @@
+import type { Catalog } from '@/lib/catalog'
+import { compatibleTargetsFor } from '@/lib/data/targets'
+import { rocketConfigForModel } from '@/lib/data/rockets'
+import { validateBuild } from '@/lib/data/parts'
+import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
+import { communityBonusRate } from '@/lib/research/marketplace'
+import { rocketPadLevel } from '@/lib/data/rockets'
 import { buildingLevel, hangarRocketDiscount } from '@/lib/data/building-levels'
 import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
 import { ROCKET_PRICES, ROCKET_RESEARCH_XP } from '@/lib/data/economy'
@@ -34,6 +41,27 @@ export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pic
   // SSL-792: an upgraded hangar builds rockets for less.
   const discount = player.placed?.includes('hangar') ? hangarRocketDiscount(buildingLevel(player, 'hangar')) : 0
   return Math.round(list * (1 - discount))
+}
+
+export function agencyRocket(player: Player): RocketModel {
+  const pad = buildingLevel(player, 'launchpad')
+  return ROCKET_MODELS.filter(model => rocketUnlocked(model, player) && rocketPadLevel(model) <= pad).reduce(
+    (best, model) => model.tier > best.tier ? model : best, ROCKET_MODELS[0],
+  )
+}
+
+export function agencyTargets(mission: Mission, catalog: Pick<Catalog, 'parts' | 'targets'>, player: Player) {
+  const assigned = rocketConfigForModel(agencyRocket(player))
+  if (mission.payload?.type === 'rover') assigned.drill = 'cargo-module-t1'
+  return compatibleTargetsFor(mission, catalog.targets).filter(target => {
+    if (target.type === 'exoplanet') return false
+    const staged = player.stagedRockets?.find(vehicle => vehicle.missionId === mission.id && vehicle.targetId === target.id)
+    return validateBuild({
+      mission, target, rocket: staged?.rocket ?? assigned, parts: catalog.parts,
+      launchpadLevel: buildingLevel(player, 'launchpad'),
+      loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel,
+    }).ok
+  })
 }
 
 export function getRequiredRocketModel(missionsDone: number): RocketModel {

@@ -9,7 +9,7 @@ import styles from './TutorialCompleteSheet.module.css'
 const STAGE_SUMMARIES: Record<Exclude<AgencyTrainingStage, 'free-ops'>, string> = {
   mining: 'Complete a mine-and-return client order.',
   scan: 'Classify a real transit light curve.',
-  part: 'Fit a module in each ship stage and confirm.',
+  part: 'Review your rocket’s capacity and range.',
   launchpad: 'Every mission launches from your pad.',
   extraction: 'Mine ore for a client and bring it home.',
   transport: 'Mine at one site, deliver to another.',

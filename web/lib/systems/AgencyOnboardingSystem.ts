@@ -24,7 +24,7 @@ export const AGENCY_TRAINING_STAGES: readonly AgencyTrainingStage[] = ['mining',
 const AGENCY_TRAINING_LABELS: Record<AgencyTrainingStage, string> = {
   mining: 'Mining try',
   scan: 'Planet scan try',
-  part: 'Part tweak try',
+  part: 'Agency rocket',
   launchpad: 'Place Launchpad',
   extraction: 'Extraction',
   transport: 'Transport',

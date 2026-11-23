@@ -3,14 +3,13 @@
 import { planQuote } from '@/lib/mission-planner'
 import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { communityBonusRate } from '@/lib/research/marketplace'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, smallestRocketHolding, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, validateBuild } from '@/lib/data'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
-import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
 import MissionBoard from '@/components/game/MissionBoard'
 import MissionPlanStrip from '@/components/game/MissionPlanStrip'
 import styles from './MissionSetupRoutes.module.css'
@@ -32,15 +31,10 @@ interface MissionSetupRoutesProps {
 export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({ catalog: game.catalog, missionsDone: game.player.missionsDone, freeOperations: game.player.freeOperations, francs: game.player.francs, player: game.player, sceneScope: game.sceneScope })
   const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
-  // SSL-375: the rocket stands in the Workshop while it is prepared, then rolls to the pad in-scene on confirm.
-  const [rolling, setRolling] = useState<string | null>(null)
-  const purchaseRef = useRef(game.onPurchaseRocket)
-  purchaseRef.current = game.onPurchaseRocket
+  const prepareAgencyRocket = game.prepareAgencyRocket
   useEffect(() => {
-    if (!rolling) return
-    const timer = window.setTimeout(() => { purchaseRef.current(rolling); setRolling(null) }, ROLLOUT_MS)
-    return () => window.clearTimeout(timer)
-  }, [rolling])
+    if (screen === 'rocket-buy' || (screen === 'fab' && !selectedVehicle)) prepareAgencyRocket()
+  }, [screen, selectedVehicle, prepareAgencyRocket])
 
   // Older saves may still hold a prepared vehicle in the hangar. The R1 route
   // never asks for a second confirmation: roll it onto the pad on mount.
@@ -82,7 +76,6 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
 
   if (!game.mission || !game.target) return null
   const target = game.target
-  const selectedRocket = rocketModelForConfig(game.rocket)
   const preparing = !selectedVehicle || selectedVehicle.location !== 'launchpad'
   // SSL-750: check the rocket that would actually fly. A vehicle left on the pad from another contract keeps its own
   // parts, so the job is checked against it, not against the design the builder would make for this job.
@@ -93,11 +86,11 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   const launchReady = check.ok && !padWorn && !customHold
   const vehicleName = selectedVehicle ? ROCKET_MODELS.find(model => model.id === selectedVehicle.rocketId)?.name : null
   const hold = check.holds?.[0]
-  const blockedReason = launchReady ? null : customHold ? customHold : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName, hold.kind === 'cargo' ? smallestRocketHolding(hold.need, game.player.missionsDone, buildingLevel(game.player, 'launchpad')) : null) : (check.problems[0] ?? 'Mission requirements not met')
+  const blockedReason = launchReady ? null : customHold ? customHold : padWorn ? 'The launchpad needs service. Tap it on the Base.' : hold ? buildHoldLine(hold, vehicleName) : (check.problems[0] ?? 'Mission requirements not met')
   // Nothing is built or launched that cannot do the job (Liam, 02.11).
   // SSL-842: Launch stays on screen through the lift-off; a second tap must not launch again.
-  const actionDisabled = launchPending || !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
-  const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'
+  const actionDisabled = launchPending || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
+  const actionLabel = !launchReady ? "Can't launch" : preparing ? 'Preparing rocket' : 'Launch'
   const ownProgram = isOwnProgramMission(game.mission)
 
   return (
@@ -107,10 +100,9 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         game={game}
         launched={launchPending}
         blockedReason={blockedReason}
-        blockedFix={hold && hold.kind !== 'drill' ? 'vehicle' : hold ? 'customize' : null}
         primaryLabel={actionLabel}
         primaryDisabled={actionDisabled}
-        primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
+        primaryAction={onLaunch}
       />}
       <LaunchpadScreen
         onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
@@ -128,16 +120,13 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         target={target}
         rocket={flyingRocket}
         hasStagedRocket={selectedVehicle?.location === 'launchpad'}
-        onDismantle={() => game.onDismantleStagedRocket()}
-        assembly={rolling ? 'building' : preparing ? 'design' : 'ready'}
+        assembly={preparing ? 'design' : 'ready'}
         launchTestId={preparing ? 'prepare-launch-btn' : 'launch-btn'}
         launchDisabled={actionDisabled}
         launchLabel={actionLabel}
         cargoNeed={game.mission.requires.cargo_min}
-        onOpenWorkshop={() => game.go('rocket-workshop')}
-        onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
         earthBiome={game.player.earthBiome}
-        onRequestLaunch={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
+        onRequestLaunch={onLaunch}
         launching={launchPending}
         onLaunchComplete={onLaunchComplete}
       />

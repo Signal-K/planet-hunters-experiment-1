@@ -9,7 +9,7 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   BASE_LASER_CHARGES, rocketModelForConfig, travelDurationMs, suggestBuild,
-  feasibleTargetsFor, validateBuild, rocketConfigForModel,
+  validateBuild, rocketConfigForModel,
   isOwnProgramMission,
   isFreeHaulMission,
   isOrionidsEventMission,
@@ -20,7 +20,7 @@ import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyBuyLaserCapacitor, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
-import { pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
+import { agencyRocket, agencyTargets, pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
@@ -151,7 +151,7 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   const mission = missionById(s, catalog, s.missionId)
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
-  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
+  if (!agencyTargets(mission, catalog, s.player).some(item => item.id === id)) return s
   const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts })
   // SSL-450: Change never strands a rocket. A vehicle built for this job's old destination is re-aimed at the new
   // one when it can fly there. Liam, 01.11: rockets now always cost after the tutorial, so a paid vehicle is moved,
@@ -174,23 +174,41 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : setup
 }
 
-/**
- * SSL-450: Accept Contract lands straight on the launch review. The
- * recommended target is chosen for the player, but vehicle selection remains
- * an explicit action. A default config is only a build preview, never a
- * physical rocket on the pad.
- */
+/** A new flight receives the agency's current hull. Paid legacy preparations keep their identity and loadout. */
+function assignAgencyRocket(s: GameState, catalog: Catalog): GameState {
+  if (!['fab', 'rocket-buy'].includes(s.screen) || !s.missionId || !s.targetId || s.player.activeMission) return s
+  const existing = stagedRocketForMission(s, s.missionId, s.targetId)
+  if (existing) {
+    if (s.screen === 'fab' && existing.id === s.player.selectedStagedRocketId) return s
+    return selectStagedRocket({ ...s, screen: 'fab' }, existing)
+  }
+  const mission = missionById(s, catalog, s.missionId)
+  if (!mission) return s
+  const model = agencyRocket(s.player)
+  const rocket = rocketConfigForModel(model)
+  if (mission.payload?.type === 'rover') rocket.drill = 'cargo-module-t1'
+  const vehicle: StagedRocket = {
+    id: JSON.stringify(['agency', s.missionId, s.targetId]), rocketId: model.id, rocket,
+    missionId: s.missionId, targetId: s.targetId, deliveryTargetId: s.deliveryTargetId,
+    location: 'launchpad', source: 'company',
+  }
+  return selectStagedRocket({
+    ...s, screen: 'fab', doneSteps: { ...s.doneSteps, 8: true },
+    player: { ...s.player, stagedRockets: [...(s.player.stagedRockets ?? []), vehicle] },
+  }, vehicle)
+}
+
 function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
   let next = s
   if (next.screen === 'targets' && next.missionId) {
     const mission = missionById(next, catalog, next.missionId)
     if (!mission) return next
-    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, buildingLevel(next.player, 'launchpad'))
+    const feasible = agencyTargets(mission, catalog, next.player)
     const pick = feasible.find(target => target.recommended) ?? feasible[0]
     if (!pick) return next
     next = pickTargetState(next, catalog, pick.id)
   }
-  return next
+  return assignAgencyRocket(next, catalog)
 }
 
 /** Moves the selected hangar vehicle to the launchpad; null when there is nothing to move. */
@@ -369,7 +387,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission
         ?? null
-      if (!mission) return s
+      if (!mission || catalog.targets.some(target => target.type === 'exoplanet' && target.id === mission.targetId)) return s
       const nextDailyPool = s.player.dailyClientPool
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
@@ -417,7 +435,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
-          destinationChosen: !!mission.customPlan || mission.payload?.type === 'satellite',
+          destinationChosen: true,
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -443,6 +461,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // The player chose this body on the map: the launch review can go ahead.
       return next.targetId === id ? { ...next, destinationChosen: true } : next
     })
+  }, [catalog, setState])
+
+  const prepareAgencyRocket = useCallback(() => {
+    setState(s => assignAgencyRocket(s, catalog))
   }, [catalog, setState])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
@@ -574,7 +596,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
     const currentTarget = catalog.targets.find(t => t.id === current.targetId)
     if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
-      addToast('This rocket cannot do this job. Change the vehicle first.', 'warn')
+      addToast('This flight exceeds your rocket’s capabilities. Review the mission requirements.', 'warn')
       return
     }
     const isFirstEver = current.player.missionsDone === 0
@@ -1580,7 +1602,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
+    onPickMission, onPickTarget, prepareAgencyRocket, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

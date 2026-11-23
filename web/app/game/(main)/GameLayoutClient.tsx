@@ -41,6 +41,40 @@ import { heartbeatFriendPresence } from '@/lib/friends/client'
 import OrionidsShowerChrome from '@/components/game/orionids/OrionidsShowerChrome'
 import { useSaturnFramePrefetch } from '@/lib/offline/scienceImages'
 
+const PROGRAM_PHASE = {
+  'intro': 'Base',
+  'build': 'Base',
+  'hub': 'Base',
+  'hub-subsurface': 'Base',
+  'surface-silo': 'Base',
+  'market': 'Base',
+  'refinery': 'Base',
+  'missions': 'Plan',
+  'targets': 'Plan',
+  'mission-planner': 'Plan',
+  'fab': 'Prepare',
+  'hangar': 'Prepare',
+  'rocket-buy': 'Prepare',
+  'launchpad': 'Prepare',
+  'rocket-workshop': 'Prepare',
+  'flight': 'Operate',
+  'landing': 'Operate',
+  'mining': 'Operate',
+  'delivery': 'Operate',
+  'tess-discovery': 'Research',
+  'asteroid-discovery': 'Research',
+  'saturn-storm-search': 'Research',
+  'radio-meteors': 'Research',
+  'probe-scan': 'Research',
+  'probe-watch': 'Research',
+  'instrument-hub': 'Research',
+  'community-research': 'Research',
+  'sky-pointing': 'Research',
+  'debrief': 'Review',
+  'mission-history': 'Review',
+  'narrative-ledger': 'Review',
+} satisfies Record<import('@/lib/game-types').Screen, string>
+
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
   useSaturnFramePrefetch(game.player)
@@ -48,6 +82,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [coldIntro] = useState(() => typeof window !== 'undefined' && window.location.pathname === '/game/intro')
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
+  const programMenu = useRef<HTMLDialogElement>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [orionidsEntryActive, setOrionidsEntryActive] = useState(false)
@@ -351,6 +386,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
+      if (programMenu.current?.open) return
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
         setSettingsOpen(false); setFriendsOpen(false)
@@ -419,6 +455,23 @@ function GameChrome({ children }: { children: ReactNode }) {
               </SceneErrorBoundary>
             )}
           </div>
+          {!game.authGateOpen && (
+            <footer className="program-footer">
+              <button onClick={() => programMenu.current?.showModal()}>Menu</button>
+              <strong>{PROGRAM_PHASE[currentScreen]}</strong>
+              <span>Missions completed · {game.player.missionsDone}</span>
+              <dialog ref={programMenu} aria-label="Program menu">
+                <form method="dialog">
+                  <button autoFocus>Resume</button>
+                  {currentScreen === 'hub' && <>
+                    <button onClick={resumeOperations}>{game.player.activeMission ? 'Resume mission' : 'Mission Board'}</button>
+                    <button onClick={() => game.go('mission-history')}>Mission history</button>
+                  </>}
+                  <button onClick={() => setSettingsOpen(true)}>Settings</button>
+                </form>
+              </dialog>
+            </footer>
+          )}
         <BackendStatus />
         <div className="flight-plan-slot" data-testid="flight-plan-slot">
         {/* The intro's own heading already says what to do; the strip would sit over it. */}

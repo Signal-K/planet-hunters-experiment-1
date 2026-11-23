@@ -185,7 +185,7 @@ describe('buildRuntimeCatalog', () => {
     expect(catalog.missions.some(mission => mission.id === 'story-scan-station-commission')).toBe(false)
   })
 
-  it('turns discovered exoplanets into reachable survey missions and catalog targets', () => {
+  it('keeps telescope findings out of new flight destinations', () => {
     const discovered = tessCandidateToExoplanetTarget(toTessCandidate({
       id: 'subject-42',
       tic_id: '42424242',
@@ -205,18 +205,8 @@ describe('buildRuntimeCatalog', () => {
     })
     const surveyMission = catalog.missions.find(mission => mission.id === `exo-survey-${discovered.id}`)
 
-    expect(catalog.targets.find(target => target.id === discovered.id)).toMatchObject({
-      type: 'exoplanet',
-      minerals: discovered.minerals,
-    })
-    expect(surveyMission).not.toHaveProperty('client')
-    expect(surveyMission).toMatchObject({
-      targetId: discovered.id,
-      tag: 'SCIENCE',
-      payout: { francs: 0, affinity: 0 },
-      programReward: { researchXP: 25, outcome: expect.stringContaining('target intelligence') },
-      requires: expect.objectContaining({ max_orbit: discovered.orbit }),
-    })
+    expect(catalog.targets.some(target => target.id === discovered.id)).toBe(false)
+    expect(surveyMission).toBeUndefined()
   })
 
   it('keeps a self-directed launchpad run when the remote catalog omits owned mining rows', () => {

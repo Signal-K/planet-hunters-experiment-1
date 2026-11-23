@@ -1,14 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isFreeHaulEligibleMission, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
-import { feasibleTargetsFor } from '@/lib/data/targets'
+import { ROCKET_MODELS, isFreeHaulEligibleMission, isOrionidsEventMission, isOwnProgramMission } from '@/lib/data'
+import { agencyTargets } from '@/lib/rockets'
 import { RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import { showerForRunMission } from '@/lib/data/showers'
-import { pastRocketTraining, rocketCompatibleWithMission, rocketJobRoles, rocketPrice, rocketResearchId, rocketResearchXp, rocketUnlocked } from '@/lib/rockets'
-import { buildingLevel } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import { applyFreeRunGoal, clampGoalAmount, maxGoalAmount } from '@/lib/freeRunGoal'
 import { siloRoomFor } from '@/lib/systems/HomeDeliverySystem'
@@ -30,16 +28,15 @@ function MapUnavailable() {
 }
 
 type Game = ReturnType<typeof useGame>
-type Sheet = 'destination' | 'vehicle' | 'goal' | null
+type Sheet = 'destination' | 'goal' | null
 
 const STEPS = ['Contract', 'Plan', 'Launch'] as const
 
 /** Contract, Plan, Launch. The plan strip makes the auto-picked destination and vehicle visible and changeable in place. */
-export default function MissionPlanStrip({ game, blockedReason, blockedFix = null, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
+export default function MissionPlanStrip({ game, blockedReason, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
   game: Game
   blockedReason: string | null
   /** SSL-750: what the hold line offers to change: another vehicle, or the rocket's parts. */
-  blockedFix?: 'vehicle' | 'customize' | null
   launched: boolean
   primaryAction?: () => void
   primaryLabel?: string
@@ -47,23 +44,6 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
 }) {
   const [sheet, setSheet] = useState<Sheet>(null)
   const { mission, target, player } = game
-  const autoStaged = useRef(false)
-  // A new player has one free vehicle and no staged rocket: stage it, so the pad shows a rocket and Launch is ready.
-  const freeStart = !!mission && !!target && !player.stagedRockets?.length && !isOrionidsEventMission(mission)
-  useEffect(() => {
-    if (!freeStart || autoStaged.current || !mission || !target) return
-    const free = ROCKET_MODELS.filter(model => !model.locked && rocketPrice(model, player) === 0 && model.missionsRequired <= player.missionsDone && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)
-    if (free.length !== 1) return
-    autoStaged.current = true
-    game.onPurchaseRocket(free[0].id)
-  }, [freeStart, mission, target, player.missionsDone, game])
-  // Liam, 01.11: accepting a mission sends the player through the map to choose where they are going. The body
-  // auto-picked behind the scenes keeps the state valid; the map stays open until a body is tapped. Training keeps
-  // its guided path, and the shower run has a fixed field.
-  const mustChoose = !launched && game.destinationChosen === false && pastRocketTraining(player)
-    && !!mission && !showerForRunMission(mission.id)
-  useEffect(() => { if (mustChoose) setSheet('destination') }, [mustChoose, mission?.id])
   if (!mission || !target) return null
 
   const selectedVehicle = player.stagedRockets?.find(vehicle => vehicle.id === player.selectedStagedRocketId && (vehicle.location === 'hangar' || vehicle.location === 'launchpad'))
@@ -105,47 +85,29 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
     const next = { missionId: mission.id, mineral, amount: clampGoalAmount(amount, meta, holdUnits) }
     game.setPlayer(p => ({ ...p, freeRunGoal: next }))
     // A body without this ore cannot be flown to for it: move the destination to one that has it.
-    const suited = feasibleTargetsFor(applyFreeRunGoal(mission, next, game.catalog.minerals), game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
+    const suited = agencyTargets(applyFreeRunGoal(mission, next, game.catalog.minerals), game.catalog, player)
     if (suited.length && !suited.some(t => t.id === target.id)) game.onPickTarget(suited[0].id)
   }
   const goalOptions = sheet === 'goal'
     ? Object.entries(game.catalog.minerals).filter(([id, meta]) => meta.cargoUnits !== 0 && (meta.laserAccess ?? 1) <= drillTier && maxGoalAmount(meta, holdUnits) > 0
-      && feasibleTargetsFor(applyFreeRunGoal(mission, { missionId: mission.id, mineral: id, amount: 1 }, game.catalog.minerals), game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad')).length > 0)
+      && agencyTargets(applyFreeRunGoal(mission, { missionId: mission.id, mineral: id, amount: 1 }, game.catalog.minerals), game.catalog, player).length > 0)
     : []
   const targets = sheet === 'destination'
-    ? feasibleTargetsFor(mission, game.catalog.targets, game.catalog.parts, player.missionsDone, player.launchpadUpgraded, buildingLevel(player, 'launchpad'))
+    ? agencyTargets(mission, game.catalog, player)
     : []
-  // Every announced rocket, each with its role in this job: the smallest that fits is the one to fly (SSL-728).
-  // Liam, 01.11: when nothing the player has can fly it, the sheet offers to research or buy one that can.
-  const rockets = sheet === 'vehicle' ? ROCKET_MODELS.filter(model => !model.locked && (rocketUnlocked(model, player) || rocketResearchXp(model) > 0)) : []
-  const fits = (model: (typeof ROCKET_MODELS)[number]) => rocketCompatibleWithMission(model, mission)
-    && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok
-  const roles = rocketJobRoles(rockets.filter(model => rocketUnlocked(model, player)), mission, fits)
-  const nothingFits = sheet === 'vehicle' && ![...roles.values()].some(role => role.kind === 'use')
-  const researchable = rockets.filter(model => !rocketUnlocked(model, player) && fits(model))
-  const research = (model: (typeof ROCKET_MODELS)[number]) => {
-    const xp = rocketResearchXp(model)
-    const have = Math.floor(player.researchXP ?? 0)
-    if (have < xp) {
-      game.addToast(`Research needs ${xp} XP, you have ${have}. Classify data at the Data hub to earn it.`, 'warn')
-      return
-    }
-    game.unlockBlueprint(rocketResearchId(model.id), 0, xp, {})
-    game.addToast(`${model.name} researched: it can be built now.`, 'ok')
-  }
-
   return (
     <div className={styles.host} data-testid="mission-plan-strip">
       <ol className={styles.rail} aria-label={`Mission step ${step + 1} of 3`}>
         {STEPS.map((label, i) => <li key={label} data-state={i < step ? 'done' : i === step ? 'now' : 'next'}><i />{label}</li>)}
       </ol>
       <div className={styles.slots}>
-        <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched} onClick={() => setSheet('destination')}>
-          <span>Destination</span><strong>{runShower ? `${runShower.name} field` : target.name}</strong><em>Change</em>
+        <button type="button" className={styles.slot} data-testid="plan-destination" disabled={launched || !!mission.targetId} onClick={() => setSheet('destination')}>
+          <span>Destination</span><strong>{runShower ? `${runShower.name} field` : target.name}</strong>{!mission.targetId && <em>Change</em>}
         </button>
-        <button type="button" className={styles.slot} data-testid="plan-vehicle" data-blocked={blockedFix === 'vehicle' || undefined} disabled={launched} onClick={() => setSheet('vehicle')}>
-          <span>Vehicle</span><strong>{selectedRocket?.name ?? 'Choose vehicle'}</strong><em>{selectedRocket ? 'Change' : 'Choose'}</em>
-        </button>
+        <div className={styles.slot} data-testid="plan-vehicle">
+          <span>Agency rocket</span><strong>{selectedRocket?.name ?? 'Preparing'}</strong>
+          {selectedRocket && <small>{selectedRocket.stats.cargo} cargo · Range {selectedRocket.stats.maxOrbit}</small>}
+        </div>
         {(() => {
           const rows = (
             <>
@@ -184,19 +146,15 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
       {blockedReason && !launched && (
         <p className={styles.hold} data-testid="plan-clearance" data-blocked="true" role="status">
           <span>{blockedReason}.</span>
-          {blockedFix === 'vehicle' && <button type="button" className={styles.holdFix} data-testid="plan-clearance-fix" onClick={() => setSheet('vehicle')}>Change vehicle</button>}
         </p>
       )}
 
       {sheet === 'destination' && (
         <div className={styles.mapSheet} role="group" aria-label="Choose destination" data-testid="plan-sheet-destination">
           <div className={styles.mapHead}>
-            <strong>{mustChoose ? 'Where are you flying?' : 'Destination'}</strong>
-            {mustChoose
-              ? <button type="button" data-testid="plan-destination-back" onClick={() => game.goBack()}>Back</button>
-              : <button type="button" onClick={() => setSheet(null)}>Close</button>}
+            <strong>Destination</strong>
+            <button type="button" onClick={() => setSheet(null)}>Close</button>
           </div>
-          <p>{mustChoose ? 'Tap a lit body on the map to set the destination for ' + mission.title + '.' : 'Lit bodies suit this mission: the minerals it needs, in range, room in the hold.'}</p>
           {evidence}
           <div className={styles.mapField} data-testid="plan-destination-map">
             <PixiGalaxyMap
@@ -242,62 +200,6 @@ export default function MissionPlanStrip({ game, blockedReason, blockedFix = nul
         </div>
       )}
 
-      {sheet === 'vehicle' && (
-        <div className={styles.sheet} role="group" aria-label="Choose vehicle" data-testid="plan-sheet-vehicle">
-          <div className={styles.sheetHead}>
-            <strong>Vehicle</strong>
-            <button type="button" onClick={() => setSheet(null)}>Close</button>
-          </div>
-          {nothingFits ? (
-            <p className={styles.noFit} data-testid="plan-vehicle-none" role="status">
-              No rocket you have can fly this job.{' '}
-              {researchable.length > 0
-                ? <>Research {researchable.map(model => model.name).join(' or ')} below, or pick another destination.</>
-                : <>Pick another destination, or come back once a bigger rocket is unlocked.</>}
-            </p>
-          ) : (
-            <p className={styles.sheetLead}>The smallest rocket that fits flies the job. Bigger ones are for more cargo or a farther orbit.</p>
-          )}
-          {evidence}
-          <ul>
-            {rockets.map(model => {
-              if (!rocketUnlocked(model, player)) {
-                const xp = rocketResearchXp(model)
-                const canFly = fits(model)
-                return (
-                  <li key={model.id}><button type="button" data-role="research" data-testid={`plan-vehicle-research-${model.id}`} disabled={!canFly} onClick={() => research(model)}>
-                    <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
-                    <strong>{model.name}<small>{model.stats.cargo}U · ORB {model.stats.maxOrbit}</small></strong>
-                    {canFly
-                      ? <span className={styles.vehicleOptionAction}>Research · {xp} XP</span>
-                      : <span className={styles.vehicleOptionNote}>Locked · {model.unlockHint}</span>}
-                  </button></li>
-                )
-              }
-              const role = roles.get(model.id) ?? { kind: 'too-small' as const, note: 'Cannot fly this job' }
-              const price = rocketPrice(model, player)
-              const cost = price === 0 ? 'No cost' : formatCurrency(price, { compact: true })
-              const usable = role.kind === 'use'
-              return (
-                <li key={model.id}><button type="button" data-role={role.kind} data-testid={`plan-vehicle-${model.id}`} data-current={model.id === selectedRocket?.id || undefined} disabled={!usable} onClick={() => {
-                  // Already staged for this job: tapping it again must not buy a second rocket.
-                  if (model.id === selectedRocket?.id) { setSheet(null); return }
-                  if (player.francs < price) { game.addToast(`Not enough francs: you need ${formatCurrency(price - player.francs, { compact: true })} more`, 'warn'); return }
-                  game.onPurchaseRocket(model.id)
-                  setSheet(null)
-                }}>
-                  <img className={styles.vehicleOptionArt} src={model.img} alt="" aria-hidden="true" />
-                  <strong>{model.name}<small>{model.stats.cargo}U · ORB {model.stats.maxOrbit}</small></strong>
-                  {usable
-                    ? <span className={styles.vehicleOptionAction}>{model.id === selectedRocket?.id ? `Staged · ${cost}` : price > 0 ? `Buy · ${cost}` : `Stage · ${cost}`}</span>
-                    : <span className={styles.vehicleOptionNote}>{role.note}</span>}
-                </button></li>
-              )
-            })}
-            {!rockets.length && <li><p>No rocket is unlocked yet.</p></li>}
-          </ul>
-        </div>
-      )}
     </div>
   )
 }

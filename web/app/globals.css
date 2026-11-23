@@ -4960,3 +4960,37 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 
 /* The mission board is its own full screen with no HUD cluster, so the training "?" chip drops to the bottom-left instead of covering the contract header. */
 .game-stage-main:has([data-screen="missions"]) .flight-plan-slot > .flight-plan-chip { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+
+.program-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 0 12px env(safe-area-inset-bottom, 0px);
+  background: var(--ln-void);
+  color: var(--ln-text);
+  font: 600 14px var(--ln-font-display);
+}
+.program-footer dialog {
+  margin: auto;
+  padding: 12px;
+  background: var(--ln-void);
+  color: var(--ln-text);
+  border: 1px solid var(--ln-hairline);
+}
+.program-footer form { display: grid; gap: 4px; }
+.program-footer button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 1px solid var(--ln-hairline);
+  cursor: pointer;
+}
+
+.agency-hangar { display: grid; place-items: center; overflow: auto; }
+.agency-hangar > div { padding: 16px; color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper); border: 2px solid currentColor; }
+.agency-hangar img { max-height: 18vh; max-width: 100%; object-fit: contain; }
+.agency-hangar button { min-height: 44px; margin-right: 8px; }

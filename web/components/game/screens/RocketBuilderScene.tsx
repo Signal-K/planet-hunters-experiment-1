@@ -171,7 +171,7 @@ export default function RocketBuilderScene({
             <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>
-          {!guided && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {!guided && (onInstall || onOpenWorkshop) && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
           {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 

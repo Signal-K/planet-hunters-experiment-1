@@ -1,4 +1,4 @@
-import { buildingLevel } from '@/lib/data/building-levels'
+import { agencyTargets } from '@/lib/rockets'
 import { useState } from 'react'
 import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
@@ -72,16 +72,10 @@ export function useMissionRelayModels({
   // parts cannot complete. This is deliberately applied before the board
   // renders, not only when the player reaches Target Picker: an impossible
   // card is already a broken contract from the player's perspective.
-  const feasibleCandidates = available.filter(mission =>
-    feasibleTargetsFor(
-      mission,
-      targets,
-      parts,
-      missionsDone,
-      player?.launchpadUpgraded ?? false,
-      player ? buildingLevel(player, 'launchpad') : 1,
-    ).length > 0,
-  )
+  const targetsFor = (mission: Catalog['missions'][number]) => player
+    ? agencyTargets(mission, catalog, player)
+    : feasibleTargetsFor(mission, targets, parts, missionsDone)
+  const feasibleCandidates = available.filter(mission => targetsFor(mission).length > 0)
   const tutorialOptionIds = new Set(freeOperations
     ? feasibleCandidates.map(mission => mission.id)
     : tutorialClientMissionOptions(feasibleCandidates, sequence).map(mission => mission.id))
@@ -100,7 +94,7 @@ export function useMissionRelayModels({
       const clientReady = freeOperations || m.sequence === sequence
       const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
       const unlocked = clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
-      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player ? buildingLevel(player, 'launchpad') : 1)
+      const mTargets = targetsFor(m)
       const displayPayout = m.payout.francs
       const cardState = !unlocked ? 'locked' as const : 'available' as const
       const lockedDetail = !jointFundingReady
