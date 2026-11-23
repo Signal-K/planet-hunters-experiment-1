@@ -1,5 +1,7 @@
 'use client'
 
+import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { MINERAL_META, type Target } from '@/lib/data'
@@ -192,11 +194,13 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   return (
     <div className={board.scene} data-testid="probe-scan-screen" data-screen="probe-scan">
       <section className={board.dispatch} aria-label="Survey probe">
+        <InstrumentFrame header={<>
         <nav className={board.rail} aria-label="Survey probe">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="probe-back" aria-label="Close" onClick={onBack}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
           </button>
         </nav>
+        </>}>
         <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
         <article className={styles.workspace}>
           <section className={styles.stage} aria-label="Probe in orbit">
@@ -326,6 +330,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
             </div>
           </section>
         </article>
+        </InstrumentFrame>
       </section>
     </div>
   )

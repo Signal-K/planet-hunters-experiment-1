@@ -187,7 +187,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         status={result.status}
         messageTitle={`${result.title} · +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`}
         messageBody={result.body}
-        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Next: tune a rocket part', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
+        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Review agency rocket', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
       />
     )
   }

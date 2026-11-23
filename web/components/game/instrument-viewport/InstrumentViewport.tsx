@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react'
 import { AUTO_FINISH, INSTRUMENT_FINISHES, finishStyle, readFinishChoice, resolveFinish, unlockedFinishes, writeFinishChoice, type InstrumentFinish } from '@/lib/instrument-finish'
+import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
 import TopBar from '@/components/ui/TopBar'
 import { UI_ZONES } from '@/lib/ui-zones'
 import {
@@ -427,7 +428,7 @@ export default function InstrumentViewport({
   return (
     <FinishContext.Provider value={finish}>
     <div className={`game-screen theme-blueprint ${sceneClassName} ${styles.screen}`} data-testid={testId} data-finish={finish.id} style={finishVars}>
-      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} right={help} solid />
+      <InstrumentFrame header={<TopBar eyebrow={eyebrow} title={title} onBack={onBack} right={help} solid />}>
       {helpLayer}
       <div className={styles.body}>
         {devBar}
@@ -603,6 +604,7 @@ export default function InstrumentViewport({
           </div>
         </div>
       </div>
+      </InstrumentFrame>
     </div>
     </FinishContext.Provider>
   )

@@ -1,5 +1,7 @@
 'use client'
 
+import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
+
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { getSkyEvent } from '@/lib/data/sky-events'
@@ -277,11 +279,13 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   return (
     <div className={board.scene} data-testid="radio-meteor-screen" data-screen="radio-meteors">
       <section className={board.dispatch} aria-label="Meteor radio">
+        <InstrumentFrame header={<>
         <nav className={board.rail} aria-label="Meteor radio">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="radio-back" aria-label="Close" onClick={onBack}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
           </button>
         </nav>
+        </>}>
         <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
         <article className={styles.workspace}>
           <section className={styles.receiver} aria-label="Receiver">
@@ -399,6 +403,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             </div>
           </section>
         </article>
+        </InstrumentFrame>
       </section>
     </div>
   )

@@ -104,3 +104,7 @@
   .found li { min-height: 24px; }
   .actions button { min-height: 44px; }
 }
+
+/* Navigation occupies its frame row, so the workspace needs no corner offsets. */
+.head { margin-left: 0; }
+.desk { padding-top: 16px; overflow-y: auto; }

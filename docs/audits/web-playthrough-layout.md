@@ -49,3 +49,9 @@ Mission Board now uses the existing ScreenFrame header slot so both navigation g
 ## Verification matrix
 
 For each setup inspect phone portrait, phone landscape and desktop with short and long labels, low and high balances, empty and populated inventories, locked and eligible actions, overlay open/closed, offline rendering and an active saved mission. For each mission family play from selection through results using the existing scene driver, then reload mid-operation and verify the resume action. Community weeks and special events must exercise the same operations with their eligibility and rewards.
+
+### Instrument migration
+
+The shared InstrumentViewport now reserves its TopBar in an InstrumentFrame row. This covers TESS, asteroid discovery, Saturn imaging and their standby variants through the same component. ProbeScanScreen and RadioMeteorScreen use that frame and no longer offset headings sideways to avoid a floating Back button. Their original scan, annotation, classification and submission callbacks remain attached. Telescope training copy now points to the agency rocket review.
+
+Browser geometry checks confirmed header bottom equals content top at 390×844, 926×428 and 1440×900 for probe and radio fixtures. The TESS browser check did not finish mounting within the inspection window, so its visual verification remains pending.
