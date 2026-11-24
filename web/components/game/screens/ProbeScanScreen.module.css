@@ -148,3 +148,15 @@
 .receipt > div { display: contents; }
 .receipt dt { color: var(--ln-world-glass); }
 .receipt dd { margin: 0; }
+
+/* Keep the orbit visible alongside its controls on a short landscape screen. */
+@media (max-height: 520px) and (min-width: 600px) {
+  .stage { grid-template-columns: minmax(0, 1fr) minmax(260px, .9fr); grid-template-rows: auto auto minmax(44px, 1fr) auto auto; column-gap: 16px; }
+  .head { grid-column: 2; grid-row: 1; }
+  .bodies { grid-column: 2; grid-row: 2; }
+  .levels { grid-column: 2; grid-row: 3; align-self: start; }
+  .view { grid-column: 1; grid-row: 1 / -1; }
+  .progress { grid-column: 2; grid-row: 4; }
+  .stage > .actions { grid-column: 2; grid-row: 5; }
+  .stage > .actions button { min-width: 0; }
+}

@@ -1,6 +1,12 @@
 import { expect, it } from 'vitest'
 import { debriefExitScreen, debriefExits } from './debrief-exits'
 
+it('a deployed probe opens its scanner after completing the flight, without needing a telescope', () => {
+  const input = { showerRun: false, programOperation: true, hasInstrument: false }
+  expect(debriefExitScreen('probe', { ...input, probeDeployment: true })).toBe('probe-scan')
+  expect(debriefExitScreen('probe', input)).toBeNull()
+})
+
 it('a completed run can view existing community progress without creating a new mission', () => {
   expect(debriefExitScreen('community', { showerRun: false, programOperation: true, hasInstrument: false })).toBe('community-research')
 })

@@ -59,7 +59,7 @@ const inTime = (ms: number) => {
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** Seconds between sectors while the console plays back what the probe mapped since the last visit. */
-const PLAYBACK_MS = 650
+const PLAYBACK_MS = 2200
 
 // The orbit stage, in SVG units: the body in the middle, a tilted orbit around it.
 const W = 380
@@ -113,7 +113,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const [mineralPage, setMineralPage] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const bodies = useMemo(
-    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
+    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target).sort((a, b) => (player.probes?.[b.id]?.launchedAt ?? 0) - (player.probes?.[a.id]?.launchedAt ?? 0)),
     [player.probes, player.agencyCommunity, targets],
   )
   const [bodyId, setBodyId] = useState<string | null>(bodies[0]?.id ?? null)
@@ -125,16 +125,23 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const visitKey = `${body?.id}:${scanLevel}`
   const waiting = record?.scanStartedAt === null
   // Sectors new since the last visit, per body, remembered for this visit so the playback survives the download.
-  const [fresh] = useState(() => Object.fromEntries(Object.entries(player.probes ?? {}).map(([id, rec]) => [id, Object.fromEntries(([1, 2, 3] as const).map(level => [level, newSectors(probePass(rec, level), now)]))])))
+  const [downloadedOnEntry] = useState(() => Object.fromEntries(Object.entries(player.probes ?? {}).map(([id, rec]) => [id, Object.fromEntries(([1, 2, 3] as const).map(level => [level, Object.keys(probePass(rec, level)?.readings ?? {}).filter(id => scanOrder().includes(id)).length]))])))
   const mapped = sectorsMapped(record, now)
-  const freshHere = body ? fresh[body.id]?.[scanLevel] ?? [] : []
-  const before = mapped.length - freshHere.length
+  const before = Math.min(mapped.length, body ? downloadedOnEntry[body.id]?.[scanLevel] ?? 0 : 0)
+  const freshHere = mapped.slice(before)
   const [played, setPlayed] = useState<Record<string, number>>({})
   const shown = body ? Math.max(before, Math.min(mapped.length, played[visitKey] ?? before)) : 0
   const playing = shown < mapped.length
   const next = nextSector(record, now)
 
-  useEffect(() => { if (Object.values(fresh).some(passes => Object.values(passes).some(list => list.length))) { onCollect(); setPage('contribution') } }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (newSectors(record, now).length) onCollect()
+  }, [body?.id, scanLevel, mapped.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the new sectors back one at a time, a scan flash on each.
   const [flash, setFlash] = useState<{ key: number; x: number; y: number; sector: string | null } | null>(null)
@@ -154,10 +161,12 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   // Between playbacks, an occasional flash where the probe is scanning now.
   useEffect(() => {
     if (!body || playing || !next || reducedMotion()) return
-    const timer = window.setInterval(() => {
+    const pulse = () => {
       const box = cellBox(next.sector)
       setFlash({ key: Date.now(), x: box.x + box.w * (0.25 + Math.random() * 0.5), y: box.y + box.h * (0.25 + Math.random() * 0.5), sector: null })
-    }, 2600)
+    }
+    pulse()
+    const timer = window.setInterval(pulse, 2600)
     return () => window.clearInterval(timer)
   }, [body?.id, playing, next?.sector]) // eslint-disable-line react-hooks/exhaustive-deps
 

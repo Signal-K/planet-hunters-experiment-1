@@ -477,6 +477,7 @@ export default function MissionOperationRoutes({
           showerRun={showerRun}
           initialDisposition={game.player.freeHaulDisposition}
           exits={debriefExits({
+            probeDeployment: game.mission.payload?.instrumentId === 'survey-probe',
             showerRun: !!showerRun,
             programOperation: isOwnProgramMission(game.mission),
             hasInstrument: onlineTelescopes(game.player).length > 0,

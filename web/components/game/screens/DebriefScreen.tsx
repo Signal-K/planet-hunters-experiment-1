@@ -343,9 +343,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           full={false}
           testId="collect-reward-btn"
           disabled={collecting}
-          onClick={() => collect('base')}
+          onClick={() => collect(mission.payload?.instrumentId === 'survey-probe' ? 'probe' : 'base')}
         >
-          Complete flight · return to Base
+          {mission.payload?.instrumentId === 'survey-probe' ? 'Complete flight · open probe scanner' : 'Complete flight · return to Base'}
         </PrimaryBtn>
         </div>
       </article>

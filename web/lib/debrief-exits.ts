@@ -6,7 +6,7 @@ import type { Screen } from '@/lib/game-types'
  * left out until the message board exists in cycle 10; when it lands, each vote
  * and comment there will also add community research points.
  */
-export type DebriefExitId = 'explore' | 'again' | 'reposition' | 'community' | 'plan' | 'base'
+export type DebriefExitId = 'explore' | 'again' | 'reposition' | 'community' | 'plan' | 'base' | 'probe'
 
 export interface DebriefExit {
   id: DebriefExitId
@@ -15,6 +15,7 @@ export interface DebriefExit {
 }
 
 interface ExitInput {
+  probeDeployment?: boolean
   /** The run was a Leonids/Orionids shower run: another run lives on the Mission Board. */
   showerRun: boolean
   /** The run was one of the player's own program operations: another lives on the launchpad. */
@@ -25,8 +26,9 @@ interface ExitInput {
   guided: boolean
 }
 
-export function debriefExits({ programOperation, hasInstrument, guided }: ExitInput): DebriefExit[] {
+export function debriefExits({ programOperation, hasInstrument, guided, probeDeployment }: ExitInput): DebriefExit[] {
   const exits: DebriefExit[] = []
+  if (probeDeployment) exits.push({ id: 'probe', label: 'Open probe scanner', screen: 'probe-scan' })
   exits.push({ id: 'again', label: 'Choose next flight', screen: 'missions' })
   if (!guided) exits.push({ id: 'plan', label: 'Plan my own flight', screen: 'mission-planner' })
   if (hasInstrument) exits.push({ id: 'explore', label: 'Review telescope data', screen: 'instrument-hub' })

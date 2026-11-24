@@ -1480,7 +1480,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         missionBoardScope: EARTH_BASE_SCOPE,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-          screen: debriefExitScreen(exitId, { showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
+          screen: debriefExitScreen(exitId, { probeDeployment: mission?.payload?.instrumentId === 'survey-probe', showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
             ?? (mission?.payload?.type === 'satellite'
               ? 'instrument-hub'
               : completedShower
