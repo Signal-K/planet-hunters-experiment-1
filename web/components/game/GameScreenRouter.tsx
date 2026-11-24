@@ -527,6 +527,7 @@ function ScreenBody({
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => leaveInstrument('tess')}
+          onAgency={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}

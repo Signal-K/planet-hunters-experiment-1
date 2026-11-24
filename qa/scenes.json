@@ -1072,6 +1072,17 @@
    ],
    "aliasOf": "probe-scan",
    "nativeDeferred": "Survey probe gameplay remains outside the supported iOS companion scope."
+  },
+  {
+   "id": "tess-receipt",
+   "name": "TESS: contribution receipt",
+   "flow": "instruments",
+   "web": "ui-tess-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "galaxy",
+   "native": "tess-discovery-phone"
   }
  ],
  "missions": [

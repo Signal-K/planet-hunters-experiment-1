@@ -891,7 +891,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "tess"
           ],
-          "note": "Subject data and context."
+          "note": "Subject data and context. A saved result opens the contribution page: Exoplanet Hunters, one classification saved locally, backend-confirmed or pending daily research and passport progress, plus the existing fragment balance. Measurements remain on their own readout page. iOS retains the submitted candidate and reports local save with confirmation pending; native passport receipts remain deferred with the companion scope."
         },
         {
           "id": "next-action",
@@ -901,7 +901,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "tess"
           ],
-          "note": "Continue through the real instrument feed."
+          "note": "Continue through the real instrument feed: Next signal appears only for an eligible unresolved candidate; Data hub and Return to Base remain available. Reading the result never awards again."
         }
       ]
     },

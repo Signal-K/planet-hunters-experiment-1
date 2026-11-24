@@ -7,7 +7,7 @@ import type { ResearchStamps } from './stamps'
 import type { PassportResponse } from './passport'
 
 export function passportFixture(preset: string, now: number, stamps: ResearchStamps | undefined): PassportResponse | null {
-  if (preset === 'ui-probe-receipt') {
+  if (['ui-probe-receipt', 'ui-tess-receipt'].includes(preset)) {
     const view = passportFixture('ui-research-passport', now, stamps)!
     return { ...view, confirmedStamps: stamps ?? {} }
   }

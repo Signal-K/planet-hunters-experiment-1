@@ -1,3 +1,4 @@
+import { VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { rocketConfigForModel } from '@/lib/data/rockets'
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
@@ -146,6 +147,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Submit · Transit to see the result card', stage: 'free-ops' },
+      { key: 'ui-tess-receipt', label: 'TESS contribution receipt', hint: 'Confirmed research and existing fragments after classification', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -802,6 +804,12 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+
+    case 'ui-tess-receipt': {
+      const base = fixture('ui-tess-discovery')!
+      const at = Date.now(), day = new Date(at).toISOString().slice(0, 10)
+      return { ...base, player: { ...base.player!, researchFragments: 17, tessClassifications: { [VISUAL_TESS_CANDIDATE.id]: { subjectId: VISUAL_TESS_CANDIDATE.id, verdict: 'not_planet', ranges: [], submittedAt: at } }, researchStamps: { [day]: ['classification'] } } }
+    }
 
     case 'ui-tess-discovery':
       return {
