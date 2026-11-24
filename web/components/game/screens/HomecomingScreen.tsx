@@ -16,7 +16,7 @@ import {
 import { sellUnitPrice } from '@/lib/systems/EconomySystem'
 import styles from './HomecomingScreen.module.css'
 
-export const TOUCHDOWN_MS = 2600
+export const TOUCHDOWN_MS = 6200
 /** Cargo leaves the hold and the rocket is taken apart before the base returns. */
 export const SETTLE_MS = 2400
 const MAX_CRATES = 8
@@ -96,6 +96,7 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
   return (
     <div ref={rootRef} className={styles.root} data-testid="homecoming-screen" data-landed={down ? 'true' : 'false'} data-settling={settling ? 'true' : undefined}>
       <HubScreen player={player} homecoming padLanding={!down} onFocusBuilding={() => {}} onOpenScene={() => {}} />
+      {!down && <p className={styles.settleNote} role="status" data-testid="recovery-status">Capsule parachutes · booster returning to the catch tower</p>}
       {down && !settling && (
         <div className={styles.scrim}>
           <section className={styles.sheet} aria-label="Deliver cargo" data-testid="delivery-sheet">

@@ -307,9 +307,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         app.ticker.add(ticker => {
           sceneTime += ticker.deltaMS / 1000
           const firing = lastFireAt > 0 && performance.now() - lastFireAt < 180
-          field.step(sceneTime, prefersReducedMotion(), firing)
           const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
-          // The ship stays level; altitude moves it between the sky ceiling and just above the ground.
+          // Altitude moves between the sky ceiling and just above the ground.
           const dt = ticker.deltaMS / 1000
           shipX = Math.max(40, Math.min(worldW - 40, shipX + steering * STEER_SPEED * dt))
           field.ship.x = shipX
@@ -317,7 +316,10 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           field.beam.x = shipX
           field.spark.x = shipX
           field.dig.x = shipX
+          const previousAltitude = altitude
           altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
+          field.climb = altitude === previousAltitude ? 0 : climb
+          field.step(sceneTime, prefersReducedMotion(), firing)
           // Liam, 01.11: the hills behind the grey ridge are scenery, not solid. They scroll at a third of
           // the ground's speed and read as distant, so flying "into" them bumped the hull for no visible
           // reason. The flight floor (maxAlt) keeps the hull above the grey foreground ridge.

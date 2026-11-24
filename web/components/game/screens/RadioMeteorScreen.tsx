@@ -142,6 +142,8 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const [queue, setQueue] = useState<RadioMeteorSubject[]>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
+  const [imageMode, setImageMode] = useState<'cors' | 'plain' | 'failed'>('cors')
+  const [imageRetry, setImageRetry] = useState(0)
   const [size, setSize] = useState<{ w: number; h: number } | null>(null)
   const [boxes, setBoxes] = useState<RadioMeteorBox[]>([])
   const [selected, setSelected] = useState<number | null>(null)
@@ -166,7 +168,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   }, [])
 
   const subject = queue[0] ?? null
-  useEffect(() => { setBoxes([]); setSelected(null); setDraft(null); setSize(null) }, [subject?.id])
+  useEffect(() => { setBoxes([]); setSelected(null); setDraft(null); setSize(null); setImageMode('cors') }, [subject?.id])
 
   const point = (e: PointerEvent<SVGSVGElement>) => {
     const ctm = svgRef.current?.getScreenCTM()
@@ -306,15 +308,24 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                   <div className={styles.strip} style={{ width: `${zoom * 100}%`, height: `${zoom * 100}%`, left: `${left}%`, top: `${top}%` }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
+                      key={`${subject.id}:${imageMode}:${imageRetry}`}
                       className={styles.image}
                       data-testid="radio-spectrogram"
                       src={subject.imageUrl}
                       alt={`Radio spectrogram ${subject.filename}`}
-                      crossOrigin="anonymous"
+                      crossOrigin={imageMode === 'cors' ? 'anonymous' : undefined}
+                      hidden={imageMode === 'failed'}
+                      onError={() => { setSize(null); setImageMode(mode => mode === 'cors' ? 'plain' : 'failed') }}
                       draggable={false}
                       style={{ filter: `brightness(${0.75 + gain * 0.25}) contrast(${gain}) saturate(${0.8 + gain * 0.2})` }}
                       onLoad={e => setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                     />
+                    {imageMode === 'failed' && <div className={styles.imageFailure} role="status" data-testid="radio-image-error">
+                      <strong>Recording image unavailable</strong>
+                      <p>This recording could not load. Your progress is safe; retry before marking echoes.</p>
+                      <button type="button" onClick={() => { setImageRetry(n => n + 1); setImageMode('cors') }}>Retry image</button>
+                      <button type="button" onClick={() => setQueue(items => items.slice(1))}>Try another recording</button>
+                    </div>}
                     {size && (
                       <svg
                         ref={svgRef}

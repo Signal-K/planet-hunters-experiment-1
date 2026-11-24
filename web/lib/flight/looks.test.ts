@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_LIVERY, PAD_ROCKET_PROFILE, flightCraftLook, flightDestinationLook, seedFromText } from './looks'
+import { DEFAULT_LIVERY, ORBIT_ROCKET_PROFILE, flightCraftLook, flightDestinationLook, seedFromText } from './looks'
 
 const body = (id: string, type: string, archetype?: string) => ({ id, name: id, type, archetype })
 const luminance = (hex: string) => {
@@ -28,13 +28,13 @@ describe('flight looks', () => {
     expect(Math.max(...look.colors.map(luminance))).toBeGreaterThan(150)
   })
 
-  it('revolves the launchpad rocket, so the rocket in space is the one the player built', () => {
+  it('keeps only the launchpad upper stage in space, with its paint and no boosters', () => {
     const craft = flightCraftLook(null)
-    expect(craft.sections).toHaveLength(PAD_ROCKET_PROFILE.length)
-    expect(craft.sections.reduce((n, s) => n + s.length, 0)).toBeCloseTo(2.1)
-    expect(Math.max(...craft.sections.map(s => s.r0))).toBeLessThan(0.16)
-    expect(craft.sections.filter(s => s.color === DEFAULT_LIVERY.hull).length).toBeGreaterThan(8)
-    expect(craft.boosters).toMatchObject({ count: 2, color: DEFAULT_LIVERY.hull })
+    expect(craft.sections).toHaveLength(ORBIT_ROCKET_PROFILE.length)
+    expect(craft.sections.reduce((n, s) => n + s.length, 0)).toBeCloseTo(1.5)
+    expect(Math.max(...craft.sections.map(s => s.r0))).toBeLessThan(0.35)
+    expect(craft.sections.filter(s => s.color === DEFAULT_LIVERY.hull).length).toBeGreaterThan(3)
+    expect(craft.boosters).toBeUndefined()
     expect(craft.fins).toBeUndefined()
     const painted = flightCraftLook(null, { hull: '#222222', trim: '#ff0000' })
     expect(painted.sections.some(s => s.color === '#ff0000')).toBe(true)

@@ -1,5 +1,5 @@
-import { Assets, Container, Graphics, Sprite, Text, Texture, TilingSprite } from 'pixi.js'
-import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
+import { Assets, Container, Graphics, Sprite, Text, Texture, TilingSprite, Rectangle } from 'pixi.js'
+import { LAUNCH_ROCKET_SPRITE, ORBIT_ROCKET_FRAME } from '@/lib/rocket-assets'
 import type { LaserPalette } from './laserPalette'
 import { PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
 
@@ -74,6 +74,8 @@ export interface LaserField {
   hull: Sprite
   /** -1 reversing, 0 holding, 1 forward: drives the thruster animation. */
   thrust: number
+  /** -1 climbing, 0 level, 1 descending: tilts hull and both exhausts together. */
+  climb: number
   soilW: number
   ridgeW: number
   pixelScale: number
@@ -388,20 +390,23 @@ export async function buildLaserField(opts: {
   const plume = new Sprite(flame0)
   plume.anchor.set(1, 0.5)
   plume.scale.set(px)
-  plume.x = -19 * px
+  plume.x = -30
   ship.addChild(plume)
-  const hull = new Sprite(shipTex)
+  const orbitalTexture = (!opts.rocketImageSrc || opts.rocketImageSrc === LAUNCH_ROCKET_SPRITE)
+    ? new Texture({ source: shipTex.source, frame: new Rectangle(ORBIT_ROCKET_FRAME.x, ORBIT_ROCKET_FRAME.y, ORBIT_ROCKET_FRAME.width, ORBIT_ROCKET_FRAME.height) })
+    : shipTex
+  const hull = new Sprite(orbitalTexture)
   hull.anchor.set(0.5)
   shipTex.source.scaleMode = 'linear'
-  hull.scale.set(80 / shipTex.height)
+  hull.scale.set(64 / orbitalTexture.height)
   hull.rotation = Math.PI / 2
   ship.addChild(hull)
   // Retro burn: the same flame, flipped to fire forward from the nose, under the hull.
   const retro = new Sprite(flame0)
   retro.anchor.set(1, 0.5)
   retro.scale.set(-px * 0.7, px * 0.7)
-  retro.x = 17 * px
-  retro.y = 2 * px
+  retro.x = 30
+  retro.y = 0
   retro.alpha = 0
   ship.addChildAt(retro, 0)
   ship.x = shipX
@@ -409,7 +414,7 @@ export async function buildLaserField(opts: {
 
   const flameFrames = [flame0, flame1]
   const field: LaserField = {
-    backdrop, far, near, mid, surface, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume, retro, hull, thrust: 0,
+    backdrop, far, near, mid, surface, midW, obstacles, depositArt: depositTex as Record<DepositKind, Texture>, ground, beam, dig, spark, ship, plume, retro, hull, thrust: 0, climb: 0,
     soilW, ridgeW, pixelScale: px, depositFrames: [deposit0, deposit1], hover: 0,
     step(time, reduced, firing) {
       const tw = reduced ? 0 : 1
@@ -451,7 +456,9 @@ export async function buildLaserField(opts: {
       plume.alpha = (thrust < 0 ? 0.35 : 0.7) + pulse * 0.3
       retro.alpha += ((thrust < 0 ? 0.75 + pulse * 0.25 : 0) - retro.alpha) * ease
       retro.scale.x = -px * 0.7 * (thrust < 0 ? 0.85 + pulse * 0.3 : 0.6)
-      hull.rotation += ((Math.PI / 2 + (reduced ? 0 : thrust < 0 ? -0.07 : thrust > 0 ? 0.02 : 0)) - hull.rotation) * ease
+      // Rotate their shared parent: flames stay attached to the engine as the nose pitches.
+      const pitch = field.climb * 0.55 + (thrust < 0 ? -0.07 : thrust > 0 ? 0.02 : 0)
+      ship.rotation += (pitch - ship.rotation) * ease
       if (!reduced) {
         plume.texture = flameFrames[Math.floor(time * 10) % 2]
         retro.texture = flameFrames[(Math.floor(time * 12) + 1) % 2]

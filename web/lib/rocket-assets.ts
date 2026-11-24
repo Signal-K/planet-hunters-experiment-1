@@ -1,4 +1,6 @@
 export const LAUNCH_ROCKET_SPRITE = '/art/scenes/launchpad/launchpad-rocket-multistage.png'
+/** Upper-stage frame within the launch artwork; boosters and lower stages stay on the pad/ascent. */
+export const ORBIT_ROCKET_FRAME = { x: 44, y: 0, width: 64, height: 164 } as const
 
 /**
  * The only runtime mapping between a canonical rocket and its art. All
