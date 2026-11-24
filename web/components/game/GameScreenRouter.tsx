@@ -587,6 +587,7 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onCollect={game.collectProbeData}
           onStartScan={game.startProbeScan}
+          onLogSpectrum={game.logProbeSpectrum}
           onHub={() => game.go('hub')}
           onPlanRun={(targetId, runId) => { requestMissionBoardSite('free', targetId, runId); game.goToMissions() }}
           onPlanMineral={(targetId, mineral) => { requestMiningPlan(targetId, mineral); game.go('mission-planner') }}

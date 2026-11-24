@@ -628,7 +628,8 @@ export interface GameActions {
   submitRadioMeteorClassification: (classification: import('@/lib/radio-meteors').RadioMeteorClassification) => void
   /** SSL-773: download the sectors the survey probes mapped since the last visit. */
   collectProbeData: () => void
-  startProbeScan: (targetId: string) => void
+  startProbeScan: (targetId: string, level?: 1 | 2 | 3) => void
+  logProbeSpectrum: (targetId: string, sector: string, wavelengths: number[]) => void
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   reviewAgencyRocket: () => void

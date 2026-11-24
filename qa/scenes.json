@@ -118,7 +118,9 @@
    "flow": "core-loop",
    "web": "ui-mining-survey",
    "nativeDeferred": "Probe readings are not yet in the native companion model (SSL-773/851 scope); ordinary native mining remains supported.",
-   "tickets": ["SSL-879"]
+   "tickets": [
+    "SSL-879"
+   ]
   },
   {
    "id": "mining-actions",
@@ -895,9 +897,10 @@
    "flow": "instruments",
    "web": "ui-probe-scan",
    "tickets": [
-    "SSL-773"
+    "SSL-773",
+    "SSL-832"
    ],
-   "native": "radio-meteors"
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
   },
   {
    "id": "second-ground-telescope",
@@ -1036,6 +1039,28 @@
     "SSL-848",
     "SSL-861"
    ]
+  },
+  {
+   "id": "probe-subsurface",
+   "name": "Survey probe: shallow and deep subsurface",
+   "flow": "instruments",
+   "web": "ui-probe-subsurface",
+   "tickets": [
+    "SSL-832"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+  },
+  {
+   "id": "probe-science",
+   "name": "Survey probe: level 4 citizen science",
+   "flow": "instruments",
+   "web": "ui-probe-science",
+   "tickets": [
+    "SSL-832"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
   }
  ],
  "missions": [

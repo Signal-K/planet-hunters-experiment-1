@@ -1,9 +1,6 @@
-// Survey probes (SSL-773). A probe is flown to a planet or asteroid and left in orbit; it does not come home
-// (Liam, 9 Nov). The basic scan is automatic (Liam, 12 Nov): the probe maps one sector of the body every
-// PROBE_SECTOR_HOURS on its own, finding each deposit and how many tonnes it holds. It just takes time.
-// Opening the probe console downloads the newly mapped sectors; that download is a probe observation (a research
-// stamp, once a day, and a ledger row). Scan levels where the player does an activity come in cycle 11; the
-// spectrum below is kept for them. Pure over the player, like the other systems.
+// Survey probes: SCAN starts timed coverage, followed by shallow and deep subsurface passes.
+// Downloaded passes open level 4 citizen science readings in the shared instrument console.
+// Mapping cadence, baseline deposits and daily observation/classification stamps retain their existing rules.
 
 import { buildingLevel, probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
@@ -24,6 +21,8 @@ export const BAND_MIN_NM = 400
 export const BAND_MAX_NM = 2500
 
 export interface ProbeReading {
+  /** Level 4: the player's measured absorption wavelengths, never an automatic answer. */
+  analysis?: { at: number; wavelengths: number[] }
   /** When the player's console downloaded this sector. */
   at: number
   /** Unused by the basic scan; cycle 11's scan levels record what the player marked. */
@@ -33,6 +32,8 @@ export interface ProbeReading {
 }
 
 export interface ProbeRecord {
+  /** Independent subsurface coverage; never adds to the baseline mineral reserves. */
+  subsurface?: Partial<Record<2 | 3, { startedAt: number; readings: Record<string, ProbeReading> }>>
   /** null waits for SCAN; absent preserves automatic mapping on older saves. */
   scanStartedAt?: number | null
   /** Optional coverage chosen in a self-planned survey. Existing probes map all 24 sectors. */
@@ -188,10 +189,42 @@ export function scanOrder(): string[] {
 }
 
 /** The player's first scan command starts the clock once; reopening never restarts it. */
-export function startProbeScan<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number): T {
+export function startProbeScan<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number, level: 1 | 2 | 3 = 1): T {
   const record = player.probes?.[targetId]
-  if (!record || record.scanStartedAt !== null || !Number.isFinite(at) || at < record.launchedAt) return player
-  return { ...player, probes: { ...player.probes, [targetId]: { ...record, scanStartedAt: at } } }
+  if (!record || !Number.isFinite(at) || at < record.launchedAt || level > probeScanLevel(record)) return player
+  if (level === 1) {
+    if (record.scanStartedAt !== null) return player
+    return { ...player, probes: { ...player.probes, [targetId]: { ...record, scanStartedAt: at } } }
+  }
+  if (record.subsurface?.[level]) return player
+  return { ...player, probes: { ...player.probes, [targetId]: { ...record, subsurface: { ...record.subsurface, [level]: { startedAt: at, readings: {} } } } } }
+}
+
+export const PROBE_SCAN_LABELS = ['Surface', 'Shallow subsurface', 'Deep subsurface', 'Citizen science'] as const
+
+/** Each downloaded pass opens the next; the citizen science console begins only at level 4. */
+export function probeScanLevel(record: ProbeRecord | undefined): 1 | 2 | 3 | 4 {
+  if (!record || Object.keys(record.readings).length < probeSectorGoal(record)) return 1
+  if (Object.keys(record.subsurface?.[2]?.readings ?? {}).length < probeSectorGoal(record)) return 2
+  if (Object.keys(record.subsurface?.[3]?.readings ?? {}).length < probeSectorGoal(record)) return 3
+  return 4
+}
+
+export function probePass(record: ProbeRecord | undefined, level: 1 | 2 | 3): ProbeRecord | undefined {
+  if (!record || level === 1) return record
+  const pass = record.subsurface?.[level]
+  return { ...record, scanStartedAt: pass?.startedAt ?? null, readings: pass?.readings ?? {} }
+}
+
+/** Logs a player's reading once. Research uses the existing daily classification stamp. */
+export function logProbeSpectrum<T extends ProbePlayer>(player: T, targetId: string, sector: string, wavelengths: number[], at: number): T {
+  const record = player.probes?.[targetId]
+  const reading = record?.readings[sector]
+  if (!record || probeScanLevel(record) !== 4 || !reading || reading.analysis || !Number.isFinite(at) || at < reading.at) return player
+  const marks = [...new Set(wavelengths.filter(nm => Number.isFinite(nm) && nm >= BAND_MIN_NM && nm <= BAND_MAX_NM).map(Math.round))].sort((a, b) => a - b)
+  if (!marks.length || marks.length > 12) return player
+  const probes = { ...player.probes, [targetId]: { ...record, readings: { ...record.readings, [sector]: { ...reading, analysis: { at, wavelengths: marks } } } } }
+  return addStamp({ ...player, probes }, 'classification', at, 'deposit-survey')
 }
 
 export const probeSectorGoal = (record: Pick<ProbeRecord, 'goalSectors'> | undefined) => Math.max(1, Math.min(24, Math.floor(record?.goalSectors ?? 24)))
@@ -218,7 +251,7 @@ export function newSectors(record: ProbeRecord | undefined, now: number): string
 
 /** New sectors waiting across every probe. */
 export function probeSectorsWaiting(player: Pick<Player, 'probes'>, now: number): number {
-  return Object.values(player.probes ?? {}).reduce((sum, record) => sum + newSectors(record, now).length, 0)
+  return Object.values(player.probes ?? {}).reduce((sum, record) => sum + ([1, 2, 3] as const).reduce((n, level) => n + newSectors(probePass(record, level), now).length, 0), 0)
 }
 
 /**
@@ -230,12 +263,18 @@ export function collectProbeData<T extends ProbePlayer>(player: T, targets: read
   let changed = false
   for (const [id, record] of Object.entries(player.probes ?? {})) {
     const target = targets.find(item => item.id === id)
-    const fresh = newSectors(record, at)
-    if (!target || !fresh.length) continue
-    const readings = { ...record.readings }
-    for (const sector of fresh) readings[sector] = { at, marked: [], deposits: sectorDeposits(target, sector) }
-    probes = { ...(probes ?? {}), [id]: { ...record, readings } }
-    changed = true
+    if (!target) continue
+    let next = record
+    for (const level of [1, 2, 3] as const) {
+      const pass = probePass(record, level)
+      const fresh = newSectors(pass, at)
+      if (!fresh.length || !pass) continue
+      const readings = { ...pass.readings }
+      for (const sector of fresh) readings[sector] = { at, marked: [], deposits: sectorDeposits(target, sector) }
+      next = level === 1 ? { ...next, readings } : { ...next, subsurface: { ...next.subsurface, [level]: { startedAt: pass.scanStartedAt!, readings } } }
+      changed = true
+    }
+    if (next !== record) probes = { ...probes, [id]: next }
   }
   return changed ? addStamp({ ...player, probes }, 'probe-observation', at, 'deposit-survey') : player
 }
@@ -277,6 +316,20 @@ export function mergeProbes(current: Player['probes'], remote: Player['probes'])
     const sectorMs = a.sectorMs && b.sectorMs ? Math.min(a.sectorMs, b.sectorMs) : a.sectorMs ?? b.sectorMs
     // Legacy records already map from launch; a stale waiting save cannot stop a scan.
     const starts = [a, b].flatMap(rec => rec.scanStartedAt === null ? [] : [rec.scanStartedAt ?? rec.launchedAt])
-    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), scanStartedAt: starts.length ? Math.min(...starts) : null, goalSectors: Math.max(probeSectorGoal(a), probeSectorGoal(b)), readings: { ...b.readings, ...a.readings }, ...(sectorMs ? { sectorMs } : {}) }]
+    const subsurface: ProbeRecord['subsurface'] = {}
+    for (const level of [2, 3] as const) {
+      const left = a.subsurface?.[level], right = b.subsurface?.[level]
+      if (left || right) subsurface[level] = { startedAt: Math.min(left?.startedAt ?? Infinity, right?.startedAt ?? Infinity), readings: mergeReadings(left?.readings, right?.readings) }
+    }
+    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), scanStartedAt: starts.length ? Math.min(...starts) : null, goalSectors: Math.max(probeSectorGoal(a), probeSectorGoal(b)), readings: mergeReadings(a.readings, b.readings), ...(Object.keys(subsurface).length ? { subsurface } : {}), ...(sectorMs ? { sectorMs } : {}) }]
+  }))
+}
+
+function mergeReadings(a: Record<string, ProbeReading> = {}, b: Record<string, ProbeReading> = {}): Record<string, ProbeReading> {
+  return Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])].map(id => {
+    const left = a[id], right = b[id]
+    if (!left || !right) return [id, left ?? right]
+    const analysis = [left.analysis, right.analysis].filter((row): row is NonNullable<ProbeReading['analysis']> => !!row).sort((x, y) => x.at - y.at)[0]
+    return [id, { ...right, ...left, at: Math.min(left.at, right.at), ...(analysis ? { analysis } : {}) }]
   }))
 }

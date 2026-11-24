@@ -133,3 +133,13 @@
 .view > svg { position: absolute; inset: 0; margin: auto; width: 100%; height: 100%; }
 .progress { grid-row: 4; }
 .stage > .actions { grid-row: 5; }
+
+.levels { display: flex; gap: 8px; flex-wrap: wrap; grid-row: 3; }
+.levels button { min-height: 44px; padding: 8px; border: 1px solid var(--ln-world-glass); border-radius: 8px; color: var(--ln-world-hull-lit); background: var(--ln-world-night-mid); font: 700 14px var(--ln-font-body); cursor: pointer; }
+.levels button[aria-pressed='true'] { outline: 2px solid var(--ln-world-glass); }
+.levels button:disabled { opacity: .5; cursor: default; }
+.stage { grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; }
+.view { grid-row: 4; }
+.progress { grid-row: 5; }
+.stage > .actions { grid-row: 6; flex-wrap: wrap; }
+@media (max-height: 520px) { .head { min-height: 32px; } .levels button { padding: 4px 8px; } }

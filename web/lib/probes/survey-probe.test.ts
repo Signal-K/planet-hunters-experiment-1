@@ -18,6 +18,9 @@ import {
   sectorSpectrum,
   sectorsMapped,
   startProbeScan,
+  probeScanLevel,
+  probePass,
+  logProbeSpectrum,
 } from './survey-probe'
 
 const eros = TARGETS.find(target => target.id === 'eros')!
@@ -99,6 +102,34 @@ describe('survey probes (SSL-773)', () => {
     const merged = mergeProbes(a, b)!
     expect(merged.eros.launchedAt).toBe(3)
     expect(Object.keys(merged.eros.readings).sort()).toEqual(['0_0', '1_0'])
+  })
+
+  it('requires surface, shallow and deep passes in order before readings; logging and merges cannot award twice', () => {
+    let p = placeProbe<Pick<Player, 'probes' | 'researchStamps' | 'researchFragments'>>({ researchFragments: 19 }, 'eros', NOW, 1)
+    expect(startProbeScan(p, 'eros', NOW, 2)).toBe(p)
+    const hour = 3_600_000
+    for (const level of [1, 2, 3] as const) {
+      expect(probeScanLevel(p.probes!.eros)).toBe(level)
+      const at = NOW + (level - 1) * 3 * hour
+      p = startProbeScan(p, 'eros', at, level)
+      const active = p
+      expect(startProbeScan(p, 'eros', at + hour, level)).toBe(active)
+      expect(sectorsMapped(probePass(p.probes!.eros, level), at + 2 * hour)).toHaveLength(1)
+      expect(probeScanLevel(p.probes!.eros)).toBe(level)
+      p = collectProbeData(p, TARGETS, at + 2 * hour)
+    }
+    expect(probeScanLevel(p.probes!.eros)).toBe(4)
+    const stale = structuredClone(p)
+    p = logProbeSpectrum(p, 'eros', '0_0', [1000, 1000, NaN, 2600], NOW + 9 * hour)
+    expect(p.probes!.eros.readings['0_0'].analysis?.wavelengths).toEqual([1000])
+    expect(p.researchFragments).toBe(19)
+    expect(p.researchStamps?.['2026-11-11']).toContain('classification')
+    expect(logProbeSpectrum(p, 'eros', '0_0', [1200], NOW + 24 * hour)).toBe(p)
+    for (const merged of [mergeProbes(p.probes, stale.probes), mergeProbes(stale.probes, p.probes)]) {
+      expect(probeScanLevel(merged!.eros)).toBe(4)
+      expect(merged!.eros.readings['0_0'].analysis?.wavelengths).toEqual([1000])
+      expect(Object.keys(merged!.eros.readings)).toHaveLength(1)
+    }
   })
 
   it('adds a probe step before the Breakthrough on both paths when a probe is up', () => {

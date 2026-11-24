@@ -2131,7 +2131,8 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/ProbeScanScreen.tsx"
+          "web/components/game/screens/ProbeScanScreen.tsx",
+          "web/components/game/screens/ProbeSpectrumConsole.tsx"
         ],
         "native": []
       },
@@ -2155,7 +2156,7 @@ enum AuthoredSceneDeclarations {
             "community-research",
             "mission-planning"
           ],
-          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early."
+          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early. Level 1 starts surface mapping, level 2 a shallow subsurface pass, level 3 a deep subsurface pass; each is manually started and opens after the previous pass is downloaded. Level 4 opens a separate citizen science instrument: pick a downloaded sector, mark its spectrum dips, log the reading, then continue to an unread sector. Map and spectrum never share a page. Passes preserve the original reserve estimates."
         }
       ]
     },

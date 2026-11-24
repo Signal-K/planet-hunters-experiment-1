@@ -196,7 +196,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
       { key: 'ui-probe-mars', label: 'Mars probe readings', hint: 'Survey deposits on Mars', stage: 'free-ops' },
       { key: 'ui-probe-europa', label: 'Europa probe readings', hint: 'Survey deposits on Europa', stage: 'free-ops' },
-      { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-832: SCAN starts timed mapping. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-probe-subsurface', label: 'Survey probe: subsurface', hint: 'Shallow and deep timed passes open in order after download', stage: 'free-ops' },
+      { key: 'ui-probe-science', label: 'Survey probe: citizen science', hint: 'Level 4 spectrum marking and logged readings', stage: 'free-ops' },
       { key: 'ui-second-ground-telescope', label: 'Control Station: second ground telescope', hint: 'SSL-802: one ground telescope standing on the West annex and ₣6M in hand: Add a telescope buys the second one (₣2M) into the Unplaced tray', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
       { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
@@ -890,6 +892,15 @@ function fixture(name: string): Partial<GameState> | null {
 
     case 'ui-probe-watch':
       return { screen: 'probe-watch', player: { ...POST_ONBOARDING_PLAYER }, tutorial: false, targetId: null, missionId: null, popup: null }
+
+    case 'ui-probe-subsurface':
+    case 'ui-probe-science': {
+      const base = fixture('ui-probe-scan')!
+      const at = Date.now() - 48 * 3_600_000
+      const target = TARGETS.find(t => t.id === 'eros')!
+      const readings = Object.fromEntries(sectorIds().slice(0, 2).map(id => [id, { at, marked: [], deposits: sectorDeposits(target, id) }]))
+      return { ...base, player: { ...base.player!, probes: { eros: { launchedAt: at, goalSectors: 2, readings, ...(name === 'ui-probe-science' ? { subsurface: { 2: { startedAt: at, readings }, 3: { startedAt: at, readings } } } : {}) } } } }
+    }
 
     case 'ui-probe-mars':
     case 'ui-probe-europa':

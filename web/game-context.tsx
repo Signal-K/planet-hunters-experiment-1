@@ -516,6 +516,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       submitRadioMeteorClassification: loop.submitRadioMeteorClassification,
       collectProbeData: loop.collectProbeData,
       startProbeScan: loop.startProbeScan,
+      logProbeSpectrum: loop.logProbeSpectrum,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
