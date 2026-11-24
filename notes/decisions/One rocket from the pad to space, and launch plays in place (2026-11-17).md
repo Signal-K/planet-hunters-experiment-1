@@ -12,8 +12,11 @@ gliding over the screen?"
   swaps it for another drawing.
 - Launch plays on the launchpad the player is looking at. The built rocket lifts off its own mount; the pad, the tower
   and the camera stay where they are. No second backdrop, no second rocket, no cut-away sky.
-- The 3D flight rocket is the launchpad rocket's core stage, revolved from measurements of that drawing
-  (`PAD_ROCKET_PROFILE` in `web/lib/flight/looks.ts`). If the launchpad rocket is redrawn, re-measure the profile.
+- Updated 2026-11-24 (SSL-887): flight draws the surviving upper stage directly from the authored launchpad
+  sprite, preserving its nose, panel lines and ink outline. The rear-facing revolved profile hid those details
+  behind a circular engine glow and did not read as the launched rocket. The sprite follows Takeon's simulated
+  position and turns side-on into orbit; the procedural profile remains an image-load fallback. If the launchpad
+  art changes, update the upper-stage crop and outline in `web/lib/flight/rocketSprite.ts`.
 - A scene change during a mission is a fade through black between two views of the same thing, never a hard cut to
   different art.
 - A flight is long enough to steer. Un-timed hops last 18 seconds, not 4.

@@ -195,6 +195,7 @@ export default function TransitScreen({
         config={config}
         destination={destination}
         craft={craft}
+        livery={paint}
         progress={exact / 100}
         onEvent={onFlightEvent}
         onSnapshot={setSnapshot}
