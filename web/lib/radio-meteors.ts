@@ -29,6 +29,8 @@ export interface RadioMeteorSubject {
 }
 
 export interface RadioMeteorClassification {
+  /** Receiver event for truthful result restoration; legacy records remain untouched. */
+  eventId?: string
   subjectId: string
   workflowId: string
   imageUrl: string
@@ -37,6 +39,11 @@ export interface RadioMeteorClassification {
   imageHeight: number
   boxes: RadioMeteorBox[]
   submittedAt: number
+}
+
+/** Restore only a receipt known to belong to this receiver; do not relabel older history. */
+export function latestRadioReceipt(done: Record<string, RadioMeteorClassification>, eventId: string): RadioMeteorClassification | null {
+  return Object.values(done).filter(row => row.eventId === eventId && Number.isFinite(row.submittedAt)).sort((a, b) => b.submittedAt - a.submittedAt)[0] ?? null
 }
 
 const STATION_NAMES: Record<string, string> = { BEDOUR: 'Dourbes', BEHUMA: 'Humain', BEUCCL: 'Uccle', BEOTTI: 'Ottignies', BEGENK: 'Genk' }

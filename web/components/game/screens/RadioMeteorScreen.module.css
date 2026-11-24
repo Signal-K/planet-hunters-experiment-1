@@ -213,3 +213,19 @@
   .mission ol { display: none; }
   .desk { gap: 5px; }
 }
+
+/* The completed activity uses the same desk, with its tools on a separate page. */
+.workspace[data-page='result'] { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+.workspace[data-page='result'] .receiver { display: none; }
+.workspace[data-page='result'] .desk { padding: 16px; overflow: hidden; min-height: 0; }
+.result { padding: 16px; border: 1px solid var(--ln-world-glass); border-radius: 16px; background: var(--ln-world-night-mid); }
+.result h2 { margin: 0 0 16px; font: 800 18px var(--ln-font-display); }
+.result dl { display: grid; gap: 8px; margin: 0; font: 600 14px/1.3 var(--ln-font-body); }
+.result dl > div { display: contents; }
+.result dt { color: var(--ln-world-glass); }
+.result dd { margin: 0; }
+.workspace[data-page='result'] .actions { grid-template-columns: 1fr; }
+.workspace[data-page='result'] .actions button { min-height: 44px; font-size: 14px; }
+@media (max-height: 520px) and (min-width: 701px) {
+  .workspace[data-page='result'] .desk { display: grid; grid-template-columns: 1.3fr 1fr; align-content: center; gap: 16px; }
+}

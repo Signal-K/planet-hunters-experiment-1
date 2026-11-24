@@ -4,9 +4,9 @@ format = 1
 id = "radio-meteors"
 type = "exchange-lab"
 name = "Meteor radio"
-summary = "Box the meteor echoes in real Belgian radio meteor recordings, served live by the Panoptes API. Kept on Landnam's side."
-tickets = ["SSL-714"]
-qa = ["radio-meteors"]
+summary = "Box the meteor echoes in real Belgian radio meteor recordings, served live by the Panoptes API. Kept on Landnam's side. After submission the same desk shows the saved recording and echo count, daily research receipt, passport progress and the event fragment ledger. Fetch or continue a recording, open Community research, or return to Base. Tagged receipts survive reload without rewriting legacy records or awarding again."
+tickets = ["SSL-714", "SSL-883"]
+qa = ["radio-meteors", "radio-receipt", "radio-receipt-pending"]
 
 [runtime]
 surface = "dom"

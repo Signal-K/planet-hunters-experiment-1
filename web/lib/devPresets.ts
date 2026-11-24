@@ -1,3 +1,4 @@
+import { completeChainRadio, getShowerChain } from '@/lib/orionids/chain'
 import { VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { rocketConfigForModel } from '@/lib/data/rockets'
 import { weekKey } from '@/lib/research/paths'
@@ -191,6 +192,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
       { key: 'ui-leonids-shower-debrief', label: 'Leonids run: debrief', hint: 'SSL-831: filled Leonids run back home: the Leonid fragment sample and LEO-1 is up', stage: 'free-ops' },
       { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
+      { key: 'ui-radio-receipt-pending', label: 'Event pending receipt', hint: 'Locally saved event work awaiting research confirmation', stage: 'free-ops' },
+      { key: 'ui-radio-receipt', label: 'Event contribution receipt', hint: 'Saved LEO-1 result, confirmed research and preserved fragment ledger', stage: 'free-ops' },
       { key: 'ui-radio-meteors-leo1', label: 'Meteor radio: LEO-1 last check', hint: 'SSL-831: Leonids mission 2 on LEO-1 with 2 of 3 recordings checked since the run (and older ORI-1 checks that do not count). The next send grades the badge', stage: 'free-ops' },
       { key: 'ui-community-research-leonids-leo1', label: 'Community research: Leonids LEO-1', hint: 'SSL-831: Explorer path in the Leonids week, run done, 1 of 3 LEO-1 recordings: the event step names LEO-1 and the history shows the fragment sample', stage: 'free-ops' },
       { key: 'ui-probe-launch', label: 'Survey probe: launch', hint: 'SSL-773: control station built, Free Ops. The Program tab offers survey probes to the two nearest bodies without one', stage: 'free-ops' },
@@ -1163,6 +1166,17 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+    }
+
+    case 'ui-radio-receipt-pending':
+      return fixture('ui-radio-receipt')
+
+    case 'ui-radio-receipt': {
+      const base = fixture('ui-radio-meteors-leo1')!
+      const at = Date.now(), day = new Date(at).toISOString().slice(0, 10)
+      const result = { subjectId: 'receipt-radio-883', eventId: 'leonids-2026', workflowId: '33017', imageUrl: '', filename: 'Saved LEO-1 recording', imageWidth: 949, imageHeight: 543, boxes: [], submittedAt: at }
+      const p: Player = { ...base.player!, radioMeteorClassifications: { ...base.player!.radioMeteorClassifications, [result.subjectId]: result }, researchStamps: { [day]: ['classification', 'event'] } }
+      return { ...base, player: completeChainRadio(p, getShowerChain('leonids-2026')!, at).player }
     }
 
     case 'ui-radio-meteors-leo1': {

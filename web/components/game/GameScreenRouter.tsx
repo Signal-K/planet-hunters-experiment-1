@@ -573,6 +573,8 @@ function ScreenBody({
           eventId={receiverEventId(game.player, skyEventNow(isDevLauncherEnabled()))}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
+          onAgency={() => game.go('hub')}
+          onResearch={() => game.go('community-research')}
         />
       )
 

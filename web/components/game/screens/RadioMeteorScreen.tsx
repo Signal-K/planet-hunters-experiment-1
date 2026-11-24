@@ -1,5 +1,7 @@
 'use client'
 
+import { useContributionReadout } from '@/lib/research/useContributionReadout'
+import { showerLedger } from '@/lib/orionids/shower-ledger'
 import { radioImageSource } from '@/lib/radio-image-source'
 import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
 
@@ -8,7 +10,7 @@ import { GalaxyMap } from '@/components/game/MissionBoard'
 import { getSkyEvent } from '@/lib/data/sky-events'
 import { chainItems, chainRecordings, chainStage, getShowerChain, ORIONIDS_CHAIN, showerItems } from '@/lib/orionids/chain'
 import type { Player } from '@/lib/game-types'
-import { fetchQueuedRadioSubjects, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
+import { fetchQueuedRadioSubjects, latestRadioReceipt, type RadioMeteorBox, type RadioMeteorClassification, type RadioMeteorSubject } from '@/lib/radio-meteors'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './RadioMeteorScreen.module.css'
 import { captureStroke, composeImageCapture, queueClassificationCapture } from '@/lib/capture/classificationCapture'
@@ -16,6 +18,8 @@ import { captureStroke, composeImageCapture, queueClassificationCapture } from '
 interface RadioMeteorScreenProps {
   player: Player
   onBack: () => void
+  onAgency: () => void
+  onResearch: () => void
   onSubmit: (classification: RadioMeteorClassification) => void
   /** The shower whose community receiver this is. */
   eventId?: string
@@ -114,7 +118,7 @@ export function Dial({ label, readout, value, min, max, step, disabled, testId, 
   )
 }
 
-export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 'orionids-2026' }: RadioMeteorScreenProps) {
+export default function RadioMeteorScreen({ player, onBack, onAgency, onResearch, onSubmit, eventId = 'orionids-2026' }: RadioMeteorScreenProps) {
   const event = getSkyEvent(eventId)
   const instrument = event?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
   // SSL-714: Orionids mission 3 is checking recordings here; the chain finishes on this screen.
@@ -128,6 +132,10 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const badgeTier = player.badges?.[eventId]?.tier ?? null
   const done = player.radioMeteorClassifications ?? {}
   const total = Object.keys(done).length
+  const [receipt, setReceipt] = useState(() => latestRadioReceipt(done, eventId))
+  const [requestToken, setRequestToken] = useState(0)
+  const contribution = useContributionReadout(player, 'classification', receipt?.submittedAt ?? 0)
+  const fragments = showerLedger(player, eventId)
   const target = chain?.radioTarget ?? ORIONIDS_CHAIN.radioTarget
   const missionChecked = chain ? chainRecordings(player, chain) : total
   const items = chain?.items ?? ORIONIDS_CHAIN.items
@@ -149,6 +157,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
+    if (receipt && requestToken === 0) { setLoading(false); return }
     let cancelled = false
     setLoading(true)
     fetchQueuedRadioSubjects(player.radioMeteorClassifications ?? {})
@@ -158,7 +167,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     return () => { cancelled = true }
     // Refetch only on entry; a submission advances the local queue instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [requestToken])
 
   const subject = queue[0] ?? null
   useEffect(() => { setBoxes([]); setSelected(null); setDraft(null); setSize(null); setImageMode('proxy') }, [subject?.id])
@@ -230,7 +239,8 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
       image,
       annotatedImage: annotated,
     }))
-    onSubmit({
+    const classification: RadioMeteorClassification = {
+      eventId,
       subjectId: subject.id,
       workflowId: subject.workflowId,
       imageUrl: subject.imageUrl,
@@ -239,7 +249,9 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
       imageHeight: size.h,
       boxes: list,
       submittedAt: Date.now(),
-    })
+    }
+    onSubmit(classification)
+    setReceipt(classification)
     const at = clock(subject.recordedAt, 0).slice(0, 5)
     setLast(list.length ? { kind: 'logged', echoes: list.length, at } : { kind: 'quiet', at })
     setQueue(prev => prev.slice(1))
@@ -278,7 +290,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
         </nav>
         </>}>
         <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
-        <article className={styles.workspace}>
+        <article className={styles.workspace} data-page={receipt ? 'result' : 'work'}>
           <section className={styles.receiver} aria-label="Receiver">
             <header className={styles.readout}>
               <span className={styles.eyebrow}>Community instrument · launched for the {event?.name ?? 'shower'}</span>
@@ -368,6 +380,22 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             </div>
           </section>
           <section className={styles.desk} aria-label="Radio desk">
+            {receipt ? <>
+              <div className={styles.result} aria-live="polite">
+                <h2>{eventName} · Meteor echoes</h2>
+                <dl>
+                  <dt>Work saved</dt><dd>1 recording · {receipt.boxes.length} echoes · saved locally</dd>
+                  {contribution.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+                  <dt>Fragments</dt><dd>{fragments.caught} caught · {fragments.redeemed} redeemed</dd>
+                  {badgeTier && <><dt>Event record</dt><dd>{badgeTier} badge recorded locally</dd></>}
+                </dl>
+              </div>
+              <div className={styles.actions}>
+                <button type="button" className={board.contractTake} data-testid="radio-result-next" onClick={() => { setReceipt(null); if (!queue.length) setRequestToken(n => n + 1) }}>{queue.length ? 'NEXT RECORDING' : 'FETCH RECORDING'}</button>
+                <button type="button" className={styles.secondary} onClick={onResearch}>COMMUNITY RESEARCH</button>
+                <button type="button" className={styles.secondary} onClick={onAgency}>RETURN TO BASE</button>
+              </div>
+            </> : <>
             <div className={styles.comms} data-testid="radio-dialogue" aria-live="polite">
               <span className={styles.speaker}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13v8M8 21h8" /><circle cx="12" cy="10" r="2" /><path d="M7.8 5.8a6 6 0 0 0 0 8.4M16.2 5.8a6 6 0 0 1 0 8.4M5 3a10 10 0 0 0 0 14M19 3a10 10 0 0 1 0 14" /></svg>
@@ -403,6 +431,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
               <button type="button" className={styles.secondary} data-testid="radio-no-meteors" disabled={!subject || !size || boxes.length > 0} onClick={() => submit([])}>NO METEORS</button>
               <button type="button" className={board.contractTake} data-testid="radio-submit" disabled={!subject || !size || boxes.length === 0} onClick={() => submit(boxes)}>SEND {boxes.length || ''} {boxes.length === 1 ? 'ECHO' : 'ECHOES'}</button>
             </div>
+            </>}
           </section>
         </article>
         </InstrumentFrame>

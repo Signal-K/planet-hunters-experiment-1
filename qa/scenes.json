@@ -172,7 +172,8 @@
    "native": "radio-meteors",
    "tickets": [
     "SSL-714"
-   ]
+   ],
+   "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
   },
   {
    "id": "leonids-shower-mining",
@@ -859,7 +860,8 @@
    "tickets": [
     "SSL-831"
    ],
-   "native": "radio-meteors"
+   "native": "radio-meteors",
+   "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
   },
   {
    "id": "community-research-leonids-leo1",
@@ -1083,6 +1085,28 @@
    ],
    "aliasOf": "galaxy",
    "native": "tess-discovery-phone"
+  },
+  {
+   "id": "radio-receipt",
+   "name": "LEO-1: event contribution receipt",
+   "flow": "events",
+   "web": "ui-radio-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "radio-meteors",
+   "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
+  },
+  {
+   "id": "radio-receipt-pending",
+   "name": "LEO-1: pending event contribution",
+   "flow": "events",
+   "web": "ui-radio-receipt-pending",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "radio-meteors",
+   "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
   }
  ],
  "missions": [

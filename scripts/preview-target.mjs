@@ -32,6 +32,8 @@ const SCREENS = [
   ['surfacesilo', 'ui-surface-silo'],
   ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['agency', 'hub-first-run'], ['hub-first-run', 'hub-first-run'], ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
+  ['radio-receipt-pending', 'ui-radio-receipt-pending'],
+  ['radio-receipt', 'ui-radio-receipt'],
   ['tess-receipt', 'ui-tess-receipt'],
   ['probe-receipt', 'ui-probe-receipt'],
   ['probespectrum', 'ui-probe-science'], ['probe-science', 'ui-probe-science'], ['probe-subsurface', 'ui-probe-subsurface'], ['probescan', 'ui-probe-scan'],
