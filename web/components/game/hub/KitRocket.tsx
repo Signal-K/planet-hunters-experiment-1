@@ -30,7 +30,7 @@ export function KitRocket({ parts, blueprint = false, active, onSelect, classNam
       data-sprite={src}
     >
       {space && !blueprint ? (
-        <svg className={styles.sprite} viewBox="44 164 64 286" role="img" aria-label="Recovered booster">
+        <svg className={styles.sprite} viewBox="46 164 56 286" style={{ overflow: 'hidden' }} role="img" aria-label="Recovered booster">
           <image href={LAUNCH_ROCKET_SPRITE} width="169" height="450" />
         </svg>
       ) : <img ref={sprite.image} onError={sprite.onError} className={styles.sprite} src={src} alt="" draggable={false} />}

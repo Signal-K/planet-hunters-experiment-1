@@ -276,7 +276,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const from = ((zoom - 1) * pan / zoom) * RECORDING_SECONDS
   const to = from + RECORDING_SECONDS / zoom
   const draftBox = draft ? toBox(draft) : null
-  const status = loading ? 'TUNING' : failed ? 'NO SIGNAL' : !subject ? 'QUEUE EMPTY' : 'LIVE QUEUE'
+  const status = loading ? 'TUNING' : failed ? 'NO SIGNAL' : imageMode === 'failed' ? 'IMAGE UNAVAILABLE' : !subject ? 'QUEUE EMPTY' : 'LIVE QUEUE'
 
   return (
     <div className={board.scene} data-testid="radio-meteor-screen" data-screen="radio-meteors">
@@ -298,7 +298,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             <div className={styles.console}>
             <div className={styles.panel} data-testid="radio-console">
             <div className={styles.titlebar}>
-              <i className={styles.led} data-state={subject ? 'live' : failed ? 'off' : 'wait'} aria-hidden="true" />
+              <i className={styles.led} data-state={imageMode === 'failed' || failed ? 'off' : subject ? 'live' : 'wait'} aria-hidden="true" />
               <span>{status}</span>
               <b data-testid="radio-title">{subject ? `${station} · ${subject.recordedAt ?? subject.filename}` : `${instrument.callsign} · 49.97 MHz`}</b>
             </div>
