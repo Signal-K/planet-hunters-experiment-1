@@ -65,13 +65,7 @@ describe('Orionids: fragments, then ORI-1', () => {
     byTest('radio-instrument').should('contain', 'ORI-1')
     byTest('radio-mission-progress').should('contain', '0 / 3')
 
-    // First time on the receiver: the radio desk briefs the player.
-    byTest('radio-briefing-next').click()
-    byTest('radio-briefing-next').click()
-    byTest('radio-briefing-next').should('be.disabled')
-    cy.get('[aria-label="Choose the short upright mark"]').click()
-    byTest('radio-briefing-next').click()
-    byTest('radio-briefing-next').should('contain', 'START LISTENING').click()
+    byTest('radio-question').should('contain', 'Scan the beacon line')
 
     // Two recordings with an echo, one marked quiet.
     for (const checked of [1, 2]) {

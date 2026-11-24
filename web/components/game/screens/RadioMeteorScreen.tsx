@@ -40,13 +40,6 @@ const toBox = (d: Draft): RadioMeteorBox => ({
   height: Math.round(Math.abs(d.y1 - d.y0)),
 })
 
-const briefingLines = (callsign: string, eventName: string) => [
-  `${callsign} listens to radio recordings collected for the ${eventName}. Each image shows five minutes: time runs left to right, and height shows radio frequency.`,
-  'The horizontal line is a radio beacon. A meteor trail can briefly reflect its signal, making a short upright echo near the line. Long curved tracks are often aircraft.',
-  'Try it: choose the likely meteor echo in this simplified example. This is practice, so nothing will be submitted.',
-  'On the recording, tap an echo to place a box, or drag around it. Check the whole five minutes, then send your boxes. If there are none, choose No meteors.',
-]
-
 /** "2026-07-25 13:55 UTC" plus seconds → "13:57:30". */
 function clock(recordedAt: string | null, seconds: number): string {
   const m = /(\d{2}):(\d{2}) UTC/.exec(recordedAt ?? '')
@@ -124,7 +117,6 @@ export function Dial({ label, readout, value, min, max, step, disabled, testId, 
 export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 'orionids-2026' }: RadioMeteorScreenProps) {
   const event = getSkyEvent(eventId)
   const instrument = event?.communityInstrument ?? { callsign: 'RX-1', name: 'Community receiver' }
-  const BRIEFING = briefingLines(instrument.callsign, event?.name ?? 'shower')
   // SSL-714: Orionids mission 3 is checking recordings here; the chain finishes on this screen.
   // SSL-831: on LEO-1 it is Leonids mission 2, counted from the moment the shower run came home.
   const chain = getShowerChain(eventId)
@@ -153,9 +145,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const [gain, setGain] = useState(1)
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState(0.5)
-  const [briefing, setBriefing] = useState<number | null>(total === 0 ? 0 : null)
   const [last, setLast] = useState<Last>(null)
-  const [practice, setPractice] = useState<'meteor' | 'aircraft' | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -252,14 +242,12 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     })
     const at = clock(subject.recordedAt, 0).slice(0, 5)
     setLast(list.length ? { kind: 'logged', echoes: list.length, at } : { kind: 'quiet', at })
-    setBriefing(null)
     setQueue(prev => prev.slice(1))
   }
 
   const station = subject?.station ?? 'BRAMS'
   const line = justCompleted && (last?.kind === 'logged' || last?.kind === 'quiet')
     ? `That’s ${target} recordings confirmed. The ${eventName} record is complete. Thank you. ${instrument.callsign} keeps listening if you want to stay on.`
-    : briefing != null ? BRIEFING[briefing]
     : loading ? 'Tuning in. Pulling the next recording off the Belgian network.'
     : failed ? 'I can’t reach the archive from here. Check your connection and come back.'
     : !subject ? (last?.kind === 'logged' || last?.kind === 'quiet' ? 'That was the last one in this batch. Nice work. More come in as the stations upload.' : 'Nothing waiting in the queue right now. More come in as the stations upload.')
@@ -269,8 +257,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     : last?.kind === 'deleted' ? (boxes.length ? `Box removed. ${boxes.length} left on this one.` : 'Box removed. Back to a clean sheet.')
     : last?.kind === 'logged' ? `Logged ${last.echoes} echo${last.echoes === 1 ? '' : 'es'} from ${last.at}. Next recording, from ${station}.`
     : last?.kind === 'quiet' ? `Quiet sweep from ${last.at}, logged. That counts too. Here’s the next one, from ${station}.`
-    : onMission ? `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Check ${target - Math.min(missionChecked, target)} more to confirm the ${eventName}. Box every meteor, or tell me it’s quiet.`
-    : `Recording from ${station}, starting ${clock(subject.recordedAt, 0).slice(0, 5)} UTC. Box every meteor, or tell me it’s quiet.`
+    : 'Scan the beacon line from left to right. Tap or drag around each short, upright echo.'
 
   // The view: zoom scales both axes about the beacon line; pan moves along time.
   const left = -(zoom - 1) * pan * 100
@@ -361,16 +348,16 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                 ) : (
                   <p className={styles.standby}>{status}</p>
                 )}
-                <span className={styles.beacon} data-highlight={briefing === 0 || undefined} aria-hidden="true">49.97 MHz</span>
+                <span className={styles.beacon} aria-hidden="true">49.97 MHz</span>
               </div>
             </div>
-            <div className={styles.scanHint}>TIME → <span>Scan along the beacon line for short upright echoes</span></div>
+
             <div className={styles.timeline} aria-label="Visible time">
               <span>{clock(subject?.recordedAt ?? null, from)}</span>
               <i style={{ marginLeft: `${(from / RECORDING_SECONDS) * 100}%`, width: `${100 / zoom}%` }} aria-hidden="true" />
               <span>{clock(subject?.recordedAt ?? null, to)}</span>
             </div>
-            <div className={styles.controlHint}>Drag a dial, scroll, or use arrow keys · Zoom, then sweep to see the rest</div>
+
             <div className={styles.deck}>
               <Dial label="GAIN" testId="radio-gain" readout={`${Math.round(gain * 100)}%`} value={gain} min={0.6} max={2.2} step={0.1} onChange={setGain} />
               <Dial label="ZOOM" testId="radio-zoom" readout={`×${zoom.toFixed(1)}`} value={zoom} min={1} max={4} step={0.5} onChange={setZoom} />
@@ -387,28 +374,12 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                 Radio desk · {station}
               </span>
               <p data-testid="radio-question">{line}</p>
-              {briefing != null && (
-                <div className={styles.coach}>
-                  <span className={styles.step}>GUIDE · {briefing + 1} / {BRIEFING.length}</span>
-                  {briefing === 2 && (
-                    <>
-                      <div className={styles.practice} aria-label="Practice identifying an echo">
-                        <div className={styles.practiceBeacon} aria-hidden="true" />
-                        <button type="button" className={styles.practiceMeteor} onClick={() => setPractice('meteor')} aria-label="Choose the short upright mark"><span /></button>
-                        <button type="button" className={styles.practiceAircraft} onClick={() => setPractice('aircraft')} aria-label="Choose the long curved track"><span /></button>
-                        <span className={styles.practiceLabel}>BEACON</span>
-                      </div>
-                      <p className={styles.feedback} role="status">{practice === 'meteor' ? 'That’s the likely echo: short and upright. The curved track is likely an aircraft.' : practice === 'aircraft' ? 'That long curve is likely an aircraft. Try the short upright mark.' : 'Select one of the two marks.'}</p>
-                    </>
-                  )}
-                  <div className={styles.coachActions}>
-                    <button type="button" className={styles.next} data-testid="radio-briefing-next" disabled={briefing === 2 && practice !== 'meteor'} onClick={() => setBriefing(briefing + 1 < BRIEFING.length ? briefing + 1 : null)}>
-                      {briefing + 1 < BRIEFING.length ? 'NEXT' : 'START LISTENING'}
-                    </button>
-                    <button type="button" className={styles.skip} onClick={() => setBriefing(null)}>SKIP GUIDE</button>
-                  </div>
-                </div>
-              )}
+            </div>
+            <div className={styles.fieldGuide} aria-label="What to look for">
+              <span className={styles.keyEcho} aria-hidden="true" />
+              <span><b>LOOK FOR</b> short upright marks</span>
+              <span className={styles.keyCurve} aria-hidden="true" />
+              <span><b>LEAVE</b> long curved tracks</span>
             </div>
             {(onMission || justCompleted) && (
               <div className={styles.mission} data-testid="radio-mission" data-complete={justCompleted || undefined}>
@@ -426,7 +397,6 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             <div className={styles.tally}>
               <span><b data-testid="radio-echoes">{boxes.length}</b>echoes</span>
               <span><b data-testid="radio-checked">{total}</b>checked</span>
-              {briefing == null && <button type="button" className={styles.brief} data-testid="radio-briefing" onClick={() => { setPractice(null); setBriefing(0) }}>HOW TO PLAY</button>}
             </div>
             <div className={styles.actions}>
               <button type="button" className={styles.secondary} data-testid="radio-delete-box" disabled={!boxes.length} onClick={removeBox}>{selected != null ? 'DELETE BOX' : 'UNDO'}</button>

@@ -130,30 +130,86 @@
 .imageFailure { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 20px; color: var(--ln-text); background: var(--ln-panel); text-align: center; font-size: 14px; }
 .imageFailure p { margin: 0; max-width: 40ch; }
 .imageFailure button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--ln-cyan-border); border-radius: 8px; background: var(--ln-panel-2); color: var(--ln-text); cursor: pointer; font: inherit; }
-/* Practice is separate from real classifications. */
-.coach { display: grid; gap: 8px; }
-.step { color: #ffc9bd; font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .08em; }
-.coachActions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.next:disabled { opacity: .5; cursor: not-allowed; }
-.skip { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: #f4efe4; font: 800 14px/1 var(--ln-font-display); cursor: pointer; }
-.practice { position: relative; height: 94px; overflow: hidden; border: 2px solid #6879a0; border-radius: 6px; background: #17255e; }
-.practiceBeacon { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #b4db82; }
-.practice button { position: absolute; top: 8px; height: 76px; border: 1px dashed rgba(255,255,255,.5); border-radius: 5px; background: transparent; cursor: pointer; }
-.practice button:focus-visible { outline: 3px solid #f2c24c; }
-.practiceMeteor { left: 26%; width: 52px; }
-.practiceMeteor span { position: absolute; top: 15px; bottom: 12px; left: 50%; width: 4px; border-radius: 50%; background: #ecdf72; box-shadow: 0 0 8px #b2ef95; }
-.practiceAircraft { right: 10%; width: 40%; overflow: hidden; }
-.practiceAircraft span { position: absolute; left: -10%; top: 10px; width: 125%; height: 40px; border-bottom: 4px solid #8dd5a5; border-radius: 0 0 50% 30%; transform: rotate(14deg); }
-.practiceLabel { position: absolute; left: 4px; top: 53%; color: #c4edee; font: 700 14px/1 var(--ln-font-mono); pointer-events: none; }
-.comms .feedback { min-height: 0; color: #fff2c6; font-size: 14px; }
-.scanHint, .controlHint { color: #c9dce6; font: 700 14px/1.2 var(--ln-font-body); }
-.scanHint { display: flex; gap: 10px; color: #9de7ef; }
-.scanHint span { color: #f4efe4; }
-.controlHint { text-align: center; }
-.console { --controls: 225px; }
-@media (max-height: 520px) {
-  .console { --controls: 180px; }
-  .practice { height: 68px; }
-  .practice button { top: 2px; height: 60px; }
-  .desk { overflow-y: auto; justify-content: flex-start; }
+/* One instrument housing, with a fixed place for the radio desk. */
+.workspace { inset: 10px; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .75fr); gap: 0; overflow: hidden; border: 1px solid #667693; border-radius: 8px; background: #18243a; }
+.receiver { background: transparent; padding: 12px; gap: 6px; }
+.desk { background: #202e45; border-left: 1px solid #52627a; padding: 12px; gap: 10px; justify-content: center; overflow: hidden; }
+.desk > * { max-width: none; }
+.readout { min-height: 38px; }
+.eyebrow { font-size: 14px; }
+.console { --controls: 140px; --pad: 10px; }
+.panel { border-radius: 6px; background: #111c30; gap: 6px; }
+.titlebar { border-radius: 4px 4px 0 0; }
+.screw { display: none; }
+.comms { min-height: 170px; box-sizing: border-box; align-content: start; border-radius: 5px; background: #142238; gap: 8px; }
+.comms p { min-height: 3em; }
+.speaker { color: #a3dce8; }
+.step { color: #a3dce8; }
+.next { border-radius: 4px; }
+.skip { color: #c9dce6; }
+.tally[data-guiding], .actions[data-guiding] { visibility: hidden; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { inset: 6px; display: flex; flex-direction: column; overflow: hidden; }
+  .receiver { flex: 0 1 auto; padding: 8px; }
+  .readout { min-height: 32px; }
+  .readout h2 { font-size: 18px; }
+  .eyebrow { font-size: 14px; white-space: nowrap; }
+  .console { container-type: inline-size; }
+  .panel { width: 100%; }
+  .desk { flex: 1 1 auto; min-height: 0; border: 0; border-top: 1px solid #52627a; padding: 8px; gap: 6px; justify-content: flex-start; overflow: hidden; }
+  .comms { min-height: 148px; padding: 8px 10px; }
+  .comms p { min-height: 2.7em; font-size: 16px; }
+  .speaker svg { width: 18px; height: 18px; }
+  .mission { padding: 6px 8px; }
+  .tally b { font-size: 20px; }
+  .actions { grid-template-columns: 1fr 1fr 1.3fr; gap: 6px; }
+  .actions > :last-child { grid-column: auto; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .workspace { inset: 4px; grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr); }
+  .receiver { padding: 5px 8px; }
+  .readout { min-height: 26px; }
+  .readout h2 { font-size: 16px; }
+  .eyebrow { display: none; }
+  .console { --controls: 105px; }
+  .desk { padding: 6px 10px; gap: 5px; }
+  .comms { min-height: 135px; padding: 7px 10px; }
+  .comms p { font-size: 15px; min-height: 2.7em; }
+  .actions { position: static; background: none; padding: 0; }
+}
+
+/* Brief field cues stay alongside the real recording. */
+.desk { justify-content: center; }
+.comms { height: auto; min-height: 96px; flex: 0 0 auto; align-content: center; }
+.comms p { min-height: 0; }
+.fieldGuide { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 8px 10px; padding: 10px 12px; border: 1px solid #52627a; border-radius: 5px; color: #e5ece8; background: #18283e; font: 600 15px/1.2 var(--ln-font-body); }
+.fieldGuide b { color: #9de7ef; font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .05em; }
+.keyEcho { width: 3px; height: 28px; justify-self: center; border-radius: 50%; background: #e6ea84; box-shadow: 0 0 6px #a8e698; }
+.keyCurve { width: 20px; height: 13px; border-bottom: 3px solid #8dd5a5; border-radius: 0 0 80% 20%; transform: rotate(12deg); }
+@media (orientation: portrait) and (max-width: 700px) {
+  .desk { justify-content: center; gap: 8px; }
+  .comms { height: auto; min-height: 80px; flex-basis: auto; }
+  .fieldGuide { grid-template-columns: 15px 1fr 20px 1fr; gap: 5px; padding: 8px; font-size: 14px; }
+  .fieldGuide b { display: block; }
+  .keyEcho { height: 24px; }
+  .keyCurve { width: 18px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .comms { height: auto; min-height: 74px; flex-basis: auto; }
+  .fieldGuide { grid-template-columns: 15px 1fr 20px 1fr; gap: 5px; padding: 6px; font-size: 14px; }
+  .fieldGuide b { display: block; }
+  .keyEcho { height: 22px; }
+  .keyCurve { width: 18px; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { bottom: auto; height: auto; max-height: calc(100% - 12px); }
+  .desk { flex: 0 0 auto; justify-content: flex-start; }
+}
+@media (orientation: portrait) and (max-width: 700px) and (max-height: 720px) {
+  .receiver { flex: 0 0 auto; }
+  .eyebrow { display: none; }
+  .screen { max-width: 250px; }
+  .comms { min-height: 64px; }
+  .mission ol { display: none; }
+  .desk { gap: 5px; }
 }
