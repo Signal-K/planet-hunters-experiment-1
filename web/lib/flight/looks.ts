@@ -33,6 +33,10 @@ export function flightDestinationLook(target: FlightBodyInput, returning: boolea
   const spec = flightBodySpec(target, returning)
   const seed = seedFromText(spec.seed)
   const p = spec.palette
+  // Mercury's trace exosphere produces no visible halo, clouds or polar ice caps.
+  if (target.id === 'mercury' && !returning) {
+    return { kind: 'rocky', seed, colors: ramp([p.groundDeep, p.groundDeep, p.ground, p.nearRidge]), craters: 0.85 }
+  }
   switch (spec.kind) {
     case 'earth':
       // Three sea tones before the land ones, so Earth is mostly ocean.

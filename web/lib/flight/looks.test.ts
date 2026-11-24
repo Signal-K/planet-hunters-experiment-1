@@ -8,6 +8,19 @@ const luminance = (hex: string) => {
 }
 
 describe('flight looks', () => {
+  it('draws Mercury as grey cratered rock without an atmosphere or caps', () => {
+    const look = flightDestinationLook(body('mercury', 'planet'), false)
+    expect(look.kind).toBe('rocky')
+    expect(look.atmosphere).toBeUndefined()
+    expect(look.caps).toBeUndefined()
+    expect(look.clouds).toBeUndefined()
+    expect(look.craters).toBeGreaterThan(0.5)
+    for (const color of look.colors) {
+      const channels = color.slice(1).match(/../g)!.map(channel => parseInt(channel, 16))
+      expect(Math.max(...channels) - Math.min(...channels)).toBeLessThan(30)
+    }
+    expect(flightDestinationLook(body('mercury', 'planet'), true).kind).toBe('ocean')
+  })
   it('draws Earth on the way home and the body itself on the way out', () => {
     expect(flightDestinationLook(body('eros', 'asteroid', 'S'), true).kind).toBe('ocean')
     expect(flightDestinationLook(body('eros', 'asteroid', 'S'), false).kind).toBe('asteroid')
