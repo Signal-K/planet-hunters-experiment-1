@@ -15,7 +15,7 @@ it('delivers the actual recording bytes from a fixed host on the game origin', a
   expect(response.status).toBe(200)
   expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([137, 80, 78, 71])
   expect(response.headers.get('content-type')).toBe('image/png')
-  expect(fetch).toHaveBeenCalledWith(source, expect.objectContaining({ redirect: 'error' }))
+  expect(fetch).toHaveBeenCalledWith(source, expect.objectContaining({ redirect: 'manual' }))
 })
 
 it('rejects arbitrary hosts, paths and non-image responses', async () => {

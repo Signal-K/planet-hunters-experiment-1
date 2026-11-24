@@ -6,7 +6,7 @@ export async function GET(_request: Request, context: { params: Promise<{ file: 
   }
   try {
     const upstream = await fetch(`https://panoptes-uploads.zooniverse.org/subject_location/${file}`, {
-      redirect: 'error', signal: AbortSignal.timeout(12000),
+      redirect: 'manual',
     })
     if (!upstream.ok) return new Response('Recording unavailable', { status: upstream.status === 404 ? 404 : 502 })
     const type = upstream.headers.get('content-type')?.split(';')[0]
@@ -18,7 +18,8 @@ export async function GET(_request: Request, context: { params: Promise<{ file: 
       'Cache-Control': 'public, max-age=86400, s-maxage=604800',
       'X-Content-Type-Options': 'nosniff',
     } })
-  } catch {
+  } catch (error) {
+    console.error('[radio-image] Delivery failed', error)
     return new Response('Recording temporarily unavailable', { status: 502, headers: { 'Cache-Control': 'no-store' } })
   }
 }
