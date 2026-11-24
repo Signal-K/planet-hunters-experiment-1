@@ -1,5 +1,6 @@
 'use client'
 
+import { radioImageSource } from '@/lib/radio-image-source'
 import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
@@ -215,7 +216,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     const target = subject
     const sx = size.w
     const sy = size.h
-    void composeImageCapture(target.imageUrl, (ctx, w, h) => {
+    void composeImageCapture(radioImageSource(target.imageUrl), (ctx, w, h) => {
       const t = captureStroke(w)
       ctx.strokeStyle = '#ffd60a'
       ctx.lineWidth = t
@@ -311,7 +312,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                       key={`${subject.id}:${imageMode}:${imageRetry}`}
                       className={styles.image}
                       data-testid="radio-spectrogram"
-                      src={subject.imageUrl}
+                      src={radioImageSource(subject.imageUrl)}
                       alt={`Radio spectrogram ${subject.filename}`}
                       crossOrigin={imageMode === 'cors' ? 'anonymous' : undefined}
                       hidden={imageMode === 'failed'}

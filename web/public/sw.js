@@ -81,7 +81,7 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url)
 
-  if (url.hostname === SCIENCE_HOST) {
+  if (url.hostname === SCIENCE_HOST || (url.origin === self.location.origin && url.pathname.startsWith('/api/radio-images/'))) {
     event.respondWith(
       caches.open(SCIENCE_CACHE).then(async cache => {
         const cached = await cache.match(request.url)
