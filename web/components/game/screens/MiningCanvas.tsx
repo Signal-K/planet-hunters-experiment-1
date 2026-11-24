@@ -75,7 +75,6 @@ interface MiningCanvasProps {
 }
 
 export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
-  void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
   debrisPresetRef.current = debrisPreset
@@ -188,7 +187,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
 
         // SSL-708: the ship starts about a quarter of the way in, not hugging the left edge.
         const startX = Math.round(Math.max(110, Math.min(320, worldW * 0.24)))
-        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey })
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey, rocketImageSrc })
         if (destroyed) {
           field.backdrop.destroy({ children: true })
           field.beam.destroy({ children: true })

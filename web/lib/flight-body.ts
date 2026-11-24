@@ -17,7 +17,7 @@ export interface FlightBodySpec {
 
 /** Which painted body belongs on the right of a flight. Earth return and Earth-orbit lanes are a disc, never a ground limb. */
 export function flightBodyKind(target: FlightBodyInput, returning: boolean): FlightBodyKind {
-  if (returning || /earth/i.test(target.id) || /earth/i.test(target.name)) return 'earth'
+  if (returning || target.type === 'event-field' || /earth/i.test(target.id) || /earth/i.test(target.name)) return 'earth'
   if (target.archetype === 'gas-giant') return 'bands'
   if (target.archetype === 'icy') return 'ice'
   if (target.type === 'asteroid') return 'asteroid'

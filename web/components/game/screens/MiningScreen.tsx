@@ -29,10 +29,6 @@ import { miningSeamPool } from '@/lib/probes/mining-intelligence'
 
 // SSL-711: the no-client explanation lives in the start card (centre of the scene, fades), not a panel across the top.
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
-// SSL-333: first-ever mining run, any mission type, opens the controls guide
-// automatically once so a player never has to discover the "?" button on
-// their own.
-const HUD_GUIDE_ACK_KEY = 'ln_mining_hud_guide_ack'
 
 function useFreeOpsFirstSuccessAck() {
   const [dismissed, setDismissed] = useState(false)
@@ -494,23 +490,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [])
   const palette = paletteById(paletteOverride) ?? paletteForTarget(target)
 
-  // SSL-333 opened the guide once on a first mining run. The Flight Plan owns
-  // the Fire Laser training try now, so the guide remains opt-in there and
-  // never covers the seam it asks the player to watch.
-  useEffect(() => {
-    // Flight Plan already explains the shot; the guide must not create a
-    // second guidance layer over the ore and fire controls.
-    if (trainingMiningTry) return
-    // A Free Ops run has its own first-run explainer; the full-screen guide would hide Fire behind it.
-    if (isFreeHaulEligible) return
-    try {
-      if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
-        setGuideOpen(true)
-        localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
-      }
-    } catch { /* localStorage unavailable */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trainingMiningTry, isFreeHaulEligible])
 
   const isFreeOps = !!isFreeHaulEligible
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
@@ -745,31 +724,29 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             <div className="mining-menu-head">
               <span className="mining-menu-eyebrow">{nightRun ? `${showerName} shower` : isFreeOps ? 'Free mining' : 'Mission'}</span>
               <strong>{nightRun ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments` : mission.title}</strong>
-              <span>{briefGoal} · {nightRun ? `${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL} caught` : isFreeOps ? `${freeOpsCargoUnits} in the hold` : `${totalCollected} of ${totalNeeded} collected`} · Laser {laserCharges}/{MAX_CHARGES}</span>
-              <span data-testid="mining-survey-source">{seamPool.source === 'probe' ? `Seam mix from ${seamPool.coverage}/24 downloaded or shared sectors. Required job ore is included.` : 'No mapped deposits on file: seam mix uses the body’s composition.'}</span>
+              <span>{nightRun ? `${Math.min(shownCatches, ORIONIDS_FRAGMENT_GOAL)} of ${ORIONIDS_FRAGMENT_GOAL} caught` : isFreeOps ? `${freeOpsCargoUnits} in the hold` : `${totalCollected} of ${totalNeeded} collected`} · Laser {laserCharges}/{MAX_CHARGES}</span>
+              {!nightRun && <details><summary>Survey details</summary><span data-testid="mining-survey-source">{seamPool.source === 'probe' ? `Seam mix from ${seamPool.coverage}/24 downloaded or shared sectors. Required job ore is included.` : 'No mapped deposits on file: seam mix uses the body’s composition.'}</span></details>}
             </div>
-            <button type="button" className="mining-guide-x" aria-label="Close menu" onClick={() => setGuideOpen(false)}>
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                <path d="M4 4 L14 14 M14 4 L4 14" fill="none" stroke="currentColor" strokeWidth="2" />
-              </svg>
-            </button>
           </div>
           <div className="mining-guide-actions">
             <div className="mining-guide-column">
               <button type="button" className="mining-guide-close" data-testid="mining-resume-btn" onClick={() => setGuideOpen(false)}>Resume</button>
+              <button type="button" className="mining-guide-close" data-testid="mining-return-btn" onClick={() => { setGuideOpen(false); handleReturn() }}>{returnLabel}</button>
+
+              <details className="mining-menu-options"><summary>Other options</summary>
               {onSwitchMission && (
                 <button type="button" className="mining-guide-close" data-testid="mining-switch-mission-btn" onClick={() => { setGuideOpen(false); onSwitchMission(cargoRef.current, laserChargesRef.current) }}>Switch mission</button>
               )}
-              <button type="button" className="mining-guide-close" data-testid="mining-return-btn" onClick={() => { setGuideOpen(false); handleReturn() }}>{returnLabel}</button>
-              <p>{mission.deliveryTargetId ? 'Starts the delivery flight with your cargo. Settle the delivery on arrival.' : 'Starts the flight home with your cargo. Land on Earth to settle the haul.'}</p>
               <button type="button" className="mining-guide-close" data-testid="hub-btn" onClick={() => { setGuideOpen(false); onBack(cargoRef.current, laserChargesRef.current) }}>View Base · pause mining</button>
               <button type="button" className="mining-guide-close" data-testid="mining-overflow-recharge-btn" disabled={laserCharges >= MAX_CHARGES} onClick={() => { setGuideOpen(false); handleRecharge() }}>
                 {rechargePrice > 0 ? `Recharge laser · ${rechargePrice} fr` : 'Recharge laser'}
               </button>
+              </details>
             </div>
           </div>
           <div className="mining-guide-scroll">
             <div className="mining-guide-column">
+              {!nightRun && freeOpsCargoUnits > 0 && <details className="mining-menu-options"><summary>Cargo hold</summary>
               {!nightRun && freeOpsCargoUnits > 0 && (
                 <div className="mining-hold" role="region" aria-label="Cargo hold" data-testid="mining-hold">
                   <div className="mining-hold__title">Hold · {freeOpsCargoUnits}</div>
@@ -788,6 +765,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   ))}
                 </div>
               )}
+              </details>}
+              <details className="mining-menu-options"><summary>Controls and help</summary>
               <span className="mining-menu-eyebrow">How to play</span>
               {miningGuide(!!deliveryTargetName, secondaryAction).map(item => (
                 <article key={item.label} className="mining-guide-card">
@@ -798,6 +777,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   </div>
                 </article>
               ))}
+              </details>
+              <details className="mining-menu-options"><summary>Settings and mission management</summary>
               <div className="mining-menu-row">
                 <button type="button" className="mining-guide-close" data-testid="mining-help-btn" onClick={() => { setGuideOpen(false); help.show() }}>More help</button>
                 <button type="button" className="mining-guide-close" data-testid="settings-button" onClick={() => { setGuideOpen(false); openSettings() }}>Settings</button>
@@ -807,6 +788,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                   Scrub mission
                 </button>
               )}
+              </details>
             </div>
           </div>
         </div>

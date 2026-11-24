@@ -1,5 +1,7 @@
 'use client'
 
+import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
+
 import { useEffect, useRef, useState } from 'react'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
@@ -286,7 +288,7 @@ export default function MissionOperationRoutes({
           mission={game.mission}
           target={game.target}
           probeEvidence={game.player}
-          rocketImageSrc={rocketDisplay.img}
+          rocketImageSrc={LAUNCH_ROCKET_SPRITE}
           initialCargo={game.player.miningCargoInProgress}
           initialCharges={game.player.miningLaserCharges}
           francs={game.player.francs}

@@ -52,7 +52,7 @@ const TakeOnFlight = forwardRef<TakeOnFlightHandle, Props>(function TakeOnFlight
       if (cancelled) return
       scene = engine.createFlightScene({ canvas, config, destination, craft: latest.current.craft, onEvent: event => latest.current.onEvent?.(event) })
       sceneRef.current = scene
-      const fit = () => scene?.resize(canvas.clientWidth, canvas.clientHeight)
+      const fit = () => scene?.resize(canvas.clientWidth, canvas.clientHeight, 2)
       fit()
       observer = new ResizeObserver(fit)
       observer.observe(canvas)

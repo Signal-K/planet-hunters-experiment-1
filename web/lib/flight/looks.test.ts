@@ -34,7 +34,7 @@ describe('flight looks', () => {
     expect(craft.sections.reduce((n, s) => n + s.length, 0)).toBeCloseTo(2.1)
     expect(Math.max(...craft.sections.map(s => s.r0))).toBeLessThan(0.16)
     expect(craft.sections.filter(s => s.color === DEFAULT_LIVERY.hull).length).toBeGreaterThan(8)
-    expect(craft.boosters).toBeUndefined()
+    expect(craft.boosters).toMatchObject({ count: 2, color: DEFAULT_LIVERY.hull })
     expect(craft.fins).toBeUndefined()
     const painted = flightCraftLook(null, { hull: '#222222', trim: '#ff0000' })
     expect(painted.sections.some(s => s.color === '#ff0000')).toBe(true)

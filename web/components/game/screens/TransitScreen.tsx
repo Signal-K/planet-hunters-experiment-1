@@ -203,7 +203,7 @@ export default function TransitScreen({
       <div className={styles.top}>
         <button type="button" className={styles.exit} data-testid="transit-base-btn" onClick={onBack}>View Base</button>
         <div className={styles.route}>
-          <span className={styles.routeName} data-testid="transit-destination">{returning ? 'Returning to Earth' : `To ${target.name}`}</span>
+          <span className={styles.routeName} data-testid="transit-destination">{returning ? 'Returning to Earth' : target.type === 'event-field' ? `${target.name} · near Earth` : `To ${target.name}`}</span>
           <div
             className={styles.progress}
             role="progressbar"
@@ -215,7 +215,7 @@ export default function TransitScreen({
           >
             <span style={{ width: `${progress}%` }} />
           </div>
-          <span className={styles.routeEta}>{arrived ? 'In orbit' : remainingLabel ?? `${progress}%`}</span>
+          <span className={styles.routeEta}>{arrived ? target.type === 'event-field' && !returning ? 'Meteor stream reached' : 'In orbit' : remainingLabel ?? `${progress}%`}</span>
         </div>
       </div>
 

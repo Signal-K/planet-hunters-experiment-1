@@ -2401,10 +2401,10 @@ body[data-pwa="standalone"]::before {
   background: rgba(88, 208, 234, .18);
   outline: none;
 }
-/* Resume is the call to action: the cream contract button. */
-.theme-blueprint.mining-screen .mining-guide-actions .mining-guide-close:first-child {
-  border-color: #f4efe4;
-  background: #f4efe4;
+/* Resume is the primary action in the mining menu. */
+.theme-blueprint.mining-screen .mining-guide-actions [data-testid="mining-resume-btn"] {
+  border-color: #9de7ef;
+  background: #9de7ef;
   color: #142840;
 }
 .theme-blueprint.mining-screen .mining-guide-close:disabled {
@@ -5000,3 +5000,9 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 .program-footer:has(.program-new-mission) > strong,
 .program-footer:has(.program-new-mission) > span { display:none; }
 .program-footer .program-new-mission { flex:1; max-width:480px; margin-left:12px; }
+.mining-menu-options { width:100%; border-top:1px solid #58758b; }
+.mining-menu-options summary { min-height:44px; padding:12px 0; cursor:pointer; font:700 14px/1.3 var(--ln-font-body); }
+.mining-menu-options[open] { display:flex; flex-direction:column; gap:10px; }
+.mining-guide-dock .mining-guide-top { padding-top:20px; }
+.mining-guide-scroll .mining-guide-column { gap:8px; }
+.mining-guide-actions [data-testid="mining-resume-btn"] { background:#9de7ef; color:#142840; border-color:#9de7ef; }

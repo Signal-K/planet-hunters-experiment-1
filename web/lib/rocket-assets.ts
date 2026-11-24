@@ -1,3 +1,5 @@
+export const LAUNCH_ROCKET_SPRITE = '/art/scenes/launchpad/launchpad-rocket-multistage.png'
+
 /**
  * The only runtime mapping between a canonical rocket and its art. All
  * surfaces deliberately resolve through this map so a new body cannot drift

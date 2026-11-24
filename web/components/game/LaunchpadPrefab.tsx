@@ -1,4 +1,5 @@
 'use client'
+import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
 import type { CSSProperties } from 'react'
 import { authoredScene, resolvePrefab } from '@/lib/engine/SceneGraph'
 import styles from './screens/RocketBuilderScene.module.css'
@@ -26,7 +27,7 @@ export default function LaunchpadPrefab({ towerLabel, onChooseMission, rocketId 
     } as CSSProperties}>
       <img className={styles.complexArt} style={frame('apron')} src={source('apron')} alt="" data-engine-object="apron" />
       {showRocket && <div className={styles.rocketSlot} style={frame('staged-rocket')} data-engine-object="staged-rocket" data-rocket-id={rocketId}>
-        <img className={styles.rocket} src={source('staged-rocket')} alt="" data-testid="launch-rocket" />
+        <img className={styles.rocket} src={LAUNCH_ROCKET_SPRITE} alt="" data-testid="launch-rocket" />
       </div>}
       <img className={styles.serviceMotion} style={frame('service-motion')} src={source('service-motion')} alt="" data-testid="pad-activity" data-engine-object="service-motion" />
       <img className={styles.scaffold} style={frame('assembly-scaffold')} src={source('assembly-scaffold')} alt="" data-testid="pad-scaffold" data-engine-object="assembly-scaffold" />

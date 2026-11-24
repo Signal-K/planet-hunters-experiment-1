@@ -1,4 +1,5 @@
 import { Assets, Container, Graphics, Sprite, Text, Texture, TilingSprite } from 'pixi.js'
+import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
 import type { LaserPalette } from './laserPalette'
 import { PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } from './landscape'
 
@@ -88,6 +89,7 @@ export async function buildLaserField(opts: {
   shipX: number
   shipY: number
   palette: LaserPalette
+  rocketImageSrc?: string
   /** Target id; varies the terrain arrangement within one palette. */
   landscapeKey?: string
 }): Promise<LaserField> {
@@ -107,7 +109,7 @@ export async function buildLaserField(opts: {
     // ridge-ice carries snow pines; barren bodies get no plants, so ice reuses the rubble ridge (SSL-536).
     tex(palette.terrain === 'dunes' ? 'ridge-dunes' : 'ridge-rubble'),
     tex('crust'), tex('soil'), tex('soil-flecks'),
-    tex('ship'), tex('flame-0'), tex('flame-1'), tex('beam'), tex('spark-0'),
+    Assets.load<Texture>(opts.rocketImageSrc ?? LAUNCH_ROCKET_SPRITE), tex('flame-0'), tex('flame-1'), tex('beam'), tex('spark-0'),
     tex('deposit-0'), tex('deposit-1'),
   ])
   const dither = [dither0, dither1, dither2]
@@ -390,7 +392,9 @@ export async function buildLaserField(opts: {
   ship.addChild(plume)
   const hull = new Sprite(shipTex)
   hull.anchor.set(0.5)
-  hull.scale.set(px)
+  shipTex.source.scaleMode = 'linear'
+  hull.scale.set(80 / shipTex.height)
+  hull.rotation = Math.PI / 2
   ship.addChild(hull)
   // Retro burn: the same flame, flipped to fire forward from the nose, under the hull.
   const retro = new Sprite(flame0)
@@ -447,7 +451,7 @@ export async function buildLaserField(opts: {
       plume.alpha = (thrust < 0 ? 0.35 : 0.7) + pulse * 0.3
       retro.alpha += ((thrust < 0 ? 0.75 + pulse * 0.25 : 0) - retro.alpha) * ease
       retro.scale.x = -px * 0.7 * (thrust < 0 ? 0.85 + pulse * 0.3 : 0.6)
-      hull.rotation += ((reduced ? 0 : thrust < 0 ? -0.07 : thrust > 0 ? 0.02 : 0) - hull.rotation) * ease
+      hull.rotation += ((Math.PI / 2 + (reduced ? 0 : thrust < 0 ? -0.07 : thrust > 0 ? 0.02 : 0)) - hull.rotation) * ease
       if (!reduced) {
         plume.texture = flameFrames[Math.floor(time * 10) % 2]
         retro.texture = flameFrames[(Math.floor(time * 12) + 1) % 2]

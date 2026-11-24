@@ -72,7 +72,7 @@ export const DEFAULT_LIVERY: RocketLivery = { hull: '#dfd3cc', trim: '#2f6fd0' }
 const PAD_UNIT = 2.1 / PAD_ROCKET_PROFILE.reduce((n, r) => n + r[0], 0)
 
 /**
- * The rocket in space is the core stage of the launchpad rocket (side boosters are gone, SSL-553), in the player's
+ * The rocket in space carries the launchpad core and its paired side boosters in the player's
  * livery. Fitted parts only change the exhaust: the silhouette stays the one rocket the player built.
  */
 export function flightCraftLook(parts: InstalledCustomizerPartsByKind | null | undefined, livery: RocketLivery = DEFAULT_LIVERY): FlightCraftLook {
@@ -83,6 +83,7 @@ export function flightCraftLook(parts: InstalledCustomizerPartsByKind | null | u
     sections: PAD_ROCKET_PROFILE.map(([rows, tail, nose, color], i) => ({
       id: `core-${i}`, length: rows * PAD_UNIT, r0: tail * PAD_UNIT, r1: nose * PAD_UNIT, color: paint[color] ?? color,
     })),
+    boosters: { count: 2, radius: 0.067, length: 1.15, color: livery.hull },
     plume: enginePower > 0.6 ? '#b9a8ff' : '#ffb23e',
     scale: 1.2,
   }
