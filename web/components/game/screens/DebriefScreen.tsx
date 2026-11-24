@@ -165,7 +165,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <p className="debrief-result-panel__kicker">Program Outcome</p>
             <p className="debrief-result-panel__outcome">{mission.programReward?.outcome}</p>
             <details><summary>Deployment details</summary><p className="debrief-result-panel__note">{mission.payload?.instrumentId === 'survey-probe'
-              ? mission.customPlan ? `The probe stays in orbit at ${target.name} and maps the planned ${mission.customPlan.amount} sectors. Download its readings at the Data hub as they arrive.` : `The probe stays in orbit at ${target.name} and does not come home. It maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and its finds land in your data hub.`
+              ? mission.customPlan ? `The probe stays in orbit at ${target.name} ready to map the planned ${mission.customPlan.amount} sectors. Press SCAN at the Data hub to start, then download its readings as they arrive.` : `The probe stays in orbit at ${target.name} and does not come home. Press SCAN at the Data hub to start timed mapping, one sector every ${PROBE_SECTOR_HOURS} hours.`
               : `${mission.payload?.name ?? 'Instrument'} remains in Earth orbit. The sky-side status indicator marks the downlink. Stationed at ${target.name}.`}</p></details>
           </section>
         ) : (
@@ -254,7 +254,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             {storyItem
               ? storyItem.unlocks
               : mission.payload?.instrumentId === 'survey-probe'
-                ? 'Probe released. It starts mapping the surface now; check the data hub to see the deposits it finds.'
+                ? 'Probe released. Open the Data hub and press SCAN to start mapping its deposits.'
                 : 'Choose your next activity, or return to Base. Every option completes this flight first.'}
           </p>
           {exits.some(exit => exit.id !== 'again') && (

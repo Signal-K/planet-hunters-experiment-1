@@ -1200,8 +1200,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const logProbeSpectrum = useCallback((targetId: string, sector: string, wavelengths: number[]) => {
     const at = Date.now()
+    const before = stateRef.current.player
+    if (logProbeSpectrumFor(before, targetId, sector, wavelengths, at) === before) return
     setState(s => ({ ...s, player: logProbeSpectrumFor(s.player, targetId, sector, wavelengths, at) }))
-  }, [setState])
+    // Reuse the instrument classification's daily, idempotent Community Site receipt.
+    stampResearch('classification', 'deposit-survey')
+  }, [setState, stampResearch, stateRef])
 
   const collectProbeData = useCallback(() => {
     const at = Date.now()

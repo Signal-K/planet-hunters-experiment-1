@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 31,
     "nativeScreenCases": 25,
-    "qaScenes": 105,
+    "qaScenes": 111,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 31,
     "authoringSources": 71,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 167,
-    "webGameComponents": 119,
+    "webGameComponents": 121,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -435,7 +435,8 @@
         "native": "radio-meteors",
         "tickets": [
           "SSL-714"
-        ]
+        ],
+        "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
       },
       {
         "id": "leonids-shower-mining",
@@ -1122,7 +1123,8 @@
         "tickets": [
           "SSL-831"
         ],
-        "native": "radio-meteors"
+        "native": "radio-meteors",
+        "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
       },
       {
         "id": "community-research-leonids-leo1",
@@ -1160,9 +1162,10 @@
         "flow": "instruments",
         "web": "ui-probe-scan",
         "tickets": [
-          "SSL-773"
+          "SSL-773",
+          "SSL-832"
         ],
-        "native": "radio-meteors"
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
       },
       {
         "id": "second-ground-telescope",
@@ -1301,6 +1304,72 @@
           "SSL-848",
           "SSL-861"
         ]
+      },
+      {
+        "id": "probe-subsurface",
+        "name": "Survey probe: shallow and deep subsurface",
+        "flow": "instruments",
+        "web": "ui-probe-subsurface",
+        "tickets": [
+          "SSL-832"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+      },
+      {
+        "id": "probe-science",
+        "name": "Survey probe: level 4 citizen science",
+        "flow": "instruments",
+        "web": "ui-probe-science",
+        "tickets": [
+          "SSL-832"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+      },
+      {
+        "id": "probe-receipt",
+        "name": "Survey probe: confirmed contribution",
+        "flow": "instruments",
+        "web": "ui-probe-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probe gameplay remains outside the supported iOS companion scope."
+      },
+      {
+        "id": "tess-receipt",
+        "name": "TESS: contribution receipt",
+        "flow": "instruments",
+        "web": "ui-tess-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "galaxy",
+        "native": "tess-discovery-phone"
+      },
+      {
+        "id": "radio-receipt",
+        "name": "LEO-1: event contribution receipt",
+        "flow": "events",
+        "web": "ui-radio-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "radio-meteors",
+        "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
+      },
+      {
+        "id": "radio-receipt-pending",
+        "name": "LEO-1: pending event contribution",
+        "flow": "events",
+        "web": "ui-radio-receipt-pending",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "radio-meteors",
+        "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
       }
     ],
     "authored": [
@@ -1792,7 +1861,8 @@
           "mission-planning"
         ],
         "web": [
-          "web/components/game/screens/ProbeScanScreen.tsx"
+          "web/components/game/screens/ProbeScanScreen.tsx",
+          "web/components/game/screens/ProbeSpectrumConsole.tsx"
         ],
         "native": []
       },
@@ -2657,10 +2727,12 @@
       "web/components/game/screens/MissionPlannerScreen.tsx",
       "web/components/game/screens/NarrativeLedgerScreen.tsx",
       "web/components/game/screens/ProbeScanScreen.tsx",
+      "web/components/game/screens/ProbeSpectrumConsole.tsx",
       "web/components/game/screens/ProbeWatchScreen.tsx",
       "web/components/game/screens/RadioMeteorScreen.tsx",
       "web/components/game/screens/RefineryScreen.tsx",
       "web/components/game/screens/ResearchPassport.tsx",
+      "web/components/game/screens/ResearchReadout.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
       "web/components/game/screens/SaturnStormSearchScreen.tsx",
       "web/components/game/screens/SkyBadgeRow.tsx",

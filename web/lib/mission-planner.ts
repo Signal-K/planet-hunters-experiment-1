@@ -31,7 +31,7 @@ export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Rec
   const cargo = plan.work === 'survey' ? {} : { [plan.mineral]: plan.amount }
   return {
     id: plan.id, customPlan: plan, title: `${verb} ${target.name}`, brief: plan.work === 'survey'
-      ? `Leave a probe in orbit to map ${plan.amount} sectors. Download its readings at the Data hub as they arrive.`
+      ? `Leave a probe in orbit to map ${plan.amount} sectors. Press SCAN at the Data hub to start, then download its readings as they arrive.`
       : plan.work === 'deliver' ? `Carry ${plan.amount} ${meta?.name ?? plan.mineral} from your Earth stash to your forward cache at ${target.name}. Cargo loads at launch.`
         : `Bring home ${plan.amount} ${meta?.name ?? plan.mineral}. Keep it or sell it on return.`,
     tag: 'PROGRAM', category: plan.work === 'mine' ? 'free-mining' : 'explore', difficulty: target.difficulty,

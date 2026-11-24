@@ -83,7 +83,7 @@ export function probeMission(target: Target, sequence: number): Mission {
     targetId: target.id,
     payload: { type: 'satellite', name: 'Survey probe', cargoCost: 0, instrumentId: SURVEY_PROBE_INSTRUMENT_ID },
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: target.orbit },
-    programReward: { researchXP: 0, outcome: `Probe in orbit at ${target.name} · mapping its deposits for the data hub` },
+    programReward: { researchXP: 0, outcome: `Probe in orbit at ${target.name} · ready for SCAN at the Data hub` },
     payout: { francs: 0, affinity: 0 },
   }
 }
