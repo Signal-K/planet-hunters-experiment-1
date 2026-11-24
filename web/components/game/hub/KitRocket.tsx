@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
 import type { ShipRoomKind } from '@/lib/data/shipRooms'
 import { KIT_ROCKET_ASPECT, KIT_ROCKET_BANDS, KIT_ROCKET_STAGES, kitRocketSrc, type KitRocketStage } from '@/lib/kit-rocket'
@@ -20,6 +21,7 @@ interface KitRocketProps {
 
 /** The base-kit pixel rocket. Blueprint mode tints it and outlines one stage. */
 export function KitRocket({ parts, blueprint = false, active, onSelect, className, testId, space = false }: KitRocketProps) {
+  const recoveryClipId = useId()
   const src = space && !blueprint ? LAUNCH_ROCKET_SPRITE : kitRocketSrc(parts)
   const sprite = useSpriteFailure(src)
   return (
@@ -30,8 +32,9 @@ export function KitRocket({ parts, blueprint = false, active, onSelect, classNam
       data-sprite={src}
     >
       {space && !blueprint ? (
-        <svg className={styles.sprite} viewBox="46 164 56 286" style={{ overflow: 'hidden' }} role="img" aria-label="Recovered booster">
-          <image href={LAUNCH_ROCKET_SPRITE} width="169" height="450" />
+        <svg className={styles.sprite} viewBox="0 0 56 286" role="img" aria-label="Recovered booster">
+          <defs><clipPath id={recoveryClipId}><rect width="56" height="286" /></clipPath></defs>
+          <image href={LAUNCH_ROCKET_SPRITE} x="-46" y="-164" width="169" height="450" clipPath={`url(#${recoveryClipId})`} />
         </svg>
       ) : <img ref={sprite.image} onError={sprite.onError} className={styles.sprite} src={src} alt="" draggable={false} />}
       {blueprint && KIT_ROCKET_STAGES.map(kind => {
