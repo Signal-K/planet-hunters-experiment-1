@@ -6,6 +6,7 @@ import { MINERAL_META } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import {
   SURVEY_SCAN_RESEARCH_XP,
+  SURVEY_SCAN_DURATION_MS,
   scanInstrumentLaunched,
   scanProgress,
   scannableTargets,
@@ -43,6 +44,8 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
   const charted = player.chartedBodies ?? {}
   const chartedList = bodies.filter(target => charted[target.id])
   const progress = scanProgress(player, now)
+  const secondsLeft = Math.ceil((1 - progress) * SURVEY_SCAN_DURATION_MS / 1000)
+  const remaining = `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`
   const activeName = bodies.find(target => target.id === player.activeScan?.targetId)?.name
 
   return (
@@ -52,10 +55,10 @@ export default function SurveyScanConsole({ player, targets, onStart, onResolve 
         <p style={body} data-testid="survey-scan-locked">Launch a telescope from the Launchpad to scan bodies. Your own instruments do the survey.</p>
       ) : (
         <>
-          <p style={body}>Point your telescope at a body. The scan runs, the body is charted, and you earn {SURVEY_SCAN_RESEARCH_XP} research XP. Balance: {player.researchXP ?? 0} research XP.</p>
+          <p style={body}>Point your telescope at a body. Each scan takes two minutes and keeps running if you close this panel. The body is charted, and you earn {SURVEY_SCAN_RESEARCH_XP} research XP. Balance: {player.researchXP ?? 0} research XP.</p>
           {scanning && (
             <div data-testid="survey-scan-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={`Scanning ${activeName ?? 'body'}`} style={{ display: 'grid', gap: 4 }}>
-              <span style={label}>Scanning {activeName} · {Math.round(progress * 100)}%</span>
+              <span style={label}>Scanning {activeName} · {Math.round(progress * 100)}% · {remaining} left</span>
               <span style={{ display: 'block', height: 8, borderRadius: 4, background: 'var(--ln-surface-2)', overflow: 'hidden' }}>
                 <span style={{ display: 'block', height: '100%', width: `${progress * 100}%`, background: 'var(--ln-cyan)' }} />
               </span>
