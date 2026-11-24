@@ -28,7 +28,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { collectProbeData as collectProbeDataFor, placeProbe } from '@/lib/probes/survey-probe'
+import { collectProbeData as collectProbeDataFor, placeProbe, startProbeScan as startProbeScanFor } from '@/lib/probes/survey-probe'
 import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
 import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
@@ -1193,6 +1193,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // SSL-773: opening the probe console downloads every sector the probes mapped since the last visit. That is a
   // probe observation: one stamp per day, like every stamp. Synced in game_states; the ledger reports the stamp.
+  const startProbeScan = useCallback((targetId: string) => {
+    const at = Date.now()
+    setState(s => ({ ...s, player: startProbeScanFor(s.player, targetId, at) }))
+  }, [setState])
+
   const collectProbeData = useCallback(() => {
     const at = Date.now()
     const before = stateRef.current.player
@@ -1606,6 +1611,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData, startProbeScan,
   }
 }

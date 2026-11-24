@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { structureSprite } from '@/lib/scene/base-site'
-import { placeProbe, sectorsMapped } from '@/lib/probes/survey-probe'
+import { placeProbe, sectorsMapped, startProbeScan } from '@/lib/probes/survey-probe'
 import { rocketPrice } from '@/lib/rockets'
 import { sellUnitPrice, applyUpgradeBuilding } from './EconomySystem'
 import type { GameState } from '@/lib/game-types'
@@ -34,8 +34,8 @@ describe('SSL-792: hangar, Exchange and control station levels', () => {
   })
 
   it('a probe launched from a level 3 control station maps a sector every hour', () => {
-    const fast = placeProbe({ placed: ['control-station'], buildingLevels: { 'control-station': 3 } } as Parameters<typeof placeProbe>[0], 'eros', NOW).probes!.eros
-    const slow = placeProbe<Pick<import('@/lib/game-types').Player, 'probes'>>({}, 'eros', NOW).probes!.eros
+    const fast = startProbeScan(placeProbe({ placed: ['control-station'], buildingLevels: { 'control-station': 3 } } as Parameters<typeof placeProbe>[0], 'eros', NOW), 'eros', NOW).probes!.eros
+    const slow = startProbeScan(placeProbe<Pick<import('@/lib/game-types').Player, 'probes'>>({}, 'eros', NOW), 'eros', NOW).probes!.eros
     expect(sectorsMapped(fast, NOW + 6 * 3_600_000)).toHaveLength(6)
     expect(sectorsMapped(slow, NOW + 6 * 3_600_000)).toHaveLength(3)
   })

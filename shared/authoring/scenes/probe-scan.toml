@@ -4,8 +4,8 @@ format = 1
 id = "probe-scan"
 type = "exchange-lab"
 name = "Survey probe"
-summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
-tickets = ["SSL-773", "SSL-878"]
+summary = "Level 1 starts with a manual SCAN command: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. After SCAN starts the timer, opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
+tickets = ["SSL-773", "SSL-878", "SSL-832"]
 qa = ["probe-scan"]
 
 [runtime]

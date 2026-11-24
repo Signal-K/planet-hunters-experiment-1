@@ -5,7 +5,7 @@ import { MINERAL_META } from '@/lib/data/minerals'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 import { STATIC_CATALOG as CATALOG } from '@/lib/catalog'
 import { probeContracts, probeRunId, probeRunMission } from './probe-offers'
-import { collectProbeData, downloadedSurvey, placeProbe, surveyOf, sectorIds } from './survey-probe'
+import { collectProbeData, downloadedSurvey, placeProbe, startProbeScan, surveyOf, sectorIds } from './survey-probe'
 
 const eros = TARGETS.find(target => target.id === 'eros')!
 const rarity = (id: string) => MINERAL_META[id]?.rarity
@@ -43,7 +43,7 @@ describe('what a probe survey opens (SSL-773)', () => {
   it('puts the run and contracts on the board once the survey is downloaded', () => {
     const now = Date.parse('2026-11-11T12:00:00Z')
     const start: Pick<Player, 'probes' | 'researchStamps' | 'completedMissions'> = { researchStamps: {} }
-    let player = placeProbe(start, 'eros', now)
+    let player = startProbeScan(placeProbe(start, 'eros', now), 'eros', now)
     player = collectProbeData(player, TARGETS, now + 30 * 3_600_000)
     expect(downloadedSurvey(eros, player.probes!.eros).length).toBeGreaterThan(0)
     const catalog = buildRuntimeCatalog({ catalog: CATALOG, freeOperations: true, missionsDone: 6, player })

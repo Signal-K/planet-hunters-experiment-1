@@ -6,7 +6,7 @@ import { buildRuntimeCatalog } from './runtimeCatalog'
 import { plannerTargets, planQuote, missionFromPlan, loadPlannedCargo, deliveryCache, sanitizeMissionPlans, type MissionPlan } from './mission-planner'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from './systems/DeliverySystem'
 import { applyReturnArrived } from './systems/MiningSystem'
-import { placeProbe, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
+import { placeProbe, startProbeScan, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
 const plan: MissionPlan = { id: 'self-plan-test', targetId: 'mercury', work: 'deliver', mineral: 'iron', amount: 3, createdAt: 100 }
 const target = STATIC_CATALOG.targets.find(target => target.id === plan.targetId)!
 const player = () => ({ ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], stash: { iron: 12 } })
@@ -71,12 +71,12 @@ describe('self-planned missions', () => {
   })
   it('limits a planned survey to its chosen coverage and keeps ordinary probes mapping all 24 sectors', () => {
     const at = 1000
-    const limited = placeProbe(player(), target.id, at, 6)
+    const limited = startProbeScan(placeProbe(player(), target.id, at, 6), target.id, at)
     const record = limited.probes![target.id]
     expect(probeSectorGoal(record)).toBe(6)
     expect(sectorsMapped(record, at + 48 * 3_600_000)).toHaveLength(6)
     expect(nextSector(record, at + 48 * 3_600_000)).toBeNull()
-    const ordinary = placeProbe(player(), target.id, at)
+    const ordinary = startProbeScan(placeProbe(player(), target.id, at), target.id, at)
     expect(sectorsMapped(ordinary.probes![target.id], at + 48 * 3_600_000)).toHaveLength(24)
     const survey = { ...plan, work: 'survey' as const, amount: 6 }
     expect(planQuote(survey, limited, STATIC_CATALOG).issues).toContain('A probe already orbits this body. Open it at the Data hub.')

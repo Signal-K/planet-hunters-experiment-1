@@ -33,6 +33,8 @@ export interface ProbeReading {
 }
 
 export interface ProbeRecord {
+  /** null waits for SCAN; absent preserves automatic mapping on older saves. */
+  scanStartedAt?: number | null
   /** Optional coverage chosen in a self-planned survey. Existing probes map all 24 sectors. */
   goalSectors?: number
   launchedAt: number
@@ -71,7 +73,7 @@ export function probeMission(target: Target, sequence: number): Mission {
   return {
     id: probeMissionId(target.id),
     title: `Survey probe to ${target.name}`,
-    brief: `Fly a survey probe to ${target.name} and leave it in orbit. It stays there and maps the surface on its own, one sector every ${PROBE_SECTOR_HOURS} hours, and sends every deposit it finds to your data hub.`,
+    brief: `Fly a survey probe to ${target.name} and leave it in orbit. It stays there and maps the surface after you press SCAN, one sector every ${PROBE_SECTOR_HOURS} hours, and sends every deposit it finds to your data hub.`,
     tag: 'STORY',
     difficulty: target.difficulty,
     locked: false,
@@ -91,7 +93,7 @@ export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId
   // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
   const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed'>>
   const hours = withLevels.placed?.includes('control-station') ? probeSectorHours(buildingLevel(withLevels, 'control-station')) : PROBE_SECTOR_HOURS
-  const base = hours === PROBE_SECTOR_HOURS ? { launchedAt: at, readings: {} } : { launchedAt: at, readings: {}, sectorMs: hours * 3_600_000 }
+  const base = { launchedAt: at, scanStartedAt: null, readings: {}, ...(hours === PROBE_SECTOR_HOURS ? {} : { sectorMs: hours * 3_600_000 }) }
   const record = goalSectors === undefined ? base : { ...base, goalSectors: Math.min(24, Math.max(1, Math.floor(goalSectors))) }
   return { ...player, probes: { ...(player.probes ?? {}), [targetId]: record } }
 }
@@ -185,21 +187,28 @@ export function scanOrder(): string[] {
   return sectorIds()
 }
 
+/** The player's first scan command starts the clock once; reopening never restarts it. */
+export function startProbeScan<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number): T {
+  const record = player.probes?.[targetId]
+  if (!record || record.scanStartedAt !== null || !Number.isFinite(at) || at < record.launchedAt) return player
+  return { ...player, probes: { ...player.probes, [targetId]: { ...record, scanStartedAt: at } } }
+}
+
 export const probeSectorGoal = (record: Pick<ProbeRecord, 'goalSectors'> | undefined) => Math.max(1, Math.min(24, Math.floor(record?.goalSectors ?? 24)))
 
 /** Sectors the probe has mapped by `now`: one every PROBE_SECTOR_HOURS since it arrived. */
-export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): string[] {
-  if (!record) return []
-  const count = Math.max(0, Math.min(probeSectorGoal(record), Math.floor((now - record.launchedAt) / sectorMsOf(record))))
+export function sectorsMapped(record: Pick<ProbeRecord, 'launchedAt' | 'scanStartedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): string[] {
+  if (!record || record.scanStartedAt === null) return []
+  const count = Math.max(0, Math.min(probeSectorGoal(record), Math.floor((now - (record.scanStartedAt ?? record.launchedAt)) / sectorMsOf(record))))
   return scanOrder().slice(0, count)
 }
 
 /** The sector being mapped now and when it is done, or null once the whole body is mapped. */
-export function nextSector(record: Pick<ProbeRecord, 'launchedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): { sector: string; at: number } | null {
-  if (!record) return null
+export function nextSector(record: Pick<ProbeRecord, 'launchedAt' | 'scanStartedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number): { sector: string; at: number } | null {
+  if (!record || record.scanStartedAt === null) return null
   const done = sectorsMapped(record, now).length
   if (done >= probeSectorGoal(record)) return null
-  return { sector: scanOrder()[done], at: record.launchedAt + (done + 1) * sectorMsOf(record) }
+  return { sector: scanOrder()[done], at: (record.scanStartedAt ?? record.launchedAt) + (done + 1) * sectorMsOf(record) }
 }
 
 /** Mapped sectors not yet downloaded to the console. */
@@ -234,7 +243,7 @@ export function collectProbeData<T extends ProbePlayer>(player: T, targets: read
 export interface SurveyTotal { mineral: string; tonnes: number; sectors: number }
 
 /** What the probe has found on a body so far: each mineral, its tonnes and how many sectors hold it. */
-export function bodySurvey(target: Pick<Target, 'id' | 'minerals'>, record: Pick<ProbeRecord, 'launchedAt'> | undefined, now: number, rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
+export function bodySurvey(target: Pick<Target, 'id' | 'minerals'>, record: Pick<ProbeRecord, 'launchedAt' | 'scanStartedAt' | 'sectorMs' | 'goalSectors'> | undefined, now: number, rarity: (mineral: string) => string | undefined = () => undefined): SurveyTotal[] {
   return surveyOf(target, sectorsMapped(record, now), rarity)
 }
 
@@ -266,6 +275,8 @@ export function mergeProbes(current: Player['probes'], remote: Player['probes'])
     const b = remote?.[id]
     if (!a || !b) return [id, (a ?? b)!]
     const sectorMs = a.sectorMs && b.sectorMs ? Math.min(a.sectorMs, b.sectorMs) : a.sectorMs ?? b.sectorMs
-    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), readings: { ...b.readings, ...a.readings }, ...(sectorMs ? { sectorMs } : {}) }]
+    // Legacy records already map from launch; a stale waiting save cannot stop a scan.
+    const starts = [a, b].flatMap(rec => rec.scanStartedAt === null ? [] : [rec.scanStartedAt ?? rec.launchedAt])
+    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), scanStartedAt: starts.length ? Math.min(...starts) : null, goalSectors: Math.max(probeSectorGoal(a), probeSectorGoal(b)), readings: { ...b.readings, ...a.readings }, ...(sectorMs ? { sectorMs } : {}) }]
   }))
 }

@@ -17,6 +17,7 @@ import {
   sectorIds,
   sectorSpectrum,
   sectorsMapped,
+  startProbeScan,
 } from './survey-probe'
 
 const eros = TARGETS.find(target => target.id === 'eros')!
@@ -47,7 +48,7 @@ describe('survey probes (SSL-773)', () => {
   })
 
   it('maps one sector every few hours on its own, and the whole body in two days', () => {
-    const record = placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW).probes!.eros
+    const record = startProbeScan(placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW), 'eros', NOW).probes!.eros
     const hour = 3_600_000
     expect(sectorsMapped(record, NOW + hour)).toHaveLength(0)
     expect(sectorsMapped(record, NOW + PROBE_SECTOR_HOURS * hour * 5)).toHaveLength(5)
@@ -56,8 +57,25 @@ describe('survey probes (SSL-773)', () => {
     expect(nextSector(record, NOW + 48 * hour)).toBeNull()
   })
 
+  it('waits for SCAN, starts once and survives merging a stale waiting save', () => {
+    const waiting = placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW)
+    const at = NOW + 24 * 3_600_000
+    expect(sectorsMapped(waiting.probes!.eros, at)).toEqual([])
+    expect(nextSector(waiting.probes!.eros, at)).toBeNull()
+    expect(collectProbeData(waiting, TARGETS, at)).toBe(waiting)
+    const active = startProbeScan(waiting, 'eros', at)
+    expect(startProbeScan(active, 'eros', at + 1000)).toBe(active)
+    expect(nextSector(active.probes!.eros, at)?.at).toBe(at + 2 * 3_600_000)
+    for (const probes of [mergeProbes(active.probes, waiting.probes), mergeProbes(waiting.probes, active.probes)]) {
+      expect(sectorsMapped(probes!.eros, at + 2 * 3_600_000)).toHaveLength(1)
+    }
+    const legacy = { launchedAt: NOW, readings: {} }
+    expect(sectorsMapped(legacy, at)).toHaveLength(12)
+    expect(startProbeScan({ probes: { eros: legacy } }, 'eros', at).probes.eros).toBe(legacy)
+  })
+
   it('finds every mineral type with tonnes once the basic scan is done', () => {
-    const record = placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW).probes!.eros
+    const record = startProbeScan(placeProbe<Pick<Player, 'probes'>>({}, 'eros', NOW), 'eros', NOW).probes!.eros
     const survey = bodySurvey(eros, record, NOW + 48 * 3_600_000)
     expect(survey.map(row => row.mineral)).toEqual(eros.minerals)
     expect(survey.every(row => row.tonnes > 0 && row.sectors > 0)).toBe(true)
@@ -66,7 +84,7 @@ describe('survey probes (SSL-773)', () => {
   it('downloads new sectors as one probe observation, and nothing twice', () => {
     const later = NOW + 6 * 3_600_000
     const fresh: Pick<Player, 'probes' | 'researchStamps'> = { researchStamps: {} }
-    let p = placeProbe(fresh, 'eros', NOW)
+    let p = startProbeScan(placeProbe(fresh, 'eros', NOW), 'eros', NOW)
     expect(collectProbeData(p, TARGETS, NOW)).toBe(p)
     p = collectProbeData(p, TARGETS, later)
     expect(Object.keys(p.probes!.eros.readings)).toHaveLength(3)

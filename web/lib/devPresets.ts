@@ -313,7 +313,7 @@ function probeFixture(targetId = 'eros'): NonNullable<Player['probes']> {
   const readings = Object.fromEntries(sectorIds().slice(0, 9).map(id => [id, { at: launchedAt + 20 * 3_600_000, marked: [], deposits: sectorDeposits(body, id) }]))
   return {
     [targetId]: { launchedAt, readings },
-    ...(targetId === 'eros' ? { vesta: { launchedAt: Date.now() - 600_000, readings: {} } } : {}),
+    ...(targetId === 'eros' ? { vesta: { launchedAt: Date.now() - 600_000, scanStartedAt: null, readings: {} } } : {}),
   }
 }
 
