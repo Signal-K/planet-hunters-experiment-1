@@ -1,5 +1,7 @@
 'use client'
 
+import type { Player } from '@/lib/game-types'
+import { useContributionReadout } from '@/lib/research/useContributionReadout'
 import { useState } from 'react'
 import type { Target } from '@/lib/data'
 import InstrumentViewport, { InstrumentAnswerRow } from '@/components/game/instrument-viewport/InstrumentViewport'
@@ -8,14 +10,15 @@ import { BAND_MIN_NM, BAND_MAX_NM, sectorSpectrum, type ProbeRecord } from '@/li
 const name = (id: string) => { const [c, r] = id.split('_').map(Number); return `${String.fromCharCode(65 + r)}${c + 1}` }
 
 /** Level 4 shares the citizen science instrument and readout, with one step per page. */
-export default function ProbeSpectrumConsole({ target, record, onBack, onLog }: {
-  target: Target; record: ProbeRecord; onBack: () => void
+export default function ProbeSpectrumConsole({ player, target, record, onBack, onLog, onAgency }: {
+  player: Player; onAgency: () => void; target: Target; record: ProbeRecord; onBack: () => void
   onLog: (sector: string, wavelengths: number[]) => void
 }) {
   const [sector, setSector] = useState<string | null>(null)
   const [marks, setMarks] = useState<number[]>([])
   const [wavelength, setWavelength] = useState(1450)
   const saved = sector ? record.readings[sector]?.analysis : undefined
+  const contribution = useContributionReadout(player, 'classification', saved?.at ?? 0)
   const readings = Object.keys(record.readings)
   const next = readings.find(id => id !== sector && !record.readings[id].analysis)
   const spectrum = sector ? sectorSpectrum(target, sector, 211) : []
@@ -48,7 +51,7 @@ export default function ProbeSpectrumConsole({ target, record, onBack, onLog }: 
     readout={sector ? { name: 'READOUT · YOUR RESULT', testId: 'probe-spectrum-readout', rows: [
       { label: 'Project', value: 'Deposit survey' },
       { label: 'Marks', value: shown.length ? shown.map(nm => `${nm} nm`).join(' · ') : 'NONE' },
-      { label: 'Research', value: saved ? 'Classification stamp saved · confirmation pending' : 'Not submitted' },
+      ...(saved ? contribution : [{ label: 'Research', value: 'Not submitted' }]),
     ] } : undefined}
     tool={sector && !saved ? <label style={{ display: 'grid', gap: 8 }}>Wavelength · {wavelength} nm
       <input aria-label="Wavelength" type="range" min={400} max={2500} step={1} value={wavelength} onChange={event => setWavelength(Number(event.target.value))} style={{ minHeight: 44, width: '100%' }} />
@@ -61,6 +64,7 @@ export default function ProbeSpectrumConsole({ target, record, onBack, onLog }: 
       ] : []),
       ...(saved && next ? [{ id: 'next', label: `NEXT SECTOR ${name(next)}`, primary: true, onClick: () => pick(next) }] : []),
       { id: 'back', label: 'BACK TO MAP', onClick: onBack },
+      ...(saved ? [{ id: 'agency', label: 'RETURN TO BASE', onClick: onAgency }] : []),
     ].map(action => ({ ...action, testId: `probe-spectrum-${action.id}` }))} />}
   />
 }

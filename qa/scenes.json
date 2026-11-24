@@ -1061,6 +1061,17 @@
    ],
    "aliasOf": "probe-scan",
    "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+  },
+  {
+   "id": "probe-receipt",
+   "name": "Survey probe: confirmed contribution",
+   "flow": "instruments",
+   "web": "ui-probe-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probe gameplay remains outside the supported iOS companion scope."
   }
  ],
  "missions": [

@@ -111,7 +111,7 @@
 
 /* One step per page; map and readout share the same finite scene height. */
 .workspace { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); overflow: hidden; }
-.workspace[data-page='map'] .desk, .workspace[data-page='readout'] .stage { display: none; }
+.workspace[data-page='map'] .desk, .workspace[data-page='readout'] .stage, .workspace[data-page='contribution'] .stage { display: none; }
 .stage { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
 .view { overflow: hidden; }
 .orbit { max-width: 660px; }
@@ -143,3 +143,8 @@
 .progress { grid-row: 5; }
 .stage > .actions { grid-row: 6; flex-wrap: wrap; }
 @media (max-height: 520px) { .head { min-height: 32px; } .levels button { padding: 4px 8px; } }
+
+.receipt { margin: 0; display: grid; gap: 8px; font: 600 14px/1.3 var(--ln-font-body); }
+.receipt > div { display: contents; }
+.receipt dt { color: var(--ln-world-glass); }
+.receipt dd { margin: 0; }

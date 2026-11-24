@@ -86,3 +86,36 @@ func TestPassportLedgerSurvivesStaleSaveAndWeekRollover(t *testing.T) {
 		t.Fatal("spectator got part")
 	}
 }
+
+func TestResearchReceiptOnlyConfirmsOwnSavedKinds(t *testing.T) {
+	app := newLedgerTestApp(t)
+	user := ledgerTestUser(t, app, "receipt@example.test", "receipt-user")
+	other := ledgerTestUser(t, app, "other@example.test", "other-user")
+	now := time.Date(2026, 11, 24, 12, 0, 0, 0, time.UTC)
+	stamps, err := savedResearchStamps(app, user, now)
+	if err != nil || len(stamps) != 0 {
+		t.Fatalf("unsynced work confirmed: %#v %v", stamps, err)
+	}
+	col, _ := app.FindCollectionByNameOrId("game_states")
+	rec := core.NewRecord(col)
+	rec.Set("user", user)
+	rec.Set("state", ledgerState(`{"2026-11-24":["classification","probe-observation","classification","unknown"],"2026-11-25":["event"],"bad":["survey"]}`))
+	if err := app.Save(rec); err != nil {
+		t.Fatal(err)
+	}
+	before := rec.GetString("state")
+	for i := 0; i < 2; i++ {
+		stamps, err = savedResearchStamps(app, user, now)
+		if err != nil || len(stamps) != 1 || len(stamps["2026-11-24"]) != 2 {
+			t.Fatalf("wrong receipt: %#v %v", stamps, err)
+		}
+	}
+	stamps, err = savedResearchStamps(app, other, now)
+	if err != nil || len(stamps) != 0 {
+		t.Fatalf("another player's work leaked: %#v %v", stamps, err)
+	}
+	saved, _ := app.FindRecordById("game_states", rec.Id)
+	if saved.GetString("state") != before {
+		t.Fatal("reading a receipt changed saved rewards or history")
+	}
+}

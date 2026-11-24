@@ -1,6 +1,7 @@
 'use client'
 
 import ProbeSpectrumConsole from './ProbeSpectrumConsole'
+import { useContributionReadout } from '@/lib/research/useContributionReadout'
 import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -108,7 +109,7 @@ function Satellite() {
  * readout says what was found and offers a free targeted run there and the client contracts the finds opened.
  */
 export default function ProbeScanScreen({ player, targets, onBack, onCollect, onStartScan, onLogSpectrum, onHub, onPlanRun, onPlanMineral, onViewContracts }: ProbeScanScreenProps) {
-  const [page, setPage] = useState<'map' | 'readout' | 'spectrum'>('map')
+  const [page, setPage] = useState<'map' | 'readout' | 'spectrum' | 'contribution'>('map')
   const [mineralPage, setMineralPage] = useState(0)
   const [now, setNow] = useState(() => Date.now())
   const bodies = useMemo(
@@ -133,7 +134,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const playing = shown < mapped.length
   const next = nextSector(record, now)
 
-  useEffect(() => { if (Object.values(fresh).some(passes => Object.values(passes).some(list => list.length))) onCollect() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (Object.values(fresh).some(passes => Object.values(passes).some(list => list.length))) { onCollect(); setPage('contribution') } }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the new sectors back one at a time, a scan flash on each.
   const [flash, setFlash] = useState<{ key: number; x: number; y: number; sector: string | null } | null>(null)
@@ -197,6 +198,10 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const total = probeSectorGoal(record)
   const [tone, shade] = body ? BODY_TONES[body.id] ?? ASTEROID_TONE : ASTEROID_TONE
 
+  const latestAt = Math.max(0, ...Object.values(record?.readings ?? {}).map(reading => reading.at))
+  const downloaded = Object.values(record?.readings ?? {}).filter(reading => reading.at === latestAt).length
+  const contribution = useContributionReadout(player, 'probe-observation', latestAt)
+
   const line = !body ? 'No probe in orbit yet. Launch one from the Program tab, then press SCAN here to start mapping.'
     : waiting ? `Probe ready at ${body.name}. Press SCAN to start this timed pass. You can leave while it works.`
     : playing ? `Receiving sector ${sectorName(scanOrder()[shown])}…`
@@ -205,14 +210,14 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
     : !next ? `${body.name}: the planned ${total} sectors are mapped. Their deposits are on file.`
     : `Nothing new since you last looked. Sector ${sectorName(next.sector)} is done in ${inTime(next.at - now)}.`
 
-  if (page === 'spectrum' && body && sourceRecord && unlocked === 4) return <ProbeSpectrumConsole target={body} record={sourceRecord} onBack={() => setPage('map')} onLog={(sector, marks) => onLogSpectrum(body.id, sector, marks)} />
+  if (page === 'spectrum' && body && sourceRecord && unlocked === 4) return <ProbeSpectrumConsole player={player} onAgency={onHub} target={body} record={sourceRecord} onBack={() => setPage('map')} onLog={(sector, marks) => onLogSpectrum(body.id, sector, marks)} />
 
   return (
     <div className={board.scene} data-testid="probe-scan-screen" data-screen="probe-scan">
       <section className={board.dispatch} aria-label="Survey probe">
         <InstrumentFrame header={<>
         <nav className={board.rail} aria-label="Survey probe">
-          <button type="button" className={`${board.round} ${board.railClose}`} data-testid="probe-back" aria-label="Close" onClick={() => page === 'readout' ? setPage('map') : onBack()}>
+          <button type="button" className={`${board.round} ${board.railClose}`} data-testid="probe-back" aria-label="Close" onClick={() => page === 'readout' || page === 'contribution' ? setPage('map') : onBack()}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
           </button>
         </nav>
@@ -312,10 +317,13 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
             <div className={styles.readout} data-testid="probe-readout" data-phase={playing ? 'playing' : 'done'}>
               <span className={styles.speaker}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2" /></svg>
-                2 Readout
+                {page === 'contribution' ? 'Contribution · Deposit survey' : '2 Readout'}
               </span>
               <p data-testid="probe-line" aria-live="polite">{line}</p>
-              {body && (
+              {page === 'contribution' ? <dl className={styles.receipt} aria-live="polite">
+                <dt>Work saved</dt><dd>{downloaded} sector{downloaded === 1 ? '' : 's'} downloaded</dd>
+                {contribution.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+              </dl> : body && (
                 <div className={styles.found} data-testid="probe-found-list" aria-label="Deposits found">
                   <span>Deposits · {survey.length} of {body.minerals.length} types</span>
                   {survey.length ? (
@@ -353,8 +361,9 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                     {newContracts > 0 && <em>{newContracts} new</em>}
                   </button>
                 )}
+                <button type="button" className={styles.ghost} onClick={() => setPage(page === 'contribution' ? 'readout' : 'contribution')}>{page === 'contribution' ? 'View deposits' : 'Contribution'}</button>
                 <button type="button" className={styles.ghost} onClick={() => setPage('map')}>Back to map</button>
-                <button type="button" className={styles.ghost} data-testid="probe-hub" onClick={onHub}>Back to hub</button>
+                <button type="button" className={styles.ghost} data-testid="probe-hub" onClick={onHub}>Return to Base</button>
               </>}
             </div>
           </section>

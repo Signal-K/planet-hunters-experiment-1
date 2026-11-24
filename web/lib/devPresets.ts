@@ -196,6 +196,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
       { key: 'ui-probe-mars', label: 'Mars probe readings', hint: 'Survey deposits on Mars', stage: 'free-ops' },
       { key: 'ui-probe-europa', label: 'Europa probe readings', hint: 'Survey deposits on Europa', stage: 'free-ops' },
+      { key: 'ui-probe-receipt', label: 'Probe confirmed receipt', hint: 'Server-confirmed research after a probe download', stage: 'free-ops' },
       { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-832: SCAN starts timed mapping. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
       { key: 'ui-probe-subsurface', label: 'Survey probe: subsurface', hint: 'Shallow and deep timed passes open in order after download', stage: 'free-ops' },
       { key: 'ui-probe-science', label: 'Survey probe: citizen science', hint: 'Level 4 spectrum marking and logged readings', stage: 'free-ops' },
@@ -901,6 +902,9 @@ function fixture(name: string): Partial<GameState> | null {
       const readings = Object.fromEntries(sectorIds().slice(0, 2).map(id => [id, { at, marked: [], deposits: sectorDeposits(target, id) }]))
       return { ...base, player: { ...base.player!, probes: { eros: { launchedAt: at, goalSectors: 2, readings, ...(name === 'ui-probe-science' ? { subsurface: { 2: { startedAt: at, readings }, 3: { startedAt: at, readings } } } : {}) } } } }
     }
+
+    case 'ui-probe-receipt':
+      return fixture('ui-probe-scan')
 
     case 'ui-probe-mars':
     case 'ui-probe-europa':
