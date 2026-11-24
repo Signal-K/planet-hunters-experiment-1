@@ -28,6 +28,8 @@ export interface ProbeReading {
   at: number
   /** Unused by the basic scan; cycle 11's scan levels record what the player marked. */
   marked: string[]
+  /** Set only after a player submits optional Level 2 analysis. */
+  analyzedAt?: number
   /** What the sector holds. */
   deposits: string[]
 }
@@ -231,6 +233,34 @@ export function collectProbeData<T extends ProbePlayer>(player: T, targets: read
   return changed ? addStamp({ ...player, probes }, 'probe-observation', at, 'deposit-survey') : player
 }
 
+/** SSL-832: optional Level 2 reading; does not change automatic deposit discoveries or award a second stamp. */
+export function recordProbeAnalysis<T extends Pick<Player, 'probes'>>(
+  player: T, target: Pick<Target, 'id' | 'minerals'>, sector: string, selectedBands: readonly string[], at: number,
+): T {
+  const probe = player.probes?.[target.id]
+  const reading = probe?.readings[sector]
+  if (!probe || !reading || reading.analyzedAt !== undefined || !sectorIds().includes(sector)) return player
+  const valid = new Set(target.minerals)
+  const marked = [...new Set(selectedBands.filter(band => valid.has(band)))]
+  return {
+    ...player,
+    probes: { ...player.probes, [target.id]: { ...probe, readings: {
+      ...probe.readings, [sector]: { ...reading, marked, analyzedAt: at },
+    } } },
+  }
+}
+
+/** Accurate readout of the player's marks, without grading or modifying deposits. */
+export function probeAnalysisResult(target: Pick<Target, 'id' | 'minerals'>, sector: string, marked: readonly string[]) {
+  const actual = sectorDeposits(target, sector)
+  const selected = new Set(marked)
+  return {
+    correct: actual.filter(mineral => selected.has(mineral)),
+    missed: actual.filter(mineral => !selected.has(mineral)),
+    extra: marked.filter(mineral => !actual.includes(mineral)),
+  }
+}
+
 export interface SurveyTotal { mineral: string; tonnes: number; sectors: number }
 
 /** What the probe has found on a body so far: each mineral, its tonnes and how many sectors hold it. */
@@ -266,6 +296,9 @@ export function mergeProbes(current: Player['probes'], remote: Player['probes'])
     const b = remote?.[id]
     if (!a || !b) return [id, (a ?? b)!]
     const sectorMs = a.sectorMs && b.sectorMs ? Math.min(a.sectorMs, b.sectorMs) : a.sectorMs ?? b.sectorMs
-    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), readings: { ...b.readings, ...a.readings }, ...(sectorMs ? { sectorMs } : {}) }]
+    return [id, { launchedAt: Math.min(a.launchedAt, b.launchedAt), readings: Object.fromEntries([...new Set([...Object.keys(a.readings), ...Object.keys(b.readings)])].map(sector => {
+      const x = a.readings[sector], y = b.readings[sector]
+      return [sector, !x ? y : !y ? x : x.analyzedAt === undefined ? y : y.analyzedAt === undefined ? x : x.analyzedAt >= y.analyzedAt ? x : y]
+    })), ...(sectorMs ? { sectorMs } : {}) }]
   }))
 }
