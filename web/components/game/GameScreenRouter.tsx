@@ -440,11 +440,9 @@ function ScreenBody({
           onOpenMarket={() => game.go('market')}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
-          onOpenEvents={() => {
-            // Completing the sky reading should reveal the event brief first.
-            // Accepting the focused event is the explicit step that starts
-            // mission setup and lets the player choose a ship.
-            requestMissionBoardEvent(liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
+          onOpenEvents={eventId => {
+            // Open the named event directly; its primary action starts or continues the mission.
+            requestMissionBoardEvent(eventId ?? liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
             game.goToMissions()
           }}
           onFocusResources={(label, minerals) => {

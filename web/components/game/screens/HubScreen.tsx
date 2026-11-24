@@ -118,7 +118,7 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
-  onOpenEvents?: () => void
+  onOpenEvents?: (eventId?: string) => void
   communityResearch?: CommunityResearch | null
   onOpenCommunity?: () => void
   subsurface?: boolean

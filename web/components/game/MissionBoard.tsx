@@ -373,15 +373,15 @@ function EventSpecials({ eventId, player, onStart }: { eventId: string; player: 
   const open = specials.filter(special => special.state !== 'locked').length
   const bonus = Math.round(masteryBonus(player) * 100)
   return (
-    <div className={styles.specials} data-testid={`event-specials-${eventId}`}>
-      <p className={styles.specialsHead}><b>Special missions</b><span>{open} of {specials.length} unlocked{bonus ? ` · Mastery +${bonus}%` : ''}</span></p>
+    <details className={styles.specials} data-testid={`event-specials-${eventId}`}>
+      <summary>Special missions · {open} unlocked{bonus ? ` · Mastery +${bonus}%` : ''}</summary>
       <ul>
         {specials.map(special => <li key={special.id} data-state={special.state} data-testid={`special-${special.id}`}>
           <span><b>{special.title}</b><small>{special.state === 'locked' ? special.needs : special.state === 'flown' ? 'Flown' : special.key === 'gold' ? 'Gold unlock' : special.key === 'badge' ? 'Badge unlock' : special.key === 'mastery' ? 'Mastery unlock' : 'Voucher unlock'}</small></span>
           {special.state === 'open' && <button type="button" data-testid={`special-start-${special.id}`} onClick={() => onStart(special)}>Start</button>}
         </li>)}
       </ul>
-    </div>
+    </details>
   )
 }
 
@@ -389,7 +389,7 @@ export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenPlanner, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
   onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
-  const [requestedEventId] = useState(() => pendingMissionBoardEvent())
+  const [focusedEventId, setFocusedEventId] = useState(() => pendingMissionBoardEvent())
   const [requestedSite] = useState(() => pendingMissionBoardSite())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
@@ -403,6 +403,8 @@ export default function MissionBoard({
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
     [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
   )
+  const eventCards = events.groups.flatMap(group => group.cards)
+  const event = eventCards.find(item => item.id === focusedEventId) ?? eventCards[0]
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(() => tab === 'contracts' ? requestedSite?.targetId ?? null : null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
@@ -701,7 +703,7 @@ export default function MissionBoard({
           <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
             onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
         </div>
-      </article> : <div className={styles.sheet}>
+      </article> : <div className={`${styles.sheet} ${tab === 'events' ? styles.eventSheet : ''}`}>
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
@@ -784,9 +786,16 @@ export default function MissionBoard({
           </div>}
 
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
-            {events.groups.map(group => <section key={group.status} className={styles.eventGroup} aria-label={group.title} data-testid={`events-group-${group.status}`}>
-              <div className={styles.eventGrid}>
-                {group.cards.map(event => <article key={event.id} className={styles.eventCard} data-event-focused={requestedEventId === event.id || undefined} data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
+            <nav className={styles.eventList} aria-label="Choose an event">
+              {events.groups.map(group => <section key={group.status} aria-label={group.title} data-testid={`events-group-${group.status}`}>
+                <h3>{group.title}</h3>
+                {group.cards.map(item => <button type="button" key={item.id} aria-pressed={item.id === event?.id} data-testid={`event-select-${item.id}`} onClick={() => setFocusedEventId(item.id)}>
+                  <strong>{item.name}</strong><small>{item.earnedTier ? `${item.earnedTier} badge earned` : item.status === 'live' ? 'Live now' : item.status === 'upcoming' ? 'Coming soon' : 'Replay & rewards'}</small>
+                </button>)}
+              </section>)}
+            </nav>
+            <div className={styles.eventDetail} aria-live="polite">
+            {event && <article key={event.id} className={styles.eventCard} data-event-focused="true" data-testid={event.id === 'orionids-2026' ? 'events-orionids' : `events-card-${event.id}`}>
                   <div className={styles.eventArt} aria-hidden="true"><SkyBanner kind={bannerKind(event.id)} /></div>
                   <div className={styles.eventBody}>
                     <div className={styles.eventTitle}><h3>{event.name}</h3><EventStatus card={event} /></div>
@@ -803,13 +812,11 @@ export default function MissionBoard({
                       if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
                     }} />
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
-                    <button type="button" autoFocus={requestedEventId === event.id} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.actionLabel}</button>
+                    <button type="button" disabled={event.status === 'upcoming'} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.status === 'upcoming' ? 'Opens soon' : event.actionLabel}</button>
                   </div>
-                </article>)}
-              </div>
-            </section>)}
-            {(isOrionidsWindow(orionidsNow) || orionidsArchiveUnlocked(player) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
-              <div className={styles.fragmentBench} data-testid="orionids-fragments">
+                </article>}
+            {event?.id === 'orionids-2026' && (isOrionidsWindow(orionidsNow) || orionidsArchiveUnlocked(player) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (
+              <details className={styles.fragmentBench} data-testid="orionids-fragments"><summary>Fragment rewards</summary>
                 <p>HELD {heldFragments(player.stash)} · CAUGHT {player.orionidsFragments?.caught ?? 0} · REDEEMED {player.orionidsFragments?.redeemed ?? 0}</p>
                 {player.badges?.['orionids-looked-up'] && <p data-testid="orionids-looked-up">LOOKED UP · {player.badges['orionids-looked-up'].tier.toUpperCase()}</p>}
                 <p data-testid="orionids-fireball-progress">FIREBALL {heldFragments(player.stash)} / {FRAGMENTS_PER_FIREBALL}</p>
@@ -819,9 +826,10 @@ export default function MissionBoard({
                     <button type="button" className={styles.eventAction} data-testid="orionids-combine" onClick={onCombineFragments}>MAKE FIREBALL</button>
                   )}
                 </div>
-              </div>
+              </details>
             )}
-            {atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">{atlasEventLink.label}</a>}
+            {event?.id === 'orionids-2026' && atlasEventLink && <a className={styles.eventAtlas} href={atlasEventLink.href} target="_blank" rel="noreferrer">{atlasEventLink.label}</a>}
+            </div>
           </div>}
       </div>}
       </BoardFrame>
