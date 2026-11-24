@@ -41,9 +41,10 @@ const toBox = (d: Draft): RadioMeteorBox => ({
 })
 
 const briefingLines = (callsign: string, eventName: string) => [
-  `Radio desk here. ${callsign} is the receiver the whole community launched for the ${eventName}. With the BRAMS network in Belgium it hears one tone at 49.97 MHz: the bright line across the middle.`,
-  'When a meteor burns up, its trail bounces that tone back to us for a moment. It shows as a short upright mark crossing the line.',
-  'The long sweeping curves are aircraft, so leave those. Box every meteor, then send me the recording.',
+  `${callsign} listens to radio recordings collected for the ${eventName}. Each image shows five minutes: time runs left to right, and height shows radio frequency.`,
+  'The horizontal line is a radio beacon. A meteor trail can briefly reflect its signal, making a short upright echo near the line. Long curved tracks are often aircraft.',
+  'Try it: choose the likely meteor echo in this simplified example. This is practice, so nothing will be submitted.',
+  'On the recording, tap an echo to place a box, or drag around it. Check the whole five minutes, then send your boxes. If there are none, choose No meteors.',
 ]
 
 /** "2026-07-25 13:55 UTC" plus seconds → "13:57:30". */
@@ -154,6 +155,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
   const [pan, setPan] = useState(0.5)
   const [briefing, setBriefing] = useState<number | null>(total === 0 ? 0 : null)
   const [last, setLast] = useState<Last>(null)
+  const [practice, setPractice] = useState<'meteor' | 'aircraft' | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -201,7 +203,6 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
     setDraft(null)
     setBoxes(prev => [...prev, box])
     setSelected(boxes.length)
-    setBriefing(null)
     setLast(box.width > WIDE_BOX ? { kind: 'wide' } : { kind: 'boxed' })
   }
   const removeBox = () => {
@@ -363,11 +364,13 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
                 <span className={styles.beacon} data-highlight={briefing === 0 || undefined} aria-hidden="true">49.97 MHz</span>
               </div>
             </div>
+            <div className={styles.scanHint}>TIME → <span>Scan along the beacon line for short upright echoes</span></div>
             <div className={styles.timeline} aria-label="Visible time">
               <span>{clock(subject?.recordedAt ?? null, from)}</span>
               <i style={{ marginLeft: `${(from / RECORDING_SECONDS) * 100}%`, width: `${100 / zoom}%` }} aria-hidden="true" />
               <span>{clock(subject?.recordedAt ?? null, to)}</span>
             </div>
+            <div className={styles.controlHint}>Drag a dial, scroll, or use arrow keys · Zoom, then sweep to see the rest</div>
             <div className={styles.deck}>
               <Dial label="GAIN" testId="radio-gain" readout={`${Math.round(gain * 100)}%`} value={gain} min={0.6} max={2.2} step={0.1} onChange={setGain} />
               <Dial label="ZOOM" testId="radio-zoom" readout={`×${zoom.toFixed(1)}`} value={zoom} min={1} max={4} step={0.5} onChange={setZoom} />
@@ -385,9 +388,26 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
               </span>
               <p data-testid="radio-question">{line}</p>
               {briefing != null && (
-                <button type="button" className={styles.next} data-testid="radio-briefing-next" onClick={() => setBriefing(briefing + 1 < BRIEFING.length ? briefing + 1 : null)}>
-                  {briefing + 1 < BRIEFING.length ? `NEXT · ${briefing + 1}/${BRIEFING.length}` : 'START LISTENING'}
-                </button>
+                <div className={styles.coach}>
+                  <span className={styles.step}>GUIDE · {briefing + 1} / {BRIEFING.length}</span>
+                  {briefing === 2 && (
+                    <>
+                      <div className={styles.practice} aria-label="Practice identifying an echo">
+                        <div className={styles.practiceBeacon} aria-hidden="true" />
+                        <button type="button" className={styles.practiceMeteor} onClick={() => setPractice('meteor')} aria-label="Choose the short upright mark"><span /></button>
+                        <button type="button" className={styles.practiceAircraft} onClick={() => setPractice('aircraft')} aria-label="Choose the long curved track"><span /></button>
+                        <span className={styles.practiceLabel}>BEACON</span>
+                      </div>
+                      <p className={styles.feedback} role="status">{practice === 'meteor' ? 'That’s the likely echo: short and upright. The curved track is likely an aircraft.' : practice === 'aircraft' ? 'That long curve is likely an aircraft. Try the short upright mark.' : 'Select one of the two marks.'}</p>
+                    </>
+                  )}
+                  <div className={styles.coachActions}>
+                    <button type="button" className={styles.next} data-testid="radio-briefing-next" disabled={briefing === 2 && practice !== 'meteor'} onClick={() => setBriefing(briefing + 1 < BRIEFING.length ? briefing + 1 : null)}>
+                      {briefing + 1 < BRIEFING.length ? 'NEXT' : 'START LISTENING'}
+                    </button>
+                    <button type="button" className={styles.skip} onClick={() => setBriefing(null)}>SKIP GUIDE</button>
+                  </div>
+                </div>
               )}
             </div>
             {(onMission || justCompleted) && (
@@ -406,7 +426,7 @@ export default function RadioMeteorScreen({ player, onBack, onSubmit, eventId = 
             <div className={styles.tally}>
               <span><b data-testid="radio-echoes">{boxes.length}</b>echoes</span>
               <span><b data-testid="radio-checked">{total}</b>checked</span>
-              {briefing == null && <button type="button" className={styles.brief} data-testid="radio-briefing" onClick={() => setBriefing(0)}>BRIEFING</button>}
+              {briefing == null && <button type="button" className={styles.brief} data-testid="radio-briefing" onClick={() => { setPractice(null); setBriefing(0) }}>HOW TO PLAY</button>}
             </div>
             <div className={styles.actions}>
               <button type="button" className={styles.secondary} data-testid="radio-delete-box" disabled={!boxes.length} onClick={removeBox}>{selected != null ? 'DELETE BOX' : 'UNDO'}</button>

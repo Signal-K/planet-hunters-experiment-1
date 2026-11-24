@@ -68,6 +68,9 @@ describe('Orionids: fragments, then ORI-1', () => {
     // First time on the receiver: the radio desk briefs the player.
     byTest('radio-briefing-next').click()
     byTest('radio-briefing-next').click()
+    byTest('radio-briefing-next').should('be.disabled')
+    cy.get('[aria-label="Choose the short upright mark"]').click()
+    byTest('radio-briefing-next').click()
     byTest('radio-briefing-next').should('contain', 'START LISTENING').click()
 
     // Two recordings with an echo, one marked quiet.
