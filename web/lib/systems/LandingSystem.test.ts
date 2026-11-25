@@ -29,6 +29,7 @@ describe('landingProgress', () => {
     expect(landingProgress(1000, 1000, 8000)).toBe(0)
     expect(landingProgress(1000, 5000, 8000)).toBeCloseTo(0.5)
     expect(landingProgress(1000, 20000, 8000)).toBe(1)
+    expect(landingProgress(0, 4000, 8000)).toBe(0.5)
   })
 })
 
@@ -71,6 +72,10 @@ describe('applyLandingTouchdown', () => {
     const noDescent = game({}, { screen: 'landing' })
     expect(applyLandingTouchdown(noDescent)).toBe(noDescent)
   })
+
+  it('accepts a descent clock starting at zero', () => {
+    expect(applyLandingTouchdown(game({ landingStartedAt: 0 }, { screen: 'landing' })).screen).toBe('mining')
+  })
 })
 
 describe('applyRedockComplete', () => {
@@ -89,5 +94,10 @@ describe('applyRedockComplete', () => {
   it('is a no-op without an ascent in progress', () => {
     const state = game({}, { screen: 'landing', missionId: 'm1', targetId: 't1' })
     expect(applyRedockComplete(state, {}, null, null)).toBe(state)
+  })
+
+  it('accepts an ascent clock starting at zero and preserves cargo', () => {
+    const state = game({ landingReturnStartedAt: 0 }, { screen: 'landing', missionId: 'm1', targetId: 't1' })
+    expect(applyRedockComplete(state, { iron: 3 }, null).lastCargo).toEqual({ iron: 3 })
   })
 })

@@ -258,9 +258,10 @@ export default function MissionOperationRoutes({
 
     case 'landing': {
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
-      const mode = game.player.landingReturnStartedAt ? 'ascend' : 'descend'
+      const mode = game.player.landingReturnStartedAt != null ? 'ascend' : 'descend'
       return (
         <LandingScreen
+          key={JSON.stringify([game.player.missionRunId, game.mission.id, game.target.id, mode, game.player.landingStartedAt, game.player.landingReturnStartedAt])}
           target={game.target}
           mode={mode}
           startedAt={mode === 'ascend' ? game.player.landingReturnStartedAt : game.player.landingStartedAt}

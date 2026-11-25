@@ -92,7 +92,11 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
     landed.current = true
     // Dim to black first so the next scene is not a hard cut from the ground.
     setLeaving(true)
-    window.setTimeout(() => onContinueRef.current(), 1500)
+    const timer = window.setTimeout(() => onContinueRef.current(), 1500)
+    return () => {
+      window.clearTimeout(timer)
+      landed.current = false
+    }
   }, [ready])
 
   return (

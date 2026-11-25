@@ -15,7 +15,7 @@ export function landingProgress(
   now: number = Date.now(),
   durationMs: number = LANDING_DESCEND_DURATION_MS,
 ): number {
-  if (!startedAt || !Number.isFinite(startedAt) || durationMs <= 0) return 0
+  if (startedAt == null || !Number.isFinite(startedAt) || durationMs <= 0) return 0
   return Math.max(0, Math.min(1, (now - startedAt) / durationMs))
 }
 
@@ -41,7 +41,7 @@ export function applyResearchLanding(state: GameState): GameState {
  * the return/redock leg yet.
  */
 export function applyLandingTouchdown(state: GameState): GameState {
-  if (state.screen !== 'landing' || !state.player.landingStartedAt) return state
+  if (state.screen !== 'landing' || state.player.landingStartedAt == null) return state
   return {
     ...state,
     screen: 'mining',
@@ -66,7 +66,7 @@ export function applyRedockComplete(
 ): GameState {
   if (
     state.screen !== 'landing'
-    || !state.player.landingReturnStartedAt
+    || state.player.landingReturnStartedAt == null
     || !state.missionId
     || !state.targetId
   ) {

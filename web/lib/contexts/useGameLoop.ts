@@ -762,7 +762,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           missionPhase: 'landing',
           // A resumed descent whose clock was never saved is already due.
-          landingStartedAt: s.player.landingStartedAt ?? Date.now(),
+          landingStartedAt: Number.isFinite(s.player.landingStartedAt) ? s.player.landingStartedAt : Date.now(),
         },
       })
     })
