@@ -202,6 +202,7 @@ export default function DeliveryScreen({
             missionId={`tutorial-delivery-${mission.id}`}
             bodyId={takeonBodyForTarget(target)}
             target={target}
+            zone={mission.targetId === target.id ? mission.customPlan?.zone : undefined}
             rover={rover}
             roverName="Mule Field Rover"
             seedCargo={seedCargo}
@@ -244,6 +245,7 @@ export default function DeliveryScreen({
           missionId={`delivery-view-${mission.id}-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
           target={target}
+          zone={mission.targetId === target.id ? mission.customPlan?.zone : undefined}
           startView="iso"
           readOnly
           className={styles.takeonMount}

@@ -10,9 +10,11 @@ import { agencyRocket } from '@/lib/rockets'
 import { rocketBuilderStats, asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { travelDurationMs, MISSION_ORBIT_MS } from '@/lib/data/flight'
+import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
+import { MISSION_ZONES, type MissionZone } from '@/lib/data/mission-zone'
 
 export type PlannedWork = 'mine' | 'survey' | 'deliver'
-export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number }
+export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number; zone?: MissionZone }
 export interface DeliveryReceipt { targetId: string; cargo: Record<string, number>; at: number }
 export const PLAN_PREFIX = 'self-plan-'
 export function sanitizeMissionPlans(raw: unknown): Record<string, MissionPlan> {
@@ -22,6 +24,13 @@ export function sanitizeMissionPlans(raw: unknown): Record<string, MissionPlan> 
     return p && id === p.id && /^self-plan-[a-zA-Z0-9-]+$/.test(id) && typeof p.targetId === 'string' && typeof p.mineral === 'string'
       && ['mine', 'survey', 'deliver'].includes(p.work) && Number.isInteger(p.amount) && p.amount >= 1 && p.amount <= (p.work === 'survey' ? 24 : 999)
       && Number.isFinite(p.createdAt)
+  }).map(([id, value]) => {
+    const plan = value as MissionPlan
+    if (plan.zone !== undefined && !MISSION_ZONES.includes(plan.zone)) {
+      const { zone: _invalid, ...legacy } = plan
+      return [id, legacy]
+    }
+    return [id, plan]
   }))
 }
 export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Record<string, MineralMeta>): Mission {
@@ -49,7 +58,8 @@ export function plannerRockets(player: Player): RocketModel[] {
 export function plannerTargets(player: Player, catalog: Catalog, work: PlannedWork): Target[] {
   const range = Math.max(0, ...plannerRockets(player).map(model => rocketBuilderStats(rocketConfigForModel(model), asLoadout(player.shipCustomizerParts), catalog.parts, communityBonusRate(player).fuel).range))
   return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet'].includes(target.type) && target.orbit <= range
-    && (work === 'survey' || (target.archetype !== 'gas-giant' && target.id !== 'venus'))
+    && supportsMissionAtTarget(missionFromPlan({ id: 'self-plan-range', targetId: target.id, work, mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target)
+    && (work === 'survey' || target.id !== 'venus')
     && plannerRockets(player).some(model => validateBuild({ mission: missionFromPlan({ id: 'self-plan-range', targetId: target.id, work: 'survey', mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)).sort((a, b) => a.orbit - b.orbit || a.name.localeCompare(b.name))
 }
 export function plannerMinerals(player: Player, target: Target | undefined, catalog: Catalog, work: PlannedWork): string[] {

@@ -38,6 +38,21 @@ describe('self-planned missions', () => {
     expect(catalog.missions.find(mission => mission.id === plan.id)?.customPlan).toEqual(plan)
     expect(sanitizeMissionPlans({ bad: { ...plan, amount: -1 } })).toEqual({})
   })
+  it('preserves a valid zone through save restoration and mission generation', () => {
+    const zoned = { ...plan, zone: 'east' as const }
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: zoned.id, targetId: zoned.targetId, player: { ...player(), missionPlans: { [zoned.id]: zoned } } }
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(state)))
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, missionId: zoned.id, targetId: zoned.targetId, player: restored.player })
+    expect(catalog.missions.find(mission => mission.id === zoned.id)?.customPlan?.zone).toBe('east')
+    expect(sanitizeMissionPlans({ [zoned.id]: { ...zoned, zone: 'unknown' } })[zoned.id]).toEqual(plan)
+  })
+  it('retains a legacy gas-giant surface plan while flagging it for replanning', () => {
+    const legacy = { ...plan, targetId: 'jupiter', work: 'mine' as const }
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: legacy.id, targetId: legacy.targetId, player: { ...player(), missionPlans: { [legacy.id]: legacy } } }
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(state)))
+    expect(restored.player.missionPlans?.[legacy.id]).toEqual(legacy)
+    expect(planQuote(legacy, restored.player, STATIC_CATALOG).issues).toContain('Choose a reachable destination for this work.')
+  })
   it('loads Earth cargo at launch, unloads exactly once, and never puts delivered cargo back on Earth', () => {
     const mission = missionFromPlan(plan, target, STATIC_CATALOG.minerals)
     const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: plan.id, targetId: target.id, player: player() }

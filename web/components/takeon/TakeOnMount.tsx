@@ -20,6 +20,7 @@ import type {
   ViewKind,
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
+import type { MissionZone } from '@/lib/data/mission-zone'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
@@ -129,6 +130,7 @@ export interface TakeOnMountProps {
    * `lifeStage` (SSL-317); otherwise the stock takeon body is mounted.
    */
   target?: SurfaceTarget
+  zone?: MissionZone
   lifeStage?: LifeStage
   /** Read-only visit: pointer input is disabled and no save is written. */
   readOnly?: boolean
@@ -259,6 +261,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargo,
   seedCache,
   target,
+  zone,
   lifeStage = 'dormant',
   readOnly = false,
   fieldWeather,
@@ -472,6 +475,22 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         const resume = isSeeded ? null : await adapter.loadMission(missionId)
         if (disposed) return
 
+        // Only ephemeral fields can switch generators without changing an existing
+        // player's saved terrain or interpreting their edits against a new world.
+        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && (readOnly || isSeeded)) {
+          try {
+            const { loadLandingPreview } = await import('@/lib/takeon/solarLandingPreview')
+            const { solarField } = await import('@/lib/takeon/solarField')
+            const landing = await loadLandingPreview(currentTarget.id, zone)
+            if (disposed) return
+            const demId = `solar-v${landing.styleVersion}-${landing.bodyId}-${landing.seed}-${landing.longitude}`
+            engine.registerDem(demId, solarField(landing, look.ground, engine.registerMaterial))
+            body.dem = demId
+          } catch (error) {
+            console.warn('Takeon solar terrain unavailable; using the existing field', error)
+          }
+        }
+
         const viewport = takeOnViewportSize(canvasElement)
         const sky = look.skyNight
         app = new PIXI.Application()
@@ -656,6 +675,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     seed,
     startView,
     targetId,
+    zone,
   ])
 
   return (

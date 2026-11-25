@@ -1,0 +1,24 @@
+# Experimental solar terrain connection
+
+The optional web connection samples a versioned Takeon Go solar landing patch and converts its elevation to the DEM used by the playable Takeon field. The landing scene's generated orbital globe, its landing patch, and fresh tutorial delivery fields use the same body, seed, style version and coordinates. The globe samples a broad hemisphere, while the field uses a local elevation grid. The globe is shown only when its centre sample matches the landing patch. The orbital globe and landing preview use the same biome colour mapping and landing samples. The landing preview draws an angled relief mesh and deterministic rocks from that patch; it is a visual scene, not the playable rover field.
+
+Enable it locally with a Takeon checkout that contains the solar landing bridge:
+
+```sh
+cd web
+PATH="/path/to/go/bin:$PATH" bash scripts/sync-takeon-go-wasm.sh /path/to/takeon
+NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW=1 npm run dev
+```
+
+The WASM and its matching shim are ignored build output and must be provisioned for each deployment. If loading fails, the existing field remains available. Saved rover missions retain their existing generator: this experiment only applies to read-only fields and seeded, ephemeral tutorial fields. The existing illustrated globe is used if generation fails. Mining scenes and persistent fields are not connected. The generated globe and field load asynchronously. This is not yet a complete orbit-to-surface connection.
+
+
+For a stationary visual review, open `/game/stage/solar-visual` in the enabled development build. Choose a destination and use the percentage buttons to hold the real landing scene at points in the descent. The fixture does not change mission progress. Generated terrain needs the preview flag and matching Go assets above; check the browser console if the old view appears.
+
+The visual fixture includes an observed-imagery slider for bodies with bundled global maps: Moon, Mars, Earth, Mercury, Venus, Jupiter, Saturn and Neptune. It blends the same registered image into both preview views. This changes colour only: the terrain and surface rocks are still procedural, and the slider is not a 1:1 reconstruction. Moon and Mars also have elevation datasets, but this control does not yet display unexaggerated measured elevation. The other six have imagery without measured elevation. Gas-giant maps show cloud tops, not terrain; the existing landing sampler rejects gas-giant landings. Destinations without imagery show the coverage gap rather than presenting invented data as observed. Data provenance and native resolution are documented in Takeon's `docs/solar-biomes.md` and `go/data/lunar/README.md`. The slider does not change world generation, player preferences, or saved mission state.
+
+The Go bridge also exposes a versioned `solarOrbit` patch that works for landable bodies and gas giants, without permitting a gas landing. The visual fixture shows Jupiter as an orbit-only view, with generated cloud bands and an optional observed cloud image; Uranus has no bundled observed image. The fixture is a generator review, not a new gameplay mission route. Ceres and Lutetia now have deterministic stylised profiles, so all destinations in the current web target catalog have a generator profile. These additions do not alter version-1 sampling for previously supported bodies.
+
+Mission selection and launch share a destination capability rule: gas giants accept orbital payloads, while mining, delivery, construction and rover work require a surface. Saved plans remain available for editing and active flights are not migrated. Plans can retain an optional stable preview zone; missing or unrecognised zones use the original prime location. The visual fixture can compare four equatorial preview locations, and the landing sequence passes a plan's zone to orbital, surface and observed-imagery sampling. The control is not offered in the player planner yet: the existing division grid and playable field still use separate biome models, and generated and authored contracts do not yet persist a shared zone. A complete migration needs a location selection and identity across all mission types and a playable field driven by that same terrain.
+
+The vendored Takeon engine accepts a categorical surface-material grid alongside a DEM. With the preview flag enabled, read-only and seeded ephemeral fields receive both grids from the same solar patch used by the orbit and landing views. The solar visual fixture can switch to the engine field for inspection. The bundled engine omits planetary image assets to limit its size; the separate solar-preview WASM supplies those assets. Persistent fields still use their existing generator. Before migrating them, save a generator identity and pin the matching engine and data version so a field always resumes with the same generator even when settings or assets change.

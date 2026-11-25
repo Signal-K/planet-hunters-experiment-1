@@ -1,5 +1,6 @@
 import { recordAgencyLaunch } from '@/lib/agency/fleet'
 import { loadPlannedCargo } from '@/lib/mission-planner'
+import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
 import { MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
@@ -595,6 +596,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (!loadPlannedCargo(current, currentMission)) { addToast('This plan no longer has its cargo or survey equipment available. Return to the planner.', 'warn'); return }
     // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
     const currentTarget = catalog.targets.find(t => t.id === current.targetId)
+    if (currentTarget && !supportsMissionAtTarget(currentMission, currentTarget)) {
+      addToast('This destination only supports orbital missions. Choose another destination for surface work.', 'warn')
+      return
+    }
     if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
       addToast('This flight exceeds your rocket’s capabilities. Review the mission requirements.', 'warn')
       return
@@ -613,6 +618,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
+      if (!supportsMissionAtTarget(mission, target)) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       if (padNeedsService(s.player)) return s
       const loaded = loadPlannedCargo(s, mission)

@@ -263,6 +263,7 @@ export default function MissionOperationRoutes({
         <LandingScreen
           key={JSON.stringify([game.player.missionRunId, game.mission.id, game.target.id, mode, game.player.landingStartedAt, game.player.landingReturnStartedAt])}
           target={game.target}
+          zone={game.mission.customPlan?.zone}
           mode={mode}
           startedAt={mode === 'ascend' ? game.player.landingReturnStartedAt : game.player.landingStartedAt}
           onBack={() => game.go('hub')}

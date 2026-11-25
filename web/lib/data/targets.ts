@@ -5,6 +5,7 @@ import { mineralsForArchetype } from './target-archetypes'
 import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
 import { suggestBuild, validateBuild } from './parts'
 import { RESOURCE_FOCUS_MISSION_ID } from './missions'
+import { supportsMissionAtTarget } from './mission-locations'
 
 // A landmark target: real body, hand-authored id/name/brief for narrative
 // recognizability, minerals derived from its composition archetype + orbit
@@ -157,7 +158,7 @@ export const STAR_LINKS: [string, string][] = [
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
   // Explicit fixed-target missions: only the designated target is valid.
-  if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
+  if (mission.targetId) return targets.filter(t => t.id === mission.targetId && supportsMissionAtTarget(mission, t))
 
   // A construction mission's minerals are materials carried from the stash, not ore the target must hold.
   const required = mission.construction ? [] : Object.keys(mission.requires.minerals)
@@ -174,7 +175,7 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
     const mineralsAvailable = mission.id === RESOURCE_FOCUS_MISSION_ID
       ? required.some(mineral => t.minerals.includes(mineral))
       : required.every(mineral => t.minerals.includes(mineral))
-    return inRange && typeOk && mineralsAvailable
+    return inRange && typeOk && mineralsAvailable && supportsMissionAtTarget(mission, t)
   })
 }
 
