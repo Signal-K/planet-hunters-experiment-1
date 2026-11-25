@@ -56,7 +56,7 @@
 <dialog id="dlg">
   <form method="dialog" id="form">
     <h2 id="dlgtitle">Sign in</h2>
-    <p>Optional. Use your Star Sailors account (the one you use for Landnam). Signing in saves your runs.</p>
+    <p>Optional. Use your Star Sailors account (the one you use for Landnam). Signing in syncs your progress and saves your runs.</p>
     <label>Email<input id="email" type="email" autocomplete="username" required></label>
     <label id="codewrap" hidden>Code from the email<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label>
     <label id="pwlabel">Password<input id="pw" type="password" autocomplete="current-password" minlength="8" required></label>
@@ -70,6 +70,7 @@
   </form>
 </dialog>
 <script src="config.js"></script>
+<script src="progress-sync.js"></script>
 <script src="host.js"></script>
 <script src="wasm_exec.js"></script>
 <script>
@@ -102,6 +103,7 @@ document.getElementById('rotateskip').addEventListener('click', () => document.g
         inst = await WebAssembly.instantiate(buf, go.importObject);
       }
     }
+    if (window.haphazard && window.haphazard.ready) await window.haphazard.ready;
     document.getElementById('boot').remove();
     await go.run(inst.instance);
   } catch (e) {
@@ -123,7 +125,7 @@ if (cfg.sw !== false && 'serviceWorker' in navigator) {
     if (!navigator.serviceWorker.controller) {
       await new Promise((ok) => navigator.serviceWorker.addEventListener('controllerchange', ok, { once: true }));
     }
-    for (const f of [location.pathname, 'config.js', 'host.js', 'wasm_exec.js', cfg.wasm || 'game.wasm', 'manifest.webmanifest']) {
+    for (const f of [location.pathname, 'config.js', 'host.js', 'progress-sync.js', 'wasm_exec.js', cfg.wasm || 'game.wasm', 'manifest.webmanifest']) {
       await fetch(f).catch(() => {});
     }
   }).catch(() => {});
