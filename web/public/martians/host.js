@@ -54,6 +54,135 @@
     } finally { flushing = false; }
   }
 
+  // A private row per browser avoids two devices overwriting each other's
+  // unsent saves. Campaign achievements merge; consumables and checkpoints use
+  // the most recently edited value. Legacy local saves are adopted only once.
+  const saveKeys = ['hm.progress', 'hm.tutorial', 'hm.school', 'expedition-v1'];
+  const storageKey = (k) => 'hm.' + k;
+  let owner = null, syncing = false, syncAgain = false, syncFailed = false;
+  const device = (() => {
+    let id = LS.get('hm.sync.device');
+    if (!id) { id = Array.from(crypto.getRandomValues(new Uint8Array(15)), n => 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]).join(''); LS.set('hm.sync.device', id); }
+    return id;
+  })();
+  const stateKey = (id) => 'hm.sync.state.' + id;
+  const readState = (id) => { try { return JSON.parse(LS.get(stateKey(id)) || '{}'); } catch { return {}; } };
+  const writeState = (id, state) => LS.set(stateKey(id), JSON.stringify(state));
+  const parseProgress = (v) => { try { return JSON.parse(v || '{}') || {}; } catch { return {}; } };
+  function mergeProgress(a, b) {
+    const out = { ...a, ...b, levels: { ...(a.levels || {}) }, labels: { ...(a.labels || {}) } };
+    for (const [id, level] of Object.entries(b.levels || {})) {
+      const prev = out.levels[id] || {};
+      const times = [prev.best, level.best].filter(n => typeof n === 'number' && n > 0);
+      out.levels[id] = { ...prev, ...level, stars: Math.max(prev.stars || 0, level.stars || 0), score: Math.max(prev.score || 0, level.score || 0), best: times.length ? Math.min(...times) : 0 };
+    }
+    for (const [id, labels] of Object.entries(b.labels || {})) out.labels[id] = { ...(out.labels[id] || {}), ...labels };
+    out.best_expedition = Math.max(a.best_expedition || 0, b.best_expedition || 0);
+    out.launched = Math.max(a.launched || 0, b.launched || 0);
+    out.claimed_missions = { ...(a.claimed_missions || {}), ...(b.claimed_missions || {}) };
+    return out;
+  }
+  function mergeStates(states) {
+    const result = {};
+    for (const key of saveKeys) {
+      const entries = states.map(s => s && s[key]).filter(e => e && typeof e.time === 'number' && typeof e.value === 'string').sort((a, b) => a.time - b.time);
+      if (!entries.length) continue;
+      const latest = entries[entries.length - 1];
+      if (key === 'hm.progress') {
+        let p = {};
+        for (const e of entries) p = mergeProgress(p, parseProgress(e.value));
+        result[key] = { time: latest.time, value: JSON.stringify(p) };
+      } else if (key === 'hm.school') {
+        result[key] = { time: latest.time, value: String(Math.max(...entries.map(e => Number(e.value) || 0))) };
+      } else if (key === 'hm.tutorial') {
+        result[key] = { time: latest.time, value: entries.some(e => e.value === 'done') ? 'done' : latest.value };
+      } else result[key] = latest;
+    }
+    return result;
+  }
+  function activateOwner(id) {
+    if (owner === id) return;
+    if (owner) for (const k of saveKeys) { const v = LS.get(storageKey(k)); if (v !== null) LS.set('hm.sync.local.' + owner + '.' + k, v); }
+    owner = id;
+    if (!id) { for (const k of saveKeys) LS.del(storageKey(k)); if (window.haphazard?.refreshProgress) window.haphazard.refreshProgress(); return; }
+    const legacyOwner = LS.get('hm.sync.legacyOwner');
+    let state = readState(id);
+    const guest = {};
+    for (const k of saveKeys) {
+      const v = LS.get('hm.sync.guest.' + k);
+      if (v !== null) { try { guest[k] = JSON.parse(v); } catch {} }
+    }
+    state = mergeStates([state, guest]);
+    for (const k of saveKeys) {
+      let v = LS.get('hm.sync.local.' + id + '.' + k);
+      if (v === null && !legacyOwner) v = LS.get(storageKey(k));
+      if (state[k]) v = state[k].value;
+      if (v !== null) { LS.set(storageKey(k), v); if (!state[k]) state[k] = { value: v, time: Date.now() }; }
+      else LS.del(storageKey(k));
+    }
+    if (!legacyOwner) LS.set('hm.sync.legacyOwner', id);
+    writeState(id, state);
+    for (const k of saveKeys) LS.del('hm.sync.guest.' + k);
+    if (window.haphazard?.refreshProgress) window.haphazard.refreshProgress();
+  }
+  function saveGame(key, value) {
+    LS.set(storageKey(key), value);
+    if (!saveKeys.includes(key)) return;
+    if (owner) {
+      LS.set('hm.sync.local.' + owner + '.' + key, value);
+      const state = readState(owner);
+      state[key] = { value, time: Math.max(Date.now(), (state[key]?.time || 0) + 1) };
+      writeState(owner, state);
+      syncProgress();
+    } else {
+      LS.set('hm.sync.guest.' + key, JSON.stringify({ value, time: Date.now() }));
+    }
+  }
+  async function syncProgress() {
+    if (DEMO || !auth || !owner) return;
+    if (syncing) { syncAgain = true; return; }
+    syncing = true;
+    const id = owner, token = auth.token;
+    try {
+      let page = 1, records = [];
+      for (;;) {
+        const data = await pb('/api/collections/hm_saves/records?perPage=200&page=' + page++);
+        records.push(...data.items);
+        if (page > data.totalPages) break;
+      }
+      if (!auth || auth.token !== token || owner !== id) return;
+      const local = readState(id);
+      // Earlier versions uploaded run records but did not upload local saves.
+      // Restore those records as well, retaining all newer save fields.
+      const queryUser = id.replace(/["\\]/g, '');
+      const recovered = await window.HMProgressSync.hydrateProgress(async (page, perPage) => {
+        const query = new URLSearchParams({filter: `user = "${queryUser}"`, page: String(page), perPage: String(perPage), fields: 'level,won,stars,time,score'});
+        return pb('/api/collections/hm_runs/records?' + query);
+      }, local['hm.progress']?.value);
+      if (!auth || auth.token !== token || owner !== id) return;
+      // Re-read after the network request so local play during restore is kept.
+      const current = readState(id);
+      const fromRuns = recovered.changed ? { 'hm.progress': {time: 0, value: JSON.stringify(recovered.progress)} } : {};
+      const merged = mergeStates([fromRuns, ...records.map(r => r.state), current]);
+      let changed = false;
+      for (const [key, entry] of Object.entries(merged)) {
+        if (LS.get(storageKey(key)) !== entry.value) changed = true;
+        LS.set(storageKey(key), entry.value);
+        LS.set('hm.sync.local.' + id + '.' + key, entry.value);
+      }
+      writeState(id, merged);
+      const mine = records.find(r => r.device === device);
+      if (JSON.stringify(mine?.state || {}) !== JSON.stringify(merged)) {
+        const data = { user: id, device, state: merged };
+        await pb('/api/collections/hm_saves/records' + (mine ? '/' + mine.id : ''), { method: mine ? 'PATCH' : 'POST', body: JSON.stringify(data) });
+      }
+      syncFailed = false;
+      render();
+      if (changed && window.haphazard?.refreshProgress) window.haphazard.refreshProgress();
+    } catch (e) { syncFailed = true; render(); console.warn('Game progress sync failed; local save retained.', e); }
+    finally { syncing = false; if (syncAgain) { syncAgain = false; syncProgress(); } }
+  }
+
   // ---- review captures ----
   // Sending a review keeps it in full on the shared backend
   // (platform_classification_captures): every label, plus two photos of the
@@ -129,15 +258,15 @@
   const btn = $('acct'), dlg = $('dlg'), msg = $('msg');
   const CLERK_KEY = !DEMO && cfg && cfg.clerk ? String(cfg.clerk).trim() : '';
   let step = 'password'; // Clerk only: 'password', then 'signup-code' or 'reset-code'
-  function render() { if (DEMO) { btn.hidden = true; return; } btn.textContent = auth ? auth.record.email + ' · sign out' : 'Sign in'; }
+  function render() { if (DEMO) { btn.hidden = true; return; } btn.textContent = auth ? auth.record.email + (syncFailed ? ' · sync pending' : ' · sign out') : 'Sign in'; }
   function signOut() {
-    auth = null; LS.del('hm.auth');
+    auth = null; syncFailed = false; activateOwner(null); LS.del('hm.auth');
     // Leaving the game does not sign the player out of Landnam; it only stops
     // the shared session from signing them straight back in here.
     if (CLERK_KEY || (cfg && cfg.shareAuth)) LS.set('hm.signedOut', '1');
     render();
   }
-  async function setAuth(r) { auth = { token: r.token, record: r.record }; LS.set('hm.auth', JSON.stringify(auth)); LS.del('hm.signedOut'); render(); flush(); flushCaptures(); }
+  async function setAuth(r) { auth = { token: r.token, record: r.record }; activateOwner(auth.record.id); syncProgress(); LS.set('hm.auth', JSON.stringify(auth)); LS.del('hm.signedOut'); render(); flush(); flushCaptures(); }
   async function login(email, password) {
     await setAuth(await pb('/api/collections/users/auth-with-password', { method: 'POST', body: JSON.stringify({ identity: email, password }) }));
   }
@@ -290,6 +419,7 @@
       if (shared && shared.token && shared.record && shared.record.collectionName === 'users') auth = { token: shared.token, record: shared.record };
     } catch {}
   }
+  if (auth) activateOwner(auth.record.id);
   render();
   if (auth && !DEMO) {
     pb('/api/collections/users/auth-refresh', { method: 'POST' }).then(setAuth).catch((e) => { if (e.status === 401 || e.status === 403) signOut(); });
@@ -297,6 +427,9 @@
     // signed in to Landnam already? then this game is signed in too
     loadClerk().then((clerk) => clerk.session && exchange(clerk)).catch(() => {});
   }
+  addEventListener('online', syncProgress);
+  addEventListener('focus', syncProgress);
+  setInterval(syncProgress, 30000);
   addEventListener('online', flush);
   addEventListener('online', flushCaptures);
   if (auth) setTimeout(flushCaptures, 3000);
@@ -353,12 +486,56 @@
     input.select();
   }
 
+  // ---- analytics (KES-505) ----
+  // With cfg.posthog = { key, host } the game's events go to PostHog, so we
+  // can see how players build and where they quit. Players stay anonymous:
+  // no identify call, no person profiles, no session recording, and events
+  // carry only game facts. The SDK loads after the game so it never slows boot.
+  const PH = cfg && cfg.posthog && cfg.posthog.key ? cfg.posthog : null;
+  const phQueue = [];
+  let ph = null;
+  function track(event, props) {
+    if (!PH) return;
+    if (ph) ph.capture(event, props); else if (phQueue.length < 200) phQueue.push([event, props]);
+  }
+  if (PH) {
+    const host = PH.host || 'https://us.i.posthog.com';
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = host.replace('.i.posthog.com', '-assets.i.posthog.com') + '/static/array.js';
+    s.onload = () => {
+      if (!window.posthog || !window.posthog.init) return;
+      window.posthog.init(PH.key, {
+        api_host: host,
+        persistence: 'localStorage',
+        person_profiles: 'identified_only',
+        disable_session_recording: true,
+        autocapture: false,
+        capture_pageview: true,
+        loaded: (p) => {
+          p.register({ game: 'haphazard-martians', build: cfg.build || 'dev' });
+          ph = p;
+          while (phQueue.length) { const [e, pr] = phQueue.shift(); p.capture(e, pr); }
+        },
+      });
+    };
+    document.head.appendChild(s);
+  }
+  // The run event already says how a drive ended; analytics gets a lean copy
+  // without the design grid.
+  const runProps = (p) => ({ level: p.level, won: p.won, outcome: p.outcome, stars: p.stars, time: p.time, samples: p.samples,
+    score: p.score, cost: p.cost, cells: (p.design || []).length, damaged: p.damaged, distance: p.distance, progress: p.progress,
+    body: p.body, par: p.par, lesson: p.lesson, expedition: p.expedition });
+
   window.haphazard = {
     photo: (name, bytes) => { photo(name, bytes); },
     load: (k) => LS.get('hm.' + k),
-    save: (k, v) => LS.set('hm.' + k, v),
+    save: (k, v) => saveGame(k, v),
     emit: (ev, json) => {
       let p; try { p = JSON.parse(json); } catch { return; }
+      if (ev === 'track') { track(p.event, p.props || {}); return; }
+      if (ev === 'run') track('hm_run_finished', runProps(p));
+      if (ev === 'scene') track('hm_scene', { name: p.name });
       if (ev === 'scene') { btn.hidden = DEMO || p.name !== 'menu'; return; } // keep the HTML chrome off the in-game HUD
       if (ev === 'prompt') { setTimeout(() => askText(p), 0); return; } // a text field in the game
       if (DEMO) return; // nothing to send to: progress is already saved locally
