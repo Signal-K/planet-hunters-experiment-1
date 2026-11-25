@@ -59,7 +59,7 @@
   // the most recently edited value. Legacy local saves are adopted only once.
   const saveKeys = ['hm.progress', 'hm.tutorial', 'hm.school', 'expedition-v1'];
   const storageKey = (k) => 'hm.' + k;
-  let owner = null, syncing = false, syncAgain = false, syncFailed = false;
+  let owner = null, syncing = false, syncAgain = false, syncFailed = false, synced = false;
   const device = (() => {
     let id = LS.get('hm.sync.device');
     if (!id) { id = Array.from(crypto.getRandomValues(new Uint8Array(15)), n => 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]).join(''); LS.set('hm.sync.device', id); }
@@ -142,6 +142,7 @@
     if (DEMO || !auth || !owner) return;
     if (syncing) { syncAgain = true; return; }
     syncing = true;
+    render();
     const id = owner, token = auth.token;
     try {
       let page = 1, records = [];
@@ -177,10 +178,10 @@
         await pb('/api/collections/hm_saves/records' + (mine ? '/' + mine.id : ''), { method: mine ? 'PATCH' : 'POST', body: JSON.stringify(data) });
       }
       syncFailed = false;
-      render();
+      synced = true;
       if (changed && window.haphazard?.refreshProgress) window.haphazard.refreshProgress();
     } catch (e) { syncFailed = true; render(); console.warn('Game progress sync failed; local save retained.', e); }
-    finally { syncing = false; if (syncAgain) { syncAgain = false; syncProgress(); } }
+    finally { syncing = false; render(); if (syncAgain) { syncAgain = false; syncProgress(); } }
   }
 
   // ---- review captures ----
@@ -258,9 +259,9 @@
   const btn = $('acct'), dlg = $('dlg'), msg = $('msg');
   const CLERK_KEY = !DEMO && cfg && cfg.clerk ? String(cfg.clerk).trim() : '';
   let step = 'password'; // Clerk only: 'password', then 'signup-code' or 'reset-code'
-  function render() { if (DEMO) { btn.hidden = true; return; } btn.textContent = auth ? auth.record.email + (syncFailed ? ' · sync pending' : ' · sign out') : 'Sign in'; }
+  function render() { if (DEMO) { btn.hidden = true; return; } btn.textContent = auth ? auth.record.email + (syncFailed ? ' · sync pending' : syncing || !synced ? ' · syncing…' : ' · synced') : 'Sign in to sync'; btn.title = auth ? 'Click to sign out' : 'Sign in to sync progress'; }
   function signOut() {
-    auth = null; syncFailed = false; activateOwner(null); LS.del('hm.auth');
+    auth = null; syncFailed = false; synced = false; activateOwner(null); LS.del('hm.auth');
     // Leaving the game does not sign the player out of Landnam; it only stops
     // the shared session from signing them straight back in here.
     if (CLERK_KEY || (cfg && cfg.shareAuth)) LS.set('hm.signedOut', '1');
@@ -536,7 +537,7 @@
       if (ev === 'track') { track(p.event, p.props || {}); return; }
       if (ev === 'run') track('hm_run_finished', runProps(p));
       if (ev === 'scene') track('hm_scene', { name: p.name });
-      if (ev === 'scene') { btn.hidden = DEMO || p.name !== 'menu'; return; } // keep the HTML chrome off the in-game HUD
+      if (ev === 'scene') { btn.hidden = DEMO || !['menu', 'map'].includes(p.name); return; } // keep account controls off the in-game HUD
       if (ev === 'prompt') { setTimeout(() => askText(p), 0); return; } // a text field in the game
       if (DEMO) return; // nothing to send to: progress is already saved locally
       if (ev === 'review') { queueReview(p); return; }
