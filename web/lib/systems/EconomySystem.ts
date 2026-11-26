@@ -2,6 +2,7 @@ import { agencyLevel } from '@/lib/agency/construction-translation'
 import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
 import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
 import type { BuildingLevels } from '@/lib/data/building-levels'
+import { MISSIONS } from '@/lib/data'
 import { rocketPrice } from '@/lib/rockets'
 // Pure state-transition functions for the economy system.
 // Covers: sell minerals, refinery queue, launchpad upgrade.
@@ -321,7 +322,7 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 /** Buy the rocket a mission will fly. Francs used to be deducted inline in
  *  `useGameLoop`; every purchase in the game now goes through this file. */
 export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameState {
-  const price = rocketPrice(rocket, s.player)
+  const price = rocketPrice(rocket, s.player, { payloadType: MISSIONS.find(m => m.id === s.missionId)?.payload?.type })
   if (s.player.francs < price) return s
   const missionId = s.missionId ?? 'unassigned'
   const targetId = s.targetId ?? 'unassigned'
@@ -367,7 +368,7 @@ export function rocketPurchaseRefusal(s: GameState, rocket: RocketModel): string
   // SSL-450: the launch review (screen 'fab') is where a vehicle is prepared.
   if (s.screen !== 'rocket-buy' && s.screen !== 'fab' && s.screen !== 'targets' && s.screen !== 'hangar') return 'Return to the launch review before building.'
   if (!s.missionId || !s.targetId) return 'Choose a contract destination before building a rocket.'
-  const price = rocketPrice(rocket, s.player)
+  const price = rocketPrice(rocket, s.player, { payloadType: MISSIONS.find(m => m.id === s.missionId)?.payload?.type })
   // Never charge twice for the same job: a vehicle of this model already staged for this contract is the one that flies.
   const alreadyStaged = (s.player.stagedRockets ?? []).some(v => v.rocketId === rocket.id && v.missionId === s.missionId
     && v.targetId === s.targetId && (v.location === 'hangar' || v.location === 'launchpad'))

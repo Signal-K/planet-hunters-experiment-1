@@ -41,7 +41,11 @@ export function rocketUnlocked(rocket: Pick<RocketModel, 'id' | 'locked' | 'miss
 export const ROCKET_PROGRESS_GRACE_MISSIONS = 10
 export const ROCKET_PROGRESS_STEP = 0.02
 export const ROCKET_PROGRESS_MAX_SURCHARGE = 1
+export const HARDWARE_PAYLOADS: readonly string[] = ['rover', 'lander']
+export const HARDWARE_PREMIUM = 3
+export const HARDWARE_PREMIUM_PER_LEVEL = 0.4
 
+export type RocketPriceContext = { payloadType?: string }
 type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
 
 /**
@@ -49,16 +53,23 @@ type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Pl
  * more or less (client contracts, manufacturing pipelines, events), so add an entry here rather than a branch in
  * `rocketPrice`. Each factor must be pure over the player and must never throw on an old save.
  */
-export const ROCKET_PRICE_MODIFIERS: ReadonlyArray<{ id: string; factor: (player: PricePlayer) => number }> = [
+export const ROCKET_PRICE_MODIFIERS: ReadonlyArray<{ id: string; factor: (player: PricePlayer, context: RocketPriceContext) => number }> = [
   // Rockets cost more the further the agency has progressed.
   { id: 'progress', factor: player => 1 + Math.min(ROCKET_PROGRESS_MAX_SURCHARGE, Math.max(0, (player.missionsDone ?? 0) - ROCKET_PROGRESS_GRACE_MISSIONS) * ROCKET_PROGRESS_STEP) },
+  // Hardware missions (rovers; landers when they get their own payload type) cost a premium until the agency can
+  // manufacture: each refining and ore-storage level takes `HARDWARE_PREMIUM_PER_LEVEL` off, down to list price.
+  { id: 'hardware-premium', factor: (player, context) => {
+    if (!context.payloadType || !HARDWARE_PAYLOADS.includes(context.payloadType)) return 1
+    const capacity = agencyLevel(player, 'refining') + agencyLevel(player, 'ore-storage')
+    return Math.max(1, HARDWARE_PREMIUM - capacity * HARDWARE_PREMIUM_PER_LEVEL)
+  } },
   // SSL-792: an upgraded hangar builds rockets for less.
   { id: 'hangar-discount', factor: player => agencyLevel(player, 'rocket-discounts') > 0 ? 1 - hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 1 },
 ]
 
-export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: PricePlayer): number {
+export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: PricePlayer, context: RocketPriceContext = {}): number {
   const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
-  return Math.round(ROCKET_PRICE_MODIFIERS.reduce((price, modifier) => price * modifier.factor(player), list))
+  return Math.round(ROCKET_PRICE_MODIFIERS.reduce((price, modifier) => price * modifier.factor(player, context), list))
 }
 
 export function agencyRocket(player: Player): RocketModel {

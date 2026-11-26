@@ -50,3 +50,14 @@ describe('rocket price follows progress (SSL-892)', () => {
     expect(at(10_000)).toBe(20_000_000)
   })
 })
+
+describe('hardware missions cost a premium until the agency can manufacture (SSL-892)', () => {
+  it('rovers fall to list price with refining and storage, other payloads never pay it', () => {
+    const rocket = { costFrancs: 10_000_000 }
+    const p = (levels: Record<string, number>) => ({ missionsDone: 0, agencyLevels: levels } as unknown as Parameters<typeof rocketPrice>[1])
+    expect(rocketPrice(rocket, p({}), { payloadType: 'rover' })).toBe(30_000_000)
+    expect(rocketPrice(rocket, p({ refining: 1, 'ore-storage': 1 }), { payloadType: 'rover' })).toBe(22_000_000)
+    expect(rocketPrice(rocket, p({ refining: 3, 'ore-storage': 3 }), { payloadType: 'rover' })).toBe(10_000_000)
+    expect(rocketPrice(rocket, p({}), { payloadType: 'satellite' })).toBe(10_000_000)
+  })
+})
