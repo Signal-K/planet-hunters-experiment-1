@@ -484,7 +484,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (savedSolar) {
           if (!currentTarget || savedSolar.bodyId !== currentTarget.id) throw new Error('Saved solar field belongs to another destination')
           const { registerSolarFieldMaterials } = await import('@/lib/takeon/solarField')
-          registerSolarFieldMaterials(savedSolar.bodyId, look.ground, engine.registerMaterial)
+          const definitions: Parameters<typeof engine.registerMaterial>[0][] = []
+          registerSolarFieldMaterials(savedSolar.bodyId, look.ground, definition => { definitions.push(definition) })
+          if (savedSolar.palette && (Object.keys(savedSolar.palette).length !== definitions.length || definitions.some(definition => !savedSolar.palette?.[definition.id]))) throw new Error('Incomplete saved solar palette')
+          for (const definition of definitions) engine.registerMaterial({ ...definition, colors: savedSolar.palette?.[definition.id] ?? definition.colors })
           fieldIdentity = savedSolar
         }
 
@@ -498,7 +501,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             if (disposed) return
             const demId = `solar-v${landing.styleVersion}-${landing.bodyId}-${landing.seed}-${landing.longitude}`
             const identity = solarFieldIdentity(landing, zone)
-            engine.registerDem(demId, solarField(landing, look.ground, engine.registerMaterial))
+            const palette: NonNullable<SolarFieldIdentity['palette']> = {}
+            engine.registerDem(demId, solarField(landing, look.ground, definition => {
+              palette[definition.id] = [...definition.colors]
+              engine.registerMaterial(definition)
+            }))
+            identity.palette = palette
             body.dem = demId
             fieldIdentity = identity
           } catch (error) {

@@ -24,6 +24,14 @@ describe('solar field snapshot identity', () => {
     expect(() => readSolarFieldIdentity(JSON.stringify(saved))).toThrow()
   })
 
+  it('persists and validates the sampled material colours', () => {
+    const withPalette = { ...identity, palette: { '110': ['#aabbcc', '#123456', '#abcdef'] as [string, string, string] } }
+    expect(readSolarFieldIdentity(writeSolarFieldIdentity(snapshot, withPalette))?.palette).toEqual(withPalette.palette)
+    const saved = JSON.parse(writeSolarFieldIdentity(snapshot, withPalette))
+    saved.landnamTerrain.palette['110'][0] = 'invalid'
+    expect(() => readSolarFieldIdentity(JSON.stringify(saved))).toThrow('palette')
+  })
+
   it('rejects a fallback or changed terrain after restore', () => {
     const saved = writeSolarFieldIdentity(snapshot, identity)
     expect(() => assertSolarFieldRestored(saved)).toThrow()
