@@ -209,7 +209,17 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
       items = items.filter(i => !(i.op.type === 'upsert' && i.op.collection === op.collection && i.op.filter === op.filter))
     }
     if (op.type === 'field-save') {
-      items = items.filter(i => !(i.op.type === 'field-save' && i.op.filter === op.filter))
+      // A complete snapshot also supersedes the old per-row field queue.
+      // Otherwise a backed-off legacy write could replay after this snapshot
+      // and restore stale terrain or a structure the player removed.
+      items = items.filter(i => {
+        const previous = i.op
+        if (previous.type === 'field-save') return previous.filter !== op.filter
+        if (previous.type !== 'upsert') return true
+        if (previous.collection === 'voxel_worlds') return previous.filter !== op.filter
+        if (previous.collection === 'structures') return !previous.filter.startsWith(`${op.filter} && structure_id = `)
+        return true
+      })
     }
     items.push({ id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false })
     await persist()
@@ -221,6 +231,9 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
     await ensureLoaded()
     emit()
     for (const item of [...items]) {
+      // Enqueue can replace a queued snapshot while an earlier request is in
+      // flight. Do not execute entries removed from this pass in the meantime.
+      if (!items.includes(item)) continue
       // A failed item is deliberately retained and retried. `failed` is a
       // user-visible warning threshold, not a terminal state.
       if (item.nextAttemptAt > now()) continue

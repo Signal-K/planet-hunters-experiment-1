@@ -43,6 +43,36 @@ describe('outbox', () => {
     expect(h.calls[0].type === 'field-save' && h.calls[0].structures).toEqual([{ structure_id: 'new' }])
   })
 
+  it('supersedes older world and structure upserts only for the same field', async () => {
+    const h = harness([])
+    const filter = 'user = "u1" && target_id = "mars"'
+    await h.outbox.enqueue({ type: 'upsert', collection: 'voxel_worlds', id: 'world', filter, data: {} })
+    await h.outbox.enqueue({ type: 'upsert', collection: 'structures', id: 'structure', filter: `${filter} && structure_id = "old"`, data: {} })
+    await h.outbox.enqueue({ type: 'upsert', collection: 'voxel_worlds', id: 'other', filter: 'user = "u1" && target_id = "moon"', data: {} })
+    await h.outbox.enqueue({ type: 'field-save', id: 'new', filter, user: 'u1', data: {}, structures: [] })
+    expect(h.outbox.pending().map(item => item.op.type === 'http' ? item.op.path : item.op.id)).toEqual(['other', 'new'])
+  })
+
+  it('does not replay a superseded legacy write captured by an active flush', async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const calls: OutboxOp[] = []
+    const outbox = createOutbox({
+      store: memoryStore(), isOnline: () => false,
+      execute: async op => { calls.push(op); if (calls.length === 1) await gate; return null },
+    })
+    const filter = 'user = "u1" && target_id = "mars"'
+    await outbox.enqueue(create)
+    await outbox.enqueue({ type: 'upsert', collection: 'structures', id: 'old', filter: `${filter} && structure_id = "old"`, data: {} })
+    const flushing = outbox.flush()
+    await vi.waitFor(() => expect(calls).toHaveLength(1))
+    await outbox.enqueue({ type: 'field-save', id: 'new', filter, user: 'u1', data: {}, structures: [] })
+    release()
+    await flushing
+    await outbox.flush()
+    expect(calls.map(op => op.type === 'http' ? op.path : op.id)).toEqual([create.id, 'new'])
+  })
+
   it('replays a complete field, including structure updates and removals', async () => {
     const op: Extract<OutboxOp, { type: 'field-save' }> = {
       type: 'field-save', id: 'world-id', filter: 'owner', user: 'u1', data: { time: 2 },
