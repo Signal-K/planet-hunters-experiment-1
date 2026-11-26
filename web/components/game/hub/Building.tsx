@@ -318,7 +318,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w
               background: 'var(--hub-panel)',
               border: '1.5px solid var(--hub-outline)',
               borderRadius: 12, padding: 'var(--ln-s-3)',
-              boxShadow: '0 2px 0 var(--hub-outline) inset, 0 24px 48px var(--ln-overlay)',
+              boxShadow: 'none',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
               visibility: calloutOpen ? 'visible' : 'hidden',

@@ -1,3 +1,5 @@
+import { completeChainRadio, getShowerChain } from '@/lib/orionids/chain'
+import { VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { rocketConfigForModel } from '@/lib/data/rockets'
 import { weekKey } from '@/lib/research/paths'
 import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
@@ -6,6 +8,8 @@ import { MISSIONS, ROCKET_IDS, TARGETS } from '@/lib/data'
 import { sectorDeposits, sectorIds } from '@/lib/probes/survey-probe'
 import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
+import { missionFromPlan, type MissionPlan } from '@/lib/mission-planner'
+import { MINERAL_META } from '@/lib/data/minerals'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const WORKSHOP_MISSION = { ...(MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres') ?? FIRST_MISSION), id: 'qa-workshop-relay', title: 'Workshop relay fit check', targetId: 'lutetia', requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 8, drill_tier: 2, max_orbit: 6 } }
@@ -115,6 +119,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
       { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
       { key: 'transport-delivery', label: 'Delivery', hint: 'Cargo transfer at Vesta with mixed cargo (ordered + leftover minerals)', stage: 'tutorial' },
+      { key: 'solar-site-delivery', label: 'Solar site delivery', hint: 'Experimental Mercury descent and rover cargo delivery', stage: 'free-ops' },
+      { key: 'transport-delivery-timed', label: 'Timed delivery', hint: 'Regular two-leg delivery at Vesta with automated unloading', stage: 'free-ops' },
       { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
@@ -145,6 +151,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-tess-training', label: 'Telescope training', hint: 'Training try 2 of 3: mark the dip in the training light curve and Submit · Transit to see the result card', stage: 'free-ops' },
+      { key: 'ui-tess-receipt', label: 'TESS contribution receipt', hint: 'Confirmed research and existing fragments after classification', stage: 'free-ops' },
       { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
@@ -175,12 +182,11 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-focus-run', label: 'Materials focus run', hint: 'SSL-840: a Mineral Vault focus (15 aluminium, 8 copper) with 6 aluminium already stored, mining at Itokawa in a 6-unit hull. Return with whatever the hold carries; the next trip asks only for what is still missing', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run on Eros at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run near Earth at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-launch-review', label: 'Launch review (single rocket)', hint: 'Single-rocket launch review reached from the solar map: place, work, cargo, rocket, Launch. Starter Base, Free Ops', stage: 'free-ops' },
-      { key: 'ui-solar-map', label: 'Solar map', hint: 'Map-first entry: pick a body, see its agency and client missions. Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
@@ -190,12 +196,19 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-leonids-events', label: 'Leonids: events board', hint: 'SSL-831: Leonids live (open with &at=2026-11-17T12:00:00Z for the peak). The Leonids card names mission 1, the shower run, and starts it', stage: 'free-ops' },
       { key: 'ui-leonids-shower-debrief', label: 'Leonids run: debrief', hint: 'SSL-831: filled Leonids run back home: the Leonid fragment sample and LEO-1 is up', stage: 'free-ops' },
       { key: 'ui-leonids-events-leo1', label: 'Leonids: LEO-1 step', hint: 'SSL-831: Leonids run done, 1 of 3 LEO-1 recordings checked. The card opens LEO-1', stage: 'free-ops' },
+      { key: 'ui-radio-receipt-pending', label: 'Event pending receipt', hint: 'Locally saved event work awaiting research confirmation', stage: 'free-ops' },
+      { key: 'ui-radio-receipt', label: 'Event contribution receipt', hint: 'Saved LEO-1 result, confirmed research and preserved fragment ledger', stage: 'free-ops' },
       { key: 'ui-radio-meteors-leo1', label: 'Meteor radio: LEO-1 last check', hint: 'SSL-831: Leonids mission 2 on LEO-1 with 2 of 3 recordings checked since the run (and older ORI-1 checks that do not count). The next send grades the badge', stage: 'free-ops' },
       { key: 'ui-community-research-leonids-leo1', label: 'Community research: Leonids LEO-1', hint: 'SSL-831: Explorer path in the Leonids week, run done, 1 of 3 LEO-1 recordings: the event step names LEO-1 and the history shows the fragment sample', stage: 'free-ops' },
       { key: 'ui-probe-launch', label: 'Survey probe: launch', hint: 'SSL-773: control station built, Free Ops. The Program tab offers survey probes to the two nearest bodies without one', stage: 'free-ops' },
-      { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it stays there and maps the surface on its own', stage: 'free-ops' },
+      { key: 'ui-probe-debrief', label: 'Survey probe: debrief', hint: 'SSL-773: probe released into orbit at Eros; it waits for SCAN at the Data hub', stage: 'free-ops' },
       { key: 'ui-probe-watch', label: 'Field probe: watch the shower', hint: 'SSL-772: stationary lunar camera at the Leonids peak; confirm impacts. Observations survive reload in an isolated fixture save.', stage: 'free-ops' },
-      { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-773: the basic scan is automatic. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-probe-mars', label: 'Mars probe readings', hint: 'Survey deposits on Mars', stage: 'free-ops' },
+      { key: 'ui-probe-europa', label: 'Europa probe readings', hint: 'Survey deposits on Europa', stage: 'free-ops' },
+      { key: 'ui-probe-receipt', label: 'Probe confirmed receipt', hint: 'Server-confirmed research after a probe download', stage: 'free-ops' },
+      { key: 'ui-probe-scan', label: 'Survey probe: readings', hint: 'SSL-832: SCAN starts timed mapping. Eros has 13 of 24 sectors mapped (4 new since the last visit); Vesta has just arrived', stage: 'free-ops' },
+      { key: 'ui-probe-subsurface', label: 'Survey probe: subsurface', hint: 'Shallow and deep timed passes open in order after download', stage: 'free-ops' },
+      { key: 'ui-probe-science', label: 'Survey probe: citizen science', hint: 'Level 4 spectrum marking and logged readings', stage: 'free-ops' },
       { key: 'ui-second-ground-telescope', label: 'Control Station: second ground telescope', hint: 'SSL-802: one ground telescope standing on the West annex and ₣6M in hand: Add a telescope buys the second one (₣2M) into the Unplaced tray', stage: 'free-ops' },
       { key: 'ui-probe-hub', label: 'Survey probe: data hub', hint: 'SSL-773: the data hub with the space telescope, the Saturn satellite and a survey probe at Eros with new sectors mapped', stage: 'free-ops' },
       { key: 'ui-community-research-site', label: 'Community research: Community Site', hint: 'SSL-758: a late joiner. The Community Spaceport is at Frame, this player has a small share, and last month\'s Observatory is archived. Open Rewards', stage: 'free-ops' },
@@ -306,13 +319,13 @@ function instrumentHubFixture(researchStamps?: Player['researchStamps']): Partia
 }
 
 /** SSL-773: a probe at Eros for 26 hours (13 sectors mapped, 9 downloaded before, so 4 are new) and one just arrived at Vesta. */
-function probeFixture(): NonNullable<Player['probes']> {
-  const eros = TARGETS.find(target => target.id === 'eros')!
+function probeFixture(targetId = 'eros'): NonNullable<Player['probes']> {
+  const body = TARGETS.find(target => target.id === targetId)!
   const launchedAt = Date.now() - 26 * 3_600_000
-  const readings = Object.fromEntries(sectorIds().slice(0, 9).map(id => [id, { at: launchedAt + 20 * 3_600_000, marked: [], deposits: sectorDeposits(eros, id) }]))
+  const readings = Object.fromEntries(sectorIds().slice(0, 9).map(id => [id, { at: launchedAt + 20 * 3_600_000, marked: [], deposits: sectorDeposits(body, id) }]))
   return {
-    eros: { launchedAt, readings },
-    vesta: { launchedAt: Date.now() - 600_000, readings: {} },
+    [targetId]: { launchedAt, readings },
+    ...(targetId === 'eros' ? { vesta: { launchedAt: Date.now() - 600_000, scanStartedAt: null, readings: {} } } : {}),
   }
 }
 
@@ -582,6 +595,24 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
+    case 'solar-site-delivery': {
+      const plan: MissionPlan = { id: 'self-plan-fixture-solar', work: 'deliver', targetId: 'mercury', mineral: 'iron', amount: 3, createdAt: 100, zone: 'east' }
+      const target = TARGETS.find(body => body.id === plan.targetId)!
+      const mission = missionFromPlan(plan, target, MINERAL_META)
+      return {
+        screen: 'landing', tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: plan.id, targetId: target.id, deliveryTargetId: target.id,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: { iron: 3 }, popup: null,
+        player: { ...POST_ONBOARDING_PLAYER, missionPlans: { [plan.id]: plan }, activeMission: { id: plan.id, label: mission.title, mission, target }, missionRunId: 'solar-site-fixture', missionPhase: 'landing', headingToDelivery: true, landingStartedAt: Date.now() },
+      }
+    }
+
+    case 'transport-delivery-timed': {
+      const delivery = fixture('transport-delivery')!
+      return { ...delivery, tutorial: false, player: { ...POST_ONBOARDING_PLAYER, activeMission: delivery.player!.activeMission, deliveryUnloadStartedAt: Date.now() } }
+    }
+
     case 'transport-delivery':
       return {
         screen: 'delivery',
@@ -808,6 +839,12 @@ function fixture(name: string): Partial<GameState> | null {
         popup: null,
       }
 
+    case 'ui-tess-receipt': {
+      const base = fixture('ui-tess-discovery')!
+      const at = Date.now(), day = new Date(at).toISOString().slice(0, 10)
+      return { ...base, player: { ...base.player!, researchFragments: 17, tessClassifications: { [VISUAL_TESS_CANDIDATE.id]: { subjectId: VISUAL_TESS_CANDIDATE.id, verdict: 'not_planet', ranges: [], submittedAt: at } }, researchStamps: { [day]: ['classification'] } } }
+    }
+
     case 'ui-tess-discovery':
       return {
         screen: 'tess-discovery',
@@ -899,10 +936,24 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-probe-watch':
       return { screen: 'probe-watch', player: { ...POST_ONBOARDING_PLAYER }, tutorial: false, targetId: null, missionId: null, popup: null }
 
+    case 'ui-probe-subsurface':
+    case 'ui-probe-science': {
+      const base = fixture('ui-probe-scan')!
+      const at = Date.now() - 48 * 3_600_000
+      const target = TARGETS.find(t => t.id === 'eros')!
+      const readings = Object.fromEntries(sectorIds().slice(0, 2).map(id => [id, { at, marked: [], deposits: sectorDeposits(target, id) }]))
+      return { ...base, player: { ...base.player!, probes: { eros: { launchedAt: at, goalSectors: 2, readings, ...(name === 'ui-probe-science' ? { subsurface: { 2: { startedAt: at, readings }, 3: { startedAt: at, readings } } } : {}) } } } }
+    }
+
+    case 'ui-probe-receipt':
+      return fixture('ui-probe-scan')
+
+    case 'ui-probe-mars':
+    case 'ui-probe-europa':
     case 'ui-probe-scan':
       return {
         screen: 'probe-scan',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 }, probes: probeFixture() },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'control-station'], placementPlots: { launchpad: 0, 'control-station': 1 }, probes: probeFixture(name === 'ui-probe-scan' ? 'eros' : name.slice(9)) },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,
@@ -934,7 +985,7 @@ function fixture(name: string): Partial<GameState> | null {
           placementPlots: { launchpad: 0, 'control-station': 1 },
           activeMission: { id: 'probe-launch-eros', label: 'Survey probe to Eros' },
           missionPhase: 'debrief',
-          probes: { eros: { launchedAt: Date.now(), readings: {} } },
+          probes: { eros: { launchedAt: Date.now(), scanStartedAt: null, readings: {} } },
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,
@@ -1057,7 +1108,7 @@ function fixture(name: string): Partial<GameState> | null {
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: runId,
-        targetId: 'eros',
+        targetId: showerRunMission('leonids-2026').targetId,
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
@@ -1148,6 +1199,17 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'ui-radio-receipt-pending':
+      return fixture('ui-radio-receipt')
+
+    case 'ui-radio-receipt': {
+      const base = fixture('ui-radio-meteors-leo1')!
+      const at = Date.now(), day = new Date(at).toISOString().slice(0, 10)
+      const result = { subjectId: 'receipt-radio-883', eventId: 'leonids-2026', workflowId: '33017', imageUrl: '', filename: 'Saved LEO-1 recording', imageWidth: 949, imageHeight: 543, boxes: [], submittedAt: at }
+      const p: Player = { ...base.player!, radioMeteorClassifications: { ...base.player!.radioMeteorClassifications, [result.subjectId]: result }, researchStamps: { [day]: ['classification', 'event'] } }
+      return { ...base, player: completeChainRadio(p, getShowerChain('leonids-2026')!, at).player }
+    }
+
     case 'ui-radio-meteors-leo1': {
       const runAt = Date.now() - 3_600_000
       return {
@@ -1222,19 +1284,6 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'market',
         player: { ...POST_ONBOARDING_PLAYER, placed: [...POST_ONBOARDING_PLAYER.placed, 'market', 'surface-silo'], stash: { iron: 20, nickel: 10, silicates: 5 }, },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-solar-map':
-      return {
-        screen: 'solar-map',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo', 'transit-telescope'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4, 'transit-telescope': 5 } },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

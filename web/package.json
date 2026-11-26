@@ -11,6 +11,7 @@
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
+    "sync:solar": "bash scripts/sync-takeon-go-wasm.sh",
     "authoring:compile": "node ../scripts/authoring.mjs compile",
     "authoring:check": "node ../scripts/authoring.mjs check",
     "studio": "node ../scripts/studio.mjs",
@@ -30,14 +31,12 @@
     "test:file": "vitest run",
     "test:related": "vitest related --run",
     "test:cypress:ssl-695": "cypress run --spec cypress/e2e/ssl-695-marketplace.cy.ts",
-    "test:cypress:orionids": "CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://localhost:4320} cypress run --spec cypress/e2e/orionids-chain.cy.ts",
-    "dev:minimal": "vite --config ../minimal/vite.config.ts",
-    "build:minimal": "npm --prefix ../minimal ci --no-audit --no-fund && vite build --config ../minimal/vite.config.ts",
-    "typecheck:minimal": "tsc --noEmit -p ../minimal/tsconfig.json"
+    "test:cypress:orionids": "CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://localhost:4320} cypress run --spec cypress/e2e/orionids-chain.cy.ts"
   },
   "dependencies": {
     "@clerk/react": "6.17.8",
-    "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.5.tgz",
+    "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.7.tgz",
+    "@takeon/flight-engine": "file:vendor/takeon/takeon-engine-0.2.5.tgz",
     "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.5.tgz",
     "lucide-react": "^1.17.0",
     "next": "16.2.12",

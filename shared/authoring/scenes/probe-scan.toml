@@ -4,13 +4,13 @@ format = 1
 id = "probe-scan"
 type = "exchange-lab"
 name = "Survey probe"
-summary = "The basic scan is automatic: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
-tickets = ["SSL-773", "SSL-878"]
-qa = ["probe-scan"]
+summary = "Level 1 starts with a manual SCAN command: a probe in orbit maps one sector of the body every 2 hours on its own. The console shows the probe at work, Tiny Space Program style: it circles the body, scan flashes go off and a progress bar counts the sectors. After SCAN starts the timer, opening it plays back the sectors mapped since the last visit (the download, a probe observation), then the readout lists every deposit with its tonnes and offers a free targeted run there, the client contracts the finds opened, or the hub."
+tickets = ["SSL-773", "SSL-878", "SSL-832", "SSL-883"]
+qa = ["probe-scan", "probe-subsurface", "probe-science", "probe-receipt"]
 
 [runtime]
 surface = "dom"
-web = ["web/components/game/screens/ProbeScanScreen.tsx"]
+web = ["web/components/game/screens/ProbeScanScreen.tsx", "web/components/game/screens/ProbeSpectrumConsole.tsx"]
 native = []
 
 [preview]
@@ -29,4 +29,4 @@ id = "probe-readout"
 kind = "panel"
 layout = "host"
 mechanics = ["instruments", "community-research", "mission-planning"]
-note = "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early."
+note = "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early. Level 1 starts surface mapping, level 2 a shallow subsurface pass, level 3 a deep subsurface pass; each is manually started and opens after the previous pass is downloaded. Level 4 opens a separate citizen science instrument: pick a downloaded sector, mark its spectrum dips, log the reading, then continue to an unread sector. Map and spectrum never share a page. Passes preserve the original reserve estimates. The map stays visible during download playback, with live time and an immediate scan flash when SCAN starts. Deployment offers a direct scanner handoff, selecting the newest probe. After a download, the player can open the existing readout, which shows the saved sector amount, server-confirmed or pending daily research stamp, passport progress, and eligible targeted run or contracts; Return to Base exits directly. The server receipt reads only the authenticated player save, never a local queued stamp."

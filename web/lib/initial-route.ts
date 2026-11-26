@@ -6,7 +6,7 @@ const VALID_SCREENS = new Set<Screen>([
   'flight', 'mining', 'delivery', 'debrief', 'refinery', 'market',
   'hangar', 'rocket-buy',
   'launchpad',
-  'mission-history', 'solar-map',
+  'mission-history',
 ])
 
 const RESUMABLE_MISSION_SCREENS = new Set<Screen>([

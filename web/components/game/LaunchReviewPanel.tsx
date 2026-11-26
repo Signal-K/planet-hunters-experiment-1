@@ -1,10 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOrionidsEventMission, isOwnProgramMission, rocketConfigForModel, validateBuild } from '@/lib/data'
-import { buildingLevel } from '@/lib/data/building-levels'
-import { rocketCompatibleWithMission, rocketUnlocked } from '@/lib/rockets'
+import { ROCKET_MODELS, isOwnProgramMission } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import styles from './LaunchReviewPanel.module.css'
 
@@ -23,16 +20,6 @@ export default function LaunchReviewPanel({ game, blockedReason, launched, prima
   primaryDisabled?: boolean
 }) {
   const { mission, target, player } = game
-  const staged = useRef(false)
-  // The agency's rocket is the smallest one it owns that can do this job. Stage it so the pad shows it.
-  useEffect(() => {
-    if (staged.current || !mission || !target || player.stagedRockets?.length || isOrionidsEventMission(mission)) return
-    const fit = ROCKET_MODELS.find(model => !model.locked && rocketUnlocked(model, player) && rocketCompatibleWithMission(model, mission)
-      && validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: game.catalog.parts, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)
-    if (!fit) return
-    staged.current = true
-    game.onPurchaseRocket(fit.id)
-  }, [mission, target, player, game])
   if (!mission || !target) return null
 
   const vehicle = player.stagedRockets?.find(v => v.id === player.selectedStagedRocketId)

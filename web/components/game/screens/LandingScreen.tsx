@@ -1,8 +1,11 @@
 'use client'
 
+import SceneFrame from '@/components/layout/frame/SceneFrame'
+
 import { useEffect, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import type { Target } from '@/lib/data'
+import type { MissionZone } from '@/lib/data/mission-zone'
 import {
   LANDING_ASCEND_DURATION_MS,
   LANDING_DESCEND_DURATION_MS,
@@ -18,6 +21,7 @@ import styles from './LandingScreen.module.css'
 
 interface LandingScreenProps {
   target: Target
+  zone?: MissionZone
   mode: LandingSequenceMode
   startedAt?: number
   onBack: () => void
@@ -50,7 +54,7 @@ const COPY: Record<LandingSequenceMode, {
   },
 }
 
-export default function LandingScreen({ target, mode, startedAt, onBack, onContinue }: LandingScreenProps) {
+export default function LandingScreen({ target, zone, mode, startedAt, onBack, onContinue }: LandingScreenProps) {
   // A saved run can reopen this screen with no descent clock (Belt Courier
   // stalled at 0% and a frozen 00:08). That run is already due: land it.
   const help = useHelp('landing')
@@ -90,25 +94,32 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
     landed.current = true
     // Dim to black first so the next scene is not a hard cut from the ground.
     setLeaving(true)
-    window.setTimeout(() => onContinueRef.current(), 1500)
+    const timer = window.setTimeout(() => onContinueRef.current(), 1500)
+    return () => {
+      window.clearTimeout(timer)
+      landed.current = false
+    }
   }, [ready])
 
   return (
     <div className={`game-screen ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
-      <LandingScene target={target} progress={progress} mode={mode} />
-      <SceneVignette />
-      <div aria-hidden="true" data-testid="landing-fade" style={{ position: 'absolute', inset: 0, background: '#02040b', opacity: leaving || !arrived ? 1 : 0, transition: `opacity ${leaving ? 1400 : 700}ms ease`, pointerEvents: 'none', zIndex: 5 }} />
-
-      <SceneTop onBack={onBack}>
+      <SceneFrame
+        surface="orbit"
+        header={<SceneTop onBack={onBack}>
         <ScenePill>{copy.eyebrow}</ScenePill>
         <ScenePill align="end" tone="white"><i style={{ fontStyle: 'normal', color: '#9fd6e4' }}>TARGET</i> {target.name}</ScenePill>
         <span style={{ display: 'inline-flex' }}>{help.button}</span>
-      </SceneTop>
-      {help.layer}
-
-      <SceneCard solo label="Landing sequence status">
+      </SceneTop>}
+        status={<SceneCard solo label="Landing sequence status">
         <SceneMeter kicker={ready ? copy.ready : stage} value={ready ? 'READY' : formatCountdown(remainingMs)} pct={progressPct} caption={copy.progressLabel} captionValue={`${progressPct}%`} testId="landing-progress" />
-      </SceneCard>
+      </SceneCard>}
+        overlay={help.layer}
+      >
+      <LandingScene target={target} zone={zone} progress={progress} mode={mode} />
+      <SceneVignette />
+      <div aria-hidden="true" data-testid="landing-fade" style={{ position: 'absolute', inset: 0, background: '#02040b', opacity: leaving || !arrived ? 1 : 0, transition: `opacity ${leaving ? 1400 : 700}ms ease`, pointerEvents: 'none', zIndex: 5 }} />
+
+      </SceneFrame>
     </div>
   )
 }

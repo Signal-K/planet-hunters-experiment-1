@@ -39,7 +39,7 @@
   border: 2px solid var(--ln-bp-ink, #0f2436);
   border-radius: 999px;
   background: var(--ln-bp-paper, #fff);
-  box-shadow: 3px 3px 0 var(--ln-bp-line-strong, rgba(15, 36, 54, 0.3));
+  box-shadow: none;
   color: var(--ln-bp-ink, #0f2436);
   font: 800 14px/1.15 var(--ln-font-display);
   letter-spacing: 0.08em;

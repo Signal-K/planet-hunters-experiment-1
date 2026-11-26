@@ -6,7 +6,7 @@ describe('MissionHistoryScreen', () => {
   it('shows completed operations in reverse completion order', () => {
     const markup = renderToStaticMarkup(
       <MissionHistoryScreen
-        onBack={() => {}}
+        onNewMission={() => {}} onBack={() => {}}
         records={[
           { id: 'old', title: 'Old Survey', targetName: 'Mars', completedAt: 100, runId: 'run-old' },
           { id: 'new', title: 'New Survey', clientName: 'Meridian', targetName: 'Luna', completedAt: 200, runId: 'run-new' },
@@ -22,16 +22,18 @@ describe('MissionHistoryScreen', () => {
   })
 
   it('explains how to start when the log is empty', () => {
-    const markup = renderToStaticMarkup(<MissionHistoryScreen onBack={() => {}} records={[]} />)
+    const markup = renderToStaticMarkup(<MissionHistoryScreen onNewMission={() => {}} onBack={() => {}} records={[]} />)
     expect(markup).toContain('No completed missions yet')
     expect(markup).toContain('Archive status')
+    expect(markup).toContain('agency-new-mission')
+    expect(markup).toContain('Agency Hub')
     expect(markup).not.toContain('emptySlots')
   })
 
   it('explains legacy completions instead of contradicting the lifetime count', () => {
     const markup = renderToStaticMarkup(
       <MissionHistoryScreen
-        onBack={() => {}}
+        onNewMission={() => {}} onBack={() => {}}
         records={[]}
         player={{ missionsDone: 1 } as never}
       />,
@@ -44,7 +46,7 @@ describe('MissionHistoryScreen', () => {
   it('lists a classified transit alongside missions', () => {
     const markup = renderToStaticMarkup(
       <MissionHistoryScreen
-        onBack={() => {}}
+        onNewMission={() => {}} onBack={() => {}}
         records={[{ id: 'm', title: 'Iron Run', clientName: 'Meridian', completedAt: 100, runId: 'run-m' }]}
         player={{
           missionsDone: 1,
@@ -62,7 +64,7 @@ describe('MissionHistoryScreen', () => {
   it('does not count a transit as a completed mission', () => {
     const markup = renderToStaticMarkup(
       <MissionHistoryScreen
-        onBack={() => {}}
+        onNewMission={() => {}} onBack={() => {}}
         records={[]}
         player={{
           missionsDone: 0,

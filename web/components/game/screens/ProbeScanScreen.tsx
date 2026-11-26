@@ -1,5 +1,9 @@
 'use client'
 
+import ProbeSpectrumConsole from './ProbeSpectrumConsole'
+import { useContributionReadout } from '@/lib/research/useContributionReadout'
+import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { MINERAL_META, type Target } from '@/lib/data'
@@ -7,6 +11,9 @@ import type { Player } from '@/lib/game-types'
 import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import {
   probeSectorGoal,
+  probePass,
+  probeScanLevel,
+  PROBE_SCAN_LABELS,
   PROBE_COLS,
   PROBE_ROWS,
   sectorMsOf,
@@ -26,6 +33,8 @@ interface ProbeScanScreenProps {
   onBack: () => void
   /** Download the sectors the probes mapped since the last visit (a probe observation). */
   onCollect: () => void
+  onStartScan: (targetId: string, level: 1 | 2 | 3) => void
+  onLogSpectrum: (targetId: string, sector: string, wavelengths: number[]) => void
   /** Leave for the hub from the readout. */
   onHub: () => void
   /** Open the Free run tab on this body with its targeted run picked. */
@@ -50,7 +59,7 @@ const inTime = (ms: number) => {
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** Seconds between sectors while the console plays back what the probe mapped since the last visit. */
-const PLAYBACK_MS = 650
+const PLAYBACK_MS = 2200
 
 // The orbit stage, in SVG units: the body in the middle, a tilted orbit around it.
 const W = 380
@@ -99,49 +108,65 @@ function Satellite() {
  * and a progress bar counts the sectors. Opening it plays back the sectors mapped since the last visit, then the
  * readout says what was found and offers a free targeted run there and the client contracts the finds opened.
  */
-export default function ProbeScanScreen({ player, targets, onBack, onCollect, onHub, onPlanRun, onPlanMineral, onViewContracts }: ProbeScanScreenProps) {
-  const [now] = useState(() => Date.now())
+export default function ProbeScanScreen({ player, targets, onBack, onCollect, onStartScan, onLogSpectrum, onHub, onPlanRun, onPlanMineral, onViewContracts }: ProbeScanScreenProps) {
+  const [page, setPage] = useState<'map' | 'readout' | 'spectrum' | 'contribution'>('map')
+  const [mineralPage, setMineralPage] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
   const bodies = useMemo(
-    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target),
+    () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target).sort((a, b) => (player.probes?.[b.id]?.launchedAt ?? 0) - (player.probes?.[a.id]?.launchedAt ?? 0)),
     [player.probes, player.agencyCommunity, targets],
   )
   const [bodyId, setBodyId] = useState<string | null>(bodies[0]?.id ?? null)
   const body = bodies.find(target => target.id === bodyId) ?? bodies[0] ?? null
-  const record = body ? player.probes?.[body.id] : undefined
+  const sourceRecord = body ? player.probes?.[body.id] : undefined
+  const [scanLevel, setScanLevel] = useState<1 | 2 | 3>(1)
+  const unlocked = probeScanLevel(sourceRecord)
+  const record = probePass(sourceRecord, scanLevel)
+  const visitKey = `${body?.id}:${scanLevel}`
+  const waiting = record?.scanStartedAt === null
   // Sectors new since the last visit, per body, remembered for this visit so the playback survives the download.
-  const [fresh] = useState(() => Object.fromEntries(Object.entries(player.probes ?? {}).map(([id, rec]) => [id, newSectors(rec, now)])))
+  const [downloadedOnEntry] = useState(() => Object.fromEntries(Object.entries(player.probes ?? {}).map(([id, rec]) => [id, Object.fromEntries(([1, 2, 3] as const).map(level => [level, Object.keys(probePass(rec, level)?.readings ?? {}).filter(id => scanOrder().includes(id)).length]))])))
   const mapped = sectorsMapped(record, now)
-  const freshHere = body ? fresh[body.id] ?? [] : []
-  const before = mapped.length - freshHere.length
+  const before = Math.min(mapped.length, body ? downloadedOnEntry[body.id]?.[scanLevel] ?? 0 : 0)
+  const freshHere = mapped.slice(before)
   const [played, setPlayed] = useState<Record<string, number>>({})
-  const shown = body ? Math.max(before, Math.min(mapped.length, played[body.id] ?? before)) : 0
+  const shown = body ? Math.max(before, Math.min(mapped.length, played[visitKey] ?? before)) : 0
   const playing = shown < mapped.length
   const next = nextSector(record, now)
 
-  useEffect(() => { if (Object.values(fresh).some(list => list.length)) onCollect() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (newSectors(record, now).length) onCollect()
+  }, [body?.id, scanLevel, mapped.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Play the new sectors back one at a time, a scan flash on each.
   const [flash, setFlash] = useState<{ key: number; x: number; y: number; sector: string | null } | null>(null)
   const satPos = useRef(orbitPoint(0))
   useEffect(() => {
     if (!body || !playing) return
-    if (reducedMotion()) { setPlayed(p => ({ ...p, [body.id]: mapped.length })); return }
+    if (reducedMotion()) { setPlayed(p => ({ ...p, [visitKey]: mapped.length })); return }
     const timer = window.setTimeout(() => {
       const sector = scanOrder()[shown]
       const box = cellBox(sector)
       setFlash({ key: Date.now(), x: box.x + box.w / 2, y: box.y + box.h / 2, sector })
-      setPlayed(p => ({ ...p, [body.id]: shown + 1 }))
+      setPlayed(p => ({ ...p, [visitKey]: shown + 1 }))
     }, shown === before ? 900 : PLAYBACK_MS)
     return () => window.clearTimeout(timer)
-  }, [body?.id, playing, shown, before, mapped.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [body?.id, scanLevel, playing, shown, before, mapped.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Between playbacks, an occasional flash where the probe is scanning now.
   useEffect(() => {
     if (!body || playing || !next || reducedMotion()) return
-    const timer = window.setInterval(() => {
+    const pulse = () => {
       const box = cellBox(next.sector)
       setFlash({ key: Date.now(), x: box.x + box.w * (0.25 + Math.random() * 0.5), y: box.y + box.h * (0.25 + Math.random() * 0.5), sector: null })
-    }, 2600)
+    }
+    pulse()
+    const timer = window.setInterval(pulse, 2600)
     return () => window.clearInterval(timer)
   }, [body?.id, playing, next?.sector]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -168,7 +193,7 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   }, [!!body]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sharedSectors = (body ? player.agencyCommunity?.surveys[body.id] ?? [] : []).filter(id => scanOrder().includes(id))
-  const shownSectors = [...new Set([...scanOrder().slice(0, shown), ...sharedSectors])]
+  const shownSectors = [...new Set([...scanOrder().slice(0, shown), ...(scanLevel === 1 ? sharedSectors : [])])]
   const shownSet = new Set(shownSectors)
   const scanningId = playing ? scanOrder()[shown] : next?.sector ?? null
   const freshSet = new Set(freshHere)
@@ -182,35 +207,47 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const total = probeSectorGoal(record)
   const [tone, shade] = body ? BODY_TONES[body.id] ?? ASTEROID_TONE : ASTEROID_TONE
 
-  const line = !body ? 'No probe in orbit yet. Launch one from the Program tab and it starts mapping as soon as it arrives.'
+  const latestAt = Math.max(0, ...Object.values(record?.readings ?? {}).map(reading => reading.at))
+  const downloaded = Object.values(record?.readings ?? {}).filter(reading => reading.at === latestAt).length
+  const contribution = useContributionReadout(player, 'probe-observation', latestAt)
+
+  const line = !body ? 'No probe in orbit yet. Launch one from the Program tab, then press SCAN here to start mapping.'
+    : waiting ? `Probe ready at ${body.name}. Press SCAN to start this timed pass. You can leave while it works.`
     : playing ? `Receiving sector ${sectorName(scanOrder()[shown])}…`
     : freshHere.length ? `${freshHere.length} new sector${freshHere.length === 1 ? '' : 's'} mapped since you last looked${newTypes.length ? `: ${newTypes.length} new mineral type${newTypes.length === 1 ? '' : 's'} found` : ''}.`
     : mapped.length === 0 ? `Probe in orbit at ${body.name}. The first sector is mapped in ${next ? inTime(next.at - now) : 'a moment'}.`
     : !next ? `${body.name}: the planned ${total} sectors are mapped. Their deposits are on file.`
     : `Nothing new since you last looked. Sector ${sectorName(next.sector)} is done in ${inTime(next.at - now)}.`
 
+  if (page === 'spectrum' && body && sourceRecord && unlocked === 4) return <ProbeSpectrumConsole player={player} onAgency={onHub} target={body} record={sourceRecord} onBack={() => setPage('map')} onLog={(sector, marks) => onLogSpectrum(body.id, sector, marks)} />
+
   return (
     <div className={board.scene} data-testid="probe-scan-screen" data-screen="probe-scan">
       <section className={board.dispatch} aria-label="Survey probe">
+        <InstrumentFrame header={<>
         <nav className={board.rail} aria-label="Survey probe">
-          <button type="button" className={`${board.round} ${board.railClose}`} data-testid="probe-back" aria-label="Close" onClick={onBack}>
+          <button type="button" className={`${board.round} ${board.railClose}`} data-testid="probe-back" aria-label="Close" onClick={() => page === 'readout' || page === 'contribution' ? setPage('map') : onBack()}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
           </button>
         </nav>
+        </>}>
         <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
-        <article className={styles.workspace}>
+        <article className={styles.workspace} data-page={page}>
           <section className={styles.stage} aria-label="Probe in orbit">
             <header className={styles.head}>
-              <span className={styles.eyebrow}>Survey probe · basic scan</span>
+              <span className={styles.eyebrow}>1 Map · Level {scanLevel} · {PROBE_SCAN_LABELS[scanLevel - 1]}</span>
               <h2 data-testid="probe-body">{body ? body.name : 'No probe yet'}</h2>
             </header>
             {bodies.length > 1 && (
               <div className={styles.bodies} role="tablist" aria-label="Probes">
                 {bodies.map(item => (
-                  <button key={item.id} type="button" role="tab" aria-selected={item.id === body?.id} className={styles.bodyTab} data-testid={`probe-body-${item.id}`} onClick={() => setBodyId(item.id)}>{item.name.replace(/^\d+\s+/, '')}</button>
+                  <button key={item.id} type="button" role="tab" aria-selected={item.id === body?.id} className={styles.bodyTab} data-testid={`probe-body-${item.id}`} onClick={() => { setBodyId(item.id); setScanLevel(1); setMineralPage(0) }}>{item.name.replace(/^\d+\s+/, '')}</button>
                 ))}
               </div>
             )}
+            <div className={styles.levels} aria-label="Scan levels">
+              {([1, 2, 3] as const).map(level => <button type="button" key={level} disabled={level > unlocked} aria-pressed={level === scanLevel} onClick={() => { setScanLevel(level); setMineralPage(0) }}>{level} · {PROBE_SCAN_LABELS[level - 1]}</button>)}
+            </div>
             <div className={styles.view}>
               <svg viewBox={`0 0 ${W} ${H}`} className={styles.orbit} data-testid="probe-map" role="img" aria-label={body ? `${body.name}: ${shown} of ${total} sectors mapped` : 'No probe'}>
                 <defs>
@@ -269,63 +306,72 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
             {body && (
               <div className={styles.progress} data-testid="probe-progress">
                 <div className={styles.progressHead}>
-                  <span><i className={styles.led} data-state={playing ? 'rx' : next ? 'live' : 'done'} aria-hidden="true" />{playing ? 'Downloading' : next ? 'Mapping' : 'Map complete'}</span>
+                  <span><i className={styles.led} data-state={playing ? 'rx' : next ? 'live' : 'done'} aria-hidden="true" />{waiting ? 'Ready to scan' : playing ? 'Downloading' : next ? 'Mapping' : 'Map complete'}</span>
                   <b data-testid="probe-title">{shown} / {total} sectors</b>
                 </div>
                 <div className={styles.bar} role="progressbar" aria-label="Sectors mapped" aria-valuemin={0} aria-valuemax={total} aria-valuenow={shown}>
                   <i style={{ width: `${(shown / total) * 100}%` }} />
                   {next && !playing && <i className={styles.barNext} style={{ left: `${(shown / total) * 100}%`, width: `${(1 / total) * 100}%`, ['--part' as string]: 1 - (next.at - now) / sectorMsOf(record) }} />}
                 </div>
-                <small>{playing ? `Sector ${sectorName(scanOrder()[shown])}` : next ? `Next sector ${sectorName(next.sector)} in ${inTime(next.at - now)}` : 'Planned sectors mapped'}</small>
+                <small>{waiting ? `Level ${scanLevel} · press SCAN to begin` : playing ? `Sector ${sectorName(scanOrder()[shown])}` : next ? `Next sector ${sectorName(next.sector)} in ${inTime(next.at - now)}` : 'Planned sectors mapped'}</small>
               </div>
             )}
+            <div className={styles.actions}>
+              {waiting && body && <button type="button" className={styles.primary} data-testid="probe-start" onClick={() => { setNow(Date.now()); onStartScan(body.id, scanLevel) }}>SCAN</button>}
+              {unlocked === 4 && <button type="button" className={styles.ghost} onClick={() => setPage('spectrum')}>Level 4 · Read spectra</button>}
+              <button type="button" className={styles.ghost} onClick={() => setPage('readout')}>View readout</button>
+            </div>
           </section>
           <section className={styles.desk} aria-label="Scan readout">
             <div className={styles.readout} data-testid="probe-readout" data-phase={playing ? 'playing' : 'done'}>
               <span className={styles.speaker}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2" /></svg>
-                Scan readout
+                {page === 'contribution' ? 'Contribution · Deposit survey' : '2 Readout'}
               </span>
               <p data-testid="probe-line" aria-live="polite">{line}</p>
-              {body && (
+              {page === 'contribution' ? <dl className={styles.receipt} aria-live="polite">
+                <dt>Work saved</dt><dd>{downloaded} sector{downloaded === 1 ? '' : 's'} downloaded</dd>
+                {contribution.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
+              </dl> : body && (
                 <div className={styles.found} data-testid="probe-found-list" aria-label="Deposits found">
                   <span>Deposits · {survey.length} of {body.minerals.length} types</span>
                   {survey.length ? (
                     <ul>
-                      {survey.map(row => (
+                      {survey.slice(mineralPage * 4, mineralPage * 4 + 4).map(row => (
                         <li key={row.mineral} data-testid={`probe-deposit-${row.mineral}`} data-new={newTypes.includes(row.mineral) || undefined}>
                           <i style={{ background: mineralColor(row.mineral) }} />
                           <b>{mineralName(row.mineral)}</b>
                           <small>{tonnes(row.tonnes)}</small>
-                          {!playing && player.freeOperations && <button type="button" className={styles.planMineral} aria-label={`Plan a ${mineralName(row.mineral)} flight`} onClick={() => onPlanMineral(body.id, row.mineral)}>Plan flight</button>}
                         </li>
                       ))}
                     </ul>
                   ) : <p>Nothing yet. Deposits show here as sectors are mapped.</p>}
+                  {survey.length > 4 && <div className={styles.actions}>
+                    <button type="button" className={styles.ghost} disabled={mineralPage === 0} onClick={() => setMineralPage(p => p - 1)}>Previous</button>
+                    <button type="button" className={styles.ghost} disabled={(mineralPage + 1) * 4 >= survey.length} onClick={() => setMineralPage(p => p + 1)}>More deposits</button>
+                  </div>}
                 </div>
               )}
             </div>
             <p className={styles.meta} data-testid="probe-community-survey">{sharedSectors.length}/24 sectors shared by the community. Your probe downloads earn your own observation stamp.</p>
             <div className={styles.actions}>
               {playing ? (
-                <button type="button" className={styles.ghost} data-testid="probe-skip" onClick={() => body && setPlayed(p => ({ ...p, [body.id]: mapped.length }))}>Skip</button>
+                <button type="button" className={styles.ghost} data-testid="probe-skip" onClick={() => body && setPlayed(p => ({ ...p, [visitKey]: mapped.length }))}>Skip</button>
               ) : <>
-                {body && (
-                  <button type="button" className={styles.primary} data-testid="probe-plan-run" disabled={!run} onClick={() => body && run && onPlanRun(body.id, run.id)}>
-                    <span>Targeted run</span><em>Free</em>
-                  </button>
-                )}
-                {body && (
+                {body && contracts.length > 0 && (
                   <button type="button" className={styles.secondary} data-testid="probe-contracts" disabled={!contracts.length} onClick={() => body && onViewContracts(body.id)}>
                     <span>{contracts.length ? `Contracts · ${contracts.length}` : 'No contracts'}</span>
                     {newContracts > 0 && <em>{newContracts} new</em>}
                   </button>
                 )}
-                <button type="button" className={styles.ghost} data-testid="probe-hub" onClick={onHub}>Back to hub</button>
+                <button type="button" className={styles.ghost} onClick={() => setPage(page === 'contribution' ? 'readout' : 'contribution')}>{page === 'contribution' ? 'View deposits' : 'Contribution'}</button>
+                <button type="button" className={styles.ghost} onClick={() => setPage('map')}>Back to map</button>
+                <button type="button" className={styles.ghost} data-testid="probe-hub" onClick={onHub}>Return to Base</button>
               </>}
             </div>
           </section>
         </article>
+        </InstrumentFrame>
       </section>
     </div>
   )

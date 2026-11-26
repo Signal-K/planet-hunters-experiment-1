@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LANDING_RESEARCH_XP_COST } from '@/lib/data'
 import { DEFAULT_STATE } from '@/lib/game-state'
+import { getBuildSequence } from '@/lib/data/shipCustomizer'
 import type { GameState, Player } from '@/lib/game-types'
 import {
   applyLandingTouchdown,
@@ -29,20 +30,27 @@ describe('landingProgress', () => {
     expect(landingProgress(1000, 1000, 8000)).toBe(0)
     expect(landingProgress(1000, 5000, 8000)).toBeCloseTo(0.5)
     expect(landingProgress(1000, 20000, 8000)).toBe(1)
+    expect(landingProgress(0, 4000, 8000)).toBe(0.5)
   })
 })
 
 describe('applyResearchLanding', () => {
-  it('requires missionsDone >= 2 and enough researchXP, then flips the flag and spends XP', () => {
+  it('shows the lander after the mission milestone and preserves early unlocks', () => {
+    expect(getBuildSequence(1, false)).not.toContain('lander')
+    expect(getBuildSequence(2, false)).toContain('lander')
+    expect(getBuildSequence(1, true)).toContain('lander')
+  })
+  it('unlocks after two missions without spending research XP', () => {
     const tooEarly = applyResearchLanding(game({ missionsDone: 1, researchXP: LANDING_RESEARCH_XP_COST }))
     expect(tooEarly.player.landingResearched).toBeFalsy()
 
     const tooPoor = applyResearchLanding(game({ researchXP: LANDING_RESEARCH_XP_COST - 1 }))
-    expect(tooPoor.player.landingResearched).toBeFalsy()
+    expect(tooPoor.player.landingResearched).toBe(true)
+    expect(tooPoor.player.researchXP).toBe(LANDING_RESEARCH_XP_COST - 1)
 
     const researched = applyResearchLanding(game({ researchXP: LANDING_RESEARCH_XP_COST }))
     expect(researched.player.landingResearched).toBe(true)
-    expect(researched.player.researchXP).toBe(0)
+    expect(researched.player.researchXP).toBe(LANDING_RESEARCH_XP_COST)
   })
 
   it('is a no-op once already researched', () => {
@@ -71,6 +79,10 @@ describe('applyLandingTouchdown', () => {
     const noDescent = game({}, { screen: 'landing' })
     expect(applyLandingTouchdown(noDescent)).toBe(noDescent)
   })
+
+  it('accepts a descent clock starting at zero', () => {
+    expect(applyLandingTouchdown(game({ landingStartedAt: 0 }, { screen: 'landing' })).screen).toBe('mining')
+  })
 })
 
 describe('applyRedockComplete', () => {
@@ -89,6 +101,11 @@ describe('applyRedockComplete', () => {
   it('is a no-op without an ascent in progress', () => {
     const state = game({}, { screen: 'landing', missionId: 'm1', targetId: 't1' })
     expect(applyRedockComplete(state, {}, null, null)).toBe(state)
+  })
+
+  it('accepts an ascent clock starting at zero and preserves cargo', () => {
+    const state = game({ landingReturnStartedAt: 0 }, { screen: 'landing', missionId: 'm1', targetId: 't1' })
+    expect(applyRedockComplete(state, { iron: 3 }, null).lastCargo).toEqual({ iron: 3 })
   })
 })
 

@@ -35,8 +35,8 @@ export const TRAINING_TRIES: readonly TrainingTryStep[] = [
   { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
   { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Data hub', radio: 'Your telescope sends its signals to the Data hub. Open it from the hub.', doneOn: 'tess-classified' },
   { id: 'scan-classify', try: 'scan', screen: 'tess-discovery', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
-  { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'The Hangar is where ship modules are fitted.', doneOn: 'part-tweaked' },
-  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Fit a module in each ship stage', radio: 'Open the ship customiser, choose a module for engine, booster, cockpit and payload, then confirm.', doneOn: 'part-tweaked' },
+  { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'Your agency rocket gains capacity and range as you progress.', doneOn: 'part-tweaked' },
+  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Review your agency rocket', radio: 'Check capacity and range, then continue to your mission.', doneOn: 'part-tweaked' },
 ]
 
 /** Screens that belong to a live cargo run. A scan or part try must not paste

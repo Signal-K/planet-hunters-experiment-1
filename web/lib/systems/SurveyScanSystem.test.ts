@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { applyScanFollowUpBonus, followUpProject, scanAsksFollowUp, FOLLOW_UP_BONUS_FRAGMENTS } from './SurveyScanSystem'
+import { applyStartScan, applyResolveScan, scanProgress, SURVEY_SCAN_DURATION_MS, applyScanFollowUpBonus, followUpProject, scanAsksFollowUp, FOLLOW_UP_BONUS_FRAGMENTS } from './SurveyScanSystem'
 
 const state = (player: object) => ({ player } as unknown as GameState)
+
+it('keeps the scan running for two minutes and awards completion only once', () => {
+  const start = 1000
+  const scanning = applyStartScan(state({ freeOperations: true, transitSatelliteLaunchedAt: 1, researchXP: 0 }), 'mercury', start)
+  expect(SURVEY_SCAN_DURATION_MS).toBe(120_000)
+  expect(applyResolveScan(scanning, start + 12_000)).toBe(scanning)
+  expect(scanProgress(scanning.player, start + 60_000)).toBe(0.5)
+  expect(applyResolveScan(scanning, start + 119_999)).toBe(scanning)
+  const done = applyResolveScan(scanning, start + 120_000)
+  expect(done.player.activeScan).toBeNull()
+  expect(done.player.chartedBodies?.mercury).toBeDefined()
+  expect(applyResolveScan(done, start + 240_000)).toBe(done)
+})
 
 describe('scan follow-up', () => {
   it('routes bodies to the instrument that analyses them', () => {

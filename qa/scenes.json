@@ -118,7 +118,9 @@
    "flow": "core-loop",
    "web": "ui-mining-survey",
    "nativeDeferred": "Probe readings are not yet in the native companion model (SSL-773/851 scope); ordinary native mining remains supported.",
-   "tickets": ["SSL-879"]
+   "tickets": [
+    "SSL-879"
+   ]
   },
   {
    "id": "mining-actions",
@@ -170,7 +172,8 @@
    "native": "radio-meteors",
    "tickets": [
     "SSL-714"
-   ]
+   ],
+   "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
   },
   {
    "id": "leonids-shower-mining",
@@ -475,7 +478,7 @@
    "name": "Rocket workshop",
    "flow": "core-loop",
    "web": "ui-rocket-workshop",
-   "nativeDeferred": "iOS comes in cycle 13 \u2014 Liam, SSL-850 comment, 19 Nov 2026",
+   "nativeDeferred": "iOS comes in cycle 13 — Liam, SSL-850 comment, 19 Nov 2026",
    "tickets": [
     "SSL-850"
    ]
@@ -543,6 +546,15 @@
    "web": "transport-mining",
    "native": "transport-mining-live",
    "tickets": []
+  },
+  {
+   "id": "solar-site-delivery",
+   "name": "Solar site delivery",
+   "flow": "core-loop",
+   "web": "solar-site-delivery",
+   "tickets": [
+    "SSL-891"
+   ]
   },
   {
    "id": "transport-delivery",
@@ -715,16 +727,6 @@
    "tickets": []
   },
   {
-   "id": "solar-map",
-   "name": "Solar map",
-   "flow": "core-loop",
-   "web": "ui-solar-map",
-   "native": "",
-   "tickets": [
-    "SSL-892"
-   ]
-  },
-  {
    "id": "missions",
    "name": "Mission Board",
    "flow": "core-loop",
@@ -867,7 +869,8 @@
    "tickets": [
     "SSL-831"
    ],
-   "native": "radio-meteors"
+   "native": "radio-meteors",
+   "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
   },
   {
    "id": "community-research-leonids-leo1",
@@ -905,9 +908,10 @@
    "flow": "instruments",
    "web": "ui-probe-scan",
    "tickets": [
-    "SSL-773"
+    "SSL-773",
+    "SSL-832"
    ],
-   "native": "radio-meteors"
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
   },
   {
    "id": "second-ground-telescope",
@@ -1046,6 +1050,72 @@
     "SSL-848",
     "SSL-861"
    ]
+  },
+  {
+   "id": "probe-subsurface",
+   "name": "Survey probe: shallow and deep subsurface",
+   "flow": "instruments",
+   "web": "ui-probe-subsurface",
+   "tickets": [
+    "SSL-832"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+  },
+  {
+   "id": "probe-science",
+   "name": "Survey probe: level 4 citizen science",
+   "flow": "instruments",
+   "web": "ui-probe-science",
+   "tickets": [
+    "SSL-832"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+  },
+  {
+   "id": "probe-receipt",
+   "name": "Survey probe: confirmed contribution",
+   "flow": "instruments",
+   "web": "ui-probe-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "probe-scan",
+   "nativeDeferred": "Survey probe gameplay remains outside the supported iOS companion scope."
+  },
+  {
+   "id": "tess-receipt",
+   "name": "TESS: contribution receipt",
+   "flow": "instruments",
+   "web": "ui-tess-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "galaxy",
+   "native": "tess-discovery-phone"
+  },
+  {
+   "id": "radio-receipt",
+   "name": "LEO-1: event contribution receipt",
+   "flow": "events",
+   "web": "ui-radio-receipt",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "radio-meteors",
+   "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
+  },
+  {
+   "id": "radio-receipt-pending",
+   "name": "LEO-1: pending event contribution",
+   "flow": "events",
+   "web": "ui-radio-receipt-pending",
+   "tickets": [
+    "SSL-883"
+   ],
+   "aliasOf": "radio-meteors",
+   "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
   }
  ],
  "missions": [

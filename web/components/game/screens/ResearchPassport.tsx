@@ -10,8 +10,10 @@ import styles from './ResearchPassport.module.css'
 const PROJECT_LABEL: Record<string, string> = { 'exoplanet-hunters': 'Transit', 'asteroid-discovery': 'Asteroid', 'saturn-storms': 'Saturn', 'deposit-survey': 'Probe', 'meteor-echoes': 'Meteor' }
 
 /** This week in Community research: seven day stamps, this week's rocket part and the one shared weekly goal. It lives inside the research screen, not on a screen of its own. */
-export default function ResearchPassport({ player, onGo, onReview, onWorkshop, status }: {
+export default function ResearchPassport({ player, onGo, onReview, onWorkshop, status, calendarOnly = false, rewardOnly = false }: {
   player: Player; onGo: (kind: StampKind) => void; onReview?: () => void; onWorkshop: () => void
+  calendarOnly?: boolean
+  rewardOnly?: boolean
   status?: 'loading' | 'live' | 'offline' | 'signed-out'
 }) {
   const now = Date.now()
@@ -31,12 +33,12 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
   const owned = !!confirmed?.earned && !!part && (player.researchRocketParts ?? []).includes(part.id)
   const contributed = mine > 0 || (confirmed?.mine ?? 0) > 0
   const date = (key: string) => new Date(`${key}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-  const rewardLine = owned ? 'Part earned · ready in the workshop'
+  const rewardLine = owned ? 'Part earned · saved to your agency'
     : confirmed?.reachedAt != null ? (pending ? 'Your stamp is waiting to sync. The part unlocks after it is confirmed.' : contributed ? 'Confirming your part…' : current ? 'Goal reached. Add one research stamp this week to earn the part.' : 'Goal reached · you did not contribute this week.')
       : current && pending > 0 && total >= goal ? 'Waiting for synced stamps. The shared goal and reward will be confirmed online.' : current ? 'The community goal unlocks this part for everyone who contributes at least one stamp this week.' : 'The community goal was not reached. This week’s part was not earned.'
   return <div className={styles.week} data-testid="research-passport">
     <main className={styles.book}>
-      <section className={styles.page} aria-label="Weekly passport page">
+      {!rewardOnly && <section className={styles.page} aria-label="Weekly passport page">
         <nav className={styles.paging} aria-label="Passport pages">
           <button aria-label="Previous week" disabled={index < 0 || index >= weeks.length - 1} onClick={() => setSelectedWeek(weeks[index + 1])}>‹</button>
           <div><span>{current ? 'THIS WEEK' : 'PASSPORT ARCHIVE'}</span><h2>{date(week)} – {date(days[6].key)}</h2></div>
@@ -53,22 +55,22 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
         {current && <div className={styles.actions} aria-label="Earn a research stamp">
           <button onClick={() => onGo('classification')}>Classify a signal</button><button onClick={() => onGo('survey')}>Survey a world</button>{onReview && <button onClick={onReview}>Review a finding</button>}
         </div>}
-      </section>
-      <section className={styles.rewardPage} aria-label="Weekly community reward">
+      </section>}
+      {!calendarOnly && <section className={styles.rewardPage} aria-label="Weekly community reward">
         <span className={styles.kicker}>This week&apos;s rocket part</span>
         <div className={styles.partDrawing}>{part && <img src={customizerPartById(part.id)?.img} alt={part.name} />}</div>
         <h2 data-testid="passport-part">{part?.name.split(' · ')[0] ?? 'Research archive'}</h2>
-        <p>One new issue each week. Earn it once, keep it, and fit it for free.</p>
+
         <div className={styles.bar} data-testid="research-community-bar">
           <div><strong>{confirmed?.reachedAt != null ? 'Weekly goal reached' : 'This week · everyone'}</strong><span>{total} / {goal}</span></div>
           <progress value={Math.min(total, goal)} max={goal} aria-label="Weekly community stamps" />
           <small>{confirmed ? `${confirmed.total} confirmed stamps${pending ? ` + ${pending} waiting to sync` : ''}` : status === 'signed-out' ? 'Sign in to see the shared total.' : status === 'offline' ? 'Offline · shared total will refresh when connected.' : 'Waiting for the shared total…'}</small>
         </div>
         <p className={styles.rewardStatus} data-testid="passport-reward-status">{rewardLine}</p>
-        {owned && <button onClick={onWorkshop} data-testid="passport-workshop">Fit in rocket workshop →</button>}
+        {owned && <button onClick={onWorkshop} data-testid="passport-workshop">View agency rocket</button>}
         {status === 'offline' && confirmed && <p>Offline · showing the last confirmed page.</p>}
         <div className={styles.seal}>{owned ? 'PART EARNED' : contributed ? 'CONTRIBUTOR' : 'RESEARCH PASSPORT'}</div>
-      </section>
+      </section>}
     </main>
   </div>
 }

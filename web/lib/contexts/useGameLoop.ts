@@ -1,5 +1,6 @@
 import { recordAgencyLaunch } from '@/lib/agency/fleet'
 import { loadPlannedCargo } from '@/lib/mission-planner'
+import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
 import { MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
@@ -9,7 +10,7 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   BASE_LASER_CHARGES, rocketModelForConfig, travelDurationMs, suggestBuild,
-  feasibleTargetsFor, validateBuild, rocketConfigForModel,
+  validateBuild, rocketConfigForModel,
   isOwnProgramMission,
   isFreeHaulMission,
   isOrionidsEventMission,
@@ -20,7 +21,7 @@ import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyBuyLaserCapacitor, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
-import { pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
+import { agencyRocket, agencyTargets, pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
@@ -28,7 +29,7 @@ import { queueRadioMeteorClassification, type RadioMeteorClassification } from '
 import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
-import { collectProbeData as collectProbeDataFor, placeProbe } from '@/lib/probes/survey-probe'
+import { collectProbeData as collectProbeDataFor, placeProbe, startProbeScan as startProbeScanFor, logProbeSpectrum as logProbeSpectrumFor } from '@/lib/probes/survey-probe'
 import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
 import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
@@ -151,7 +152,7 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   const mission = missionById(s, catalog, s.missionId)
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
-  if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, buildingLevel(s.player, 'launchpad')).some(item => item.id === id)) return s
+  if (!agencyTargets(mission, catalog, s.player).some(item => item.id === id)) return s
   const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts })
   // SSL-450: Change never strands a rocket. A vehicle built for this job's old destination is re-aimed at the new
   // one when it can fly there. Liam, 01.11: rockets now always cost after the tutorial, so a paid vehicle is moved,
@@ -174,23 +175,41 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : setup
 }
 
-/**
- * SSL-450: Accept Contract lands straight on the launch review. The
- * recommended target is chosen for the player, but vehicle selection remains
- * an explicit action. A default config is only a build preview, never a
- * physical rocket on the pad.
- */
+/** A new flight receives the agency's current hull. Paid legacy preparations keep their identity and loadout. */
+function assignAgencyRocket(s: GameState, catalog: Catalog): GameState {
+  if (!['fab', 'rocket-buy'].includes(s.screen) || !s.missionId || !s.targetId || s.player.activeMission) return s
+  const existing = stagedRocketForMission(s, s.missionId, s.targetId)
+  if (existing) {
+    if (s.screen === 'fab' && existing.id === s.player.selectedStagedRocketId) return s
+    return selectStagedRocket({ ...s, screen: 'fab' }, existing)
+  }
+  const mission = missionById(s, catalog, s.missionId)
+  if (!mission) return s
+  const model = agencyRocket(s.player)
+  const rocket = rocketConfigForModel(model)
+  if (mission.payload?.type === 'rover') rocket.drill = 'cargo-module-t1'
+  const vehicle: StagedRocket = {
+    id: JSON.stringify(['agency', s.missionId, s.targetId]), rocketId: model.id, rocket,
+    missionId: s.missionId, targetId: s.targetId, deliveryTargetId: s.deliveryTargetId,
+    location: 'launchpad', source: 'company',
+  }
+  return selectStagedRocket({
+    ...s, screen: 'fab', doneSteps: { ...s.doneSteps, 8: true },
+    player: { ...s.player, stagedRockets: [...(s.player.stagedRockets ?? []), vehicle] },
+  }, vehicle)
+}
+
 function finishQuickSetup(s: GameState, catalog: Catalog): GameState {
   let next = s
   if (next.screen === 'targets' && next.missionId) {
     const mission = missionById(next, catalog, next.missionId)
     if (!mission) return next
-    const feasible = feasibleTargetsFor(mission, catalog.targets, catalog.parts, next.player.missionsDone, next.player.launchpadUpgraded, buildingLevel(next.player, 'launchpad'))
+    const feasible = agencyTargets(mission, catalog, next.player)
     const pick = feasible.find(target => target.recommended) ?? feasible[0]
     if (!pick) return next
     next = pickTargetState(next, catalog, pick.id)
   }
-  return next
+  return assignAgencyRocket(next, catalog)
 }
 
 /** Moves the selected hangar vehicle to the launchpad; null when there is nothing to move. */
@@ -364,12 +383,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       const isOrionidsEntry = !!entryShower
-      if (s.screen !== 'missions' && s.screen !== 'solar-map' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
+      if (s.screen !== 'missions' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission
         ?? null
-      if (!mission) return s
+      if (!mission || catalog.targets.some(target => target.type === 'exoplanet' && target.id === mission.targetId)) return s
       const nextDailyPool = s.player.dailyClientPool
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)
@@ -417,7 +436,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           rocket: stagedVehicle?.rocket ?? next,
           screen: stagedVehicle ? ('fab' as const) : ('rocket-buy' as const),
           doneSteps: { ...prepared.doneSteps, 2: true, 3: true },
-          destinationChosen: !!mission.customPlan || mission.payload?.type === 'satellite',
+          destinationChosen: true,
         }
         return stagedVehicle ? selectStagedRocket(setup, stagedVehicle) : finishQuickSetup(setup, catalog)
       }
@@ -443,6 +462,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // The player chose this body on the map: the launch review can go ahead.
       return next.targetId === id ? { ...next, destinationChosen: true } : next
     })
+  }, [catalog, setState])
+
+  const prepareAgencyRocket = useCallback(() => {
+    setState(s => assignAgencyRocket(s, catalog))
   }, [catalog, setState])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
@@ -573,8 +596,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (!loadPlannedCargo(current, currentMission)) { addToast('This plan no longer has its cargo or survey equipment available. Return to the planner.', 'warn'); return }
     // SSL-750: never fly a vehicle that cannot do this job (one left on the pad from another contract, say).
     const currentTarget = catalog.targets.find(t => t.id === current.targetId)
+    if (currentTarget && !supportsMissionAtTarget(currentMission, currentTarget)) {
+      addToast('This destination only supports orbital missions. Choose another destination for surface work.', 'warn')
+      return
+    }
     if (currentTarget && !stagedRocketSupportsMission(selectedVehicle, current, currentMission, currentTarget, catalog)) {
-      addToast('This rocket cannot do this job. Change the vehicle first.', 'warn')
+      addToast('This flight exceeds your rocket’s capabilities. Review the mission requirements.', 'warn')
       return
     }
     const isFirstEver = current.player.missionsDone === 0
@@ -591,6 +618,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
+      if (!supportsMissionAtTarget(mission, target)) return s
       if (!stagedRocketSupportsMission(vehicle, s, mission, target, catalog)) return s
       if (padNeedsService(s.player)) return s
       const loaded = loadPlannedCargo(s, mission)
@@ -740,7 +768,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           missionPhase: 'landing',
           // A resumed descent whose clock was never saved is already due.
-          landingStartedAt: s.player.landingStartedAt ?? Date.now(),
+          landingStartedAt: Number.isFinite(s.player.landingStartedAt) ? s.player.landingStartedAt : Date.now(),
         },
       })
     })
@@ -1171,6 +1199,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // SSL-773: opening the probe console downloads every sector the probes mapped since the last visit. That is a
   // probe observation: one stamp per day, like every stamp. Synced in game_states; the ledger reports the stamp.
+  const startProbeScan = useCallback((targetId: string, level: 1 | 2 | 3 = 1) => {
+    const at = Date.now()
+    setState(s => ({ ...s, player: startProbeScanFor(s.player, targetId, at, level) }))
+  }, [setState])
+
+  const logProbeSpectrum = useCallback((targetId: string, sector: string, wavelengths: number[]) => {
+    const at = Date.now()
+    const before = stateRef.current.player
+    if (logProbeSpectrumFor(before, targetId, sector, wavelengths, at) === before) return
+    setState(s => ({ ...s, player: logProbeSpectrumFor(s.player, targetId, sector, wavelengths, at) }))
+    // Reuse the instrument classification's daily, idempotent Community Site receipt.
+    stampResearch('classification', 'deposit-survey')
+  }, [setState, stampResearch, stateRef])
+
   const collectProbeData = useCallback(() => {
     const at = Date.now()
     const before = stateRef.current.player
@@ -1444,7 +1486,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         missionBoardScope: EARTH_BASE_SCOPE,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-          screen: debriefExitScreen(exitId, { showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
+          screen: debriefExitScreen(exitId, { probeDeployment: mission?.payload?.instrumentId === 'survey-probe', showerRun: !!completedShower, programOperation: isProgramOperation, hasInstrument: onlineTelescopes(s.player).length > 0 })
             ?? (mission?.payload?.type === 'satellite'
               ? 'instrument-hub'
               : completedShower
@@ -1580,10 +1622,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
+    onPickMission, onPickTarget, prepareAgencyRocket, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
-    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData,
+    submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData, startProbeScan, logProbeSpectrum,
   }
 }

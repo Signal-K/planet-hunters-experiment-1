@@ -26,7 +26,7 @@
   height: 38px;
   pointer-events: none;
   background: #a39d92;
-  box-shadow: inset 0 -3px 0 #706c64;
+  box-shadow: none;
 }
 
 .surfaceCap::before {
@@ -48,7 +48,7 @@
   height: 34px;
   pointer-events: none;
   background: #756b56;
-  box-shadow: inset 0 -3px 0 #59554b;
+  box-shadow: none;
 }
 
 /* Small, low-contrast material variation keeps the soil from becoming a flat
@@ -106,7 +106,7 @@
   border-radius: 48% 52% 42% 58%;
   opacity: .55;
   background: #a58d5e;
-  box-shadow: inset 0 -2px 0 rgb(47 50 48 / 38%);
+  box-shadow: none;
 }
 
 .mineralPockets i:nth-child(1) { top: 47%; left: 18%; transform: rotate(-11deg); }
@@ -170,7 +170,7 @@
   background:
     linear-gradient(#8a7a64 0 68%, #6f6252 68% 80%, #4a3f38 80%),
     #8a7a64;
-  box-shadow: inset 0 -3px 0 #16293b;
+  box-shadow: none;
 }
 
 .stageCavern {
@@ -185,7 +185,7 @@
   background:
     linear-gradient(90deg, rgb(74 63 56 / 88%), rgb(58 56 53 / 92%) 16%, #252b31 48%, rgb(58 56 53 / 92%) 84%, rgb(74 63 56 / 88%)),
     #3a3835;
-  box-shadow: inset 0 0 0 4px rgb(22 41 59 / 24%);
+  box-shadow: none;
 }
 
 .stageRockCells {
@@ -213,7 +213,7 @@
   border: 2px solid #16293b;
   border-radius: 12px;
   background: #c9c4b8;
-  box-shadow: 0 4px 0 rgb(22 41 59 / 32%);
+  box-shadow: none;
 }
 
 .stageConduit i {
@@ -980,7 +980,7 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.28)),
     color-mix(in srgb, var(--ln-void) 82%, transparent);
   overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 .siloFill {
@@ -1000,7 +1000,7 @@
   min-height: 3px;
   background: var(--seg-color);
   border-top: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.14);
+  box-shadow: none;
 }
 
 .siloTick {
@@ -1207,7 +1207,7 @@
 
 .bedrockAction { position: relative; z-index: 1; width: min(360px, calc(100% - 32px)); margin-bottom: 146px; text-align: center; }
 .excavateActions { display: grid; gap: 6px; }
-.bedrockExcavate, .bedrockNeed { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--ln-world-outline); color: var(--ln-world-outline); background: var(--ln-world-hull-lit); box-shadow: 3px 3px 0 rgb(26 40 50 / 28%); cursor: pointer; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.bedrockExcavate, .bedrockNeed { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 9px; border: 2px solid var(--ln-world-outline); color: var(--ln-world-outline); background: var(--ln-world-hull-lit); box-shadow: none; cursor: pointer; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .bedrockExcavate { border-radius: var(--ln-r-md); }
 .bedrockExcavate b { color: var(--ln-world-glass); font: 800 12px/1 var(--ln-font-mono); }
 .bedrockNeed { min-height: 30px; justify-content: space-between; padding: 0 10px; border-color: #665c46; color: #443f34; background: #c4b997; font-size: 11px; }

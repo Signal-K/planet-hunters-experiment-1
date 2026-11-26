@@ -16,17 +16,17 @@
 /* The screen, its time bar and dials sit together in the middle; the screen keeps the recording's aspect in the space the controls leave. */
 .console { --controls: 178px; --pad: 14px; container-type: size; min-height: 0; display: grid; place-items: center; }
 /* The instrument's console window: a title bar, the screen, then the dials on the panel face. */
-.panel { position: relative; box-sizing: border-box; width: min(100cqw, (100cqh - var(--controls)) * 949 / 543 + 2 * var(--pad)); display: grid; gap: 10px; padding: 0 var(--pad) var(--pad); border: 2px solid #0a1022; border-radius: 16px; background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e); box-shadow: 0 0 0 1px rgba(244, 239, 228, .18), 6px 8px 0 rgba(8, 16, 34, .45), inset 0 1px 0 rgba(255, 255, 255, .14); }
+.panel { position: relative; box-sizing: border-box; width: min(100cqw, (100cqh - var(--controls)) * 949 / 543 + 2 * var(--pad)); display: grid; gap: 10px; padding: 0 var(--pad) var(--pad); border: 2px solid #0a1022; border-radius: 16px; background: linear-gradient(180deg, #2a3350, #1a2138 55%, #151b2e); box-shadow: none; }
 .titlebar { box-sizing: border-box; display: flex; align-items: center; gap: 10px; min-width: 0; height: 36px; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); border-bottom: 2px solid #0a1022; border-radius: 14px 14px 0 0; background: linear-gradient(180deg, #353f60, #262e48); color: #c9d0c2; font: 800 12px/1 var(--ln-font-display); letter-spacing: .12em; }
 .titlebar b { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f4efe4; font: 700 13px/1 var(--ln-font-mono); letter-spacing: 0; }
-.screw { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a93a8, #3a4258); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .4); pointer-events: none; }
+.screw { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a93a8, #3a4258); box-shadow: none; pointer-events: none; }
 .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 3.5px; height: 1px; background: rgba(0, 0, 0, .55); transform: rotate(35deg); }
 .screw:nth-of-type(1) { left: 6px; bottom: 6px; }
 .screw:nth-of-type(2) { right: 6px; bottom: 6px; }
 .screw:nth-of-type(3) { left: 6px; top: 50%; }
 .screw:nth-of-type(4) { right: 6px; top: 50%; }
 .well { display: grid; place-items: center; }
-.screen { position: relative; width: 100%; aspect-ratio: 949 / 543; overflow: hidden; border: 3px solid #070b18; border-radius: 8px; background: #0a1640; box-shadow: 0 1px 0 rgba(255, 255, 255, .14), inset 0 0 24px rgba(0, 0, 0, .5); }
+.screen { position: relative; width: 100%; aspect-ratio: 949 / 543; overflow: hidden; border: 3px solid #070b18; border-radius: 8px; background: #0a1640; box-shadow: none; }
 .screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(160deg, rgba(255, 255, 255, .1), transparent 30%), repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, .08) 3px 4px); }
 .strip { position: absolute; }
 .image { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; transition: filter .12s ease; }
@@ -53,13 +53,13 @@
 .knob:focus-visible { box-shadow: 0 0 0 3px #9de7ef; }
 .dial[data-disabled] .knob { cursor: not-allowed; }
 .knob svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: rgba(244, 239, 228, .5); stroke-width: 2; stroke-linecap: round; }
-.cap { position: absolute; inset: 9px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4b5675, #1a2238 62%, #10182c); box-shadow: 0 3px 0 rgba(8, 16, 34, .6), inset 0 1px 0 rgba(255, 255, 255, .22); transition: transform .08s ease-out; }
+.cap { position: absolute; inset: 9px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #4b5675, #1a2238 62%, #10182c); box-shadow: none; transition: transform .08s ease-out; }
 .cap i { position: absolute; left: 50%; top: 4px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: #f2c24c; }
 .dialLabel { color: #f4efe4; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; }
 .dialValue { color: #9de7ef; font: 700 14px/1 var(--ln-font-mono); }
 
 /* Radio desk. */
-.comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.comms { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 18px; background: rgba(8, 16, 34, .3); box-shadow: none; }
 .speaker { display: inline-flex; align-items: center; gap: 8px; color: #ffc9bd; font: 800 14px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .speaker svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .comms p { margin: 0; min-height: calc(3 * 1.35em); font: 600 17px/1.35 var(--ln-font-body); }
@@ -121,4 +121,111 @@
 @media (max-height: 520px) {
   .mission { padding: 6px 10px; gap: 4px 10px; }
   .mission li { min-height: 24px; }
+}
+
+/* Navigation occupies its frame row, so the workspace needs no corner offsets. */
+.readout { margin-left: 0; }
+.desk { padding-top: 16px; overflow-y: auto; }
+
+.imageFailure { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; padding: 20px; color: var(--ln-text); background: var(--ln-panel); text-align: center; font-size: 14px; }
+.imageFailure p { margin: 0; max-width: 40ch; }
+.imageFailure button { min-height: 44px; padding: 10px 18px; border: 1px solid var(--ln-cyan-border); border-radius: 8px; background: var(--ln-panel-2); color: var(--ln-text); cursor: pointer; font: inherit; }
+/* One instrument housing, with a fixed place for the radio desk. */
+.workspace { inset: 10px; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .75fr); gap: 0; overflow: hidden; border: 1px solid #667693; border-radius: 8px; background: #18243a; }
+.receiver { background: transparent; padding: 12px; gap: 6px; }
+.desk { background: #202e45; border-left: 1px solid #52627a; padding: 12px; gap: 10px; justify-content: center; overflow: hidden; }
+.desk > * { max-width: none; }
+.readout { min-height: 38px; }
+.eyebrow { font-size: 14px; }
+.console { --controls: 140px; --pad: 10px; }
+.panel { border-radius: 6px; background: #111c30; gap: 6px; }
+.titlebar { border-radius: 4px 4px 0 0; }
+.screw { display: none; }
+.comms { min-height: 170px; box-sizing: border-box; align-content: start; border-radius: 5px; background: #142238; gap: 8px; }
+.comms p { min-height: 3em; }
+.speaker { color: #a3dce8; }
+.step { color: #a3dce8; }
+.next { border-radius: 4px; }
+.skip { color: #c9dce6; }
+.tally[data-guiding], .actions[data-guiding] { visibility: hidden; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { inset: 6px; display: flex; flex-direction: column; overflow: hidden; }
+  .receiver { flex: 0 1 auto; padding: 8px; }
+  .readout { min-height: 32px; }
+  .readout h2 { font-size: 18px; }
+  .eyebrow { font-size: 14px; white-space: nowrap; }
+  .console { container-type: inline-size; }
+  .panel { width: 100%; }
+  .desk { flex: 1 1 auto; min-height: 0; border: 0; border-top: 1px solid #52627a; padding: 8px; gap: 6px; justify-content: flex-start; overflow: hidden; }
+  .comms { min-height: 148px; padding: 8px 10px; }
+  .comms p { min-height: 2.7em; font-size: 16px; }
+  .speaker svg { width: 18px; height: 18px; }
+  .mission { padding: 6px 8px; }
+  .tally b { font-size: 20px; }
+  .actions { grid-template-columns: 1fr 1fr 1.3fr; gap: 6px; }
+  .actions > :last-child { grid-column: auto; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .workspace { inset: 4px; grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr); }
+  .receiver { padding: 5px 8px; }
+  .readout { min-height: 26px; }
+  .readout h2 { font-size: 16px; }
+  .eyebrow { display: none; }
+  .console { --controls: 105px; }
+  .desk { padding: 6px 10px; gap: 5px; }
+  .comms { min-height: 135px; padding: 7px 10px; }
+  .comms p { font-size: 15px; min-height: 2.7em; }
+  .actions { position: static; background: none; padding: 0; }
+}
+
+/* Brief field cues stay alongside the real recording. */
+.desk { justify-content: center; }
+.comms { height: auto; min-height: 96px; flex: 0 0 auto; align-content: center; }
+.comms p { min-height: 0; }
+.fieldGuide { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 8px 10px; padding: 10px 12px; border: 1px solid #52627a; border-radius: 5px; color: #e5ece8; background: #18283e; font: 600 15px/1.2 var(--ln-font-body); }
+.fieldGuide b { color: #9de7ef; font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .05em; }
+.keyEcho { width: 3px; height: 28px; justify-self: center; border-radius: 50%; background: #e6ea84; box-shadow: 0 0 6px #a8e698; }
+.keyCurve { width: 20px; height: 13px; border-bottom: 3px solid #8dd5a5; border-radius: 0 0 80% 20%; transform: rotate(12deg); }
+@media (orientation: portrait) and (max-width: 700px) {
+  .desk { justify-content: center; gap: 8px; }
+  .comms { height: auto; min-height: 80px; flex-basis: auto; }
+  .fieldGuide { grid-template-columns: 15px 1fr 20px 1fr; gap: 5px; padding: 8px; font-size: 14px; }
+  .fieldGuide b { display: block; }
+  .keyEcho { height: 24px; }
+  .keyCurve { width: 18px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .comms { height: auto; min-height: 74px; flex-basis: auto; }
+  .fieldGuide { grid-template-columns: 15px 1fr 20px 1fr; gap: 5px; padding: 6px; font-size: 14px; }
+  .fieldGuide b { display: block; }
+  .keyEcho { height: 22px; }
+  .keyCurve { width: 18px; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { bottom: auto; height: auto; max-height: calc(100% - 12px); }
+  .desk { flex: 0 0 auto; justify-content: flex-start; }
+}
+@media (orientation: portrait) and (max-width: 700px) and (max-height: 720px) {
+  .receiver { flex: 0 0 auto; }
+  .eyebrow { display: none; }
+  .screen { max-width: 250px; }
+  .comms { min-height: 64px; }
+  .mission ol { display: none; }
+  .desk { gap: 5px; }
+}
+
+/* The completed activity uses the same desk, with its tools on a separate page. */
+.workspace[data-page='result'] { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+.workspace[data-page='result'] .receiver { display: none; }
+.workspace[data-page='result'] .desk { padding: 16px; overflow: hidden; min-height: 0; }
+.result { padding: 16px; border: 1px solid var(--ln-world-glass); border-radius: 16px; background: var(--ln-world-night-mid); }
+.result h2 { margin: 0 0 16px; font: 800 18px var(--ln-font-display); }
+.result dl { display: grid; gap: 8px; margin: 0; font: 600 14px/1.3 var(--ln-font-body); }
+.result dl > div { display: contents; }
+.result dt { color: var(--ln-world-glass); }
+.result dd { margin: 0; }
+.workspace[data-page='result'] .actions { grid-template-columns: 1fr; }
+.workspace[data-page='result'] .actions button { min-height: 44px; font-size: 14px; }
+@media (max-height: 520px) and (min-width: 701px) {
+  .workspace[data-page='result'] .desk { display: grid; grid-template-columns: 1.3fr 1fr; align-content: center; gap: 16px; }
 }

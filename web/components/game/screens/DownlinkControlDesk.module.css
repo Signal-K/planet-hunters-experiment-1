@@ -14,7 +14,7 @@
   border: 1px solid var(--ln-blueprint-line-strong);
   border-radius: 4px 4px 12px 12px;
   background: var(--ln-blueprint-paper-2);
-  box-shadow: inset 0 2px 0 var(--ln-blueprint-paper), 0 16px 24px color-mix(in srgb, var(--ln-purple-depth) 74%, transparent);
+  box-shadow: none;
 }
 
 .upperDeck { min-height: 0; display: grid; grid-template-columns: minmax(168px, 22%) minmax(0, 1fr); gap: 12px; }

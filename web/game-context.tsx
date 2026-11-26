@@ -480,6 +480,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       setLastCargo: loop.setLastCargo,
       onPickMission: loop.onPickMission,
       onPickTarget: loop.onPickTarget,
+      prepareAgencyRocket: loop.prepareAgencyRocket,
       onPurchaseRocket: loop.onPurchaseRocket,
       onMoveStagedRocket: loop.onMoveStagedRocket,
       onFabricateRocketPart: loop.onFabricateRocketPart,
@@ -514,6 +515,8 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       submitSaturnClassification: loop.submitSaturnClassification,
       submitRadioMeteorClassification: loop.submitRadioMeteorClassification,
       collectProbeData: loop.collectProbeData,
+      startProbeScan: loop.startProbeScan,
+      logProbeSpectrum: loop.logProbeSpectrum,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
@@ -543,6 +546,7 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       placeAnnex: economy.placeAnnex,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       abandonMission: economy.abandonMission,
+      reviewAgencyRocket: economy.reviewAgencyRocket,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
     }}>
       {children}

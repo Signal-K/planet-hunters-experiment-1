@@ -170,11 +170,11 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          {!review && <button type="button" className={styles.target} data-testid="rocket-builder-target" data-sync-anchor="" onClick={onChooseMission}>
+          {phase !== 'idle' && !review && <button type="button" className={styles.target} data-testid="rocket-builder-target" data-sync-anchor="" onClick={onChooseMission}>
             <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>}
-          {!guided && !review && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {!guided && !review && (onInstall || onOpenWorkshop) && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
           {hasStagedRocket && onDismantle && !review && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 
@@ -203,11 +203,11 @@ export default function RocketBuilderScene({
               </button>
             )}
             {(phase === 'building' || phase === 'ready') && (
-              <ul className={styles.stats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
+              <details className={styles.stats}><summary>Rocket details</summary><ul className={styles.detailStats} data-testid="rocket-builder-stats" data-capacity={stats.capacity} data-range={stats.range} data-laser={stats.laser}>
                 <li data-stat="capacity"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Capacity</span><strong>{stats.capacity}</strong><i aria-hidden="true" /></li>
                 <li data-stat="range"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Range</span><strong>{stats.range}</strong><i aria-hidden="true" /></li>
                 <li data-stat="laser"><span className={styles.statIcon} aria-hidden="true" /><span className={styles.statCopy}>Laser</span><strong>{stats.laser}</strong><i aria-hidden="true" /></li>
-              </ul>
+              </ul></details>
             )}
             {confirmingDismantle && (
               <div className={styles.dismantleConfirm} role="alert">

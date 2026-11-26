@@ -265,19 +265,17 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
         <p className={styles.note}>{lockedNow ? INSTRUMENTS[lockedNow.instrument].lockedCopy(lockedNow.target) : freeSky ? skyNote : readout ? readout.note : view.blurb}</p>
         {freeSky ? <p className={styles.coord} data-testid="sky-coord">{formatAim(confirmed?.aim ?? aim)}</p> : (readout || lockedNow) && <p className={styles.coord}>{(lockedNow?.target ?? readout)!.coord}</p>}
         {freeSky && <p className={styles.mapline} data-testid="sky-mapped">{mappedLine}</p>}
-        {overview && portrait && overview}
+        {overview && portrait && <details><summary>Sky coverage</summary>{overview}</details>}
       </div>
-      {overview && !portrait && <div className={styles.overviewSlot}>{overview}</div>}
+      {overview && !portrait && <details className={styles.overviewSlot}><summary>Sky coverage</summary>{overview}</details>}
 
       {!confirmed && (
         <>
-          <div className={styles.rail} role="radiogroup" aria-label="Instrument">
-            {ORDER.filter(id => !online || online.includes(id)).map(id => (
-              <button key={id} type="button" role="radio" aria-checked={id === instrument} className={styles.tab} data-active={id === instrument} data-testid={`sky-instrument-${id}`} onClick={() => switchTo(id)}>
-                <Icon id={id} /><span>{INSTRUMENTS[id].short}</span>
-              </button>
-            ))}
-          </div>
+          <label className={styles.rail}>Instrument
+            <select aria-label="Instrument" value={instrument} onChange={event => switchTo(event.target.value as InstrumentPointing)}>
+              {ORDER.filter(id => !online || online.includes(id)).map(id => <option key={id} value={id}>{INSTRUMENTS[id].short}</option>)}
+            </select>
+          </label>
           <div
             className={styles.stick}
             data-testid="sky-stick"
@@ -295,7 +293,7 @@ export default function SkyPointing({ start = 'transit', online, onLock, onAim, 
 
       <SceneActions className={styles.actionSlot}>
         {ready && ready.count > 0 && !confirmed && (
-          <SceneGhost testId="sky-pointing-ready" onClick={ready.onOpen}>{ready.count} DATA READY · CLASSIFY</SceneGhost>
+          <details><summary>{ready.count} observations ready</summary><SceneGhost testId="sky-pointing-ready" onClick={ready.onOpen}>Classify observations</SceneGhost></details>
         )}
         {confirmed ? (
           <ScenePrimary testId="sky-pointing-done" onClick={() => onLock(confirmed.instrument, confirmed.instrument === 'saturn' ? undefined : confirmed.aim, confirmed.instrument === 'saturn' ? confirmed.target.id : undefined)}>SIGNALS INCOMING · CONTINUE</ScenePrimary>

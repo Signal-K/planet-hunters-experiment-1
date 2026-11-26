@@ -5,7 +5,7 @@ import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
 import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
-import { buildingLevel } from '@/lib/data/building-levels'
+import { rocketPadLevel } from '@/lib/data/rockets'
 import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
@@ -14,7 +14,7 @@ import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/l
 import type { PendingConsensusReview } from '@/components/game/screens/CommunityConsensus'
 import { useGame } from '@/game-context'
 import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
-import { rocketCompatibleWithMission, rocketJobRoles } from '@/lib/rockets'
+import { agencyRocket } from '@/lib/rockets'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
@@ -45,9 +45,7 @@ const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoute
 const loadMissionOperationRoutes = () => import('@/components/game/MissionOperationRoutes')
 const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
-const loadHangarScreen = () => import('@/components/game/screens/HangarScreen')
 const loadMissionPlannerScreen = () => import('@/components/game/screens/MissionPlannerScreen')
-const loadRocketWorkshopScreen = () => import('@/components/game/screens/RocketWorkshopScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
 const loadTessDiscoveryScreen = () => import('@/components/game/screens/TessDiscoveryScreen')
@@ -56,7 +54,6 @@ const loadProbeScanScreen = () => import('@/components/game/screens/ProbeScanScr
 const loadSaturnStormSearchScreen = () => import('@/components/game/screens/SaturnStormSearchScreen')
 const loadAsteroidDiscoveryScreen = () => import('@/components/game/screens/AsteroidDiscoveryScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
-const loadSolarMapScreen = () => import('@/components/game/screens/SolarMapScreen')
 const loadCommunityResearchScreen = () => import('@/components/game/screens/CommunityResearchScreen')
 const loadNarrativeLedgerScreen = () => import('@/components/game/screens/NarrativeLedgerScreen')
 
@@ -65,7 +62,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
   loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
-  loadHangarScreen, loadMissionPlannerScreen, loadRocketWorkshopScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
+  loadMissionPlannerScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
   // Nested inside the mission plan's destination sheet (construction and contract runs).
@@ -76,9 +73,7 @@ const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoad
 const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: ScreenLoading })
 const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
-const HangarScreen = dynamic(loadHangarScreen, { loading: ScreenLoading })
 const MissionPlannerScreen = dynamic(loadMissionPlannerScreen, { loading: ScreenLoading })
-const RocketWorkshopScreen = dynamic(loadRocketWorkshopScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
 const TessDiscoveryScreen = dynamic(loadTessDiscoveryScreen, { loading: ScreenLoading })
@@ -88,7 +83,6 @@ const ProbeScanScreen = dynamic(loadProbeScanScreen, { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
-const SolarMapScreen = dynamic(loadSolarMapScreen, { loading: ScreenLoading })
 const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
@@ -448,11 +442,9 @@ function ScreenBody({
           onOpenMarket={() => game.go('market')}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
-          onOpenEvents={() => {
-            // Completing the sky reading should reveal the event brief first.
-            // Accepting the focused event is the explicit step that starts
-            // mission setup and lets the player choose a ship.
-            requestMissionBoardEvent(liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
+          onOpenEvents={eventId => {
+            // Open the named event directly; its primary action starts or continues the mission.
+            requestMissionBoardEvent(eventId ?? liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
             game.goToMissions()
           }}
           onFocusResources={(label, minerals) => {
@@ -479,36 +471,19 @@ function ScreenBody({
         onSell={hasAgencyUnlock(game.player, 'exchange') ? () => game.go('market') : undefined}
       />
 
-    case 'solar-map':
-      return (
-        <PageSurface testId="solar-map-page" ariaLabel="Solar system">
-          <SolarMapScreen
-            catalog={game.catalog}
-            player={game.player}
-            onBase={() => game.go('hub')}
-            onAccept={(missionId, bodyId) => {
-              const mission = game.catalog.missions.find(m => m.id === missionId) ?? game.player.dailyClientPool?.missions.find(m => m.id === missionId)
-              game.onPickMission(missionId)
-              // A fixed-destination mission already knows where it goes; the rest fly to the place that was tapped.
-              if (mission && !mission.targetId) game.onPickTarget(bodyId)
-            }}
-          />
-        </PageSurface>
-      )
-
     case 'mission-history':
       // Mission Log is its own page with its own panel, not a tray over the Base.
       return (
-        <PageSurface testId="mission-history-page" ariaLabel="Mission Log">
           <MissionHistoryScreen
             records={game.player.completedMissions ?? []}
             clients={game.catalog.clients}
             targets={game.catalog.targets}
             missions={game.catalog.missions}
             player={game.player}
+            onNewMission={() => { requestMissionBoardTab('contracts'); game.goToMissions() }}
+            onResumeMission={game.player.activeMission ? () => game.go(missionResumeScreen(game.player)) : undefined}
             onBack={() => game.goBack('hub')}
           />
-        </PageSurface>
       )
 
     case 'instrument-hub':
@@ -554,6 +529,7 @@ function ScreenBody({
             ? TRAINING_TESS_CANDIDATE
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => leaveInstrument('tess')}
+          onAgency={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
@@ -599,6 +575,8 @@ function ScreenBody({
           eventId={receiverEventId(game.player, skyEventNow(isDevLauncherEnabled()))}
           onBack={() => game.goBack()}
           onSubmit={game.submitRadioMeteorClassification}
+          onAgency={() => game.go('hub')}
+          onResearch={() => game.go('community-research')}
         />
       )
 
@@ -613,6 +591,8 @@ function ScreenBody({
           targets={game.catalog.targets}
           onBack={() => game.goBack()}
           onCollect={game.collectProbeData}
+          onStartScan={game.startProbeScan}
+          onLogSpectrum={game.logProbeSpectrum}
           onHub={() => game.go('hub')}
           onPlanRun={(targetId, runId) => { requestMissionBoardSite('free', targetId, runId); game.goToMissions() }}
           onPlanMineral={(targetId, mineral) => { requestMiningPlan(targetId, mineral); game.go('mission-planner') }}
@@ -720,38 +700,21 @@ function ScreenBody({
         onSave={plan => game.setPlayer(player => ({ ...player, missionPlans: { ...player.missionPlans, [plan.id]: plan } }))}
         onReview={id => game.onPickMission(id)} />
     case 'rocket-workshop':
-      return <RocketWorkshopScreen player={game.player} rocket={game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)?.rocket ?? game.rocket}
-        mission={game.mission} target={game.target} deliveryTarget={game.catalog.targets.find(target => target.id === game.mission?.deliveryTargetId)}
-        onBack={() => game.go(game.mission && game.target ? 'fab' : 'launchpad')}
-        onInstall={game.confirmShipCustomizerBuild}
-        onLivery={rocketLivery => game.setPlayer(player => ({ ...player, rocketLivery }))}
-        onResearch={() => game.go('community-research')} />
-    case 'hangar':
-      return (
-        <HangarScreen
-          francs={game.player.francs}
-          missionsDone={game.player.missionsDone}
-          launchpadLevel={buildingLevel(game.player, 'launchpad')}
-          flightPlan={game.player.flightPlan}
-          shipCustomizerParts={game.player.shipCustomizerParts}
-          landingResearched={landingUnlocked(game.player)}
-          pendingLaunch={game.player.pendingLaunch}
-          pendingRocketName={rocketDisplay.name}
-          onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
-          missionTitle={game.mission?.title ?? null}
-          rocketRoles={game.mission && game.target
-            ? Object.fromEntries(rocketJobRoles(ROCKET_MODELS.filter(model => !model.locked), game.mission, model => rocketCompatibleWithMission(model, game.mission!)))
-            : null}
-          stagedTier={(() => {
-            const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId && candidate.location === 'hangar')
-            return vehicle ? (ROCKET_MODELS.find(model => model.id === vehicle.rocketId)?.tier ?? 1) : null
-          })()}
-          selectedRocketId={game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)?.rocketId ?? null}
-          onChooseMission={() => game.goToMissions()}
-          onBuildRocket={game.onPurchaseRocket}
-          onBack={onBackFromHangar ?? game.returnFromHangar}
-        />
-      )
+    case 'hangar': {
+      const rocket = agencyRocket(game.player)
+      const next = ROCKET_MODELS.find(model => !model.locked && model.tier > rocket.tier)
+      return <section className="game-screen theme-blueprint agency-hangar">
+        <div>
+          <h1>Agency rocket</h1>
+          <img src={rocket.img} alt="" />
+          <h2>{rocket.name}</h2>
+          <p>Capacity {rocket.stats.cargo} · Range {rocket.stats.maxOrbit}</p>
+          {next && <p>{next.name} unlocks after {next.missionsRequired} completed missions with launchpad level {rocketPadLevel(next)}. Completed: {game.player.missionsDone}.</p>}
+          <button onClick={() => { game.reviewAgencyRocket(); return game.mission && game.target && !game.player.activeMission ? game.go('fab') : game.goToMissions() }}> {game.mission && game.target && !game.player.activeMission ? 'Review mission' : 'Mission Board'}</button>
+          <button onClick={onBackFromHangar ?? game.returnFromHangar}>Back</button>
+        </div>
+      </section>
+    }
 
     case 'sky-pointing':
       return (
@@ -915,10 +878,6 @@ function ScreenBody({
           target={game.target}
           rocket={game.rocket}
           hasStagedRocket={game.player.stagedRockets?.some(vehicle => vehicle.id === game.player.selectedStagedRocketId && vehicle.location === 'launchpad') ?? false}
-          onDismantle={() => game.onDismantleStagedRocket()}
-          guided={onboardingActive}
-          onOpenWorkshop={() => game.go('rocket-workshop')}
-          onInstallLoadout={(next, prev) => game.confirmShipCustomizerBuild(next, prev)}
           onRequestLaunch={() => {
             const vehicle = game.player.stagedRockets?.find(candidate => candidate.id === game.player.selectedStagedRocketId)
             if (!vehicle || vehicle.location !== 'launchpad') {

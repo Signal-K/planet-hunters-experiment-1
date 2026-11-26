@@ -1,8 +1,10 @@
+import { DEFAULT_STATE } from './game-state'
 import { describe, expect, it } from 'vitest'
 import { MISSIONS, ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, rocketConfigForModel } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_ASSETS } from './rocket-assets'
 import {
+  agencyRocket,
   getRequiredRocketModel,
   rocketCompatibleWithMission,
   rocketJobRoles,
@@ -122,4 +124,13 @@ describe('rocketJobRoles', () => {
     expect(far.get(ROCKET_IDS.explorer)).toEqual({ kind: 'too-small', note: 'Cannot reach ORB 7' })
     expect(far.get(ROCKET_IDS.prospector)).toEqual({ kind: 'use' })
   })
+})
+
+it('assigns the strongest released hull supported by progress and the pad', () => {
+  const player = { ...DEFAULT_STATE.player, missionsDone: 0 }
+  expect(agencyRocket(player).id).toBe('explorer')
+  expect(agencyRocket({ ...player, missionsDone: 1 }).id).toBe('prospector')
+  expect(agencyRocket({ ...player, missionsDone: 6 }).id).toBe('prospector')
+  expect(agencyRocket({ ...player, missionsDone: 6, launchpadUpgraded: true }).id).toBe('surveyor')
+  expect(agencyRocket({ ...player, unlockedBlueprints: ['rocket:prospector'] }).id).toBe('prospector')
 })

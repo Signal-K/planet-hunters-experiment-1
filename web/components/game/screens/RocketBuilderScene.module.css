@@ -182,7 +182,7 @@
   right: 12px;
   bottom: 12px;
   width: min(38%, 430px);
-  box-shadow: 5px 5px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent);
+  box-shadow: none;
 }
 
 .launchDock {
@@ -197,7 +197,7 @@
   min-width: min(280px, 70vw);
   min-height: 56px;
   font-size: 16px;
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent);
+  box-shadow: none;
 }
 
 /* The pad scene: the launch complex drawn in Blender (pad, gantry, rail, hangar), fitted to the room it has. */
@@ -220,7 +220,7 @@
   border: 2px solid var(--ln-blueprint-ink);
   border-radius: 8px;
   background: color-mix(in srgb, var(--ln-blueprint-paper) 94%, transparent);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-blueprint-blue) 28%, transparent);
+  box-shadow: none;
 }
 
 .payloadManifest span { font: 700 11px/1.2 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
@@ -353,7 +353,7 @@
   border-radius: 14px;
   background: var(--ln-blueprint-blue);
   color: var(--ln-blueprint-paper);
-  box-shadow: 0 6px 0 var(--ln-blueprint-ink);
+  box-shadow: none;
   cursor: pointer;
   animation: choose-pulse 1.8s ease-in-out infinite;
 }
@@ -362,8 +362,8 @@
 .choose strong { font: 800 clamp(24px, 6vw, 34px)/1.05 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 
 @keyframes choose-pulse {
-  0%, 100% { box-shadow: 0 6px 0 var(--ln-blueprint-ink), 0 0 0 0 color-mix(in srgb, var(--ln-blueprint-paper) 70%, transparent); }
-  50% { box-shadow: 0 6px 0 var(--ln-blueprint-ink), 0 0 0 12px transparent; }
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: none; }
 }
 
 @media (prefers-reduced-motion: reduce) { .choose { animation: none; } }
@@ -391,9 +391,9 @@
   padding: 9px 10px 8px;
   border: 2px solid color-mix(in srgb, var(--ln-world-hull-lit) 62%, var(--ln-world-outline));
   border-radius: 10px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--ln-world-hull-lit) 96%, var(--ln-world-glass)) 0 72%, var(--ln-world-hull-shade) 72%);
-  box-shadow: 3px 3px 0 color-mix(in srgb, var(--ln-world-outline) 50%, transparent);
-  color: var(--ln-world-outline);
+  background: #173d56;
+  box-shadow: none;
+  color: #f4efe4;
 }
 
 .statIcon { grid-row: 1 / span 2; width: 22px; height: 22px; border: 2px solid var(--ln-world-trim-blue); border-radius: 50%; background: color-mix(in srgb, var(--ln-world-glass) 46%, transparent); }
@@ -420,7 +420,7 @@
   border: 2px solid var(--ln-world-outline);
   border-radius: 12px;
   background: var(--ln-world-hull-lit);
-  box-shadow: 3px 3px 0 var(--ln-world-outline);
+  box-shadow: none;
   color: var(--ln-world-outline);
   font: 700 14px/1.2 var(--ln-font-display);
   letter-spacing: .06em;
@@ -500,7 +500,7 @@
 }
 
 .option img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
-.option[data-fitted='true'] { border-color: var(--ln-blueprint-blue); background: color-mix(in srgb, var(--ln-blueprint-blue) 14%, var(--ln-blueprint-paper)); box-shadow: inset 0 0 0 2px var(--ln-blueprint-blue); }
+.option[data-fitted='true'] { border-color: var(--ln-blueprint-blue); background: color-mix(in srgb, var(--ln-blueprint-blue) 14%, var(--ln-blueprint-paper)); box-shadow: none; }
 .option[data-locked='true'] { opacity: 0.6; }
 .optionText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .optionText strong { font: 800 14px/1.2 var(--ln-font-display); letter-spacing: 0.04em; text-transform: uppercase; }
@@ -653,3 +653,6 @@
   .root[data-launching='true'] .rocketSlot,
   .root[data-launching='true'] .rocketSlot::after { animation: none; }
 }
+
+.detailStats { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.stats > summary { cursor: pointer; min-height: 44px; padding: 12px; }

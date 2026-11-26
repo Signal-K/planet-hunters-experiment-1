@@ -62,6 +62,20 @@ function LaunchpadKit({ tier, parts, phase = 'idle', rocket = true }: { tier: nu
           {launching && <SpriteLoop frames={EXHAUST_FRAMES} intervalMs={90} className={styles.padExhaust} testId="pad-exhaust" />}
         </span>
       )}
+      {rocket === 'core' && <>
+        <span className={styles.recoveryCapsule} style={{ left: units(pad.mount!.x + 25), bottom: units(pad.mount!.z) }} data-testid="recovery-parachutes" aria-hidden="true">
+          <svg viewBox="0 0 100 150" fill="none">
+            <path d="M5 45C8-8 92-8 95 45Q80 32 65 45Q50 32 35 45Q20 32 5 45Z" fill="var(--ln-text)" stroke="var(--ln-cyan)" strokeWidth="3" />
+            <path d="M35 45Q35 5 50 5Q65 5 65 45M5 45 40 115M35 45 44 115M65 45 56 115M95 45 60 115" stroke="var(--ln-cyan)" strokeWidth="2" />
+            <path d="M40 115 32 139Q50 150 68 139L60 115Z" fill="var(--ln-text)" stroke="var(--ln-panel)" strokeWidth="3" />
+            <path d="M33 137H67" stroke="var(--ln-cyan)" strokeWidth="4" />
+          </svg>
+        </span>
+        <svg className={styles.catchArms} viewBox="0 0 112 99" data-testid="recovery-catch-arms" aria-hidden="true" fill="none" stroke="var(--ln-text)" strokeWidth="3">
+          <path className={styles.catchArmLeft} d="M28 65V34H49V42" />
+          <path className={styles.catchArmRight} d="M94 65V34H71V42" />
+        </svg>
+      </>}
       {launching && <SpriteLoop frames={SMOKE_FRAMES} intervalMs={140} className={styles.padSmoke} testId="pad-smoke" />}
     </span>
   )

@@ -89,3 +89,7 @@ This build also carries what takeon's default branch had merged since Landnam's 
 - the 60° three-quarter surface camera (KES-206), so every Takeon landscape (landing, delivery, probe watch, rover
   field) shows more ground and shorter cliffs than before;
 - "a scene only has a rover when it brings one" (SSL-768): the landing scene no longer draws a stray rover.
+
+## 0.2.7 solar field bridge
+
+This local bundle keeps the 0.2.5 JavaScript adapter and replaces its Go WASM and shim with a matched Takeon build including the optional DEM surface-material grid. It was built with `GOOS=js GOARCH=wasm go build -tags engine_minimal -buildvcs=false -trimpath ./cmd/wasm`. The minimal tag omits planetary imagery from the engine bundle; the separate full solar-preview WASM supplies imagery and terrain samples. Keep both Go builds on the same source revision. Existing field saves are not switched to the solar generator.

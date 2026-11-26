@@ -7,6 +7,14 @@ struct LandingScreen: View {
     @Environment(GameStore.self) private var store
     private let zones = HUDZones.standard
 
+    private struct HandoffID: Hashable {
+        let missionId: String?
+        let targetId: String?
+        let runId: String?
+        let descentStartedAt: Double?
+        let ascentStartedAt: Double?
+    }
+
     private static func copy(_ mode: Landing.Mode) -> (active: String, ready: String, leg: String) {
         switch mode {
         case .descend: return ("DESCENDING", "TOUCHDOWN CONFIRMED", "ORBIT → SURFACE")
@@ -32,7 +40,9 @@ struct LandingScreen: View {
             }
         }
         .background(Theme.ink.ignoresSafeArea())
-        .task(id: mode) { await handOff() }
+        .task(id: HandoffID(missionId: store.state.missionId, targetId: store.state.targetId,
+                            runId: store.player.missionRunId, descentStartedAt: store.player.landingStartedAt,
+                            ascentStartedAt: store.player.landingReturnStartedAt)) { await handOff() }
     }
 
     /// Waits out the clock, then lands or re-docks. A run with no mission left has nothing to land, so it goes home.

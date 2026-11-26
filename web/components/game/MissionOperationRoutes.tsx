@@ -1,5 +1,7 @@
 'use client'
 
+import { LAUNCH_ROCKET_SPRITE } from '@/lib/rocket-assets'
+
 import { useEffect, useRef, useState } from 'react'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
@@ -256,10 +258,12 @@ export default function MissionOperationRoutes({
 
     case 'landing': {
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
-      const mode = game.player.landingReturnStartedAt ? 'ascend' : 'descend'
+      const mode = game.player.landingReturnStartedAt != null ? 'ascend' : 'descend'
       return (
         <LandingScreen
+          key={JSON.stringify([game.player.missionRunId, game.mission.id, game.target.id, mode, game.player.landingStartedAt, game.player.landingReturnStartedAt])}
           target={game.target}
+          zone={game.mission.customPlan?.zone}
           mode={mode}
           startedAt={mode === 'ascend' ? game.player.landingReturnStartedAt : game.player.landingStartedAt}
           onBack={() => game.go('hub')}
@@ -286,7 +290,7 @@ export default function MissionOperationRoutes({
           mission={game.mission}
           target={game.target}
           probeEvidence={game.player}
-          rocketImageSrc={rocketDisplay.img}
+          rocketImageSrc={LAUNCH_ROCKET_SPRITE}
           initialCargo={game.player.miningCargoInProgress}
           initialCharges={game.player.miningLaserCharges}
           francs={game.player.francs}
@@ -412,11 +416,12 @@ export default function MissionOperationRoutes({
       )
     }
 
-    case 'delivery':
-      if (!game.mission || !game.deliveryTargetId) return <MissionRunUnavailable game={game} />
+    case 'delivery': {
+      const berth = game.catalog.targets.find(body => body.id === game.deliveryTargetId)
+      if (!game.mission || !berth) return <MissionRunUnavailable game={game} />
       return (
         <DeliveryScreen
-          target={transitTarget}
+          target={berth}
           mission={game.mission}
           cargo={game.lastCargo ?? {}}
           minerals={game.catalog.minerals}
@@ -424,10 +429,12 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onComplete={game.onDeliveryUnloadComplete}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
-          useTakeonDropoff={game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE}
+          useTakeonDropoff={game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE || (game.mission.customPlan?.work === 'deliver' && game.mission.customPlan.zone !== undefined && game.mission.customPlan.targetId === berth.id)}
           rocketImageSrc={rocketDisplay.img}
         />
       )
+
+    }
 
     case 'debrief':
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
@@ -472,6 +479,7 @@ export default function MissionOperationRoutes({
           showerRun={showerRun}
           initialDisposition={game.player.freeHaulDisposition}
           exits={debriefExits({
+            probeDeployment: game.mission.payload?.instrumentId === 'survey-probe',
             showerRun: !!showerRun,
             programOperation: isOwnProgramMission(game.mission),
             hasInstrument: onlineTelescopes(game.player).length > 0,

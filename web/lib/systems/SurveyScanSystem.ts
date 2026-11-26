@@ -6,7 +6,7 @@ import type { GameState, Player } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { applyGainResearchXP } from './ProgressionSystem'
 
-export const SURVEY_SCAN_DURATION_MS = 12_000
+export const SURVEY_SCAN_DURATION_MS = 120_000
 export const SURVEY_SCAN_RESEARCH_XP = 12
 /** SSL-803: a finished scan sometimes asks the player to confirm it by hand in an instrument. */
 export const FOLLOW_UP_ONE_IN = 3

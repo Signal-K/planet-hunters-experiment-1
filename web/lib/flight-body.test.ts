@@ -18,6 +18,12 @@ describe('flight body palettes', () => {
     expect(flightBodyKind(bennu, true)).toBe('earth')
   })
 
+  it('keeps meteor streams near Earth instead of inventing a planet', () => {
+    for (const shower of ['leonids', 'orionids', 'geminids']) {
+      expect(flightBodyKind({ id: `${shower}-shower-field`, name: `${shower} field`, type: 'event-field' }, false)).toBe('earth')
+    }
+  })
+
   it('does not paint every asteroid with the same palette', () => {
     const carbon = flightBodySpec(bennu, false).palette.id
     const metal = flightBodySpec(psyche, false).palette.id

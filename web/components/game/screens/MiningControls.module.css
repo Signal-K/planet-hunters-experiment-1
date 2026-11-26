@@ -50,7 +50,7 @@
   border-radius: 6px;
   background: linear-gradient(160deg, rgba(10, 16, 28, 0.78), rgba(4, 8, 16, 0.86));
   backdrop-filter: blur(8px) saturate(1.2);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 12px rgba(255, 255, 255, 0.32), inset 0 0 10px rgba(255, 255, 255, 0.06);
+  box-shadow: none;
   color: #eef2f6;
 }
 .gaugeHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }

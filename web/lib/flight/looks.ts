@@ -33,6 +33,10 @@ export function flightDestinationLook(target: FlightBodyInput, returning: boolea
   const spec = flightBodySpec(target, returning)
   const seed = seedFromText(spec.seed)
   const p = spec.palette
+  // Mercury's trace exosphere produces no visible halo, clouds or polar ice caps.
+  if (target.id === 'mercury' && !returning) {
+    return { kind: 'rocky', seed, colors: ramp([p.groundDeep, p.groundDeep, p.ground, p.nearRidge]), craters: 0.85 }
+  }
   switch (spec.kind) {
     case 'earth':
       // Three sea tones before the land ones, so Earth is mostly ocean.
@@ -68,19 +72,20 @@ export const PAD_ROCKET_PROFILE: ReadonlyArray<readonly [rows: number, tail: num
 /** The launchpad rocket's own paint: warm white hull, blue trim. */
 export const DEFAULT_LIVERY: RocketLivery = { hull: '#dfd3cc', trim: '#2f6fd0' }
 
-/** One row of the drawing in craft units: the core stage is a little over two units long. */
-const PAD_UNIT = 2.1 / PAD_ROCKET_PROFILE.reduce((n, r) => n + r[0], 0)
+/** The surviving upper stage keeps the profile of the launch artwork. */
+export const ORBIT_ROCKET_PROFILE: typeof PAD_ROCKET_PROFILE = [[4, 26, 26, 'trim'], ...PAD_ROCKET_PROFILE.slice(11)]
+const PAD_UNIT = 1.5 / ORBIT_ROCKET_PROFILE.reduce((n, r) => n + r[0], 0)
 
 /**
- * The rocket in space is the core stage of the launchpad rocket (side boosters are gone, SSL-553), in the player's
- * livery. Fitted parts only change the exhaust: the silhouette stays the one rocket the player built.
+ * Only the upper stage continues beyond ascent. Keep its launchpad paint and profile,
+ * without the discarded core and side boosters. Fitted parts change the exhaust.
  */
 export function flightCraftLook(parts: InstalledCustomizerPartsByKind | null | undefined, livery: RocketLivery = DEFAULT_LIVERY): FlightCraftLook {
   const engineId = parts?.engine
   const enginePower = Math.min(1, ((engineId ? customizerPartById(engineId) : undefined)?.power ?? 0) / 40)
   const paint: Record<string, string> = { hull: livery.hull, hullShade: shade(parseInt(livery.hull.slice(1), 16), 0.82), trim: livery.trim }
   return {
-    sections: PAD_ROCKET_PROFILE.map(([rows, tail, nose, color], i) => ({
+    sections: ORBIT_ROCKET_PROFILE.map(([rows, tail, nose, color], i) => ({
       id: `core-${i}`, length: rows * PAD_UNIT, r0: tail * PAD_UNIT, r1: nose * PAD_UNIT, color: paint[color] ?? color,
     })),
     plume: enginePower > 0.6 ? '#b9a8ff' : '#ffb23e',

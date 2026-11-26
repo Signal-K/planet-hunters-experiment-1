@@ -19,7 +19,6 @@ jobs:
     outputs:
       web: ${{ steps.filter.outputs.web }}
       web_files: ${{ steps.filter.outputs.web_files }}
-      minimal: ${{ steps.filter.outputs.minimal }}
       shared: ${{ steps.filter.outputs.shared }}
       core: ${{ steps.filter.outputs.core }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -33,9 +32,6 @@ jobs:
           filters: |
             web:
               - 'web/**'
-            minimal:
-              - 'minimal/**'
-              - '.github/workflows/deploy.yml'
             shared:
               - 'shared/**'
               - 'scripts/authoring.mjs'
@@ -51,7 +47,7 @@ jobs:
               - '.github/workflows/ci.yml'
   web:
     needs: changes
-    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.minimal == 'true' || needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -70,10 +66,6 @@ jobs:
           CHANGED_WEB_FILES: ${{ needs.changes.outputs.web_files }}
           FULL_TESTS: ${{ needs.changes.outputs.shared == 'true' || github.event_name == 'workflow_dispatch' }}
         run: node ../scripts/ci-web-tests.mjs
-      - name: Build and type-check Landnam Minimal
-        run: |
-          npm run build:minimal
-          npm run typecheck:minimal
       - run: npm run typecheck
       - run: npm run build
         env:

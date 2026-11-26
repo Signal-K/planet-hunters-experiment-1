@@ -23,7 +23,7 @@ export default function BaseNextFlight({ game, onService }: { game: ReturnType<t
       <span className={styles.nextFlightCta}>{next.cta} →</span>
     </button>
     {next.prepare && <nav className={styles.nextFlightChoices} aria-label="Choose your own work">
-      <button type="button" data-testid="base-choose-flight" onClick={() => game.go('solar-map')}>Choose another flight</button>
+      <button type="button" data-testid="base-choose-flight" onClick={() => game.go('missions')}>Choose another flight</button>
       {game.player.freeOperations && <button type="button" data-testid="base-plan-flight" onClick={() => game.go('mission-planner')}>Plan my own flight</button>}
     </nav>}
   </section>

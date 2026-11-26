@@ -102,6 +102,40 @@
         }
       }
     },
+    "mercury": {
+      "skyTop": "#05060a",
+      "skyHorizon": "#05060a",
+      "starAlpha": 1,
+      "distant": "#45433f",
+      "nearRidge": "#aaa69f",
+      "ground": "#817d76",
+      "groundDeep": "#403e3a",
+      "groundSpeck": "#c8c4bc",
+      "beam": "#5ce8ff",
+      "beamCore": "#f4fdff",
+      "light": "#9ad4ff",
+      "lightAlpha": 0,
+      "dust": "#817d76",
+      "clouds": false,
+      "terrain": "rubble",
+      "landscape": {
+        "tint": "#aaa69f",
+        "shade": 1,
+        "seed": 41,
+        "density": 0.9,
+        "pieces": {
+          "mountain": 1,
+          "ridge": 3,
+          "strata": 2
+        },
+        "deposits": {
+          "iron": 2,
+          "nickel": 3,
+          "ice": 0,
+          "cobalt": 1
+        }
+      }
+    },
     "mars": {
       "skyTop": "#14123a",
       "skyHorizon": "#4b3b8a",
@@ -195,7 +229,7 @@
     "vesta": "bennu",
     "psyche": "bennu",
     "mars": "mars",
-    "mercury": "mars",
+    "mercury": "mercury",
     "venus": "mars",
     "europa": "icy-moon",
     "enceladus": "icy-moon",

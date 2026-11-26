@@ -49,12 +49,12 @@
   --ln-cyan-press: #3fb8cc;
   --ln-cyan-soft: rgba(112, 217, 234, 0.16);
   --ln-cyan-border: rgba(112, 217, 234, 0.4);
-  --ln-blueprint-bg: #eef3f8;
-  --ln-blueprint-paper: #ffffff;
-  --ln-blueprint-paper-2: #dfe9f3;
-  --ln-blueprint-ink: #0f2436;
-  --ln-blueprint-blue: #1f78c1;
-  --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
+  --ln-blueprint-bg: #10182c;
+  --ln-blueprint-paper: #173d56;
+  --ln-blueprint-paper-2: #29254f;
+  --ln-blueprint-ink: #f4efe4;
+  --ln-blueprint-blue: #9de7ef;
+  --ln-blueprint-line-strong: rgba(244, 239, 228, 0.30);
   --ln-amber: #175f9b;
   --ln-amber-bright: #3d8fd4;
   --ln-amber-press: #124d80;
@@ -296,25 +296,25 @@
 }
 .theme-blueprint,
 body:has([data-screen="hub"]) {
-  --ln-bp-bg:      #eef3f8;
-  --ln-bp-paper:   #ffffff;
-  --ln-bp-paper-2: #dfe9f3;
+  --ln-bp-bg:      #10182c;
+  --ln-bp-paper:   #173d56;
+  --ln-bp-paper-2: #29254f;
 
-  --ln-bp-ink:      #0f2436;
-  --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #566879;
+  --ln-bp-ink:      #f4efe4;
+  --ln-bp-ink-dim:  #d1dce4;
+  --ln-bp-ink-mute: #b8c8d0;
 
-  --ln-bp-line:        rgba(15, 36, 54, 0.14);
-  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+  --ln-bp-line:        rgba(244, 239, 228, 0.18);
+  --ln-bp-line-strong: rgba(244, 239, 228, 0.30);
 
-  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue:      #9de7ef;
   --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
 
   --ln-bp-pink:        #c8293e;
   --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
   --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
-  --ln-bp-green:      #17703f;
+  --ln-bp-green:      #5ad07e;
   --ln-bp-green-soft: rgba(23, 112, 63, 0.10);
 
   --ln-void:      var(--ln-bp-bg);
@@ -342,13 +342,13 @@ body:has([data-screen="hub"]) {
   --ln-ok:          var(--ln-bp-green);
   --ln-ok-soft:     var(--ln-bp-green-soft);
 
-  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
-  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+  --ln-shadow-card: none;
+  --ln-shadow-modal: none;
 }
 
 /* The setup dock is part of the paper surface, not a dark footer. */
 .theme-blueprint .sticky-actions {
-  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+  background: var(--ln-bp-bg);
 }
 .game-stage:has(.theme-blueprint) {
   background: var(--ln-blueprint-bg);
@@ -403,25 +403,25 @@ body:has(.theme-blueprint) {
    own surface treatment. */
 .theme-blueprint,
 body:has([data-screen="hub"]) {
-  --ln-bp-bg:      #eef3f8;
-  --ln-bp-paper:   #ffffff;
-  --ln-bp-paper-2: #dfe9f3;
+  --ln-bp-bg:      #10182c;
+  --ln-bp-paper:   #173d56;
+  --ln-bp-paper-2: #29254f;
 
-  --ln-bp-ink:      #0f2436;
-  --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #566879;
+  --ln-bp-ink:      #f4efe4;
+  --ln-bp-ink-dim:  #d1dce4;
+  --ln-bp-ink-mute: #b8c8d0;
 
-  --ln-bp-line:        rgba(15, 36, 54, 0.14);
-  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+  --ln-bp-line:        rgba(244, 239, 228, 0.18);
+  --ln-bp-line-strong: rgba(244, 239, 228, 0.30);
 
-  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue:      #9de7ef;
   --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
 
   --ln-bp-pink:        #c8293e;
   --ln-bp-pink-soft:   rgba(200, 41, 62, 0.10);
   --ln-bp-pink-border: rgba(200, 41, 62, 0.4);
 
-  --ln-bp-green:      #17703f;
+  --ln-bp-green:      #5ad07e;
   --ln-bp-green-soft: rgba(23, 112, 63, 0.10);
 
   --ln-void:      var(--ln-bp-bg);
@@ -449,13 +449,13 @@ body:has([data-screen="hub"]) {
   --ln-ok:          var(--ln-bp-green);
   --ln-ok-soft:     var(--ln-bp-green-soft);
 
-  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
-  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+  --ln-shadow-card: none;
+  --ln-shadow-modal: none;
 }
 
 /* The setup dock is part of the paper surface, not a dark footer. */
 .theme-blueprint .sticky-actions {
-  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+  background: var(--ln-bp-bg);
 }
 
 /* #1f78c1 is 4.2:1 on blueprint paper. The fitter uses the paper-readable blue the loop screens already use. */
@@ -1303,7 +1303,7 @@ body[data-pwa="standalone"]::before {
   background: var(--ln-bp-paper);
   border: 2px solid var(--ln-bp-ink);
   border-radius: 16px;
-  box-shadow: 4px 4px 0 var(--ln-bp-line-strong), 0 18px 52px rgba(15,36,54,.2);
+  box-shadow: none;
   animation: gate-up 360ms cubic-bezier(.16,1,.3,1);
 }
 
@@ -1316,7 +1316,7 @@ body[data-pwa="standalone"]::before {
     padding: 0;
     border: 2px solid var(--ln-bp-ink);
     border-radius: 16px;
-    box-shadow: 4px 4px 0 var(--ln-bp-line-strong), 0 18px 52px rgba(15,36,54,.2);
+    box-shadow: none;
   }
   .auth-gate__handle { display: none; }
   .auth-gate .ln-sheet__handle-wrap { display: none; }
@@ -1410,13 +1410,13 @@ body[data-pwa="standalone"]::before {
 .auth-gate__orbit { position: absolute; border: 2px solid color-mix(in srgb, var(--ln-bp-blue) 30%, transparent); border-radius: 50%; transform: rotate(-24deg); }
 .auth-gate__orbit--outer { width: 390px; height: 180px; left: 2%; top: 42%; }
 .auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(54,198,226,.36); }
-.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border: 2px solid var(--ln-bp-blue); border-radius: 50%; background: color-mix(in srgb, var(--ln-bp-paper) 55%, transparent); box-shadow: 4px 4px 0 var(--ln-bp-line-strong); }
+.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border: 2px solid var(--ln-bp-blue); border-radius: 50%; background: color-mix(in srgb, var(--ln-bp-paper) 55%, transparent); box-shadow: none; }
 .auth-gate__content { align-self: center; padding: var(--ln-s-7); }
 .auth-gate__heading { margin-top: var(--ln-s-2); color: var(--ln-text); font: 700 34px var(--ln-font-display); letter-spacing: -.02em; }
 .auth-gate__intro { margin: var(--ln-s-3) 0 var(--ln-s-5); color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); }
 .auth-gate__tabs { display: flex; gap: var(--ln-s-2); margin-bottom: var(--ln-s-5); }
 .auth-gate__tab { flex: 1; min-height: 44px; padding: var(--ln-s-3); color: var(--ln-bp-ink-dim); background: var(--ln-bp-paper); border: 1.5px solid var(--ln-bp-line-strong); border-radius: 8px; cursor: pointer; font: 700 14px var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
-.auth-gate__tab.is-active { color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); border: 2px solid var(--ln-bp-blue); box-shadow: 2px 2px 0 var(--ln-bp-line-strong); }
+.auth-gate__tab.is-active { color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); border: 2px solid var(--ln-bp-blue); box-shadow: none; }
 .auth-gate__form { display: flex; flex-direction: column; gap: var(--ln-s-3); }
 .auth-gate__input { width: 100%; min-height: 48px; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-bp-ink); background: var(--ln-bp-paper); border: 1.5px solid var(--ln-bp-line-strong); border-radius: 8px; outline: none; font: 400 16px var(--ln-font-body); }
 .auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
@@ -1426,7 +1426,7 @@ body[data-pwa="standalone"]::before {
 .auth-gate__reset-link:disabled { cursor: not-allowed; opacity: .6; }
 .auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 14px/1.4 var(--ln-font-body); }
 .auth-gate__notice { padding: var(--ln-s-3); color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); border: 1px solid var(--ln-bp-blue); border-radius: var(--ln-r-md); font: 400 14px/1.4 var(--ln-font-body); }
-.auth-gate__primary { width: 100%; min-height: 48px; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: white; background: var(--ln-bp-blue); border: 2px solid var(--ln-bp-ink); border-radius: 8px; cursor: pointer; font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; box-shadow: 3px 3px 0 var(--ln-bp-line-strong); }
+.auth-gate__primary { width: 100%; min-height: 48px; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: white; background: var(--ln-bp-blue); border: 2px solid var(--ln-bp-ink); border-radius: 8px; cursor: pointer; font: 800 14px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; box-shadow: none; }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
 .auth-gate__primary:disabled { cursor: not-allowed; color: var(--ln-bp-ink); background: var(--ln-bp-paper-2); opacity: 1; box-shadow: none; }
 
@@ -2041,7 +2041,7 @@ body[data-pwa="standalone"]::before {
   border: 1px solid rgba(244, 239, 228, .22);
   border-radius: 18px;
   background: rgba(8, 16, 34, .36);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  box-shadow: none;
 }
 .mining-guide-mark {
   display: block;
@@ -2141,7 +2141,7 @@ body[data-pwa="standalone"]::before {
   overflow: hidden;
   border: 1px solid var(--ln-cyan-border);
   background: var(--ln-surface);
-  box-shadow: inset 0 0 0 1px var(--ln-hairline), var(--ln-glow-cyan);
+  box-shadow: none;
 }
 .rocket-cutaway-board::before,
 .rocket-cutaway-board::after {
@@ -2401,10 +2401,10 @@ body[data-pwa="standalone"]::before {
   background: rgba(88, 208, 234, .18);
   outline: none;
 }
-/* Resume is the call to action: the cream contract button. */
-.theme-blueprint.mining-screen .mining-guide-actions .mining-guide-close:first-child {
-  border-color: #f4efe4;
-  background: #f4efe4;
+/* Resume is the primary action in the mining menu. */
+.theme-blueprint.mining-screen .mining-guide-actions [data-testid="mining-resume-btn"] {
+  border-color: #9de7ef;
+  background: #9de7ef;
   color: #142840;
 }
 .theme-blueprint.mining-screen .mining-guide-close:disabled {
@@ -2512,7 +2512,7 @@ body[data-pwa="standalone"]::before {
 .theme-blueprint.mining-screen .mining-controls > div:last-child button {
   background: var(--ln-mining-action);
   color: #ffffff;
-  box-shadow: 0 3px 0 rgba(15, 36, 54, 0.18);
+  box-shadow: none;
 }
 .theme-blueprint.mining-screen .mining-controls > div:last-child button:active:not(:disabled) {
   background: var(--ln-mining-action-press);
@@ -2668,21 +2668,21 @@ body[data-pwa="standalone"]::before {
 .intro-world { position: absolute; inset: 0; z-index: 0; }
 .intro-content { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 12px; padding: max(24px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); text-align: center; overflow-y: auto; }
 .intro-content[data-mode='restoring'], .intro-content[data-mode='returning'] { justify-content: center; }
-.intro-head { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 520px; padding: 12px 20px; background: color-mix(in srgb, var(--dusk-panel) 94%, transparent); border: 2px solid var(--ln-world-outline); border-radius: 12px; box-shadow: 3px 3px 0 var(--ln-world-outline); }
+.intro-head { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 520px; padding: 12px 20px; background: color-mix(in srgb, var(--dusk-panel) 94%, transparent); border: 2px solid var(--ln-world-outline); border-radius: 12px; box-shadow: none; }
 .intro-title { color: var(--dusk-dim); font: 800 14px var(--ln-font-display); letter-spacing: 0.32em; text-transform: uppercase; margin: 0; }
 .intro-heading { color: var(--dusk-ink); font: 800 24px/1.15 var(--ln-font-display); letter-spacing: 0.04em; margin: 0; }
 .intro-subtitle { color: var(--dusk-dim); font: 400 14px/1.4 var(--ln-font-body); margin: 0; }
-.intro-panel { display: grid; gap: 8px; width: 100%; max-width: 760px; padding: 12px; background: color-mix(in srgb, var(--dusk-panel) 94%, transparent); border: 2px solid var(--ln-world-outline); border-radius: 16px; box-shadow: 3px 3px 0 var(--ln-world-outline); }
+.intro-panel { display: grid; gap: 8px; width: 100%; max-width: 760px; padding: 12px; background: color-mix(in srgb, var(--dusk-panel) 94%, transparent); border: 2px solid var(--ln-world-outline); border-radius: 16px; box-shadow: none; }
 .intro-content[data-mode='returning'] .intro-panel { max-width: 360px; }
 .intro-legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .intro-screen .base-biome-choice { position: relative; min-width: 0; margin: 0; padding: 0; border: 0; border-radius: 0; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.intro-screen .base-biome-option { min-height: 112px; padding: 10px; display: grid; grid-template-rows: auto 36px auto; gap: 4px; justify-items: start; align-content: start; align-items: start; text-align: left; text-transform: none; letter-spacing: normal; font: 400 14px/1.3 var(--ln-font-body); background: var(--dusk-deep); color: var(--dusk-ink); border: 2px solid var(--ln-world-outline); box-shadow: 2px 2px 0 var(--ln-world-outline); }
+.intro-screen .base-biome-option { min-height: 112px; padding: 10px; display: grid; grid-template-rows: auto 36px auto; gap: 4px; justify-items: start; align-content: start; align-items: start; text-align: left; text-transform: none; letter-spacing: normal; font: 400 14px/1.3 var(--ln-font-body); background: var(--dusk-deep); color: var(--dusk-ink); border: 2px solid var(--ln-world-outline); box-shadow: none; }
 .intro-screen .base-biome-option[aria-pressed='true'] { background: var(--dusk-raised); border-color: var(--dusk-ink); outline: 0; box-shadow: 0 0 0 2px var(--dusk-ink); }
 .base-biome-name { color: var(--dusk-ink); font: 800 14px var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
 .base-biome-tagline { color: var(--dusk-dim); }
 .base-biome-trait { padding: 2px 8px; border: 2px solid var(--dusk-muted); border-radius: 8px; color: var(--dusk-ink); font: 700 14px/1.2 var(--ln-font-display); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .intro-note { margin: 0; color: var(--dusk-dim); font: 400 14px/1.35 var(--ln-font-body); }
-.intro-begin-btn { min-height: 48px; min-width: 44px; padding: 10px 24px; background: color-mix(in srgb, var(--ln-world-dusk-horizon) 82%, var(--dusk-deep)); color: var(--dusk-ink); font-family: var(--ln-font-display); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; border: 2px solid var(--ln-world-outline); border-radius: 8px; box-shadow: 2px 2px 0 var(--ln-world-outline); cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
+.intro-begin-btn { min-height: 48px; min-width: 44px; padding: 10px 24px; background: color-mix(in srgb, var(--ln-world-dusk-horizon) 82%, var(--dusk-deep)); color: var(--dusk-ink); font-family: var(--ln-font-display); font-weight: 800; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; border: 2px solid var(--ln-world-outline); border-radius: 8px; box-shadow: none; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
 @media (min-width: 640px) { .intro-screen .base-biome-choice { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .intro-begin-btn:hover { background: var(--ln-world-dusk-horizon); }
 .intro-begin-btn:focus-visible { outline: 3px solid var(--dusk-ink); outline-offset: 2px; }
@@ -2927,7 +2927,7 @@ body[data-pwa="standalone"]::before {
   background: #175f9b !important;
   border: 3px solid var(--ln-blueprint-ink) !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 0 rgba(15, 36, 54, 0.72) !important;
+  box-shadow: none;
 }
 .debrief-command-dock [data-testid="resolve-cargo-btn"]:hover,
 .debrief-command-dock [data-testid="collect-reward-btn"]:hover {
@@ -3142,7 +3142,7 @@ body:has([data-testid^="plan-sheet-"]) .flight-plan-slot > .flight-plan { displa
   padding: 4px 6px; background: color-mix(in srgb, var(--ln-bp-paper, #fff) 94%, transparent);
   border: 2px solid var(--ln-bp-blue, #1f78c1);
   border-radius: 10px;
-  box-shadow: 0 4px 0 color-mix(in srgb, var(--ln-bp-ink, #0f2436) 24%, transparent);
+  box-shadow: none;
   color: var(--ln-bp-ink, #0f2436);
 }
 .flight-plan:has(> .help-coach-dock) .flight-plan-row,
@@ -3394,7 +3394,7 @@ body:has([data-testid^="plan-sheet-"]) .flight-plan-slot > .flight-plan { displa
   background: var(--scene-card-bg);
   border: 3px solid var(--scene-ink);
   border-radius: 10px;
-  box-shadow: 0 4px 0 var(--scene-ink);
+  box-shadow: none;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -3617,7 +3617,7 @@ body:has([data-testid^="plan-sheet-"]) .flight-plan-slot > .flight-plan { displa
   border: 2px solid var(--ln-bp-ink);
   border-radius: var(--ln-r-md);
   background: var(--ln-bp-paper);
-  box-shadow: 3px 3px 0 var(--ln-bp-blue);
+  box-shadow: none;
 }
 .mining-overflow__scrub {
   min-height: 44px;
@@ -4023,7 +4023,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   border-radius: 12px;
   background: var(--ln-world-hull-lit);
   color: var(--ln-world-outline);
-  box-shadow: 4px 4px 0 color-mix(in srgb, var(--ln-world-outline) 35%, transparent);
+  box-shadow: none;
   text-align: left;
 }
 .hub-callout--clear button { min-height: 44px; }
@@ -4090,7 +4090,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   border: 2px solid color-mix(in srgb, var(--ln-world-hull-lit) 55%, var(--ln-world-outline));
   border-radius: 12px;
   background: linear-gradient(165deg, #1c2c48, #121c30 58%, #152433);
-  box-shadow: 4px 4px 0 #0c1424, 0 16px 32px rgba(6, 10, 20, 0.45);
+  box-shadow: none;
   color: #f4efe4;
 }
 .debrief-result-panel__status {
@@ -4140,7 +4140,7 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   min-height: 48px;
   border: 2px solid var(--ln-world-hull-lit) !important;
   background: linear-gradient(160deg, var(--ln-world-trim-blue), #12283f) !important;
-  box-shadow: 3px 3px 0 #0c1424 !important;
+  box-shadow: none;
   color: #f4efe4 !important;
 }
 @media (max-width: 620px) {
@@ -4169,10 +4169,10 @@ body:has([data-screen="hub"]) [data-screen="hub"].theme-blueprint,
   min-width: 44px;
   min-height: 36px;
   padding: 0 8px;
-  border: 1px solid var(--ln-world-outline);
+  border: 1px solid #58758b;
   border-radius: 4px;
-  background: var(--ln-world-hull-lit);
-  color: var(--ln-world-outline);
+  background: #173d56;
+  color: #f4efe4;
   font-family: var(--ln-font-mono);
   font-size: 14px;
   font-weight: 700;
@@ -4551,7 +4551,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   padding: 8px clamp(16px, 4vw, 48px);
   border-bottom: 3px solid var(--set-ink);
   background: var(--ln-blueprint-paper);
-  box-shadow: inset 0 4px 0 var(--ln-blueprint-blue);
+  box-shadow: none;
 }
 .ops-settings__card .ops-settings__stack {
   width: min(1280px, 100%);
@@ -4568,7 +4568,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 }
 .ops-settings__card .ops-settings__stack > section { min-width: 0; }
 .ops-settings__card .ops-settings__stack > section:first-child { grid-column: 1 / -1; }
-.ops-settings__card .ops-settings__panel { box-shadow: 4px 4px 0 var(--ln-blueprint-paper-2); }
+.ops-settings__card .ops-settings__panel { box-shadow: none; }
 .ops-settings .ln-set-segment > button { border-radius: 2px; }
 .ops-settings .ln-set-segment > button[aria-pressed="true"] {
   background: var(--ln-blueprint-blue);
@@ -4879,7 +4879,7 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
   padding: max(12px, env(safe-area-inset-top, 0px)) clamp(16px, 4vw, 48px) 12px;
   border: 0;
   background: color-mix(in srgb, var(--dusk-deep) 82%, transparent);
-  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dusk-ink) 22%, transparent);
+  box-shadow: none;
 }
 .ops-settings__page { color: var(--dusk-ink); font-size: 16px; letter-spacing: .2em; }
 .ops-settings__close {
@@ -4960,3 +4960,49 @@ html[data-flight-target~="mining-fire-laser"] .mining-screen [data-beacon="minin
 
 /* The mission board is its own full screen with no HUD cluster, so the training "?" chip drops to the bottom-left instead of covering the contract header. */
 .game-stage-main:has([data-screen="missions"]) .flight-plan-slot > .flight-plan-chip { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+
+.program-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 0 12px env(safe-area-inset-bottom, 0px);
+  background: var(--ln-void);
+  color: var(--ln-text);
+  font: 600 14px var(--ln-font-display);
+}
+.program-footer dialog {
+  margin: auto;
+  padding: 12px;
+  background: var(--ln-void);
+  color: var(--ln-text);
+  border: 1px solid var(--ln-hairline);
+}
+.program-footer form { display: grid; gap: 4px; }
+.program-footer button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 1px solid var(--ln-hairline);
+  cursor: pointer;
+}
+
+.agency-hangar { display: grid; place-items: center; overflow: auto; }
+.agency-hangar > div { padding: 16px; color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper); border: 2px solid currentColor; }
+.agency-hangar img { max-height: 18vh; max-width: 100%; object-fit: contain; }
+.agency-hangar button { min-height: 44px; margin-right: 8px; }
+
+.program-footer .program-new-mission { min-height:52px; min-width:180px; color:#142840; background:#9de7ef; font-weight:800; border-radius:8px; }
+.game-stage [data-surface="cream"], .game-screen [data-surface="cream"] { color:#f4efe4; background:#173d56; border:1px solid #58758b; box-shadow:none; }
+.program-footer:has(.program-new-mission) > strong,
+.program-footer:has(.program-new-mission) > span { display:none; }
+.program-footer .program-new-mission { flex:1; max-width:480px; margin-left:12px; }
+.mining-menu-options { width:100%; border-top:1px solid #58758b; }
+.mining-menu-options summary { min-height:44px; padding:12px 0; cursor:pointer; font:700 14px/1.3 var(--ln-font-body); }
+.mining-menu-options[open] { display:flex; flex-direction:column; gap:10px; }
+.mining-guide-dock .mining-guide-top { padding-top:20px; }
+.mining-guide-scroll .mining-guide-column { gap:8px; }
+.mining-guide-actions [data-testid="mining-resume-btn"] { background:#9de7ef; color:#142840; border-color:#9de7ef; }

@@ -119,7 +119,7 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
   onOpenMarket?: () => void
-  onOpenEvents?: () => void
+  onOpenEvents?: (eventId?: string) => void
   communityResearch?: CommunityResearch | null
   onOpenCommunity?: () => void
   subsurface?: boolean
@@ -863,7 +863,7 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
               onPrev={() => moveBase(-0.22)}
               onNext={() => moveBase(0.22)}
               onBuild={() => { setPlaceNote(null); setArrangeKind(null); setSubsurface(false); setEditMode(true) }}
-              onMission={!subsurface && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('solar-map') : undefined}
+              onMission={!subsurface && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
               locationNavigationDisabled={false}

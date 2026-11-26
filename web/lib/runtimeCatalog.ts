@@ -140,7 +140,8 @@ export function buildRuntimeCatalog({
   missionsDone,
   player,
 }: RuntimeCatalogOpts): Catalog {
-  const discoveredTargetList = [...Object.values(discoveredTargets), ...communityWorlds(player?.agencyCommunity).filter(target => !discoveredTargets[target.id])]
+  // Retain the target for a legacy trip already in progress. New telescope findings remain research records.
+  const discoveredTargetList = [...Object.values(discoveredTargets), ...communityWorlds(player?.agencyCommunity).filter(target => !discoveredTargets[target.id])].filter(target => target.id === targetId)
   // A satellite or telescope is run from the control station, so none is offered until one is built.
   const hasControlStation = !!player?.placed?.includes('control-station')
   const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation

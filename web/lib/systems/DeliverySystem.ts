@@ -25,6 +25,11 @@ export function applyDeliveryArrived(
     return state
   }
 
+  const plan = state.player.activeMission?.mission?.customPlan
+  if (plan?.work === 'deliver' && plan.zone !== undefined && plan.targetId === state.deliveryTargetId) {
+    return { ...state, screen: 'landing', player: { ...state.player, arrivalAt: null, transitStartedAt: null, missionPhase: 'landing', landingStartedAt: startedAt, debriefPending: false, returningToEarth: false } }
+  }
+
   return {
     ...state,
     screen: 'delivery',

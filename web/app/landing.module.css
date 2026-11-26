@@ -108,7 +108,7 @@
   border: 1px solid rgba(159, 208, 255, 0.72);
   border-radius: 8px;
   background: rgba(15, 22, 54, 0.76);
-  box-shadow: 3px 3px 0 rgba(107, 180, 238, 0.42);
+  box-shadow: none;
   backdrop-filter: blur(6px);
 }
 .event div { display: grid; gap: 4px; }

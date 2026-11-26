@@ -704,13 +704,10 @@ enum AuthoredSceneDeclarations {
         "surface": "canvas",
         "web": [
           "web/components/game/screens/DeliveryScreen.tsx",
-          "web/components/game/screens/DeliveryCanvas.tsx"
+          "web/components/takeon/TakeOnMount.tsx"
         ],
         "native": [
           "native/App/Screens/CoreLoop.swift"
-        ],
-        "engine": [
-          "web/public/game/scenes/delivery.scene.json"
         ]
       },
       "objects": [
@@ -894,7 +891,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "tess"
           ],
-          "note": "Subject data and context."
+          "note": "Subject data and context. A saved result opens the contribution page: Exoplanet Hunters, one classification saved locally, backend-confirmed or pending daily research and passport progress, plus the existing fragment balance. Measurements remain on their own readout page. iOS retains the submitted candidate and reports local save with confirmation pending; native passport receipts remain deferred with the companion scope."
         },
         {
           "id": "next-action",
@@ -904,7 +901,7 @@ enum AuthoredSceneDeclarations {
           "mechanics": [
             "tess"
           ],
-          "note": "Continue through the real instrument feed."
+          "note": "Continue through the real instrument feed: Next signal appears only for an eligible unresolved candidate; Data hub and Return to Base remain available. Reading the result never awards again."
         }
       ]
     },
@@ -916,8 +913,7 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/HangarScreen.tsx",
-          "web/components/game/screens/HangarBay.tsx"
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": [
           "native/App/Screens/HangarScreen.swift"
@@ -2135,7 +2131,8 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/ProbeScanScreen.tsx"
+          "web/components/game/screens/ProbeScanScreen.tsx",
+          "web/components/game/screens/ProbeSpectrumConsole.tsx"
         ],
         "native": []
       },
@@ -2159,7 +2156,7 @@ enum AuthoredSceneDeclarations {
             "community-research",
             "mission-planning"
           ],
-          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early."
+          "note": "Two-tone right half (under the orbit on a phone). Says what is new or when the next sector is done, lists every mineral found with its total tonnes (types new this visit highlighted). Each downloaded find offers Plan flight, carrying that body and mineral to an unsaved custom haul without replacing active work. Targeted run still opens the Free run tab with the probe's run picked; Contracts opens this body's offers; Back to hub leaves. Skip ends playback early. Level 1 starts surface mapping, level 2 a shallow subsurface pass, level 3 a deep subsurface pass; each is manually started and opens after the previous pass is downloaded. Level 4 opens a separate citizen science instrument: pick a downloaded sector, mark its spectrum dips, log the reading, then continue to an unread sector. Map and spectrum never share a page. Passes preserve the original reserve estimates. The map stays visible during download playback, with live time and an immediate scan flash when SCAN starts. Deployment offers a direct scanner handoff, selecting the newest probe. After a download, the player can open the existing readout, which shows the saved sector amount, server-confirmed or pending daily research stamp, passport progress, and eligible targeted run or contracts; Return to Base exits directly. The server receipt reads only the authenticated player save, never a local queued stamp."
         }
       ]
     },
@@ -2397,47 +2394,19 @@ enum AuthoredSceneDeclarations {
       "runtime": {
         "surface": "dom",
         "web": [
-          "web/components/game/screens/RocketWorkshopScreen.tsx"
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": []
       },
       "objects": [
         {
-          "id": "rocket-stack",
-          "kind": "vehicle",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Five independently tappable sections redraw from the fitted part tier and construction; hull, trim and decal persist. iOS follows in cycle 13 per Liam's SSL-850 comment."
-        },
-        {
-          "id": "parts-tray",
-          "kind": "panel",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Shows mission-unlocked catalog parts and permanently earned weekly research parts. Weekly milestones 2, 4 and 5 grant the silo T2, engine T2 and laser T3. Earned parts refit for free."
-        },
-        {
-          "id": "livery",
-          "kind": "panel",
-          "layout": "host",
-          "mechanics": [
-            "rocket-assembly"
-          ],
-          "note": "Free hull and trim colours from shared tokens, plus none, star, orbit or stripes decal."
-        },
-        {
           "id": "mission-readout",
           "kind": "panel",
           "layout": "host",
           "mechanics": [
-            "rocket-assembly",
             "mission-planning"
           ],
-          "note": "Live capacity, range and laser charges with named mission limits, including the farther delivery leg. Launch remains on the existing launchpad and keeps its validation."
+          "note": "Review the assigned hull, capacity, range and next unlock."
         }
       ]
     },
@@ -2555,49 +2524,6 @@ enum AuthoredSceneDeclarations {
             "records"
           ],
           "note": "Return to the base."
-        }
-      ]
-    },
-    {
-      "id": "solar-map",
-      "type": "menu",
-      "route": "solar-map",
-      "surface": "dom",
-      "runtime": {
-        "surface": "dom",
-        "web": [
-          "web/components/game/screens/SolarMapScreen.tsx"
-        ]
-      },
-      "objects": [
-        {
-          "id": "solar-map-field",
-          "kind": "world",
-          "layout": "host",
-          "mechanics": [
-            "mission-planning"
-          ],
-          "note": "The solar system with every body that has work lit."
-        },
-        {
-          "id": "place-missions",
-          "kind": "collection",
-          "parent": "solar-map-field",
-          "layout": "host",
-          "mechanics": [
-            "mission-planning"
-          ],
-          "note": "Agency missions and client missions for the picked place, kept in two groups."
-        },
-        {
-          "id": "base-action",
-          "kind": "button",
-          "parent": "solar-map-field",
-          "layout": "host",
-          "mechanics": [
-            "mission-planning"
-          ],
-          "note": "Return to the Base."
         }
       ]
     },

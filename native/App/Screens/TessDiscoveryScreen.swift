@@ -16,6 +16,7 @@ struct TessDiscoveryScreen: View {
     @State private var dragArmed = true
     /// SSL-745: photometry module (web lib/instrument-viewport/lightcurve-controls.ts).
     @State private var lc = LightcurveControls()
+    @State private var resultCandidate: TessCandidate?
 
     init(candidate: TessCandidate? = nil, inspect: String? = nil, marks: [TransitRange] = []) {
         self.candidate = candidate; self.inspect = inspect; _ranges = State(initialValue: marks)
@@ -28,6 +29,7 @@ struct TessDiscoveryScreen: View {
     }
 
     private var today: TessCandidate? {
+        if let resultCandidate { return resultCandidate }
         if training { return store.player.tessClassifications[Tess.trainingCandidate.id] == nil ? Tess.trainingCandidate : nil }
         return candidate ?? Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: inspect)
     }
@@ -71,7 +73,7 @@ struct TessDiscoveryScreen: View {
         let caption = display.folded ? String(format: "FOLDED · P %.2fD · FOLD OFF TO MARK", lc.period) : prompt ?? [window.label, "\(marks.count) MARK\(marks.count == 1 ? "" : "S")"].joined(separator: " · ")
         return InstrumentViewport(
             eyebrow: "Instrument data feed · Daily downlink", title: c.toi,
-            status: saved == nil ? "Review" : "Saved", caption: caption,
+            status: saved == nil ? "Review" : "Saved locally", caption: caption,
             back: { store.go(.instrumentHub) },
             onCommand: { line, view in
                 if let r = LightcurveControls.apply(lc, line) { lc = r.controls; return Instrument.CommandResult(view: view, lines: r.lines) }
@@ -92,12 +94,19 @@ struct TessDiscoveryScreen: View {
             overlay: { EmptyView() },
             answers: {
                 if saved != nil {
-                    Panel(accent: Theme.teal) { Text("Classification submitted").font(AppFont.display(16)) }
+                    VStack(spacing: 8) {
+                        Panel(accent: Theme.teal) { Text("1 classification saved locally. Research confirmation pending.").font(AppFont.body(14)) }
+                        if candidate == nil, Tess.today(candidates: feed.tess, player: store.player, dateKey: Saturn.dateKey(store.now), inspect: nil) != nil {
+                            InstrumentAnswerButton(title: "Next signal", primary: true) { resultCandidate = nil; ranges = []; sector = 0; lc = LightcurveControls() }
+                        }
+                        InstrumentAnswerButton(title: "Data hub") { store.go(.instrumentHub) }
+                        InstrumentAnswerButton(title: "Return to Base") { store.go(.hub) }
+                    }
                 } else {
                     HStack(spacing: 10) {
                         InstrumentAnswerButton(title: "Submit · Transit", primary: true, dim: ranges.isEmpty) { verdict(.planet, c) }
                         InstrumentAnswerButton(title: "Submit · Noise", dim: ranges.isEmpty) { verdict(.notPlanet, c) }
-                        InstrumentAnswerButton(title: "Skip") { store.classifyTess(c.id, verdict: .unsure, ranges: ranges, candidate: c) }
+                        InstrumentAnswerButton(title: "Skip") { verdict(.unsure, c) }
                     }
                 }
             },
@@ -123,6 +132,11 @@ struct TessDiscoveryScreen: View {
         rows.append(("View", (display.folded ? "ALL SECTORS" : String(format: "%.1fd", display.xDomain.upperBound - display.xDomain.lowerBound)) + " · BIN ×\(lc.bin)"))
         func label(_ v: TessVerdict) -> String { switch v { case .planet: return "TRANSIT"; case .notPlanet: return "NOISE"; case .unsure: return "SKIPPED" } }
         rows.append(("Verdict", saved.map { label($0.verdict) } ?? "PENDING"))
+        if saved != nil {
+            rows.append(("Project", "Exoplanet Hunters"))
+            rows.append(("Research", "Confirmation pending"))
+            if store.player.researchFragments > 0 { rows.append(("Fragments", "Balance \(store.player.researchFragments)")) }
+        }
         if saved != nil { rows.append(("Catalogue P", String(format: "%.2fd", c.periodDays))) }
         return InstrumentReadout(name: "READOUT · YOUR RESULT", rows: rows)
     }
@@ -150,6 +164,7 @@ struct TessDiscoveryScreen: View {
     /// A verdict that needs a marked dip explains itself instead of sitting dead.
     private func verdict(_ v: TessVerdict, _ c: TessCandidate) {
         if v != .unsure && ranges.isEmpty { needsMark = true; return }
+        resultCandidate = c
         store.classifyTess(c.id, verdict: v, ranges: ranges, candidate: c)
     }
 

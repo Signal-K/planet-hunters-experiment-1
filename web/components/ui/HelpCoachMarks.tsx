@@ -135,7 +135,7 @@ export default function HelpCoachMarks({ step, index, total, onNext, onStop }: {
       style={{
         position: flightPlan ? 'relative' : 'absolute', ...(flightPlan ? {} : pos), pointerEvents: 'auto',
         padding: 'var(--ln-s-3) var(--ln-s-4)', background: 'var(--ln-blueprint-paper, #fff)', color: 'var(--ln-bp-ink, #0f2436)',
-        border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: '4px 4px 0 var(--ln-blueprint-blue, #1f78c1)',
+        border: '2px solid var(--ln-cyan-border)', borderRadius: 'var(--ln-r-md)', boxShadow: 'none',
         ...(flightPlan ? { width: '100%', maxWidth: 'none', maxHeight: 'none' } : {}),
       }}
     >

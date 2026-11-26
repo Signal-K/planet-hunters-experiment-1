@@ -5,6 +5,7 @@ import { mineralsForArchetype } from './target-archetypes'
 import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
 import { suggestBuild, validateBuild } from './parts'
 import { RESOURCE_FOCUS_MISSION_ID } from './missions'
+import { supportsMissionAtTarget } from './mission-locations'
 
 // A landmark target: real body, hand-authored id/name/brief for narrative
 // recognizability, minerals derived from its composition archetype + orbit
@@ -136,6 +137,30 @@ export const TARGETS: Target[] = [
     brief: 'Ice-covered moon of Jupiter. Water ice over a silicate interior, with a banded giant in the sky.',
     archetype: 'icy',
   }),
+  // These are the named moons with native Takeon solar profiles. They remain
+  // separate destinations even though the map groups them under their parent.
+  landmark({ id: 'moon', name: 'Moon', type: 'planet', orbit: 3, difficulty: 'L1', brief: 'Earth’s airless, cratered companion.', archetype: 'S' }),
+  landmark({ id: 'phobos', name: 'Phobos', type: 'planet', orbit: 4, difficulty: 'L2', brief: 'Mars’s larger, heavily cratered moon.', archetype: 'S' }),
+  landmark({ id: 'deimos', name: 'Deimos', type: 'planet', orbit: 4, difficulty: 'L2', brief: 'Mars’s small, dusty outer moon.', archetype: 'S' }),
+  landmark({ id: 'io', name: 'Io', type: 'planet', orbit: 6, difficulty: 'L3', brief: 'A volcanic moon of Jupiter, marked by sulfur plains.', archetype: 'S' }),
+  landmark({ id: 'ganymede', name: 'Ganymede', type: 'planet', orbit: 6, difficulty: 'L3', brief: 'Jupiter’s largest moon, with icy and rocky terrain.', archetype: 'icy' }),
+  landmark({ id: 'callisto', name: 'Callisto', type: 'planet', orbit: 6, difficulty: 'L3', brief: 'An ancient, heavily cratered icy moon of Jupiter.', archetype: 'icy' }),
+  landmark({ id: 'saturn', name: 'Saturn', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'A ringed gas giant with a diverse family of moons.', archetype: 'gas-giant' }),
+  landmark({ id: 'titan', name: 'Titan', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'Saturn’s hazy moon, with methane lakes and icy ground.', archetype: 'icy' }),
+  landmark({ id: 'enceladus', name: 'Enceladus', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'A bright icy moon of Saturn, known for its plumes.', archetype: 'icy' }),
+  landmark({ id: 'mimas', name: 'Mimas', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'A small, heavily cratered icy moon of Saturn.', archetype: 'icy' }),
+  landmark({ id: 'tethys', name: 'Tethys', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'An icy Saturnian moon crossed by a great chasm.', archetype: 'icy' }),
+  landmark({ id: 'dione', name: 'Dione', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'An icy Saturnian moon with bright fractures.', archetype: 'icy' }),
+  landmark({ id: 'rhea', name: 'Rhea', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'Saturn’s second-largest moon, covered in ice and craters.', archetype: 'icy' }),
+  landmark({ id: 'iapetus', name: 'Iapetus', type: 'planet', orbit: 7, difficulty: 'L3', brief: 'A distant Saturnian moon with unusually dark and bright terrain.', archetype: 'C' }),
+  landmark({ id: 'uranus', name: 'Uranus', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'A cold ice giant with a strongly tilted axis.', archetype: 'gas-giant' }),
+  landmark({ id: 'miranda', name: 'Miranda', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'A small Uranian moon with rugged icy terrain.', archetype: 'icy' }),
+  landmark({ id: 'ariel', name: 'Ariel', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'A relatively bright icy moon of Uranus.', archetype: 'icy' }),
+  landmark({ id: 'umbriel', name: 'Umbriel', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'A dark, cratered moon of Uranus.', archetype: 'C' }),
+  landmark({ id: 'titania', name: 'Titania', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'Uranus’s largest moon, with icy plains and fractures.', archetype: 'icy' }),
+  landmark({ id: 'oberon', name: 'Oberon', type: 'planet', orbit: 8, difficulty: 'L3', brief: 'A distant, cratered Uranian moon of rock and ice.', archetype: 'icy' }),
+  landmark({ id: 'neptune', name: 'Neptune', type: 'planet', orbit: 9, difficulty: 'L3', brief: 'A distant ice giant with powerful winds.', archetype: 'gas-giant' }),
+  landmark({ id: 'triton', name: 'Triton', type: 'planet', orbit: 9, difficulty: 'L3', brief: 'Neptune’s cold, icy largest moon.', archetype: 'icy' }),
 ]
 
 export const STARS: Star[] = [
@@ -157,7 +182,7 @@ export const STAR_LINKS: [string, string][] = [
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
   // Explicit fixed-target missions: only the designated target is valid.
-  if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
+  if (mission.targetId) return targets.filter(t => t.id === mission.targetId && supportsMissionAtTarget(mission, t))
 
   // A construction mission's minerals are materials carried from the stash, not ore the target must hold.
   const required = mission.construction ? [] : Object.keys(mission.requires.minerals)
@@ -174,7 +199,7 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
     const mineralsAvailable = mission.id === RESOURCE_FOCUS_MISSION_ID
       ? required.some(mineral => t.minerals.includes(mineral))
       : required.every(mineral => t.minerals.includes(mineral))
-    return inRange && typeOk && mineralsAvailable
+    return inRange && typeOk && mineralsAvailable && supportsMissionAtTarget(mission, t)
   })
 }
 

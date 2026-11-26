@@ -10,6 +10,14 @@ function withStaticParts(seeded: Part[], fallback: readonly Part[]): Part[] {
   return [...seeded, ...fallback.filter(part => !have.has(part.id))]
 }
 
+/** Keep authored destinations available while allowing live rows to update their details. */
+export function mergeTargetCatalog(seeded: Target[]): Target[] {
+  const authored = new Map(TARGETS.map(target => [target.id, target]))
+  const merged = seeded.map(target => ({ ...authored.get(target.id), ...target }))
+  const have = new Set(merged.map(target => target.id))
+  return [...merged, ...TARGETS.filter(target => !have.has(target.id))]
+}
+
 export interface Catalog {
   targets: Target[]
   missions: Mission[]
@@ -271,7 +279,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   ]
 
   return {
-    targets: locations.filter(isSolarTarget).map(toTarget),
+    targets: mergeTargetCatalog(locations.filter(isSolarTarget).map(toTarget)),
     missions: tagMissionCategories(allMissions),
     // A part a rocket model is built from but the PocketBase table lacks (hull-mk3 and hull-hauler were never
     // seeded) made validateBuild fall back to the starter hull, so the Surveyor read "Cannot reach" (Liam, 01.11).

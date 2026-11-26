@@ -81,11 +81,13 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url)
 
-  if (url.hostname === SCIENCE_HOST) {
+  if (url.hostname === SCIENCE_HOST || (url.origin === self.location.origin && url.pathname.startsWith('/api/radio-images/'))) {
     event.respondWith(
       caches.open(SCIENCE_CACHE).then(async cache => {
         const cached = await cache.match(request.url)
-        if (cached) return cached
+        // An opaque prefetch can display as a plain image, but browsers reject it
+        // for a CORS annotation image. Fetch a readable response in that case.
+        if (cached && !(request.mode === 'cors' && cached.type === 'opaque')) return cached
         try {
           const res = await fetch(request)
           if (res.ok || res.type === 'opaque') cache.put(request.url, res.clone()).then(() => trimScience(cache))
@@ -271,8 +273,9 @@ self.addEventListener('message', event => {
       await Promise.all(urls.map(async url => {
         if (await cache.match(url)) return
         try {
-          // The upload host may not send CORS headers; an opaque response still renders in <img>.
-          const res = await fetch(url, { mode: 'no-cors' })
+          // Prefer readable images so later annotation requests can reuse this cache.
+          // Plain-image fallback still lets hosts without CORS work offline.
+          const res = await fetch(url, { mode: 'cors' }).catch(() => fetch(url, { mode: 'no-cors' }))
           if (res.ok || res.type === 'opaque') await cache.put(url, res)
         } catch {
           // Optional warm-up: the next online visit tries again.

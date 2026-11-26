@@ -1,18 +1,22 @@
 import type { GameState, Player } from '@/lib/game-types'
 import type { Mission, MineralMeta, RocketModel, Target } from '@/lib/data/types'
 import type { Catalog } from '@/lib/catalog'
-import { ROCKET_MODELS, rocketConfigForModel } from '@/lib/data/rockets'
+import { rocketConfigForModel } from '@/lib/data/rockets'
 import { validateBuild } from '@/lib/data/parts'
 import { buildingLevel } from '@/lib/data/building-levels'
 import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { isArtifactMineralId } from '@/lib/data/minerals'
-import { rocketUnlocked, rocketPrice } from '@/lib/rockets'
+import { agencyRocket } from '@/lib/rockets'
 import { rocketBuilderStats, asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { travelDurationMs, MISSION_ORBIT_MS } from '@/lib/data/flight'
+import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
+import { MISSION_ZONES, type MissionZone } from '@/lib/data/mission-zone'
+import { supportsSolarField } from '@/lib/takeon/solarField'
+import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 
 export type PlannedWork = 'mine' | 'survey' | 'deliver'
-export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number }
+export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number; zone?: MissionZone }
 export interface DeliveryReceipt { targetId: string; cargo: Record<string, number>; at: number }
 export const PLAN_PREFIX = 'self-plan-'
 export function sanitizeMissionPlans(raw: unknown): Record<string, MissionPlan> {
@@ -22,6 +26,13 @@ export function sanitizeMissionPlans(raw: unknown): Record<string, MissionPlan> 
     return p && id === p.id && /^self-plan-[a-zA-Z0-9-]+$/.test(id) && typeof p.targetId === 'string' && typeof p.mineral === 'string'
       && ['mine', 'survey', 'deliver'].includes(p.work) && Number.isInteger(p.amount) && p.amount >= 1 && p.amount <= (p.work === 'survey' ? 24 : 999)
       && Number.isFinite(p.createdAt)
+  }).map(([id, value]) => {
+    const plan = value as MissionPlan
+    if (plan.zone !== undefined && !MISSION_ZONES.includes(plan.zone)) {
+      const { zone: _invalid, ...legacy } = plan
+      return [id, legacy]
+    }
+    return [id, plan]
   }))
 }
 export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Record<string, MineralMeta>): Mission {
@@ -31,7 +42,7 @@ export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Rec
   const cargo = plan.work === 'survey' ? {} : { [plan.mineral]: plan.amount }
   return {
     id: plan.id, customPlan: plan, title: `${verb} ${target.name}`, brief: plan.work === 'survey'
-      ? `Leave a probe in orbit to map ${plan.amount} sectors. Download its readings at the Data hub as they arrive.`
+      ? `Leave a probe in orbit to map ${plan.amount} sectors. Press SCAN at the Data hub to start, then download its readings as they arrive.`
       : plan.work === 'deliver' ? `Carry ${plan.amount} ${meta?.name ?? plan.mineral} from your Earth stash to your forward cache at ${target.name}. Cargo loads at launch.`
         : `Bring home ${plan.amount} ${meta?.name ?? plan.mineral}. Keep it or sell it on return.`,
     tag: 'PROGRAM', category: plan.work === 'mine' ? 'free-mining' : 'explore', difficulty: target.difficulty,
@@ -44,12 +55,13 @@ export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Rec
   }
 }
 export function plannerRockets(player: Player): RocketModel[] {
-  return ROCKET_MODELS.filter(model => rocketUnlocked(model, player) || player.stagedRockets?.some(vehicle => vehicle.rocketId === model.id))
+  return [agencyRocket(player)]
 }
 export function plannerTargets(player: Player, catalog: Catalog, work: PlannedWork): Target[] {
   const range = Math.max(0, ...plannerRockets(player).map(model => rocketBuilderStats(rocketConfigForModel(model), asLoadout(player.shipCustomizerParts), catalog.parts, communityBonusRate(player).fuel).range))
-  return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet', 'exoplanet'].includes(target.type) && target.orbit <= range
-    && (work === 'survey' || (target.type !== 'exoplanet' && target.archetype !== 'gas-giant' && target.id !== 'venus'))
+  return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet'].includes(target.type) && target.orbit <= range
+    && supportsMissionAtTarget(missionFromPlan({ id: 'self-plan-range', targetId: target.id, work, mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target)
+    && (work === 'survey' || target.id !== 'venus')
     && plannerRockets(player).some(model => validateBuild({ mission: missionFromPlan({ id: 'self-plan-range', targetId: target.id, work: 'survey', mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)).sort((a, b) => a.orbit - b.orbit || a.name.localeCompare(b.name))
 }
 export function plannerMinerals(player: Player, target: Target | undefined, catalog: Catalog, work: PlannedWork): string[] {
@@ -61,15 +73,17 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   const issues: string[] = []
   if (!player.freeOperations) issues.push('Finish training to plan your own mission.')
   if (!target) issues.push('Choose a reachable destination for this work.')
+  if (plan.zone !== undefined && (plan.work !== 'deliver' || !supportsSolarField(plan.targetId))) issues.push('This landing site is only available for supported delivery destinations.')
+  if (plan.zone !== undefined && plan.work === 'deliver' && !LANDNAM_TO_TAKEON_MINERAL[plan.mineral]) issues.push('Choose cargo supported by the surface rover.')
   if (!Number.isInteger(plan.amount) || plan.amount < 1 || plan.amount > (plan.work === 'survey' ? 24 : 999)) issues.push(plan.work === 'survey' ? 'Choose 1–24 sectors.' : 'Choose a whole amount from 1 to 999.')
   if (plan.work !== 'survey' && !plannerMinerals(player, target, catalog, plan.work).includes(plan.mineral)) issues.push('Choose available ore for this work.')
   if (plan.work === 'deliver' && (player.stash?.[plan.mineral] ?? 0) < plan.amount) issues.push(`Earth stash has ${player.stash?.[plan.mineral] ?? 0}; delivery needs ${plan.amount}.`)
   if (plan.work === 'survey' && !player.placed.includes('control-station')) issues.push('Build the control station to launch a survey probe.')
   if (plan.work === 'survey' && player.probes?.[plan.targetId]) issues.push('A probe already orbits this body. Open it at the Data hub.')
   const mission = target ? missionFromPlan(plan, target, catalog.minerals) : null
-  const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok).sort((a, b) => rocketPrice(a, player) - rocketPrice(b, player)) : []
+  const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok) : []
   if (mission && !models.length) issues.push(`No available rocket fits: ${mission.requires.cargo_min} U cargo, orbit ${target!.orbit}, laser T${mission.requires.drill_tier}.`)
-  return { target, mission, issues, rocket: models[0], buildCost: models[0] ? rocketPrice(models[0], player) : 0,
+  return { target, mission, issues, rocket: models[0],
     outboundMs: target ? travelDurationMs(target, MISSION_ORBIT_MS) : 0,
     marketEstimate: plan.work === 'mine' ? Math.round((catalog.minerals[plan.mineral]?.price ?? 0) * plan.amount * OPEN_MARKET_SELL_RATE) : 0 }
 }

@@ -197,6 +197,8 @@ export function ControlStationConsole({
   onDonation,
   onService,
 }: ControlStationConsoleProps) {
+  const [inspectedId, setInspectedId] = useState<string | null>(null)
+  const shownInstrument = inspectedId ?? telescopeId ?? telescopes[0]?.id
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
   const active = telescopes.find(item => item.id === telescopeId) ?? null
@@ -302,8 +304,18 @@ export function ControlStationConsole({
           </span>
         </header>
         {notice}
+        <label className={styles.instrumentPicker}>Instrument
+          <select value={shownInstrument ?? ''} onChange={event => {
+            const id = event.target.value
+            setInspectedId(id)
+            setPickedId(null)
+            onTelescope(telescopes.find(scope => scope.id === id)?.built ? id : null)
+          }}>
+            {telescopes.map(scope => <option key={scope.id} value={scope.id}>{scope.name}{scope.built ? '' : ' · available to build'}</option>)}
+          </select>
+        </label>
         <ul className={styles.keys}>
-          {telescopes.map(scope => (
+          {telescopes.filter(scope => scope.id === shownInstrument).map(scope => (
             <li key={scope.id} className={styles.key} data-testid="control-station-telescope" data-telescope={scope.id} data-on={scope.id === telescopeId}>
               <button
                 type="button"
@@ -327,6 +339,8 @@ export function ControlStationConsole({
                 </span>
                 {scope.built && <span className={styles.counter} data-ready={scope.readyCount > 0} aria-label={`${scope.readyCount} ready`}>{String(scope.readyCount).padStart(2, '0')}</span>}
               </button>
+              <details>
+                <summary>Instrument details</summary>
               {programme?.[scope.id] && (() => {
                 const craft = programme[scope.id]
                 return <div className={styles.programme} data-testid={`agency-craft-${craft.id}`}>
@@ -358,6 +372,7 @@ export function ControlStationConsole({
                   {ground.unplaced === 1 ? 'One telescope waits' : `${ground.unplaced} telescopes wait`} in the Base's Unplaced tray. Place it to observe.
                 </p>
               )}
+              </details>
               {(!scope.built || (scope.id === 'ground' && ground && ground.owned < ground.max)) && (() => {
                 const more = scope.built
                 const verb = more ? 'Add a telescope' : 'Build'

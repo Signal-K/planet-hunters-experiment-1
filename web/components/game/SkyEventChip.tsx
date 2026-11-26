@@ -31,7 +31,7 @@ export default function SkyEventChip({
   debrisCount?: number
   fragmentGoal?: number
   badgeTier?: BadgeTier | null
-  onParticipate?: () => void
+  onParticipate?: (eventId?: string) => void
   orionidsRead?: boolean
   playerLocation?: PlayerLocation | null
 }) {
@@ -92,9 +92,9 @@ export default function SkyEventChip({
             type="button"
             className={styles.eventButton}
             data-testid="sky-event-chip"
-            aria-expanded={open}
-            aria-label={peak ? 'Orionids peak times two. Open event details.' : 'Orionids live. Open event details.'}
-            onClick={() => setOpen(o => !o)}
+            aria-expanded={surface === 'base' ? undefined : open}
+            aria-label={peak ? 'Orionids peak times two. Open Orionids event.' : 'Orionids live. Open Orionids event.'}
+            onClick={() => surface === 'base' && onParticipate ? onParticipate(preset.eventId) : setOpen(o => !o)}
           >
             <img src={variant.meteorIcon} alt="" />
             <span>Orionids</span>
@@ -105,9 +105,9 @@ export default function SkyEventChip({
             type="button"
             className={styles.chip}
             data-testid="sky-event-chip"
-            aria-expanded={open}
+            aria-expanded={surface === 'base' ? undefined : open}
             aria-label="Orionids active. Fragments are caught on the way up."
-            onClick={() => setOpen(o => !o)}
+            onClick={() => surface === 'base' && onParticipate ? onParticipate(preset.eventId) : setOpen(o => !o)}
           >
             <img src={variant.chipOn} alt="" width={235} height={44} />
           </button>
@@ -116,8 +116,8 @@ export default function SkyEventChip({
             type="button"
             className={styles.fallback}
             data-testid="sky-event-chip"
-            aria-expanded={open}
-            onClick={() => setOpen(o => !o)}
+            aria-expanded={surface === 'base' ? undefined : open}
+            onClick={() => surface === 'base' && onParticipate ? onParticipate(preset.eventId) : setOpen(o => !o)}
           >
             {preset.chipLabel}
           </button>
@@ -142,7 +142,7 @@ export default function SkyEventChip({
             )}
             <div className={styles.actions}>
               {surface === 'base' && <button type="button" className={styles.secondary} data-testid="orionids-read-sky" onClick={() => openOrionidsReading(onParticipate)}>READ THE SKY</button>}
-              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate} disabled={orionids && !orionidsRead} aria-disabled={orionids && !orionidsRead}>{orionids && !orionidsRead ? 'READ THE SKY FIRST' : 'VIEW EVENT'}</button>}
+              {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={() => onParticipate?.(preset.eventId)} disabled={orionids && !orionidsRead} aria-disabled={orionids && !orionidsRead}>{orionids && !orionidsRead ? 'READ THE SKY FIRST' : 'VIEW EVENT'}</button>}
             </div>
             {badgeTier && (
               <button type="button" className={styles.fallback} data-testid="orionids-share" onClick={() => { void share() }}>
@@ -153,8 +153,8 @@ export default function SkyEventChip({
         )}
         {open && !orionids && preset && (
           <div className={styles.note} role="status">
-            <p>{preset.label} falls while you mine tonight. Laser it after it lands, then sell it at the Market spot price. It does not count toward the mining order.</p>
-            {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={onParticipate}>VIEW EVENT</button>}
+            <p>Open the event to see its missions, progress and rewards.</p>
+            {onParticipate && <button type="button" className={styles.participate} data-testid="sky-event-participate" onClick={() => onParticipate?.(preset.eventId)}>VIEW EVENT</button>}
             {preset.eventId === 'draconids-2026' && (
               <nav className={styles.playerLinks} aria-label="Continue World Space Week in other games">
                 {WORLD_SPACE_WEEK_PLAYER_LINKS.map(link => (

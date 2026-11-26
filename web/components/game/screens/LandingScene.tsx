@@ -1,17 +1,22 @@
 'use client'
 
 import styles from './LandingScene.module.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import SolarOrbitGlobe from './SolarOrbitGlobe'
+import SolarSurface from './SolarSurface'
 import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
 import { terrainLookForTarget, type TerrainLook } from '@/lib/takeon/terrainColour'
 import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController'
 import type { Target } from '@/lib/data'
+import type { MissionZone } from '@/lib/data/mission-zone'
 
 interface Props {
   target: Target
   progress: number
   mode: LandingSequenceMode
+  realism?: number
+  zone?: MissionZone
 }
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -31,10 +36,17 @@ function rng(seed0: number) {
  * in space) to 0 (surface: the field fills the view). No rover is passed, so
  * Takeon draws none: a landing has no vehicle on the ground yet.
  */
-export default function LandingScene({ target, progress, mode }: Props) {
+export default function LandingScene({ target, progress, mode, realism = 0, zone }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 160, h: 100 })
   const [tick, setTick] = useState(0)
+  const [globeReady, setGlobeReady] = useState(false)
+  const [surfaceReady, setSurfaceReady] = useState(false)
+  const onSurfaceReady = useCallback((ready: boolean) => setSurfaceReady(ready), [])
+  const onGlobeReady = useCallback((ready: boolean) => setGlobeReady(ready), [])
+  // Switch both views together: showing one generated layer with an unrelated
+  // fallback layer would make the apparent landing location jump on descent.
+  const solarReady = globeReady && surfaceReady
 
   useEffect(() => {
     const el = ref.current
@@ -117,9 +129,9 @@ export default function LandingScene({ target, progress, mode }: Props) {
             <stop offset="1" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0" />
           </linearGradient>
         </defs>
-        {glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 3} fill="none" stroke="url(#ls-air)" strokeWidth={6} opacity={glowRim} />}
-        <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />
-        <g clipPath="url(#ls-limb)">
+        {!solarReady && glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 3} fill="none" stroke="url(#ls-air)" strokeWidth={6} opacity={glowRim} />}
+        {!solarReady && <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />}
+        {!solarReady && <g clipPath="url(#ls-limb)">
           <circle cx={limbX - limbR * 0.16} cy={limbY + limbR + limbR * 0.06} r={limbR * 0.96} fill={ground[1]} />
           <circle cx={limbX - limbR * 0.3} cy={limbY + limbR + limbR * 0.14} r={limbR * 0.86} fill={ground[0]} />
           {craters.map((c, i) => {
@@ -127,18 +139,23 @@ export default function LandingScene({ target, progress, mode }: Props) {
             const cy = limbY + 4 + c.d * Math.min(limbR * 0.3, H * 0.5)
             return <ellipse key={i} cx={cx} cy={cy} rx={c.s * lerp(1, 4, t)} ry={c.s * lerp(0.7, 1.6, t)} fill={ground[2]} opacity={0.55 * (1 - clamp01((low - 0.55) / 0.3))} />
           })}
-        </g>
+        </g>}
         {heat > 0 && <ellipse cx={padX} cy={landerY + 4} rx={16 * heat} ry={22 * heat} fill="url(#ls-heat)" opacity={0.5 * heat} />}
       </svg>
 
+      {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <SolarOrbitGlobe targetId={target.id} zone={zone} colours={ground} realism={realism} scale={lerp(1, 12, t * t)} opacity={solarReady ? worldOpacity : 0} onReady={onGlobeReady} />}
+
       <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.82, 1.08, low)})`, transformOrigin: '50% 64%', opacity: fieldOpacity, WebkitMaskImage: mask, maskImage: mask, pointerEvents: 'none' }}>
-        <TakeOnMount
+        <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 0 : 1 }}><TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
+          target={target}
+          zone={zone}
           startView="iso"
           readOnly
           className={styles.field}
-        />
+        /></div>
+        {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 1 : 0 }}><SolarSurface targetId={target.id} zone={zone} ground={ground} realism={realism} onReady={onSurfaceReady} /></div>}
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label={mode === 'descend' ? 'Lander descending to the surface' : 'Lander climbing to orbit'} data-testid="landing-canvas" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

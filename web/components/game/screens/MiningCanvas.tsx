@@ -75,7 +75,6 @@ interface MiningCanvasProps {
 }
 
 export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
-  void rocketImageSrc
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
   debrisPresetRef.current = debrisPreset
@@ -188,7 +187,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
 
         // SSL-708: the ship starts about a quarter of the way in, not hugging the left edge.
         const startX = Math.round(Math.max(110, Math.min(320, worldW * 0.24)))
-        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey })
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey, rocketImageSrc })
         if (destroyed) {
           field.backdrop.destroy({ children: true })
           field.beam.destroy({ children: true })
@@ -308,9 +307,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
         app.ticker.add(ticker => {
           sceneTime += ticker.deltaMS / 1000
           const firing = lastFireAt > 0 && performance.now() - lastFireAt < 180
-          field.step(sceneTime, prefersReducedMotion(), firing)
           const kick = prefersReducedMotion() || lastFireAt < 0 ? 0 : recoilOffset((performance.now() - lastFireAt) / 1000)
-          // The ship stays level; altitude moves it between the sky ceiling and just above the ground.
+          // Altitude moves between the sky ceiling and just above the ground.
           const dt = ticker.deltaMS / 1000
           shipX = Math.max(40, Math.min(worldW - 40, shipX + steering * STEER_SPEED * dt))
           field.ship.x = shipX
@@ -318,7 +316,10 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           field.beam.x = shipX
           field.spark.x = shipX
           field.dig.x = shipX
+          const previousAltitude = altitude
           altitude = Math.max(minAlt, Math.min(maxAlt, altitude + climb * CLIMB_SPEED * dt))
+          field.climb = altitude === previousAltitude ? 0 : climb
+          field.step(sceneTime, prefersReducedMotion(), firing)
           // Liam, 01.11: the hills behind the grey ridge are scenery, not solid. They scroll at a third of
           // the ground's speed and read as distant, so flying "into" them bumped the hull for no visible
           // reason. The flight floor (maxAlt) keeps the hull above the grey foreground ridge.

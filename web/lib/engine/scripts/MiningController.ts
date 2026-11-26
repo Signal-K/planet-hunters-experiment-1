@@ -429,7 +429,7 @@ export class MiningController extends ScriptBehaviour {
 
     const visibleChipLabels: Array<{ ore: OreEntity; center: number; halfWidth: number }> = []
     for (const ore of this.ores) {
-      if (!ore.hero) ore.go.transform.position.x -= dx
+      if (!ore.hero && !ore.catchable) ore.go.transform.position.x -= dx
       if (ore.frames && ore.frames.length > 1 && ore.sprite) {
         ore.animTime += dt
         const frame = ore.frames[Math.floor(ore.animTime / 0.6) % ore.frames.length]
@@ -758,21 +758,21 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private spawnDebris(mineral: string, speedFactor: number, hero = false, catchable = false): void {
-    // Aim where the ship is now, shifted by how far the ground scrolls while the fragment falls.
-    const groundY = (this.opts.surfaceY ?? SURFACE_Y) - 4
-    const y = hero ? -36 : -20 - Math.random() * 40
+    // Catchable rain falls in the visible sky; ordinary debris still travels with terrain.
+    const y = catchable ? 24 : hero ? -36 : -20 - Math.random() * 40
     const baseSpeed = DEBRIS_BASE_FALL_SPEED * Math.max(0.2, speedFactor)
     // SSL-711: a catchable fragment never reaches the ship sooner than CATCH_MIN_SECONDS_TO_SHIP, and is aimed at where the ship can meet it.
     const fallSpeed = catchable
       ? Math.min(baseSpeed, Math.max(20, this.currentShipY() - y) / CATCH_MIN_SECONDS_TO_SHIP)
       : baseSpeed * (hero ? 1.35 : 1)
-    const fallTime = catchable ? Math.max(0, this.currentShipY() - y) / fallSpeed : (groundY + 40) / baseSpeed
-    const rainX = this.currentShipX() + SCROLL_SPEED * fallTime + (Math.random() * 2 - 1) * RAIN_SPREAD
+    // Rain starts fully visible and falls independently of terrain scroll. Previously it
+    // spawned off the right edge, spending most of its reaction window out of sight.
+    const rainX = this.currentShipX() + (Math.random() * 2 - 1) * RAIN_SPREAD
     const x = hero
       ? this.currentShipX()
       : catchable
-        // Not clamped to the right edge: on a narrow phone the aim point sits past the screen and the fragment drifts in. Clamping it made every fragment land out of reach.
-        ? Math.max(40, rainX)
+        // Keep the whole fragment visible, including on narrow portrait screens.
+        ? Math.max(24, Math.min(this.opts.worldWidth - 24, rainX))
         : 40 + Math.random() * Math.max(80, this.opts.worldWidth - 80)
     const colorHex = this.opts.mineralColors[mineral] ?? LASER_COLOR
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)

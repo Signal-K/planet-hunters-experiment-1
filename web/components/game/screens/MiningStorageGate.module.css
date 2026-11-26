@@ -1,7 +1,7 @@
 /* KES-283 storage gate, in the two-tone mission style (Community research, the ORI-1 receiver):
    a dark rounded panel with two choice tiles, before a free run starts. */
 .overlay { position: absolute; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4, 10, 20, .62); }
-.gate { width: min(100%, 420px); display: grid; gap: 8px; padding: 18px 20px 20px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 22px; background: linear-gradient(160deg, rgba(60, 44, 118, .94), rgba(22, 104, 148, .94)); color: #f4efe4; text-align: center; box-shadow: 0 12px 32px rgba(4, 10, 20, .5), inset 0 1px 0 rgba(255, 255, 255, .12); }
+.gate { width: min(100%, 420px); display: grid; gap: 8px; padding: 18px 20px 20px; border: 1px solid rgba(244, 239, 228, .3); border-radius: 22px; background: linear-gradient(160deg, rgba(60, 44, 118, .94), rgba(22, 104, 148, .94)); color: #f4efe4; text-align: center; box-shadow: none; }
 .eyebrow { color: #9de7ef; font: 800 14px/1.2 var(--ln-font-body); letter-spacing: .1em; text-transform: uppercase; }
 .gate h2 { margin: 0; font: 800 24px/1.1 var(--ln-font-display); }
 .gate p { margin: 0 0 6px; color: #e6e1d6; font: 600 15px/1.35 var(--ln-font-body); }

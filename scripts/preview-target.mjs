@@ -22,6 +22,7 @@ const SCREENS = [
   ['mission-planner', 'ui-mission-planner'],
   ['planner-survey', 'ui-mission-planner-survey'],
   ['planner-delivery', 'ui-mission-planner-delivery'],
+  ['solar-site-delivery', 'solar-site-delivery'],
   ['research-passport', 'ui-research-passport'],
   ['passport-unconfirmed', 'ui-research-passport-unconfirmed'],
   ['passport-missed', 'ui-research-passport-missed'],
@@ -32,6 +33,11 @@ const SCREENS = [
   ['surfacesilo', 'ui-surface-silo'],
   ['controlstation', 'ui-instrument-hub'], ['basemenu', 'cp-mid'],
   ['agency', 'hub-first-run'], ['hub-first-run', 'hub-first-run'], ['hub', 'cp-mid'], ['basedock', 'cp-mid'], ['baselayer', 'cp-mid'],
+  ['radio-receipt-pending', 'ui-radio-receipt-pending'],
+  ['radio-receipt', 'ui-radio-receipt'],
+  ['tess-receipt', 'ui-tess-receipt'],
+  ['probe-receipt', 'ui-probe-receipt'],
+  ['probespectrum', 'ui-probe-science'], ['probe-science', 'ui-probe-science'], ['probe-subsurface', 'ui-probe-subsurface'], ['probescan', 'ui-probe-scan'],
   ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
@@ -46,7 +52,7 @@ const ROUTE_PRESETS = {
   'surface-silo': 'ui-surface-silo',
   hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
-  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', 'flight-return': 'ui-flight-return', 'craft-service': 'ui-craft-service', 'agency-programme': 'ui-agency-programme', 'agency-research': 'ui-agency-research', refinery: 'ui-refinery', 'solar-map': 'ui-solar-map', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
+  'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', 'flight-return': 'ui-flight-return', 'craft-service': 'ui-craft-service', 'agency-programme': 'ui-agency-programme', 'agency-research': 'ui-agency-research', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
   targets: 'ui-target-picker', build: 'ui-build', intro: 'm1-intro',
 }
 

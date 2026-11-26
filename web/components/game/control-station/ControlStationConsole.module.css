@@ -52,7 +52,7 @@
   flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
   border: 2px solid rgba(244, 239, 228, 0.55);
   background: radial-gradient(circle at 35% 30%, rgba(88, 208, 234, 0.35), rgba(8, 16, 34, 0.7));
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(8, 16, 34, 0.3);
+  box-shadow: none;
   color: var(--cyan-soft);
 }
 .deskIcon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
@@ -63,7 +63,7 @@
 .tiles div {
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 9px 12px;
   border-radius: 8px; background: var(--well);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: none;
 }
 .tiles dt { min-width: 0; color: var(--mute); font: 700 14px/1 var(--ln-font-body); letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tiles dd { margin: 0; color: var(--cyan-soft); font: 700 20px/1 var(--ln-font-mono); font-variant-numeric: tabular-nums; }
@@ -77,7 +77,7 @@
   border: 1px solid rgba(244, 239, 228, 0.22);
   border-radius: 20px;
   background: linear-gradient(155deg, rgba(255, 255, 255, 0.08), rgba(8, 16, 34, 0.28));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 3px 0 rgba(8, 16, 34, 0.35);
+  box-shadow: none;
 }
 .key[data-on='true'] { border-color: var(--cyan); background: linear-gradient(155deg, rgba(88, 208, 234, 0.2), rgba(8, 16, 34, 0.3)); }
 .keyToggle {
@@ -104,7 +104,7 @@
   height: 28px;
   border-radius: 999px;
   background: rgba(8, 16, 34, 0.7);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: none;
   transition: background 0.18s ease;
 }
 .switch span {
@@ -130,7 +130,7 @@
 .whereIcon { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; color: var(--cream); }
 .whereIcon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .keyCopy em { color: var(--cyan-soft); font: 700 14px/1.2 var(--ln-font-body); font-style: normal; }
-.led { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #3a4558; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5); }
+.led { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #3a4558; box-shadow: none; }
 .led[data-on='true'] { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
 .led[data-ready='true'] { background: var(--gold); box-shadow: 0 0 7px var(--gold); }
 
@@ -140,7 +140,7 @@
   padding: 6px 8px;
   border-radius: 8px;
   background: #070c18;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+  box-shadow: none;
   color: #4d5d72;
   font: 700 20px/1 var(--ln-font-mono);
   text-align: center;
@@ -227,7 +227,7 @@
   padding: 4px;
   border-radius: 999px;
   background: rgba(8, 16, 34, 0.62);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: none;
 }
 .viewThumb {
   position: absolute;
@@ -237,7 +237,7 @@
   width: calc((100% - 8px) / 3);
   border-radius: 999px;
   background: radial-gradient(circle at 40% 25%, #fffaf0, #e2d9c6);
-  box-shadow: 0 2px 6px rgba(8, 16, 34, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   transform: translateX(calc(var(--pos) * 100%));
   transition: transform 0.2s ease;
 }
@@ -269,7 +269,7 @@
   background:
     radial-gradient(ellipse at 50% 120%, rgba(88, 208, 234, 0.12), transparent 60%),
     linear-gradient(#060b18, #0c1630);
-  box-shadow: 0 0 0 5px rgba(8, 16, 34, 0.45), inset 0 0 30px rgba(0, 0, 0, 0.6);
+  box-shadow: none;
   overflow: hidden;
 }
 .scopeBar {
@@ -299,7 +299,7 @@
   border-radius: 14px;
   overflow: hidden;
   container-type: size;
-  box-shadow: inset 0 0 0 1px rgba(157, 231, 239, 0.14), inset 0 0 24px rgba(0, 0, 0, 0.7);
+  box-shadow: none;
   /* SSL-830: the sky itself is the shared SkyMapBase. */
   background: #050a16;
 }
@@ -316,7 +316,7 @@
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2px solid rgba(244, 239, 228, 0.28);
-  box-shadow: inset 0 0 0 14px rgba(8, 16, 34, 0.55), inset 0 0 0 15px rgba(88, 208, 234, 0.45), 0 0 0 1px rgba(8, 16, 34, 0.6);
+  box-shadow: none;
 }
 .ring::before, .ring::after { content: ''; position: absolute; inset: 0; border-radius: 50%; }
 .ring::before {
@@ -502,3 +502,12 @@
 
 .programme { padding: var(--ln-s-2) var(--ln-s-3); font-size: var(--ln-fs-micro); line-height: 1.5; }
 .programme p { margin: 0 0 var(--ln-s-1); }
+
+.key summary { min-height:44px; padding:12px 0; cursor:pointer; font:700 14px/1.3 var(--ln-font-body); }
+
+.instrumentPicker { display:grid; gap:6px; font-size:14px; }
+.instrumentPicker select { min-height:44px; max-width:100%; padding:8px; background:#10182c; color:#f4efe4; border:1px solid #58758b; border-radius:8px; font:inherit; }
+@media (orientation:portrait) and (max-width:820px) {
+ .scope { height:min(32vh,280px); }
+ .horizon { height:64px; }
+}

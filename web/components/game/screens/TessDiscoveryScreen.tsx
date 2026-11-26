@@ -1,6 +1,6 @@
 'use client'
 
-import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
+import { useContributionReadout } from '@/lib/research/useContributionReadout'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useHelp } from '@/components/ui/useHelp'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -25,6 +25,7 @@ interface TessDiscoveryScreenProps {
   /** Fixed record supplied only by the named visual dev preset. */
   visualCandidate?: TessCandidate
   onBack: () => void
+  onAgency: () => void
   onBuildStation: () => void
   onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
@@ -57,7 +58,6 @@ const TRAINING_RESULT: Record<TessVerdict, { status: string; title: string; body
 }
 
 /** Readout rows kept on the simple console: whose star, what you marked, your verdict. */
-const SIMPLE_READOUT = new Set(['Star', 'Marks', 'Verdict', 'Catalogue P'])
 
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean }> = [
   { id: 'planet', label: 'Planet transit', requiresMark: true },
@@ -65,12 +65,14 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false },
 ]
 
-export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onOpenProgram, onSubmit, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onAgency, onOpenProgram, onSubmit, onReplayTraining, onTrainingContinue, onShareReadout, reviewing }: TessDiscoveryScreenProps) {
+  const initialFragments = useRef(player.researchFragments ?? 0)
   const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   // Liam, 2.11 ("too much going on, more of an interactive tutorial"): until the first classification the console is
   // just the light curve and the answers, and the first visit plays the read → mark → submit coach.
   const firstClassification = Object.keys(classifications).length === 0
-  const help = useHelp('tess-discovery', { onReplayTraining, firstVisit: firstClassification || !onboardingMissionDone(player.flightPlan), firstVisitCoach: true })
+  const help = useHelp('tess-discovery', { onReplayTraining, firstVisit: firstClassification, firstVisitCoach: true })
+  const [resultPage, setResultPage] = useState<'contribution' | 'measurements'>('contribution')
   const [allControls, setAllControls] = useState(false)
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
@@ -137,6 +139,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   }, [visualCandidate, inspectSubjectId, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset, retryToken])
 
   const classification: TessClassification | undefined = candidate && !candidate.id.startsWith(TRAINING_ID_PREFIX) ? classifications[candidate.id] : undefined
+  const contribution = useContributionReadout(player, 'classification', classification?.submittedAt ?? 0)
   const points = useMemo(() => candidate ? tessLightcurvePoints(candidate) : [], [candidate])
   const sectors = useMemo(() => candidate ? sectorWindows(points, candidate.sector) : [], [candidate, points])
   const activeSector = sectors[Math.min(sectorIndex, Math.max(0, sectors.length - 1))]
@@ -187,7 +190,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         status={result.status}
         messageTitle={`${result.title} · +${RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION} research XP`}
         messageBody={result.body}
-        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Next: tune a rocket part', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
+        answers={<InstrumentAnswerRow actions={[{ id: 'continue', label: 'Continue · Review agency rocket', testId: 'tess-training-continue', primary: true, onClick: () => onTrainingContinue?.() }]} />}
       />
     )
   }
@@ -257,7 +260,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         answers={loadFailed && !misconfigured ? (
           <GhostBtn onClick={() => { captureGameEvent('tess_downlink_retry'); setRetryToken(token => token + 1) }}>Retry Downlink</GhostBtn>
         ) : undefined}
-        devBar={devBar}
+        devBar={classification ? undefined : devBar}
       />
     )
   }
@@ -308,7 +311,15 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const meanDepth = measured.dips.length ? measured.dips.reduce((sum, dip) => sum + dip.depthPpt, 0) / measured.dips.length : null
   const verdictLabel: Record<TessVerdict, string> = { planet: 'TRANSIT', not_planet: 'NOISE', unsure: 'SKIPPED' }
   // SSL-749: the target star's details sit on the readout, beside what the player measured from its light.
+  const nextCandidate = unresolvedTransitInstrumentDigest(pool, player, instrumentDigestDateKey(new Date())).find(item => item.id !== candidate.id)
+  const fragments = Math.max(0, (player.researchFragments ?? 0) - initialFragments.current)
   const readoutRows: InstrumentReadoutRow[] = [
+    ...(classification ? [
+      { label: 'Project', value: 'Exoplanet Hunters' },
+      { label: 'Work saved', value: '1 classification · saved locally' },
+      ...contribution,
+      ...((player.researchFragments ?? 0) > 0 ? [{ label: 'Fragments', value: `${fragments ? `+${fragments} · ` : ''}balance ${player.researchFragments}` }] : []),
+    ] : []),
     { label: 'Star', value: `${candidate.host} · ${/^TIC/i.test(candidate.ticId) ? candidate.ticId : `TIC ${candidate.ticId}`}`, testId: 'tess-readout-star' },
     ...(candidate.starTeffK ? [{ label: 'Teff', value: `${Math.round(candidate.starTeffK).toLocaleString('en-US')} K`, testId: 'tess-readout-star-teff' }] : []),
     { label: 'Where', value: [candidate.constellation, candidate.distanceLy ? `${Math.round(candidate.distanceLy).toLocaleString('en-US')} LY` : null].filter(Boolean).join(' · ') || '—', testId: 'tess-readout-star-where' },
@@ -385,9 +396,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       onBack={onBack}
       help={help.button}
       helpLayer={help.layer}
-      status={classification ? 'CLASSIFICATION SUBMITTED' : 'REVIEW'}
+      status={classification ? 'CLASSIFICATION SAVED LOCALLY' : 'REVIEW'}
       onCommand={onCommand}
-      devBar={devBar}
+      devBar={classification ? undefined : devBar}
       module={{
         name: 'PHOTOMETRY · TP-02',
         testId: 'tess-photometry',
@@ -404,13 +415,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         </>,
       }}
       simple={simpleConsole}
-      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: simpleConsole ? readoutRows.filter(row => SIMPLE_READOUT.has(row.label) || row.label.startsWith('Dip ') || (row.label === 'Fold' && lc.fold)) : readoutRows }}
+      readout={{ name: 'READOUT · YOUR RESULT', testId: 'tess-readout', rows: classification && resultPage === 'contribution' ? readoutRows.filter(row => ['Project', 'Work saved', 'Research', 'Passport', 'Fragments'].includes(row.label)) : simpleConsole ? readoutRows.filter(row => ['Star', 'Marks', 'Verdict'].includes(row.label) || row.label.startsWith('Dip ') || (row.label === 'Fold' && lc.fold)) : readoutRows }}
       caption={(
         <p className={viewportStyles.caption} data-testid="tess-data-provenance" data-attention={needsMark ? 'true' : undefined}>
           {display.folded ? `FOLDED · P ${lc.period.toFixed(2)}D · FOLD OFF TO MARK` : !classification && markCount === 0 ? (needsMark ? 'DRAG ACROSS THE DIP FIRST' : 'DRAG ACROSS THE DIP') : (activeSector?.label ?? 'LIGHT CURVE')}
         </p>
       )}
-      footer={simpleEligible ? (
+      footer={simpleEligible && !classification ? (
         <button type="button" className={viewportStyles.quickKey} data-testid="tess-all-controls" aria-pressed={allControls} onClick={() => setAllControls(on => !on)}>
           {allControls ? 'Simple view' : 'All controls'}
         </button>
@@ -459,6 +470,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         <InstrumentAnswerRow
           groupTestId="tess-readout-actions"
           actions={[
+            { id: 'result', label: resultPage === 'contribution' ? 'MEASUREMENTS' : 'CONTRIBUTION', testId: 'tess-readout-result', onClick: () => setResultPage(page => page === 'contribution' ? 'measurements' : 'contribution') },
+            ...(nextCandidate ? [{ id: 'next', label: 'NEXT SIGNAL', testId: 'tess-readout-next', primary: true, onClick: () => { setCandidate(nextCandidate); setRanges([]); setSectorIndex(0); setPendingVerdict(null); setResultPage('contribution') } }] : []),
+            { id: 'agency', label: 'RETURN TO BASE', testId: 'tess-readout-agency', onClick: onAgency },
             { id: 'hub', label: 'DATA HUB', testId: 'tess-readout-hub', primary: true, onClick: onBack },
             ...(onShareReadout ? [{ id: 'ask', label: reviewing ? 'SEND FOR REVIEW' : 'ASK COMMUNITY', testId: 'tess-readout-ask', onClick: shareResult }] : []),
           ]}

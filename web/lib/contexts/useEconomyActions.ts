@@ -3,7 +3,7 @@ import { REFINERY_RECIPES } from '@/lib/data'
 import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyServiceLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom, applyBuildGroundTelescope, applyPlaceAnnex } from '@/lib/systems/EconomySystem'
 import { applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import { captureGameEvent } from '@/lib/posthog'
-import { completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
+import { currentTrainingTry, completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueUpdate } from '@/lib/offline/pbOutbox'
@@ -13,10 +13,30 @@ import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
 
+function finishRocketLesson(state: GameState): GameState {
+  const replayReward = earnsTrainingReplayReward(state.player.flightPlan, 'part')
+  const flightPlan = completeFlightPlanEvent(state.player.flightPlan, 'part-tweaked')
+  const player = {
+    ...state.player,
+    francs: state.player.francs + (replayReward ? TRAINING_REPLAY_REWARD.francs : 0),
+    researchXP: (state.player.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
+    stash: replayReward ? {
+      ...(state.player.stash ?? {}),
+      iron: (state.player.stash?.iron ?? 0) + TRAINING_REPLAY_REWARD.stash.iron,
+    } : state.player.stash,
+    flightPlan,
+  }
+  return { ...state, tutorial: !freeOperationsUnlocked(player), player: { ...player, freeOperations: freeOperationsUnlocked(player) } }
+}
+
 export function useEconomyActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
   getCatalogMissions: () => Mission[],
 ) {
+  const reviewAgencyRocket = useCallback(() => {
+    setState(s => currentTrainingTry(s.player.flightPlan) === 'part' ? finishRocketLesson(s) : s)
+  }, [setState])
+
   const sellMinerals = useCallback((mineralId: string, amount: number) => {
     setState(s => applySellMinerals(s, mineralId, amount))
   }, [setState])
@@ -147,19 +167,7 @@ export function useEconomyActions(
       const result = applyConfirmShipCustomizerBuild(s, installed, prevInstalled)
       applied = result.ok
       if (!result.ok) return result.state
-      const replayReward = earnsTrainingReplayReward(result.state.player.flightPlan, 'part')
-      const flightPlan = completeFlightPlanEvent(result.state.player.flightPlan, 'part-tweaked')
-      const player = {
-        ...result.state.player,
-        francs: result.state.player.francs + (replayReward ? TRAINING_REPLAY_REWARD.francs : 0),
-        researchXP: (result.state.player.researchXP ?? 0) + (replayReward ? TRAINING_REPLAY_REWARD.researchXP : 0),
-        stash: replayReward ? {
-          ...(result.state.player.stash ?? {}),
-          iron: (result.state.player.stash?.iron ?? 0) + TRAINING_REPLAY_REWARD.stash.iron,
-        } : result.state.player.stash,
-        flightPlan,
-      }
-      return { ...result.state, tutorial: !freeOperationsUnlocked(player), player: { ...player, freeOperations: freeOperationsUnlocked(player) } }
+      return finishRocketLesson(result.state)
     })
     return applied
   }, [setState])
@@ -168,6 +176,6 @@ export function useEconomyActions(
     sellMinerals, buyMinerals, setPriceAlert, removePriceAlert, checkPriceAlerts, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding, serviceLaunchpad,
     excavateSubsurface, buildSubsurfaceRoom, buildGroundTelescope, placeAnnex,
     abandonMission,
-    confirmShipCustomizerBuild,
+    reviewAgencyRocket, confirmShipCustomizerBuild,
   }
 }

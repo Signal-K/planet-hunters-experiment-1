@@ -1,5 +1,0 @@
-{
-  "name": "landnam-minimal",
-  "private": true,
-  "description": "Landnam Minimal. React, Vite and Landnam's code come from ../web; Minimal has no dependencies of its own."
-}

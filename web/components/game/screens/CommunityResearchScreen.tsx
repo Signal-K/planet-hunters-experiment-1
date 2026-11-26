@@ -1,5 +1,8 @@
 'use client'
 
+import ResearchReadout from './ResearchReadout'
+import BoardFrame from '@/components/layout/frame/BoardFrame'
+
 import ResearchPassport from './ResearchPassport'
 import AgencyFrontier from './AgencyFrontier'
 import { useEffect, useState } from 'react'
@@ -235,10 +238,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
   const firstOpen = Math.max(0, progress.findIndex(p => p.have < p.need))
   const [picked, setPicked] = useState<number | null>(null)
   // One screen: This week (your stamps and the shared weekly goal) opens first; a reviewer back from the instrument lands on Votes.
-  const [readout, setReadout] = useState<'week' | 'mission' | 'rewards' | 'votes'>(pendingReview ? 'votes' : 'week')
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' && new URLSearchParams(window.location.search).get('preset')?.startsWith('ui-community-research-')) setReadout('mission')
-  }, [])
+  const [readout, setReadout] = useState<'week' | 'mission' | 'rewards' | 'votes'>(pendingReview ? 'votes' : 'mission')
   // SSL-757: community votes. They sit beside the path choice and never block it.
   const ballotState = useBallots(true)
   const consensus = useConsensus(true)
@@ -267,6 +267,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
   return (
     <div className={board.scene} data-testid="community-research-screen" data-screen="community-research">
       <section className={board.dispatch} style={{ '--signal': color } as React.CSSProperties} aria-label="Community research">
+        <BoardFrame header={<div className={board.boardHeader}>
         <nav className={board.rail} aria-label="Community research">
           <button type="button" className={`${board.round} ${board.railClose}`} data-testid="community-research-back" aria-label="Close" onClick={onBack}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
@@ -276,12 +277,13 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
             <span className={board.tabLabel}>Community research</span>
           </button>
         </nav>
-        <GalaxyMap targets={[]} mode="ambient" view="belt" onView={() => {}} />
+        </div>}>
+
         <article className={styles.workspace} data-testid="community-research-board">
           {path === null ? (
             <>
               <section className={styles.left} data-testid="community-research-picker">
-                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
+                {panel && <details><summary>Current event</summary><EventPanelCard panel={panel} now={now} player={player} step={eventStep} /></details>}
                 <div className={styles.paths}>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'explorer'} data-testid="research-path-explorer" aria-label="Explorer path" onClick={() => setSelectedPath('explorer')}><StepIcon icon="scan" size={34} /><span>Explorer</span><small>Signals</small></button>
                   <button type="button" className={styles.path} data-selected={selectedPath === 'trader'} data-testid="research-path-trader" aria-label="Trader path" onClick={() => setSelectedPath('trader')}><StepIcon icon="world" size={34} /><span>Trader</span><small>Exchange</small></button>
@@ -294,18 +296,81 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   {selectedPath === 'agency' && <AgencyLine agency={agency} />}
                 </div>
               </section>
+            </>
+          ) : (
+            <>
+              <section className={styles.left}>
+                {panel && <details><summary>Current event</summary><EventPanelCard panel={panel} now={now} player={player} step={eventStep} /></details>}
+                <div className={styles.pathHeader}>
+                  <span className={styles.eyebrow}>{PATH_NAME[path]} pathway</span>
+                  <span>{finished}/{steps.length} complete</span>
+                </div>
+
+                <details><summary>Agency fleet and findings</summary><AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} /></details>
+                <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
+                  {steps.filter((_, i) => i === at).map(st => { const i = at; return (
+                    <button key={st.id} type="button" className={styles.pathStep} data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
+                      data-testid={`research-step-${st.id}`} data-done={progress[i].have >= progress[i].need} onClick={() => { setPicked(i); setReadout('mission') }}>
+                      <span className={styles.pathMarker} style={{ '--step-color': st.color } as React.CSSProperties}><StepIcon icon={st.icon} /></span>
+                      <span className={styles.pathCopy}><b>Step {i + 1}</b><strong>{st.title}</strong></span>
+                      <span className={styles.pathCount}>{progress[i].have >= progress[i].need ? 'Done' : `${progress[i].have}/${progress[i].need}`}</span>
+                    </button>
+                  )})}
+                </div>
+                <details><summary>All weekly steps · {finished}/{steps.length}</summary>
+                  <div className={styles.pathway}>
+                    {steps.map((item, i) => <button key={item.id} type="button" className={styles.pathStep} onClick={() => { setPicked(i); setReadout('mission') }}>
+                      <span className={styles.pathCopy}><b>Step {i + 1}</b><strong>{item.title}</strong></span>
+                      <span className={styles.pathCount}>{progress[i].have}/{progress[i].need}</span>
+                    </button>)}
+                  </div>
+                </details>
+              </section>
+            </>
+          )}
               <section className={styles.right}>
-                <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} />
-                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
-                <h2>How it works</h2>
-                <ol className={styles.how} data-testid="community-research-how">
-                  {HOW_IT_WORKS.map(line => <li key={line}>{line}</li>)}
-                </ol>
-                <button type="button" className={board.contractTake} data-testid="community-research-choose" onClick={() => setConfirmingPath(true)}>START {selectedPath.toUpperCase()}</button>
-                {site && <CommunitySite site={site} archived={archived} />}
-                <CommunityBallots state={ballotState} />
+                <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
+                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Next action</button>
+                  <button type="button" role="tab" aria-selected={readout === 'week'} data-testid="community-research-week-tab" onClick={() => setReadout('week')}>Progress</button>
+                  <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
+                  <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
+                </div>
+                <ResearchReadout
+                  title={{ mission: 'Next action', week: 'Your progress', rewards: 'Your rewards', votes: 'Community decisions' }[readout]}
+                  description={{ mission: path ? step.title : 'Choose a weekly path to begin.', week: 'Your contributions during the selected week.', rewards: 'Earned parts, fragments and shared milestones.', votes: 'Vote on priorities and review community findings.' }[readout]}
+                  completed={finished}
+                  total={steps.length}
+                  action={path ? step.title : `Start ${PATH_NAME[selectedPath]}`}
+                  onAction={() => path ? onGo(step.kind) : setConfirmingPath(true)}
+                >
+                {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} calendarOnly /> : readout === 'mission' && path === null ? <>
+                  <p className={styles.readoutCopy}>{PATH_BLURB[selectedPath]}</p>
+                </> : readout === 'mission' ? <>
+                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
+                  <p className={styles.readoutCopy}>{step.brief}</p>
+                  <details><summary>Why this helps</summary><p className={styles.why} data-testid="community-research-why">{step.why}</p></details>
+                </> : readout === 'votes' ? <>
+                  <CommunityBallots state={ballotState} />
                   <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                </> : <>
+                  <ResearchPassport player={player} status={passportStatus} onGo={onGo} onWorkshop={() => onWorkshop?.()} rewardOnly />
+                  <details><summary>Path milestones and fragments</summary>
+                  <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
+                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract', 'launch')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales', 'fleet-watch')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
+                    <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
+                  </div>
+                  <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
+                  </details>
+                  <details><summary>Monthly community goal and construction</summary>
+                  <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>This month · everyone</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
+                  {site && <CommunitySite site={site} archived={archived} />}
+                  <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
+                  <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
+                  <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
+                  </details>
+                </>}
+                </ResearchReadout>
               </section>
               {confirmingPath && (
                 <ActionConfirmBar
@@ -317,64 +382,8 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
                   onDismiss={() => setConfirmingPath(false)}
                 />
               )}
-            </>
-          ) : (
-            <>
-              <section className={styles.left}>
-                {panel && <EventPanelCard panel={panel} now={now} player={player} step={eventStep} />}
-                <div className={styles.pathHeader}>
-                  <span className={styles.eyebrow}>{PATH_NAME[path]} pathway</span>
-                  <span>{finished}/{steps.length} complete</span>
-                </div>
-                {path === 'agency' && <AgencyLine agency={agency} />}
-                <AgencyFrontier player={player} onData={() => onGo('classification')} onLaunch={() => onGo('launch')} />
-                <div className={styles.pathway} aria-label="Weekly research pathway" data-testid="community-research-pathway">
-                  {steps.map((st, i) => (
-                    <button key={st.id} type="button" className={styles.pathStep} data-selected={i === at || undefined} aria-label={`Step ${i + 1}: ${st.title}`}
-                      data-testid={`research-step-${st.id}`} data-done={progress[i].have >= progress[i].need} onClick={() => { setPicked(i); setReadout('mission') }}>
-                      <span className={styles.pathMarker} style={{ '--step-color': st.color } as React.CSSProperties}><StepIcon icon={st.icon} /></span>
-                      <span className={styles.pathCopy}><b>Step {i + 1}</b><strong>{st.title}</strong></span>
-                      <span className={styles.pathCount}>{progress[i].have >= progress[i].need ? 'Done' : `${progress[i].have}/${progress[i].need}`}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-              <section className={styles.right}>
-                <div className={styles.readoutTabs} role="tablist" aria-label="Research readout">
-                  <button type="button" role="tab" aria-selected={readout === 'week'} data-testid="community-research-week-tab" onClick={() => setReadout('week')}>Week</button>
-                  <button type="button" role="tab" aria-selected={readout === 'mission'} onClick={() => setReadout('mission')}>Step</button>
-                  <button type="button" role="tab" aria-selected={readout === 'rewards'} data-testid="community-research-rewards-tab" onClick={() => setReadout('rewards')}>Rewards</button>
-                  <button type="button" role="tab" aria-selected={readout === 'votes'} data-testid="community-research-votes-tab" onClick={() => setReadout('votes')}>Votes</button>
-                </div>
-                {readout === 'week' ? <ResearchPassport player={player} status={passportStatus} onGo={onGo} onReview={() => setReadout('votes')} onWorkshop={() => onWorkshop?.()} /> : readout === 'mission' ? <>
-                  <span className={styles.stepBig} style={{ color: step.color }}><StepIcon icon={step.icon} size={60} /></span>
-                  <span className={styles.eyebrow}>Step {at + 1} of {steps.length} · {progress[at].have}/{progress[at].need}</span>
-                  <h2 data-testid="community-research-title">{step.title}</h2>
-                  <p className={styles.readoutCopy}>{step.brief}</p>
-                  <p className={styles.why} data-testid="community-research-why">{step.why}</p>
-                  <button type="button" className={board.contractTake} data-testid="community-research-go" onClick={() => onGo(step.kind)}>{step.kind === 'event' ? 'JOIN' : 'GO'}</button>
-                </> : readout === 'votes' ? <>
-                  <h2>Community votes</h2>
-                  <CommunityBallots state={ballotState} />
-                  <CommunityConsensus state={consensus} pendingReview={pendingReview ?? null} onStartReview={item => onStartReview?.(item)} onFinishReview={() => { onFinishReview?.(); consensus.reload() }} />
-                </> : <>
-                  <h2>Your rewards</h2>
-                  <div className={styles.rewardShelf} data-testid="community-research-rewards" aria-label="Weekly reward milestones">
-                    <div className={styles.rewardCard} data-earned={doneById('scan', 'contract', 'launch')}><span className={styles.rewardIcon}><StepIcon icon="signal" size={30} /></span><b>2</b><small>{WEEKLY_RESEARCH_REWARDS['step-2'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={doneById('scan-again', 'world', 'sales', 'fleet-watch')}><span className={styles.rewardIcon}><StepIcon icon="scan" size={30} /></span><b>4</b><small>{WEEKLY_RESEARCH_REWARDS['step-4'].fragments}</small><em>fragments</em></div>
-                    <div className={styles.rewardCard} data-earned={doneById('breakthrough')}><span className={styles.rewardIcon}><StepIcon icon="star" size={30} /></span><b>5</b><small>Badge</small><em>breakthrough</em></div>
-                  </div>
-                  <div className={styles.ledger} data-testid="community-research-ledger"><span className={styles.ledgerOrb}><StepIcon icon="star" size={22} /></span><span>Fragments</span><b>{player.researchFragments ?? 0}</b></div>
-                  <div className={styles.bar} data-testid="research-community-bar"><div className={styles.barLabel}><span>This month · everyone</span><span>{bar.total} / {bar.goal}</span></div><div className={styles.track} role="progressbar" aria-valuemin={0} aria-valuemax={bar.goal} aria-valuenow={bar.total} aria-label="Community stamps"><div className={styles.fill} style={{ width: `${bar.fill * 100}%` }} /></div></div>
-                  {site && <CommunitySite site={site} archived={archived} />}
-                  <p className={styles.readoutCopy} data-testid="community-research-goal-reward">{bar.reached ? `Goal reached. Until the month ends: ${COMMUNITY_REWARD_TEXT}.` : `At ${bar.goal} stamps, everyone gets ${COMMUNITY_REWARD_TEXT} until the month ends.`}</p>
-                  <div className={styles.history} data-testid="community-research-month-history" aria-label="Research month history"><div className={styles.barLabel}><span>Your contributions</span><span>{ownThisMonth} this month</span></div><div className={styles.historyRows}>{monthHistory.map(month => <div className={styles.historyRow} key={month.key}><span>{month.label}</span><b>{month.stamps} contribution{month.stamps === 1 ? '' : 's'}</b></div>)}</div></div>
-                  <EventRecords player={player} recordedOn={eventHistory[0]?.[0] ?? null} />
-                </>}
-              </section>
-            </>
-          )}
         </article>
+        </BoardFrame>
       </section>
     </div>
   )

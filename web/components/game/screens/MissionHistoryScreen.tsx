@@ -1,17 +1,13 @@
 'use client'
 
 import type { CompletedMissionRecord, Player } from '@/lib/game-types'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Client, Mission, Target } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { transitLogRecords } from '@/lib/mission-log'
-import { BaseWorldCanvas } from '@/components/game/hub/BaseWorldCanvas'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { BASE_CAMERA_HOME } from '@/lib/scene/base-camera'
-import { kitScale } from '@/lib/scene/base-site'
-import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import DestinationLandscape, { type VistaTarget } from '@/components/game/screens/DestinationLandscape'
+import BoardFrame from '@/components/layout/frame/BoardFrame'
 import styles from './MissionHistoryScreen.module.css'
 
 interface MissionHistoryScreenProps {
@@ -20,6 +16,8 @@ interface MissionHistoryScreenProps {
   targets?: Target[]
   missions?: Mission[]
   player?: Player
+  onNewMission: () => void
+  onResumeMission?: () => void
   onBack: () => void
 }
 
@@ -38,27 +36,13 @@ function vistaTarget(record: CompletedMissionRecord, missions: Mission[], target
   return { id: id || record.title, type: 'asteroid', archetype: null }
 }
 
-export default function MissionHistoryScreen({ records, targets = [], missions = [], player, onBack }: MissionHistoryScreenProps) {
+export default function MissionHistoryScreen({ records, targets = [], missions = [], player, onNewMission, onResumeMission, onBack }: MissionHistoryScreenProps) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const recordKey = (record: CompletedMissionRecord) => record.runId ?? `${record.id}-${record.completedAt}`
   const ordered = [...records, ...transitLogRecords(player ?? {})].sort((a, b) => b.completedAt - a.completedAt)
   const missionEntries = ordered.filter(record => record.kind !== 'transit').length
   const lifetimeCompleted = Math.max(player?.missionsDone ?? 0, missionEntries)
 
-  const { grade } = useTimeOfDay()
-  const [view, setView] = useState({ w: 1440, h: 900 })
-  // The panel paints first; the world behind it starts after, so opening the log never waits on the scene.
-  const [backdropReady, setBackdropReady] = useState(false)
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setBackdropReady(true))
-    return () => cancelAnimationFrame(id)
-  }, [])
-  useEffect(() => {
-    const measure = () => setView({ w: window.innerWidth, h: window.innerHeight })
-    measure()
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
-  }, [])
   const clientRuns = ordered.filter(record => record.kind !== 'transit' && record.kind !== 'program').length
   const ownRuns = ordered.filter(record => record.kind === 'program').length
   const transits = ordered.filter(record => record.kind === 'transit').length
@@ -66,18 +50,25 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
 
   return (
     <section className={styles.screen} data-testid="mission-history-screen">
-      <div className={styles.backdrop} aria-hidden="true">
-        {backdropReady && <BaseWorldCanvas px={kitScale(view)} camera={BASE_CAMERA_HOME} time={grade} biome={sanitizeEarthBiome(player?.earthBiome)} />}
-      </div>
+      <BoardFrame header={<div className={styles.header}>
+        <button type="button" onClick={onBack} aria-label="Back to base">Back</button>
+        <h1>Agency Hub</h1>
+      </div>}>
       <div className={styles.shell}>
-        <div className={styles.plaque}>Mission log</div>
-        <button type="button" className={styles.backButton} onClick={onBack} aria-label="Back to base">Back</button>
+      <aside className={styles.overview}>
+        <h2>{player?.activeMission ? 'Your flight is in progress' : 'Start your next mission'}</h2>
+        <p>{player?.activeMission?.label ?? 'Choose a client contract or plan a flight for your agency.'}</p>
+        {onResumeMission && <button type="button" className={styles.primary} data-testid="agency-resume-mission" onClick={onResumeMission}>Resume mission</button>}
+        <button type="button" className={onResumeMission ? styles.secondary : styles.primary} data-testid="agency-new-mission" onClick={onNewMission}>New mission</button>
         <div className={styles.stats}>
           <p className={styles.stat}><span className={styles.count}>{lifetimeCompleted}</span><strong>MISSIONS COMPLETED</strong></p>
           <p className={styles.stat}><span className={styles.count}>{clientRuns}</span><strong>CLIENT RUNS</strong></p>
           <p className={styles.stat}><span className={styles.count}>{ownRuns}</span><strong>OWN RUNS</strong></p>
           <p className={styles.stat}><span className={styles.count}>{transits}</span><strong>TRANSITS</strong></p>
         </div>
+      </aside>
+      <div className={styles.history}>
+        <h2>Mission log</h2>
         {Object.keys(player?.legacyDiscoveredBodies ?? {}).length > 0 && (
           <div className={styles.empty}>
             <div className={styles.emptyKicker}>Star Sailors discoveries</div>
@@ -106,7 +97,7 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
               const title = canonicalSaturnLabel(record.title)
               const place = vistaTarget(record, missions, targets)
               return (
-                <article className={styles.record} key={key} data-open={open || undefined} data-surface="cream">
+                <article className={styles.record} key={key} data-open={open || undefined} >
                   <button type="button" className={styles.recordButton} aria-expanded={open} data-testid={`mission-log-entry-${index}`} onClick={() => setOpenKey(open ? null : key)}>
                     <DestinationLandscape className={styles.vista} variant="card" target={place} />
                     <span className={styles.recordCopy}>
@@ -133,6 +124,8 @@ export default function MissionHistoryScreen({ records, targets = [], missions =
           </div>
         )}
       </div>
+      </div>
+      </BoardFrame>
     </section>
   )
 }

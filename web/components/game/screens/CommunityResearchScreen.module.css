@@ -11,8 +11,8 @@
 .pathway::before { content: ''; position: absolute; left: 31px; top: 42px; bottom: 42px; width: 3px; border-radius: 999px; background: linear-gradient(#58d0ea, rgba(157, 231, 239, .18)); }
 .pathStep { position: relative; z-index: 1; min-height: 74px; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 6px 16px 6px 0; border: 1px solid transparent; border-radius: 20px; background: rgba(8, 16, 34, .08); color: #f4efe4; text-align: left; transition: background .18s ease, transform .18s ease; }
 .pathStep:hover { background: rgba(8, 16, 34, .2); transform: translateX(2px); }
-.pathStep[data-selected='true'] { border-color: #58d0ea; background: linear-gradient(90deg, rgba(8, 16, 34, .48), rgba(8, 16, 34, .2)); box-shadow: 3px 4px 0 rgba(8, 16, 34, .3); }
-.pathMarker { width: 62px; height: 62px; display: grid; place-items: center; border: 2px solid var(--step-color); border-radius: 18px; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 45%), #10182c; color: var(--step-color); box-shadow: inset 0 0 0 4px rgba(255,255,255,.035); }
+.pathStep[data-selected='true'] { border-color: #58d0ea; background: linear-gradient(90deg, rgba(8, 16, 34, .48), rgba(8, 16, 34, .2)); box-shadow: none; }
+.pathMarker { width: 62px; height: 62px; display: grid; place-items: center; border: 2px solid var(--step-color); border-radius: 18px; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 45%), #10182c; color: var(--step-color); box-shadow: none; }
 .pathMarker svg { width: 27px; height: 27px; stroke-width: 2.3; }
 .pathStep[data-done='true'] .pathMarker { background: var(--step-color); color: #10182c; }
 .pathCopy { min-width: 0; display: grid; gap: 2px; }
@@ -59,10 +59,10 @@
 .how li { counter-increment: how; position: relative; padding-left: 40px; font: 600 16px/1.3 var(--ln-font-body); color: #f4efe4; }
 .how li::before { content: counter(how); position: absolute; left: 0; top: -2px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #58d0ea; color: #0d2430; font: 800 16px/1 var(--ln-font-display); }
 .stepIcon { display: grid; place-items: center; }
-.stepBig { display: grid; place-items: center; width: 88px; height: 88px; border-radius: 28px; border: 3px solid currentColor; background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.16), transparent 45%), rgba(8, 16, 34, .3); box-shadow: inset 0 0 0 5px rgba(255,255,255,.035); }
+.stepBig { display: grid; place-items: center; width: 88px; height: 88px; border-radius: 28px; border: 3px solid currentColor; background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.16), transparent 45%), rgba(8, 16, 34, .3); box-shadow: none; }
 .why { color: #d9e6d4; font-style: italic; }
 .rewardShelf { width: min(100%, 390px); display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.rewardCard { min-height: 142px; display: grid; place-items: center; align-content: center; gap: 3px; padding: 10px 6px; border: 1px solid rgba(244,239,228,.25); border-radius: 22px; background: linear-gradient(155deg, rgba(255,255,255,.1), rgba(8,16,34,.24)); color: #c9d0c2; box-shadow: inset 0 1px 0 rgba(255,255,255,.13); }
+.rewardCard { min-height: 142px; display: grid; place-items: center; align-content: center; gap: 3px; padding: 10px 6px; border: 1px solid rgba(244,239,228,.25); border-radius: 22px; background: linear-gradient(155deg, rgba(255,255,255,.1), rgba(8,16,34,.24)); color: #c9d0c2; box-shadow: none; }
 .rewardCard[data-earned='true'] { border-color: #f2c24c; color: #f4efe4; background: linear-gradient(155deg, rgba(242,194,76,.24), rgba(8,16,34,.25)); }
 .rewardIcon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(8,16,34,.28); color: #f2c24c; }
 .rewardCard b { font: 800 12px/1 var(--ln-font-display); letter-spacing: .08em; }
@@ -116,7 +116,7 @@
 }
 
 /* SSL-775: the flagship event panel, first on the left. Gold while the shower is live, quieter before and after. */
-.event { width: 100%; max-width: 540px; margin: 0 auto; display: grid; gap: 8px; padding: 12px 14px; border: 2px solid #e8a24a; border-radius: 18px; background: rgba(8, 16, 34, .42); box-shadow: 3px 4px 0 rgba(8, 16, 34, .3); }
+.event { width: 100%; max-width: 540px; margin: 0 auto; display: grid; gap: 8px; padding: 12px 14px; border: 2px solid #e8a24a; border-radius: 18px; background: rgba(8, 16, 34, .42); box-shadow: none; }
 .event[data-phase='upcoming'] { border-color: rgba(157, 231, 239, .7); }
 .event[data-phase='ended'] { border-color: rgba(244, 239, 228, .4); }
 .eventHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap-reverse; }
@@ -154,3 +154,37 @@
 .frontier { width: 100%; color: var(--ln-text); font: var(--ln-fs-micro)/1.5 var(--ln-font-body); text-align: left; }
 .frontier summary { min-height: 44px; cursor: pointer; padding: var(--ln-s-2) 0; font-weight: 700; }
 .frontier button { min-height: 44px; padding: var(--ln-s-2); margin: var(--ln-s-1); background: var(--ln-blueprint-ink); color: var(--ln-text); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-s-1); font: inherit; cursor: pointer; }
+
+/* All research states use the same viewport and anchored tab row. */
+.workspace .left, .workspace .right { padding: 16px; justify-content: flex-start; min-height: 0; }
+.workspace .right { display: block; }
+.right .readoutTabs { position: sticky; top: 0; z-index: 3; margin: 0 auto 20px; background: #173b55; }
+.right > * { margin-bottom: 16px; }
+.right > :not(.readoutTabs) { margin-left: auto; margin-right: auto; max-width: 620px; }
+.workspace .focus { flex: none; align-items: flex-start; text-align: left; }
+.workspace .pathway { margin: 0; }
+@media (orientation: portrait) and (max-width: 700px) {
+  .workspace { overflow-y: auto; display: flex; flex-direction: column; }
+  .workspace .left, .workspace .right { overflow: visible; flex-shrink: 0; }
+}
+
+.workspace .right { scrollbar-gutter: stable both-edges; }
+
+.workspace .right { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.right .readoutTabs { position: relative; top: auto; margin: 12px auto; width: calc(100% - 24px); max-width: none; }
+.right > :not(.readoutTabs) { max-width: none; margin: 0; }
+.right .rewardShelf { display: flex; flex-direction: column; gap: 0; }
+.right .rewardCard { display: flex; flex-direction: row; justify-content: space-between; gap: 8px; min-height: 56px; padding: 8px; border: 0; border-bottom: 1px solid #58758b; border-radius: 0; background: transparent; box-shadow: none; }
+.right .rewardCard small { font-size: 18px; }
+.right .rewardIcon { width: 32px; height: 32px; }
+@media (orientation: portrait) and (max-width: 700px) {
+ .workspace .right { min-height: 580px; height: 75dvh; flex: none; }
+}
+.workspace .right { grid-template-columns: minmax(0, 1fr); }
+.right .rewardShelf, .right .ledger, .right .history, .right .record { width: 100%; max-width: none; }
+.right .ledger { border-radius: 8px; }
+
+.workspace summary { min-height:44px; padding:12px 0; cursor:pointer; font:700 14px/1.3 var(--ln-font-body); }
+@media (orientation: portrait) and (max-width:700px) {
+ .workspace .right { order:-1; height:100%; min-height:0; }
+}

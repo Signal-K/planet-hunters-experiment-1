@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pocketbase/dbx"
+
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -178,10 +180,51 @@ func loadPassport(app core.App, user string, now time.Time) ([]passportWeek, err
 }
 func communityPassportHandler(app core.App) func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
-		weeks, err := loadPassport(app, e.Auth.Id, time.Now().UTC())
+		now := time.Now().UTC()
+		weeks, err := loadPassport(app, e.Auth.Id, now)
 		if err != nil {
 			return apis.NewApiError(http.StatusInternalServerError, "failed to load weekly research", nil)
 		}
-		return e.JSON(http.StatusOK, map[string]any{"weeks": weeks})
+		stamps, err := savedResearchStamps(app, e.Auth.Id, now)
+		if err != nil {
+			return apis.NewApiError(http.StatusInternalServerError, "failed to load research receipt", nil)
+		}
+		return e.JSON(http.StatusOK, map[string]any{"weeks": weeks, "confirmedStamps": stamps})
 	}
+}
+
+// The receipt is scoped to the authenticated player's saved state. A local outbox
+// entry or a shared weekly total alone cannot confirm a particular stamp.
+func savedResearchStamps(app core.App, user string, now time.Time) (map[string][]string, error) {
+	records, err := app.FindRecordsByFilter("game_states", "user = {:user}", "", 1, 0, dbx.Params{"user": user})
+	if err != nil {
+		return nil, err
+	}
+	stamps := map[string][]string{}
+	if len(records) == 0 {
+		return stamps, nil
+	}
+	var state struct {
+		Player struct {
+			Stamps map[string][]string `json:"researchStamps"`
+		} `json:"player"`
+	}
+	if err := records[0].UnmarshalJSONField("state", &state); err != nil {
+		return nil, err
+	}
+	today := now.UTC().Format("2006-01-02")
+	for day, kinds := range state.Player.Stamps {
+		at, err := time.Parse("2006-01-02", day)
+		if err != nil || at.Format("2006-01-02") != day || day > today || day < passportStart {
+			continue
+		}
+		seen := map[string]bool{}
+		for _, kind := range kinds {
+			if passportKinds[kind] && !seen[kind] {
+				stamps[day] = append(stamps[day], kind)
+				seen[kind] = true
+			}
+		}
+	}
+	return stamps, nil
 }

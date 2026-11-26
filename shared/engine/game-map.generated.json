@@ -8,27 +8,27 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 28,
-    "nativeScreenCases": 24,
-    "qaScenes": 87,
+    "webRoutes": 31,
+    "nativeScreenCases": 25,
+    "qaScenes": 111,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 28,
-    "authoringSources": 64,
-    "authoredObjectNodes": 156,
-    "authoredGameObjects": 79,
-    "authoredUiElements": 77,
+    "authoredSceneScripts": 31,
+    "authoringSources": 71,
+    "authoredObjectNodes": 172,
+    "authoredGameObjects": 81,
+    "authoredUiElements": 91,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 28,
-    "compiledObjectNodes": 156,
+    "compiledScenes": 31,
+    "compiledObjectNodes": 172,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 151,
-    "webGameComponents": 117,
-    "nativeAppComponents": 57
+    "hostLayoutObjects": 167,
+    "webGameComponents": 121,
+    "nativeAppComponents": 58
   },
   "scenes": {
     "routed": [
@@ -101,6 +101,10 @@
         "type": "menu"
       },
       {
+        "route": "mission-planner",
+        "type": "menu"
+      },
+      {
         "route": "missions",
         "type": "menu"
       },
@@ -129,12 +133,20 @@
         "type": "build"
       },
       {
+        "route": "rocket-workshop",
+        "type": "build"
+      },
+      {
         "route": "saturn-storm-search",
         "type": "exchange-lab"
       },
       {
         "route": "sky-pointing",
         "type": "menu"
+      },
+      {
+        "route": "surface-silo",
+        "type": "base"
       },
       {
         "route": "targets",
@@ -168,6 +180,7 @@
       "rocketBuy",
       "roverSurvey",
       "saturnStormSearch",
+      "surfaceSilo",
       "targets",
       "transit"
     ],
@@ -261,6 +274,10 @@
         "route": "saturn-storm-search"
       },
       {
+        "name": "surfaceSilo",
+        "route": "surface-silo"
+      },
+      {
         "name": "targets",
         "route": "targets"
       },
@@ -281,6 +298,18 @@
         ]
       },
       {
+        "id": "ground-telescope-upgrades",
+        "name": "Ground telescope upgrades",
+        "flow": "progression",
+        "web": "hub-telescope-upgrades",
+        "native": "ground-telescope-upgrades-phone",
+        "tickets": [
+          "SSL-855",
+          "SSL-802"
+        ],
+        "objective": "Open Menu > Build. Upgrade the unplaced telescope with 1 U iron, then 2 U; level 3 disables further upgrades. Place it to observe."
+      },
+      {
         "id": "hub",
         "name": "Earth Base",
         "flow": "core-loop",
@@ -288,7 +317,9 @@
         "native": "hub-phone",
         "tickets": [
           "SSL-345",
-          "SSL-451"
+          "SSL-451",
+          "SSL-873",
+          "SSL-875"
         ]
       },
       {
@@ -340,7 +371,18 @@
         "native": "mining-laser-live",
         "tickets": [
           "SSL-411",
+          "SSL-709",
           "SSL-430"
+        ]
+      },
+      {
+        "id": "mining-survey",
+        "name": "Mining mapped probe findings",
+        "flow": "core-loop",
+        "web": "ui-mining-survey",
+        "nativeDeferred": "Probe readings are not yet in the native companion model (SSL-773/851 scope); ordinary native mining remains supported.",
+        "tickets": [
+          "SSL-879"
         ]
       },
       {
@@ -370,8 +412,20 @@
         "web": "ui-free-mining",
         "native": "mining-laser-live",
         "tickets": [
-          "SSL-711"
+          "SSL-711",
+          "SSL-863"
         ]
+      },
+      {
+        "id": "focus-run",
+        "name": "Materials focus run",
+        "flow": "core-loop",
+        "web": "ui-focus-run",
+        "native": "mining-focus-run",
+        "tickets": [
+          "SSL-840"
+        ],
+        "note": "A construction goal bigger than the hold: return a partial haul, store it, and the next trip asks only for the rest. iOS board view: mission-focus-run-phone."
       },
       {
         "id": "radio-meteors",
@@ -381,7 +435,8 @@
         "native": "radio-meteors",
         "tickets": [
           "SSL-714"
-        ]
+        ],
+        "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
       },
       {
         "id": "leonids-shower-mining",
@@ -390,7 +445,8 @@
         "web": "ui-leonids-shower-mining-fresh",
         "native": "mining-shower-live",
         "tickets": [
-          "SSL-658"
+          "SSL-658",
+          "SSL-863"
         ]
       },
       {
@@ -416,7 +472,8 @@
         "web": "m1-debrief",
         "native": "debrief-phone",
         "tickets": [
-          "SSL-462"
+          "SSL-462",
+          "SSL-874"
         ]
       },
       {
@@ -553,10 +610,55 @@
         "tickets": []
       },
       {
+        "id": "research-passport",
+        "name": "Research: This week tab",
+        "flow": "progression",
+        "web": "ui-research-passport",
+        "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-849",
+          "SSL-886"
+        ]
+      },
+      {
+        "id": "passport-unconfirmed",
+        "name": "This week awaiting sync",
+        "flow": "progression",
+        "web": "ui-research-passport-unconfirmed",
+        "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-849",
+          "SSL-886"
+        ]
+      },
+      {
+        "id": "passport-missed",
+        "name": "This week without contribution",
+        "flow": "progression",
+        "web": "ui-research-passport-missed",
+        "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-849",
+          "SSL-886"
+        ]
+      },
+      {
+        "id": "passport-empty",
+        "name": "This week open page",
+        "flow": "progression",
+        "web": "ui-research-passport-empty",
+        "nativeDeferred": "SSL-849 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-849",
+          "SSL-886"
+        ]
+      },
+      {
         "id": "community-research",
         "name": "Community research",
         "flow": "records",
         "web": "ui-community-research",
+        "nativeDeferred": "SSL-849 passport: iOS follows after web",
         "native": "community-research-phone",
         "tickets": [
           "SSL-691",
@@ -576,6 +678,17 @@
         ]
       },
       {
+        "id": "signal-dialogue",
+        "name": "Signals ready dismissal",
+        "flow": "records",
+        "web": "ui-signal-dialogue",
+        "native": "hub-phone",
+        "tickets": [
+          "SSL-868"
+        ],
+        "objective": "Dismiss the current signals, navigate away and back; the popup stays closed while the Data hub remains accessible."
+      },
+      {
         "id": "sky-dialogue",
         "name": "Sky dialogue",
         "flow": "records",
@@ -592,6 +705,46 @@
         "web": "ui-market",
         "native": "exchange-phone",
         "tickets": []
+      },
+      {
+        "id": "mission-planner",
+        "name": "Mission planner",
+        "flow": "core-loop",
+        "web": "ui-mission-planner",
+        "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-851"
+        ]
+      },
+      {
+        "id": "planner-survey",
+        "name": "Survey mission planner",
+        "flow": "core-loop",
+        "web": "ui-mission-planner-survey",
+        "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-851"
+        ]
+      },
+      {
+        "id": "planner-delivery",
+        "name": "Delivery mission planner",
+        "flow": "core-loop",
+        "web": "ui-mission-planner-delivery",
+        "nativeDeferred": "SSL-851 explicitly schedules iOS after web",
+        "tickets": [
+          "SSL-851"
+        ]
+      },
+      {
+        "id": "rocket-workshop",
+        "name": "Rocket workshop",
+        "flow": "core-loop",
+        "web": "ui-rocket-workshop",
+        "nativeDeferred": "iOS comes in cycle 13 — Liam, SSL-850 comment, 19 Nov 2026",
+        "tickets": [
+          "SSL-850"
+        ]
       },
       {
         "id": "launchpad",
@@ -833,7 +986,9 @@
         "flow": "core-loop",
         "web": "ui-mission-board",
         "native": "mission-board-live",
-        "tickets": []
+        "tickets": [
+          "SSL-876"
+        ]
       },
       {
         "id": "saturn-storm-search",
@@ -968,7 +1123,8 @@
         "tickets": [
           "SSL-831"
         ],
-        "native": "radio-meteors"
+        "native": "radio-meteors",
+        "nativeDeferred": "The native catalog entry is a companion fixture; radio meteor gameplay and receipt confirmation have no supported iOS adapter."
       },
       {
         "id": "community-research-leonids-leo1",
@@ -1006,9 +1162,30 @@
         "flow": "instruments",
         "web": "ui-probe-scan",
         "tickets": [
-          "SSL-773"
+          "SSL-773",
+          "SSL-832"
         ],
-        "native": "radio-meteors"
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+      },
+      {
+        "id": "second-ground-telescope",
+        "name": "Control Station: second ground telescope",
+        "flow": "instruments",
+        "web": "ui-second-ground-telescope",
+        "tickets": [
+          "SSL-802"
+        ],
+        "native": "second-ground-telescope-phone"
+      },
+      {
+        "id": "craft-service",
+        "name": "Data hub: worn and failed craft",
+        "flow": "instruments",
+        "web": "ui-craft-service",
+        "tickets": [
+          "SSL-852"
+        ],
+        "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
       },
       {
         "id": "probe-hub",
@@ -1037,7 +1214,9 @@
         "web": "hub-first-run",
         "nativeDeferred": "iOS scene parity parked per Liam, 11 Nov; SSL-785 bundles the sprite only.",
         "tickets": [
-          "SSL-785"
+          "SSL-785",
+          "SSL-873",
+          "SSL-875"
         ]
       },
       {
@@ -1045,9 +1224,10 @@
         "name": "Base: unplaced structures tray",
         "flow": "core-loop",
         "web": "hub-unplaced",
-        "nativeDeferred": "iOS Base has no annex slots yet: SSL-844.",
+        "native": "hub-unplaced-phone",
         "tickets": [
-          "SSL-843"
+          "SSL-843",
+          "SSL-844"
         ]
       },
       {
@@ -1081,6 +1261,115 @@
         "objective": "Aim the fixed lunar camera and confirm impacts in its field of view.",
         "complete": "Finish the one-minute watch; results show count and best sighting. Reload keeps confirmed sightings in the isolated fixture save.",
         "nativeDeferred": "iOS deferred until requested: notes/decisions/Sky events follow the real sky (2026-11-11).md"
+      },
+      {
+        "id": "surface-silo",
+        "name": "Surface Silo contents",
+        "flow": "core-loop",
+        "web": "ui-surface-silo",
+        "native": "surface-silo-live",
+        "tickets": [
+          "SSL-857"
+        ]
+      },
+      {
+        "id": "agency-programme",
+        "name": "Agency Programme",
+        "flow": "instruments",
+        "web": "ui-agency-programme",
+        "tickets": [
+          "SSL-852"
+        ],
+        "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+      },
+      {
+        "id": "agency-research",
+        "name": "Agency Research",
+        "flow": "instruments",
+        "web": "ui-agency-research",
+        "tickets": [
+          "SSL-852"
+        ],
+        "nativeDeferred": "SSL-869: iOS companion fleet/service/shared snapshot follow-up under SSL-574; basic launch stamp and Agency path are included."
+      },
+      {
+        "id": "flight-return",
+        "name": "3D return flight, offline and livery",
+        "flow": "core-loop",
+        "web": "ui-flight-return",
+        "native": "return-live",
+        "nativeDeferred": "SSL-848 explicitly schedules the native 3D renderer after web; KES-529 supplies the later shared draw-list API.",
+        "tickets": [
+          "SSL-847",
+          "SSL-848",
+          "SSL-861"
+        ]
+      },
+      {
+        "id": "probe-subsurface",
+        "name": "Survey probe: shallow and deep subsurface",
+        "flow": "instruments",
+        "web": "ui-probe-subsurface",
+        "tickets": [
+          "SSL-832"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+      },
+      {
+        "id": "probe-science",
+        "name": "Survey probe: level 4 citizen science",
+        "flow": "instruments",
+        "web": "ui-probe-science",
+        "tickets": [
+          "SSL-832"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probes and radio meteor work have no supported native adapter; companion/planner scope remains deferred."
+      },
+      {
+        "id": "probe-receipt",
+        "name": "Survey probe: confirmed contribution",
+        "flow": "instruments",
+        "web": "ui-probe-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "probe-scan",
+        "nativeDeferred": "Survey probe gameplay remains outside the supported iOS companion scope."
+      },
+      {
+        "id": "tess-receipt",
+        "name": "TESS: contribution receipt",
+        "flow": "instruments",
+        "web": "ui-tess-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "galaxy",
+        "native": "tess-discovery-phone"
+      },
+      {
+        "id": "radio-receipt",
+        "name": "LEO-1: event contribution receipt",
+        "flow": "events",
+        "web": "ui-radio-receipt",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "radio-meteors",
+        "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
+      },
+      {
+        "id": "radio-receipt-pending",
+        "name": "LEO-1: pending event contribution",
+        "flow": "events",
+        "web": "ui-radio-receipt-pending",
+        "tickets": [
+          "SSL-883"
+        ],
+        "aliasOf": "radio-meteors",
+        "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
       }
     ],
     "authored": [
@@ -1178,32 +1467,34 @@
       {
         "id": "community-research",
         "path": "shared/authoring/scenes/community-research.toml",
-        "objects": 5,
+        "objects": 6,
         "gameObjects": 0,
-        "uiElements": 5,
+        "uiElements": 6,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 5,
+        "hostLayoutObjects": 6,
         "mechanics": [
           "records"
         ],
         "web": [
-          "web/components/game/screens/CommunityResearchScreen.tsx"
+          "web/components/game/screens/CommunityResearchScreen.tsx",
+          "web/components/game/screens/ResearchPassport.tsx"
         ],
         "native": []
       },
       {
         "id": "debrief",
         "path": "shared/authoring/scenes/debrief.toml",
-        "objects": 6,
+        "objects": 7,
         "gameObjects": 1,
-        "uiElements": 5,
+        "uiElements": 6,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
+        "hostLayoutObjects": 7,
         "mechanics": [
           "delivery",
           "mission-planning",
+          "persistence",
           "progression"
         ],
         "web": [
@@ -1229,7 +1520,7 @@
         ],
         "web": [
           "web/components/game/screens/DeliveryScreen.tsx",
-          "web/components/game/screens/DeliveryCanvas.tsx"
+          "web/components/takeon/TakeOnMount.tsx"
         ],
         "native": [
           "native/App/Screens/CoreLoop.swift"
@@ -1288,8 +1579,7 @@
           "rocket-assembly"
         ],
         "web": [
-          "web/components/game/screens/HangarScreen.tsx",
-          "web/components/game/screens/HangarBay.tsx"
+          "web/components/game/GameScreenRouter.tsx"
         ],
         "native": [
           "native/App/Screens/HangarScreen.swift"
@@ -1318,12 +1608,12 @@
       {
         "id": "hub",
         "path": "shared/authoring/scenes/hub.toml",
-        "objects": 11,
+        "objects": 14,
         "gameObjects": 9,
-        "uiElements": 2,
+        "uiElements": 5,
         "prefabs": 4,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 11,
+        "hostLayoutObjects": 14,
         "mechanics": [
           "construction",
           "delivery",
@@ -1500,14 +1790,31 @@
         ]
       },
       {
-        "id": "missions",
-        "path": "shared/authoring/scenes/missions.toml",
-        "objects": 6,
-        "gameObjects": 2,
-        "uiElements": 4,
+        "id": "mission-planner",
+        "path": "shared/authoring/scenes/mission-planner.toml",
+        "objects": 3,
+        "gameObjects": 1,
+        "uiElements": 2,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
+        "hostLayoutObjects": 3,
+        "mechanics": [
+          "mission-planning"
+        ],
+        "web": [
+          "web/components/game/screens/MissionPlannerScreen.tsx"
+        ],
+        "native": []
+      },
+      {
+        "id": "missions",
+        "path": "shared/authoring/scenes/missions.toml",
+        "objects": 7,
+        "gameObjects": 2,
+        "uiElements": 5,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 7,
         "mechanics": [
           "mission-planning",
           "training"
@@ -1554,7 +1861,8 @@
           "mission-planning"
         ],
         "web": [
-          "web/components/game/screens/ProbeScanScreen.tsx"
+          "web/components/game/screens/ProbeScanScreen.tsx",
+          "web/components/game/screens/ProbeSpectrumConsole.tsx"
         ],
         "native": []
       },
@@ -1630,6 +1938,23 @@
         ]
       },
       {
+        "id": "rocket-workshop",
+        "path": "shared/authoring/scenes/rocket-workshop.toml",
+        "objects": 1,
+        "gameObjects": 0,
+        "uiElements": 1,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 1,
+        "mechanics": [
+          "mission-planning"
+        ],
+        "web": [
+          "web/components/game/GameScreenRouter.tsx"
+        ],
+        "native": []
+      },
+      {
         "id": "saturn-storm-search",
         "path": "shared/authoring/scenes/saturn-storm-search.toml",
         "objects": 5,
@@ -1666,6 +1991,25 @@
         "native": []
       },
       {
+        "id": "surface-silo",
+        "path": "shared/authoring/scenes/surface-silo.toml",
+        "objects": 3,
+        "gameObjects": 0,
+        "uiElements": 3,
+        "prefabs": 0,
+        "sharedLayoutObjects": 0,
+        "hostLayoutObjects": 3,
+        "mechanics": [
+          "delivery"
+        ],
+        "web": [
+          "web/components/game/hub/SurfaceSiloPanel.tsx"
+        ],
+        "native": [
+          "native/App/Screens/HubScreen.swift"
+        ]
+      },
+      {
         "id": "targets",
         "path": "shared/authoring/scenes/targets.toml",
         "objects": 4,
@@ -1689,17 +2033,19 @@
       {
         "id": "transit",
         "path": "shared/authoring/scenes/transit.toml",
-        "objects": 6,
-        "gameObjects": 3,
-        "uiElements": 3,
+        "objects": 9,
+        "gameObjects": 4,
+        "uiElements": 5,
         "prefabs": 0,
         "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
+        "hostLayoutObjects": 9,
         "mechanics": [
           "flight"
         ],
         "web": [
           "web/components/game/screens/TransitScreen.tsx",
+          "web/components/takeon/TakeOnFlight.tsx",
+          "web/lib/flight/looks.ts",
           "web/components/game/MissionOperationRoutes.tsx"
         ],
         "native": [
@@ -1718,11 +2064,11 @@
       },
       {
         "id": "community-research",
-        "objects": 5
+        "objects": 6
       },
       {
         "id": "debrief",
-        "objects": 6
+        "objects": 7
       },
       {
         "id": "delivery",
@@ -1746,7 +2092,7 @@
       },
       {
         "id": "hub",
-        "objects": 11
+        "objects": 14
       },
       {
         "id": "instrument-hub",
@@ -1777,8 +2123,12 @@
         "objects": 3
       },
       {
+        "id": "mission-planner",
+        "objects": 3
+      },
+      {
         "id": "missions",
-        "objects": 6
+        "objects": 7
       },
       {
         "id": "narrative-ledger",
@@ -1805,6 +2155,10 @@
         "objects": 5
       },
       {
+        "id": "rocket-workshop",
+        "objects": 1
+      },
+      {
         "id": "saturn-storm-search",
         "objects": 5
       },
@@ -1813,12 +2167,16 @@
         "objects": 4
       },
       {
+        "id": "surface-silo",
+        "objects": 3
+      },
+      {
         "id": "targets",
         "objects": 4
       },
       {
         "id": "transit",
-        "objects": 6
+        "objects": 9
       }
     ]
   },
@@ -1895,9 +2253,11 @@
         "hub",
         "launchpad",
         "mining",
+        "mission-planner",
         "missions",
         "probe-scan",
         "rocket-buy",
+        "rocket-workshop",
         "targets"
       ]
     },
@@ -2003,7 +2363,8 @@
         "delivery",
         "hub-subsurface",
         "hub",
-        "mining"
+        "mining",
+        "surface-silo"
       ]
     },
     {
@@ -2165,6 +2526,7 @@
       "note": "Host service, not a scene object. All changes use canonical save/outbox paths.",
       "components": [],
       "scenes": [
+        "debrief",
         "hub"
       ]
     },
@@ -2312,9 +2674,11 @@
       "web/components/game/hub/BaseDock.tsx",
       "web/components/game/hub/BaseLayerScene.tsx",
       "web/components/game/hub/BaseMenuSheet.tsx",
+      "web/components/game/hub/BaseNextFlight.tsx",
       "web/components/game/hub/BaseWorldCanvas.tsx",
       "web/components/game/hub/Building.tsx",
       "web/components/game/hub/EarthBaseModules.tsx",
+      "web/components/game/hub/GroundTelescopeUpgrade.tsx",
       "web/components/game/hub/HubClockWidget.tsx",
       "web/components/game/hub/HubSubsurfaceView.tsx",
       "web/components/game/hub/HubWorldBackground.tsx",
@@ -2328,27 +2692,25 @@
       "web/components/game/hub/SurfaceSiloPanel.tsx",
       "web/components/game/hub/TerrainScene.tsx",
       "web/components/game/hub/WorldBackdrop.tsx",
+      "web/components/game/hub/useSpriteFailure.ts",
       "web/components/game/hud/SceneChrome.tsx",
       "web/components/game/instrument-viewport/InstrumentViewport.tsx",
       "web/components/game/orionids/OrionidsPlanetMark.tsx",
       "web/components/game/orionids/OrionidsShowerChrome.tsx",
       "web/components/game/previews/MissionFlowPreview.tsx",
       "web/components/game/previews/missionFlowPreviewData.ts",
+      "web/components/game/screens/AgencyFrontier.tsx",
       "web/components/game/screens/AsteroidDiscoveryScreen.tsx",
       "web/components/game/screens/CommunityBallots.tsx",
       "web/components/game/screens/CommunityConsensus.tsx",
       "web/components/game/screens/CommunityResearchScreen.tsx",
       "web/components/game/screens/ControlRoomBackdrop.tsx",
       "web/components/game/screens/DebriefScreen.tsx",
-      "web/components/game/screens/DeliveryCanvas.tsx",
       "web/components/game/screens/DeliveryScreen.tsx",
       "web/components/game/screens/DestinationLandscape.tsx",
       "web/components/game/screens/DownlinkControlDesk.tsx",
-      "web/components/game/screens/FlightBody.tsx",
-      "web/components/game/screens/FlightFlame.tsx",
       "web/components/game/screens/FlightSky.tsx",
       "web/components/game/screens/HangarBay.tsx",
-      "web/components/game/screens/HangarScreen.tsx",
       "web/components/game/screens/HomecomingScreen.tsx",
       "web/components/game/screens/HubScreen.tsx",
       "web/components/game/screens/InstrumentHubScreen.tsx",
@@ -2362,11 +2724,15 @@
       "web/components/game/screens/MiningControls.tsx",
       "web/components/game/screens/MiningScreen.tsx",
       "web/components/game/screens/MissionHistoryScreen.tsx",
+      "web/components/game/screens/MissionPlannerScreen.tsx",
       "web/components/game/screens/NarrativeLedgerScreen.tsx",
       "web/components/game/screens/ProbeScanScreen.tsx",
+      "web/components/game/screens/ProbeSpectrumConsole.tsx",
       "web/components/game/screens/ProbeWatchScreen.tsx",
       "web/components/game/screens/RadioMeteorScreen.tsx",
       "web/components/game/screens/RefineryScreen.tsx",
+      "web/components/game/screens/ResearchPassport.tsx",
+      "web/components/game/screens/ResearchReadout.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
       "web/components/game/screens/SaturnStormSearchScreen.tsx",
       "web/components/game/screens/SkyBadgeRow.tsx",
@@ -2391,6 +2757,7 @@
       "native/App/Scenes/SceneKit+Landnam.swift",
       "native/App/Screens/ArchiveScreen.swift",
       "native/App/Screens/AsteroidDiscoveryScreen.swift",
+      "native/App/Screens/BaseAnnex.swift",
       "native/App/Screens/BaseCamera.swift",
       "native/App/Screens/BaseDock.swift",
       "native/App/Screens/BaseMenu.swift",
@@ -2452,6 +2819,7 @@
     "sharedData": [
       "shared/authoring/README.md",
       "shared/authoring/constellations.toml",
+      "shared/authoring/fixtures/agency-programme.toml",
       "shared/authoring/fixtures/asteroid-discovery.toml",
       "shared/authoring/fixtures/build.toml",
       "shared/authoring/fixtures/community-research.toml",
@@ -2469,6 +2837,7 @@
       "shared/authoring/fixtures/market.toml",
       "shared/authoring/fixtures/mining.toml",
       "shared/authoring/fixtures/mission-history.toml",
+      "shared/authoring/fixtures/mission-planner.toml",
       "shared/authoring/fixtures/missions.toml",
       "shared/authoring/fixtures/narrative-ledger.toml",
       "shared/authoring/fixtures/probe-scan.toml",
@@ -2476,8 +2845,10 @@
       "shared/authoring/fixtures/radio-meteors.toml",
       "shared/authoring/fixtures/refinery.toml",
       "shared/authoring/fixtures/rocket-buy.toml",
+      "shared/authoring/fixtures/rocket-workshop.toml",
       "shared/authoring/fixtures/saturn-storm-search.toml",
       "shared/authoring/fixtures/sky-pointing.toml",
+      "shared/authoring/fixtures/surface-silo.toml",
       "shared/authoring/fixtures/targets.toml",
       "shared/authoring/fixtures/transit.toml",
       "shared/authoring/flows/launch-telescope.toml",
@@ -2502,6 +2873,7 @@
       "shared/authoring/scenes/market.toml",
       "shared/authoring/scenes/mining.toml",
       "shared/authoring/scenes/mission-history.toml",
+      "shared/authoring/scenes/mission-planner.toml",
       "shared/authoring/scenes/missions.toml",
       "shared/authoring/scenes/narrative-ledger.toml",
       "shared/authoring/scenes/probe-scan.toml",
@@ -2509,8 +2881,10 @@
       "shared/authoring/scenes/radio-meteors.toml",
       "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
+      "shared/authoring/scenes/rocket-workshop.toml",
       "shared/authoring/scenes/saturn-storm-search.toml",
       "shared/authoring/scenes/sky-pointing.toml",
+      "shared/authoring/scenes/surface-silo.toml",
       "shared/authoring/scenes/targets.toml",
       "shared/authoring/scenes/transit.toml",
       "shared/authoring/worlds/base-world.toml",
@@ -2530,15 +2904,19 @@
     "qaWithoutNativeScene": [],
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
+      "mission-planner",
       "probe-scan",
       "probe-watch",
       "radio-meteors",
       "refinery",
+      "rocket-workshop",
       "sky-pointing"
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
-    "unownedDomainFiles": [],
+    "unownedDomainFiles": [
+      "native/LandnamCore/Sources/LandnamCore/Systems/ResourceFocusRun.swift"
+    ],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
       "build",
@@ -2556,6 +2934,7 @@
       "market",
       "mining",
       "mission-history",
+      "mission-planner",
       "missions",
       "narrative-ledger",
       "probe-scan",
@@ -2563,8 +2942,10 @@
       "radio-meteors",
       "refinery",
       "rocket-buy",
+      "rocket-workshop",
       "saturn-storm-search",
       "sky-pointing",
+      "surface-silo",
       "targets",
       "transit"
     ]

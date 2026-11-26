@@ -5,13 +5,33 @@ import { DEFAULT_STATE, mergeRemoteState, normalizeAndRepair } from './game-stat
 import { buildRuntimeCatalog } from './runtimeCatalog'
 import { plannerTargets, planQuote, missionFromPlan, loadPlannedCargo, deliveryCache, sanitizeMissionPlans, type MissionPlan } from './mission-planner'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from './systems/DeliverySystem'
+import { applyLandingTouchdown } from './systems/LandingSystem'
 import { applyReturnArrived } from './systems/MiningSystem'
-import { placeProbe, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
+import { placeProbe, startProbeScan, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
 const plan: MissionPlan = { id: 'self-plan-test', targetId: 'mercury', work: 'deliver', mineral: 'iron', amount: 3, createdAt: 100 }
 const target = STATIC_CATALOG.targets.find(target => target.id === plan.targetId)!
 const player = () => ({ ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], stash: { iron: 12 } })
 
 describe('self-planned missions', () => {
+  it('resumes a chosen delivery site through descent and settles its cargo once', () => {
+    const sitePlan = { ...plan, zone: 'east' as const }
+    const mission = missionFromPlan(sitePlan, target, STATIC_CATALOG.minerals)
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: plan.id, targetId: target.id, player: player() }
+    const loaded = loadPlannedCargo(state, mission)!
+    const flying = { ...loaded, screen: 'flight' as const, player: { ...loaded.player, activeMission: { id: plan.id, label: 'Delivery', mission, target }, missionRunId: 'site-run' } }
+    const descending = applyDeliveryArrived(flying, 2000)
+    expect(descending.screen).toBe('landing')
+    expect(descending.player.activeMission?.mission?.customPlan?.zone).toBe('east')
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(descending)))
+    expect(restored.player.activeMission?.mission?.customPlan?.zone).toBe('east')
+    const unloading = applyLandingTouchdown(restored)
+    expect(unloading.screen).toBe('delivery')
+    expect(unloading.lastCargo).toEqual({ iron: 3 })
+    const returning = applyDeliveryUnloadComplete(unloading, 4000, 3000)
+    expect(deliveryCache(returning.player, target.id)).toEqual({ iron: 3 })
+    expect(applyDeliveryUnloadComplete(returning, 4000, 3000)).toBe(returning)
+    expect(returning.player.stash?.iron).toBe(9)
+  })
   it('offers reachable bodies and honest work-specific requirements and returns', () => {
     const p = player()
     const far = { ...target, id: 'too-far', orbit: 100 }
@@ -37,6 +57,21 @@ describe('self-planned missions', () => {
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, missionId: plan.id, targetId: plan.targetId, player: merged.player })
     expect(catalog.missions.find(mission => mission.id === plan.id)?.customPlan).toEqual(plan)
     expect(sanitizeMissionPlans({ bad: { ...plan, amount: -1 } })).toEqual({})
+  })
+  it('preserves a valid zone through save restoration and mission generation', () => {
+    const zoned = { ...plan, zone: 'east' as const }
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: zoned.id, targetId: zoned.targetId, player: { ...player(), missionPlans: { [zoned.id]: zoned } } }
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(state)))
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, missionId: zoned.id, targetId: zoned.targetId, player: restored.player })
+    expect(catalog.missions.find(mission => mission.id === zoned.id)?.customPlan?.zone).toBe('east')
+    expect(sanitizeMissionPlans({ [zoned.id]: { ...zoned, zone: 'unknown' } })[zoned.id]).toEqual(plan)
+  })
+  it('retains a legacy gas-giant surface plan while flagging it for replanning', () => {
+    const legacy = { ...plan, targetId: 'jupiter', work: 'mine' as const }
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: legacy.id, targetId: legacy.targetId, player: { ...player(), missionPlans: { [legacy.id]: legacy } } }
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(state)))
+    expect(restored.player.missionPlans?.[legacy.id]).toEqual(legacy)
+    expect(planQuote(legacy, restored.player, STATIC_CATALOG).issues).toContain('Choose a reachable destination for this work.')
   })
   it('loads Earth cargo at launch, unloads exactly once, and never puts delivered cargo back on Earth', () => {
     const mission = missionFromPlan(plan, target, STATIC_CATALOG.minerals)
@@ -71,12 +106,12 @@ describe('self-planned missions', () => {
   })
   it('limits a planned survey to its chosen coverage and keeps ordinary probes mapping all 24 sectors', () => {
     const at = 1000
-    const limited = placeProbe(player(), target.id, at, 6)
+    const limited = startProbeScan(placeProbe(player(), target.id, at, 6), target.id, at)
     const record = limited.probes![target.id]
     expect(probeSectorGoal(record)).toBe(6)
     expect(sectorsMapped(record, at + 48 * 3_600_000)).toHaveLength(6)
     expect(nextSector(record, at + 48 * 3_600_000)).toBeNull()
-    const ordinary = placeProbe(player(), target.id, at)
+    const ordinary = startProbeScan(placeProbe(player(), target.id, at), target.id, at)
     expect(sectorsMapped(ordinary.probes![target.id], at + 48 * 3_600_000)).toHaveLength(24)
     const survey = { ...plan, work: 'survey' as const, amount: 6 }
     expect(planQuote(survey, limited, STATIC_CATALOG).issues).toContain('A probe already orbits this body. Open it at the Data hub.')

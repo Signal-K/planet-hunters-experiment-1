@@ -7,6 +7,10 @@ import type { ResearchStamps } from './stamps'
 import type { PassportResponse } from './passport'
 
 export function passportFixture(preset: string, now: number, stamps: ResearchStamps | undefined): PassportResponse | null {
+  if (['ui-probe-receipt', 'ui-tess-receipt', 'ui-radio-receipt'].includes(preset)) {
+    const view = passportFixture('ui-research-passport', now, stamps)!
+    return { ...view, confirmedStamps: stamps ?? {} }
+  }
   if (!['ui-research-passport', 'ui-research-passport-unconfirmed', 'ui-research-passport-missed', 'ui-research-passport-empty'].includes(preset)) return null
   const week = weekKey(now)
   const prior = weekKey(now - 7 * 86_400_000)
@@ -30,6 +34,7 @@ export function useResearchPassport(active: boolean, stamps: ResearchStamps | un
     const load = async () => {
       const preset = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production' && window.location.pathname === '/game/stage' ? new URLSearchParams(window.location.search).get('preset') : null
       const demo = preset ? passportFixture(preset, Date.now(), stamps) : null
+      if (!live) return
       if (demo) { setOwner(scope); setData(demo); setStatus('live'); return }
       if (!pbLandnam.authStore.token) { setOwner(scope); setData(null); setStatus('signed-out'); return }
       try { const response = await fetchResearchPassport(); if (live) { setOwner(scope); setData(response); setStatus('live') } }
