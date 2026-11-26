@@ -17,8 +17,6 @@ sessions" in AGENTS.md). There is no e2e suite or separate test stack.
    `node scripts/dev-check.mjs --route /game/stage?preset=ui-mining --see "FIRE" --click "FIRE"`.
 4. Inspect the real scene for readable text, usable controls, clipping, and
    whether the gameplay object is the thing being acted on.
-5. When iOS changes, build the iOS Simulator target and launch its matching
-   `SceneCatalog` id with `xcrun simctl launch booted com.atlasskyventures.sslandnam -scene <id>`.
 
 `make test` runs the authoring check, the colocated Vitest suite and shared Go
 core tests. Its output filters preserve failure exit codes. Run it before a

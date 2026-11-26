@@ -2,7 +2,7 @@
 
 Studio is a Unity-style authoring harness, not a web preview window. It shows
 the authored object graph, its coordinate space, and the build contract for the
-web and iOS adapters. The game runs separately through its fixture.
+the web adapter. The game runs separately through its fixture.
 
 For one scene:
 
@@ -11,11 +11,9 @@ For one scene:
    mappings. Do not judge the embedded Studio surface as the game.
 3. Run `node scripts/scene.mjs <scene> --check` to mount the web fixture in the
    existing Simple Browser follower.
-4. Launch the printed `SceneCatalog` id in the iOS Simulator when its adapter
-   changed.
 
 For a mission, make its standalone start fixture, objective, completion state,
-web preset, and iOS fixture explicit in `qa/scenes.json`. The same id must work
+and web preset explicit in `qa/scenes.json`. The same id must work
 with `node scripts/scene.mjs <mission> --check`. A mission may compose scenes,
 but never requires campaign state or a prior manual click-path to begin.
 
