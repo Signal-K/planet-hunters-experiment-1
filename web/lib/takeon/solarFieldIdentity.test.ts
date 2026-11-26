@@ -39,4 +39,11 @@ describe('solar field snapshot identity', () => {
     changed.config.body.coreDEM.heights[0] = 99
     expect(() => assertSolarFieldRestored(saved, JSON.stringify(changed))).toThrow()
   })
+
+  it('refuses a field that restores its surface but loses a mined voxel', () => {
+    const mined = { ...JSON.parse(snapshot), edits: { '4,5,6': 0 } }
+    const saved = writeSolarFieldIdentity(JSON.stringify(mined), identity)
+    expect(() => assertSolarFieldRestored(saved, JSON.stringify(mined))).not.toThrow()
+    expect(() => assertSolarFieldRestored(saved, snapshot)).toThrow('could not be restored safely')
+  })
 })

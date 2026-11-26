@@ -442,7 +442,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     }
 
     const save = async () => {
-      if (readOnly) return
+      // Seeded cargo/cache belongs to the host mission, not a persistent
+      // field. Saving it here could overwrite a real field under this id.
+      if (readOnly || seedCargoRef.current || seedCacheRef.current) return
       const state = snapshot()
       if (state) await adapter.saveMission(state, roverName ?? 'Rover')
     }
@@ -656,12 +658,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             }
             sim.rover.cargoUsed = cargoUsed
           }
-          // Persist the authored unload point as part of the saved TakeOn
-          // environment, rather than leaving it as a screen-only overlay.
-          // Readiness is local-first: a review harness and an offline player
-          // must be able to use the mounted scene without waiting for a
-          // PocketBase round trip (KES-235).
-          void save().catch(reportError)
+          // This is an ephemeral representation of host-owned cargo.
         }
 
         if (fieldWeather) mounted.game.sim.weather = fieldWeather.initial ? { ...fieldWeather.initial } : null

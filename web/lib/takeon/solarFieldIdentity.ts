@@ -22,8 +22,16 @@ export function readSolarFieldIdentity(snapshot?: string): SolarFieldIdentity | 
 
 /** Guard against the engine's legacy fallback after a failed snapshot restore. */
 export function assertSolarFieldRestored(original: string, restored?: string): void {
-  const grid = (snapshot: string) => (JSON.parse(snapshot) as { config?: { body?: { coreDEM?: unknown } } }).config?.body?.coreDEM
-  if (!restored || JSON.stringify(grid(original)) !== JSON.stringify(grid(restored))) throw new Error('Saved solar field could not be restored safely')
+  if (!restored) throw new Error('Saved solar field could not be restored safely')
+  const a = JSON.parse(original) as { config?: { body?: { coreDEM?: unknown } }; edits?: Record<string, number> }
+  const b = JSON.parse(restored) as typeof a
+  const editsMatch = (left: Record<string, number> = {}, right: Record<string, number> = {}) => {
+    const keys = Object.keys(left)
+    return keys.length === Object.keys(right).length && keys.every(key => left[key] === right[key])
+  }
+  if (JSON.stringify(a.config?.body?.coreDEM) !== JSON.stringify(b.config?.body?.coreDEM) || !editsMatch(a.edits, b.edits)) {
+    throw new Error('Saved solar field could not be restored safely')
+  }
 }
 
 export function writeSolarFieldIdentity(snapshot: string, identity: SolarFieldIdentity): string {

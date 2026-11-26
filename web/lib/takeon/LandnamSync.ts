@@ -181,6 +181,9 @@ export function restoredStructureProgress(type: StructureType, value: unknown): 
 export class LandnamSync implements SyncAdapter {
   readonly mode = 'remote' as const
 
+  // A slow earlier upload must not finish after, and overwrite, a later edit.
+  private saveTail: Promise<void> = Promise.resolve()
+
   private readonly client: LandnamPersistenceClient
   private readonly fallback: SyncAdapter
   private readonly options: LandnamSyncOptions
@@ -252,6 +255,7 @@ export class LandnamSync implements SyncAdapter {
   }
 
   async loadMission(id: string): Promise<MissionState | null> {
+    await this.saveTail
     const userId = this.userId
     if (!userId) return this.fallback.loadMission(id)
 
@@ -277,9 +281,14 @@ export class LandnamSync implements SyncAdapter {
       const rover = objectField<MissionState['rover'] | null>(world, 'rover', null)
       if (!rover) return null
 
+      const coreSnapshot = decodeCoreSnapshot(world.snapshot)
+      if (typeof world.snapshot === 'string' && world.snapshot && !coreSnapshot) {
+        throw new Error('Saved field snapshot is damaged')
+      }
+
       return {
         schemaVersion: numberField(world, 'schema_version') || undefined,
-        coreSnapshot: decodeCoreSnapshot(world.snapshot),
+        coreSnapshot,
         id,
         bodyId: textField(world, 'body_id'),
         seed: numberField(world, 'seed'),
@@ -300,6 +309,17 @@ export class LandnamSync implements SyncAdapter {
   }
 
   async saveMission(state: MissionState, roverName: string): Promise<void> {
+    const owner = this.userId
+    const save = this.saveTail.then(() => {
+      if (this.userId !== owner) throw new Error('Account changed before field could be saved')
+      return this.persistMission(state, roverName)
+    })
+    // A failed save is reported to its caller but does not block later saves.
+    this.saveTail = save.catch(() => {})
+    return save
+  }
+
+  private async persistMission(state: MissionState, roverName: string): Promise<void> {
     const userId = this.userId
     if (!userId) {
       await this.fallback.saveMission(state, roverName)
