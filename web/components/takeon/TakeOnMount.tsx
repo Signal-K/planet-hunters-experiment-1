@@ -210,9 +210,9 @@ function openLandingSite(game: unknown): void {
   rover.stats.maxClimb = assistedClimb(world, rover.pos, rover.stats.maxClimb)
 }
 
-/** Camera zoom the field opens at: Takeon's 3.2 shows only a few tiles, so open wider. */
+/** Keep the rover readable while leaving room to navigate around it. */
 export function fieldZoom(viewport: { width: number; height: number }): number {
-  return Math.min(viewport.width, viewport.height) < 500 ? 1.7 : 2
+  return Math.min(viewport.width, viewport.height) < 500 ? 2.5 : 2.8
 }
 
 /**
@@ -231,12 +231,11 @@ function settleFieldView(game: unknown, viewport: { width: number; height: numbe
 }
 
 /**
- * The vendored renderer strokes its surface grid in pale cyan, which disappears on light ground and
- * glares on dark, so the field looked half gridded. Each surface chunk's context swaps that stroke
- * for one faint dark line, so the grid reads the same everywhere.
+ * The terrain layer owns the chunk contexts. Remove its blueprint stroke
+ * while retaining the texture and any non-grid strokes drawn into each chunk.
  */
 function evenFieldGrid(renderer: unknown): void {
-  const r = renderer as { rebuildChunk?: (chunk: { canvas: HTMLCanvasElement }) => void } | undefined
+  const r = (renderer as { terrainLayer?: { rebuildChunk?: (chunk: { canvas: HTMLCanvasElement }) => void; invalidateAll?: () => void } } | undefined)?.terrainLayer
   const rebuild = r?.rebuildChunk
   if (!r || typeof rebuild !== 'function') return
   const stroke = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'strokeStyle')
@@ -254,6 +253,7 @@ function evenFieldGrid(renderer: unknown): void {
     }
     return rebuild.call(this, chunk)
   }
+  r.invalidateAll?.()
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */

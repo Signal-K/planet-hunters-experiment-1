@@ -26,11 +26,23 @@ export function installHighObliqueRover(engine: Registry): void {
       const wheel = Array.from({length:12}, (_,i): Point => { const t = i*Math.PI/6; return [x+Math.cos(t)*2.2,y,2.3+Math.sin(t)*2.2] })
       face(wheel, '#303b40'); face(wheel.map(([wx,wy,wz]) => [x+(wx-x)*.42,wy+(y<0?-.05:.05),2.3+(wz-2.3)*.42]), '#c58958')
     }
+    // Suspension arms join each axle to a slim undercarriage.
+    for (const x of [-8, 0, 8]) for (const y of [-1, 1]) {
+      face([[x-1,y*3.8,3.5],[x+1,y*3.8,3.5],[x+.55,y*5.4,2.3],[x-.55,y*5.4,2.3]], '#59686a')
+    }
+    face([[-10,-3,1.8],[10,-3,1.8],[10,3,1.8],[-10,3,1.8]], '#35464b')
     face([[-11,-4,2],[11,-4,2],[11,-4,6],[-11,-4,6]], '#aab8b9')
     face([[-11,4,2],[11,4,2],[11,4,6],[-11,4,6]], '#899da1')
     face([[11,-4,2],[11,4,2],[11,4,6],[11,-4,6]], '#d57948')
     face([[-11,-4,2],[-11,4,2],[-11,4,6],[-11,-4,6]], '#71868a')
     face([[-11,-4,6],[11,-4,6],[11,4,6],[-11,4,6]], '#e6e3d5')
+    // Separate orange end caps and small access hatches break up the hull.
+    for (const y of [-4.02, 4.02]) {
+      face([[-10,y,2.4],[-8.5,y,2.4],[-8.5,y,5.7],[-10,y,5.7]], '#d77a43')
+      face([[2,y,2.4],[3.2,y,2.4],[3.2,y,5.7],[2,y,5.7]], '#d77a43')
+      face([[-6.5,y,2.8],[-3,y,2.8],[-3,y,5],[-6.5,y,5]], '#d9ddcf')
+      face([[-6,y*1.002,3.1],[-3.5,y*1.002,3.1],[-3.5,y*1.002,4.7],[-6,y*1.002,4.7]], '#aab9b6')
+    }
     // Equipment follows the fitted rover spec, leaving room for future modules.
     face([[5,-3.5,6],[10,-3.5,6],[10,-3.5,8],[5,-3.5,8]], '#df7840')
     face([[5,3.5,6],[10,3.5,6],[10,3.5,8],[5,3.5,8]], '#bc633b')
@@ -48,6 +60,8 @@ export function installHighObliqueRover(engine: Registry): void {
     if (!p.has.scanner) return
     const [mx,my] = project(world([-5,0,6])), [tx,ty] = project(world([-5,0,11]))
     ctx.strokeStyle='#2b3d43'; ctx.lineWidth=.7; ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(tx,ty); ctx.stroke()
-    ctx.fillStyle='#f2bb72'; ctx.beginPath(); ctx.arc(tx,ty,.8,0,Math.PI*2); ctx.fill()
+    ctx.fillStyle='#e9e5d5'; ctx.strokeStyle='#53666c'; ctx.lineWidth=.55
+    ctx.beginPath(); ctx.ellipse(tx,ty-1,2.6,1.4,-.35,0,Math.PI*2); ctx.fill(); ctx.stroke()
+    ctx.fillStyle='#df884b'; ctx.beginPath(); ctx.arc(tx,ty-1,.55,0,Math.PI*2); ctx.fill()
   } })
 }

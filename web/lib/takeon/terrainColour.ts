@@ -145,8 +145,8 @@ function ramp(top: string): Ramp {
   return [top, mixHex(top, '#000000', 0.34), mixHex(top, '#000000', 0.58)]
 }
 
-/** Grid line drawn on every surface chunk: dark and faint, so it reads the same on light and dark ground. */
-export const FIELD_GRID_LINE = 'rgba(8, 6, 16, 0.16)'
+/** Hide the blueprint grid in the surface scene; terrain retains its own texture and relief. */
+export const FIELD_GRID_LINE = 'rgba(0, 0, 0, 0)'
 
 /** True for Takeon's pale-cyan blueprint grid stroke (it vanished on light ground and glared on dark). */
 export function isBlueprintGridStroke(value: unknown): boolean {
