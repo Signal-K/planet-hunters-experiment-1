@@ -25,7 +25,7 @@ import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import type { MissionZone } from '@/lib/data/mission-zone'
 import { assertSolarFieldRestored, readSolarFieldIdentity, solarFieldIdentity, writeSolarFieldIdentity, type SolarFieldIdentity } from '@/lib/takeon/solarFieldIdentity'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
-import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
+import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import { assistedClimb, type DrivableWorld } from '@/lib/takeon/drivable'
 import { installFieldProbeGlyph } from '@/lib/takeon/fieldProbeGlyph'
@@ -223,37 +223,10 @@ export function fieldZoom(viewport: { width: number; height: number }): number {
 function settleFieldView(game: unknown, viewport: { width: number; height: number }, lifeStage: LifeStage | undefined): void {
   const renderer = (game as { renderer?: { camera?: { setZoom?: (z: number) => void }; critters?: unknown[]; flora?: unknown[]; flyers?: unknown[] } }).renderer
   renderer?.camera?.setZoom?.(fieldZoom(viewport))
-  evenFieldGrid(renderer)
   if (lifeStage === 'blooming' || lifeStage === 'thriving') return
   if (renderer?.critters) renderer.critters.length = 0
   if (renderer?.flora) renderer.flora.length = 0
   if (renderer?.flyers) renderer.flyers.length = 0
-}
-
-/**
- * The terrain layer owns the chunk contexts. Remove its blueprint stroke
- * while retaining the texture and any non-grid strokes drawn into each chunk.
- */
-function evenFieldGrid(renderer: unknown): void {
-  const r = (renderer as { terrainLayer?: { rebuildChunk?: (chunk: { canvas: HTMLCanvasElement }) => void; invalidateAll?: () => void } } | undefined)?.terrainLayer
-  const rebuild = r?.rebuildChunk
-  if (!r || typeof rebuild !== 'function') return
-  const stroke = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'strokeStyle')
-  if (!stroke?.set || !stroke.get) return
-  const patched = new WeakSet<CanvasRenderingContext2D>()
-  r.rebuildChunk = function (chunk) {
-    const ctx = chunk.canvas.getContext('2d')
-    if (ctx && !patched.has(ctx)) {
-      patched.add(ctx)
-      Object.defineProperty(ctx, 'strokeStyle', {
-        configurable: true,
-        get() { return stroke.get!.call(ctx) },
-        set(value: unknown) { stroke.set!.call(ctx, isBlueprintGridStroke(value) ? FIELD_GRID_LINE : value) },
-      })
-    }
-    return rebuild.call(this, chunk)
-  }
-  r.invalidateAll?.()
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
