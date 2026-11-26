@@ -15,13 +15,18 @@ const BIOMES: Record<string, typeof GROUPS[number]> = {
 }
 
 /** Register stable per-body colours and map the sampled field to engine material ids. */
-export function solarField(landing: SolarLandingPreview, ground: Ramp, registerMaterial: (def: MaterialDef) => unknown) {
-  const body = BODIES.indexOf(landing.bodyId as typeof BODIES[number])
-  if (body < 0) throw new Error(`No solar field material allocation for ${landing.bodyId}`)
+export function registerSolarFieldMaterials(bodyId: string, ground: Ramp, registerMaterial: (def: MaterialDef) => unknown) {
+  const body = BODIES.indexOf(bodyId as typeof BODIES[number])
+  if (body < 0) throw new Error(`No solar field material allocation for ${bodyId}`)
   const ids = Object.fromEntries(GROUPS.map((group, index) => [group, 110 + body * GROUPS.length + index])) as Record<typeof GROUPS[number], number>
   for (const group of GROUPS) {
     const colour = solarBiomeColour(group, ground)
-    registerMaterial({ id: ids[group], name: `Solar ${landing.bodyId} ${group}`, hardness: 2, yields: { resource: group === 'ice' || group === 'ice-ridges' ? 'ice' : 'regolith', amount: 1 }, colors: [colour, mixHex(colour, '#302719', 0.2), mixHex(colour, '#101018', 0.35)], jitter: 0.1 })
+    registerMaterial({ id: ids[group], name: `Solar ${bodyId} ${group}`, hardness: 2, yields: { resource: group === 'ice' || group === 'ice-ridges' ? 'ice' : 'regolith', amount: 1 }, colors: [colour, mixHex(colour, '#302719', 0.2), mixHex(colour, '#101018', 0.35)], jitter: 0.1 })
   }
+  return ids
+}
+
+export function solarField(landing: SolarLandingPreview, ground: Ramp, registerMaterial: (def: MaterialDef) => unknown) {
+  const ids = registerSolarFieldMaterials(landing.bodyId, ground, registerMaterial)
   return landingTerrain(landing, Object.fromEntries(Object.entries(BIOMES).map(([biome, group]) => [biome, ids[group]])))
 }

@@ -21,6 +21,7 @@ import type {
 } from '@takeon/engine'
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import type { MissionZone } from '@/lib/data/mission-zone'
+import { assertSolarFieldRestored, readSolarFieldIdentity, solarFieldIdentity, writeSolarFieldIdentity, type SolarFieldIdentity } from '@/lib/takeon/solarFieldIdentity'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { applyTerrainLook, DEFAULT_TERRAIN_LOOK, FIELD_GRID_LINE, isBlueprintGridStroke, terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
@@ -414,6 +415,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let unbindPhoto: (() => void) | null = null
     let unbindDiscovery: (() => void) | null = null
     let disposed = false
+    let fieldIdentity: SolarFieldIdentity | undefined
 
     // The TakeOn adapter has its own fixed-step loop and a Pixi texture
     // presentation callback. Keep both detached while the installed PWA is
@@ -426,8 +428,11 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
 
     const snapshot = (): MissionState | null => {
       if (!mounted) return null
+      const state = mounted.game.save()
+      if (fieldIdentity && !state.coreSnapshot) throw new Error('Solar field snapshot unavailable')
       return {
-        ...mounted.game.save(),
+        ...state,
+        ...(fieldIdentity ? { coreSnapshot: writeSolarFieldIdentity(state.coreSnapshot!, fieldIdentity) } : {}),
         id: missionId,
         bodyId,
       }
@@ -475,17 +480,27 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         const resume = isSeeded ? null : await adapter.loadMission(missionId)
         if (disposed) return
 
+        const savedSolar = readSolarFieldIdentity(resume?.coreSnapshot)
+        if (savedSolar) {
+          if (!currentTarget || savedSolar.bodyId !== currentTarget.id) throw new Error('Saved solar field belongs to another destination')
+          const { registerSolarFieldMaterials } = await import('@/lib/takeon/solarField')
+          registerSolarFieldMaterials(savedSolar.bodyId, look.ground, engine.registerMaterial)
+          fieldIdentity = savedSolar
+        }
+
         // Only ephemeral fields can switch generators without changing an existing
         // player's saved terrain or interpreting their edits against a new world.
-        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && (readOnly || isSeeded)) {
+        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && !resume && (readOnly || isSeeded)) {
           try {
             const { loadLandingPreview } = await import('@/lib/takeon/solarLandingPreview')
             const { solarField } = await import('@/lib/takeon/solarField')
             const landing = await loadLandingPreview(currentTarget.id, zone)
             if (disposed) return
             const demId = `solar-v${landing.styleVersion}-${landing.bodyId}-${landing.seed}-${landing.longitude}`
+            const identity = solarFieldIdentity(landing, zone)
             engine.registerDem(demId, solarField(landing, look.ground, engine.registerMaterial))
             body.dem = demId
+            fieldIdentity = identity
           } catch (error) {
             console.warn('Takeon solar terrain unavailable; using the existing field', error)
           }
@@ -523,6 +538,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           resume: resume ?? undefined,
           startView,
         })
+        if (savedSolar && resume?.coreSnapshot) {
+          try { assertSolarFieldRestored(resume.coreSnapshot, mounted.game.save().coreSnapshot) }
+          catch (error) { mounted.destroy(); mounted = null; throw error }
+        }
 
         const handleHostEvent = (event: TakeonHostEvent) => {
           callbacksRef.current.onEvent?.(event)
