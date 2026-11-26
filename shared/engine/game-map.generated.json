@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 167,
-    "webGameComponents": 124,
+    "webGameComponents": 122,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -2653,7 +2653,6 @@
       "web/components/game/MineralChip.tsx",
       "web/components/game/MissionBoard.tsx",
       "web/components/game/MissionOperationRoutes.tsx",
-      "web/components/game/MissionPlanStrip.tsx",
       "web/components/game/MissionSetupRoutes.tsx",
       "web/components/game/MissionTicker.tsx",
       "web/components/game/NotificationBell.tsx",
@@ -2671,7 +2670,6 @@
       "web/components/game/SettingsSheet.tsx",
       "web/components/game/ShipInteriorPreview.tsx",
       "web/components/game/SkyEventChip.tsx",
-      "web/components/game/SolSystemPreview.tsx",
       "web/components/game/SuiteHopRail.tsx",
       "web/components/game/SyncTray.tsx",
       "web/components/game/TutorialCompleteSheet.tsx",

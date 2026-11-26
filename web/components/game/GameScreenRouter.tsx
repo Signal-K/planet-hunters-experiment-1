@@ -33,7 +33,6 @@ import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
 import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import BaseNextFlight from '@/components/game/hub/BaseNextFlight'
 import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
-import { loadPixiGalaxyMap } from '@/components/TargetPicker/loadPixiGalaxyMap'
 
 const ScreenLoading = () => (
   <div className="game-screen-loading" role="status" aria-label="Loading screen">
@@ -65,8 +64,6 @@ const ALL_SCREEN_LOADERS = [
   loadMissionPlannerScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
-  // Nested inside the mission plan's destination sheet (construction and contract runs).
-  loadPixiGalaxyMap,
 ]
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
