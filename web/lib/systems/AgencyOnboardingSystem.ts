@@ -13,6 +13,7 @@
 // three-mission onboarding keep it without a silo, so nobody loses an unlock.
 
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { CONSTRUCTION_COMING_LATER } from '../deferred-features'
 import { isTrainingComplete, type FlightPlanProgress, type TrainingTryId } from './FlightPlanSystem'
 
 /** The structure whose placement completes the Storage stage. Kept here (not
@@ -116,7 +117,7 @@ export interface FreeOpsActivity {
   cta: string
   /** Where the activity opens. The telescope starts at the Launchpad (where
    *  its launch lives) until one is in orbit. */
-  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build'
+  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build' | 'hub'
 }
 
 export interface FreeOpsActivityPlayer {
@@ -154,9 +155,11 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
     {
       id: 'storage-silo',
       label: 'Storage Silo',
-      body: 'Build Earth-side storage before expanding your material operations.',
-      cta: 'Open build',
-      screen: 'build',
+      body: CONSTRUCTION_COMING_LATER
+        ? 'Earth-side storage expansion is coming later.'
+        : 'Build Earth-side storage before expanding your material operations.',
+      cta: CONSTRUCTION_COMING_LATER ? 'Open base' : 'Open build',
+      screen: CONSTRUCTION_COMING_LATER ? 'hub' : 'build',
     },
   ]
 }

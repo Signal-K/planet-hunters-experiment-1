@@ -1,6 +1,7 @@
 'use client'
 
 import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
+import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
 import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
@@ -391,7 +392,7 @@ function ScreenBody({
           onUpgradeGroundTelescope={id => game.setPlayer(current => applyGroundTelescopeUpgrade(current, id))}
           onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
-            if (building === 'build') return game.go('build')
+            if (building === 'build') return game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')
             if (building === 'refinery') return game.go('refinery')
             if (building === 'market') return game.go('market')
             if (building === 'control-station') return game.go('instrument-hub')
@@ -526,7 +527,7 @@ function ScreenBody({
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => leaveInstrument('tess')}
           onAgency={() => game.go('hub')}
-          onBuildStation={() => game.go('build')}
+          onBuildStation={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
           reviewing={reviewTarget?.project === 'tess'}
@@ -681,7 +682,7 @@ function ScreenBody({
           refinedGoods={game.player.refinedGoods}
           onSellRefined={game.sellRefinedGoods}
           onBack={() => game.goBack()}
-          onBuild={() => game.go('build')}
+          onBuild={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
           onHub={() => game.go('instrument-hub')}
           onNext={() => game.go(game.player.activeMission ? 'launchpad' : 'missions')}
           onConvertResearchFragments={() => game.setPlayer(current => convertResearchFragments(current))}
@@ -860,7 +861,7 @@ function ScreenBody({
             }
             game.resumeMissionRun(key)
           }}
-          onOpenSiloBuild={() => game.go('build')}
+          onOpenSiloBuild={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
           onOpenControlStation={() => game.go('instrument-hub')}
           onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}
