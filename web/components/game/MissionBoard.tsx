@@ -43,6 +43,7 @@ import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
 import { terrainLookForTarget } from '@/lib/takeon/terrainColour'
+import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { agencyStepLocation } from '@/lib/location-missions'
 import { missionTypePrimer } from '@/lib/data/mission-primers'
 import type { Mission } from '@/lib/data/types'
@@ -733,8 +734,8 @@ export default function MissionBoard({
       </> : <article className={styles.dock} data-testid="mission-board-section-client">
         {onboardingComplete ? <>
           <header className={styles.dockHead}><div className={styles.dockWho}><h2>No client signals yet</h2></div></header>
-          <p className={styles.dockBrief}>Build the Earth storage silo to open client missions.</p>
-          <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>
+          <p className={styles.dockBrief}>{CONSTRUCTION_COMING_LATER ? 'Client missions open once the Earth storage silo is built. Building is coming later.' : 'Build the Earth storage silo to open client missions.'}</p>
+          {!CONSTRUCTION_COMING_LATER && <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>}
         </> : contractTargetId ? <>
           <header className={styles.dockHead}><div className={styles.dockWho}><span>Destination filter</span><h2>No contracts for this location</h2></div></header>
           <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
@@ -769,7 +770,7 @@ export default function MissionBoard({
           <section aria-label="Client missions" data-testid="location-client-missions">
             <h3>Client missions</h3>
             {clientCards.length === 0 && <p>No client missions available here right now.</p>}
-            {clientCards.length === 0 && onboardingComplete && <button type="button" className={styles.clearFilter} onClick={onOpenBuild}>Build storage silo to open client missions</button>}
+            {clientCards.length === 0 && onboardingComplete && !CONSTRUCTION_COMING_LATER && <button type="button" className={styles.clearFilter} onClick={onOpenBuild}>Build storage silo to open client missions</button>}
             {clientCards.map(item => <article className={styles.locationMission} key={item.mission.id}>
               <span className={styles.locationIcon} data-kind={contractGroup(item.mission)}><MissionGlyph mission={item.mission} /></span><div><strong>{item.mission.title}</strong><small>{item.client?.name} · {formatCurrency(item.displayPayout, { compact: true })}</small><MissionAtAGlance mission={item.mission} /></div>
               <button type="button" disabled={!item.unlocked || tutorialBlocked} data-testid={`location-accept-${item.mission.id}`} onClick={() => { onAccept(item.mission.id); if (pickedId) onPickTarget?.(pickedId) }}>Select</button>

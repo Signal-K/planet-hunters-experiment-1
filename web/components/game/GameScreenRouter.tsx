@@ -1,6 +1,5 @@
 'use client'
 
-import { landingUnlocked } from '@/lib/systems/LandingSystem'
 import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
