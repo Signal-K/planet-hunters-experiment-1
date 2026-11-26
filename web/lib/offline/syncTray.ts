@@ -36,6 +36,7 @@ export function syncTrayCopy(state: SyncState, waiting: number): { title: string
 /** One waiting change in plain words. */
 export function describeChange(item: OutboxItem): string {
   const op = item.op
+  if (op.type === 'field-save') return 'Rover terrain'
   if (op.type === 'http') return op.path.includes('community') ? 'Community research' : 'Shared record'
   if (op.type === 'shared-create') return op.collection === 'platform_classification_captures' ? 'Classification and images' : 'Shared record'
   switch (op.collection) {

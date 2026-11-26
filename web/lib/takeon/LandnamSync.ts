@@ -14,7 +14,8 @@ import {
   type SyncAdapter,
   type TakeonProfile,
 } from '@takeon/engine'
-import { getOutbox, isQueuedUpsert, queueUpsert } from '@/lib/offline/pbOutbox'
+import { getOutbox, isQueuedUpsert } from '@/lib/offline/pbOutbox'
+import { newRecordId, type OutboxOp } from '@/lib/offline/outbox'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 type JsonRecord = Record<string, unknown>
@@ -89,6 +90,12 @@ const TAKEON_TYPE_BY_BLUEPRINT = new Map(
 
 function filterValue(value: string): string {
   return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
+}
+
+function isPendingField(op: OutboxOp, filter: string): boolean {
+  return (op.type === 'field-save' && op.filter === filter)
+    || isQueuedUpsert(op, 'voxel_worlds', filter)
+    || (op.type === 'upsert' && op.collection === 'structures' && op.filter.startsWith(`${filter} && structure_id = `))
 }
 
 function isNotFound(error: unknown): boolean {
@@ -251,7 +258,7 @@ export class LandnamSync implements SyncAdapter {
     // A queued snapshot can be newer than the server field. Loading the
     // server copy now and saving it again would silently erase offline edits.
     const filter = this.worldFilter(userId, id)
-    if (await getOutbox().has(op => isQueuedUpsert(op, 'voxel_worlds', filter))) {
+    if (await getOutbox().has(op => isPendingField(op, filter))) {
       throw new Error('This field has changes waiting to sync. Reconnect and try again.')
     }
 
@@ -301,7 +308,7 @@ export class LandnamSync implements SyncAdapter {
 
     const filter = this.worldFilter(userId, state.id)
     // Never write around a pending snapshot: its later replay would undo this save.
-    if (await getOutbox().has(op => isQueuedUpsert(op, 'voxel_worlds', filter))) {
+    if (await getOutbox().has(op => isPendingField(op, filter))) {
       await this.queueMissionUpload(userId, state, roverName)
       return
     }
@@ -337,46 +344,26 @@ export class LandnamSync implements SyncAdapter {
     }
   }
 
-  /**
-   * SSL-321: the local fallback copy is not enough on its own, so the same
-   * snapshot is queued for upload and replays when the device reconnects.
-   * Keyed upserts mean only the latest snapshot per world/structure is kept.
-   */
+  /** Keep the complete structure set with the snapshot until both have replayed. */
   private async queueMissionUpload(userId: string, state: MissionState, roverName: string): Promise<void> {
-    await queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
-      user: userId,
-      target_id: state.id,
-      body_id: state.bodyId,
-      rover_name: roverName,
-      seed: state.seed,
-      schema_version: state.schemaVersion ?? 0,
-      status: state.status,
-      time: state.time,
-      edits: state.edits,
-      rover: state.rover,
-      anomalies: state.anomalies,
-      photos: state.photos,
-      weather: state.weather ?? null,
-      snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
+    await getOutbox().enqueue({
+      type: 'field-save', id: newRecordId(), user: userId,
+      filter: this.worldFilter(userId, state.id),
+      data: {
+        user: userId, target_id: state.id, body_id: state.bodyId,
+        rover_name: roverName, seed: state.seed, schema_version: state.schemaVersion ?? 0,
+        status: state.status, time: state.time, edits: state.edits, rover: state.rover,
+        anomalies: state.anomalies, photos: state.photos, weather: state.weather ?? null,
+        snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
+      },
+      structures: state.structures.map(structure => ({
+        user: userId, target_id: state.id, structure_id: structure.id,
+        blueprint_slug: BLUEPRINT_BY_TAKEON_TYPE[structure.type] ?? structure.type,
+        pos_x: structure.pos.x, pos_y: structure.pos.y, facing: structure.facing ?? 0,
+        buffer: structure.buffer, cooldown_until: structure.cooldownUntil ?? 0,
+        progress: persistedStructureProgress(structure),
+      })),
     })
-    for (const structure of state.structures) {
-      await queueUpsert(
-        'structures',
-        `${this.worldFilter(userId, state.id)} && structure_id = "${filterValue(structure.id)}"`,
-        {
-          user: userId,
-          target_id: state.id,
-          structure_id: structure.id,
-          blueprint_slug: BLUEPRINT_BY_TAKEON_TYPE[structure.type] ?? structure.type,
-          pos_x: structure.pos.x,
-          pos_y: structure.pos.y,
-          facing: structure.facing ?? 0,
-          buffer: structure.buffer,
-          cooldown_until: structure.cooldownUntil ?? 0,
-          progress: persistedStructureProgress(structure),
-        }
-      )
-    }
   }
 
   private async saveStructures(

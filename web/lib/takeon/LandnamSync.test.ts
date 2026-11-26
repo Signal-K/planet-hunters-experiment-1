@@ -49,14 +49,14 @@ describe('field sync', () => {
     try {
       const sync = new LandnamSync({ client })
       await sync.saveMission(state, 'Rover')
-      expect(await outbox.has(op => op.type === 'upsert' && op.filter === filter)).toBe(true)
+      expect(await outbox.has(op => op.type === 'field-save' && op.filter === filter)).toBe(true)
       await sync.saveMission({ ...state, time: 2 }, 'Rover')
-      const saves = outbox.pending().filter(item => item.op.type === 'upsert' && item.op.filter === filter)
+      const saves = outbox.pending().filter(item => item.op.type === 'field-save' && item.op.filter === filter)
       expect(saves).toHaveLength(1)
-      expect(saves[0].op.type === 'upsert' && saves[0].op.data.time).toBe(2)
+      expect(saves[0].op.type === 'field-save' && saves[0].op.data.time).toBe(2)
       expect(create).not.toHaveBeenCalled()
     } finally {
-      await outbox.discard(op => op.type === 'upsert' && op.filter === filter)
+      await outbox.discard(op => op.type === 'field-save' && op.filter === filter)
     }
   })
 

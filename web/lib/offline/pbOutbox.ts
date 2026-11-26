@@ -28,7 +28,7 @@ export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
   }
   const message = `${error.status} ${error.message} ${JSON.stringify(error.response?.data ?? {})}`
   // A validation failure is deterministic: replaying the same payload cannot succeed.
-  if (error.status === 400) return { kind: 'invalid', message }
+  if (error.status === 400 && op.type !== 'field-save') return { kind: 'invalid', message }
   return { kind: 'rejected', message }
 }
 
@@ -63,8 +63,43 @@ export function classifyHttpStatus(status: number): OutboxFailure | null {
   return { kind: 'rejected', message: `${status}` }
 }
 
+type FieldSave = Extract<OutboxOp, { type: 'field-save' }>
+interface FieldCollection {
+  getFirstListItem(filter: string): Promise<{ id: string }>
+  getFullList(options: { filter: string }): Promise<Array<{ id: string; structure_id: unknown }>>
+  create(data: Record<string, unknown>): Promise<unknown>
+  update(id: string, data: Record<string, unknown>): Promise<unknown>
+  delete(id: string): Promise<unknown>
+}
+
+/** Replay until both world and the full structure set match the queued save. */
+export async function replayFieldSave(op: FieldSave, worlds: FieldCollection, collection: FieldCollection): Promise<void> {
+  const existing = await worlds.getFirstListItem(op.filter).catch((error: unknown) => {
+    if (error instanceof ClientResponseError && error.status === 404) return null
+    throw error
+  })
+  if (existing) await worlds.update(existing.id, op.data)
+  else await worlds.create({ id: op.id, ...op.data })
+  const records = await collection.getFullList({ filter: op.filter })
+  const remaining = new Map(records.map(record => [record.structure_id, record]))
+  for (const data of op.structures) {
+    const record = remaining.get(data.structure_id)
+    if (record) {
+      await collection.update(record.id, data)
+      remaining.delete(data.structure_id)
+    } else await collection.create(data)
+  }
+  for (const record of remaining.values()) await collection.delete(record.id)
+}
+
 async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> {
   if (op.type === 'http') return executeHttp(op)
+  if (op.type === 'field-save') {
+    // Never replay one account's field using another account's session.
+    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
+    await replayFieldSave(op, pbLandnam.collection('voxel_worlds'), pbLandnam.collection('structures'))
+    return null
+  }
   if (op.type === 'upsert') {
     const collection = pbLandnam.collection(op.collection)
     const existing = await collection.getFirstListItem(op.filter).catch((error: unknown) => {

@@ -9,6 +9,8 @@
 export type OutboxOp =
   | { type: 'create'; collection: string; id: string; data: Record<string, unknown> }
   | { type: 'update'; collection: string; id: string; data: Record<string, unknown> }
+  /** A world and its complete structure set must replay together. */
+  | { type: 'field-save'; id: string; filter: string; user: string; data: Record<string, unknown>; structures: Record<string, unknown>[] }
   /** Create-or-update keyed by a PocketBase filter (e.g. one voxel world per user + target). */
   | { type: 'upsert'; collection: string; id: string; filter: string; data: Record<string, unknown> }
   /** A Landnam custom-route call (community API). `body.id` is the client-generated idempotency key. */
@@ -205,6 +207,9 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
     // Only the latest snapshot of a keyed upsert matters; drop superseded ones.
     if (op.type === 'upsert') {
       items = items.filter(i => !(i.op.type === 'upsert' && i.op.collection === op.collection && i.op.filter === op.filter))
+    }
+    if (op.type === 'field-save') {
+      items = items.filter(i => !(i.op.type === 'field-save' && i.op.filter === op.filter))
     }
     items.push({ id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false })
     await persist()

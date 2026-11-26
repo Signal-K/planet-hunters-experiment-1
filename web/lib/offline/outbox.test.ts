@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { syncLabel } from '@/components/game/LandnamSyncStatus'
 import { backoffMs, createOutbox, MAX_ATTEMPTS, memoryStore, newRecordId, type OutboxFailure, type OutboxOp } from './outbox'
-import { classifyHttpStatus } from './pbOutbox'
+import { classifyHttpStatus, replayFieldSave } from './pbOutbox'
 
 function harness(results: Array<OutboxFailure | null>) {
   const calls: OutboxOp[] = []
@@ -28,6 +28,40 @@ describe('outbox', () => {
     expect(h.outbox.pending()).toHaveLength(2)
     await h.outbox.flush()
     expect(h.calls.map(c => (c.type === 'upsert' ? c.data.time : null))).toEqual([2, 3])
+  })
+
+  it('replaces a field and its complete structure set as one queued change', async () => {
+    const h = harness([])
+    const save = (structures: Record<string, unknown>[]): OutboxOp => ({
+      type: 'field-save', id: 'bbbbbbbbbbbbbbb', filter: 'user = "u1" && target_id = "mars"',
+      user: 'u1', data: {}, structures,
+    })
+    await h.outbox.enqueue(save([{ structure_id: 'old' }]))
+    await h.outbox.enqueue(save([{ structure_id: 'new' }]))
+    expect(h.outbox.pending()).toHaveLength(1)
+    await h.outbox.flush()
+    expect(h.calls[0].type === 'field-save' && h.calls[0].structures).toEqual([{ structure_id: 'new' }])
+  })
+
+  it('replays a complete field, including structure updates and removals', async () => {
+    const op: Extract<OutboxOp, { type: 'field-save' }> = {
+      type: 'field-save', id: 'world-id', filter: 'owner', user: 'u1', data: { time: 2 },
+      structures: [{ structure_id: 'keep', pos_x: 4 }, { structure_id: 'new' }],
+    }
+    const worlds = {
+      getFirstListItem: vi.fn().mockResolvedValue({ id: 'world' }),
+      getFullList: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(),
+    }
+    const structures = {
+      getFirstListItem: vi.fn(),
+      getFullList: vi.fn().mockResolvedValue([{ id: 'one', structure_id: 'keep' }, { id: 'two', structure_id: 'removed' }]),
+      create: vi.fn(), update: vi.fn(), delete: vi.fn(),
+    }
+    await replayFieldSave(op, worlds, structures)
+    expect(worlds.update).toHaveBeenCalledWith('world', { time: 2 })
+    expect(structures.update).toHaveBeenCalledWith('one', op.structures[0])
+    expect(structures.create).toHaveBeenCalledWith(op.structures[1])
+    expect(structures.delete).toHaveBeenCalledWith('two')
   })
 
   it('sends a write enqueued mid-flush in a follow-up pass', async () => {
