@@ -231,7 +231,7 @@ export function BaseDock({
             {buildIcon ?? <BuildSiteIcon />}<span>{buildLabel}</span>
           </DockWordButton>}
           {onMission && <DockWordButton className="scene-location-action--mission" data-testid="hub-new-mission-btn" onClick={onMission}>
-            <MissionIcon /><span>Missions</span>
+            <MissionIcon /><span>Map</span>
           </DockWordButton>}
           {onSubsurface && <DockWordButton className="scene-location-action--subsurface" data-testid="hub-subsurface-btn" onClick={onSubsurface}>
             <SubsurfaceIcon /><span>{subsurface ? 'Surface' : 'Subsurface'}</span>

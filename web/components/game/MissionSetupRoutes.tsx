@@ -106,7 +106,6 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         game={game}
         launched={launchPending}
         blockedReason={blockedReason}
-        onChangePlace={() => game.go('solar-map')}
         primaryLabel={actionLabel}
         primaryDisabled={actionDisabled}
         primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}

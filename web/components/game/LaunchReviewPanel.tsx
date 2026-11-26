@@ -12,13 +12,12 @@ type Game = ReturnType<typeof useGame>
 
 /**
  * Launch review for the map-first loop. There is one rocket, so there is nothing to choose: the review states the
- * place, the work, the cargo and the rocket, then launches. Another place is chosen on the solar-system map.
+ * place, the work, the cargo and the rocket, then launches. Back returns to the solar-system map to choose another place.
  */
-export default function LaunchReviewPanel({ game, blockedReason, launched, onChangePlace, primaryAction, primaryLabel, primaryDisabled = false }: {
+export default function LaunchReviewPanel({ game, blockedReason, launched, primaryAction, primaryLabel, primaryDisabled = false }: {
   game: Game
   blockedReason: string | null
   launched: boolean
-  onChangePlace: () => void
   primaryAction: () => void
   primaryLabel: string
   primaryDisabled?: boolean
@@ -57,7 +56,6 @@ export default function LaunchReviewPanel({ game, blockedReason, launched, onCha
         </dl>
         {blockedReason && !launched && <p className={styles.hold} data-testid="review-hold" role="status">{blockedReason}.</p>}
         <div className={styles.actions}>
-          <button type="button" className={styles.place} data-testid="review-change-place" onClick={onChangePlace}>Map</button>
           <button type="button" className={styles.launch} data-testid="review-launch" disabled={primaryDisabled} onClick={primaryAction}>{primaryLabel}</button>
         </div>
       </section>

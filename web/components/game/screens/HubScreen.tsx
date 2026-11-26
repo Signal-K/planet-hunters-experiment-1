@@ -1,5 +1,6 @@
 'use client'
 
+import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { firedAlertCount } from '@/lib/systems/MarketplaceSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -514,7 +515,7 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
     || !!player.saturnImagerLaunchedAt
   const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
-    { id: 'build', icon: 'build', primary: true, label: 'Build', detail: 'New structures and launch support', onSelect: () => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) } },
+    { id: 'build', icon: 'build', primary: true, label: CONSTRUCTION_COMING_LATER ? 'Build: coming later' : 'Build', detail: CONSTRUCTION_COMING_LATER ? 'Coming later' : 'New structures and launch support', disabled: CONSTRUCTION_COMING_LATER, onSelect: () => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) } },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
     ...(
@@ -862,12 +863,12 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
               onPrev={() => moveBase(-0.22)}
               onNext={() => moveBase(0.22)}
               onBuild={() => { setPlaceNote(null); setArrangeKind(null); setSubsurface(false); setEditMode(true) }}
-              onMission={!subsurface && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('missions') : undefined}
+              onMission={!subsurface && !player.activeMission && !player.pendingLaunch ? () => onOpenScene('solar-map') : undefined}
               onHub={() => setMenuOpen(true)}
               locationLabel="Earth"
               locationNavigationDisabled={false}
               hideLocationArrows={phoneView}
-              showLocationBuild={buildOptions.length > 0}
+              showLocationBuild={!CONSTRUCTION_COMING_LATER && buildOptions.length > 0}
               buildLabel="Build"
               buildTestId="hub-build-btn"
             />

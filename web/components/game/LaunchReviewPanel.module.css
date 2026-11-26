@@ -11,7 +11,8 @@
 .card dd { margin: 0; font-weight: 800; text-align: right; }
 .hold { margin: 0; font-size: 14px; }
 .actions { display: flex; gap: 8px; }
-.place { min-height: 48px; padding: 0 16px; color: inherit; font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; background: transparent; border: 2px solid currentColor; border-radius: 10px; }
 .launch { flex: 1; min-height: 48px; color: var(--ln-blueprint-paper); font: 800 16px/1 var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; background: var(--ln-blueprint-blue); border: 2px solid var(--ln-blueprint-ink); border-radius: 10px; }
 .launch:disabled { color: var(--ln-blueprint-ink); background: var(--ln-blueprint-paper-2); }
-@media (orientation: landscape) and (max-height: 520px) { .host { top: 48px; left: 8px; right: auto; justify-content: flex-start; } .card { width: min(340px, 46vw); padding: 10px 12px; gap: 6px; } }
+/* Wide screens: the card sits in the open sky beside the rocket, clear of the tower, the rocket and the stat chips. */
+@media (min-width: 700px) { .host { left: 48%; right: auto; justify-content: flex-start; } .card { width: min(360px, 100%); } }
+@media (orientation: landscape) and (max-height: 520px) { .host { top: 48px; left: 50%; } .card { width: 290px; padding: 10px 12px; gap: 6px; } }
