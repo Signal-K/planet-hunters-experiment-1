@@ -31,7 +31,7 @@ describe('agency launch and research loop', () => {
 
   it('offers another launch and the construction reward, and keeps shared-world plans on cold load', () => {
     const player = { ...DEFAULT_STATE.player, freeOperations: true, placed: ['launchpad', 'control-station'], transitSatelliteLaunchedAt: now, agencyCommunity: community }
-    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, transitSatelliteLaunchedAt: now, player, missionsDone: 5 })
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, transitSatelliteLaunchedAt: now, targetId: 'exo-shared', player, missionsDone: 5 })
     expect(catalog.missions.some(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)).toBe(true)
     expect(catalog.missions.some(mission => mission.id === 'community-science-launch')).toBe(true)
     expect(catalog.targets.some(target => target.id === 'exo-shared')).toBe(true)

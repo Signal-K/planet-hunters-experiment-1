@@ -5,6 +5,12 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PORT="${LANDNAM_WEB_PORT:-4320}"
 healthy() { curl -fsS -m 3 "http://127.0.0.1:${PORT}/api/backend-health" >/dev/null 2>&1; }
+# The solar-system map draws its planet globes with the Takeon Go/WASM runtime. Without this gitignored build the
+# globes stay as empty grey discs, which looks like a lighting bug but is a missing asset.
+if [ ! -f web/public/takeon-go/takeon.wasm ]; then
+  echo "WARNING: web/public/takeon-go is missing, so map planets render as grey discs." >&2
+  echo "  Fix: git -C <takeon> worktree add ../takeon-kes551 origin/codex/kes-551-procedural-locations && TAKEON_GO_REPO=../takeon-kes551 npm --prefix web run sync:solar" >&2
+fi
 if healthy; then echo "Landnam stack already up on :${PORT}"; exit 0; fi
 LOCK=/tmp/landnam-ensure.lock
 if ! mkdir "$LOCK" 2>/dev/null; then

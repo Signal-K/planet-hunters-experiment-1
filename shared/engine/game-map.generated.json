@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 31,
     "nativeScreenCases": 25,
-    "qaScenes": 111,
+    "qaScenes": 112,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 31,
     "authoringSources": 71,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 167,
-    "webGameComponents": 121,
+    "webGameComponents": 124,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -355,7 +355,7 @@
         "id": "launch-review",
         "name": "Launch review",
         "flow": "core-loop",
-        "web": "ui-target-picker",
+        "web": "ui-launch-review",
         "native": "launch-review-phone",
         "tickets": [
           "SSL-426",
@@ -809,6 +809,15 @@
         "web": "transport-mining",
         "native": "transport-mining-live",
         "tickets": []
+      },
+      {
+        "id": "solar-site-delivery",
+        "name": "Solar site delivery",
+        "flow": "core-loop",
+        "web": "solar-site-delivery",
+        "tickets": [
+          "SSL-891"
+        ]
       },
       {
         "id": "transport-delivery",
@@ -2215,7 +2224,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/ResourceFocusRun.swift"
       ],
       "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
       "components": [
@@ -2636,6 +2646,7 @@
       "web/components/game/FriendsSheet.tsx",
       "web/components/game/GameScreenRouter.tsx",
       "web/components/game/LandnamSyncStatus.tsx",
+      "web/components/game/LaunchReviewPanel.tsx",
       "web/components/game/LaunchSequenceCanvas.tsx",
       "web/components/game/LaunchpadPrefab.tsx",
       "web/components/game/LightcurvePlot.tsx",
@@ -2740,6 +2751,8 @@
       "web/components/game/screens/SkyPixels.tsx",
       "web/components/game/screens/SkyPointing.tsx",
       "web/components/game/screens/SkyScenes.tsx",
+      "web/components/game/screens/SolarOrbitGlobe.tsx",
+      "web/components/game/screens/SolarSurface.tsx",
       "web/components/game/screens/TessDiscoveryScreen.tsx",
       "web/components/game/screens/TransitScreen.tsx",
       "web/components/game/sky/SkyMapBase.tsx"
@@ -2901,7 +2914,9 @@
     "routesWithoutSceneType": [],
     "unknownSlots": [],
     "qaWithoutWebPreset": [],
-    "qaWithoutNativeScene": [],
+    "qaWithoutNativeScene": [
+      "solar-site-delivery"
+    ],
     "scenesWithoutObjects": [],
     "routesWithoutNativeCase": [
       "mission-planner",
@@ -2914,9 +2929,7 @@
     ],
     "scenesWithoutMechanics": [],
     "mechanicsWithoutNativeSources": [],
-    "unownedDomainFiles": [
-      "native/LandnamCore/Sources/LandnamCore/Systems/ResourceFocusRun.swift"
-    ],
+    "unownedDomainFiles": [],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
       "build",

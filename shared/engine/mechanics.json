@@ -30,7 +30,8 @@
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",
         "native/LandnamCore/Sources/LandnamCore/Industry/BuildingLevels.swift",
-        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift"
+        "native/LandnamCore/Sources/LandnamCore/Industry/ConstructionMissions.swift",
+        "native/LandnamCore/Sources/LandnamCore/Systems/ResourceFocusRun.swift"
       ],
       "note": "Fixed-site placement and underground rooms; compare unlocks and costs before migration.",
       "components": [

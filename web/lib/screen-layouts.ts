@@ -120,6 +120,7 @@ export const GAME_ROUTES = [
   // Dev-only
   { path: '/game/launcher', surface: 'dev', dev: true },
   { path: '/game/stage', surface: 'dev', dev: true },
+  { path: '/game/stage/solar-visual', surface: 'dev', dev: true },
   { path: '/game/studio', surface: 'dev', dev: true },
   { path: '/game/demo', surface: 'dev', dev: true },
   { path: '/game/demo/[preset]', surface: 'dev', dev: true, redirectTo: '/game/<preset screen>' },
