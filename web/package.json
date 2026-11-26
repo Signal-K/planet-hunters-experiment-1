@@ -11,6 +11,7 @@
     "start": "next start -p 3001",
     "typecheck": "next typegen && tsc --noEmit",
     "sync:shared": "node ../scripts/sync-all-shared.mjs",
+    "sync:solar": "bash scripts/sync-takeon-go-wasm.sh",
     "authoring:compile": "node ../scripts/authoring.mjs compile",
     "authoring:check": "node ../scripts/authoring.mjs check",
     "studio": "node ../scripts/studio.mjs",

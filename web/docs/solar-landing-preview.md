@@ -2,13 +2,15 @@
 
 The optional web connection samples a versioned Takeon Go solar landing patch and converts its elevation to the DEM used by the playable Takeon field. The landing scene's generated orbital globe, its landing patch, and fresh tutorial delivery fields use the same body, seed, style version and coordinates. The globe samples a broad hemisphere, while the field uses a local elevation grid. The globe is shown only when its centre sample matches the landing patch. The orbital globe and landing preview use the same biome colour mapping and landing samples. The landing preview draws an angled relief mesh and deterministic rocks from that patch; it is a visual scene, not the playable rover field.
 
-Enable it locally with a Takeon checkout that contains the solar landing bridge:
+The solar-system map's generated planet icons also use this WASM, even when the descent preview is disabled. The files are not committed: another checkout or deployment must build them before starting the web app. Use Takeon's `codex/kes-551-procedural-locations` branch at commit `d079e94` or a later compatible revision, and the Go version specified in its `go/go.mod`:
 
 ```sh
 cd web
-PATH="/path/to/go/bin:$PATH" bash scripts/sync-takeon-go-wasm.sh /path/to/takeon
+npm run sync:solar -- /path/to/takeon
 NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW=1 npm run dev
 ```
+
+The path can be omitted when Takeon is a sibling checkout named `takeon`, or supplied via `TAKEON_GO_REPO`. If the Go toolchain is not on `PATH`, prepend its bin directory. Restart the web server after changing the preview flag. Without the assets the map falls back to plain icons; enabling the flag without matching assets cannot provide the generated descent or a selected-site rover field.
 
 The WASM and its matching shim are ignored build output and must be provisioned for each deployment. If loading fails, the existing field remains available. Saved rover missions retain their existing generator: this experiment only applies to read-only fields and seeded, ephemeral tutorial fields. The existing illustrated globe is used if generation fails. Mining scenes and persistent fields are not connected. The generated globe and field load asynchronously. This is not yet a complete orbit-to-surface connection.
 
