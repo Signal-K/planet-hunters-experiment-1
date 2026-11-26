@@ -6,7 +6,10 @@ import { Application, Container, Sprite } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
-import type { MineralMeta } from '@/lib/data'
+import type { MineralMeta, Target } from '@/lib/data'
+import type { MissionZone } from '@/lib/data/mission-zone'
+import { loadLandingPreview } from '@/lib/takeon/solarLandingPreview'
+import { solarMiningPalette } from '@/lib/mining/solarMiningPalette'
 import type { PlayerLocation } from '@/lib/game-types'
 import { prefersReducedMotion } from '@/lib/pixi/launchSpriteAnim'
 import { recoilOffset } from '@/lib/engine/miningJuice'
@@ -26,6 +29,7 @@ interface MiningCanvasProps {
   palette: LaserPalette
   /** Target id; varies the landscape arrangement (SSL-536). */
   landscapeKey?: string
+  solarSite?: { target: Target; zone: MissionZone }
   rocketImageSrc?: string
   minerals: string[]
   leadMinerals?: string[]
@@ -74,7 +78,7 @@ interface MiningCanvasProps {
   skyEventLocation?: PlayerLocation | null
 }
 
-export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
+export default function MiningCanvas({ palette, landscapeKey, solarSite, rocketImageSrc, minerals, leadMinerals, scrollScreens = 0, pinScroll = false, requiredMinerals, mineralMeta, laserTier, onCollect, onEventProof, onReady, onFailure, fireRef, onFireRequest, scrollRef, steerRef, altitudeRef, onBump, oreNearRef, onTargetCueRef, onObstacleAheadRef, neededMineralsRef, chargingRef, trainingMiningTry = false, catchRain = false, catchRef, onCatchCueRef, debrisPreset = null, fireballCaughtAt = null, skyEventLocation = null }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const debrisPresetRef = useRef(debrisPreset)
   debrisPresetRef.current = debrisPreset
@@ -171,6 +175,8 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
           : Math.min(worldH * 0.72, surfaceFromBottom + Math.min(210, worldH * 0.28))
         const shipY = Math.round(worldH - shipFromBottom)
 
+        const sitePalette = solarSite ? solarMiningPalette(palette, solarSite.target, await loadLandingPreview(solarSite.target.id, solarSite.zone)) : palette
+        if (destroyed) return
         const [sceneData] = await Promise.all([
           Scene.load('/game/scenes/mining.scene.json'),
           app.init({
@@ -187,7 +193,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
 
         // SSL-708: the ship starts about a quarter of the way in, not hugging the left edge.
         const startX = Math.round(Math.max(110, Math.min(320, worldW * 0.24)))
-        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette, landscapeKey, rocketImageSrc })
+        const field = await buildLaserField({ worldW, worldH, surfaceY, shipX: startX, shipY, palette: sitePalette, landscapeKey: solarSite ? `${landscapeKey}:${solarSite.zone}` : landscapeKey, rocketImageSrc })
         if (destroyed) {
           field.backdrop.destroy({ children: true })
           field.beam.destroy({ children: true })
@@ -456,7 +462,7 @@ export default function MiningCanvas({ palette, landscapeKey, rocketImageSrc, mi
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [palette.id, landscapeKey, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
+  }, [palette.id, landscapeKey, solarSite?.zone, solarSite?.target.id, rocketImageSrc, fitKey, leadMinerals?.join(','), scrollScreens, pinScroll])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-palette={palette.id} data-training-mining={trainingMiningTry || undefined}>

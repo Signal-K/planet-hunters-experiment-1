@@ -14,7 +14,7 @@ import {
   type SyncAdapter,
   type TakeonProfile,
 } from '@takeon/engine'
-import { queueUpsert } from '@/lib/offline/pbOutbox'
+import { getOutbox, isQueuedUpsert, queueUpsert } from '@/lib/offline/pbOutbox'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 type JsonRecord = Record<string, unknown>
@@ -243,6 +243,13 @@ export class LandnamSync implements SyncAdapter {
   async loadMission(id: string): Promise<MissionState | null> {
     const userId = this.userId
     if (!userId) return this.fallback.loadMission(id)
+
+    // A queued snapshot can be newer than the server field. Loading the
+    // server copy now and saving it again would silently erase offline edits.
+    const filter = this.worldFilter(userId, id)
+    if (await getOutbox().has(op => isQueuedUpsert(op, 'voxel_worlds', filter))) {
+      throw new Error('This field has changes waiting to sync. Reconnect and try again.')
+    }
 
     try {
       const world = await this.client.collection('voxel_worlds')

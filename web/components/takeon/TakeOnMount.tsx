@@ -488,7 +488,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           throw new Error('This landing site is unavailable. Pause and try again when solar terrain is available.')
         }
         if (savedSolar) {
-          if (!currentTarget || savedSolar.bodyId !== currentTarget.id) throw new Error('Saved solar field belongs to another destination')
+          if (!currentTarget || savedSolar.bodyId !== currentTarget.id || (zone !== undefined && savedSolar.zone !== zone)) throw new Error('Saved solar field belongs to another landing site')
           const { registerSolarFieldMaterials } = await import('@/lib/takeon/solarField')
           const definitions: Parameters<typeof engine.registerMaterial>[0][] = []
           registerSolarFieldMaterials(savedSolar.bodyId, look.ground, definition => { definitions.push(definition) })
@@ -497,8 +497,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           fieldIdentity = savedSolar
         }
 
-        // Only ephemeral fields can switch generators without changing an existing
-        // player's saved terrain or interpreting their edits against a new world.
+        // Persistent creation stays disabled until offline and remote snapshots
+        // can be reconciled without overwriting a newer field.
         if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && !resume && (readOnly || isSeeded)) {
           try {
             const { loadLandingPreview } = await import('@/lib/takeon/solarLandingPreview')

@@ -665,6 +665,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           key={runKey}
           palette={palette}
           landscapeKey={target?.id}
+          solarSite={mission.customPlan?.work === 'mine' && mission.customPlan.zone ? { target, zone: mission.customPlan.zone } : undefined}
           rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           leadMinerals={mixedOres ? ['iron', 'carbon', 'ice'] : undefined}

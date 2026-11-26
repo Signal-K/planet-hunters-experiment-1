@@ -105,6 +105,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, Extraction coach active', stage: 'tutorial' },
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
+      { key: 'solar-site-mining', label: 'Solar site mining', hint: 'Selected Mercury site with preserved cargo and charges', stage: 'free-ops' },
       { key: 'ui-mining-survey', label: 'Mining mapped finds', hint: 'SSL-879: two Eros sectors, one aluminium haul; mapped mix plus required ore', stage: 'free-ops' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
       { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
@@ -502,6 +503,14 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
+    case 'solar-site-mining': {
+      const plan: MissionPlan = { id: 'self-plan-fixture-mine', work: 'mine', targetId: 'mercury', mineral: 'iron', amount: 3, createdAt: 100, zone: 'east' }
+      const target = TARGETS.find(body => body.id === plan.targetId)!
+      const mission = missionFromPlan(plan, target, MINERAL_META)
+      return { ...resolvePresetState('m1-mining')!, tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: plan.id, targetId: target.id,
+        player: { ...POST_ONBOARDING_PLAYER, missionPlans: { [plan.id]: plan }, miningCargoInProgress: { iron: 1 }, miningLaserCharges: 12, activeMission: { id: plan.id, label: mission.title, mission, target } } }
+    }
     case 'ui-mining-survey': {
       const base = resolvePresetState('m1-mining')!
       const plan = { id: 'self-plan-probe-field', targetId: 'eros', work: 'mine' as const, mineral: 'aluminium', amount: 1, createdAt: Date.now() }

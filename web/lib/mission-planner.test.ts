@@ -66,6 +66,12 @@ describe('self-planned missions', () => {
     expect(catalog.missions.find(mission => mission.id === zoned.id)?.customPlan?.zone).toBe('east')
     expect(sanitizeMissionPlans({ [zoned.id]: { ...zoned, zone: 'unknown' } })[zoned.id]).toEqual(plan)
   })
+  it('accepts selected sites for mining but not orbital surveys', () => {
+    const site = { ...plan, zone: 'east' as const }
+    expect(planQuote({ ...site, work: 'mine' }, player(), STATIC_CATALOG).issues).toEqual([])
+    expect(planQuote({ ...site, work: 'survey' }, player(), STATIC_CATALOG).issues).toContain('This landing site is only available for supported surface destinations.')
+    expect(missionFromPlan({ ...site, work: 'mine' }, target, STATIC_CATALOG.minerals).customPlan?.zone).toBe('east')
+  })
   it('retains a legacy gas-giant surface plan while flagging it for replanning', () => {
     const legacy = { ...plan, targetId: 'jupiter', work: 'mine' as const }
     const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: legacy.id, targetId: legacy.targetId, player: { ...player(), missionPlans: { [legacy.id]: legacy } } }

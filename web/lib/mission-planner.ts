@@ -73,7 +73,7 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   const issues: string[] = []
   if (!player.freeOperations) issues.push('Finish training to plan your own mission.')
   if (!target) issues.push('Choose a reachable destination for this work.')
-  if (plan.zone !== undefined && (plan.work !== 'deliver' || !supportsSolarField(plan.targetId))) issues.push('This landing site is only available for supported delivery destinations.')
+  if (plan.zone !== undefined && (plan.work === 'survey' || !supportsSolarField(plan.targetId))) issues.push('This landing site is only available for supported surface destinations.')
   if (plan.zone !== undefined && plan.work === 'deliver' && !LANDNAM_TO_TAKEON_MINERAL[plan.mineral]) issues.push('Choose cargo supported by the surface rover.')
   if (!Number.isInteger(plan.amount) || plan.amount < 1 || plan.amount > (plan.work === 'survey' ? 24 : 999)) issues.push(plan.work === 'survey' ? 'Choose 1–24 sectors.' : 'Choose a whole amount from 1 to 999.')
   if (plan.work !== 'survey' && !plannerMinerals(player, target, catalog, plan.work).includes(plan.mineral)) issues.push('Choose available ore for this work.')
