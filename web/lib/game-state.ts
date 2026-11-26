@@ -27,6 +27,7 @@ import { SHOWERS } from '@/lib/data/showers'
 import type { CompletedMissionRecord, GameState, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, OWN_PROGRAM_CLIENT_ID, RESOURCE_FOCUS_MISSION_ID, TARGETS } from '@/lib/data'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
+import { STARTER_BASE_PLACED, STARTER_BASE_PLOTS } from '@/lib/data/starter-base'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
@@ -61,8 +62,8 @@ export const DEFAULT_STATE: GameState = {
     selectedStagedRocketId: undefined,
     pendingRocketId: undefined,
     pendingRocketLocation: undefined,
-    placed: [],
-    placementPlots: {},
+    placed: [...STARTER_BASE_PLACED],
+    placementPlots: { ...STARTER_BASE_PLOTS },
     groundTelescopeGrandfathered: false,
     controlBuilt: false,
     missionsDone: 0,
@@ -303,7 +304,7 @@ export function normalizeState(input: PartialSave): GameState {
   // "Build a Space Telescope" they had already built. Derive the
   // flags from `placed` so the two can never drift again — and OR rather than
   // overwrite, so a flag set by any other route still counts.
-  const savedPlaced = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
+  const savedPlaced = Array.isArray(player.placed) ? player.placed : []
   // Scanning Station is retired (KES-333); strip it from any older save so it
   // can never resurface as a placed structure.
   const placedList = savedPlaced.filter(kind => kind !== 'scan-station')

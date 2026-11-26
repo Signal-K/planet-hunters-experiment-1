@@ -1,4 +1,5 @@
 import type { GameState } from '@/lib/game-types'
+import { STARTER_BASE_PLACED } from '@/lib/data/starter-base'
 import { mergeRemoteState, normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 
 /**
@@ -26,6 +27,12 @@ export type GameStateLoadDecision = {
   shouldWriteRemote: boolean
 }
 
+/** A new game starts with the starter Base standing, so that alone is still "no progress". */
+function onlyStarterBase(placed: unknown): boolean {
+  if (!Array.isArray(placed) || placed.length === 0) return true
+  return placed.every(kind => STARTER_BASE_PLACED.includes(kind))
+}
+
 export function isSignInPlaceholder(state: PartialSave | null | undefined): boolean {
   if (!state) return true
   const screen = state.screen ?? 'intro'
@@ -38,7 +45,7 @@ export function isSignInPlaceholder(state: PartialSave | null | undefined): bool
   return screen === 'intro'
     && missionsDone <= 0
     && player?.freeOperations !== true
-    && (!Array.isArray(placed) || placed.length === 0)
+    && onlyStarterBase(placed)
     && (!Array.isArray(completed) || completed.length === 0)
 }
 
