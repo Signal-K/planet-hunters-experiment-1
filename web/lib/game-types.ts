@@ -317,6 +317,8 @@ export interface Player {
   missionStartedAt?: number | null
   /** SSL-781: receipt synced with the imported ledger credits. */
   legacyProgressImported?: boolean
+  /** SSL-889: capabilities the Base earned, kept as agency unlocks. Only grows; see lib/agency/construction-translation.ts. */
+  agencyUnlocks?: string[]
   legacyDiscoveredBodies?: Record<string, import('./legacy-progress').LegacyBody>
   seen_planets?: string[]
   roverDeployments?: Array<{

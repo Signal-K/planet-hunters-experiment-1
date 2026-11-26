@@ -1,5 +1,6 @@
 import { communityWorlds, mergeAgencyCommunity } from '@/lib/agency/community'
 import { fleetLaunchTimes, mergeAgencyLaunches } from '@/lib/agency/fleet'
+import { mergeAgencyUnlocks, translateConstruction } from '@/lib/agency/construction-translation'
 import { sanitizeMissionPlans, sanitizeDeliveryReceipts } from '@/lib/mission-planner'
 import { mergePassportWeeks, mergeFirstStamps, sanitizeFirstStamps } from '@/lib/research/passport'
 import { earnedRocketParts, sanitizeLivery } from '@/lib/launchpad/workshop'
@@ -523,7 +524,7 @@ function repairStateRoute(rawInput: GameState): GameState {
 
 
 export function normalizeAndRepair(partial: PartialSave): GameState {
-  return repairStateRoute(normalizeState(partial))
+  return translateConstruction(repairStateRoute(normalizeState(partial)))
 }
 
 /**
@@ -715,6 +716,7 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.doneSteps = remoteState.doneSteps ?? {}
   }
 
+  merged.player.agencyUnlocks = mergeAgencyUnlocks(current.player.agencyUnlocks, remoteState.player?.agencyUnlocks)
   merged.player.legacyProgressImported = !!(current.player.legacyProgressImported || remoteState.player?.legacyProgressImported)
   const legacyBodies = { ...current.player.legacyDiscoveredBodies }
   for (const [id, body] of Object.entries(remoteState.player?.legacyDiscoveredBodies ?? {})) {
