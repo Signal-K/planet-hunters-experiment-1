@@ -34,13 +34,16 @@ type Mission = Catalog['missions'][number]
  */
 export default function SolarMapScreen({ catalog, player, onAccept, onBase }: SolarMapScreenProps) {
   const lit = useMemo(() => bodiesWithMissions(catalog, player), [catalog, player])
-  const firstLit = catalog.targets.find(t => lit.has(t.id))?.id ?? null
+  // Moons are not drawn as bodies of their own: their parent glows when the moon has work, and the panel lists the moons.
+  const mapTargets = useMemo(() => catalog.targets.filter(t => !MOON_PARENTS[t.id]), [catalog.targets])
+  const mapLit = useMemo(() => new Set([...lit].map(id => MOON_PARENTS[id] ?? id)), [lit])
+  const firstLit = mapTargets.find(t => mapLit.has(t.id))?.id ?? null
   const [pickedId, setPickedId] = useState<string | null>(firstLit)
   const body = catalog.targets.find(t => t.id === pickedId) ?? null
   const here = useMemo(() => (pickedId ? missionsAtBody(catalog, player, pickedId) : { agency: [], client: [] }), [catalog, player, pickedId])
   // The map needs a reach figure; every orbit is drawn so the whole system is visible.
   const mapMission = useMemo(() => catalog.missions[0] && ({ ...catalog.missions[0], requires: { ...catalog.missions[0].requires, max_orbit: 8 } }), [catalog.missions])
-  const moons = body ? catalog.targets.filter(t => MOON_PARENTS[t.id] === body.id) : []
+  const moons = body ? catalog.targets.filter(t => MOON_PARENTS[t.id] === body.id && lit.has(t.id)) : []
   const parent = body && MOON_PARENTS[body.id] ? catalog.targets.find(t => t.id === MOON_PARENTS[body.id]) : null
 
   const row = (m: Mission, kind: 'agency' | 'client') => {
@@ -63,7 +66,7 @@ export default function SolarMapScreen({ catalog, player, onAccept, onBase }: So
         <button type="button" className={styles.base} data-testid="solar-map-base" onClick={onBase}>Base</button>
       </header>
       <div className={styles.field} data-testid="solar-map-field">
-        {mapMission && <PixiGalaxyMap mission={mapMission} targets={catalog.targets} compatibleIds={lit} pickedId={pickedId ?? ''} onPick={setPickedId} />}
+        {mapMission && <PixiGalaxyMap mission={mapMission} targets={mapTargets} compatibleIds={mapLit} pickedId={pickedId ?? ''} onPick={setPickedId} />}
       </div>
       <section className={styles.panel} aria-label={body ? `Missions at ${body.name}` : 'Choose a place'}>
         {body ? (

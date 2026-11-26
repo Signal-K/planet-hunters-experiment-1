@@ -779,14 +779,14 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'ui-launch-review':
-      // Launch review reached from the solar map: one rocket, the place, the work, the cargo. Agency mission at Mercury.
+      // Launch review reached from the solar map: one rocket, the place, the work, the cargo. Agency mission (self-directed mining) at Mercury.
       return {
         screen: 'fab',
         player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4 } },
         tutorial: false,
         doneSteps: TRAINING_DONE,
-        missionId: FIRST_MISSION.id,
-        targetId: FIRST_MISSION.targetId ?? 'mercury',
+        missionId: SELF_DIRECTED_MINING_MISSION_ID,
+        targetId: 'mercury',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
