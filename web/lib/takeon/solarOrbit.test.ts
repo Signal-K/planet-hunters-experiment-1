@@ -9,7 +9,7 @@ describe('orbital terrain handoff', () => {
       const { op, solar } = JSON.parse(json)
       expect(op).toBe('solarOrbit')
       expect(solar).toMatchObject({ id: identity.id, seed: identity.seed, styleVersion: identity.styleVersion, latitude: identity.latitude, longitude: identity.longitude })
-      return JSON.stringify({ ok: true, value: { bodyId: solar.id, seed: solar.seed, styleVersion: solar.styleVersion, latitude: solar.latitude, longitude: solar.longitude, stepDegrees: solar.step, width: solar.width, height: solar.height, patch: Array.from({ length: solar.width * solar.height }, () => ({ radius: 1, biome: 'rock' })) } })
+      return JSON.stringify({ ok: true, value: { bodyId: solar.id, seed: solar.seed, styleVersion: solar.styleVersion, latitude: solar.latitude, longitude: solar.longitude, stepDegrees: solar.step, width: solar.width, height: solar.height, center: { radius: 1, biome: 'rock' }, patch: Array.from({ length: solar.width * solar.height }, () => ({ radius: 1, biome: 'rock' })) } })
     }, 'mars')
     const vertices = orbitMesh(orbit)
     expect(vertices[(orbit.width * orbit.height - 1) / 2]).toMatchObject({ x: 0, y: -0, depth: 1, biome: 'rock' })
@@ -17,5 +17,9 @@ describe('orbital terrain handoff', () => {
   })
   it('rejects a mismatched body or invalid samples', () => {
     expect(() => requestOrbitPreview(() => JSON.stringify({ ok: true, value: {} }), 'mars')).toThrow('Invalid Takeon orbital preview')
+    expect(() => requestOrbitPreview(json => {
+      const { solar } = JSON.parse(json)
+      return JSON.stringify({ ok: true, value: { bodyId: solar.id, seed: solar.seed, styleVersion: solar.styleVersion, latitude: solar.latitude, longitude: solar.longitude, stepDegrees: solar.step, width: solar.width, height: solar.height, center: { radius: 1, biome: 'ice' }, patch: Array.from({ length: solar.width * solar.height }, () => ({ radius: 1, biome: 'rock' })) } })
+    }, 'mars')).toThrow('Invalid Takeon orbital preview')
   })
 })

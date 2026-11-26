@@ -1,4 +1,4 @@
-import { loadSolarTransport, previewLandingRequest, type SolarLandingPreview } from './solarLandingPreview'
+import { hasMatchingSolarCenter, loadSolarTransport, previewLandingRequest, type SolarLandingPreview } from './solarLandingPreview'
 import { missionZone, type MissionZone } from '@/lib/data/mission-zone'
 
 type Transport = (request: string) => string
@@ -9,7 +9,7 @@ export function requestOrbitPreview(transport: Transport, targetId: string, zone
   const solar = { ...identity, step: 1.5, width: 119, height: 119 }
   const response = JSON.parse(transport(JSON.stringify({ op: 'solarOrbit', solar }))) as { ok: boolean; error?: string; value?: SolarLandingPreview }
   const value = response.value
-  if (!response.ok || !value || value.bodyId !== solar.id || value.seed !== solar.seed || value.styleVersion !== solar.styleVersion || value.width !== solar.width || value.height !== solar.height || value.latitude !== solar.latitude || value.longitude !== solar.longitude || value.stepDegrees !== solar.step || !Array.isArray(value.patch) || value.patch.length !== solar.width * solar.height || value.patch.some(point => !point || !Number.isFinite(point.radius) || typeof point.biome !== 'string')) {
+  if (!response.ok || !value || value.bodyId !== solar.id || value.seed !== solar.seed || value.styleVersion !== solar.styleVersion || value.width !== solar.width || value.height !== solar.height || value.latitude !== solar.latitude || value.longitude !== solar.longitude || value.stepDegrees !== solar.step || !Array.isArray(value.patch) || value.patch.length !== solar.width * solar.height || value.patch.some(point => !point || !Number.isFinite(point.radius) || typeof point.biome !== 'string') || !hasMatchingSolarCenter(value)) {
     throw new Error(response.error ?? 'Invalid Takeon orbital preview')
   }
   return value

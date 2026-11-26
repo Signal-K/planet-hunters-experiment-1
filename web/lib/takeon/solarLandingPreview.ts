@@ -16,6 +16,13 @@ export interface SolarLandingPreview {
 
 type SolarTransport = (request: string) => string
 
+/** The named center and center cell must describe the same generated place. */
+export function hasMatchingSolarCenter(value: SolarLandingPreview): boolean {
+  const center = value.patch[Math.floor(value.height / 2) * value.width + Math.floor(value.width / 2)]
+  return !!center && Number.isFinite(value.center?.radius) && typeof value.center?.biome === 'string'
+    && center.radius === value.center.radius && center.biome === value.center.biome
+}
+
 /** Preview-only identity. It does not change or identify an existing rover save. */
 export function previewLandingRequest(targetId: string, zone?: MissionZone) {
   return { id: targetId, seed: stableSeed(targetId), styleVersion: 1, latitude: 0, longitude: zoneLongitude(zone), step: 0.08, width: 81, height: 81 }
@@ -29,8 +36,7 @@ export function requestLandingPreview(transport: SolarTransport, targetId: strin
     throw new Error(response.error ?? 'Invalid Takeon landing preview')
   }
   // Never hand a rover a patch whose centre differs from its orbital sample.
-  const center = value.patch[Math.floor(value.height / 2) * value.width + Math.floor(value.width / 2)]
-  if (center.radius !== value.center.radius || center.biome !== value.center.biome) {
+  if (!hasMatchingSolarCenter(value)) {
     throw new Error('Takeon landing center does not match its surface patch')
   }
   return value
