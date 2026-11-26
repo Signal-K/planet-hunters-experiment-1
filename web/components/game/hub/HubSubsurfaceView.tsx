@@ -1,5 +1,6 @@
 'use client'
 
+import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { useState } from 'react'
 import {
   ArrowLeft,
@@ -330,6 +331,18 @@ function RoomBuildPrompt({
   onBuild?: (roomId: SubsurfaceRoomId) => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
+  if (CONSTRUCTION_COMING_LATER) {
+    return (
+      <div className={styles.trainingPanel} data-testid={`subsurface-room-build-${room.id}`}>
+        <div>
+          <span className={styles.trainingLock}><Hammer size={28} strokeWidth={1.8} /></span>
+          <h2 className={styles.trainingTitle}>{room.name}: coming later</h2>
+          <p className={styles.trainingCopy}>{room.description}</p>
+          <p className={styles.trainingCopy}>Building underground rooms is coming later.</p>
+        </div>
+      </div>
+    )
+  }
   const affordable = canAffordSubsurface(room, { francs, stash })
   const shortMinerals = Object.entries(room.costMaterials).map(([id, need]): [string, number] => [id, need - (stash?.[id] ?? 0)]).filter(([, n]) => n > 0)
   return (
@@ -376,6 +389,15 @@ function ExcavatePrompt({
   onExcavateUnavailable?: () => void
   onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
+  if (CONSTRUCTION_COMING_LATER) {
+    return (
+      <div className={styles.bedrockPrompt} data-testid="subsurface-excavate-prompt">
+        <div className={styles.bedrockAction}>
+          <p className={styles.trainingCopy}>Excavating below the base is coming later.</p>
+        </div>
+      </div>
+    )
+  }
   const affordable = canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs, stash })
   const missingFrancs = Math.max(0, SUBSURFACE_EXCAVATE_COST.cost - francs)
   const requiredAluminium = SUBSURFACE_EXCAVATE_COST.costMaterials.aluminium ?? 0

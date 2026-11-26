@@ -517,7 +517,7 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: CONSTRUCTION_COMING_LATER ? 'Build: coming later' : 'Build', detail: CONSTRUCTION_COMING_LATER ? 'Coming later' : 'New structures and launch support', disabled: CONSTRUCTION_COMING_LATER, onSelect: () => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) } },
     { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
-    { id: 'subsurface', icon: 'subsurface', label: 'Subsurface', detail: 'Excavate below the base and build underground rooms', onSelect: () => setSubsurface(true) },
+    { id: 'subsurface', icon: 'subsurface', label: CONSTRUCTION_COMING_LATER ? 'Subsurface: coming later' : 'Subsurface', detail: CONSTRUCTION_COMING_LATER ? 'Coming later' : 'Excavate below the base and build underground rooms', disabled: CONSTRUCTION_COMING_LATER, onSelect: () => setSubsurface(true) },
     ...(
       hasControlStation || ownsOrbitalInstrument
         ? [{ id: 'instruments', icon: 'station' as const, label: 'Data hub', detail: 'Satellites, telescopes and their feeds', onSelect: () => onOpenScene('instrument-hub') }]
