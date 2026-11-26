@@ -112,3 +112,14 @@ describe('SSL-892 agency levels', () => {
     expect(normalizeAndRepair(once).player.agencyLevels).toEqual(once.player.agencyLevels)
   })
 })
+
+describe('SSL-892 probe pace', () => {
+  it('keeps the control station level pace with nothing placed', async () => {
+    const { placeProbe } = await import('@/lib/probes/survey-probe')
+    const s = fresh()
+    s.player.agencyLevels = { 'data-hub': 3 }
+    s.player.placed = []
+    const probe = placeProbe(s.player, 'moon', 0).probes?.moon
+    expect(probe?.sectorMs).toBe(3_600_000)
+  })
+})
