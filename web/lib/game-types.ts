@@ -319,6 +319,8 @@ export interface Player {
   legacyProgressImported?: boolean
   /** SSL-889: capabilities the Base earned, kept as agency unlocks. Only grows; see lib/agency/construction-translation.ts. */
   agencyUnlocks?: string[]
+  /** SSL-892: upgrade level (1-3) of each level-bearing agency capability, recorded from the Base so its benefits outlive the buildings. Only grows. */
+  agencyLevels?: Partial<Record<'launch' | 'ore-storage' | 'refining' | 'exchange' | 'rocket-discounts' | 'data-hub', number>>
   legacyDiscoveredBodies?: Record<string, import('./legacy-progress').LegacyBody>
   seen_planets?: string[]
   roverDeployments?: Array<{

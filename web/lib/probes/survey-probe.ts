@@ -5,6 +5,7 @@
 // stamp, once a day, and a ledger row). Scan levels where the player does an activity come in cycle 11; the
 // spectrum below is kept for them. Pure over the player, like the other systems.
 
+import { agencyLevel } from '@/lib/agency/construction-translation'
 import { buildingLevel, probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
@@ -89,8 +90,8 @@ export function probeMission(target: Target, sequence: number): Mission {
 export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number, goalSectors?: number): T {
   if (player.probes?.[targetId]) return player
   // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
-  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed'>>
-  const hours = withLevels.placed?.includes('control-station') ? probeSectorHours(buildingLevel(withLevels, 'control-station')) : PROBE_SECTOR_HOURS
+  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
+  const hours = agencyLevel(withLevels, 'data-hub') > 0 && withLevels.placed?.includes('control-station') !== false ? probeSectorHours(agencyLevel(withLevels, 'data-hub')) : PROBE_SECTOR_HOURS
   const base = hours === PROBE_SECTOR_HOURS ? { launchedAt: at, readings: {} } : { launchedAt: at, readings: {}, sectorMs: hours * 3_600_000 }
   const record = goalSectors === undefined ? base : { ...base, goalSectors: Math.min(24, Math.max(1, Math.floor(goalSectors))) }
   return { ...player, probes: { ...(player.probes ?? {}), [targetId]: record } }

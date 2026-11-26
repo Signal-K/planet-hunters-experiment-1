@@ -1,3 +1,4 @@
+import { agencyLevel } from '@/lib/agency/construction-translation'
 import { buildingLevel, hangarRocketDiscount } from '@/lib/data/building-levels'
 import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
 import { ROCKET_PRICES, ROCKET_RESEARCH_XP } from '@/lib/data/economy'
@@ -29,10 +30,10 @@ export function rocketUnlocked(rocket: Pick<RocketModel, 'id' | 'locked' | 'miss
  * What a rocket costs this player now. Liam, 01.11: after the tutorial a rocket ALWAYS costs something, so a
  * model listed at no cost (the starter Explorer) is charged a set build price once training is over.
  */
-export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed'>>): number {
+export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>): number {
   const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
   // SSL-792: an upgraded hangar builds rockets for less.
-  const discount = player.placed?.includes('hangar') ? hangarRocketDiscount(buildingLevel(player, 'hangar')) : 0
+  const discount = agencyLevel(player, 'rocket-discounts') > 0 ? hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 0
   return Math.round(list * (1 - discount))
 }
 

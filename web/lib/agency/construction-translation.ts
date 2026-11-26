@@ -1,5 +1,5 @@
 import type { GameState, Player } from '@/lib/game-types'
-import { buildingLevel } from '@/lib/data/building-levels'
+import { buildingLevel, MAX_BUILDING_LEVEL, type UpgradableBuildingId } from '@/lib/data/building-levels'
 import { GROUND_TELESCOPE_IDS } from '@/lib/systems/InstrumentFeedSystem'
 
 // SSL-889: legacy construction progress becomes agency unlocks.
@@ -26,7 +26,7 @@ export const AGENCY_UNLOCKS = [
 export type AgencyUnlockId = typeof AGENCY_UNLOCKS[number]
 
 type TranslatePlayer = Pick<Player,
-  'placed' | 'buildingLevels' | 'launchpadUpgraded' | 'controlBuilt' | 'underConstruction' | 'remoteStorage' | 'agencyUnlocks'>
+  'placed' | 'buildingLevels' | 'launchpadUpgraded' | 'controlBuilt' | 'underConstruction' | 'remoteStorage' | 'agencyUnlocks' | 'agencyLevels'>
 
 function standing(player: TranslatePlayer, kind: string): boolean {
   return !!player.placed?.includes(kind) && !(player.underConstruction && kind in player.underConstruction)
@@ -62,13 +62,76 @@ export function mergeAgencyUnlocks(a: readonly string[] | undefined, b: readonly
 
 /** Record what the Base earns as agency unlocks. Returns the same state when nothing is new. */
 export function translateConstruction(state: GameState): GameState {
-  const merged = mergeAgencyUnlocks(state.player.agencyUnlocks, constructionUnlocks(state.player))
-  const current = state.player.agencyUnlocks ?? []
-  if (merged.length === current.length && merged.every((id, i) => id === current[i])) return state
-  return { ...state, player: { ...state.player, agencyUnlocks: merged } }
+  const withLevels = translateAgencyLevels(state)
+  const merged = mergeAgencyUnlocks(withLevels.player.agencyUnlocks, constructionUnlocks(withLevels.player))
+  const current = withLevels.player.agencyUnlocks ?? []
+  if (merged.length === current.length && merged.every((id, i) => id === current[i])) return withLevels
+  return { ...withLevels, player: { ...withLevels.player, agencyUnlocks: merged } }
 }
 
 /** True when an unlock was earned, however the player got there. Gameplay that retires a building check reads this. */
 export function hasAgencyUnlock(player: Pick<TranslatePlayer, 'agencyUnlocks'>, id: AgencyUnlockId): boolean {
   return !!player.agencyUnlocks?.includes(id)
+}
+
+// ---- Agency levels (SSL-892) ----
+//
+// Unlocks say "has it"; several benefits also depend on how far it was upgraded (exchange bonus, silo capacity, hangar
+// discount, probe pace). Those levels are recorded here, separately from the Base buildings, so the benefits survive
+// when construction is deferred. `buildingLevels` and `placed` are kept untouched as the reference for later construction.
+
+/** Level-bearing agency capabilities and the Base building each one comes from. */
+export const AGENCY_LEVEL_SOURCES = {
+  launch: 'launchpad',
+  'ore-storage': 'surface-silo',
+  refining: 'refinery',
+  exchange: 'market',
+  'rocket-discounts': 'hangar',
+  'data-hub': 'control-station',
+} as const satisfies Record<string, UpgradableBuildingId>
+export type AgencyLevelId = keyof typeof AGENCY_LEVEL_SOURCES
+const AGENCY_LEVEL_IDS = Object.keys(AGENCY_LEVEL_SOURCES) as AgencyLevelId[]
+
+function clampAgencyLevel(value: unknown): number {
+  const n = typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : 0
+  return Math.min(MAX_BUILDING_LEVEL, Math.max(0, n))
+}
+
+/** Levels the player's buildings give today. A building counts as soon as it is placed, which is what the economy has always read. */
+type LevelPlayer = Partial<Pick<TranslatePlayer, 'placed' | 'buildingLevels' | 'launchpadUpgraded' | 'controlBuilt' | 'agencyLevels'>>
+
+function placedLevels(player: LevelPlayer): Partial<Record<AgencyLevelId, number>> {
+  const out: Partial<Record<AgencyLevelId, number>> = {}
+  for (const id of AGENCY_LEVEL_IDS) {
+    const kind = AGENCY_LEVEL_SOURCES[id]
+    if (player.placed?.includes(kind)) out[id] = buildingLevel(player, kind)
+  }
+  if (!out['data-hub'] && player.controlBuilt) out['data-hub'] = 1
+  return out
+}
+
+/** Per-id max, so a stale save on either side can never lower a level. Unknown ids are dropped. */
+export function mergeAgencyLevels(a: Partial<Record<string, number>> | undefined, b: Partial<Record<string, number>> | undefined): Partial<Record<AgencyLevelId, number>> {
+  const out: Partial<Record<AgencyLevelId, number>> = {}
+  for (const id of AGENCY_LEVEL_IDS) {
+    const level = Math.max(clampAgencyLevel(a?.[id]), clampAgencyLevel(b?.[id]))
+    if (level > 0) out[id] = level
+  }
+  return out
+}
+
+/**
+ * The level of an agency capability: 0 when never earned. It is the higher of the recorded level and what the
+ * buildings give right now, so a player whose save has not been translated yet gets exactly the effect they had.
+ */
+export function agencyLevel(player: LevelPlayer, id: AgencyLevelId): number {
+  return Math.max(clampAgencyLevel(player.agencyLevels?.[id]), placedLevels(player)[id] ?? 0)
+}
+
+/** Record the levels the Base has earned. Returns the same state when nothing is new. */
+export function translateAgencyLevels(state: GameState): GameState {
+  const merged = mergeAgencyLevels(state.player.agencyLevels, placedLevels(state.player))
+  const current = state.player.agencyLevels ?? {}
+  if (AGENCY_LEVEL_IDS.every(id => (merged[id] ?? 0) === (current[id] ?? 0))) return state
+  return { ...state, player: { ...state.player, agencyLevels: merged } }
 }

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
-import { constructionUnlocks, mergeAgencyUnlocks, translateConstruction } from './construction-translation'
+import { agencyLevel, constructionUnlocks, mergeAgencyLevels, mergeAgencyUnlocks, translateConstruction } from './construction-translation'
+import { exchangeSaleBonus } from '@/lib/data/building-levels'
+import { rocketPrice } from '@/lib/rockets'
+import { sellUnitPrice, storageCapacity } from '@/lib/systems/EconomySystem'
 
 const fresh = () => structuredClone(DEFAULT_STATE)
 
@@ -13,7 +16,7 @@ describe('SSL-889 construction translation', () => {
     s.player.remoteStorage = { eros: { nickel: 2 } }
     const t = translateConstruction(s)
     expect(t.player.agencyUnlocks).toEqual(['launch', 'heavy-hulls', 'bulk-hulls', 'ore-storage', 'exchange', 'data-hub', 'remote-storage'])
-    const { agencyUnlocks, ...rest } = t.player
+    const { agencyUnlocks, agencyLevels, ...rest } = t.player
     expect(rest).toEqual(s.player)
     expect(s.player.agencyUnlocks).toBeUndefined()
   })
@@ -54,5 +57,58 @@ describe('SSL-889 construction translation', () => {
     expect(merged.player.agencyUnlocks).toEqual(expect.arrayContaining(['launch', 'exchange']))
     const reloaded = normalizeAndRepair(JSON.parse(JSON.stringify(merged)))
     expect(reloaded.player.agencyUnlocks).toEqual(merged.player.agencyUnlocks)
+  })
+})
+
+describe('SSL-892 agency levels', () => {
+  const upgraded = () => {
+    const s = fresh()
+    s.player.placed = ['launchpad', 'surface-silo', 'market', 'hangar', 'control-station']
+    s.player.buildingLevels = { launchpad: 3, 'surface-silo': 3, market: 2, hangar: 3, 'control-station': 2 }
+    return s
+  }
+
+  it('records each earned level and leaves the building data alone', () => {
+    const s = upgraded()
+    const t = translateConstruction(s)
+    expect(t.player.agencyLevels).toEqual({ launch: 3, 'ore-storage': 3, exchange: 2, 'rocket-discounts': 3, 'data-hub': 2 })
+    expect(t.player.buildingLevels).toEqual(s.player.buildingLevels)
+    expect(t.player.placed).toEqual(s.player.placed)
+  })
+
+  it('keeps level effects when the buildings are no longer placed', () => {
+    const before = upgraded().player
+    const after = translateConstruction(upgraded()).player
+    const gone = { ...after, placed: [] as string[] }
+    expect(storageCapacity({ ...gone, subsurfaceBuilt: [] })).toBe(storageCapacity({ ...before, subsurfaceBuilt: [] }))
+    expect(rocketPrice({ costFrancs: 1000 }, gone as never)).toBe(rocketPrice({ costFrancs: 1000 }, before as never))
+    expect(agencyLevel(gone, 'exchange')).toBe(2)
+    expect(exchangeSaleBonus(agencyLevel(gone, 'exchange'))).toBe(0.03)
+    const sale = (p: typeof before) => sellUnitPrice('iron', p as never, undefined, 0).price
+    expect(sale(gone)).toBe(sale(before))
+  })
+
+  it('gives an untranslated save exactly the effect it had', () => {
+    const p = upgraded().player
+    expect(p.agencyLevels).toBeUndefined()
+    expect(agencyLevel(p, 'ore-storage')).toBe(3)
+    expect(agencyLevel(fresh().player, 'exchange')).toBe(0)
+  })
+
+  it('only grows: a lower or stale level never wins in a merge', () => {
+    expect(mergeAgencyLevels({ exchange: 3 }, { exchange: 1, launch: 2 })).toEqual({ exchange: 3, launch: 2 })
+    expect(mergeAgencyLevels({ exchange: 9, nope: 2 } as never, undefined)).toEqual({ exchange: 3 })
+    const local = translateConstruction(upgraded())
+    const remote = fresh()
+    remote.player.agencyLevels = { exchange: 3 }
+    const merged = mergeRemoteState(local, remote)
+    expect(merged.player.agencyLevels?.exchange).toBe(3)
+    expect(merged.player.agencyLevels?.['ore-storage']).toBe(3)
+  })
+
+  it('survives normalize on reload', () => {
+    const once = normalizeAndRepair(translateConstruction(upgraded()))
+    expect(once.player.agencyLevels?.launch).toBe(3)
+    expect(normalizeAndRepair(once).player.agencyLevels).toEqual(once.player.agencyLevels)
   })
 })
