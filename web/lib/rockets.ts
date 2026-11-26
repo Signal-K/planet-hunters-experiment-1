@@ -37,11 +37,28 @@ export function rocketUnlocked(rocket: Pick<RocketModel, 'id' | 'locked' | 'miss
  * What a rocket costs this player now. Liam, 01.11: after the tutorial a rocket ALWAYS costs something, so a
  * model listed at no cost (the starter Explorer) is charged a set build price once training is over.
  */
-export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>): number {
-  const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
+/** Missions flown before a rocket starts costing more, and the extra per mission after that (SSL-892). Tunable. */
+export const ROCKET_PROGRESS_GRACE_MISSIONS = 10
+export const ROCKET_PROGRESS_STEP = 0.02
+export const ROCKET_PROGRESS_MAX_SURCHARGE = 1
+
+type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
+
+/**
+ * A factor applied to the list price. The list is open: the economy will grow more reasons for a rocket to cost
+ * more or less (client contracts, manufacturing pipelines, events), so add an entry here rather than a branch in
+ * `rocketPrice`. Each factor must be pure over the player and must never throw on an old save.
+ */
+export const ROCKET_PRICE_MODIFIERS: ReadonlyArray<{ id: string; factor: (player: PricePlayer) => number }> = [
+  // Rockets cost more the further the agency has progressed.
+  { id: 'progress', factor: player => 1 + Math.min(ROCKET_PROGRESS_MAX_SURCHARGE, Math.max(0, (player.missionsDone ?? 0) - ROCKET_PROGRESS_GRACE_MISSIONS) * ROCKET_PROGRESS_STEP) },
   // SSL-792: an upgraded hangar builds rockets for less.
-  const discount = agencyLevel(player, 'rocket-discounts') > 0 ? hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 0
-  return Math.round(list * (1 - discount))
+  { id: 'hangar-discount', factor: player => agencyLevel(player, 'rocket-discounts') > 0 ? 1 - hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 1 },
+]
+
+export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: PricePlayer): number {
+  const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
+  return Math.round(ROCKET_PRICE_MODIFIERS.reduce((price, modifier) => price * modifier.factor(player), list))
 }
 
 export function agencyRocket(player: Player): RocketModel {

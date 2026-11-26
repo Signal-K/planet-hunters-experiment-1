@@ -40,3 +40,13 @@ describe('SSL-792: hangar, Exchange and control station levels', () => {
     expect(sectorsMapped(slow, NOW + 6 * 3_600_000)).toHaveLength(3)
   })
 })
+
+describe('rocket price follows progress (SSL-892)', () => {
+  it('is flat through the grace window, rises after it, and is capped', () => {
+    const rocket = { costFrancs: 10_000_000 }
+    const at = (missionsDone: number) => rocketPrice(rocket, { missionsDone } as Parameters<typeof rocketPrice>[1])
+    expect(at(10)).toBe(10_000_000)
+    expect(at(20)).toBe(12_000_000)
+    expect(at(10_000)).toBe(20_000_000)
+  })
+})
