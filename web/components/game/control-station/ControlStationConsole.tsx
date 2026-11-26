@@ -1,5 +1,6 @@
 'use client'
 
+import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
@@ -381,11 +382,11 @@ export function ControlStationConsole({
                     type="button"
                     className={styles.build}
                     data-testid={more ? 'control-station-build-more' : 'control-station-build'}
-                    disabled={!!buildShortfall}
-                    aria-label={buildShortfall ? `${verb} ${more ? '' : scope.name}: needs ${buildShortfall}` : `${more ? 'Add another ground telescope' : `Build ${scope.name}`}${buildCost ? ` for ${buildCost}` : ''}`}
+                    disabled={CONSTRUCTION_COMING_LATER || !!buildShortfall}
+                    aria-label={CONSTRUCTION_COMING_LATER ? `${verb} ${more ? '' : scope.name}: coming later` : buildShortfall ? `${verb} ${more ? '' : scope.name}: needs ${buildShortfall}` : `${more ? 'Add another ground telescope' : `Build ${scope.name}`}${buildCost ? ` for ${buildCost}` : ''}`}
                     onClick={onBuild}
                   >
-                    {buildShortfall ? `Needs ${buildShortfall}` : `${verb}${buildCost ? ` · ${buildCost}` : ''}`}
+                    {CONSTRUCTION_COMING_LATER ? `${verb}: coming later` : buildShortfall ? `Needs ${buildShortfall}` : `${verb}${buildCost ? ` · ${buildCost}` : ''}`}
                   </button>
                 )
               })()}
