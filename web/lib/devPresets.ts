@@ -155,7 +155,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-free-ops-fab', label: 'Free Ops launch', hint: 'Free Ops with no mission opens the launch route and lands on the Mission Board', stage: 'free-ops' },
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
-      { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-target-picker', label: 'Launch Review', hint: 'Single-rocket launch review reached from the solar map: place, work, cargo, rocket, Launch. Starter Base, Free Ops', stage: 'free-ops' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-research-calendar-empty', label: 'Research calendar, empty', hint: 'Control Station with no stamps yet', stage: 'free-ops' },
@@ -764,14 +764,14 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     case 'ui-target-picker':
+      // Launch review reached from the solar map: one rocket, the place, the work, the cargo. Agency mission at Mercury.
       return {
-        screen: 'targets',
-        player: { ...BASE_PLAYER, missionsDone: 1 },
+        screen: 'fab',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4 } },
         tutorial: false,
-        doneSteps: EXTRACTION_DONE,
-        missionId: TRANSPORT_MISSION.id,
-        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
-        deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        doneSteps: TRAINING_DONE,
+        missionId: FIRST_MISSION.id,
+        targetId: FIRST_MISSION.targetId ?? 'mercury',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,

@@ -7,12 +7,12 @@ import { useEffect, useRef, useState } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, smallestRocketHolding, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, buildHoldLine, rocketDisplayForConfig, rocketModelForConfig, smallestRocketHolding, validateBuild } from '@/lib/data'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import { ROLLOUT_MS } from '@/components/game/screens/RocketBuilderScene'
 import MissionBoard from '@/components/game/MissionBoard'
-import MissionPlanStrip from '@/components/game/MissionPlanStrip'
+import LaunchReviewPanel from '@/components/game/LaunchReviewPanel'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -98,22 +98,22 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   // SSL-842: Launch stays on screen through the lift-off; a second tap must not launch again.
   const actionDisabled = launchPending || !!rolling || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
   const actionLabel = !launchReady ? (preparing ? "Can't build" : "Can't launch") : preparing ? 'Build rocket' : 'Launch'
-  const ownProgram = isOwnProgramMission(game.mission)
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
       {/* The plan is settled once the engines light: the strip leaves the sky clear for the ascent. */}
-      {!launchPending && <MissionPlanStrip
+      {!launchPending && <LaunchReviewPanel
         game={game}
         launched={launchPending}
         blockedReason={blockedReason}
-        blockedFix={hold && hold.kind !== 'drill' ? 'vehicle' : hold ? 'customize' : null}
+        onChangePlace={() => game.go('solar-map')}
         primaryLabel={actionLabel}
         primaryDisabled={actionDisabled}
         primaryAction={() => { if (preparing) setRolling(selectedRocket.id); else onLaunch() }}
       />}
       <LaunchpadScreen
-        onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
+        onBack={() => game.go('solar-map')}
+        review
         onPick={game.onPickMission}
         onViewContracts={() => game.go('missions')}
         onLaunchpadAction={() => game.go('fab')}
