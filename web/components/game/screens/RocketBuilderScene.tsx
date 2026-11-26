@@ -48,6 +48,8 @@ interface RocketBuilderSceneProps {
   onOpenWorkshop?: () => void
   onInstall?: (next: BuilderLoadout, prev: BuilderLoadout) => boolean
   onDismantle?: () => void
+  /** Single-rocket review: no mission, customize or dismantle controls, and the review panel owns Launch. */
+  review?: boolean
   launching?: boolean
   launchRocketName?: string
   launchRocketSrc?: string
@@ -85,6 +87,7 @@ export default function RocketBuilderScene({
   onInstall,
   onOpenWorkshop,
   onDismantle,
+  review = false,
   launching = false,
   launchRocketName = 'Explorer',
   launchRocketSrc = '',
@@ -167,12 +170,12 @@ export default function RocketBuilderScene({
       <div className={styles.stage}>
         <div className={styles.actions}>
           {onBack && <button type="button" className={styles.back} data-testid="top-bar-back" aria-label="back" onClick={onBack}>&lsaquo; Back</button>}
-          {phase !== 'idle' && <button type="button" className={styles.target} data-testid="rocket-builder-target" data-sync-anchor="" onClick={onChooseMission}>
+          {phase !== 'idle' && !review && <button type="button" className={styles.target} data-testid="rocket-builder-target" data-sync-anchor="" onClick={onChooseMission}>
             <span>{hasLaunchPlan ? 'Change mission' : 'Select mission'}</span>
             <strong>{hasLaunchPlan ? `${missionTitle} · ${targetLabel}` : targetLabel}</strong>
           </button>}
-          {!guided && (onInstall || onOpenWorkshop) && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
-          {hasStagedRocket && onDismantle && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
+          {!guided && !review && (onInstall || onOpenWorkshop) && <button type="button" className={`${styles.back} ${styles.customize}`} data-testid="builder-customize" aria-expanded={customizing} onClick={() => onOpenWorkshop ? onOpenWorkshop() : setCustomizing(open => !open)}>{customizing ? 'Done' : 'Customize'}</button>}
+          {hasStagedRocket && onDismantle && !review && <button type="button" className={styles.dismantle} data-testid="builder-dismantle" onClick={() => setConfirmingDismantle(true)}>Dismantle</button>}
         </div>
 
         {guided && (
@@ -215,7 +218,7 @@ export default function RocketBuilderScene({
             )}
           </section>
 
-          {hasLaunchPlan && (
+          {hasLaunchPlan && !review && (
             <div className={styles.launchDock}>
               <button type="button" className={styles.launch} data-testid={launchTestId} data-assembly={phase} disabled={launchDisabled || phase === 'building'} onClick={onLaunch}>{launchLabel}</button>
             </div>

@@ -110,6 +110,7 @@ export function useUIActions(
   const goToMissions = useCallback((scope: SceneScope = EARTH_BASE_SCOPE) => {
     setState(s => ({
       ...s,
+      // Map-first loop: choosing work from the Base starts on the solar-system map. A remote site's own scope still opens its board.
       screen: 'missions',
       missionBoardScope: scope,
       doneSteps: { ...s.doneSteps, 1: true },

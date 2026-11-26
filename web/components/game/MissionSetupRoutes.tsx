@@ -7,11 +7,11 @@ import { useEffect } from 'react'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
-import { ROCKET_MODELS, buildHoldLine, isOwnProgramMission, rocketDisplayForConfig, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, buildHoldLine, rocketDisplayForConfig, validateBuild } from '@/lib/data'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import MissionBoard from '@/components/game/MissionBoard'
-import MissionPlanStrip from '@/components/game/MissionPlanStrip'
+import LaunchReviewPanel from '@/components/game/LaunchReviewPanel'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -91,12 +91,11 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   // SSL-842: Launch stays on screen through the lift-off; a second tap must not launch again.
   const actionDisabled = launchPending || !selectedVehicle || selectedVehicle.location === 'hangar' || !launchReady
   const actionLabel = !launchReady ? "Can't launch" : preparing ? 'Preparing rocket' : 'Launch'
-  const ownProgram = isOwnProgramMission(game.mission)
 
   return (
     <div data-testid="mission-launch-review" className={styles.builderHost}>
       {/* The plan is settled once the engines light: the strip leaves the sky clear for the ascent. */}
-      {!launchPending && <MissionPlanStrip
+      {!launchPending && <LaunchReviewPanel
         game={game}
         launched={launchPending}
         blockedReason={blockedReason}
@@ -105,7 +104,8 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
         primaryAction={onLaunch}
       />}
       <LaunchpadScreen
-        onBack={() => game.go(ownProgram ? 'launchpad' : 'missions')}
+        onBack={() => game.go('missions')}
+        review
         onPick={game.onPickMission}
         onViewContracts={() => game.go('missions')}
         onLaunchpadAction={() => game.go('fab')}

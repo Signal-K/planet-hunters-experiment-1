@@ -2,6 +2,7 @@
 // Downloaded passes open level 4 citizen science readings in the shared instrument console.
 // Mapping cadence, baseline deposits and daily observation/classification stamps retain their existing rules.
 
+import { agencyLevel } from '@/lib/agency/construction-translation'
 import { buildingLevel, probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
@@ -92,8 +93,8 @@ export function probeMission(target: Target, sequence: number): Mission {
 export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number, goalSectors?: number): T {
   if (player.probes?.[targetId]) return player
   // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
-  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed'>>
-  const hours = withLevels.placed?.includes('control-station') ? probeSectorHours(buildingLevel(withLevels, 'control-station')) : PROBE_SECTOR_HOURS
+  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
+  const hours = agencyLevel(withLevels, 'data-hub') > 0 ? probeSectorHours(agencyLevel(withLevels, 'data-hub')) : PROBE_SECTOR_HOURS
   const base = { launchedAt: at, scanStartedAt: null, readings: {}, ...(hours === PROBE_SECTOR_HOURS ? {} : { sectorMs: hours * 3_600_000 }) }
   const record = goalSectors === undefined ? base : { ...base, goalSectors: Math.min(24, Math.max(1, Math.floor(goalSectors))) }
   return { ...player, probes: { ...(player.probes ?? {}), [targetId]: record } }

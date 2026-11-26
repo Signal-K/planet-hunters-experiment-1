@@ -1,6 +1,6 @@
 # Landnam agent guide
 
-Landnam ships only a Next.js web build and an iOS SwiftUI build. `AGENTS.md` is
+Landnam ships only a Next.js web build. `AGENTS.md` is
 canonical; area files point here. Keep work small, scene-first, and fast.
 
 ## Fast loop
@@ -9,9 +9,9 @@ canonical; area files point here. Keep work small, scene-first, and fast.
    Linear cycle, the highest `cycle/*` on origin. Never assume a number.
    Inspect `git status --short`, and read the active Linear `SSL-*` issue plus
    its latest comment.
-2. Find the authored scene or mission in `shared/authoring/`, then its web and
-   iOS implementation from the map below.
-3. Implement web, then the matching iOS behavior before starting another slice.
+2. Find the authored scene or mission in `shared/authoring/`, then its web
+   implementation from the map below.
+3. Implement web before starting another slice.
 4. Run the smallest relevant type/build or colocated test. Do not run broad
    suites by default.
 5. Open the affected scene in the VS Code/Cursor Simple Browser and inspect it.
@@ -72,7 +72,7 @@ to be visible to him as it happens.
 - Work directly on the current cycle branch (`cycle/<N>`, matching the active
   Linear cycle); never push to `main`. One coherent ticket outcome
   is one commit. Use Linear for the task record and handoff.
-- Web and iOS are the only supported targets. Do not add macOS, iPadOS,
+- Web is the only supported target. Do not add iOS, macOS, iPadOS,
   Android, desktop, Electron, Godot, or e2e test suites (Playwright/Cypress
   specs, scripted playthroughs). `scripts/scene-drive.mjs` drives the real
   scene by hand and is allowed.
@@ -90,16 +90,15 @@ to be visible to him as it happens.
   Keep the shared HUD (except inside mining scenes, which show only the Menu
   button; see docs/agents/product.md), offline outbox, sign-in requirement, and real-scene
   interaction model intact.
-- Do not use a user’s device or desktop. The editor Simple Browser and iOS
-  Simulator are the supported interactive surfaces.
+- Do not use a user’s device or desktop. The editor Simple Browser is the
+  supported interactive surface.
 - Keep discovery bounded: `rg -n`, then read a small window. Do not open
   `web/package-lock.json`, generated theme files, assets, or build output.
 
 ## Verification
 
 Web: `cd web && npm run typecheck`, then a focused `npm run test:file -- <path>`
-when logic changed, and a checked Simple Browser scene. iOS: build the simulator
-target and launch the matching `SceneCatalog` id when native code changed. State
+when logic changed, and a checked Simple Browser scene. State
 exactly what ran and what was skipped; source checks never substitute for a
 rendered scene.
 
@@ -116,8 +115,8 @@ the current `cycle/<N>` branch, then close the loop in Linear for every SSL key
 in the commit:
 
 1. Comment with the commit hash, the proof and the remaining caveats.
-2. Set the status: **Done** when the ticket's outcome is shipped (caveats such
-   as deferred iOS parity go in the comment, not in the status); **In Progress**
+2. Set the status: **Done** when the ticket's outcome is shipped (caveats go in the
+   comment, not in the status); **In Progress**
    only when part of the ticket is still unbuilt, and say what in the comment.
 3. Make sure the ticket is in the current cycle; add it if it is not.
 
@@ -125,14 +124,14 @@ A pushed commit whose ticket still reads Todo or Backlog is unfinished work.
 
 ## Map
 
-| Area | Web | iOS |
-| --- | --- | --- |
-| Routing | `web/components/game/GameScreenRouter.tsx` | `native/App/RootView.swift` |
-| Independent scene | `web/app/game/stage/` + `web/lib/devPresets.ts` | `native/App/SceneCatalog.swift` |
-| Missions | `web/components/game/Mission*`, `web/lib/mission-flow.ts` | `native/App/Screens/FlightScreens.swift`, `native/LandnamCore/.../Mission*` |
-| Mining | `web/components/game/screens/MiningScreen.tsx` | `native/App/Scenes/MiningScene.swift` |
-| Scene contracts | `shared/authoring/` + `web/lib/engine/` | `shared/authoring/` + `LandnamCore/Scene/` |
-| State and sync | `web/lib/game-state*.ts`, `web/lib/offline/` | `native/LandnamCore/Sync/`, `native/App/Store/` |
+| Area | Web |
+| --- | --- |
+| Routing | `web/components/game/GameScreenRouter.tsx` |
+| Independent scene | `web/app/game/stage/` + `web/lib/devPresets.ts` |
+| Missions | `web/components/game/Mission*`, `web/lib/mission-flow.ts` |
+| Mining | `web/components/game/screens/MiningScreen.tsx` |
+| Scene contracts | `shared/authoring/` + `web/lib/engine/` |
+| State and sync | `web/lib/game-state*.ts`, `web/lib/offline/` |
 
 Read `notes/decisions/` (Liam's decisions, a ZenNotes vault; newest wins) and
 `docs/agents/product.md` for product rules, `docs/agents/studio.md` for

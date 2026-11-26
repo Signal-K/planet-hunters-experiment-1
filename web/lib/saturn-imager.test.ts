@@ -53,7 +53,7 @@ describe('saturn imager launch offer', () => {
       payload: { type: 'satellite', instrumentId: 'saturn-imager' },
       payout: { francs: 0, affinity: 0 },
     })
-    const launched = buildRuntimeCatalog({ ...opts, player: { ...DEFAULT_STATE.player, freeOperations: true, saturnImagerLaunchedAt: Date.now() } })
+    const launched = buildRuntimeCatalog({ ...opts, player: { ...DEFAULT_STATE.player, placed: [], freeOperations: true, saturnImagerLaunchedAt: Date.now() } })
     expect(launched.missions.some(m => m.id === SATURN_IMAGER_MISSION_ID)).toBe(false)
   })
 

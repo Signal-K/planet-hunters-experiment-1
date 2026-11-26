@@ -17,6 +17,14 @@ export function landingProgress(
   return Math.max(0, Math.min(1, (now - startedAt) / durationMs))
 }
 
+/**
+ * Landing opens from solar-system progress: two missions flown. The old research purchase still counts, so a save
+ * that already bought it keeps it, and nothing a save had is ever taken away.
+ */
+export function landingUnlocked(player: Pick<GameState['player'], 'landingResearched' | 'missionsDone'>): boolean {
+  return !!player.landingResearched || (player.missionsDone ?? 0) >= LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE
+}
+
 export function applyResearchLanding(state: GameState): GameState {
   if (state.player.landingResearched) return state
   if (state.player.missionsDone < LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE) return state

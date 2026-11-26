@@ -749,12 +749,17 @@ export default function MissionBoard({
         {locationName && <div className={styles.locationMissions}>
           <section aria-label="Agency missions" data-testid="location-agency-missions">
             <h3>Agency missions</h3>
-            {locationSteps.length === 0 && agencyCards.length === 0 && <p>No agency missions available here yet.</p>}
+            {locationSteps.length === 0 && agencyCards.length === 0 && pickedRuns.length === 0 && <p>No agency missions available here yet.</p>}
             {locationSteps.map(step => { const mission = catalog.missions.find(item => item.id === step.id); return <article className={styles.locationMission} key={step.id}>
               {mission ? <><span className={styles.locationIcon} data-kind={contractGroup(mission)}><MissionGlyph mission={mission} /></span><div><strong>{step.title}</strong><small>{STEP_STATE_LABEL[step.state]}</small><MissionAtAGlance mission={mission} /></div></> : <ProgramStepFallback step={step} />}
               <button type="button" disabled={step.state === 'locked' || step.state === 'done' || tutorialBlocked} onClick={() => startStep(step)}>{step.state === 'locked' ? 'Locked' : step.state === 'done' ? 'Done' : 'Select'}</button>
               <details><summary>Mission details</summary><p>{step.brief}</p><p>{step.state === 'locked' ? step.lockLine : step.detail}</p></details>
             </article> })}
+            {pickedRuns.map(run => <article className={styles.locationMission} key={run.id} data-testid={`location-run-${run.id}`}>
+              <span className={styles.locationIcon} data-kind={contractGroup(run)}><MissionGlyph mission={run} /></span><div><strong>{run.title}</strong><MissionAtAGlance mission={run} /></div>
+              <button type="button" disabled={tutorialBlocked} data-testid={`location-accept-${run.id}`} onClick={() => { onAccept(run.id); if (pickedId) onPickTarget?.(pickedId) }}>Select</button>
+              <details><summary>Mission details</summary><p>{run.brief}</p></details>
+            </article>)}
             {agencyCards.map(item => <article className={styles.locationMission} key={item.mission.id}>
               <span className={styles.locationIcon} data-kind={contractGroup(item.mission)}><MissionGlyph mission={item.mission} /></span><div><strong>{item.mission.title}</strong><MissionAtAGlance mission={item.mission} /></div>
               <button type="button" disabled={!item.unlocked || tutorialBlocked} onClick={() => { onAccept(item.mission.id); if (pickedId) onPickTarget?.(pickedId) }}>Select</button>

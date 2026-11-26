@@ -12,6 +12,8 @@ export interface BaseMenuItem {
   icon: BaseMenuIcon
   /** The few things a player does from the base: drawn larger, above the rest. */
   primary?: boolean
+  /** Held back for now: drawn dimmed with its detail line saying so, and does nothing. */
+  disabled?: boolean
   onSelect: () => void
 }
 
@@ -43,7 +45,7 @@ export function BaseMenuSheet({ items, onClose }: { items: readonly BaseMenuItem
   const rest = items.filter(item => !item.primary)
   const row = (item: BaseMenuItem) => (
     <li key={item.id}>
-      <button type="button" className={`${styles.row} ${item.primary ? styles.primary : ''}`} data-testid={`base-menu-${item.id}`} onClick={() => { onClose(); item.onSelect() }}>
+      <button type="button" className={`${styles.row} ${item.primary ? styles.primary : ''}`} data-testid={`base-menu-${item.id}`} disabled={item.disabled} aria-disabled={item.disabled || undefined} style={item.disabled ? { opacity: 0.6 } : undefined} onClick={() => { if (item.disabled) return; onClose(); item.onSelect() }}>
         <MenuIcon name={item.icon} />
         <span className={styles.text}>
           <span className={styles.label}>{item.label}</span>

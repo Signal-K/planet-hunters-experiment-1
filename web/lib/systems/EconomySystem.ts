@@ -1,3 +1,4 @@
+import { agencyLevel } from '@/lib/agency/construction-translation'
 import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
 import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
 import type { BuildingLevels } from '@/lib/data/building-levels'
@@ -68,7 +69,7 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'> & Partial<Pick<GameState['player'], 'buildingLevels' | 'launchpadUpgraded'>>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'> & Partial<Pick<GameState['player'], 'buildingLevels' | 'launchpadUpgraded' | 'agencyLevels'>>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -82,12 +83,13 @@ export function sellUnitPrice(
   // A player can always make an open-market sale, but the physical Exchange
   // is what gives access to the full quoted price. Without it, the broker
   // takes the open-market discount; both paths still respond to supply.
-  const exchangeBuilt = player.placed?.includes('market') ?? false
+  const exchangeLevel = agencyLevel(player, 'exchange')
+  const exchangeBuilt = exchangeLevel > 0
   const base = snapshotQuote?.price ?? Math.round(meta.price * (exchangeBuilt ? 1 : OPEN_MARKET_SELL_RATE) * supplyDipMultiplier(unitsSold))
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   // SSL-792: an upgraded Exchange pays a little more on every sale.
-  const exchangeBonus = exchangeBuilt ? exchangeSaleBonus(buildingLevel(player, 'market')) : 0
+  const exchangeBonus = exchangeBuilt ? exchangeSaleBonus(exchangeLevel) : 0
   const quoted = Math.round((premiumApplied ? base * (1 + client!.payoutPremium) : base) * (1 + exchangeBonus))
   const permanentRate = permanentResearchSaleRate(player, now)
   const bonusApplied = permanentRate > 0
@@ -148,7 +150,7 @@ export function applySellMinerals(
 // a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number>; buildingLevels?: BuildingLevels }
+type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number>; buildingLevels?: BuildingLevels; launchpadUpgraded?: boolean; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
 
 /** True once any Earth-side silo is built — the prerequisite for keeping ore
  *  on Earth. Excavation alone is not enough; the room/building is the silo. */
@@ -165,8 +167,8 @@ export function siloCount(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuil
 }
 
 /** Total ore units the player's silos can hold. 0 with no silo. */
-export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt' | 'buildingLevels'>): number {
-  return ((player.placed ?? []).includes('surface-silo') ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(buildingLevel(player, 'surface-silo')) : 0)
+export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt' | 'buildingLevels' | 'agencyLevels'>): number {
+  return (agencyLevel(player, 'ore-storage') > 0 ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(agencyLevel(player, 'ore-storage')) : 0)
     + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? MINERAL_SILO_CAPACITY : 0)
     + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? DEEP_MINERAL_SILO_CAPACITY : 0)
 }

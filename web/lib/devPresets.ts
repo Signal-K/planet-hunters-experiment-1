@@ -187,6 +187,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-launch-review', label: 'Launch review (single rocket)', hint: 'Single-rocket launch review reached from the solar map: place, work, cargo, rocket, Launch. Starter Base, Free Ops', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
@@ -812,6 +813,20 @@ function fixture(name: string): Partial<GameState> | null {
         missionId: TRANSPORT_MISSION.id,
         targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
         deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-launch-review':
+      // Launch review reached from the solar map: one rocket, the place, the work, the cargo. Agency mission (self-directed mining) at Mercury.
+      return {
+        screen: 'fab',
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4 } },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: SELF_DIRECTED_MINING_MISSION_ID,
+        targetId: 'mercury',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,

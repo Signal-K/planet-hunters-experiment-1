@@ -108,3 +108,15 @@ describe('applyRedockComplete', () => {
     expect(applyRedockComplete(state, { iron: 3 }, null).lastCargo).toEqual({ iron: 3 })
   })
 })
+
+import { landingUnlocked } from './LandingSystem'
+
+describe('landingUnlocked', () => {
+  it('opens after two missions without spending research', () => {
+    expect(landingUnlocked({ missionsDone: 1 })).toBe(false)
+    expect(landingUnlocked({ missionsDone: 2 })).toBe(true)
+  })
+  it('keeps a landing the save already researched', () => {
+    expect(landingUnlocked({ missionsDone: 0, landingResearched: true })).toBe(true)
+  })
+})
