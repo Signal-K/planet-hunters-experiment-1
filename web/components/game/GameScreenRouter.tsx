@@ -1,5 +1,6 @@
 'use client'
 
+import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
 import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
@@ -472,7 +473,7 @@ function ScreenBody({
         buildingLevels={game.player.buildingLevels}
         subsurfaceBuilt={game.player.subsurfaceBuilt}
         onClose={() => game.go('hub')}
-        onSell={game.player.placed.includes('market') ? () => game.go('market') : undefined}
+        onSell={hasAgencyUnlock(game.player, 'exchange') ? () => game.go('market') : undefined}
       />
 
     case 'mission-history':
@@ -801,7 +802,7 @@ function ScreenBody({
             else if (kind === 'probe-observation') return game.go('probe-scan')
             // SSL-852: a craft is launched from the Program tab; a ground telescope is built in the Data hub.
             else if (kind === 'launch') {
-              if (!agencySummary(game.player).needsService && agencySummary(game.player).next?.how === 'build' && (game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
+              if (!agencySummary(game.player).needsService && agencySummary(game.player).next?.how === 'build' && (hasAgencyUnlock(game.player, 'data-hub') || !!game.player.transitSatelliteLaunchedAt)) return game.go('instrument-hub')
               requestMissionBoardTab('program')
             }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
@@ -812,7 +813,7 @@ function ScreenBody({
               requestMissionBoardTab('program')
             }
             else if (kind === 'classification') {
-              const hasInstruments = game.player.placed.includes('control-station') || !!game.player.transitSatelliteLaunchedAt
+              const hasInstruments = hasAgencyUnlock(game.player, 'data-hub') || !!game.player.transitSatelliteLaunchedAt
               if (hasInstruments) return game.go('instrument-hub')
               requestMissionBoardTab('program')
             }
