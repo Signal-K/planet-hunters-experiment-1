@@ -28,6 +28,11 @@ export function requestLandingPreview(transport: SolarTransport, targetId: strin
   if (!response.ok || !value || value.bodyId !== solar.id || value.seed !== solar.seed || value.styleVersion !== solar.styleVersion || value.width !== solar.width || value.height !== solar.height || value.latitude !== solar.latitude || value.longitude !== solar.longitude || value.stepDegrees !== solar.step || !Array.isArray(value.patch) || value.patch.length !== solar.width * solar.height || !Number.isFinite(value.center?.radius) || typeof value.center.biome !== 'string' || value.patch.some(sample => !sample || !Number.isFinite(sample.radius) || typeof sample.biome !== 'string')) {
     throw new Error(response.error ?? 'Invalid Takeon landing preview')
   }
+  // Never hand a rover a patch whose centre differs from its orbital sample.
+  const center = value.patch[Math.floor(value.height / 2) * value.width + Math.floor(value.width / 2)]
+  if (center.radius !== value.center.radius || center.biome !== value.center.biome) {
+    throw new Error('Takeon landing center does not match its surface patch')
+  }
   return value
 }
 

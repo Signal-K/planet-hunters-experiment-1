@@ -355,6 +355,26 @@ const PROFILE_BY_TARGET: Record<string, BiomeProfile> = {
   mars: MARS,
   moon: ROCKY_MOON,
   europa: ICE_MOON,
+  titan: TITAN_LIKE,
+  phobos: ROCKY_MOON,
+  deimos: ROCKY_MOON,
+  // These destinations share biome families, but their climates and relief
+  // should follow the same broad body profiles as the Takeon solar generator.
+  // Keep the family ids and bands: older saved terrain still uses those ids.
+  ganymede: { ...ICE_MOON, temperature: -160, roughness: 0.4 },
+  callisto: { ...ICE_MOON, temperature: -140, roughness: 0.55 },
+  enceladus: { ...ICE_MOON, temperature: -200, roughness: 0.3 },
+  mimas: { ...ICE_MOON, temperature: -200, roughness: 0.55 },
+  tethys: { ...ICE_MOON, temperature: -187, roughness: 0.42 },
+  dione: { ...ICE_MOON, temperature: -186, roughness: 0.45 },
+  rhea: { ...ICE_MOON, temperature: -174, roughness: 0.48 },
+  iapetus: { ...C_TYPE, temperature: -143, roughness: 0.58 },
+  miranda: { ...ICE_MOON, temperature: -187, roughness: 0.65 },
+  ariel: { ...ICE_MOON, temperature: -203, roughness: 0.45 },
+  umbriel: { ...C_TYPE, temperature: -198, roughness: 0.48 },
+  titania: { ...ICE_MOON, temperature: -203, roughness: 0.45 },
+  oberon: { ...ICE_MOON, temperature: -203, roughness: 0.5 },
+  triton: { ...ICE_MOON, temperature: -235, roughness: 0.4 },
   ceres: { ...C_TYPE, id: 'ceres', label: 'Dwarf planet', roughness: 0.45, bands: [
     { maxTemp: 0.4, low: 'icefield', high: 'carbonaceous-rubble' },
     { maxTemp: 1, low: 'carbonaceous-rubble', high: 'salt-flats' },

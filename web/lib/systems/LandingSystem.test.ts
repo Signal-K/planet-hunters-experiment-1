@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LANDING_RESEARCH_XP_COST } from '@/lib/data'
 import { DEFAULT_STATE } from '@/lib/game-state'
+import { getBuildSequence } from '@/lib/data/shipCustomizer'
 import type { GameState, Player } from '@/lib/game-types'
 import {
   applyLandingTouchdown,
@@ -34,16 +35,22 @@ describe('landingProgress', () => {
 })
 
 describe('applyResearchLanding', () => {
-  it('requires missionsDone >= 2 and enough researchXP, then flips the flag and spends XP', () => {
+  it('shows the lander after the mission milestone and preserves early unlocks', () => {
+    expect(getBuildSequence(1, false)).not.toContain('lander')
+    expect(getBuildSequence(2, false)).toContain('lander')
+    expect(getBuildSequence(1, true)).toContain('lander')
+  })
+  it('unlocks after two missions without spending research XP', () => {
     const tooEarly = applyResearchLanding(game({ missionsDone: 1, researchXP: LANDING_RESEARCH_XP_COST }))
     expect(tooEarly.player.landingResearched).toBeFalsy()
 
     const tooPoor = applyResearchLanding(game({ researchXP: LANDING_RESEARCH_XP_COST - 1 }))
-    expect(tooPoor.player.landingResearched).toBeFalsy()
+    expect(tooPoor.player.landingResearched).toBe(true)
+    expect(tooPoor.player.researchXP).toBe(LANDING_RESEARCH_XP_COST - 1)
 
     const researched = applyResearchLanding(game({ researchXP: LANDING_RESEARCH_XP_COST }))
     expect(researched.player.landingResearched).toBe(true)
-    expect(researched.player.researchXP).toBe(0)
+    expect(researched.player.researchXP).toBe(LANDING_RESEARCH_XP_COST)
   })
 
   it('is a no-op once already researched', () => {

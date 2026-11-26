@@ -5,7 +5,10 @@ import { mixHex, type Ramp } from './terrainColour'
 
 // Append-only: ids are persisted in field snapshots and must fit in a byte.
 const BODIES = ['mercury', 'venus', 'mars', 'eros', 'vesta', 'itokawa', 'ryugu', 'psyche', 'bennu', 'ceres', 'lutetia', 'europa'] as const
-export function supportsSolarField(bodyId: string): boolean { return BODIES.includes(bodyId as typeof BODIES[number]) }
+// New fields reuse a material slot: each engine instance has one body, and
+// persisted solar snapshots carry their own palette. Existing IDs stay fixed.
+const ADDITIONAL_BODIES = ['moon', 'phobos', 'deimos', 'io', 'ganymede', 'callisto', 'titan', 'enceladus', 'mimas', 'tethys', 'dione', 'rhea', 'iapetus', 'miranda', 'ariel', 'umbriel', 'titania', 'oberon', 'triton'] as const
+export function supportsSolarField(bodyId: string): boolean { return BODIES.includes(bodyId as typeof BODIES[number]) || ADDITIONAL_BODIES.includes(bodyId as typeof ADDITIONAL_BODIES[number]) }
 const GROUPS = ['regolith', 'ice', 'ice-ridges', 'tundra', 'ocean', 'grassland', 'drylands', 'methane-lakes', 'sulfur-plains', 'highlands', 'dark-regolith', 'volcanic-highlands'] as const
 const BIOMES: Record<string, typeof GROUPS[number]> = {
   regolith: 'regolith', 'red-desert': 'regolith', dunes: 'regolith', 'metal-regolith': 'regolith',
@@ -17,7 +20,8 @@ const BIOMES: Record<string, typeof GROUPS[number]> = {
 
 /** Register stable per-body colours and map the sampled field to engine material ids. */
 export function registerSolarFieldMaterials(bodyId: string, ground: Ramp, registerMaterial: (def: MaterialDef) => unknown) {
-  const body = BODIES.indexOf(bodyId as typeof BODIES[number])
+  const existing = BODIES.indexOf(bodyId as typeof BODIES[number])
+  const body = existing >= 0 ? existing : ADDITIONAL_BODIES.includes(bodyId as typeof ADDITIONAL_BODIES[number]) ? 0 : -1
   if (body < 0) throw new Error(`No solar field material allocation for ${bodyId}`)
   const ids = Object.fromEntries(GROUPS.map((group, index) => [group, 110 + body * GROUPS.length + index])) as Record<typeof GROUPS[number], number>
   for (const group of GROUPS) {

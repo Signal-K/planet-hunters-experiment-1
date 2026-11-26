@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { loadLandingPreview } from '@/lib/takeon/solarLandingPreview'
 import { loadObservedPatch, observedCoverage, observedHex } from '@/lib/takeon/solarObserved'
 import { solarBiomeColour } from '@/lib/takeon/solarBiomeColour'
+import { solarSurfaceObjects } from '@/lib/takeon/solarSurfaceObjects'
 import { mixHex, type Ramp } from '@/lib/takeon/terrainColour'
 import type { MissionZone } from '@/lib/data/mission-zone'
 
@@ -56,16 +57,13 @@ export default function SolarSurface({ targetId, zone, ground, realism = 0, onRe
       softened.getContext('2d')?.drawImage(canvas, 0, 0)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.filter = 'blur(2px)'; ctx.drawImage(softened, 0, 0); ctx.filter = 'none'
-      // Small deterministic surface stones, not a square gameplay grid.
-      for (let y = 3; y < h - 3; y++) for (let x = 3; x < w - 3; x++) {
-        const hash = Math.imul(x + landing.seed, 73856093) ^ Math.imul(y + landing.seed, 19349663)
-        if ((hash >>> 0) % 61 !== 0) continue
+      // Sample the same landing biomes for sparse, site-specific surface detail.
+      for (const { x, y, size, kind } of solarSurfaceObjects(landing)) {
         const p = point(x, y), base = observed ? mixHex(solarBiomeColour(samples[y * w + x].biome, colours), observedHex(observed[y * w + x]), realism) : solarBiomeColour(samples[y * w + x].biome, colours)
-        const size = 2.5 + ((hash >>> 8) & 3)
         ctx.fillStyle = mixHex(base, '#2d2521', 0.55)
         ctx.beginPath(); ctx.ellipse(p.x + 1, p.y + 2, size * 1.35, size * 0.5, 0, 0, Math.PI * 2); ctx.fill()
-        ctx.fillStyle = mixHex(base, '#362d28', 0.35)
-        ctx.beginPath(); ctx.moveTo(p.x - size, p.y); ctx.lineTo(p.x - size * 0.35, p.y - size * 0.9); ctx.lineTo(p.x + size * 0.55, p.y - size * 0.75); ctx.lineTo(p.x + size, p.y); ctx.closePath(); ctx.fill()
+        ctx.fillStyle = mixHex(base, kind === 'ice' ? '#f0ffff' : '#362d28', 0.35)
+        ctx.beginPath(); ctx.moveTo(p.x - size, p.y); ctx.lineTo(p.x - size * 0.35, p.y - size * (kind === 'ice' ? 1.4 : 0.9)); ctx.lineTo(p.x + size * 0.55, p.y - size * 0.75); ctx.lineTo(p.x + size, p.y); ctx.closePath(); ctx.fill()
       }
       setReady(true)
       onReady(true)

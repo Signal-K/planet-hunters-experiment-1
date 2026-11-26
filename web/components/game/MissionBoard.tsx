@@ -41,6 +41,12 @@ import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/ac
 import BoardFrame from '@/components/layout/frame/BoardFrame'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
+import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
+import { terrainLookForTarget } from '@/lib/takeon/terrainColour'
+import { agencyStepLocation } from '@/lib/location-missions'
+import { missionTypePrimer } from '@/lib/data/mission-primers'
+import type { Mission } from '@/lib/data/types'
+import { moonParent } from '@/lib/solar-moons'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
 
@@ -119,7 +125,7 @@ function MineralRock({ shape, color }: { shape?: string; color: string }) {
 }
 
 type Target = Catalog['targets'][number]
-type MapView = 'system' | 'inner' | 'belt' | 'outer'
+type MapView = 'system' | 'inner' | 'belt' | 'outer' | 'moons'
 type MapMode = 'route' | 'pick' | 'ambient'
 
 const SUN = { x: 4, y: 44 }
@@ -148,7 +154,7 @@ const STARS = (() => {
 })()
 
 const orbitPoint = (r: number, angle: number) => ({ x: SUN.x + r * UX * Math.cos(angle), y: SUN.y + r * UY * Math.sin(angle) })
-const EARTH_POS = orbitPoint(1.5, 1.0)
+const EARTH_POS = orbitPoint(3, -0.4)
 const REGION_EARTH_POS = { x: 38, y: 42 }
 const BELT_ROCKS = (() => {
   const rand = lcg(31)
@@ -159,13 +165,16 @@ const BELT_FIELD = (() => {
   return Array.from({ length: 32 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
 })()
 
-/** Asteroids sit in one belt; zoomed in, they spread across the screen. */
+/** A stable, schematic field; positions do not imply current orbital locations. */
 function beltLayout(list: Target[]): Record<string, { x: number; y: number }> {
-  const cols = 3
-  const rows = Math.max(1, Math.ceil(list.length / cols))
-  return Object.fromEntries(list.map((t, i) => [t.id, {
-    x: 18 + ((i % cols) + 0.5) * (66 / cols) + spread(`${t.id}x`) * 3,
-    y: 24 + (Math.floor(i / cols) + 0.5) * (36 / rows) + spread(`${t.id}y`) * 2.5,
+  const places: Record<string, { x: number; y: number }> = {
+    bennu: { x: 18, y: 31 }, itokawa: { x: 48, y: 20 }, eros: { x: 75, y: 32 },
+    ryugu: { x: 33, y: 48 }, vesta: { x: 66, y: 52 }, psyche: { x: 17, y: 69 },
+    ceres: { x: 47, y: 77 }, lutetia: { x: 67, y: 72 },
+  }
+  return Object.fromEntries(list.map(t => [t.id, places[t.id] ?? {
+    x: 15 + (spread(`${t.id}x`) + 1) * 35,
+    y: 20 + (spread(`${t.id}y`) + 1) * 30,
   }]))
 }
 
@@ -180,6 +189,14 @@ function regionLayout(list: Target[]): Record<string, { x: number; y: number }> 
 
 const shortName = (name: string) => name.replace(/^\d+\s+/, '')
 
+const ignoreGlobeReady = () => {}
+function MapGlobe({ target }: { target?: Target }) {
+  const colours = target ? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
+  return <i className={styles.gxPlanet}>
+    <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />
+  </i>
+}
+
 interface GalaxyMapProps {
   targets: Target[]
   mode: MapMode
@@ -189,14 +206,19 @@ interface GalaxyMapProps {
   candidates?: string[]
   selectedId?: string | null
   onPick?: (id: string) => void
+  locationOpen?: boolean
+  moonParentId?: string | null
+  onOpenMoons?: (id: string) => void
 }
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
-export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick }: GalaxyMapProps) {
+export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons }: GalaxyMapProps) {
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')
-  const planets = real.filter(t => t.type !== 'asteroid')
+  const planets = real.filter(t => t.type !== 'asteroid' && !moonParent(t.id))
+  const moons = real.filter(t => moonParent(t.id) === moonParentId)
+  const parent = planets.find(t => t.id === moonParentId)
   const asteroids = real.filter(t => t.type === 'asteroid')
   const shownPlanets = mode === 'route' ? planets.filter(t => lit.has(t.id)) : planets
   const shownAsteroids = mode === 'route' ? asteroids.filter(t => lit.has(t.id)) : asteroids
@@ -207,34 +229,43 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const outer = regionLayout(outerPlanets)
   const litAsteroid = asteroids.find(t => lit.has(t.id))
   const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
-  const planetPos = (t: Target) => orbitPoint(t.orbit, spread(t.id) * 0.85)
-  const pos = (t: Target) => t.type === 'asteroid' ? anchor : planetPos(t)
+  // These are illustrative positions, not ephemerides. Separate the inner
+  // planets so their globes and labels remain legible on their own rings.
+  const planetAngles: Record<string, number> = { mercury: -0.9, venus: 0.5, mars: 0.5 }
+  const planetPos = (t: Target) => orbitPoint(t.orbit, planetAngles[t.id] ?? spread(t.id) * 0.85)
+  const pos = (t: Target) => {
+    const parentId = moonParent(t.id)
+    const parentTarget = planets.find(planet => planet.id === parentId)
+    return t.type === 'asteroid' ? anchor : parentId === 'earth' ? EARTH_POS : planetPos(parentTarget ?? t)
+  }
   const route = [EARTH_POS, ...(stops.length ? stops : candidates).flatMap(id => {
     const t = real.find(x => x.id === id)
     return t ? [pos(t)] : []
   })]
   const style = (p: { x: number; y: number }) => ({ left: `${p.x}%`, top: `${p.y}%` })
   const line = (pts: { x: number; y: number }[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')
-  const beltLane = (ids: string[]) => line(ids.flatMap(id => belt[id] ? [belt[id]] : []))
   const node = (t: Target, p: { x: number; y: number }, label: string) => pickable
     ? <button key={t.id} type="button" className={styles.gxNode}
       data-lit={lit.has(t.id) || undefined} data-selected={t.id === selectedId || undefined} data-route={stops.includes(t.id) || undefined}
-      style={style(p)} aria-label={t.name} aria-pressed={t.id === selectedId} data-testid={`map-node-${t.id}`} onClick={() => onPick?.(t.id)}>
-      <i /><span>{label}</span>
+      style={style(p)} aria-label={t.name} aria-pressed={t.id === selectedId} data-testid={`map-node-${t.id}`} onClick={() => { onPick?.(t.id); if (view !== 'moons' && real.some(body => moonParent(body.id) === t.id)) onOpenMoons?.(t.id) }}>
+      <MapGlobe target={t} /><span>{label}</span>
     </button>
     : <div key={t.id} className={`${styles.gxNode} ${styles.gxStaticNode}`}
       data-lit={lit.has(t.id) || undefined} data-route={stops.includes(t.id) || undefined}
       style={style(p)} aria-label={t.name} data-testid={`map-node-${t.id}`}>
-      <i /><span>{label}</span>
+      <MapGlobe target={t} /><span>{label}</span>
     </div>
-  return <div className={styles.gx} data-view={view} data-mode={mode} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
+  const earth = (p: { x: number; y: number }) => pickable
+    ? <button type="button" className={styles.gxNode} data-home data-selected={selectedId === 'earth' || undefined} style={style(p)} aria-label="Earth" aria-pressed={selectedId === 'earth'} data-testid="map-node-earth" onClick={() => { onPick?.('earth'); if (view !== 'moons' && real.some(body => moonParent(body.id) === 'earth')) onOpenMoons?.('earth') }}><MapGlobe /><span>Earth</span></button>
+    : <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(p)} aria-label="Earth"><MapGlobe /><span>Earth</span></div>
+  return <div className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="18" cy="44" rx="20" ry="17" className={styles.gxRegion} />
         <ellipse cx="62" cy="44" rx="25" ry="24" className={styles.gxRegion} />
         <ellipse cx="92" cy="44" rx="21" ry="29" className={styles.gxRegion} />
-        {[1, 2, 3, 4, 6, 7].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
+        {[1, 2, 3, 4, 6, 7, 8, 9].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
           ? <path d={line(route)} className={styles.gxRoute} />
           : route.slice(1).map((p, i) => <path key={i} d={line([route[0], p])} className={styles.gxSpoke} />))}
@@ -245,7 +276,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <span className={styles.gxRegionLabel} style={{ left: '54%', top: '73%' }}>Main belt</span>
       <span className={styles.gxRegionLabel} style={{ left: '83%', top: '78%' }}>Outer system</span>
       {mode !== 'ambient' && <>
-        <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>
+        {earth(EARTH_POS)}
         {shownPlanets.map(t => node(t, planetPos(t), t.name))}
         <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
@@ -253,18 +284,26 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       </>}
         {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>}
         {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>}
+    </> : view === 'moons' ? <>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <ellipse cx="42" cy="44" rx="27" ry="24" className={styles.gxRing} />
+        <ellipse cx="42" cy="44" rx="38" ry="32" className={styles.gxRegion} />
+      </svg>
+      {moonParentId === 'earth' ? earth({ x: 42, y: 44 }) : parent && node(parent, { x: 42, y: 44 }, parent.name)}
+      {moons.map((moon, index) => {
+        const angle = -0.8 + index * Math.PI * 2 / Math.max(moons.length, 1)
+        return node(moon, { x: 42 + Math.cos(angle) * 27, y: 44 + Math.sin(angle) * 24 }, shortName(moon.name))
+      })}
+      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '84%' }}>{parent?.name ?? 'Earth'} · moons</span>
+      <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>
     </> : view === 'belt' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="31" cy="39" rx="22" ry="25" className={styles.gxRegion} />
         <ellipse cx="68" cy="38" rx="25" ry="25" className={styles.gxRegion} />
         <ellipse cx="52" cy="66" rx="26" ry="19" className={styles.gxRegion} />
-        <path d={beltLane(['bennu', 'ryugu', 'ceres', 'lutetia', 'psyche', 'eros'])} className={styles.gxLane} />
-        <path d={beltLane(['bennu', 'vesta', 'psyche'])} className={styles.gxLane} />
-        <path d={beltLane(['itokawa', 'vesta', 'lutetia'])} className={styles.gxLane} />
       </svg>
       {BELT_FIELD.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
-      <span className={styles.gxRegionLabel} style={{ left: '18%', top: '68%' }}>Near-Earth group</span>
-      <span className={styles.gxRegionLabel} style={{ left: '64%', top: '69%' }}>Main-belt group</span>
+      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '91%' }}>Asteroid locations · schematic</span>
       {shownAsteroids.map(t => node(t, belt[t.id], shortName(t.name)))}
       {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </> : <>
@@ -277,7 +316,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
           : outerPlanets.map(target => outer[target.id]))} className={styles.gxLane} />
       </svg>
       <i className={styles.gxSun} style={{ left: '50%', top: '44%' }} />
-      {view === 'inner' && <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(REGION_EARTH_POS)} aria-label="Earth"><i /><span>Earth</span></div>}
+      {view === 'inner' && earth(REGION_EARTH_POS)}
       {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
       <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
       {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
@@ -298,6 +337,31 @@ function ContractGroupGlyph({ group }: { group: ContractGroup }) {
   if (group === 'construction') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6h14M4 6l4-3M18 6v5M15 11h6M18 11v3a2 2 0 1 1-2 2" /></svg>
   if (group === 'exploration') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="M14.5 14.5 20 20M10 7v6M7 10h6" /></svg>
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20 14 10M11 5c4-2 8 0 9 4-3-2-6-2-9 0zM11 5l3 5" /></svg>
+}
+
+function MissionGlyph({ mission }: { mission: Mission }) {
+  const payload = mission.payload
+  if (payload?.type === 'rover') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16h14l-2-6H8l-3 6ZM10 10V7h4v3M12 7V4M4 19h16" /><circle cx="7" cy="19" r="2" /><circle cx="17" cy="19" r="2" /></svg>
+  if (payload?.type === 'satellite' || payload?.type === 'deep-space-survey') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 9 6 6-3 3-6-6zM6 12 3 9l3-3 3 3M15 15l3 3 3-3-3-3M14 5c3 0 5 2 5 5M14 2c5 0 8 3 8 8" /></svg>
+  if (mission.survey?.scanRequired || mission.tag === 'SCIENCE') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" /><path d="M12 3v4M12 17v4M3 12h4M17 12h4M9 12l2 2 4-4" /></svg>
+  if (mission.deliveryTargetId) return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h11v9H3zM14 11h4l3 3v3h-7M6 8V5h5v3" /><circle cx="7" cy="19" r="2" /><circle cx="18" cy="19" r="2" /></svg>
+  return <ContractGroupGlyph group={contractGroup(mission)} />
+}
+
+function MissionAtAGlance({ mission }: { mission: Mission }) {
+  const primer = missionTypePrimer(mission)
+  const minerals = Object.entries(mission.requires.minerals)
+  return <div className={styles.missionAtAGlance}><span>{primer.label}</span><span>{primer.steps.join('  ›  ')}</span>{minerals.length > 0 && <span>{minerals.map(([id, amount]) => `${amount} ${id}`).join(' · ')}</span>}</div>
+}
+
+function ProgramStepFallback({ step }: { step: ProgramStep }) {
+  const telescope = /telescope/i.test(`${step.id} ${step.title}`)
+  const satellite = /satellite|probe/i.test(`${step.id} ${step.title}`)
+  const label = telescope ? 'Space telescope' : satellite ? 'Orbital deployment' : STEP_KIND_LABEL[step.kind]
+  return <><span className={styles.locationIcon} data-kind="exploration">{telescope
+    ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 14 11-8 3 4-11 8zM16 6l2-2 3 4-2 2M10 17l2 4M7 21h10" /></svg>
+    : satellite ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 9 6 6-3 3-6-6zM6 12 3 9l3-3 3 3M15 15l3 3 3-3-3-3M14 5c3 0 5 2 5 5" /></svg>
+    : <StepGlyph kind={step.kind} />}</span><div><strong>{step.title}</strong><small>{STEP_STATE_LABEL[step.state]}</small><div className={styles.missionAtAGlance}><span>{label}</span>{(telescope || satellite) && <span>Launch › Deploy › Return</span>}</div></div></>
 }
 
 function SkyBanner({ kind }: { kind: keyof typeof EVENT_BANNERS }) {
@@ -393,12 +457,15 @@ export default function MissionBoard({
   const [requestedSite] = useState(() => pendingMissionBoardSite())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
-  const [tab, setTab] = useState<MissionBoardTab>(() => pendingMissionBoardTab() ?? lastMissionBoardTab() ?? 'contracts')
+  const [tab, setTab] = useState<MissionBoardTab>(() => {
+    const requested = pendingMissionBoardTab() ?? lastMissionBoardTab()
+    return requested === 'events' || requested === 'clients' ? requested : 'free'
+  })
   const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const fleet = agencySummary(player, now)
-  const steps = useMemo(() => programChain(catalog, player, now), [catalog, player, now])
+  const steps = useMemo(() => programChain(catalog, player, now).filter(step => step.kind !== 'mining' && step.kind !== 'focus'), [catalog, player, now])
   const events = useMemo(
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
     [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
@@ -435,15 +502,21 @@ export default function MissionBoard({
   const offerWindow = visibleCards.slice(windowStart, windowStart + windowSize)
   const [view, setView] = useState<MapView>(() => {
     const site = requestedSite ? catalog.targets.find(target => target.id === requestedSite.targetId) : null
-    return !site ? 'system' : site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer'
+    return !site ? 'system' : moonParent(site.id) ? 'moons' : site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer'
   })
+  const [moonParentId, setMoonParentId] = useState<string | null>(() => requestedSite ? moonParent(requestedSite.targetId) ?? null : null)
   const mineralSources = useMemo(() => sourceMineral
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && t.minerals.includes(sourceMineral)).sort((a, b) => a.orbit - b.orbit)
     : [], [catalog.targets, sourceMineral])
-  const [pickedId, setPickedId] = useState<string | null>(() => (tab === 'free' ? requestedSite?.targetId : null) ?? mineralSources[0]?.id ?? null)
+  const [pickedId, setPickedId] = useState<string | null>(() => requestedSite?.targetId ?? (pendingMissionBoardTab() === 'program' ? 'earth' : null) ?? mineralSources[0]?.id ?? null)
   const [runId, setRunId] = useState<string | null>(() => tab === 'free' ? requestedSite?.runId ?? null : null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const picked = pickedId ? catalog.targets.find(t => t.id === pickedId) ?? null : null
+  const locationName = pickedId === 'earth' ? 'Earth' : picked ? shortName(picked.name) : null
+  const locationSteps = pickedId ? steps.filter(step => agencyStepLocation(step, catalog.missions) === pickedId) : []
+  const locationCards = pickedId ? cards.filter(item => item.targetIds.includes(pickedId)) : []
+  const agencyCards = locationCards.filter(item => !item.client && !locationSteps.some(step => step.id === item.mission.id))
+  const clientCards = locationCards.filter(item => item.client)
   // A run tied to one body (a probe's targeted run) is offered only there.
   const pickedRuns = picked ? freeRuns.filter(run => (!run.targetId || run.targetId === picked.id) &&
     (sourceMineral
@@ -457,11 +530,14 @@ export default function MissionBoard({
     ? catalog.targets.filter(t => t.type !== 'exoplanet' && Object.keys(card.mission.requires.minerals).some(m => t.minerals.includes(m))).slice(0, 4).map(t => t.id)
     : []
   const mapMode: MapMode = tab === 'contracts' || tab === 'free' ? 'pick' : 'ambient'
-  const mapTargets = tab === 'contracts'
+  const visibleTargets = tab === 'contracts'
     ? catalog.targets.filter(target => cards.some(item => item.targetIds.includes(target.id)))
     : tab === 'free' && mineralSources.length > 0
       ? mineralSources
-      : catalog.targets
+      : catalog.targets.filter(target => (target.type === 'planet' || target.type === 'asteroid') && !target.id.startsWith('earth-orbit-'))
+  // A filtered moon still needs its parent on the map to remain reachable.
+  const parentIds = new Set(visibleTargets.flatMap(target => moonParent(target.id) ?? []))
+  const mapTargets = [...visibleTargets, ...catalog.targets.filter(target => parentIds.has(target.id) && !visibleTargets.some(visible => visible.id === target.id))]
   const sourceMineralName = sourceMineral ? catalog.minerals[sourceMineral]?.name ?? sourceMineral : null
   const selectedProgramStep = steps.find(step => step.id === programStepId)
     ?? steps.find(step => step.state === 'current')
@@ -481,7 +557,9 @@ export default function MissionBoard({
   useEffect(() => {
     const first = mineralSources[0]
     if (!first) return
-    setView(first.type === 'asteroid' ? 'belt' : first.orbit <= 4 ? 'inner' : 'outer')
+    const parentId = moonParent(first.id)
+    setMoonParentId(parentId ?? null)
+    setView(parentId ? 'moons' : first.type === 'asteroid' ? 'belt' : first.orbit <= 4 ? 'inner' : 'outer')
     // Only on open: the player may pan the map afterwards.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -538,9 +616,8 @@ export default function MissionBoard({
         onOpenEvent('radio-meteors')
         return
       }
-      // The event is over and this player cannot replay it: the archive is bought in the research marketplace.
+      // Existing archive purchases and participation remain valid; new archive access is not yet migrated.
       if (event.id === 'orionids-2026' && event.status === 'ended' && !orionidsRunAvailable(player, orionidsNow)) {
-        onOpenEvent('market')
         return
       }
       // Orionids is its own event chain, not a filter over ordinary Free Run
@@ -568,10 +645,8 @@ export default function MissionBoard({
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
   const tabButtons = <>
-    <button type="button" className={styles.tab} aria-label="Client contracts" data-tab="contracts" data-active={tab === 'contracts'} data-testid="mission-board-tab-contracts" onClick={() => chooseTab('contracts')}><ChartIcon /><span className={styles.tabLabel}>Contracts</span></button>
-    <button type="button" className={styles.tab} aria-label="Your program" data-tab="program" data-active={tab === 'program'} data-testid="mission-board-tab-program" onClick={() => chooseTab('program')}><ClipboardIcon /><span className={styles.tabLabel}>Program</span></button>
-    <button type="button" className={styles.tab} aria-label="Your clients" data-tab="clients" data-active={tab === 'clients'} data-testid="mission-board-tab-clients" onClick={() => chooseTab('clients')}><PeopleIcon /><span className={styles.tabLabel}>Clients</span></button>
-    {player.freeOperations && <button type="button" className={styles.tab} aria-label="Free run" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Free run</span></button>}
+    <button type="button" className={styles.tab} aria-label="Solar system" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Solar system</span></button>
+    <button type="button" className={styles.tab} aria-label="Client relationships" data-tab="clients" data-active={tab === 'clients'} data-testid="mission-board-tab-clients" onClick={() => chooseTab('clients')}><PeopleIcon /><span className={styles.tabLabel}>Relationships</span></button>
     <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
       <StarIcon /><span className={styles.tabLabel}>Events</span>
       {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
@@ -586,7 +661,6 @@ export default function MissionBoard({
         {tabButtons}
       </nav>
       <div className={styles.railHelp}>
-        {player.freeOperations && onOpenPlanner && <button type="button" className={`${styles.log} ${styles.plan}`} data-testid="mission-board-plan" onClick={onOpenPlanner}>Plan flight</button>}
         <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
         <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
           <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>
@@ -595,7 +669,7 @@ export default function MissionBoard({
         {help.button}
       </div>
       </div>}>
-      <GalaxyMap targets={tab === 'contracts' ? [] : mapTargets} mode={tab === 'contracts' ? 'ambient' : mapMode} view={tab === 'contracts' ? 'belt' : view} onView={setView} stops={tab === 'contracts' ? [] : routeIds} candidates={tab === 'contracts' ? [] : candidateIds}
+      <GalaxyMap targets={mapTargets} mode={mapMode} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
           else { setPickedId(id); setRunId(null) }
@@ -659,60 +733,56 @@ export default function MissionBoard({
       </> : <article className={styles.dock} data-testid="mission-board-section-client">
         {onboardingComplete ? <>
           <header className={styles.dockHead}><div className={styles.dockWho}><h2>No client signals yet</h2></div></header>
-          <p className={styles.dockBrief}>Free Ops opens once the Earth storage silo is built.</p>
+          <p className={styles.dockBrief}>Build the Earth storage silo to open client missions.</p>
           <div className={styles.dockDeal}><button type="button" className={styles.take} onClick={onOpenBuild}>BUILD STORAGE SILO</button></div>
         </> : contractTargetId ? <>
           <header className={styles.dockHead}><div className={styles.dockWho}><span>Destination filter</span><h2>No contracts for this location</h2></div></header>
           <p className={styles.dockBrief}>Choose another body or tap the selected location again to show every contract.</p>
           <div className={styles.dockDeal}><button type="button" className={styles.clearFilter} data-testid="mission-destination-clear" onClick={() => setContractTargetId(null)}>SHOW ALL CONTRACTS</button></div>
         </> : <header className={styles.dockHead}><div className={styles.dockWho}><h2>No compatible client signals</h2></div></header>}
-      </article>) : tab === 'free' ? <article className={`${styles.dock} ${styles.freeDock}`} data-testid="mission-board-free">
-        {eventFocus && <div className={styles.eventRun} data-testid="event-run-context">
-          <b>{eventFocus}</b><span>Shower run · launch catches fragments · no cargo used</span>
+      </article>) : tab === 'free' ? <article className={locationName ? styles.locationPanel : `${styles.dock} ${styles.freeDock}`} data-testid="mission-board-solar">
+        <header className={styles.dockHead}>{locationName && <div className={styles.locationWorld}><MapGlobe target={picked ?? undefined} /></div>}<div className={styles.dockWho}>
+          <span>{locationName ? 'Location missions' : 'Solar system'}</span><h2>{locationName ?? 'Choose a location'}</h2>
+        </div>{locationName && <button type="button" className={styles.clearFilter} aria-label="Close location missions" onClick={() => setPickedId(null)}>Close</button>}</header>
+        {!locationName && <p className={styles.dockBrief}>Select a planet to see its missions and moons, or open the asteroid belt.</p>}
+        {sourceMineralName && <p className={styles.dockBrief}>Showing locations with {sourceMineralName}. <button type="button" onClick={() => setSourceMineral(null)}>Show all locations</button></p>}
+        {locationName && <div className={styles.locationMissions}>
+          <section aria-label="Agency missions" data-testid="location-agency-missions">
+            <h3>Agency missions</h3>
+            {locationSteps.length === 0 && agencyCards.length === 0 && <p>No agency missions available here yet.</p>}
+            {locationSteps.map(step => { const mission = catalog.missions.find(item => item.id === step.id); return <article className={styles.locationMission} key={step.id}>
+              {mission ? <><span className={styles.locationIcon} data-kind={contractGroup(mission)}><MissionGlyph mission={mission} /></span><div><strong>{step.title}</strong><small>{STEP_STATE_LABEL[step.state]}</small><MissionAtAGlance mission={mission} /></div></> : <ProgramStepFallback step={step} />}
+              <button type="button" disabled={step.state === 'locked' || step.state === 'done' || tutorialBlocked} onClick={() => startStep(step)}>{step.state === 'locked' ? 'Locked' : step.state === 'done' ? 'Done' : 'Select'}</button>
+              <details><summary>Mission details</summary><p>{step.brief}</p><p>{step.state === 'locked' ? step.lockLine : step.detail}</p></details>
+            </article> })}
+            {agencyCards.map(item => <article className={styles.locationMission} key={item.mission.id}>
+              <span className={styles.locationIcon} data-kind={contractGroup(item.mission)}><MissionGlyph mission={item.mission} /></span><div><strong>{item.mission.title}</strong><MissionAtAGlance mission={item.mission} /></div>
+              <button type="button" disabled={!item.unlocked || tutorialBlocked} onClick={() => { onAccept(item.mission.id); if (pickedId) onPickTarget?.(pickedId) }}>Select</button>
+              <details><summary>Mission details</summary><p>{item.mission.brief}</p>{!item.unlocked && <p>{item.lockedDetail}</p>}</details>
+            </article>)}
+          </section>
+          <section aria-label="Client missions" data-testid="location-client-missions">
+            <h3>Client missions</h3>
+            {clientCards.length === 0 && <p>No client missions available here right now.</p>}
+            {clientCards.length === 0 && onboardingComplete && <button type="button" className={styles.clearFilter} onClick={onOpenBuild}>Build storage silo to open client missions</button>}
+            {clientCards.map(item => <article className={styles.locationMission} key={item.mission.id}>
+              <span className={styles.locationIcon} data-kind={contractGroup(item.mission)}><MissionGlyph mission={item.mission} /></span><div><strong>{item.mission.title}</strong><small>{item.client?.name} · {formatCurrency(item.displayPayout, { compact: true })}</small><MissionAtAGlance mission={item.mission} /></div>
+              <button type="button" disabled={!item.unlocked || tutorialBlocked} data-testid={`location-accept-${item.mission.id}`} onClick={() => { onAccept(item.mission.id); if (pickedId) onPickTarget?.(pickedId) }}>Select</button>
+              <details><summary>Mission details</summary><p>{item.mission.brief}</p>{!item.unlocked && <p>{item.lockedDetail}</p>}{Object.entries(item.mission.requires.minerals).length > 0 && <p>Requires: {Object.entries(item.mission.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}</p>}</details>
+            </article>)}
+          </section>
+          <section aria-label="Construction and sandbox"><h3>Construction &amp; sandbox</h3><p>Coming later.</p></section>
         </div>}
-        {sourceMineralName && <div className={styles.sourceSites} data-testid="mineral-sources" role="group" aria-label={`Where to mine ${sourceMineralName}`}>
-          <b>{sourceMineralName}</b>
-          {mineralSources.length > 0
-            ? mineralSources.slice(0, 4).map(site => <button key={site.id} type="button" data-on={site.id === pickedId || undefined} data-testid={`mineral-source-${site.id}`}
-                onClick={() => { setPickedId(site.id); setRunId(null); setView(site.type === 'asteroid' ? 'belt' : site.orbit <= 4 ? 'inner' : 'outer') }}>{shortName(site.name)}</button>)
-            : <span>Not mineable yet. Try the Exchange.</span>}
-          <button type="button" className={styles.sourceAll} data-testid="mineral-sources-clear" onClick={() => setSourceMineral(null)}>All sites</button>
-        </div>}
-        <header className={styles.dockHead}>
-          <div className={styles.dockWho}>
-            <span>{sourceMineralName ? `Free run · mine ${sourceMineralName}` : pickedRun?.id.startsWith(PROBE_RUN_PREFIX) ? 'Free run · targeted' : pickedRun?.id.startsWith(SPECIAL_PREFIX) ? 'Free run · special' : 'Free run'}</span>
-            <h2>{picked ? shortName(picked.name) : 'Choose a site'}</h2>
-          </div>
-        </header>
-        {picked && pickedRun?.id.startsWith(PROBE_RUN_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-probe">
-          Targeted run from your probe survey · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · no client, no fee
-        </p>}
-        {picked && pickedRun?.id.startsWith(SPECIAL_PREFIX) && <p className={styles.dockBrief} data-testid="free-run-special">
-          {pickedRun.title} · mine {Object.entries(pickedRun.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')} · ₣{(pickedRun.payout.francs / 1_000_000).toFixed(1)}M
-        </p>}
-        {!picked && <p className={styles.dockBrief}>Tap a planet, or open the asteroid belt, to pick where to mine.</p>}
-        {picked && pickedRuns.length > 1 && <div className={styles.dockRuns} role="group" aria-label="Run">
-          {pickedRuns.map(run => <button key={run.id} type="button" data-testid={`free-run-${run.id}`} data-on={run.id === pickedRun?.id || undefined} onClick={() => setRunId(run.id)}>
-            {run.id.startsWith(SPECIAL_PREFIX) ? run.title : showerForRunMission(run.id)
-              ? `Catch ${ORIONIDS_FRAGMENT_GOAL} ${showerForRunMission(run.id)!.name} fragments`
-              : Object.entries(run.requires.minerals).map(([id, amount]) => `${amount} ${catalog.minerals[id]?.name ?? id}`).join(', ')}
-          </button>)}
-        </div>}
-        {picked && pickedRuns.length === 0 && <p className={styles.dockBrief}>No free run mines this site yet.</p>}
-        <div className={`${styles.dockDeal} ${styles.freeAction}`}>
-          <button type="button" className={styles.take} data-testid="free-run-start" disabled={!picked || !pickedRun}
-            onClick={() => { if (!picked || !pickedRun) return; onAccept(pickedRun.id); onPickTarget?.(picked.id) }}>START RUN</button>
-        </div>
       </article> : <div className={`${styles.sheet} ${tab === 'events' ? styles.eventSheet : ''}`}>
           {tab === 'program' && <div className={styles.chain} data-testid="mission-board-program">
             <header className={styles.chainHead} data-testid="program-summary">
               <div>
-                <h2>Your space program</h2>
+                <h2>Agency missions</h2>
                 <p>{fleet.owned.reduce((sum, craft) => sum + craft.owned, 0)} craft · {fleet.dataPerDay} items/day · {fleet.contributed} project contributions</p>
               </div>
 
             </header>
-            <div className={styles.skillTree} role="list" aria-label="Program skill tree">
+            <div className={styles.skillTree} role="list" aria-label="Agency mission progress">
               {steps.map((step, stepIndex) => <button key={step.id} type="button" role="listitem" className={styles.skillNode}
                 data-state={step.state} data-selected={step.id === selectedProgramStep?.id || undefined}
                 data-testid={`program-step-${step.id}`} aria-pressed={step.id === selectedProgramStep?.id}
@@ -778,10 +848,14 @@ export default function MissionBoard({
               <ClientSurplus player={player} catalog={catalog} clientId={focusedStanding.client.id} clientName={focusedStanding.client.name} level={focusedStanding.met ? focusedStanding.level : 0} onSell={onSellToClient} />
               {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
                 const first = cards.find(item => item.client?.id === focusedStanding.client.id)
-                setContractTargetId(null)
-                chooseTab('contracts')
-                if (first) onSelectMission(first.mission.id)
-              }}>{focusedStanding.offers === 1 ? 'SEE CONTRACT' : `SEE ${focusedStanding.offers} CONTRACTS`}</button>}
+                const destination = first?.targetIds[0]
+                if (destination) {
+                  const target = catalog.targets.find(item => item.id === destination)
+                  setPickedId(destination)
+                  if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
+                }
+                chooseTab('free')
+              }}>FIND MISSIONS ON THE MAP</button>}
             </article>
           </div>}
 
@@ -808,11 +882,10 @@ export default function MissionBoard({
                     </>}
                     <EventSpecials eventId={event.id} player={player} onStart={special => {
                       const target = catalog.targets.find(t => t.id === special.targetId)
-                      chooseTab('free'); setPickedId(special.targetId); setRunId(special.id)
-                      if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
+                      if (target) { onAccept(special.id); onPickTarget?.(target.id) }
                     }} />
                     {event.id === 'orionids-2026' && <p className={styles.eventReward} data-testid="orionids-local-window">{localOrionids.location.city ?? localOrionids.location.timeZone}: best {formatViewingWindow(localOrionids.best, localOrionids.location.timeZone)} · moon-free {formatViewingWindow(localOrionids.moonFree, localOrionids.location.timeZone)}</p>}
-                    <button type="button" disabled={event.status === 'upcoming'} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.status === 'upcoming' ? 'Opens soon' : event.actionLabel}</button>
+                    <button type="button" disabled={event.status === 'upcoming' || (event.id === 'orionids-2026' && event.status === 'ended' && !orionidsRunAvailable(player, orionidsNow))} className={styles.eventAction} data-testid={`event-action-${event.id}`} onClick={() => openEvent(event)}>{event.status === 'upcoming' ? 'Opens soon' : event.actionLabel}</button>
                   </div>
                 </article>}
             {event?.id === 'orionids-2026' && (isOrionidsWindow(orionidsNow) || orionidsArchiveUnlocked(player) || heldFragments(player.stash) > 0 || (player.orionidsFragments?.caught ?? 0) > 0) && (

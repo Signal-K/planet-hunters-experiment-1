@@ -11,9 +11,7 @@ import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
 
 const stages = [0, 0.35, 0.6, 0.85, 1]
-const jupiter = TARGETS.find(target => target.id === 'jupiter')!
-// Orbit-only review entries do not add destinations to the mission catalog.
-const reviewTargets = [...TARGETS, ...['Saturn', 'Uranus', 'Neptune'].map(name => ({ ...jupiter, id: name.toLowerCase(), name }))]
+const reviewTargets = TARGETS
 
 /** Account-free, stationary views of the real landing scene for visual review. */
 export default function SolarVisualFixture() {

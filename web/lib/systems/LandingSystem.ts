@@ -1,9 +1,7 @@
-// Landing research (unlocks the Lander Module ship room) and the lander
-// detach/descend + ascend/redock sequence. See ZenNotes "Surface Ops gated on
-// landing research and lander module" (STS-640).
+// Landing milestone and the lander detach/descend + ascend/redock sequence.
+// Keep the saved landingResearched flag for players who unlocked it earlier.
 
 import type { GameState } from '@/lib/game-types'
-import { LANDING_RESEARCH_XP_COST } from '@/lib/data'
 import { startReturnLeg } from './MiningSystem'
 
 export const LANDING_DESCEND_DURATION_MS = 8_000
@@ -22,12 +20,10 @@ export function landingProgress(
 export function applyResearchLanding(state: GameState): GameState {
   if (state.player.landingResearched) return state
   if (state.player.missionsDone < LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE) return state
-  if ((state.player.researchXP ?? 0) < LANDING_RESEARCH_XP_COST) return state
   return {
     ...state,
     player: {
       ...state.player,
-      researchXP: (state.player.researchXP ?? 0) - LANDING_RESEARCH_XP_COST,
       landingResearched: true,
     },
   }

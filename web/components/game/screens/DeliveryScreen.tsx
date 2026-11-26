@@ -65,6 +65,9 @@ export default function DeliveryScreen({
   const rover = useMemo(() => defaultSpec(), [])
   const takeonRef = useRef<TakeOnMountHandle>(null)
   const [takeonReady, setTakeonReady] = useState(!useTakeonDropoff)
+  const takeonStarted = useRef(false)
+  const [takeonError, setTakeonError] = useState(false)
+  const [takeonAttempt, setTakeonAttempt] = useState(0)
   const [dumpError, setDumpError] = useState<string | null>(null)
   const seedCargo = useMemo(() => {
     const seeded: Partial<Record<ResourceKey, number>> = {}
@@ -95,7 +98,8 @@ export default function DeliveryScreen({
   // inline arrow here would get a fresh identity every render, so calling
   // it (setTakeonReady) would itself re-trigger the effect it lives in —
   // tearing down and remounting the whole Takeon scene in a tight loop.
-  const handleTakeonReady = useCallback(() => setTakeonReady(true), [])
+  const handleTakeonReady = useCallback(() => { takeonStarted.current = true; setTakeonError(false); setTakeonReady(true) }, [])
+  const handleTakeonError = useCallback(() => { if (!takeonStarted.current) setTakeonError(true) }, [])
 
   const handleDump = useCallback(() => {
     if (!takeonReady) return
@@ -180,13 +184,14 @@ export default function DeliveryScreen({
           {manifest}
           {!ownDelivery && fee}
           {dumpError && <SceneNote>{dumpError}</SceneNote>}
+          {takeonError && <SceneNote>The surface could not be opened. Your cargo remains on the mission; retry or pause at the hub.</SceneNote>}
           {dumped && !roverReturned && <SceneNote>Cargo unloaded. Return the empty rover to the ship before launch.</SceneNote>}
           {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth.</SceneNote>}
         </SceneCard>}
         actions={<SceneActions>
           {!dumped ? (
-            <ScenePrimary testId="delivery-dump-cargo" disabled={!takeonReady} onClick={handleDump}>
-              {takeonReady ? 'Dump cargo at building site' : 'Preparing rover'}
+            <ScenePrimary testId="delivery-dump-cargo" disabled={!takeonReady && !takeonError} onClick={takeonError ? () => { setTakeonError(false); setTakeonAttempt(attempt => attempt + 1) } : handleDump}>
+              {takeonError ? 'Retry surface' : takeonReady ? 'Dump cargo at building site' : 'Preparing rover'}
             </ScenePrimary>
           ) : (
             <ScenePrimary testId="delivery-return-rover" disabled={roverReturned} onClick={() => setRoverReturned(true)}>
@@ -199,17 +204,20 @@ export default function DeliveryScreen({
       >
         <div className={styles.stage}>
           <TakeOnMount
+            key={takeonAttempt}
             ref={takeonRef}
             missionId={`tutorial-delivery-${mission.id}`}
             bodyId={takeonBodyForTarget(target)}
             target={target}
             zone={mission.targetId === target.id ? mission.customPlan?.zone : undefined}
+            requireSolarTerrain={mission.targetId === target.id && mission.customPlan?.zone !== undefined}
             rover={rover}
             roverName="Mule Field Rover"
             seedCargo={seedCargo}
             seedCache
             startView="iso"
             onReady={handleTakeonReady}
+            onError={handleTakeonError}
             className={styles.takeonMount}
           />
           {!dumped && <div className={`${styles.siteLock} lock-on`} data-testid="delivery-site-lock" aria-hidden="true" />}

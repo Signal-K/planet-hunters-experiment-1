@@ -132,6 +132,8 @@ export interface TakeOnMountProps {
    */
   target?: SurfaceTarget
   zone?: MissionZone
+  /** A mission with an explicitly selected solar site must not use unrelated fallback terrain. */
+  requireSolarTerrain?: boolean
   lifeStage?: LifeStage
   /** Read-only visit: pointer input is disabled and no save is written. */
   readOnly?: boolean
@@ -263,6 +265,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCache,
   target,
   zone,
+  requireSolarTerrain = false,
   lifeStage = 'dormant',
   readOnly = false,
   fieldWeather,
@@ -481,6 +484,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const savedSolar = readSolarFieldIdentity(resume?.coreSnapshot)
+        if (requireSolarTerrain && !savedSolar && (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW !== '1' || !currentTarget || resume || (!readOnly && !isSeeded))) {
+          throw new Error('This landing site is unavailable. Pause and try again when solar terrain is available.')
+        }
         if (savedSolar) {
           if (!currentTarget || savedSolar.bodyId !== currentTarget.id) throw new Error('Saved solar field belongs to another destination')
           const { registerSolarFieldMaterials } = await import('@/lib/takeon/solarField')
@@ -510,6 +516,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             body.dem = demId
             fieldIdentity = identity
           } catch (error) {
+            if (requireSolarTerrain) throw new Error('Could not load the selected landing site. Pause or retry.', { cause: error })
             console.warn('Takeon solar terrain unavailable; using the existing field', error)
           }
         }
@@ -696,6 +703,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     lifeStage,
     missionId,
     readOnly,
+    requireSolarTerrain,
     fieldWeather,
     rover,
     roverName,

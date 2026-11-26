@@ -30,7 +30,6 @@ export function debriefExits({ programOperation, hasInstrument, guided, probeDep
   const exits: DebriefExit[] = []
   if (probeDeployment) exits.push({ id: 'probe', label: 'Open probe scanner', screen: 'probe-scan' })
   exits.push({ id: 'again', label: 'Choose next flight', screen: 'missions' })
-  if (!guided) exits.push({ id: 'plan', label: 'Plan my own flight', screen: 'mission-planner' })
   if (hasInstrument) exits.push({ id: 'explore', label: 'Review telescope data', screen: 'instrument-hub' })
   if (hasInstrument && programOperation) exits.push({ id: 'reposition', label: 'Reposition telescope', screen: 'sky-pointing' })
   return exits
@@ -38,6 +37,7 @@ export function debriefExits({ programOperation, hasInstrument, guided, probeDep
 
 export function debriefExitScreen(id: DebriefExitId | undefined, input: Omit<ExitInput, 'guided'>): Screen | null {
   if (id === 'base') return 'hub'
+  if (id === 'plan') return 'mission-planner' // Preserve previously saved handoffs.
   if (id === 'community') return 'community-research'
   if (!id) return null
   return debriefExits({ ...input, guided: false }).find(exit => exit.id === id)?.screen ?? null

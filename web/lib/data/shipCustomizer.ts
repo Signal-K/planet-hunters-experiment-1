@@ -17,12 +17,12 @@ export function getBuildSequence(
   landingResearched = false,
 ): ShipRoomKind[] {
   const bonus: ShipRoomKind[] = [
-    ...(landingResearched ? (['lander'] as const) : []),
+    ...((landingResearched || missionsDone >= 2) ? (['lander'] as const) : []),
   ]
   if (missionsDone >= 6) return [...BUILD_SEQUENCES[4], ...bonus]
   if (missionsDone >= 4) return [...BUILD_SEQUENCES[3], ...bonus]
-  if (missionsDone >= 2) return BUILD_SEQUENCES[2]
-  return BUILD_SEQUENCES[1]
+  if (missionsDone >= 2) return [...BUILD_SEQUENCES[2], ...bonus]
+  return [...BUILD_SEQUENCES[1], ...bonus]
 }
 
 export interface CustomizerPart {

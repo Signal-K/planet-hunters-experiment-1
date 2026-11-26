@@ -249,22 +249,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </section>
 
         <section className={styles.settle} aria-label="Settle up">
-        <section className={styles.card} data-surface="cream">
-          <p className={styles.note} data-testid="mission-next-handoff">
-            {storyItem
-              ? storyItem.unlocks
-              : mission.payload?.instrumentId === 'survey-probe'
-                ? 'Probe released. Open the Data hub and press SCAN to start mapping its deposits.'
-                : 'Choose your next activity, or return to Base. Every option completes this flight first.'}
-          </p>
-          {exits.some(exit => exit.id !== 'again') && (
+        {(storyItem || mission.payload?.instrumentId === 'survey-probe' || exits.some(exit => exit.id !== 'again' && exit.id !== 'probe')) && <section className={styles.card} data-surface="cream">
+          {(storyItem || mission.payload?.instrumentId === 'survey-probe') && <p className={styles.note} data-testid="mission-next-handoff">
+            {storyItem ? storyItem.unlocks : 'Probe released. Open the Data hub and press SCAN to start mapping its deposits.'}
+          </p>}
+          {exits.some(exit => exit.id !== 'again' && exit.id !== 'probe') && (
             <details><summary>More activities</summary><nav className={styles.exits} aria-label="Other next activities" data-testid="debrief-exits">
-              {exits.filter(exit => exit.id !== 'again').map(exit => (
+              {exits.filter(exit => exit.id !== 'again' && exit.id !== 'probe').map(exit => (
                 <button key={exit.id} type="button" className={styles.exit} data-testid={`debrief-exit-${exit.id}`} disabled={collecting} onClick={() => collect(exit.id)}>{exit.label}</button>
               ))}
             </nav></details>
           )}
-        </section>
+        </section>}
 
         {settled ? (
           <HomeSettlementLedger

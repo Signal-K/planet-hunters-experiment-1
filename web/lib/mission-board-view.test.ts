@@ -100,7 +100,7 @@ describe('mission board view', () => {
     const after = Date.parse('2026-11-09T12:00:00Z')
     const locked = eventsBoard(after, {}, after, {}, 0, 0, false)
     expect(locked.orionids.status).toBe('ended')
-    expect(locked.orionids.actionLabel).toBe('OPEN ARCHIVE')
+    expect(locked.orionids.actionLabel).toBe('ARCHIVE UNAVAILABLE')
     const open = eventsBoard(after, {}, after, {}, 0, 0, true)
     expect(open.orionids.actionLabel).toBe('PLAY FOR SILVER')
   })

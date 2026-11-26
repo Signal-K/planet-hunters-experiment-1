@@ -17,6 +17,16 @@ describe('experimental solar landing connection', () => {
     expect(() => requestLandingPreview(() => JSON.stringify({ ok: false, error: 'unknown body' }), 'ceres')).toThrow('unknown body')
     expect(() => requestLandingPreview(() => JSON.stringify({ ok: true, value: {} }), 'mars')).toThrow('Invalid Takeon landing preview')
   })
+  it('rejects a surface whose center differs from the orbit handoff', () => {
+    const identity = previewLandingRequest('mars')
+    const patch = Array.from({ length: identity.width * identity.height }, () => ({ radius: 1, biome: 'regolith' }))
+    patch[Math.floor(patch.length / 2)] = { radius: 1, biome: 'ice' }
+    expect(() => requestLandingPreview(() => JSON.stringify({ ok: true, value: {
+      bodyId: identity.id, seed: identity.seed, styleVersion: 1, latitude: identity.latitude,
+      longitude: identity.longitude, stepDegrees: identity.step, width: identity.width, height: identity.height,
+      center: { radius: 1, biome: 'regolith' }, patch,
+    } }), 'mars')).toThrow('center does not match')
+  })
   it('turns the shared patch into a finite, ordered rover elevation grid', () => {
     const landing = { bodyId: 'mars', seed: 2, styleVersion: 1, latitude: 0, longitude: 0, stepDegrees: 0.08, width: 2, height: 2, center: { radius: 1, biome: 'regolith' }, patch: [1, 2, 3, 5].map(radius => ({ radius, biome: 'regolith' })) }
     expect(landingDem(landing).heights).toEqual([0, 0.25, 0.5, 1])

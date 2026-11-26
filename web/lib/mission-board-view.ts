@@ -336,8 +336,8 @@ export function eventsBoard(
     earnedTier: earned === 'gold' || earned === 'silver' ? earned : null,
     blurb: "Fly into Orion's meteor pattern, catch fragments, and mine any minerals you want while you are there.",
     // The event is the shower run. After it, ORI-1 is open for listening.
-    actionLabel: orionidsEventStage >= 1 ? 'Listen on ORI-1' : archiveLocked ? 'OPEN ARCHIVE' : eventActionLabel(status),
-    rewardLabel: archiveLocked ? 'Archive · unlock it with research currency'
+    actionLabel: orionidsEventStage >= 1 ? 'Listen on ORI-1' : archiveLocked ? 'ARCHIVE UNAVAILABLE' : eventActionLabel(status),
+    rewardLabel: archiveLocked ? 'Archive access is not available yet'
       : orionidsEventStage >= 1 ? eventRewardLabel(status, earned)
       : status === 'live' ? 'Shower run · catch and contribute fragments' : eventRewardLabel(status, earned),
   }

@@ -212,7 +212,7 @@ export default function MarketScreen({
         <div className={styles.left}>
           <h2 className={styles.title}>Exchange</h2>
           <div className={styles.tabs} role="tablist" aria-label="Marketplace">
-            {(['sell', 'buy', 'alerts', 'research'] as const).map(id => (
+            {(['sell', 'buy', 'alerts'] as const).map(id => (
               <button key={id} type="button" role="tab" className={styles.tab} aria-selected={tab === id} data-testid={`market-tab-${id}`} onClick={() => setTab(id)}>
                 {id}
               </button>

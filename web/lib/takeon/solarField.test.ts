@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { solarField } from './solarField'
+import { solarField, supportsSolarField } from './solarField'
+import { TARGETS } from '@/lib/data/targets'
 import { solarBiomeColour } from './solarBiomeColour'
 import type { SolarLandingPreview } from './solarLandingPreview'
 
@@ -7,6 +8,17 @@ const ground = ['#aabbcc', '#8899aa', '#556677'] as const
 const sample: SolarLandingPreview = { bodyId: 'mars', seed: 1, styleVersion: 1, latitude: 0, longitude: 0, stepDegrees: 1, width: 2, height: 2, center: { radius: 1, biome: 'red-desert' }, patch: [{ radius: 1, biome: 'red-desert' }, { radius: 2, biome: 'ice' }, { radius: 3, biome: 'highlands' }, { radius: 4, biome: 'volcanic-highlands' }] }
 
 describe('solar field material handoff', () => {
+  it('offers a field for each catalogued solid destination, and none for gas giants', () => {
+    for (const target of TARGETS) {
+      expect(supportsSolarField(target.id), target.id).toBe(target.archetype !== 'gas-giant')
+    }
+  })
+  it('preserves the orbit palette for every solid biome emitted by Takeon', () => {
+    const biomes = ['regolith', 'red-desert', 'dunes', 'metal-regolith', 'ice', 'icefield', 'ice-ridges', 'tundra', 'ocean', 'grassland', 'drylands', 'methane-lakes', 'sulfur-plains', 'highlands', 'crater-highlands', 'rubble-highlands', 'metal-ridges', 'volcanic-highlands', 'dark-regolith']
+    const materials = new Map<number, string>()
+    const field = solarField({ ...sample, patch: biomes.map(biome => ({ radius: 1, biome })) }, ground, material => { materials.set(material.id, material.colors[0]) })
+    expect(field.surfaceMaterials.map(id => materials.get(id))).toEqual(biomes.map(biome => solarBiomeColour(biome, ground)))
+  })
   it('preserves each sampled biome and elevation in matching grid order', () => {
     const materials = new Map<number, string>()
     const field = solarField(sample, ground, material => { materials.set(material.id, material.colors[0]) })

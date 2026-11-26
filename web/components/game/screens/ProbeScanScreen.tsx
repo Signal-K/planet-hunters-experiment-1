@@ -342,7 +342,6 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
                           <i style={{ background: mineralColor(row.mineral) }} />
                           <b>{mineralName(row.mineral)}</b>
                           <small>{tonnes(row.tonnes)}</small>
-                          {!playing && player.freeOperations && <button type="button" className={styles.planMineral} aria-label={`Plan a ${mineralName(row.mineral)} flight`} onClick={() => onPlanMineral(body.id, row.mineral)}>Plan flight</button>}
                         </li>
                       ))}
                     </ul>
@@ -359,11 +358,6 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
               {playing ? (
                 <button type="button" className={styles.ghost} data-testid="probe-skip" onClick={() => body && setPlayed(p => ({ ...p, [visitKey]: mapped.length }))}>Skip</button>
               ) : <>
-                {body && run && (
-                  <button type="button" className={styles.primary} data-testid="probe-plan-run" disabled={!run} onClick={() => body && run && onPlanRun(body.id, run.id)}>
-                    <span>Targeted run</span><em>Free</em>
-                  </button>
-                )}
                 {body && contracts.length > 0 && (
                   <button type="button" className={styles.secondary} data-testid="probe-contracts" disabled={!contracts.length} onClick={() => body && onViewContracts(body.id)}>
                     <span>{contracts.length ? `Contracts · ${contracts.length}` : 'No contracts'}</span>

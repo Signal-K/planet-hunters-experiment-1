@@ -17,10 +17,11 @@ interface Props {
   realism?: number
   landable?: boolean
   onReady: (ready: boolean) => void
+  mapIcon?: boolean
 }
 
 /** Renders the same versioned terrain field used for the surface DEM. */
-export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacity, realism = 0, landable = true, onReady }: Props) {
+export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacity, realism = 0, landable = true, onReady, mapIcon = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [failed, setFailed] = useState(false)
   const palette = colours.join(',')
@@ -30,7 +31,7 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
     onReady(false)
     setFailed(false)
     async function draw() {
-      const [landing, orbit] = await Promise.all([landable ? loadLandingPreview(targetId, zone) : Promise.resolve(null), loadOrbitPreview(targetId, zone)])
+      const [landing, orbit] = await Promise.all([landable && !mapIcon ? loadLandingPreview(targetId, zone) : Promise.resolve(null), loadOrbitPreview(targetId, zone)])
       const observed = realism > 0 && observedCoverage(targetId) !== 'none' ? await loadObservedPatch(targetId, orbit.stepDegrees, orbit.width, orbit.height, zone) : null
       const middle = (orbit.height >> 1) * orbit.width + (orbit.width >> 1)
       if (landing && (orbit.patch[middle].radius !== landing.center.radius || orbit.patch[middle].biome !== landing.center.biome)) throw new Error('Orbit and landing do not share a terrain sample')
@@ -40,7 +41,7 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
       if (!canvas || !ctx) throw new Error('Canvas unavailable')
       // Smooth between sampled biomes instead of painting flat triangles.
       // Interpolation improves presentation; it does not add measured detail.
-      const radius = 180
+      const radius = canvas.width * 180 / 512
       const center = canvas.width / 2
       const colours = palette.split(',') as unknown as Ramp
       const rgb = orbit.patch.map((sample, index) => {
@@ -66,9 +67,17 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
         const ids = [iy * orbit.width + ix, iy * orbit.width + ix + 1, (iy + 1) * orbit.width + ix, (iy + 1) * orbit.width + ix + 1]
         const weights = [(1-tx)*(1-ty), tx*(1-ty), (1-tx)*ty, tx*ty]
         const relief = ids.reduce((sum, id, i) => sum + orbit.patch[id].radius * weights[i], 0)
-        const light = Math.max(0.42, 0.64 + depth * 0.3 + (relief - 1) * 1.5)
+        // The system map uses a consistent upper-left light, giving each tiny
+        // world a readable day/night terminator while retaining Takeon's terrain.
+        const diffuse = Math.max(0, -x * 0.48 - y * 0.42 + depth * 0.77)
+        const light = mapIcon ? 0.30 + diffuse * 0.78 + (relief - 1) * 1.5 : Math.max(0.42, 0.64 + depth * 0.3 + (relief - 1) * 1.5)
+        const highlight = mapIcon ? Math.pow(Math.max(0, -x * 0.32 - y * 0.34 + depth * 0.88), 24) * 32 : 0
+        const rim = mapIcon ? Math.pow(1 - depth, 3) * diffuse * 24 : 0
         const offset = (py * canvas.width + px) * 4
-        for (let c = 0; c < 3; c++) image.data[offset + c] = ids.reduce((sum, id, i) => sum + rgb[id][c] * weights[i], 0) * light
+        for (let c = 0; c < 3; c++) {
+          const colour = ids.reduce((sum, id, i) => sum + rgb[id][c] * weights[i], 0)
+          image.data[offset + c] = colour * light + highlight + rim * (c === 2 ? 1 : 0.65)
+        }
         image.data[offset + 3] = Math.min(255, (1 - Math.sqrt(r2)) * radius * 255)
       }
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -82,7 +91,7 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
       }
     })
     return () => { cancelled = true; onReady(false) }
-  }, [targetId, zone, palette, realism, landable, onReady])
+  }, [targetId, zone, palette, realism, landable, onReady, mapIcon])
 
-  return <canvas ref={canvasRef} width={512} height={512} aria-hidden="true" data-testid="solar-orbit-globe" style={{ position: 'absolute', width: '70%', height: 'auto', left: '15%', top: '64%', transform: `translateY(-50%) scale(${scale})`, opacity: failed ? 0 : opacity, pointerEvents: 'none' }} />
+  return <canvas ref={canvasRef} width={mapIcon ? 256 : 512} height={mapIcon ? 256 : 512} aria-hidden="true" data-testid="solar-orbit-globe" style={mapIcon ? { position: 'absolute', inset: '-21%', width: '142%', height: '142%', opacity: failed ? 0 : opacity, pointerEvents: 'none' } : { position: 'absolute', width: '70%', height: 'auto', left: '15%', top: '64%', transform: `translateY(-50%) scale(${scale})`, opacity: failed ? 0 : opacity, pointerEvents: 'none' }} />
 }

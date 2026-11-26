@@ -44,6 +44,9 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
   const [surfaceReady, setSurfaceReady] = useState(false)
   const onSurfaceReady = useCallback((ready: boolean) => setSurfaceReady(ready), [])
   const onGlobeReady = useCallback((ready: boolean) => setGlobeReady(ready), [])
+  // Switch both views together: showing one generated layer with an unrelated
+  // fallback layer would make the apparent landing location jump on descent.
+  const solarReady = globeReady && surfaceReady
 
   useEffect(() => {
     const el = ref.current
@@ -126,9 +129,9 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
             <stop offset="1" stopColor={look?.sky ?? '#9fd6e4'} stopOpacity="0" />
           </linearGradient>
         </defs>
-        {!globeReady && glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 3} fill="none" stroke="url(#ls-air)" strokeWidth={6} opacity={glowRim} />}
-        {!globeReady && <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />}
-        {!globeReady && <g clipPath="url(#ls-limb)">
+        {!solarReady && glowRim > 0 && <circle cx={limbX} cy={limbY + limbR} r={limbR + 3} fill="none" stroke="url(#ls-air)" strokeWidth={6} opacity={glowRim} />}
+        {!solarReady && <circle cx={limbX} cy={limbY + limbR} r={limbR} fill={ground[2]} />}
+        {!solarReady && <g clipPath="url(#ls-limb)">
           <circle cx={limbX - limbR * 0.16} cy={limbY + limbR + limbR * 0.06} r={limbR * 0.96} fill={ground[1]} />
           <circle cx={limbX - limbR * 0.3} cy={limbY + limbR + limbR * 0.14} r={limbR * 0.86} fill={ground[0]} />
           {craters.map((c, i) => {
@@ -140,10 +143,10 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
         {heat > 0 && <ellipse cx={padX} cy={landerY + 4} rx={16 * heat} ry={22 * heat} fill="url(#ls-heat)" opacity={0.5 * heat} />}
       </svg>
 
-      {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <SolarOrbitGlobe targetId={target.id} zone={zone} colours={ground} realism={realism} scale={lerp(1, 12, t * t)} opacity={worldOpacity} onReady={onGlobeReady} />}
+      {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <SolarOrbitGlobe targetId={target.id} zone={zone} colours={ground} realism={realism} scale={lerp(1, 12, t * t)} opacity={solarReady ? worldOpacity : 0} onReady={onGlobeReady} />}
 
       <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.82, 1.08, low)})`, transformOrigin: '50% 64%', opacity: fieldOpacity, WebkitMaskImage: mask, maskImage: mask, pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: surfaceReady ? 0 : 1 }}><TakeOnMount
+        <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 0 : 1 }}><TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
           target={target}
@@ -152,7 +155,7 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
           readOnly
           className={styles.field}
         /></div>
-        {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <SolarSurface targetId={target.id} zone={zone} ground={ground} realism={realism} onReady={onSurfaceReady} />}
+        {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 1 : 0 }}><SolarSurface targetId={target.id} zone={zone} ground={ground} realism={realism} onReady={onSurfaceReady} /></div>}
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label={mode === 'descend' ? 'Lander descending to the surface' : 'Lander climbing to orbit'} data-testid="landing-canvas" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

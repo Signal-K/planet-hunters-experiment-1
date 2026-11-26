@@ -1,9 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { mergeStructureCatalog, toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
+import { mergeStructureCatalog, mergeTargetCatalog, toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
 import { AUTHORED_MISSIONS } from './data'
 import type { Mission } from './data'
 
 describe('Landnam Catalog Mapping', () => {
+  it('keeps missing authored destinations while preserving live records and authored terrain metadata', () => {
+    const mercury = toTarget({ slug: 'mercury', name: 'Live Mercury', body_type: 'planet', orbit: 1, difficulty: 'L2' })
+    const merged = mergeTargetCatalog([mercury])
+    expect(merged.find(target => target.id === 'venus')?.orbit).toBe(2)
+    expect(merged.filter(target => target.id === 'mercury')).toHaveLength(1)
+    expect(merged.find(target => target.id === 'mercury')).toMatchObject({ name: 'Live Mercury', archetype: 'S' })
+  })
   it('keeps authored structures when a spoke catalog is missing a rollout row', () => {
     const merged = mergeStructureCatalog([toStructure({ slug: 'launchpad', name: 'Remote Launchpad', kind: 'launchpad' })])
     expect(merged.some(structure => structure.id === 'surface-silo')).toBe(true)
