@@ -1234,7 +1234,7 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-solar-map':
       return {
         screen: 'solar-map',
-        player: { ...POST_ONBOARDING_PLAYER },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo', 'transit-telescope'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4, 'transit-telescope': 5 } },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

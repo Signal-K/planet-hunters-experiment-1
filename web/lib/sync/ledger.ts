@@ -16,6 +16,8 @@
  * produced by a merge records nothing.
  */
 
+import { STARTER_BASE_PLACED } from '@/lib/data/starter-base'
+
 export const LEDGER_SCALARS = ['francs', 'researchXP', 'researchAnnotations', 'missionsDone'] as const
 export const LEDGER_RECORDS = ['stash', 'refinedGoods'] as const
 
@@ -117,7 +119,7 @@ export function applyMergedLedger<S extends SaveLike>(merged: S, local: SaveLike
 
 export function isUntouched(save: SaveLike): boolean {
   const p = save.player ?? {}
-  return ledgerWeight(save) === 0 && !(p.missionsDone > 0) && !((p.placed?.length ?? 0) > 0)
+  return ledgerWeight(save) === 0 && !(p.missionsDone > 0) && !(p.placed ?? []).some((kind: string) => !STARTER_BASE_PLACED.includes(kind))
 }
 
 /** Whether this save carries any progress worth protecting (an empty save never overwrites a richer one). */

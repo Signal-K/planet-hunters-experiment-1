@@ -2559,6 +2559,49 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "solar-map",
+      "type": "menu",
+      "route": "solar-map",
+      "surface": "dom",
+      "runtime": {
+        "surface": "dom",
+        "web": [
+          "web/components/game/screens/SolarMapScreen.tsx"
+        ]
+      },
+      "objects": [
+        {
+          "id": "solar-map-field",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "The solar system with every body that has work lit."
+        },
+        {
+          "id": "place-missions",
+          "kind": "collection",
+          "parent": "solar-map-field",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Agency missions and client missions for the picked place, kept in two groups."
+        },
+        {
+          "id": "base-action",
+          "kind": "button",
+          "parent": "solar-map-field",
+          "layout": "host",
+          "mechanics": [
+            "mission-planning"
+          ],
+          "note": "Return to the Base."
+        }
+      ]
+    },
+    {
       "id": "surface-silo",
       "type": "base",
       "route": "surface-silo",

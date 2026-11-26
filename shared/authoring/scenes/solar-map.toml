@@ -1,0 +1,39 @@
+#:schema ../schema/scene.schema.json
+# Solar map: scene script. Edit here or in the Scene Studio (http://localhost:4320/game/studio?scene=solar-map).
+format = 1
+id = "solar-map"
+type = "menu"
+name = "Solar map"
+summary = "Map-first entry to the mission loop: pick a planet, moon or asteroid, see its agency and client missions, accept one."
+qa = ["solar-map"]
+
+[runtime]
+surface = "dom"
+web = ["web/components/game/screens/SolarMapScreen.tsx"]
+
+[preview]
+route = "solar-map"
+state = "ui-solar-map"
+
+[[objects]]
+id = "solar-map-field"
+kind = "world"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "The solar system with every body that has work lit."
+
+[[objects]]
+id = "place-missions"
+kind = "collection"
+parent = "solar-map-field"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Agency missions and client missions for the picked place, kept in two groups."
+
+[[objects]]
+id = "base-action"
+kind = "button"
+parent = "solar-map-field"
+layout = "host"
+mechanics = ["mission-planning"]
+note = "Return to the Base."

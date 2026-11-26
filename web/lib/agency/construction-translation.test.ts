@@ -5,7 +5,7 @@ import { exchangeSaleBonus } from '@/lib/data/building-levels'
 import { rocketPrice } from '@/lib/rockets'
 import { sellUnitPrice, storageCapacity } from '@/lib/systems/EconomySystem'
 
-const fresh = () => structuredClone(DEFAULT_STATE)
+const fresh = () => ({ ...structuredClone(DEFAULT_STATE), player: { ...structuredClone(DEFAULT_STATE.player), placed: [] as string[] } })
 
 describe('SSL-889 construction translation', () => {
   it('turns standing buildings into agency unlocks without touching progress', () => {

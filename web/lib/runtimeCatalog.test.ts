@@ -100,7 +100,7 @@ describe('buildRuntimeCatalog', () => {
       freeOperations: true,
       transitSatelliteLaunchedAt: null,
       missionsDone: 3,
-      player: { ...DEFAULT_STATE.player, freeOperations: true },
+      player: { ...DEFAULT_STATE.player, placed: [], freeOperations: true },
     })
     expect(catalog.missions.some(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)).toBe(false)
   })

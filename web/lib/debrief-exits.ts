@@ -27,7 +27,7 @@ interface ExitInput {
 
 export function debriefExits({ programOperation, hasInstrument, guided }: ExitInput): DebriefExit[] {
   const exits: DebriefExit[] = []
-  exits.push({ id: 'again', label: 'Choose next flight', screen: 'missions' })
+  exits.push({ id: 'again', label: 'Choose next flight', screen: 'solar-map' })
   if (!guided) exits.push({ id: 'plan', label: 'Plan my own flight', screen: 'mission-planner' })
   if (hasInstrument) exits.push({ id: 'explore', label: 'Review telescope data', screen: 'instrument-hub' })
   if (hasInstrument && programOperation) exits.push({ id: 'reposition', label: 'Reposition telescope', screen: 'sky-pointing' })

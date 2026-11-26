@@ -24,3 +24,9 @@ Entry points that still gate on buildings (read these before retiring): `GameScr
 `hub/EarthBaseModules.tsx`, `hub/Building.tsx`, `hub/HubSubsurfaceView.tsx`, `hub/SurfaceSiloPanel.tsx`,
 `lib/control-station.ts`, `lib/systems/AgencyOnboardingSystem.ts`, `lib/systems/EconomySystem.ts`,
 `lib/systems/InstrumentFeedSystem.ts`, `lib/data/structures.ts`.
+
+## Agency levels (SSL-892)
+
+Building levels stay as they were, but the economy no longer reads them directly. `player.agencyLevels` (1–3, grow-only, merged by per-id max) records what the agency has earned: ore storage, exchange, rocket discounts and probe pace. `web/lib/agency/construction-translation.ts` copies an existing save's building levels into agency levels once, and the readers for those four effects use `agencyLevel(player, id)`. The refinery and launchpad still read `buildingLevels`; they are held back with construction, not removed.
+
+New agencies start with the launchpad, hangar, exchange, agency hub and Surface Silo already standing (`web/lib/data/starter-base.ts`). Existing saves keep exactly what they built, and an untouched new game still counts as a sign-in placeholder so it never overwrites a real save. Build is marked "coming later" (`web/lib/deferred-features.ts`); nothing it opens was deleted.

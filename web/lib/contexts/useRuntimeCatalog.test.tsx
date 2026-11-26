@@ -11,7 +11,7 @@ it('reuses the catalog for shots and currency, but invalidates instrument and re
   const root = createRoot(document.createElement('div'))
   let result: Catalog = STATIC_CATALOG
   function Harness({ state }: { state: GameState }) { result = useRuntimeCatalog(STATIC_CATALOG, state); return null }
-  let state = { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, freeOperations: true } }
+  let state = { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, placed: [], freeOperations: true } }
   const render = () => act(async () => root.render(<Harness state={state} />))
   try {
     await render()

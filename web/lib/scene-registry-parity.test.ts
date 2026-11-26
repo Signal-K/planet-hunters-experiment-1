@@ -21,7 +21,7 @@ describe('scene registry parity', () => {
     expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([])
   })
   it('every iOS fixture exists in SceneCatalog', () => {
-    expect(registry.filter(s => !s.nativeDeferred && (!s.native || !nativeIds.has(s.native))).map(s => `${s.id} -> ${s.native}`)).toEqual([])
+    expect(registry.filter(s => !s.nativeDeferred && !!s.native && !nativeIds.has(s.native)).map(s => `${s.id} -> ${s.native}`)).toEqual([])
   })
   it('every web fixture exists as a dev preset', () => {
     expect(registry.filter(s => !s.web || !webKeys.has(s.web)).map(s => `${s.id} -> ${s.web}`)).toEqual([])
