@@ -1,5 +1,6 @@
 'use client'
 
+import { landingUnlocked } from '@/lib/systems/LandingSystem'
 import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
@@ -733,7 +734,7 @@ function ScreenBody({
           launchpadLevel={buildingLevel(game.player, 'launchpad')}
           flightPlan={game.player.flightPlan}
           shipCustomizerParts={game.player.shipCustomizerParts}
-          landingResearched={game.player.landingResearched}
+          landingResearched={landingUnlocked(game.player)}
           pendingLaunch={game.player.pendingLaunch}
           pendingRocketName={rocketDisplay.name}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
