@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import type { FlightBodyLook, FlightConfig, FlightCraftLook, FlightEvent, FlightSceneHandle, FlightSnapshot } from '@takeon/engine'
+import type { FlightBodyLook, FlightConfig, FlightCraftLook, FlightEvent, FlightSceneHandle, FlightSnapshot } from '@takeon/flight-engine'
 import { installRocketSprite } from '@/lib/flight/rocketSprite'
 import { DEFAULT_LIVERY, type RocketLivery } from '@/lib/flight/looks'
 
@@ -52,7 +52,9 @@ const TakeOnFlight = forwardRef<TakeOnFlightHandle, Props>(function TakeOnFlight
     let cancelled = false
     let poll = 0
     let observer: ResizeObserver | null = null
-    void import('@takeon/engine').then(engine => {
+    // The solar-field build currently lacks the flight bridge; keep flight on
+    // the matching previously shipped runtime until the bridges are unified.
+    void import('@takeon/flight-engine').then(engine => {
       if (cancelled) return
       scene = engine.createFlightScene({ canvas, config, destination, craft: latest.current.craft, onEvent: event => latest.current.onEvent?.(event) })
       sceneRef.current = scene

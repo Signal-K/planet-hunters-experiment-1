@@ -35,6 +35,7 @@
   "dependencies": {
     "@clerk/react": "6.17.8",
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.7.tgz",
+    "@takeon/flight-engine": "file:vendor/takeon/takeon-engine-0.2.5.tgz",
     "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.5.tgz",
     "lucide-react": "^1.17.0",
     "next": "16.2.12",

@@ -1,4 +1,4 @@
-import type { FlightCraftLook, FlightSceneHandle } from '@takeon/engine'
+import type { FlightCraftLook, FlightSceneHandle } from '@takeon/flight-engine'
 import { authoredScene, resolvePrefab } from '@/lib/engine/SceneGraph'
 import { DEFAULT_LIVERY, type RocketLivery } from './looks'
 
