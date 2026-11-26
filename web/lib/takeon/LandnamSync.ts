@@ -91,6 +91,10 @@ function filterValue(value: string): string {
   return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
 }
 
+function isNotFound(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'status' in error && error.status === 404
+}
+
 function textField(record: JsonRecord, key: string, fallback = ''): string {
   const value = record[key]
   return typeof value === 'string' ? value : fallback
@@ -251,9 +255,15 @@ export class LandnamSync implements SyncAdapter {
       throw new Error('This field has changes waiting to sync. Reconnect and try again.')
     }
 
+    let world: JsonRecord
     try {
-      const world = await this.client.collection('voxel_worlds')
-        .getFirstListItem(this.worldFilter(userId, id))
+      world = await this.client.collection('voxel_worlds').getFirstListItem(filter)
+    } catch (error) {
+      if (isNotFound(error)) return null
+      throw new Error('Could not load this field. Reconnect and try again.', { cause: error })
+    }
+
+    try {
       const structureRecords = await this.client.collection('structures').getFullList({
         filter: this.worldFilter(userId, id),
       })
@@ -277,8 +287,8 @@ export class LandnamSync implements SyncAdapter {
         weather: objectField(world, 'weather', null),
         status: missionStatus(world.status),
       }
-    } catch {
-      return this.fallback.loadMission(id)
+    } catch (error) {
+      throw new Error('Could not restore this field. Reconnect and try again.', { cause: error })
     }
   }
 
@@ -289,9 +299,15 @@ export class LandnamSync implements SyncAdapter {
       return
     }
 
+    const filter = this.worldFilter(userId, state.id)
+    // Never write around a pending snapshot: its later replay would undo this save.
+    if (await getOutbox().has(op => isQueuedUpsert(op, 'voxel_worlds', filter))) {
+      await this.queueMissionUpload(userId, state, roverName)
+      return
+    }
+
     try {
       const worlds = this.client.collection('voxel_worlds')
-      const filter = this.worldFilter(userId, state.id)
       const data: JsonRecord = {
         user: userId,
         target_id: state.id,
@@ -308,14 +324,16 @@ export class LandnamSync implements SyncAdapter {
         weather: state.weather ?? null,
         snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
       }
-      const existing = await worlds.getFirstListItem(filter).catch(() => null)
+      const existing = await worlds.getFirstListItem(filter).catch((error: unknown) => {
+        if (isNotFound(error)) return null
+        throw error
+      })
       if (existing) await worlds.update(textField(existing, 'id'), data)
       else await worlds.create(data)
 
       await this.saveStructures(userId, state.id, state.structures)
     } catch {
-      await this.fallback.saveMission(state, roverName)
-      this.queueMissionUpload(userId, state, roverName)
+      await this.queueMissionUpload(userId, state, roverName)
     }
   }
 
@@ -324,8 +342,8 @@ export class LandnamSync implements SyncAdapter {
    * snapshot is queued for upload and replays when the device reconnects.
    * Keyed upserts mean only the latest snapshot per world/structure is kept.
    */
-  private queueMissionUpload(userId: string, state: MissionState, roverName: string): void {
-    void queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
+  private async queueMissionUpload(userId: string, state: MissionState, roverName: string): Promise<void> {
+    await queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
       user: userId,
       target_id: state.id,
       body_id: state.bodyId,
@@ -339,10 +357,10 @@ export class LandnamSync implements SyncAdapter {
       anomalies: state.anomalies,
       photos: state.photos,
       weather: state.weather ?? null,
-        snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
+      snapshot: state.coreSnapshot ? encodeCoreSnapshot(state.coreSnapshot) : undefined,
     })
     for (const structure of state.structures) {
-      void queueUpsert(
+      await queueUpsert(
         'structures',
         `${this.worldFilter(userId, state.id)} && structure_id = "${filterValue(structure.id)}"`,
         {
