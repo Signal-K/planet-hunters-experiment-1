@@ -12,6 +12,7 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/mis
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
+import SolarMiningPreview from '@/components/game/screens/SolarMiningPreview'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
@@ -280,6 +281,9 @@ export default function MissionOperationRoutes({
 
     case 'mining': {
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
+      if (game.visualFixture === 'solar-mining' && game.mission.customPlan?.zone) {
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} />
+      }
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis

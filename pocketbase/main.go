@@ -53,6 +53,7 @@ func main() {
 	registerSiteLedger(app)
 	registerAgencyProgramme(app)
 	registerTreasuryRoutes(app)
+	registerSolarFieldRoutes(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)

@@ -11,6 +11,8 @@ export type OutboxOp =
   | { type: 'update'; collection: string; id: string; data: Record<string, unknown> }
   /** A world and its complete structure set must replay together. */
   | { type: 'field-save'; id: string; filter: string; user: string; data: Record<string, unknown>; structures: Record<string, unknown>[] }
+  /** A versioned solar field and its rover/cargo, saved as one document. */
+  | { type: 'solar-field'; id: string; user: string; site: string; revision: number; state: Record<string, unknown> }
   /** Create-or-update keyed by a PocketBase filter (e.g. one voxel world per user + target). */
   | { type: 'upsert'; collection: string; id: string; filter: string; data: Record<string, unknown> }
   /** A Landnam custom-route call (community API). `body.id` is the client-generated idempotency key. */
@@ -99,61 +101,86 @@ function openDb(): Promise<IDBDatabase> {
   })
 }
 
-function readMirror(): OutboxItem[] {
+interface StoredQueue { version: number; items: OutboxItem[] }
+
+function storedQueue(value: unknown): StoredQueue | null {
+  if (Array.isArray(value)) return { version: 0, items: value as OutboxItem[] }
+  if (value && typeof value === 'object' && 'version' in value && 'items' in value
+    && typeof value.version === 'number' && Number.isSafeInteger(value.version) && Array.isArray(value.items)) {
+    return value as StoredQueue
+  }
+  return null
+}
+
+function readMirror(): StoredQueue | null {
   try {
     const raw = window.localStorage.getItem(MIRROR_KEY)
-    return raw ? (JSON.parse(raw) as OutboxItem[]) : []
+    return raw ? storedQueue(JSON.parse(raw)) : null
   } catch {
-    return []
+    return null
   }
 }
 
-function writeMirror(items: OutboxItem[]) {
+function writeMirror(queue: StoredQueue): boolean {
   try {
-    if (items.length === 0) window.localStorage.removeItem(MIRROR_KEY)
-    else window.localStorage.setItem(MIRROR_KEY, JSON.stringify(items))
+    // Preserve an empty version too, so a stale DB cannot resurrect a write.
+    window.localStorage.setItem(MIRROR_KEY, JSON.stringify(queue))
+    return true
   } catch {
     // Storage full or blocked: IndexedDB is still the primary copy.
+    return false
   }
 }
 
 /**
  * IndexedDB is the primary store; a localStorage mirror covers Safari private
  * windows and eviction edge cases where one of the two is unavailable. On
- * load the longer of the two wins, so neither copy can silently shrink the
- * queue.
+ * Versioned copies let a successful removal beat a stale longer mirror.
+ * Older unversioned queues still use the longer copy during migration.
  */
 export function browserStore(): OutboxStore {
+  let version = 0
+  let writeTail: Promise<void> = Promise.resolve()
   return {
     async load() {
       const mirror = readMirror()
       try {
         const db = await openDb()
-        const fromDb = await new Promise<OutboxItem[]>((resolve, reject) => {
+        const fromDb = await new Promise<StoredQueue | null>((resolve, reject) => {
           const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(DB_KEY)
-          req.onsuccess = () => resolve((req.result as OutboxItem[] | undefined) ?? [])
+          req.onsuccess = () => resolve(storedQueue(req.result))
           req.onerror = () => reject(req.error)
         })
         db.close()
-        return fromDb.length >= mirror.length ? fromDb : mirror
+        const candidates = [fromDb, mirror].filter((item): item is StoredQueue => item !== null)
+        candidates.sort((a, b) => b.version - a.version || b.items.length - a.items.length)
+        version = candidates[0]?.version ?? 0
+        return candidates[0]?.items ?? []
       } catch {
-        return mirror
+        version = mirror?.version ?? 0
+        return mirror?.items ?? []
       }
     },
     async save(items) {
-      writeMirror(items)
-      try {
-        const db = await openDb()
-        await new Promise<void>((resolve, reject) => {
-          const tx = db.transaction(DB_STORE, 'readwrite')
-          tx.objectStore(DB_STORE).put(items, DB_KEY)
-          tx.oncomplete = () => resolve()
-          tx.onerror = () => reject(tx.error)
-        })
-        db.close()
-      } catch {
-        // The mirror already holds the queue.
-      }
+      const copy = JSON.parse(JSON.stringify(items)) as OutboxItem[]
+      const write = writeTail.catch(() => {}).then(async () => {
+        const queue = { version: ++version, items: copy }
+        const mirrored = writeMirror(queue)
+        try {
+          const db = await openDb()
+          await new Promise<void>((resolve, reject) => {
+            const tx = db.transaction(DB_STORE, 'readwrite')
+            tx.objectStore(DB_STORE).put(queue, DB_KEY)
+            tx.oncomplete = () => resolve()
+            tx.onerror = () => reject(tx.error)
+          })
+          db.close()
+        } catch {
+          if (!mirrored) throw new Error('Unable to store offline changes on this device')
+        }
+      })
+      writeTail = write
+      return write
     },
   }
 }
@@ -221,8 +248,14 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
         return true
       })
     }
-    items.push({ id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false })
-    await persist()
+    const item = { id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false }
+    items.push(item)
+    try { await persist() } catch (error) {
+      // A field save that never reached either durable store must not later
+      // replay as a phantom write after its caller was told it failed.
+      if (op.type === 'solar-field') items = items.filter(queued => queued !== item)
+      throw error
+    }
     emit()
     if (isOnline()) void flush()
   }
@@ -230,13 +263,19 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
   async function run() {
     await ensureLoaded()
     emit()
+    const blockedSolarSites = new Set<string>()
     for (const item of [...items]) {
       // Enqueue can replace a queued snapshot while an earlier request is in
       // flight. Do not execute entries removed from this pass in the meantime.
       if (!items.includes(item)) continue
       // A failed item is deliberately retained and retried. `failed` is a
       // user-visible warning threshold, not a terminal state.
-      if (item.nextAttemptAt > now()) continue
+      const solarKey = item.op.type === 'solar-field' ? `${item.op.user}:${item.op.site}` : null
+      if (solarKey && blockedSolarSites.has(solarKey)) continue
+      if (item.nextAttemptAt > now()) {
+        if (solarKey) blockedSolarSites.add(solarKey)
+        continue
+      }
       const failure = await execute(item.op)
       if (failure === null || failure.kind === 'already-applied') {
         items = items.filter(i => i !== item)
@@ -247,6 +286,7 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
         console.warn('[outbox] dropping write the server rejected', item.op, failure.message)
         items = items.filter(i => i !== item)
       } else {
+        if (solarKey) blockedSolarSites.add(solarKey)
         item.attempts += 1
         item.lastError = failure.message
         item.failed = item.attempts >= MAX_ATTEMPTS

@@ -1,5 +1,7 @@
 'use client'
 
+import { installHighObliqueRover } from '@/lib/takeon/highObliqueRover'
+
 import {
   forwardRef,
   useEffect,
@@ -57,6 +59,9 @@ export interface TakeOnRoverPose {
 }
 
 export interface TakeOnMountHandle {
+  /** Snapshot and durably queue the current field before leaving it. */
+  saveNow: () => Promise<MissionState | null>
+  currentState: () => MissionState | null
   /** Deposit all rover cargo into an adjacent cache. Returns units moved. */
   deposit: () => number
   /** Place a structure on the tile the rover faces. False when the engine refuses (a `buildFailed` event follows). */
@@ -130,10 +135,14 @@ export interface TakeOnMountProps {
    * rebuilt with Landnam biomes gated by the target's habitability and
    * `lifeStage` (SSL-317); otherwise the stock takeon body is mounted.
    */
-  target?: SurfaceTarget
+  target?: SurfaceTarget & { minerals?: readonly string[] }
   zone?: MissionZone
   /** A mission with an explicitly selected solar site must not use unrelated fallback terrain. */
   requireSolarTerrain?: boolean
+  /** Only the dedicated versioned-field adapter or an isolated fixture may create a new field. */
+  allowSolarFieldCreation?: boolean
+  /** Generate Landnam's distinct mineral resources in the solar subsurface. */
+  solarMining?: boolean
   lifeStage?: LifeStage
   /** Read-only visit: pointer input is disabled and no save is written. */
   readOnly?: boolean
@@ -266,6 +275,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   target,
   zone,
   requireSolarTerrain = false,
+  allowSolarFieldCreation = false,
+  solarMining = false,
   lifeStage = 'dormant',
   readOnly = false,
   fieldWeather,
@@ -278,6 +289,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
 }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<RoverGame | null>(null)
+  const snapshotRef = useRef<(() => MissionState | null) | null>(null)
+  const saveRef = useRef<(() => Promise<MissionState | null>) | null>(null)
   const adapter = useMemo(
     () => suppliedAdapter ?? new LandnamSync(),
     [suppliedAdapter]
@@ -353,6 +366,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   }, [readOnly])
 
   useImperativeHandle(ref, () => ({
+    saveNow: () => saveRef.current?.() ?? Promise.resolve(null),
+    currentState: () => snapshotRef.current?.() ?? null,
     deposit: () => gameRef.current?.deposit() ?? 0,
     build: type => gameRef.current?.build(type) ?? false,
     demolish: id => gameRef.current?.demolish(id) ?? false,
@@ -441,13 +456,16 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
       }
     }
 
-    const save = async () => {
+    const save = async (): Promise<MissionState | null> => {
       // Seeded cargo/cache belongs to the host mission, not a persistent
       // field. Saving it here could overwrite a real field under this id.
-      if (readOnly || seedCargoRef.current || seedCacheRef.current) return
+      if (readOnly || seedCargoRef.current || seedCacheRef.current) return null
       const state = snapshot()
       if (state) await adapter.saveMission(state, roverName ?? 'Rover')
+      return state
     }
+    snapshotRef.current = snapshot
+    saveRef.current = save
 
     const reportError = (reason: unknown) => {
       const nextError = reason instanceof Error ? reason : new Error(String(reason))
@@ -463,14 +481,20 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // Landnam's structures (roads, factories, silos…) and its biome
         // palette must exist before a saved mission referencing them resumes.
         registerLandnamSandbox(engine)
+        installHighObliqueRover(engine)
         installLandnamStructureGlyphs(engine)
         if (rover?.id === 'field-probe') installFieldProbeGlyph(engine)
         const currentTarget = targetRef.current
         const catalogBody = currentTarget
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
           : engine.getBody(bodyId)
-        const body = catalogBody ? engine.cloneBody(catalogBody) : undefined
+        let body = catalogBody ? engine.cloneBody(catalogBody) : undefined
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
+        if (solarMining && currentTarget) {
+          const { registerSolarMiningMaterials, solarMiningBody } = await import('@/lib/takeon/solarMining')
+          registerSolarMiningMaterials(engine.registerMaterial)
+          body = solarMiningBody(body, currentTarget.minerals ?? [])
+        }
         if (fieldWeather) body.weather = { ...fieldWeather.rates }
         // Terrain colour from what the body is made of and its likely conditions (terrainColour.ts).
         const look = currentTarget ? terrainLookForTarget(currentTarget) : DEFAULT_TERRAIN_LOOK
@@ -486,7 +510,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const savedSolar = readSolarFieldIdentity(resume?.coreSnapshot)
-        if (requireSolarTerrain && !savedSolar && (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW !== '1' || !currentTarget || resume || (!readOnly && !isSeeded))) {
+        if (requireSolarTerrain && !savedSolar && (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW !== '1' || !currentTarget || resume || (!readOnly && !isSeeded && !allowSolarFieldCreation))) {
           throw new Error('This landing site is unavailable. Pause and try again when solar terrain is available.')
         }
         if (savedSolar) {
@@ -495,13 +519,11 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           const definitions: Parameters<typeof engine.registerMaterial>[0][] = []
           registerSolarFieldMaterials(savedSolar.bodyId, look.ground, definition => { definitions.push(definition) })
           if (savedSolar.palette && (Object.keys(savedSolar.palette).length !== definitions.length || definitions.some(definition => !savedSolar.palette?.[definition.id]))) throw new Error('Incomplete saved solar palette')
-          for (const definition of definitions) engine.registerMaterial({ ...definition, colors: savedSolar.palette?.[definition.id] ?? definition.colors })
+          for (const definition of definitions) engine.registerMaterial({ ...definition, ...(solarMining ? { yields: null } : {}), colors: savedSolar.palette?.[definition.id] ?? definition.colors })
           fieldIdentity = savedSolar
         }
 
-        // Persistent creation stays disabled until offline and remote snapshots
-        // can be reconciled without overwriting a newer field.
-        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && !resume && (readOnly || isSeeded)) {
+        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && !resume && (readOnly || isSeeded || allowSolarFieldCreation)) {
           try {
             const { loadLandingPreview } = await import('@/lib/takeon/solarLandingPreview')
             const { solarField } = await import('@/lib/takeon/solarField')
@@ -512,7 +534,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             const palette: NonNullable<SolarFieldIdentity['palette']> = {}
             engine.registerDem(demId, solarField(landing, look.ground, definition => {
               palette[definition.id] = [...definition.colors]
-              engine.registerMaterial(definition)
+              engine.registerMaterial(solarMining ? { ...definition, yields: null } : definition)
             }))
             identity.palette = palette
             body.dem = demId
@@ -561,7 +583,17 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         }
 
         const handleHostEvent = (event: TakeonHostEvent) => {
+          if (solarMining && event.type === 'mined' && mounted) {
+            // Ordinary stone and regolith are terrain, not contract ore. The
+            // host's exact mineral keys are the only cargo kept in this mode.
+            const cargo = mounted.game.sim.rover.cargo
+            for (const key of Object.keys(cargo)) if (!key.startsWith('landnam:')) delete cargo[key]
+            mounted.game.sim.rover.cargoUsed = Object.values(cargo).reduce<number>((sum, amount) => sum + (amount ?? 0), 0)
+          }
           callbacksRef.current.onEvent?.(event)
+          // The Go simulation emits mined, not stateChanged, for a completed
+          // drill. Save the terrain edit and rover cargo in the same snapshot.
+          if (event.type === 'mined') void save().catch(reportError)
           const notification = notificationForTakeonEvent(event)
           if (notification) void scheduleLandnamPush(notification).catch(reportError)
         }
@@ -679,6 +711,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // Unmount must remain non-blocking; the adapter already retains an
         // offline fallback when the remote write cannot complete.
       })
+      snapshotRef.current = null
+      saveRef.current = null
       resizeObserver?.disconnect()
       document.removeEventListener('visibilitychange', syncVisibility)
       unbindHostEvents?.()
@@ -701,6 +735,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     missionId,
     readOnly,
     requireSolarTerrain,
+    allowSolarFieldCreation,
+    solarMining,
     fieldWeather,
     rover,
     roverName,

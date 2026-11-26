@@ -555,6 +555,13 @@
    "tickets": ["SSL-891"]
   },
   {
+   "id": "solar-field-mining",
+   "name": "Solar field mining preview",
+   "flow": "core-loop",
+   "web": "solar-field-mining",
+   "tickets": ["SSL-891"]
+  },
+  {
    "id": "solar-site-delivery",
    "name": "Solar site delivery",
    "flow": "core-loop",

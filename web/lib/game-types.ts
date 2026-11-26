@@ -528,7 +528,7 @@ export interface GameState {
   /** SSL-559 conflict-free progress ledger (see lib/sync/ledger.ts). */
   syncLedger?: import('./sync/ledger').SyncLedger | null
   /** Dev-preset-only data switch. Never set by normal gameplay or persistence. */
-  visualFixture?: 'tess' | 'asteroid'
+  visualFixture?: 'tess' | 'asteroid' | 'solar-mining'
 }
 
 import type React from 'react'

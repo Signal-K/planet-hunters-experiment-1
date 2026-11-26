@@ -46,4 +46,11 @@ describe('solar field snapshot identity', () => {
     expect(() => assertSolarFieldRestored(saved, JSON.stringify(mined))).not.toThrow()
     expect(() => assertSolarFieldRestored(saved, snapshot)).toThrow('could not be restored safely')
   })
+
+  it('refuses to resume a field if the rover hold was lost', () => {
+    const mined = { ...JSON.parse(snapshot), rover: { cargo: { 'landnam:iron': 1 }, cargoUsed: 1, pos: { x: 1, y: 2 } } }
+    const saved = writeSolarFieldIdentity(JSON.stringify(mined), identity)
+    expect(() => assertSolarFieldRestored(saved, JSON.stringify(mined))).not.toThrow()
+    expect(() => assertSolarFieldRestored(saved, JSON.stringify({ ...mined, rover: { ...mined.rover, cargo: {}, cargoUsed: 0 } }))).toThrow()
+  })
 })

@@ -111,6 +111,23 @@ describe('outbox', () => {
     expect(calls.map(c => (c.type === 'upsert' ? c.data.time : null))).toEqual([1, 2])
   })
 
+  it('never sends a later solar revision before a failed earlier revision', async () => {
+    const h = harness([{ kind: 'rejected', message: 'conflict' }])
+    const save = (site: string, revision: number): OutboxOp => ({
+      type: 'solar-field', id: `operation-${site}-${revision}`, site, user: 'u1', revision, state: {},
+    })
+    await h.outbox.enqueue(save('mars:east', 0))
+    await h.outbox.enqueue(save('mars:east', 1))
+    await h.outbox.enqueue(save('moon:prime', 0))
+    await h.outbox.flush()
+    expect(h.calls.map(op => op.type === 'solar-field' && [op.site, op.revision])).toEqual([['mars:east', 0], ['moon:prime', 0]])
+    await h.outbox.flush()
+    expect(h.calls).toHaveLength(2)
+    h.advance(backoffMs(1))
+    await h.outbox.flush()
+    expect(h.calls.slice(2).map(op => op.type === 'solar-field' && op.revision)).toEqual([0, 1])
+  })
+
   it('reports and discards matching queued writes', async () => {
     const h = harness([])
     const save = (user: string): OutboxOp => ({ type: 'upsert', collection: 'game_states', id: 'ddddddddddddddd', filter: `user = "${user}"`, data: {} })

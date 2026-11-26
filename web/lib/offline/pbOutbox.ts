@@ -28,7 +28,7 @@ export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
   }
   const message = `${error.status} ${error.message} ${JSON.stringify(error.response?.data ?? {})}`
   // A validation failure is deterministic: replaying the same payload cannot succeed.
-  if (error.status === 400 && op.type !== 'field-save') return { kind: 'invalid', message }
+  if (error.status === 400 && op.type !== 'field-save' && op.type !== 'solar-field') return { kind: 'invalid', message }
   return { kind: 'rejected', message }
 }
 
@@ -94,6 +94,14 @@ export async function replayFieldSave(op: FieldSave, worlds: FieldCollection, co
 
 async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> {
   if (op.type === 'http') return executeHttp(op)
+  if (op.type === 'solar-field') {
+    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
+    const result = await pbLandnam.send<{ revision: number }>('/api/solar-fields', {
+      method: 'POST', body: { site: op.site, revision: op.revision, operationId: op.id, state: op.state },
+    })
+    if (result.revision !== op.revision + 1) return { kind: 'rejected', message: 'Unexpected solar field revision' }
+    return null
+  }
   if (op.type === 'field-save') {
     // Never replay one account's field using another account's session.
     if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
