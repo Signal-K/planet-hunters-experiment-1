@@ -92,7 +92,7 @@
    "id": "launch-review",
    "name": "Launch review",
    "flow": "core-loop",
-   "web": "ui-target-picker",
+   "web": "ui-launch-review",
    "native": "launch-review-phone",
    "tickets": [
     "SSL-426",
