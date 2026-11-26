@@ -36,6 +36,7 @@ export const LOGICAL_BACK: Record<Screen, Screen> = {
   market: 'hub',
   refinery: 'hub',
   'mission-history': 'hub',
+  'solar-map': 'hub',
   'narrative-ledger': 'hub',
   'community-research': 'hub',
   'sky-pointing': 'hub',

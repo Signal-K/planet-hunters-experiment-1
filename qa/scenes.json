@@ -715,6 +715,16 @@
    "tickets": []
   },
   {
+   "id": "solar-map",
+   "name": "Solar map",
+   "flow": "core-loop",
+   "web": "ui-solar-map",
+   "native": "",
+   "tickets": [
+    "SSL-892"
+   ]
+  },
+  {
    "id": "missions",
    "name": "Mission Board",
    "flow": "core-loop",

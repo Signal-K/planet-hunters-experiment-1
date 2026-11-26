@@ -113,6 +113,7 @@ export const GAME_ROUTES = [
   { path: '/game/refinery', screen: 'refinery', surface: 'instrument' },
   { path: '/game/launchpad', screen: 'launchpad', surface: 'instrument' },
   { path: '/game/mission-history', screen: 'mission-history', surface: 'instrument' },
+  { path: '/game/solar-map', screen: 'solar-map', surface: 'instrument' },
   { path: '/game/narrative-ledger', screen: 'narrative-ledger', surface: 'instrument' },
   { path: '/game/community-research', screen: 'community-research', surface: 'instrument' },
   { path: '/game/sky-pointing', screen: 'sky-pointing', surface: 'instrument' },

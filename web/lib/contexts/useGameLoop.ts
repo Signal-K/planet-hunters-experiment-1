@@ -364,7 +364,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }
     setState(s => {
       const isOrionidsEntry = !!entryShower
-      if (s.screen !== 'missions' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
+      if (s.screen !== 'missions' && s.screen !== 'solar-map' && s.screen !== 'launchpad' && s.screen !== 'mission-planner' && !isOrionidsEntry) return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission

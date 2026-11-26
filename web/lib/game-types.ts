@@ -114,6 +114,7 @@ export type Screen =
   | 'probe-watch'
   | 'instrument-hub'
   | 'mission-history'
+  | 'solar-map'
   | 'narrative-ledger'
   | 'community-research'
   | 'sky-pointing'

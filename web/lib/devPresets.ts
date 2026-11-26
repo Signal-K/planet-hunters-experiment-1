@@ -179,6 +179,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-solar-map', label: 'Solar map', hint: 'Map-first entry: pick a body, see its agency and client missions. Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-community-research-leonids', label: 'Community research: Leonids', hint: 'Explorer path in the Leonids week, pinned to 16 Nov 09:00 UTC (override with &at=). The event panel counts down to the peak and the event step leads the path', stage: 'free-ops' },
@@ -1206,6 +1207,19 @@ function fixture(name: string): Partial<GameState> | null {
       return {
         screen: 'market',
         player: { ...POST_ONBOARDING_PLAYER, placed: [...POST_ONBOARDING_PLAYER.placed, 'market', 'surface-silo'], stash: { iron: 20, nickel: 10, silicates: 5 }, },
+        tutorial: false,
+        doneSteps: TRAINING_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-solar-map':
+      return {
+        screen: 'solar-map',
+        player: { ...POST_ONBOARDING_PLAYER },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

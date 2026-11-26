@@ -34,6 +34,7 @@ const SCREEN_LIST = {
   'probe-watch': true,
   'instrument-hub': true,
   'mission-history': true,
+  'solar-map': true,
   'narrative-ledger': true,
   'community-research': true,
   'sky-pointing': true,

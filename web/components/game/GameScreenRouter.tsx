@@ -55,6 +55,7 @@ const loadProbeScanScreen = () => import('@/components/game/screens/ProbeScanScr
 const loadSaturnStormSearchScreen = () => import('@/components/game/screens/SaturnStormSearchScreen')
 const loadAsteroidDiscoveryScreen = () => import('@/components/game/screens/AsteroidDiscoveryScreen')
 const loadMissionHistoryScreen = () => import('@/components/game/screens/MissionHistoryScreen')
+const loadSolarMapScreen = () => import('@/components/game/screens/SolarMapScreen')
 const loadCommunityResearchScreen = () => import('@/components/game/screens/CommunityResearchScreen')
 const loadNarrativeLedgerScreen = () => import('@/components/game/screens/NarrativeLedgerScreen')
 
@@ -86,6 +87,7 @@ const ProbeScanScreen = dynamic(loadProbeScanScreen, { loading: ScreenLoading })
 const SaturnStormSearchScreen = dynamic(loadSaturnStormSearchScreen, { loading: ScreenLoading })
 const AsteroidDiscoveryScreen = dynamic(loadAsteroidDiscoveryScreen, { loading: ScreenLoading })
 const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: ScreenLoading })
+const SolarMapScreen = dynamic(loadSolarMapScreen, { loading: ScreenLoading })
 const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
@@ -475,6 +477,23 @@ function ScreenBody({
         onClose={() => game.go('hub')}
         onSell={hasAgencyUnlock(game.player, 'exchange') ? () => game.go('market') : undefined}
       />
+
+    case 'solar-map':
+      return (
+        <PageSurface testId="solar-map-page" ariaLabel="Solar system">
+          <SolarMapScreen
+            catalog={game.catalog}
+            player={game.player}
+            onBase={() => game.go('hub')}
+            onAccept={(missionId, bodyId) => {
+              const mission = game.catalog.missions.find(m => m.id === missionId) ?? game.player.dailyClientPool?.missions.find(m => m.id === missionId)
+              game.onPickMission(missionId)
+              // A fixed-destination mission already knows where it goes; the rest fly to the place that was tapped.
+              if (mission && !mission.targetId) game.onPickTarget(bodyId)
+            }}
+          />
+        </PageSurface>
+      )
 
     case 'mission-history':
       // Mission Log is its own page with its own panel, not a tray over the Base.

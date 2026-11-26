@@ -1,0 +1,27 @@
+.screen { position: relative; display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; min-height: 100%; padding: 12px 16px 16px; box-sizing: border-box; color: var(--ln-world-hull-lit); background: var(--ln-world-night-top); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.head h1 { margin: 0; font: 800 18px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.base { min-height: 44px; padding: 0 16px; font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; color: inherit; background: transparent; border: 2px solid currentColor; border-radius: 12px; }
+.field { position: relative; flex: 1 1 46dvh; min-height: 240px; overflow: hidden; border-radius: 14px; background: var(--ln-world-night-top); }
+.panel { display: flex; flex-direction: column; gap: 8px; max-height: 44dvh; overflow: auto; padding: 14px; border-radius: 16px; background: color-mix(in srgb, var(--ln-world-night-top) 92%, white 8%); border: 1px solid color-mix(in srgb, var(--ln-world-glass) 45%, transparent); }
+.panel h2 { margin: 0; display: flex; align-items: baseline; gap: 10px; font-size: 18px; }
+.panel h2 small { font-size: 14px; opacity: .75; }
+.panel h3 { margin: 0 0 6px; font: 800 14px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.brief, .none, .moons, .offline { margin: 0; font-size: 14px; line-height: 1.4; }
+.none { opacity: .7; }
+.moons button { min-height: 44px; margin: 0 6px; padding: 0 12px; color: inherit; background: transparent; border: 1px solid currentColor; border-radius: 10px; font-size: 14px; }
+.group ul { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mission { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; width: 100%; min-height: 56px; padding: 8px 12px; text-align: left; color: inherit; background: color-mix(in srgb, var(--ln-world-glass) 14%, transparent); border: 2px solid transparent; border-radius: 12px; font-size: 14px; }
+.mission[data-kind='agency'] { border-color: var(--ln-cyan, #4fd0e0); }
+.mission[data-kind='client'] { border-color: var(--ln-amber, #f0b24a); }
+.missionTitle { font-weight: 800; }
+.missionMeta { grid-column: 1; opacity: .75; }
+.missionPay { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-weight: 800; }
+
+/* Short landscape screens: the map and the place's missions sit side by side so neither is squeezed. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .screen { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 8px 12px; height: 100dvh; min-height: 0; }
+  .head { grid-column: 1 / -1; }
+  .field { flex: none; min-height: 0; height: 100%; }
+  .panel { max-height: none; min-height: 0; }
+}

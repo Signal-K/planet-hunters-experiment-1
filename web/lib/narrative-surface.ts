@@ -34,6 +34,7 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   refinery: 'service',
   hangar: 'service',
   'mission-history': 'service',
+  'solar-map': 'service',
   'narrative-ledger': 'service',
   'community-research': 'service',
   'sky-pointing': 'service',
