@@ -429,7 +429,7 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onComplete={game.onDeliveryUnloadComplete}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
-          useTakeonDropoff={game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE}
+          useTakeonDropoff={game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE || (game.mission.customPlan?.work === 'deliver' && game.mission.customPlan.zone !== undefined && game.mission.customPlan.targetId === berth.id)}
           rocketImageSrc={rocketDisplay.img}
         />
       )

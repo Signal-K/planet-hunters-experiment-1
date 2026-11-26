@@ -8,6 +8,8 @@ import { MISSIONS, ROCKET_IDS, TARGETS } from '@/lib/data'
 import { sectorDeposits, sectorIds } from '@/lib/probes/survey-probe'
 import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID, showerRunMission } from '@/lib/data/missions'
 import { isSandboxName, resolveSandbox } from '@/lib/sandbox'
+import { missionFromPlan, type MissionPlan } from '@/lib/mission-planner'
+import { MINERAL_META } from '@/lib/data/minerals'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const WORKSHOP_MISSION = { ...(MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres') ?? FIRST_MISSION), id: 'qa-workshop-relay', title: 'Workshop relay fit check', targetId: 'lutetia', requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 8, drill_tier: 2, max_orbit: 6 } }
@@ -117,6 +119,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
       { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
       { key: 'transport-delivery', label: 'Delivery', hint: 'Cargo transfer at Vesta with mixed cargo (ordered + leftover minerals)', stage: 'tutorial' },
+      { key: 'solar-site-delivery', label: 'Solar site delivery', hint: 'Experimental Mercury descent and rover cargo delivery', stage: 'free-ops' },
       { key: 'transport-delivery-timed', label: 'Timed delivery', hint: 'Regular two-leg delivery at Vesta with automated unloading', stage: 'free-ops' },
       { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
@@ -590,6 +593,19 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
+
+    case 'solar-site-delivery': {
+      const plan: MissionPlan = { id: 'self-plan-fixture-solar', work: 'deliver', targetId: 'mercury', mineral: 'iron', amount: 3, createdAt: 100, zone: 'east' }
+      const target = TARGETS.find(body => body.id === plan.targetId)!
+      const mission = missionFromPlan(plan, target, MINERAL_META)
+      return {
+        screen: 'landing', tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: plan.id, targetId: target.id, deliveryTargetId: target.id,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: { iron: 3 }, popup: null,
+        player: { ...POST_ONBOARDING_PLAYER, missionPlans: { [plan.id]: plan }, activeMission: { id: plan.id, label: mission.title, mission, target }, missionRunId: 'solar-site-fixture', missionPhase: 'landing', headingToDelivery: true, landingStartedAt: Date.now() },
+      }
+    }
 
     case 'transport-delivery-timed': {
       const delivery = fixture('transport-delivery')!

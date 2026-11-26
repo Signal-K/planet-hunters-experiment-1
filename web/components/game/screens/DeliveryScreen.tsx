@@ -56,6 +56,7 @@ export default function DeliveryScreen({
   )
   const cargoUnits = cargoEntries.reduce((total, [, amount]) => total + amount, 0)
   const transportFee = mission.payout.francs - Math.round(mission.payout.francs * 0.5)
+  const ownDelivery = mission.customPlan?.work === 'deliver'
 
   useEffect(() => {
     setNow(Date.now())
@@ -177,10 +178,10 @@ export default function DeliveryScreen({
             <SceneMeterHead kicker={roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'} value={roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'} />
           </div>
           {manifest}
-          {fee}
+          {!ownDelivery && fee}
           {dumpError && <SceneNote>{dumpError}</SceneNote>}
-          {dumped && !roverReturned && <SceneNote>Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.</SceneNote>}
-          {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth and settle the transport fee.</SceneNote>}
+          {dumped && !roverReturned && <SceneNote>Cargo unloaded. Return the empty rover to the ship before launch.</SceneNote>}
+          {roverReturned && <SceneNote>Rover secured. The ship is ready to launch for Earth.</SceneNote>}
         </SceneCard>}
         actions={<SceneActions>
           {!dumped ? (

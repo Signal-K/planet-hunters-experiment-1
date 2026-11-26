@@ -12,6 +12,8 @@ import { communityBonusRate } from '@/lib/research/marketplace'
 import { travelDurationMs, MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
 import { MISSION_ZONES, type MissionZone } from '@/lib/data/mission-zone'
+import { supportsSolarField } from '@/lib/takeon/solarField'
+import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 
 export type PlannedWork = 'mine' | 'survey' | 'deliver'
 export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number; zone?: MissionZone }
@@ -71,6 +73,8 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   const issues: string[] = []
   if (!player.freeOperations) issues.push('Finish training to plan your own mission.')
   if (!target) issues.push('Choose a reachable destination for this work.')
+  if (plan.zone !== undefined && (plan.work !== 'deliver' || !supportsSolarField(plan.targetId))) issues.push('This landing site is only available for supported delivery destinations.')
+  if (plan.zone !== undefined && plan.work === 'deliver' && !LANDNAM_TO_TAKEON_MINERAL[plan.mineral]) issues.push('Choose cargo supported by the surface rover.')
   if (!Number.isInteger(plan.amount) || plan.amount < 1 || plan.amount > (plan.work === 'survey' ? 24 : 999)) issues.push(plan.work === 'survey' ? 'Choose 1–24 sectors.' : 'Choose a whole amount from 1 to 999.')
   if (plan.work !== 'survey' && !plannerMinerals(player, target, catalog, plan.work).includes(plan.mineral)) issues.push('Choose available ore for this work.')
   if (plan.work === 'deliver' && (player.stash?.[plan.mineral] ?? 0) < plan.amount) issues.push(`Earth stash has ${player.stash?.[plan.mineral] ?? 0}; delivery needs ${plan.amount}.`)

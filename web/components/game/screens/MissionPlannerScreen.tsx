@@ -7,6 +7,8 @@ import { formatCurrency } from '@/lib/format'
 import { plannerTargets, plannerMinerals, planQuote, deliveryCache, type MissionPlan, type PlannedWork } from '@/lib/mission-planner'
 import { probeSectorHours, buildingLevel } from '@/lib/data/building-levels'
 import { miningIntelligence } from '@/lib/probes/mining-intelligence'
+import { supportsSolarField } from '@/lib/takeon/solarField'
+import { MISSION_ZONES, type MissionZone } from '@/lib/data/mission-zone'
 import { pendingMiningPlan, clearMiningPlan } from '@/lib/mission-planner-nav'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './MissionPlannerScreen.module.css'
@@ -38,6 +40,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
     const bodies = plannerTargets(player, catalog, next.work)
     const body = bodies.find(target => target.id === next.targetId) ?? bodies[0]
     next.targetId = body?.id ?? ''
+    if (next.work !== 'deliver' || !supportsSolarField(next.targetId)) delete next.zone
     const ores = plannerMinerals(player, body, catalog, next.work)
     if (!ores.includes(next.mineral)) next.mineral = ores[0] ?? ''
     if (next.work === 'survey') next.amount = Math.min(24, Math.max(1, next.amount))
@@ -57,6 +60,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
         <details><summary>Saved plans</summary><label>Saved plans<select aria-label="Saved plans" value={savedId && player.missionPlans?.[savedId] ? savedId : ''} onChange={event => { const plan = player.missionPlans?.[event.target.value]; if (plan) { setDraft(plan); setSavedId(plan.id); setView(mapView(plan.targetId)) } else setSavedId(null) }}><option value="">New plan</option>{saved.map(plan => <option key={plan.id} value={plan.id}>{plan.work} · {catalog.targets.find(target => target.id === plan.targetId)?.name ?? plan.targetId} · {plan.amount}</option>)}</select></label></details>
         <fieldset><legend>Work</legend><div className={styles.work}>{(['mine', 'survey', 'deliver'] as PlannedWork[]).map(work => <button key={work} data-testid={`planner-work-${work}`} aria-pressed={draft.work === work} onClick={() => change({ work, amount: work === 'survey' ? 6 : 3 })}>{work}</button>)}</div></fieldset>
         <label>Destination<select aria-label="Destination" data-testid="planner-destination" value={draft.targetId} onChange={event => change({ targetId: event.target.value })}>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · orbit {target.orbit}</option>)}</select></label>
+        {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && draft.work === 'deliver' && supportsSolarField(draft.targetId) && <label>Landing site<select aria-label="Landing site" data-testid="planner-zone" value={draft.zone ?? ''} onChange={event => change({ zone: event.target.value ? event.target.value as MissionZone : undefined })}><option value="">Standard delivery</option>{MISSION_ZONES.map(site => <option key={site} value={site}>{({ prime: 'Prime meridian · 0°', east: 'East · 90°', opposite: 'Far side · 180°', west: 'West · 90°' })[site]}</option>)}</select></label>}
         {draft.work === 'mine' && intelligence && <details className={styles.intelligence} data-testid="planner-probe-findings"><summary>Probe findings</summary>
           <h2>Probe findings</h2>
           {intelligence.sectors.length ? <>

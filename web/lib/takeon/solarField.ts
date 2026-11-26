@@ -5,6 +5,7 @@ import { mixHex, type Ramp } from './terrainColour'
 
 // Append-only: ids are persisted in field snapshots and must fit in a byte.
 const BODIES = ['mercury', 'venus', 'mars', 'eros', 'vesta', 'itokawa', 'ryugu', 'psyche', 'bennu', 'ceres', 'lutetia', 'europa'] as const
+export function supportsSolarField(bodyId: string): boolean { return BODIES.includes(bodyId as typeof BODIES[number]) }
 const GROUPS = ['regolith', 'ice', 'ice-ridges', 'tundra', 'ocean', 'grassland', 'drylands', 'methane-lakes', 'sulfur-plains', 'highlands', 'dark-regolith', 'volcanic-highlands'] as const
 const BIOMES: Record<string, typeof GROUPS[number]> = {
   regolith: 'regolith', 'red-desert': 'regolith', dunes: 'regolith', 'metal-regolith': 'regolith',

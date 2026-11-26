@@ -42,6 +42,10 @@ export function applyResearchLanding(state: GameState): GameState {
  */
 export function applyLandingTouchdown(state: GameState): GameState {
   if (state.screen !== 'landing' || state.player.landingStartedAt == null) return state
+  const plan = state.player.activeMission?.mission?.customPlan
+  if (state.player.headingToDelivery && state.deliveryTargetId && state.lastCargo && plan?.work === 'deliver' && plan.zone !== undefined && plan.targetId === state.deliveryTargetId) {
+    return { ...state, screen: 'delivery', player: { ...state.player, missionPhase: 'delivery', landingStartedAt: undefined, deliveryUnloadStartedAt: Date.now(), hasLanded: true } }
+  }
   return {
     ...state,
     screen: 'mining',

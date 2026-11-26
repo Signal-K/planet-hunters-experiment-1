@@ -5,6 +5,7 @@ import { DEFAULT_STATE, mergeRemoteState, normalizeAndRepair } from './game-stat
 import { buildRuntimeCatalog } from './runtimeCatalog'
 import { plannerTargets, planQuote, missionFromPlan, loadPlannedCargo, deliveryCache, sanitizeMissionPlans, type MissionPlan } from './mission-planner'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from './systems/DeliverySystem'
+import { applyLandingTouchdown } from './systems/LandingSystem'
 import { applyReturnArrived } from './systems/MiningSystem'
 import { placeProbe, startProbeScan, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
 const plan: MissionPlan = { id: 'self-plan-test', targetId: 'mercury', work: 'deliver', mineral: 'iron', amount: 3, createdAt: 100 }
@@ -12,6 +13,25 @@ const target = STATIC_CATALOG.targets.find(target => target.id === plan.targetId
 const player = () => ({ ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], stash: { iron: 12 } })
 
 describe('self-planned missions', () => {
+  it('resumes a chosen delivery site through descent and settles its cargo once', () => {
+    const sitePlan = { ...plan, zone: 'east' as const }
+    const mission = missionFromPlan(sitePlan, target, STATIC_CATALOG.minerals)
+    const state = { ...structuredClone(DEFAULT_STATE), screen: 'fab' as const, missionId: plan.id, targetId: target.id, player: player() }
+    const loaded = loadPlannedCargo(state, mission)!
+    const flying = { ...loaded, screen: 'flight' as const, player: { ...loaded.player, activeMission: { id: plan.id, label: 'Delivery', mission, target }, missionRunId: 'site-run' } }
+    const descending = applyDeliveryArrived(flying, 2000)
+    expect(descending.screen).toBe('landing')
+    expect(descending.player.activeMission?.mission?.customPlan?.zone).toBe('east')
+    const restored = normalizeAndRepair(JSON.parse(JSON.stringify(descending)))
+    expect(restored.player.activeMission?.mission?.customPlan?.zone).toBe('east')
+    const unloading = applyLandingTouchdown(restored)
+    expect(unloading.screen).toBe('delivery')
+    expect(unloading.lastCargo).toEqual({ iron: 3 })
+    const returning = applyDeliveryUnloadComplete(unloading, 4000, 3000)
+    expect(deliveryCache(returning.player, target.id)).toEqual({ iron: 3 })
+    expect(applyDeliveryUnloadComplete(returning, 4000, 3000)).toBe(returning)
+    expect(returning.player.stash?.iron).toBe(9)
+  })
   it('offers reachable bodies and honest work-specific requirements and returns', () => {
     const p = player()
     const far = { ...target, id: 'too-far', orbit: 100 }

@@ -548,6 +548,13 @@
    "tickets": []
   },
   {
+   "id": "solar-site-delivery",
+   "name": "Solar site delivery",
+   "flow": "core-loop",
+   "web": "solar-site-delivery",
+   "tickets": ["SSL-891"]
+  },
+  {
    "id": "transport-delivery",
    "name": "Transport delivery",
    "flow": "core-loop",
