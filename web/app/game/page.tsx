@@ -16,7 +16,7 @@ function savedScreen(): Screen {
     const raw = window.localStorage.getItem(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
     return returningScreen(raw)
   } catch {
-    return 'hub'
+    return 'missions'
   }
 }
 

@@ -873,6 +873,8 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .freeDock > .dockHead { grid-column: 1; }
 .freeDock > .freeAction { grid-column: 2; grid-row: auto; }
 .freeDock .dockBrief { text-align: left; }
+.agencyOverview { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0; color: var(--ln-text); font: 600 14px/1.35 var(--ln-font-body); }
+.agencyOverview strong { color: var(--ln-text); }
 .freeDock { left: 18px; right: auto; bottom: 18px; transform: none; width: auto; max-width: min(400px, calc(100% - 36px)); background: rgba(9, 24, 43, .72); border: 0; border-left: 3px solid #82c6df; border-radius: 0; }
 .gx[data-location-open] { right: min(380px, 39%); }
 .locationPanel { position: absolute; z-index: 2; inset: 0 0 0 auto; width: min(380px, 39%); display: flex; flex-direction: column; gap: 18px; padding: 22px 20px; color: #f4efe4; background: linear-gradient(155deg, #1b3048, #101b30 75%); border-left: 1px solid rgba(175, 221, 240, .3); }
@@ -1090,8 +1092,8 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .gx[data-view='system'] .gxSun { left: 15% !important; top: 12% !important; }
   .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 25% !important; top: 23% !important; }
   .gx[data-view='system'] [data-testid='map-node-venus'] { left: 62% !important; top: 25% !important; }
-  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 25% !important; top: 36% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 62% !important; top: 38% !important; }
+  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 50% !important; top: 36% !important; }
+  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 62% !important; top: 43% !important; }
   .gx[data-view='system'] [data-testid='map-belt'] { left: 30% !important; top: 49% !important; }
   .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 25% !important; top: 60% !important; }
   .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 62% !important; top: 61% !important; }
