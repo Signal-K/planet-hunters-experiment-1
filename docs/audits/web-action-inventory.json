@@ -351,17 +351,6 @@
     "absolutePositions": 0
   },
   {
-    "file": "web/components/game/PixiGalaxyStarMap.tsx",
-    "actions": [
-      "onOpenSol",
-      "onOpenSolRef",
-      "onSelect",
-      "onSelectRef"
-    ],
-    "buttons": 0,
-    "absolutePositions": 0
-  },
-  {
     "file": "web/components/game/PushOptIn.tsx",
     "actions": [
       "onClick"

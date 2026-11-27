@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 31,
     "nativeScreenCases": 25,
-    "qaScenes": 112,
+    "qaScenes": 113,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 31,
     "authoringSources": 71,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 167,
-    "webGameComponents": 122,
+    "webGameComponents": 121,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -809,6 +809,15 @@
         "web": "transport-mining",
         "native": "transport-mining-live",
         "tickets": []
+      },
+      {
+        "id": "solar-site-mining",
+        "name": "Solar site mining",
+        "flow": "core-loop",
+        "web": "solar-site-mining",
+        "tickets": [
+          "SSL-891"
+        ]
       },
       {
         "id": "solar-site-delivery",
@@ -2659,7 +2668,6 @@
       "web/components/game/ObservatoryChart.tsx",
       "web/components/game/OrionidsTeaser.tsx",
       "web/components/game/PanHint.tsx",
-      "web/components/game/PixiGalaxyStarMap.tsx",
       "web/components/game/PushOptIn.tsx",
       "web/components/game/RearrangeBar.tsx",
       "web/components/game/SceneErrorBoundary.tsx",
@@ -2913,6 +2921,7 @@
     "unknownSlots": [],
     "qaWithoutWebPreset": [],
     "qaWithoutNativeScene": [
+      "solar-site-mining",
       "solar-site-delivery"
     ],
     "scenesWithoutObjects": [],

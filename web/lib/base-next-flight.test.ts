@@ -38,7 +38,7 @@ describe('Base next flight', () => {
   })
 
   it('directs missing and worn pads to the required work before setup', () => {
-    expect(baseNextFlight({ ...player, placed: [] }, null, null, next).screen).toBe('build')
+    expect(baseNextFlight({ ...player, placed: [] }, null, null, next).screen).toBe('hub')
     expect(baseNextFlight({ ...player, padLaunches: 10 }, mission, target, next).cta).toBe('Service pad')
   })
 
