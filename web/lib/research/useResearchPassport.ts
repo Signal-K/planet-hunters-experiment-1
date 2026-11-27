@@ -5,23 +5,6 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { weekKey } from './paths'
 import type { ResearchStamps } from './stamps'
 import type { PassportResponse } from './passport'
-
-export function passportFixture(preset: string, now: number, stamps: ResearchStamps | undefined): PassportResponse | null {
-  if (['ui-probe-receipt', 'ui-tess-receipt', 'ui-radio-receipt'].includes(preset)) {
-    const view = passportFixture('ui-research-passport', now, stamps)!
-    return { ...view, confirmedStamps: stamps ?? {} }
-  }
-  if (!['ui-research-passport', 'ui-research-passport-unconfirmed', 'ui-research-passport-missed', 'ui-research-passport-empty'].includes(preset)) return null
-  const week = weekKey(now)
-  const prior = weekKey(now - 7 * 86_400_000)
-  const mine = Object.entries(stamps ?? {}).filter(([day, kinds]) => day >= week && day <= new Date(now).toISOString().slice(0, 10) && kinds.length).length
-  const reached = preset === 'ui-research-passport' || preset === 'ui-research-passport-missed'
-  const confirmed = preset === 'ui-research-passport' ? mine : 0
-  return { weeks: [
-    { week, total: reached ? 100 : preset.endsWith('empty') ? 24 : 99, mine: confirmed, goal: 100, reachedAt: reached ? now : null, earned: reached && confirmed > 0 },
-    { week: prior, total: 112, mine: preset === 'ui-research-passport' ? 1 : 0, goal: 100, reachedAt: Date.parse(`${week}T00:00:00Z`) - 1, earned: preset === 'ui-research-passport' },
-  ] }
-}
 export function useResearchPassport(active: boolean, stamps: ResearchStamps | undefined, userId: string | null = null) {
   const scope = userId ?? 'guest'
   const [owner, setOwner] = useState(scope)
@@ -48,4 +31,21 @@ export function useResearchPassport(active: boolean, stamps: ResearchStamps | un
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, signature, scope])
   return { data: owner === scope ? data : null, status }
+}
+
+function passportFixture(preset: string, now: number, stamps: ResearchStamps | undefined): PassportResponse | null {
+  if (['ui-probe-receipt', 'ui-tess-receipt', 'ui-radio-receipt'].includes(preset)) {
+    const view = passportFixture('ui-research-passport', now, stamps)!
+    return { ...view, confirmedStamps: stamps ?? {} }
+  }
+  if (!['ui-research-passport', 'ui-research-passport-unconfirmed', 'ui-research-passport-missed', 'ui-research-passport-empty'].includes(preset)) return null
+  const week = weekKey(now)
+  const prior = weekKey(now - 7 * 86_400_000)
+  const mine = Object.entries(stamps ?? {}).filter(([day, kinds]) => day >= week && day <= new Date(now).toISOString().slice(0, 10) && kinds.length).length
+  const reached = preset === 'ui-research-passport' || preset === 'ui-research-passport-missed'
+  const confirmed = preset === 'ui-research-passport' ? mine : 0
+  return { weeks: [
+    { week, total: reached ? 100 : preset.endsWith('empty') ? 24 : 99, mine: confirmed, goal: 100, reachedAt: reached ? now : null, earned: reached && confirmed > 0 },
+    { week: prior, total: 112, mine: preset === 'ui-research-passport' ? 1 : 0, goal: 100, reachedAt: Date.parse(`${week}T00:00:00Z`) - 1, earned: preset === 'ui-research-passport' },
+  ] }
 }

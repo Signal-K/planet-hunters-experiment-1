@@ -366,7 +366,6 @@ function ScreenBody({
       return <SurfaceSiloPanel
         stash={game.player.stash}
         buildingLevels={game.player.buildingLevels}
-        subsurfaceBuilt={game.player.subsurfaceBuilt}
         onClose={() => game.go('hub')}
       />
 

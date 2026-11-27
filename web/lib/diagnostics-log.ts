@@ -5,21 +5,13 @@ const MAX_LOGS = 60
 const logs: string[] = []
 let installed = false
 
-export function recordLog(kind: string, parts: unknown[]) {
-  const text = parts.map(part => {
-    if (part instanceof Error) return `${part.name}: ${part.message}`
-    if (typeof part === 'string') return part
-    try { return JSON.stringify(part) } catch { return String(part) }
-  }).join(' ').slice(0, 400)
-  logs.push(`${new Date().toISOString().slice(11, 23)} ${kind} ${text}`)
-  if (logs.length > MAX_LOGS) logs.shift()
-}
-
 export function getLogs(): readonly string[] {
   return logs
 }
 
-export function installLogCapture() {
+installLogCapture()
+
+function installLogCapture() {
   if (installed || typeof window === 'undefined') return
   installed = true
   for (const kind of ['error', 'warn'] as const) {
@@ -33,4 +25,12 @@ export function installLogCapture() {
   window.addEventListener('unhandledrejection', event => recordLog('unhandledrejection', [event.reason]))
 }
 
-installLogCapture()
+function recordLog(kind: string, parts: unknown[]) {
+  const text = parts.map(part => {
+    if (part instanceof Error) return `${part.name}: ${part.message}`
+    if (typeof part === 'string') return part
+    try { return JSON.stringify(part) } catch { return String(part) }
+  }).join(' ').slice(0, 400)
+  logs.push(`${new Date().toISOString().slice(11, 23)} ${kind} ${text}`)
+  if (logs.length > MAX_LOGS) logs.shift()
+}

@@ -8,13 +8,8 @@
 
 export const TESS_SETTLED_LABELS = ['planet', 'not_planet'] as const
 export const ASTEROID_SETTLED_LABELS = ['likely_real', 'likely_artifact'] as const
-export const OPEN_CONSENSUS_LABELS = ['', 'unsure'] as const
 
 export type SettledLabel = (typeof TESS_SETTLED_LABELS)[number] | (typeof ASTEROID_SETTLED_LABELS)[number]
-
-export function readAnomalyLabel(value: unknown): string {
-  return String(value ?? '').trim().toLowerCase()
-}
 
 export function isOpenConsensusValue(
   value: unknown,
@@ -65,3 +60,9 @@ export const TESS_SUBJECT_SORT = 'id'
  */
 export const REVIEWABLE_ASTEROID_CANDIDATE_FILTER = 'resolved = false'
 export const ASTEROID_CANDIDATE_SORT = '-created'
+
+const OPEN_CONSENSUS_LABELS = ['', 'unsure'] as const
+
+function readAnomalyLabel(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase()
+}

@@ -87,32 +87,6 @@ function dockClass(base: string, className?: string): string {
   return [base, className].filter(Boolean).join(' ')
 }
 
-/** Same arrow button the base dock uses. */
-export function DockArrowButton({
-  direction,
-  className,
-  ...rest
-}: { direction: 'left' | 'right' } & ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button {...rest} type="button" className={dockClass('scene-dock-arrow', className)}>
-      <DockArrow direction={direction} />
-    </button>
-  )
-}
-
-/** Light dock word button (Build, Hub, order readout). */
-export function DockWordButton({
-  className,
-  children,
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { children?: ReactNode }) {
-  return (
-    <button {...rest} type="button" className={dockClass('scene-dock-word', className)}>
-      {children}
-    </button>
-  )
-}
-
 function MissionIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -254,5 +228,31 @@ export function BaseDock({
       </div>
       <DockArrowButton direction="right" data-testid="hub-dock-next" onClick={onNext} aria-label="Next" />
     </nav>
+  )
+}
+
+/** Same arrow button the base dock uses. */
+function DockArrowButton({
+  direction,
+  className,
+  ...rest
+}: { direction: 'left' | 'right' } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button {...rest} type="button" className={dockClass('scene-dock-arrow', className)}>
+      <DockArrow direction={direction} />
+    </button>
+  )
+}
+
+/** Light dock word button (Build, Hub, order readout). */
+function DockWordButton({
+  className,
+  children,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & { children?: ReactNode }) {
+  return (
+    <button {...rest} type="button" className={dockClass('scene-dock-word', className)}>
+      {children}
+    </button>
   )
 }

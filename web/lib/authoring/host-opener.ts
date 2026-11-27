@@ -13,8 +13,6 @@ import { fileURLToPath } from 'node:url'
 import { openInEditor, planOpen } from './open-editor.ts'
 import type { EditorOptions, OpenRequest } from './open-editor.ts'
 
-export const DEFAULT_PORT = 3098
-
 const here = fileURLToPath(import.meta.url)
 const repoRoot = resolve(dirname(here), '../../..')
 const pidFile = join(tmpdir(), 'landnam-host-opener.pid')
@@ -147,3 +145,5 @@ if (process.argv[1] && resolve(process.argv[1]) === here) {
   const code = await main(process.argv.slice(2))
   if (code >= 0) process.exit(code)
 }
+
+const DEFAULT_PORT = 3098

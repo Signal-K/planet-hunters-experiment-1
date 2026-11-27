@@ -19,15 +19,6 @@ export const ROCKET_IDS = {
   unannounced5: 'unannounced-5',
 } as const
 
-export const LEGACY_ROCKET_IDS = {
-  sr1: ROCKET_IDS.explorer,
-  sr2: ROCKET_IDS.prospector,
-  sr3: ROCKET_IDS.surveyor,
-  'unannounced-3': ROCKET_IDS.surveyor,
-  sr4: ROCKET_IDS.unannounced4,
-  sr5: ROCKET_IDS.unannounced5,
-} as const
-
 export const ROCKET_MODELS: RocketModel[] = [
   {
     id: ROCKET_IDS.explorer,
@@ -151,3 +142,12 @@ export function rocketDisplayForConfig(rocket: Pick<RocketConfig, 'chassis'> | n
 export function canonicalRocketId(id: string): string {
   return LEGACY_ROCKET_IDS[id as keyof typeof LEGACY_ROCKET_IDS] ?? id
 }
+
+const LEGACY_ROCKET_IDS = {
+  sr1: ROCKET_IDS.explorer,
+  sr2: ROCKET_IDS.prospector,
+  sr3: ROCKET_IDS.surveyor,
+  'unannounced-3': ROCKET_IDS.surveyor,
+  sr4: ROCKET_IDS.unannounced4,
+  sr5: ROCKET_IDS.unannounced5,
+} as const

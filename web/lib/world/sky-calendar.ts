@@ -19,12 +19,6 @@ export interface LaunchCrew {
   mission: string
 }
 
-/** The crew flying a launch, picked deterministically from its id so every player sees the same tag. */
-export function launchCrew(id: string): LaunchCrew {
-  const crews = calendar.launches.crews
-  return crews[Math.floor(WorldRandom.from(`${calendar.salt}:crew:${id}`).next() * crews.length) % crews.length]
-}
-
 export interface SkyEvent {
   id: string
   kind: SkyEventKind
@@ -214,4 +208,10 @@ export function skyAt(now: Date, grade: WorldTimeGrade, biome: string, force: re
     }
   }
   return { events, weather }
+}
+
+/** The crew flying a launch, picked deterministically from its id so every player sees the same tag. */
+function launchCrew(id: string): LaunchCrew {
+  const crews = calendar.launches.crews
+  return crews[Math.floor(WorldRandom.from(`${calendar.salt}:crew:${id}`).next() * crews.length) % crews.length]
 }

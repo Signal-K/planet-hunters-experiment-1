@@ -135,9 +135,6 @@ function toMs(at: Date | number): number {
   return at instanceof Date ? at.getTime() : at
 }
 
-/** A run started inside an event keeps that grade for this long after the event closes. */
-export const RUN_START_GRACE_MS = 24 * 60 * 60 * 1000
-
 /**
  * Instants a run-graded badge is judged at: the run's launch (when still within
  * the grace window) and now. Grants never downgrade, so granting at both keeps
@@ -180,11 +177,6 @@ export function grantBadge<T extends BadgePlayer>(player: T, eventId: string, at
     ...player,
     badges: { ...(player.badges ?? {}), [eventId]: { eventId, tier, earnedAt: toMs(at) } },
   }
-}
-
-/** Event ids that an activity can earn. */
-export function eventsForActivity(kind: SkyActivityKind): SkyEvent[] {
-  return SKY_EVENTS.filter(event => event.activities.includes(kind))
 }
 
 /** Grants every badge the activity earns at `at`. Returns the new badges too. */
@@ -250,19 +242,6 @@ export interface DebrisEventPreset {
   allHours?: boolean
   /** When set, the event opens at the local midnight represented by `startUtc`. */
   startAtLocalMidnight?: boolean
-}
-
-/** Local night: 22:00 until dawn (06:00). */
-export const NIGHT_START_HOUR = 22
-export const NIGHT_END_HOUR = 6
-
-/** Local calendar date the Orionids shower opens (midnight, player's zone). */
-export const ORIONIDS_LOCAL_START = { year: 2026, month: 10, day: 19 } as const
-/** Teaser is up from 7 Oct 2026 local until that midnight. */
-export const ORIONIDS_TEASER_OPEN = { year: 2026, month: 10, day: 7 } as const
-
-export function localMidnightMs(year: number, month: number, day: number): number {
-  return new Date(year, month - 1, day, 0, 0, 0, 0).getTime()
 }
 
 export function orionidsLocalStartMs(): number {
@@ -338,14 +317,6 @@ export const DEBRIS_PRESETS: ReadonlyArray<DebrisEventPreset> = [
 
 /** Resource ids that only exist during a debris event. */
 export const DEBRIS_RESOURCE_IDS: ReadonlyArray<string> = DEBRIS_PRESETS.map(p => p.resourceId)
-
-/** True between 22:00 and 06:00 in the runtime's local timezone. */
-export function isLocalNight(at: Date | number): boolean {
-  const t = toMs(at)
-  if (!Number.isFinite(t)) return false
-  const hour = new Date(t).getHours()
-  return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
-}
 
 /** Inclusive window open. A preset may opt into a local-midnight opening. */
 export function debrisWindowStartMs(preset: DebrisEventPreset): number {
@@ -445,14 +416,6 @@ export function orionidsPeakReminderMs(): number {
   return new Date(2026, 9, 22, 2, 0, 0, 0).getTime()
 }
 
-/** True from 7 Oct 2026 local until the shower opens at local midnight on the 19th. */
-export function isOrionidsTeaserWindow(now: Date | number): boolean {
-  const t = toMs(now)
-  if (!Number.isFinite(t)) return false
-  const open = localMidnightMs(ORIONIDS_TEASER_OPEN.year, ORIONIDS_TEASER_OPEN.month, ORIONIDS_TEASER_OPEN.day)
-  return t >= open && t < orionidsLocalStartMs()
-}
-
 /** Whole local days and leftover hours until 19 Oct local midnight. */
 export function orionidsCountdown(now: Date | number): { days: number; hours: number } {
   const remain = Math.max(0, orionidsLocalStartMs() - toMs(now))
@@ -481,11 +444,6 @@ export function applyDebrisMined<T extends BadgePlayer>(
   return { player: next, badge }
 }
 
-// ---- New Moon --------------------------------------------------------------
-export const SYNODIC_MONTH_DAYS = 29.530588853
-/** Reference mean new moon: 2000-01-06 18:14 UTC. */
-export const NEW_MOON_REFERENCE_MS = Date.UTC(2000, 0, 6, 18, 14, 0)
-
 const DAY_MS = 86_400_000
 // Mean new moon of lunation k=0 (JDE 2451550.09766, 2000-01-06 ~14:21 UTC).
 // The 18:14 UTC reference above is the *true* new moon of that lunation, i.e.
@@ -493,32 +451,6 @@ const DAY_MS = 86_400_000
 // mean epoch instead.
 const MEEUS_MEAN_EPOCH_MS = (2451550.09766 - 2440587.5) * DAY_MS
 const RAD = Math.PI / 180
-
-/**
- * UTC instant of the k-th new moon after the reference. Starts from the mean
- * synodic month and applies the leading periodic terms (Meeus, Astronomical
- * Algorithms ch. 49); the mean alone drifts up to ~14 h from the real phase,
- * which would put the 10 Oct 2026 new moon on the wrong calendar day.
- */
-export function newMoonInstantMs(k: number): number {
-  const mean = MEEUS_MEAN_EPOCH_MS + k * SYNODIC_MONTH_DAYS * DAY_MS
-  const T = k / 1236.85
-  const E = 1 - 0.002516 * T - 0.0000074 * T * T
-  const M = (2.5534 + 29.1053567 * k) * RAD
-  const Mp = (201.5643 + 385.81693528 * k) * RAD
-  const F = (160.7108 + 390.67050284 * k) * RAD
-  const correction =
-    -0.4072 * Math.sin(Mp) +
-    0.17241 * E * Math.sin(M) +
-    0.01608 * Math.sin(2 * Mp) +
-    0.01039 * Math.sin(2 * F) +
-    0.00739 * E * Math.sin(Mp - M) -
-    0.00514 * E * Math.sin(Mp + M) +
-    0.00208 * E * E * Math.sin(2 * M) -
-    0.00111 * Math.sin(Mp - 2 * F) -
-    0.00057 * Math.sin(Mp + 2 * F)
-  return mean + correction * DAY_MS
-}
 
 /** True when a new moon falls within the given UTC calendar day (YYYY-MM-DD). */
 export function isNewMoonDay(dateKey: string): boolean {
@@ -618,3 +550,74 @@ export function skyEventNow(devEnabled: boolean): number {
   }
   return Date.now()
 }
+
+/** A run started inside an event keeps that grade for this long after the event closes. */
+const RUN_START_GRACE_MS = 24 * 60 * 60 * 1000
+
+/** Event ids that an activity can earn. */
+function eventsForActivity(kind: SkyActivityKind): SkyEvent[] {
+  return SKY_EVENTS.filter(event => event.activities.includes(kind))
+}
+
+/** Local calendar date the Orionids shower opens (midnight, player's zone). */
+const ORIONIDS_LOCAL_START = { year: 2026, month: 10, day: 19 } as const
+
+function localMidnightMs(year: number, month: number, day: number): number {
+  return new Date(year, month - 1, day, 0, 0, 0, 0).getTime()
+}
+
+/** True between 22:00 and 06:00 in the runtime's local timezone. */
+function isLocalNight(at: Date | number): boolean {
+  const t = toMs(at)
+  if (!Number.isFinite(t)) return false
+  const hour = new Date(t).getHours()
+  return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR
+}
+
+/** True from 7 Oct 2026 local until the shower opens at local midnight on the 19th. */
+function isOrionidsTeaserWindow(now: Date | number): boolean {
+  const t = toMs(now)
+  if (!Number.isFinite(t)) return false
+  const open = localMidnightMs(ORIONIDS_TEASER_OPEN.year, ORIONIDS_TEASER_OPEN.month, ORIONIDS_TEASER_OPEN.day)
+  return t >= open && t < orionidsLocalStartMs()
+}
+
+// ---- New Moon --------------------------------------------------------------
+const SYNODIC_MONTH_DAYS = 29.530588853
+
+/** Reference mean new moon: 2000-01-06 18:14 UTC. */
+const NEW_MOON_REFERENCE_MS = Date.UTC(2000, 0, 6, 18, 14, 0)
+
+/**
+ * UTC instant of the k-th new moon after the reference. Starts from the mean
+ * synodic month and applies the leading periodic terms (Meeus, Astronomical
+ * Algorithms ch. 49); the mean alone drifts up to ~14 h from the real phase,
+ * which would put the 10 Oct 2026 new moon on the wrong calendar day.
+ */
+function newMoonInstantMs(k: number): number {
+  const mean = MEEUS_MEAN_EPOCH_MS + k * SYNODIC_MONTH_DAYS * DAY_MS
+  const T = k / 1236.85
+  const E = 1 - 0.002516 * T - 0.0000074 * T * T
+  const M = (2.5534 + 29.1053567 * k) * RAD
+  const Mp = (201.5643 + 385.81693528 * k) * RAD
+  const F = (160.7108 + 390.67050284 * k) * RAD
+  const correction =
+    -0.4072 * Math.sin(Mp) +
+    0.17241 * E * Math.sin(M) +
+    0.01608 * Math.sin(2 * Mp) +
+    0.01039 * Math.sin(2 * F) +
+    0.00739 * E * Math.sin(Mp - M) -
+    0.00514 * E * Math.sin(Mp + M) +
+    0.00208 * E * E * Math.sin(2 * M) -
+    0.00111 * Math.sin(Mp - 2 * F) -
+    0.00057 * Math.sin(Mp + 2 * F)
+  return mean + correction * DAY_MS
+}
+
+/** Local night: 22:00 until dawn (06:00). */
+const NIGHT_START_HOUR = 22
+
+const NIGHT_END_HOUR = 6
+
+/** Teaser is up from 7 Oct 2026 local until that midnight. */
+const ORIONIDS_TEASER_OPEN = { year: 2026, month: 10, day: 7 } as const

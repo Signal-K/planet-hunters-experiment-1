@@ -46,27 +46,6 @@ export interface LandnamSyncOptions {
   spendCredits?: (amount: number) => Promise<boolean>
 }
 
-/**
- * Field structure types Landnam persists. The first ten are takeon built-ins;
- * `road`, `factory` and `silo` are Landnam sandbox additions registered by
- * `lib/takeon/sandbox.ts` (SSL-316).
- */
-export const STRUCTURE_TYPES = new Set<StructureType>([
-  'solar-array',
-  'beacon',
-  'drill-rig',
-  'cache',
-  'refinery',
-  'habitat-frame',
-  'habitat',
-  'launch-pad',
-  'generator',
-  'pylon',
-  'road',
-  'factory',
-  'silo',
-])
-
 const BLUEPRINT_BY_TAKEON_TYPE: Record<StructureType, string> = {
   'solar-array': 'solar-array',
   beacon: 'beacon',
@@ -149,25 +128,6 @@ function structureFromRecord(record: JsonRecord): Structure | null {
   if (typeof cooldownUntil === 'number') structure.cooldownUntil = cooldownUntil
   if (progress !== undefined) structure.progress = progress
   return structure
-}
-
-/**
- * `progress` is habitat-frame construction (0..1), not a general build flag.
- * A finished structure leaves it unset. Writing `0` for that absence made the
- * flat view (the field's default) paint the structure as an unfinished
- * blueprint — a blue-gray block for a storage silo, which has no built-in glyph.
- * Rows already saved that way are repaired on load.
- */
-export function persistedStructureProgress(structure: Structure): number | null {
-  if (structure.type !== 'habitat-frame') return null
-  if (typeof structure.progress !== 'number' || !Number.isFinite(structure.progress)) return null
-  return structure.progress
-}
-
-export function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
-  if (type !== 'habitat-frame') return undefined
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
-  return value
 }
 
 /**
@@ -454,4 +414,44 @@ export class LandnamSync implements SyncAdapter {
       ? this.options.spendCredits(amount)
       : Promise.resolve(false)
   }
+}
+
+/**
+ * Field structure types Landnam persists. The first ten are takeon built-ins;
+ * `road`, `factory` and `silo` are Landnam sandbox additions registered by
+ * `lib/takeon/sandbox.ts` (SSL-316).
+ */
+const STRUCTURE_TYPES = new Set<StructureType>([
+  'solar-array',
+  'beacon',
+  'drill-rig',
+  'cache',
+  'refinery',
+  'habitat-frame',
+  'habitat',
+  'launch-pad',
+  'generator',
+  'pylon',
+  'road',
+  'factory',
+  'silo',
+])
+
+/**
+ * `progress` is habitat-frame construction (0..1), not a general build flag.
+ * A finished structure leaves it unset. Writing `0` for that absence made the
+ * flat view (the field's default) paint the structure as an unfinished
+ * blueprint — a blue-gray block for a storage silo, which has no built-in glyph.
+ * Rows already saved that way are repaired on load.
+ */
+function persistedStructureProgress(structure: Structure): number | null {
+  if (structure.type !== 'habitat-frame') return null
+  if (typeof structure.progress !== 'number' || !Number.isFinite(structure.progress)) return null
+  return structure.progress
+}
+
+function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
+  if (type !== 'habitat-frame') return undefined
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
+  return value
 }

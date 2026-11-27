@@ -3,13 +3,6 @@ import { VALID_SCREENS } from '@/lib/game-screens'
 
 type RouteState = Pick<GameState, 'screen' | 'missionId' | 'targetId'>
 
-export const MISSION_SETUP_INTERNAL_SCREENS = new Set<Screen>([
-  'missions',
-  'targets',
-  'rocket-buy',
-  'fab',
-])
-
 export function isMissionSetupInternalScreen(screen: Screen): boolean {
   return MISSION_SETUP_INTERNAL_SCREENS.has(screen)
 }
@@ -26,11 +19,6 @@ export function canonicalGameRoute({ screen, missionId, targetId }: RouteState):
 export function canonicalGamePath(state: RouteState): string {
   return `/game/${canonicalGameRoute(state)}`
 }
-
-/** Trays (Subsurface, Mission Log) are stable URLs that open over the Base. A cold
- * load of one must keep that tray instead of restoring the saved screen, which
- * would make the state -> URL sync rewrite the path to the saved screen. */
-export const TRAY_ROUTE_SCREENS = new Set<Screen>(['mission-history'])
 
 export function trayScreenFromPath(pathname: string): Screen | null {
   const match = /^\/game\/([^/]+)\/?$/.exec(pathname)
@@ -52,3 +40,15 @@ export function entryScreenForPath(pathname: string, placed: readonly string[], 
   if (pathname === '/game/surface-silo' && placed.includes('surface-silo')) return 'surface-silo'
   return trayScreenFromPath(pathname)
 }
+
+const MISSION_SETUP_INTERNAL_SCREENS = new Set<Screen>([
+  'missions',
+  'targets',
+  'rocket-buy',
+  'fab',
+])
+
+/** Trays (Subsurface, Mission Log) are stable URLs that open over the Base. A cold
+ * load of one must keep that tray instead of restoring the saved screen, which
+ * would make the state -> URL sync rewrite the path to the saved screen. */
+const TRAY_ROUTE_SCREENS = new Set<Screen>(['mission-history'])

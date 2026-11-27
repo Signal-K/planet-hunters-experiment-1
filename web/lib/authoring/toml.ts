@@ -50,8 +50,6 @@ export interface ParsedToml {
 
 export type ParseResult = { ok: true; doc: ParsedToml } | { ok: false; error: TomlSyntaxError }
 
-export const pathKey = (path: Path): string => JSON.stringify(path)
-
 export function parseToml(text: string): ParseResult {
   let ast: TOMLProgram
   try {
@@ -116,25 +114,6 @@ export interface Span {
   endColumn: number
 }
 
-/** 1-based line and column for a character offset. */
-export function positionAt(text: string, offset: number): { line: number; column: number } {
-  let line = 1
-  let lineStart = 0
-  for (let i = 0; i < offset && i < text.length; i++) {
-    if (text.charCodeAt(i) === 10) {
-      line++
-      lineStart = i + 1
-    }
-  }
-  return { line, column: offset - lineStart + 1 }
-}
-
-export function spanOf(text: string, range: [number, number]): Span {
-  const a = positionAt(text, range[0])
-  const b = positionAt(text, range[1])
-  return { start: range[0], end: range[1], line: a.line, column: a.column, endLine: b.line, endColumn: b.column }
-}
-
 /** The span a diagnostic about `path` should underline: the value if there is one, else the nearest ancestor. */
 export function spanForPath(doc: ParsedToml, path: Path): Span {
   for (let n = path.length; n >= 0; n--) {
@@ -188,4 +167,25 @@ export function tomlValue(value: unknown): string {
     return pairs.length ? `{ ${pairs.map(([k, v]) => `${tomlKey(k)} = ${tomlValue(v)}`).join(', ')} }` : '{}'
   }
   throw new Error(`TOML cannot hold ${value === null ? 'null' : typeof value}`)
+}
+
+const pathKey = (path: Path): string => JSON.stringify(path)
+
+function spanOf(text: string, range: [number, number]): Span {
+  const a = positionAt(text, range[0])
+  const b = positionAt(text, range[1])
+  return { start: range[0], end: range[1], line: a.line, column: a.column, endLine: b.line, endColumn: b.column }
+}
+
+/** 1-based line and column for a character offset. */
+function positionAt(text: string, offset: number): { line: number; column: number } {
+  let line = 1
+  let lineStart = 0
+  for (let i = 0; i < offset && i < text.length; i++) {
+    if (text.charCodeAt(i) === 10) {
+      line++
+      lineStart = i + 1
+    }
+  }
+  return { line, column: offset - lineStart + 1 }
 }

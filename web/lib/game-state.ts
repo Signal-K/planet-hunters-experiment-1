@@ -9,7 +9,6 @@ import { mergeProbeObservations } from './probes/field-probe'
 import { sanitizeGroundTelescopeLevels } from './ground-telescope-upgrades'
 import { mergeCraftServicedAt, mergeStormDays } from '@/lib/agency/condition'
 import { mergeClientSales } from './client-sales'
-import { sanitizeArrangement } from '@/lib/scene/base-site'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
@@ -38,6 +37,7 @@ import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/Dail
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 import { dropScrubbedRuns, dropSettledMissionRuns } from '@/lib/systems/MissionRunLifecycle'
 import { GAME_SCREENS, migrateScreenId } from '@/lib/game-screens'
+import { migrateSimplifiedSave } from '@/lib/save-migrations'
 import { sanitizeEarthBiome } from '@/lib/scene/base-world'
 import { sanitizePlayerLocation } from '@/lib/data/sky-event-window'
 import { mergeSkyMaps } from '@/lib/research/sky-map'
@@ -75,12 +75,6 @@ export const DEFAULT_STATE: GameState = {
     clientStreaks: {},
     clientCooldowns: {},
     researchAnnotations: 0,
-    refineryBuilt: false,
-    refineryUnlocked: false,
-    refineryUnlockNotified: false,
-    refineryQueue: [],
-    refineryLastStartedAt: undefined,
-    refinedGoods: {},
     remoteStorage: {},
     launchpadUpgraded: false,
     buildingLevels: {},
@@ -118,8 +112,6 @@ export const DEFAULT_STATE: GameState = {
     communityBonus: undefined,
     dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
-    subsurfaceExcavated: false,
-    subsurfaceBuilt: [],
     transitSatelliteLevel: 1,
     transitSatelliteLaunchedAt: null,
     deepSpaceTelescopeBuilt: false,
@@ -197,7 +189,7 @@ export function normalizeState(input: PartialSave): GameState {
   const missionBoardScope = savedScope?.kind === 'body' && typeof savedScope.id === 'string' && savedScope.id.length > 0
     ? { kind: 'body' as const, id: savedScope.id, label: savedScope.label || savedScope.id }
     : EARTH_BASE_SCOPE
-  const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
+  const player: Partial<Player> = migrateSimplifiedSave(migrateLegacyContractorFields(input.player ?? {}) as Record<string, unknown>) as Partial<Player>
   const completedMissions = normalizeCompletedMissions(player.completedMissions)
   const orionidsProgress = detectOrionidsProgress({ ...player, completedMissions })
   // Raises only: a save that already finished the radio mission (stage 3) keeps it. Stage 1 is retired
@@ -327,7 +319,6 @@ export function normalizeState(input: PartialSave): GameState {
   // The transit and deep space telescopes are one instrument: either flag marks it launched.
   const telescopeLaunchedAt = player.transitSatelliteLaunchedAt ?? player.deepSpaceTelescopeLaunchedAt ?? null
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt) || !!telescopeLaunchedAt
-  const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
   // early; derive it (SSL-332: guided missions flown plus a storage silo, or a
@@ -357,7 +348,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, agencyLaunches: mergeAgencyLaunches(player.agencyLaunches, undefined), missionPlans: sanitizeMissionPlans(player.missionPlans), deliveryReceipts: sanitizeDeliveryReceipts(player.deliveryReceipts), rocketLivery: sanitizeLivery(player.rocketLivery), researchRocketParts: earnedRocketParts(player), probeObservations: mergeProbeObservations(player.probeObservations), baseArrangement: sanitizeArrangement(player.baseArrangement), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), groundTelescopeLevels: sanitizeGroundTelescopeLevels(player.groundTelescopeLevels), buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), researchFirstStamps: sanitizeFirstStamps(player.researchFirstStamps), researchPassportWeeks: mergePassportWeeks(player.researchPassportWeeks, undefined), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, agencyLaunches: mergeAgencyLaunches(player.agencyLaunches, undefined), missionPlans: sanitizeMissionPlans(player.missionPlans), deliveryReceipts: sanitizeDeliveryReceipts(player.deliveryReceipts), rocketLivery: sanitizeLivery(player.rocketLivery), researchRocketParts: earnedRocketParts(player), probeObservations: mergeProbeObservations(player.probeObservations), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), groundTelescopeLevels: sanitizeGroundTelescopeLevels(player.groundTelescopeLevels), buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), researchFirstStamps: sanitizeFirstStamps(player.researchFirstStamps), researchPassportWeeks: mergePassportWeeks(player.researchPassportWeeks, undefined), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -387,7 +378,7 @@ export function normalizeState(input: PartialSave): GameState {
       selectedStagedRocketId: player.activeMission ? undefined : (player.selectedStagedRocketId ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
         ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
         : undefined)),
-      deepSpaceTelescopeBuilt, refineryBuilt,
+      deepSpaceTelescopeBuilt,
       transitSatelliteLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       deepSpaceTelescopeLaunchedAt: telescopeLaunchedAt ?? (player.deepSpaceTelescopeBuilt ? Date.now() : null),
       earthBiome: sanitizeEarthBiome(player.earthBiome),
@@ -564,7 +555,7 @@ function maxMergeRecord(a: Record<string, number> | undefined, b: Record<string,
 // verified monotonic-only-increment accumulators of the same shape
 // (clientMissions).
 const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'researchAnnotations'] as const
-const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions'] as const
+const RESOURCE_RECORD_FIELDS = ['stash', 'clientMissions'] as const
 
 // Exoplanet discoveries are append-only: once a target has been confirmed it
 // must survive a stale remote save just like placed structures and plots.

@@ -119,19 +119,6 @@ export function saturnGeom({ W, H, portrait }: Geom) {
   return { R, cx, cy, tilt, k, targets, earth: { x: portrait ? W * 0.14 : W * 0.08, y: portrait ? H * 0.14 : H * 0.2 }, craft: { x: portrait ? W * 0.3 : W * 0.26, y: portrait ? H * 0.74 : H * 0.72 }, ringPoint }
 }
 
-export function Stars({ W, H, count, seed, warm = false }: { W: number; H: number; count: number; seed: number; warm?: boolean }) {
-  const r = rng(seed)
-  return (
-    <g>
-      {Array.from({ length: count }, (_, i) => {
-        const t = r()
-        const colour = t < 0.12 ? '#ffd9a8' : t < 0.3 ? '#bcd4ff' : warm ? '#fff3dc' : '#ffffff'
-        return <PixelStar key={i} x={r() * W} y={r() * H} tone={colour} big={r() > 0.97} opacity={0.5 + r() * 0.5} />
-      })}
-    </g>
-  )
-}
-
 export function Sight({ kind, w, h, locked }: { kind: 'frame' | 'cross' | 'zoom'; w: number; h: number; locked: boolean }) {
   const c = styles.reticle
   if (kind === 'frame') return (
@@ -393,3 +380,16 @@ export function SaturnScene({ g, target, zoomed }: { g: Geom; target: SkyTarget 
 }
 
 export type { InstrumentPointing }
+
+function Stars({ W, H, count, seed, warm = false }: { W: number; H: number; count: number; seed: number; warm?: boolean }) {
+  const r = rng(seed)
+  return (
+    <g>
+      {Array.from({ length: count }, (_, i) => {
+        const t = r()
+        const colour = t < 0.12 ? '#ffd9a8' : t < 0.3 ? '#bcd4ff' : warm ? '#fff3dc' : '#ffffff'
+        return <PixelStar key={i} x={r() * W} y={r() * H} tone={colour} big={r() > 0.97} opacity={0.5 + r() * 0.5} />
+      })}
+    </g>
+  )
+}

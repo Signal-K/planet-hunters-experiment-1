@@ -1,15 +1,4 @@
-/**
- * Scene-to-scene motion (SSL-441).
- *
- * Ordinary routed changes swap immediately. Three hops in the flight loop
- * retain a short in-world move: the rocket leaving the pad, arrival at a
- * body, and the return into debrief. Reduced motion skips every hold.
- */
 
-export const SCENE_TRANSITION_OUT_MS = 0
-export const SCENE_TRANSITION_IN_MS = 0
-export const CINEMATIC_TRANSITION_OUT_MS = 180
-export const CINEMATIC_TRANSITION_IN_MS = 200
 
 export type SceneTransitionKind = 'fade' | 'climb' | 'arrival' | 'debrief'
 
@@ -34,3 +23,19 @@ export function transitionKind(from: string, to: string): SceneTransitionKind {
   if (from === 'landing' && to === 'mining') return 'arrival'
   return 'fade'
 }
+
+/**
+ * Scene-to-scene motion (SSL-441).
+ *
+ * Ordinary routed changes swap immediately. Three hops in the flight loop
+ * retain a short in-world move: the rocket leaving the pad, arrival at a
+ * body, and the return into debrief. Reduced motion skips every hold.
+ */
+
+const SCENE_TRANSITION_OUT_MS = 0
+
+const SCENE_TRANSITION_IN_MS = 0
+
+const CINEMATIC_TRANSITION_OUT_MS = 180
+
+const CINEMATIC_TRANSITION_IN_MS = 200

@@ -79,9 +79,6 @@ export function structureSprite(kind: string, level = 1): StructureSprite | null
   return base && over ? { ...base, ...over } : base
 }
 
-/** Structures the player may reorder along the strip. The silo stays on its shaft. */
-export const MOVABLE_KINDS = ['hangar', 'launchpad', 'control-station', 'market'] as const
-
 /** A saved left-to-right order, or undefined when it is not a permutation of the movable kinds (then the authored order stands). */
 export function sanitizeArrangement(raw: unknown): string[] | undefined {
   if (!Array.isArray(raw) || raw.length !== MOVABLE_KINDS.length) return undefined
@@ -209,3 +206,6 @@ export function validateBaseSite(): string[] {
   }
   return problems
 }
+
+/** Structures the player may reorder along the strip. The silo stays on its shaft. */
+const MOVABLE_KINDS = ['hangar', 'launchpad', 'control-station', 'market'] as const

@@ -1,5 +1,4 @@
-// Same storage key as native OrientationPreference (UserDefaults landnam.orientation).
-export const ORIENTATION_STORAGE_KEY = 'landnam.orientation'
+
 
 export type OrientationPreference = 'auto' | 'portrait' | 'landscape'
 
@@ -55,3 +54,6 @@ export function storeOrientation(pref: OrientationPreference): void {
   const orientation = currentOrientation()
   if (orientation) applyOrientation(pref, orientation)
 }
+
+// Same storage key as native OrientationPreference (UserDefaults landnam.orientation).
+const ORIENTATION_STORAGE_KEY = 'landnam.orientation'

@@ -3,7 +3,13 @@
 
 import type { TargetStructureBlueprint } from './types'
 
-export const TARGET_STRUCTURES: TargetStructureBlueprint[] = [
+export function findTargetStructure(kind: string): TargetStructureBlueprint | undefined {
+  return TARGET_STRUCTURES.find(s => s.kind === kind)
+}
+
+/** Target-build options for the current Cycle 3 scope. */
+
+const TARGET_STRUCTURES: TargetStructureBlueprint[] = [
   // Helios (prospect client) — propellant and thrust infrastructure
   {
     id: 'fuel-depot',
@@ -64,9 +70,3 @@ export const TARGET_STRUCTURES: TargetStructureBlueprint[] = [
     description: 'Automated sorting and loading gantry for high-throughput ore extraction.',
   },
 ]
-
-export function findTargetStructure(kind: string): TargetStructureBlueprint | undefined {
-  return TARGET_STRUCTURES.find(s => s.kind === kind)
-}
-
-/** Target-build options for the current Cycle 3 scope. */

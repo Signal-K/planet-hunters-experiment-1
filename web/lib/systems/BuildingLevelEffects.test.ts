@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { structureSprite } from '@/lib/scene/base-site'
 import { placeProbe, sectorsMapped, startProbeScan } from '@/lib/probes/survey-probe'
 import { rocketPrice } from '@/lib/rockets'
-import { sellUnitPrice, applyUpgradeBuilding } from './EconomySystem'
-import type { GameState } from '@/lib/game-types'
+import { sellUnitPrice } from './EconomySystem'
 
 const NOW = Date.parse('2026-11-12T10:00:00Z')
 
@@ -13,13 +12,6 @@ describe('SSL-792: hangar, Exchange and control station levels', () => {
       const srcs = [1, 2, 3].map(level => structureSprite(kind, level)!.src)
       expect(new Set(srcs).size).toBe(3)
     }
-  })
-
-  it('upgrades a placed building for francs', () => {
-    const s = { player: { placed: ['hangar'], francs: 50_000_000, buildingLevels: {} } } as unknown as GameState
-    const up = applyUpgradeBuilding(s, 'hangar')
-    expect(up.player.buildingLevels?.hangar).toBe(2)
-    expect(up.player.francs).toBe(44_000_000)
   })
 
   it('an upgraded Exchange pays more and an upgraded hangar sells rockets for less', () => {

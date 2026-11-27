@@ -21,27 +21,6 @@ let exchangeInFlight: Promise<{ token: string; record: RecordModel }> | null = n
 let exchangeInFlightFor: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
 
-/**
- * The PocketBase machine on Fly stops when idle and takes a few seconds to
- * wake. A request during the wake can fail at the network level or return
- * 502/503/504, which is not a rejected login. Retry those with backoff so a
- * cold start never looks like an auth failure. 4xx answers are returned as-is.
- */
-export async function fetchWithWakeRetry(url: string, init: RequestInit, attempts = 5): Promise<Response> {
-  let lastError: unknown
-  for (let i = 0; i < attempts; i++) {
-    try {
-      const res = await fetch(url, init)
-      if (![502, 503, 504].includes(res.status)) return res
-      lastError = new Error(`HTTP ${res.status}`)
-    } catch (err) {
-      lastError = err
-    }
-    await new Promise(resolve => setTimeout(resolve, 600 * 2 ** i))
-  }
-  throw lastError instanceof Error ? lastError : new Error('server did not wake')
-}
-
 export async function exchangeLandnamAuth(sharedToken: string): Promise<{
   token: string
   record: RecordModel
@@ -85,4 +64,25 @@ export function refreshLandnamAuthOnce(): Promise<boolean> {
     refreshInFlight = null
   })
   return refreshInFlight
+}
+
+/**
+ * The PocketBase machine on Fly stops when idle and takes a few seconds to
+ * wake. A request during the wake can fail at the network level or return
+ * 502/503/504, which is not a rejected login. Retry those with backoff so a
+ * cold start never looks like an auth failure. 4xx answers are returned as-is.
+ */
+async function fetchWithWakeRetry(url: string, init: RequestInit, attempts = 5): Promise<Response> {
+  let lastError: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, init)
+      if (![502, 503, 504].includes(res.status)) return res
+      lastError = new Error(`HTTP ${res.status}`)
+    } catch (err) {
+      lastError = err
+    }
+    await new Promise(resolve => setTimeout(resolve, 600 * 2 ** i))
+  }
+  throw lastError instanceof Error ? lastError : new Error('server did not wake')
 }

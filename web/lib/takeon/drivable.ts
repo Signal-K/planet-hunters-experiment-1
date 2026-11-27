@@ -43,14 +43,6 @@ export function reachableColumns(world: DrivableWorld, from: { x: number; y: num
   return count
 }
 
-/** Ground the rover should be able to reach from where it lands: a quarter of the map, up to 400 tiles. */
-export function drivableTarget(size: number): number {
-  return Math.min(400, Math.floor((size * size) / 4))
-}
-
-/** Highest climb limit we will hand out: past this the terrain is a wall, not a slope. */
-export const MAX_ASSISTED_CLIMB = 4
-
 /**
  * The smallest climb limit, starting from the rover's own, that opens enough ground.
  * Returns the rover's own limit when it already does, and never goes past MAX_ASSISTED_CLIMB.
@@ -61,3 +53,11 @@ export function assistedClimb(world: DrivableWorld, from: { x: number; y: number
   while (climb < MAX_ASSISTED_CLIMB && reachableColumns(world, from, climb) < target) climb++
   return climb
 }
+
+/** Ground the rover should be able to reach from where it lands: a quarter of the map, up to 400 tiles. */
+function drivableTarget(size: number): number {
+  return Math.min(400, Math.floor((size * size) / 4))
+}
+
+/** Highest climb limit we will hand out: past this the terrain is a wall, not a slope. */
+const MAX_ASSISTED_CLIMB = 4

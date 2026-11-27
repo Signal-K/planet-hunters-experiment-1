@@ -11,9 +11,6 @@ import { CLIENT_SLOTS } from '@/lib/data/clients'
 import { stampDayKey, addStamp } from '@/lib/research/stamps'
 import { sellUnitPrice } from '@/lib/systems/EconomySystem'
 import type { GameState, Player } from '@/lib/game-types'
-
-export const CLIENT_SALE_LEVEL = 3
-export const CLIENT_SALE_PREMIUM = 0.1
 export const CLIENT_SALE_DAILY_UNITS = 10
 
 export type ClientSales = NonNullable<Player['clientSales']>
@@ -26,11 +23,6 @@ export interface ClientSaleOffer {
   /** Units this client still takes today. */
   left: number
   rows: ClientSaleRow[]
-}
-
-export function soldToday(sales: ClientSales | undefined, clientId: string, now: number): number {
-  const record = sales?.[clientId]
-  return record && record.day === stampDayKey(now) ? record.units : 0
 }
 
 /** What a client takes off the player's hands today, and at what price. */
@@ -72,4 +64,13 @@ export function mergeClientSales(a: ClientSales | undefined, b: ClientSales | un
     out[id] = !cur || rec.day > cur.day ? rec : rec.day === cur.day ? { day: rec.day, units: Math.max(rec.units, cur.units) } : cur
   }
   return out
+}
+
+const CLIENT_SALE_LEVEL = 3
+
+const CLIENT_SALE_PREMIUM = 0.1
+
+function soldToday(sales: ClientSales | undefined, clientId: string, now: number): number {
+  const record = sales?.[clientId]
+  return record && record.day === stampDayKey(now) ? record.units : 0
 }

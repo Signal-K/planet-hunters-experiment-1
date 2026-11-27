@@ -48,7 +48,6 @@ describe('resolveGameStateLoad', () => {
         placed: ['launchpad', 'refinery'],
         francs: 1800,
         freeOperations: true,
-        laserCapacitorLevel: 2,
         completedMissions: [],
       },
     }
@@ -64,7 +63,6 @@ describe('resolveGameStateLoad', () => {
     expect(decision.state.screen).toBe('hub')
     expect(decision.state.player.placed).toEqual(['launchpad', 'refinery'])
     expect(decision.state.player.missionsDone).toBe(3)
-    expect(decision.state.player.laserCapacitorLevel).toBe(2)
     expect(isSignInPlaceholder(decision.state)).toBe(false)
     expect(mayOverwriteSavedRecord(DEFAULT_STATE, nativeSave)).toBe(false)
     expect(mayOverwriteSavedRecord(decision.state, nativeSave)).toBe(true)

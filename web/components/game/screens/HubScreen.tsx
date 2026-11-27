@@ -99,7 +99,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
   // Phones keep the Base still (SSL-787): no pan, pinch or overview slider. Portrait picks the kit scale (1 to 2) that
   // fills the width with everything built; landscape already fits (kitScale caps it at width / 460).
   const phoneView = viewSize.w < 600 || viewSize.h < 500
-  const arrangement = player.baseArrangement ?? null
+  const arrangement = null
   const standingKinds = (player.placed ?? []).includes('launchpad') && !(player.placed ?? []).includes('control-station')
     ? [...(player.placed ?? []), 'control-station']
     : (player.placed ?? [])
@@ -461,7 +461,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
           <BaseConstellations player={player} visible={skyGrade === 'night' || skyGrade === 'dusk' || skyGrade === 'dawn'} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
-            siloBuilt={!!player.subsurfaceExcavated || (player.subsurfaceBuilt ?? []).length > 0}
+            siloBuilt
             operationsOnline={(player.placed ?? []).includes('launchpad')}
             onOpenSilo={() => onOpenScene('surface-silo')}
           />

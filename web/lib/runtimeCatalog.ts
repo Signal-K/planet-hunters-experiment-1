@@ -18,16 +18,6 @@ import { fleetCondition, SERVICED_CRAFT, type ServicedCraftId } from './agency/c
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
 
-export const TRANSIT_TELESCOPE_TARGET: Target = {
-  id: TRANSIT_TELESCOPE_TARGET_ID,
-  name: 'Earth Orbit',
-  type: 'planet',
-  orbit: 1,
-  difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a space telescope monitored from Base operations.',
-  minerals: [],
-}
-
 // KES-128: the Space Telescope's on-ramp, matching the Transit
 // Telescope's story-mission pattern above rather than the bare numeric
 // deepSpaceTelescopeUnlocked() threshold (STS-622) silently opening a build
@@ -40,65 +30,11 @@ export const DEEP_SPACE_TELESCOPE_MISSION_ID = 'story-deep-space-telescope-surve
 export const SATURN_IMAGER_TARGET_ID = 'earth-orbit-saturn-imager'
 export const SATURN_IMAGER_MISSION_ID = 'story-saturn-imager-launch'
 
-export const SATURN_IMAGER_TARGET: Target = {
-  id: SATURN_IMAGER_TARGET_ID,
-  name: 'Saturn observation lane',
-  type: 'planet',
-  orbit: 1,
-  difficulty: 'L1',
-  brief: 'Orbital lane for a Saturn satellite that downlinks archived Cassini frames for storm-cloud review.',
-  minerals: [],
-}
-
 export const ORIONIDS_SHOWER_TARGET: Target = showerTarget(ORIONIDS_SHOWER_ID)
-
-/** SSL-852: servicing missions fly to the craft's orbit and put it back to full condition. */
-export const SERVICE_MISSION_ID: Record<ServicedCraftId, string> = {
-  'space-telescope': 'service-space-telescope',
-  'saturn-satellite': 'service-saturn-satellite',
-}
 
 const SERVICE_TARGET: Record<ServicedCraftId, string> = {
   'space-telescope': TRANSIT_TELESCOPE_TARGET_ID,
   'saturn-satellite': SATURN_IMAGER_TARGET_ID,
-}
-
-export function serviceMission(craft: ServicedCraftId, percent: number | null, sequence: number): Mission {
-  const name = craft === 'space-telescope' ? 'Space telescope' : 'Saturn satellite'
-  const named = craft === 'space-telescope' ? 'space telescope' : 'Saturn satellite'
-  const feed = craft === 'space-telescope' ? 'light curves and asteroid candidates' : 'Cassini frames'
-  const state = percent === null ? '' : percent < 15 ? ' It has failed and sends nothing.' : percent < 50 ? ` It is at ${percent}% and sends half its ${feed}.` : ` It is at ${percent}%.`
-  return {
-    id: SERVICE_MISSION_ID[craft],
-    title: `Service the ${named}`,
-    brief: `Fly a servicing crew up to your ${named} and put it right.${state} Use and solar storms wear it down.`,
-    tag: 'PROGRAM',
-    difficulty: 'L1',
-    locked: false,
-    sequence,
-    unlockAt: 'Own the craft',
-    targetId: SERVICE_TARGET[craft],
-    payload: { type: 'satellite', name: `${name} servicing`, cargoCost: 0, service: craft },
-    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
-    programReward: { researchXP: 10, outcome: `${name} serviced · back to 100%, full data restored` },
-    payout: { francs: 0, affinity: 0 },
-  }
-}
-
-/** The field a shower run flies to (SSL-658, SSL-774). */
-export function showerTarget(showerId: string): Target {
-  const shower = SHOWERS.find(item => item.id === showerId)!
-  return {
-    id: shower.targetId,
-    name: `${shower.name} shower field`,
-    type: 'event-field',
-    orbit: 2,
-    difficulty: 'L1',
-    brief: showerId === ORIONIDS_SHOWER_ID
-      ? "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids."
-      : `A moving meteor field for the ${shower.name}. These are anonymous shower points, not named asteroids.`,
-    minerals: Object.keys(catalogMineralIds()),
-  }
 }
 
 function catalogMineralIds(): Record<string, true> {
@@ -366,5 +302,69 @@ export function buildRuntimeCatalog({
     ...catalog,
     targets: mergedTargets,
     missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...serviceMissions, ...siteMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions, ...plannedMissions]),
+  }
+}
+
+const TRANSIT_TELESCOPE_TARGET: Target = {
+  id: TRANSIT_TELESCOPE_TARGET_ID,
+  name: 'Earth Orbit',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'Low Earth orbit deployment lane for a space telescope monitored from Base operations.',
+  minerals: [],
+}
+
+const SATURN_IMAGER_TARGET: Target = {
+  id: SATURN_IMAGER_TARGET_ID,
+  name: 'Saturn observation lane',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'Orbital lane for a Saturn satellite that downlinks archived Cassini frames for storm-cloud review.',
+  minerals: [],
+}
+
+/** SSL-852: servicing missions fly to the craft's orbit and put it back to full condition. */
+const SERVICE_MISSION_ID: Record<ServicedCraftId, string> = {
+  'space-telescope': 'service-space-telescope',
+  'saturn-satellite': 'service-saturn-satellite',
+}
+
+function serviceMission(craft: ServicedCraftId, percent: number | null, sequence: number): Mission {
+  const name = craft === 'space-telescope' ? 'Space telescope' : 'Saturn satellite'
+  const named = craft === 'space-telescope' ? 'space telescope' : 'Saturn satellite'
+  const feed = craft === 'space-telescope' ? 'light curves and asteroid candidates' : 'Cassini frames'
+  const state = percent === null ? '' : percent < 15 ? ' It has failed and sends nothing.' : percent < 50 ? ` It is at ${percent}% and sends half its ${feed}.` : ` It is at ${percent}%.`
+  return {
+    id: SERVICE_MISSION_ID[craft],
+    title: `Service the ${named}`,
+    brief: `Fly a servicing crew up to your ${named} and put it right.${state} Use and solar storms wear it down.`,
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence,
+    unlockAt: 'Own the craft',
+    targetId: SERVICE_TARGET[craft],
+    payload: { type: 'satellite', name: `${name} servicing`, cargoCost: 0, service: craft },
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
+    programReward: { researchXP: 10, outcome: `${name} serviced · back to 100%, full data restored` },
+    payout: { francs: 0, affinity: 0 },
+  }
+}
+
+/** The field a shower run flies to (SSL-658, SSL-774). */
+function showerTarget(showerId: string): Target {
+  const shower = SHOWERS.find(item => item.id === showerId)!
+  return {
+    id: shower.targetId,
+    name: `${shower.name} shower field`,
+    type: 'event-field',
+    orbit: 2,
+    difficulty: 'L1',
+    brief: showerId === ORIONIDS_SHOWER_ID
+      ? "A moving meteor field arranged along Orion's pattern. These are anonymous shower points, not named asteroids."
+      : `A moving meteor field for the ${shower.name}. These are anonymous shower points, not named asteroids.`,
+    minerals: Object.keys(catalogMineralIds()),
   }
 }

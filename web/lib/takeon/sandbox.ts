@@ -89,50 +89,6 @@ function darken(hex: string, factor: number): string {
   return `#${[r, g, b].map(c => c.toString(16).padStart(2, '0')).join('')}`
 }
 
-/** Stable custom material id for a Landnam biome (ids ≥ CUSTOM_MATERIAL_BASE). */
-export function materialIdForBiome(biome: BiomeId, base: number): number {
-  const index = LANDNAM_BIOME_IDS.indexOf(biome)
-  if (index < 0) throw new Error(`${biome} is a takeon built-in biome; it has no Landnam material`)
-  return base + index
-}
-
-export function materialDefForBiome(biome: BiomeId, base: number): MaterialDef {
-  const meta = BIOME_META[biome]
-  const yields = BIOME_YIELD[biome]
-  return {
-    id: materialIdForBiome(biome, base),
-    name: meta.label,
-    hardness: meta.lifeCapacity >= 2 ? 1 : 2,
-    yields: yields ? { resource: yields.resource, amount: yields.amount } : null,
-    colors: [NATURAL_BIOME_COLOUR[biome][0], NATURAL_BIOME_COLOUR[biome][1], darken(NATURAL_BIOME_COLOUR[biome][1], 0.8)],
-    jitter: meta.lifeCapacity >= 2 ? 0.16 : 0.1,
-  }
-}
-
-export function biomeDefForBiome(biome: BiomeId, base: number): Biome {
-  const meta = BIOME_META[biome]
-  const surface = materialIdForBiome(biome, base)
-  const [r, g, b] = hexToRgb(NATURAL_BIOME_COLOUR[biome][0])
-  const subsurface = meta.subsurface
-    ? [TAKEON_MATERIAL.rock, TAKEON_MATERIAL.basalt]
-    : meta.lifeCapacity >= 1
-      ? [surface, TAKEON_MATERIAL.regolith]
-      : biome === 'glacier-shelf' || biome === 'methane-lakes'
-        ? [TAKEON_MATERIAL.ice, TAKEON_MATERIAL.rock]
-        : [TAKEON_MATERIAL.rock]
-  return {
-    id: biome,
-    label: meta.label,
-    help: meta.help,
-    surface: [surface],
-    subsurface,
-    climate: BIOME_CLIMATE[biome],
-    // Tint is a multiplier on the body palette; keep it mild so biomes read
-    // through the body's own identity rather than replacing it.
-    tint: [0.7 + (r / 255) * 0.6, 0.7 + (g / 255) * 0.6, 0.7 + (b / 255) * 0.6],
-  }
-}
-
 let registered: WeakSet<SandboxEngine> = new WeakSet()
 
 /**
@@ -146,10 +102,6 @@ export function registerLandnamSandbox(engine: SandboxEngine): void {
     engine.registerMaterial(materialDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
     engine.registerBiome(biomeDefForBiome(biome, engine.CUSTOM_MATERIAL_BASE))
   }
-}
-
-export function landnamBodyKindId(target: Pick<SurfaceTarget, 'id'>, lifeStage: LifeStage): string {
-  return `landnam:${target.id}:${lifeStage}`
 }
 
 /**
@@ -187,4 +139,52 @@ export function buildLandnamBody(
   body.palette = { sky: look.sky, skyNight: look.skyNight, tint: look.tint }
   body.climate = { temperature: profile.temperature, tempVariance: profile.tempVariance }
   return body
+}
+
+function materialDefForBiome(biome: BiomeId, base: number): MaterialDef {
+  const meta = BIOME_META[biome]
+  const yields = BIOME_YIELD[biome]
+  return {
+    id: materialIdForBiome(biome, base),
+    name: meta.label,
+    hardness: meta.lifeCapacity >= 2 ? 1 : 2,
+    yields: yields ? { resource: yields.resource, amount: yields.amount } : null,
+    colors: [NATURAL_BIOME_COLOUR[biome][0], NATURAL_BIOME_COLOUR[biome][1], darken(NATURAL_BIOME_COLOUR[biome][1], 0.8)],
+    jitter: meta.lifeCapacity >= 2 ? 0.16 : 0.1,
+  }
+}
+
+function biomeDefForBiome(biome: BiomeId, base: number): Biome {
+  const meta = BIOME_META[biome]
+  const surface = materialIdForBiome(biome, base)
+  const [r, g, b] = hexToRgb(NATURAL_BIOME_COLOUR[biome][0])
+  const subsurface = meta.subsurface
+    ? [TAKEON_MATERIAL.rock, TAKEON_MATERIAL.basalt]
+    : meta.lifeCapacity >= 1
+      ? [surface, TAKEON_MATERIAL.regolith]
+      : biome === 'glacier-shelf' || biome === 'methane-lakes'
+        ? [TAKEON_MATERIAL.ice, TAKEON_MATERIAL.rock]
+        : [TAKEON_MATERIAL.rock]
+  return {
+    id: biome,
+    label: meta.label,
+    help: meta.help,
+    surface: [surface],
+    subsurface,
+    climate: BIOME_CLIMATE[biome],
+    // Tint is a multiplier on the body palette; keep it mild so biomes read
+    // through the body's own identity rather than replacing it.
+    tint: [0.7 + (r / 255) * 0.6, 0.7 + (g / 255) * 0.6, 0.7 + (b / 255) * 0.6],
+  }
+}
+
+function landnamBodyKindId(target: Pick<SurfaceTarget, 'id'>, lifeStage: LifeStage): string {
+  return `landnam:${target.id}:${lifeStage}`
+}
+
+/** Stable custom material id for a Landnam biome (ids ≥ CUSTOM_MATERIAL_BASE). */
+function materialIdForBiome(biome: BiomeId, base: number): number {
+  const index = LANDNAM_BIOME_IDS.indexOf(biome)
+  if (index < 0) throw new Error(`${biome} is a takeon built-in biome; it has no Landnam material`)
+  return base + index
 }

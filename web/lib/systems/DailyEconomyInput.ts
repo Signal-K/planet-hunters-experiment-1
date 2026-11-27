@@ -20,13 +20,27 @@ import type {
 // moves a rare price about as much as a common one.
 const UNITS_PER_BUILD_BY_RARITY: Record<string, number> = { common: 3, uncommon: 2, rare: 1, exotic: 1 }
 
-export function dailyEconomyMaterials(): DailyEconomyMaterial[] {
+export function buildDailyEconomyInput(options: {
+  snapshotDate: DateKey
+  savedStates: readonly unknown[]
+  publishedSnapshot?: DailyEconomySnapshot
+}): DailyEconomyInput {
+  return {
+    snapshotDate: options.snapshotDate,
+    clients: dailyEconomyClients(options.publishedSnapshot),
+    materials: dailyEconomyMaterials(),
+    completedBuildEvents: collectClientBuildEvents(options.savedStates),
+    publishedSnapshot: options.publishedSnapshot,
+  }
+}
+
+function dailyEconomyMaterials(): DailyEconomyMaterial[] {
   return Object.entries(MINERAL_META)
     .filter(([id]) => !isArtifactMineralId(id))
     .map(([id, meta]) => ({ id, name: meta.name, kind: 'raw' as const, referencePrice: meta.price }))
 }
 
-export function dailyEconomyClients(publishedSnapshot?: DailyEconomySnapshot): DailyEconomyClient[] {
+function dailyEconomyClients(publishedSnapshot?: DailyEconomySnapshot): DailyEconomyClient[] {
   const materials = new Set(dailyEconomyMaterials().map(material => material.id))
   return CLIENT_SLOTS.map(slot => ({
     id: slot.id,
@@ -41,7 +55,7 @@ export function dailyEconomyClients(publishedSnapshot?: DailyEconomySnapshot): D
 }
 
 /** Collects unique, well-formed build events for known clients from saved game states. */
-export function collectClientBuildEvents(savedStates: readonly unknown[]): ClientBuildCompletionEvent[] {
+function collectClientBuildEvents(savedStates: readonly unknown[]): ClientBuildCompletionEvent[] {
   const clientIds = new Set(CLIENT_SLOTS.map(slot => slot.id))
   const byId = new Map<string, ClientBuildCompletionEvent>()
   for (const state of savedStates) {
@@ -58,18 +72,4 @@ export function collectClientBuildEvents(savedStates: readonly unknown[]): Clien
     }
   }
   return [...byId.values()].sort((left, right) => left.eventId.localeCompare(right.eventId))
-}
-
-export function buildDailyEconomyInput(options: {
-  snapshotDate: DateKey
-  savedStates: readonly unknown[]
-  publishedSnapshot?: DailyEconomySnapshot
-}): DailyEconomyInput {
-  return {
-    snapshotDate: options.snapshotDate,
-    clients: dailyEconomyClients(options.publishedSnapshot),
-    materials: dailyEconomyMaterials(),
-    completedBuildEvents: collectClientBuildEvents(options.savedStates),
-    publishedSnapshot: options.publishedSnapshot,
-  }
 }

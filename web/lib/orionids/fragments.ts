@@ -6,8 +6,6 @@
 import type { Player } from '@/lib/game-types'
 import { FIREBALL_FRAGMENT_ID } from '@/lib/orionids/fireball'
 import { fragmentsCaughtOnLaunch } from '@/lib/orionids/launch-catch'
-
-export const ORIONID_DEBRIS_ID = 'orionid_debris'
 /** Held fragments spent for one research grant. One ordinary launch (2) is enough. */
 export const FRAGMENT_REDEEM_BATCH = 2
 /** Research XP for one redeem. A classification is 15; two fragments are the smaller step. */
@@ -100,3 +98,5 @@ export function combineFragments<T extends FragmentPlayer>(player: T): T {
   stash[FIREBALL_FRAGMENT_ID] = (stash[FIREBALL_FRAGMENT_ID] ?? 0) + 1
   return { ...player, stash }
 }
+
+const ORIONID_DEBRIS_ID = 'orionid_debris'

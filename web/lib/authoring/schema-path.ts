@@ -3,16 +3,6 @@
 import type { Schema } from './schema.ts'
 import type { Path } from './toml.ts'
 
-export function deref(schema: Schema, root: Schema): Schema {
-  let node = schema
-  while (node.$ref) {
-    const target = root.definitions?.[node.$ref.replace('#/definitions/', '')]
-    if (!target) return node
-    node = { ...target, description: node.description ?? target.description }
-  }
-  return node
-}
-
 export function schemaAt(root: Schema, path: Path): Schema | undefined {
   let node: Schema | undefined = deref(root, root)
   for (const part of path) {
@@ -62,4 +52,14 @@ export function defaultFor(schema: Schema | undefined): unknown {
   if (type === 'array') return []
   if (type === 'object') return schema?.properties?.x && schema.properties.w ? { x: 0.1, y: 0.1, w: 0.3, h: 0.1 } : {}
   return ''
+}
+
+function deref(schema: Schema, root: Schema): Schema {
+  let node = schema
+  while (node.$ref) {
+    const target = root.definitions?.[node.$ref.replace('#/definitions/', '')]
+    if (!target) return node
+    node = { ...target, description: node.description ?? target.description }
+  }
+  return node
 }

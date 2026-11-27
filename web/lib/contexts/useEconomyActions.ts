@@ -1,15 +1,13 @@
 import { useCallback } from 'react'
-import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyUpgradeBuilding, applyServiceLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom, applyBuildGroundTelescope, applyPlaceAnnex } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applyServiceLaunchpad, applyBuildGroundTelescope, applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
 import { applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { currentTrainingTry, completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { queueUpdate } from '@/lib/offline/pbOutbox'
 import { isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
-import { applyBuyMinerals, applySetPriceAlert, applyRemovePriceAlert, applyFireDueAlerts } from '@/lib/systems/MarketplaceSystem'
 import type { GameState } from '@/lib/game-types'
-import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
+import type { Mission, ShipRoomKind } from '@/lib/data'
 
 function finishRocketLesson(state: GameState): GameState {
   const replayReward = earnsTrainingReplayReward(state.player.flightPlan, 'part')
@@ -39,60 +37,8 @@ export function useEconomyActions(
     setState(s => applySellMinerals(s, mineralId, amount))
   }, [setState])
 
-  const buyMinerals = useCallback((mineralId: string, amount: number) => {
-    setState(s => applyBuyMinerals(s, mineralId, amount))
-  }, [setState])
-
-  const setPriceAlert = useCallback((mineralId: string, target: number) => {
-    setState(s => applyFireDueAlerts(applySetPriceAlert(s, mineralId, target)))
-  }, [setState])
-
-  const removePriceAlert = useCallback((alertId: string) => {
-    setState(s => applyRemovePriceAlert(s, alertId))
-  }, [setState])
-
-  const checkPriceAlerts = useCallback(() => {
-    setState(s => applyFireDueAlerts(s))
-  }, [setState])
-
-  const sellRefinedGoods = useCallback((recipeId: string, amount: number) => {
-    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-    if (!recipe) return
-    setState(s => applySellRefinedGoods(s, recipe, amount))
-  }, [setState])
-
-  const onStartRefine = useCallback((recipeId: string) => {
-    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-    if (!recipe) return
-    setState(s => applyStartRefine(s, recipe))
-  }, [setState])
-
-  const onCollectRefined = useCallback((recipeId: string) => {
-    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-    if (!recipe) return
-    setState(s => applyCollectRefined(s, recipe))
-  }, [setState])
-
-  const placeStructure = useCallback((structure: StructureBlueprint | undefined, kind: string, plot: number) => {
-    let placed = false
-    setState(s => {
-      const next = applyPlaceStructure(s, structure, kind, plot)
-      placed = next !== s
-      return next
-    })
-    return placed
-  }, [setState])
-
-  const upgradeLaunchpad = useCallback(() => {
-    setState(s => applyUpgradeLaunchpad(s))
-  }, [setState])
-
   const serviceLaunchpad = useCallback(() => {
     setState(s => applyServiceLaunchpad(s))
-  }, [setState])
-
-  const upgradeBuilding = useCallback((id: string) => {
-    setState(s => applyUpgradeBuilding(s, id))
   }, [setState])
 
   const buildGroundTelescope = useCallback(() => {
@@ -103,24 +49,6 @@ export function useEconomyActions(
       return next
     })
     return built
-  }, [setState])
-
-  const placeAnnex = useCallback((kind: string, plot: number) => {
-    let placed = false
-    setState(s => {
-      const next = applyPlaceAnnex(s, kind, plot)
-      placed = next !== s
-      return next
-    })
-    return placed
-  }, [setState])
-
-  const excavateSubsurface = useCallback(() => {
-    setState(s => applyExcavateSubsurface(s))
-  }, [setState])
-
-  const buildSubsurfaceRoom = useCallback((roomId: SubsurfaceRoomId) => {
-    setState(s => applyBuildSubsurfaceRoom(s, roomId))
   }, [setState])
 
   const abandonMission = useCallback((opts?: { confirmed?: boolean; waivePenalty?: boolean }) => {
@@ -171,8 +99,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, buyMinerals, setPriceAlert, removePriceAlert, checkPriceAlerts, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad, upgradeBuilding, serviceLaunchpad,
-    excavateSubsurface, buildSubsurfaceRoom, buildGroundTelescope, placeAnnex,
+    sellMinerals, serviceLaunchpad, buildGroundTelescope,
     abandonMission,
     reviewAgencyRocket, confirmShipCustomizerBuild,
   }

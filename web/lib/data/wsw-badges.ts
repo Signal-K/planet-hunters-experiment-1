@@ -31,9 +31,6 @@ export interface WswBadgeDef {
   tone: WswTone
 }
 
-/** Space Week window, UTC. Same days as the Rocket Revolution event. */
-export const WSW_EVENT_ID = 'rocket-revolution-2026'
-
 export const WSW_BADGES: ReadonlyArray<WswBadgeDef> = [
   { type: 'onboarding-relay', badgeId: 'wsw-2026-onboarding-relay', name: 'First Relay', eventId: 'rocket-revolution-2026', tone: 'blue' },
   { type: 'mining-free-ops', badgeId: 'wsw-2026-mining-free-ops', name: 'Debris Miner', eventId: 'draconids-2026', tone: 'green' },
@@ -49,11 +46,6 @@ export function getWswBadge(badgeId: string): WswBadgeDef | undefined {
 
 export function wswBadgeFor(type: WswMissionType): WswBadgeDef {
   return WSW_BADGES.find(def => def.type === type)!
-}
-
-/** Tier for a mission-type badge: gold during WSW, silver after, null before. */
-export function wswBadgeTier(at: Date | number): BadgeTier | null {
-  return badgeTierFor(WSW_EVENT_ID, at)
 }
 
 /** Classifies a completed mission into one of our six WSW categories. */
@@ -83,3 +75,11 @@ export function grantWswBadge<T extends Pick<Player, 'badges'>>(
   const badge: PlayerBadge = { eventId: badgeId, tier, earnedAt: at instanceof Date ? at.getTime() : at }
   return { player: { ...player, badges: { ...(player.badges ?? {}), [badgeId]: badge } }, granted: badge }
 }
+
+/** Tier for a mission-type badge: gold during WSW, silver after, null before. */
+function wswBadgeTier(at: Date | number): BadgeTier | null {
+  return badgeTierFor(WSW_EVENT_ID, at)
+}
+
+/** Space Week window, UTC. Same days as the Rocket Revolution event. */
+const WSW_EVENT_ID = 'rocket-revolution-2026'

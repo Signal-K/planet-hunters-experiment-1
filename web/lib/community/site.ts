@@ -100,10 +100,6 @@ export function siteFill(components: Pick<SiteComponentView, 'target' | 'total'>
   return need ? have / need : 0
 }
 
-export function siteStage(fill: number): string {
-  return SITE_RULES.stages.reduce((label, stage) => (fill >= stage.at ? stage.label : label), SITE_RULES.stages[0].label)
-}
-
 /** A site view from totals, the same shape the server returns. */
 export function buildSiteView(project: string, template: string, totals: Partial<Record<SiteComponent, number>>, mine: Partial<Record<SiteComponent, number>>, closed = false): SiteView {
   const tpl = SITE_RULES.templates[template] ?? SITE_RULES.templates[SITE_RULES.defaultTemplate]
@@ -113,4 +109,8 @@ export function buildSiteView(project: string, template: string, totals: Partial
     project, template: SITE_RULES.templates[template] ? template : SITE_RULES.defaultTemplate, name: tpl.name, components, fill,
     stage: siteStage(fill), mineTotal: components.reduce((sum, c) => sum + c.mine, 0), closed,
   }
+}
+
+function siteStage(fill: number): string {
+  return SITE_RULES.stages.reduce((label, stage) => (fill >= stage.at ? stage.label : label), SITE_RULES.stages[0].label)
 }

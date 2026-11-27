@@ -11,16 +11,12 @@ import type { GameState } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
 import { STRUCTURE_PRICES } from '@/lib/data/economy'
 import { nextGroundTelescopeId } from './InstrumentFeedSystem'
-import { annexSlotForPlot, isAnnexKind, placedAnnex } from '@/lib/scene/base-site'
-import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
+import type { ShipRoomKind, RocketModel, } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
-import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
-import { PAD_SERVICE_COST, buildingLevel, exchangeSaleBonus, buildingTimeMultiplier, isUpgradableBuilding, siloCapacityMultiplier, upgradeCost, MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
-import { freeOperationsUnlocked, trainingFinished } from './AgencyOnboardingSystem'
+import { MINERAL_META, isArtifactMineralId, CLIENT_SLOTS, OPEN_MARKET_SELL_RATE, SURFACE_SILO_CAPACITY, customizerPartById, } from '@/lib/data'
+import { PAD_SERVICE_COST, exchangeSaleBonus, siloCapacityMultiplier, } from '@/lib/data/building-levels'
 import { permanentResearchSaleRate } from '@/lib/research/marketplace'
-import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -29,10 +25,6 @@ export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
 // (already 80%-discounted) reference price.
 const SUPPLY_DIP_PER_UNIT = 0.01
 const MAX_SUPPLY_DIP = 0.6
-
-export function supplyDipMultiplier(unitsSold: number): number {
-  return Math.max(1 - MAX_SUPPLY_DIP, 1 - unitsSold * SUPPLY_DIP_PER_UNIT)
-}
 
 // Supply pressure recovers over real time so a mineral's price isn't
 // permanently discounted once a player has ever sold enough of it — full
@@ -143,20 +135,19 @@ export function applySellMinerals(
 // a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number>; buildingLevels?: BuildingLevels; launchpadUpgraded?: boolean; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
+type StoragePlayer = { placed?: string[]; storageBonus?: number; stash?: Record<string, number>; buildingLevels?: BuildingLevels; launchpadUpgraded?: boolean; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
 
 /** True once any Earth-side silo is built — the prerequisite for keeping ore
  *  on Earth. Excavation alone is not enough; the room/building is the silo. */
-export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): boolean {
+export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'storageBonus'>): boolean {
   return (player.placed ?? []).includes('surface-silo')
-    || (player.subsurfaceBuilt ?? []).includes('mineral-vault')
+    || (player.storageBonus ?? 0) > 0
 }
 
 /** Total ore units the player's silos can hold. 0 with no silo. */
-export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt' | 'buildingLevels' | 'agencyLevels'>): number {
+export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'storageBonus' | 'buildingLevels' | 'agencyLevels'>): number {
   return (agencyLevel(player, 'ore-storage') > 0 ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(agencyLevel(player, 'ore-storage')) : 0)
-    + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? MINERAL_SILO_CAPACITY : 0)
-    + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? DEEP_MINERAL_SILO_CAPACITY : 0)
+    + Math.max(0, player.storageBonus ?? 0)
 }
 
 /** Total ore units currently held in the stash. */
@@ -239,67 +230,19 @@ export function pickSpillForStore(stash: Record<string, number>, haul: Record<st
   return spill
 }
 
-/** Sell collected refined goods at their recipe output value. */
-/** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */
-export function refinedUnitPrice(recipe: Pick<RefineryRecipe, 'output'>, player: Pick<GameState['player'], 'researchPermanentBonuses' | 'communityBonus'>, now: number = Date.now()): number {
-  const price = recipe.output.price
-  const rate = permanentResearchSaleRate(player, now)
-  return rate > 0 ? Math.round(price * (1 + rate)) : price
-}
-
-export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number, now: number = Date.now()): GameState {
-  const available = s.player.refinedGoods[recipe.id] ?? 0
-  const quantity = Math.min(Math.max(0, Math.floor(amount)), available)
-  if (quantity <= 0) return s
+export function applyBuildGroundTelescope(s: GameState): GameState {
+  const id = nextGroundTelescopeId(s.player)
+  if (!id) return s
+  if (!s.player.freeOperations) return s
+  if (s.player.francs < STRUCTURE_PRICES.groundTelescope) return s
   return {
     ...s,
+    // SSL-852: building a telescope is putting an agency craft up, the same research stamp as a launch.
     player: addStamp({
       ...s.player,
-      francs: s.player.francs + refinedUnitPrice(recipe, s.player, now) * quantity,
-      refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
-    }, 'exchange-sale', now),
-  }
-}
-
-export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameState {
-  const lastStarted = s.player.refineryLastStartedAt
-  const currentDay = new Date().toISOString().slice(0, 10)
-  const lastDay = lastStarted == null ? null : new Date(lastStarted).toISOString().slice(0, 10)
-  if (lastDay === currentDay) return s
-  const stash = { ...(s.player.stash ?? {}) }
-  const current = stash[recipe.input.mineral] ?? 0
-  if (current < recipe.input.amount || s.player.francs < recipe.cost) return s
-  stash[recipe.input.mineral] = current - recipe.input.amount
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      francs: s.player.francs - recipe.cost,
-      stash,
-      refineryQueue: [...s.player.refineryQueue, {
-        recipeId: recipe.id,
-        startedAt: Date.now(),
-        durationMs: recipe.time * 1000 * buildingTimeMultiplier(buildingLevel(s.player, 'refinery')),
-      }],
-      refineryLastStartedAt: Date.now(),
-    },
-  }
-}
-
-export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameState {
-  const queue = [...s.player.refineryQueue]
-  const idx = queue.findIndex(q => q.recipeId === recipe.id)
-  if (idx < 0) return s
-  const started = queue[idx].startedAt
-  if (Date.now() - started < (queue[idx].durationMs ?? recipe.time * 1000)) return s
-  queue.splice(idx, 1)
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      refineryQueue: queue,
-      refinedGoods: { ...s.player.refinedGoods, [recipe.id]: (s.player.refinedGoods[recipe.id] ?? 0) + 1 },
-    },
+      francs: s.player.francs - STRUCTURE_PRICES.groundTelescope,
+      placed: [...s.player.placed, id],
+    }, 'launch', Date.now(), 'asteroid-discovery'),
   }
 }
 
@@ -449,140 +392,10 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
   return changed ? { ...s, player: { ...s.player, stash } } : s
 }
 
-/** Pay for a structure and record where it was placed. This was previously
- *  hand-rolled inside `GameScreenRouter`'s JSX — the one place in the app that
- *  debited francs from a React component rather than a system function. */
-export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
-  if (!structure || structure.kind !== kind) return s
-  if (s.player.placed.includes(kind)) return s
-  const eventSiloFree = kind === 'surface-silo'
-    && s.missionId === ORIONIDS_NIGHT_RUN_ID
-    && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
-  if (!eventSiloFree && !structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone })) return s
-  if (!eventSiloFree && s.player.francs < structure.cost) return s
-  if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
-  const stash = { ...(s.player.stash ?? {}) }
-  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
-    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
-  }
-  const placed = Array.from(new Set([...s.player.placed, kind]))
-  // SSL-332: placing the storage silo is the last training step. The tick it
-  // opens Free Ops ends the coach and raises the Free Ops handoff sheet.
-  const enteredFreeOperations = !s.player.freeOperations
-    && freeOperationsUnlocked({ missionsDone: s.player.missionsDone, placed })
-  return {
-    ...s,
-    // Free Ops opens with the launchpad, but the three training tries are an optional guide that is still running: only a finished
-    // training ends the coach and raises the "agency is operating" sheet.
-    ...(enteredFreeOperations && trainingFinished({ missionsDone: s.player.missionsDone, placed, flightPlan: s.player.flightPlan }) ? { tutorial: false, popup: 'tutorial-complete' } : {}),
-    player: {
-      ...s.player,
-      ...(enteredFreeOperations ? { freeOperations: true } : {}),
-      francs: s.player.francs - (eventSiloFree ? 0 : structure.cost),
-      stash,
-      placed,
-      placementPlots: { ...s.player.placementPlots, [kind]: plot },
-      underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
-      refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
-    },
-  }
-}
-
-/** Builds the next ground telescope from the control station (Liam, 31.10: the station's Build button must build it).
- *  SSL-802: one per annex slot, ₣2M each. A new telescope waits in the Base's Unplaced tray and observes once placed. */
-export function applyBuildGroundTelescope(s: GameState): GameState {
-  const id = nextGroundTelescopeId(s.player)
-  if (!id) return s
-  if (!s.player.freeOperations) return s
-  if (s.player.francs < STRUCTURE_PRICES.groundTelescope) return s
-  return {
-    ...s,
-    // SSL-852: building a telescope is putting an agency craft up, the same research stamp as a launch.
-    player: addStamp({
-      ...s.player,
-      francs: s.player.francs - STRUCTURE_PRICES.groundTelescope,
-      placed: [...s.player.placed, id],
-    }, 'launch', Date.now(), 'asteroid-discovery'),
-  }
-}
-
-/** SSL-843: stand an owned annex structure (one already paid for) on a free annex slot, or move it to another one.
- *  Free: the price was paid when it was built. A taken slot, an unowned kind or a non-annex kind is a no-op. */
-export function applyPlaceAnnex(s: GameState, kind: string, plot: number): GameState {
-  if (!isAnnexKind(kind) || !s.player.placed.includes(kind)) return s
-  if (!annexSlotForPlot(plot)) return s
-  const holder = placedAnnex(s.player).get(plot)
-  if (holder) return s
-  return { ...s, player: { ...s.player, placementPlots: { ...s.player.placementPlots, [kind]: plot } } }
-}
-
-export function applyExcavateSubsurface(s: GameState): GameState {
-  if (s.player.subsurfaceExcavated) return s
-  if (!canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs: s.player.francs, stash: s.player.stash })) return s
-  const stash = { ...(s.player.stash ?? {}) }
-  for (const [mineral, amount] of Object.entries(SUBSURFACE_EXCAVATE_COST.costMaterials)) {
-    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
-  }
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      francs: s.player.francs - SUBSURFACE_EXCAVATE_COST.cost,
-      stash,
-      subsurfaceExcavated: true,
-    },
-  }
-}
-
-export function applyBuildSubsurfaceRoom(s: GameState, roomId: SubsurfaceRoomId): GameState {
-  if (!s.player.subsurfaceExcavated) return s
-  if (s.player.subsurfaceBuilt?.includes(roomId)) return s
-  const room = SUBSURFACE_ROOMS.find(candidate => candidate.id === roomId)
-  if (!room) return s
-  if (!canAffordSubsurface(room, { francs: s.player.francs, stash: s.player.stash })) return s
-  const stash = { ...(s.player.stash ?? {}) }
-  for (const [mineral, amount] of Object.entries(room.costMaterials)) {
-    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
-  }
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      francs: s.player.francs - room.cost,
-      stash,
-      subsurfaceBuilt: Array.from(new Set([...(s.player.subsurfaceBuilt ?? []), roomId])),
-    },
-  }
-}
-
-/** Raise a placed building one level (max 3), paying the francs in BUILDING_UPGRADE_COSTS.
- *  No-op if the building is not placed, is maxed, or is unaffordable. Never touches `placed`. */
-export function applyUpgradeBuilding(s: GameState, id: string): GameState {
-  if (!isUpgradableBuilding(id) || !s.player.placed.includes(id)) return s
-  const level = buildingLevel(s.player, id)
-  const cost = upgradeCost(id, level)
-  if (cost === null || level >= MAX_BUILDING_LEVEL || s.player.francs < cost) return s
-  const next = level + 1
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      francs: s.player.francs - cost,
-      buildingLevels: { ...(s.player.buildingLevels ?? {}), [id]: next },
-      launchpadUpgraded: s.player.launchpadUpgraded || (id === 'launchpad' && next >= 2),
-    },
-  }
-}
-
 /** Pay to service the launchpad: resets the launch count. No-op if the pad is not placed, unworn or unaffordable. */
 export function applyServiceLaunchpad(s: GameState): GameState {
   if (!s.player.placed.includes('launchpad') || (s.player.padLaunches ?? 0) <= 0 || s.player.francs < PAD_SERVICE_COST) return s
   return { ...s, player: { ...s.player, francs: s.player.francs - PAD_SERVICE_COST, padLaunches: 0 } }
-}
-
-/** Launchpad level 1 to 2: the original one-off upgrade. */
-export function applyUpgradeLaunchpad(s: GameState): GameState {
-  return buildingLevel(s.player, 'launchpad') >= 2 ? s : applyUpgradeBuilding(s, 'launchpad')
 }
 
 // Ship customiser: swaps/upgrades individual room parts on the player's owned
@@ -619,4 +432,8 @@ export function applyConfirmShipCustomizerBuild(
       },
     },
   }
+}
+
+function supplyDipMultiplier(unitsSold: number): number {
+  return Math.max(1 - MAX_SUPPLY_DIP, 1 - unitsSold * SUPPLY_DIP_PER_UNIT)
 }

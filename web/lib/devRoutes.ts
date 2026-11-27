@@ -1,5 +1,24 @@
 
-export const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
+
+const MISSION_LABELS = new Set(['Mission 1', 'Mission 2', 'Mission 3', 'First Satellite Launch'])
+
+export function presetForMissionRoute(slug: string[] | undefined): string | null {
+  if (!slug || slug.length === 0) return null
+  const mission = slug[0].toLowerCase()
+  const shot = slug[1]?.toLowerCase()
+  const numbered = mission.startsWith('mission') ? mission.replace('mission', 'm') : mission
+  const canonicalMission = numbered === 'm2' ? 'transport' : numbered
+
+  if (!shot) return MISSION_ROUTE_DEFAULTS[canonicalMission] ?? null
+  return MISSION_ROUTE_SHOTS[canonicalMission]?.[shot] ?? null
+}
+
+export function presetForUiRoute(slug: string[] | undefined): string | null {
+  if (!slug || slug.length === 0) return null
+  return UI_ROUTE_PRESETS[slug.join('/').toLowerCase()] ?? null
+}
+
+const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
   m1: 'm1-hub',
   mission1: 'm1-hub',
   // SSL-332: guided mission 2 is Transport; the Storage Silo build follows.
@@ -12,7 +31,7 @@ export const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
   satellite: 'telescope-hub',
 }
 
-export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
+const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
   m1: {
     intro: 'm1-intro',
     hub: 'm1-hub',
@@ -38,7 +57,7 @@ export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
   },
 }
 
-export const UI_ROUTE_PRESETS: Record<string, string> = {
+const UI_ROUTE_PRESETS: Record<string, string> = {
   'mission-board': 'ui-mission-board',
   'target-picker': 'ui-target-picker',
   'tess-discovery': 'ui-tess-discovery',
@@ -52,22 +71,4 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   'orionids-ready': 'ui-orionids-ready',
   'orionids-shower-mining-fresh': 'ui-orionids-shower-mining-fresh',
   'orionids-shower-debrief': 'ui-orionids-shower-debrief',
-}
-
-const MISSION_LABELS = new Set(['Mission 1', 'Mission 2', 'Mission 3', 'First Satellite Launch'])
-
-export function presetForMissionRoute(slug: string[] | undefined): string | null {
-  if (!slug || slug.length === 0) return null
-  const mission = slug[0].toLowerCase()
-  const shot = slug[1]?.toLowerCase()
-  const numbered = mission.startsWith('mission') ? mission.replace('mission', 'm') : mission
-  const canonicalMission = numbered === 'm2' ? 'transport' : numbered
-
-  if (!shot) return MISSION_ROUTE_DEFAULTS[canonicalMission] ?? null
-  return MISSION_ROUTE_SHOTS[canonicalMission]?.[shot] ?? null
-}
-
-export function presetForUiRoute(slug: string[] | undefined): string | null {
-  if (!slug || slug.length === 0) return null
-  return UI_ROUTE_PRESETS[slug.join('/').toLowerCase()] ?? null
 }

@@ -103,15 +103,6 @@ export function unknownComponentTypes(entities: readonly EntityData[]): string[]
   return [...seen]
 }
 
-/**
- * Typed read of a marker component's data. Replaces the
- * `.find(c => c.type === 'BuildPlot')?.index as number` pattern — the caller
- * names the field's type once, at the read, instead of casting blind.
- */
-export function readComponent(entity: EntityData, type: string): ComponentData | undefined {
-  return entity.components.find(c => c.type === type)
-}
-
 export function readComponentNumber(entity: EntityData, type: string, field: string, fallback: number): number {
   const value = readComponent(entity, type)?.[field]
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback
@@ -126,3 +117,12 @@ export function readComponentString(entity: EntityData, type: string, field: str
 // importing from two places. SpriteRenderer needs a resolved texture rather
 // than raw scene data, which is why it has no `create` above.
 export { SpriteRenderer }
+
+/**
+ * Typed read of a marker component's data. Replaces the
+ * `.find(c => c.type === 'BuildPlot')?.index as number` pattern — the caller
+ * names the field's type once, at the read, instead of casting blind.
+ */
+function readComponent(entity: EntityData, type: string): ComponentData | undefined {
+  return entity.components.find(c => c.type === type)
+}

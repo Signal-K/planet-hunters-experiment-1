@@ -3,13 +3,12 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE, mergeRemoteState, normalizeState } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
-import { BUILDING_LEVEL_EFFECTS, BUILDING_UPGRADE_COSTS, SURFACE_SILO_CAPACITY, buildingLevel, sanitizeBuildingLevels } from '@/lib/data'
-import { REFINERY_RECIPES } from '@/lib/data/structures'
+import { BUILDING_LEVEL_EFFECTS, BUILDING_UPGRADE_COSTS, buildingLevel, sanitizeBuildingLevels } from '@/lib/data'
 import { PARTS, suggestBuild, validateBuild } from '@/lib/data/parts'
 import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padBuildMultiplier, padLaunchesLeft, padNeedsService } from '@/lib/data/building-levels'
 import { rocketPadLevel, ROCKET_IDS } from '@/lib/data/rockets'
 import { structureBuildMs, isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
-import { applyServiceLaunchpad, applyUpgradeBuilding, applyUpgradeLaunchpad, applyStartRefine, storageCapacity } from './EconomySystem'
+import { applyServiceLaunchpad } from './EconomySystem'
 
 function state(player: Partial<GameState['player']> = {}): GameState {
   return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery',], ...player } }
@@ -30,51 +29,6 @@ describe('building levels', () => {
     const s = normalizeState({ player: { placed: ['launchpad', 'refinery'], buildingLevels: 'junk' } as unknown as GameState['player'] })
     expect(s.player.placed).toEqual(['launchpad', 'refinery'])
     expect(s.player.buildingLevels).toEqual({})
-  })
-
-  it('upgrades step by step, charges the table price and stops at level 3', () => {
-    let s = state()
-    const before = s.player.francs
-    s = applyUpgradeBuilding(s, 'refinery')
-    expect(s.player.buildingLevels?.refinery).toBe(2)
-    expect(s.player.francs).toBe(before - BUILDING_UPGRADE_COSTS.refinery[0])
-    s = applyUpgradeBuilding(s, 'refinery')
-    expect(s.player.buildingLevels?.refinery).toBe(3)
-    const maxed = applyUpgradeBuilding(s, 'refinery')
-    expect(maxed).toBe(s)
-    expect(s.player.placed).toEqual(['launchpad', 'surface-silo', 'refinery'])
-  })
-
-  it('refuses unaffordable, unplaced and unknown buildings', () => {
-    const poor = state({ francs: 1 })
-    expect(applyUpgradeBuilding(poor, 'refinery')).toBe(poor)
-    const unplaced = state({ placed: ['launchpad'] })
-    expect(applyUpgradeBuilding(unplaced, 'refinery')).toBe(unplaced)
-    expect(applyUpgradeBuilding(unplaced, 'garage')).toBe(unplaced)
-  })
-
-  it('maps the launchpad upgrade onto level 2 and keeps the legacy flag', () => {
-    const s = applyUpgradeLaunchpad(state())
-    expect(s.player.buildingLevels?.launchpad).toBe(2)
-    expect(s.player.launchpadUpgraded).toBe(true)
-    expect(applyUpgradeLaunchpad(s)).toBe(s)
-  })
-
-  it('silo capacity scales x2 and x3', () => {
-    let s = state({ subsurfaceBuilt: [] })
-    expect(storageCapacity(s.player)).toBe(SURFACE_SILO_CAPACITY)
-    s = applyUpgradeBuilding(s, 'surface-silo')
-    expect(storageCapacity(s.player)).toBe(SURFACE_SILO_CAPACITY * 2)
-    s = applyUpgradeBuilding(s, 'surface-silo')
-    expect(storageCapacity(s.player)).toBe(SURFACE_SILO_CAPACITY * 3)
-  })
-
-  it('refinery level shortens the refining time', () => {
-    const recipe = REFINERY_RECIPES[0]
-    const stash = { [recipe.input.mineral]: recipe.input.amount }
-    const l1 = applyStartRefine(state({ stash, refineryQueue: [], refineryLastStartedAt: undefined }), recipe)
-    const l3 = applyStartRefine(state({ stash, refineryQueue: [], refineryLastStartedAt: undefined, buildingLevels: { refinery: 3 } }), recipe)
-    expect(l3.player.refineryQueue[0].durationMs).toBe((l1.player.refineryQueue[0].durationMs ?? 0) * 0.5)
   })
 
   it('launchpad level 3 counts as two flown missions for part unlocks', () => {

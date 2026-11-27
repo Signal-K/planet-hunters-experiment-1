@@ -7,19 +7,10 @@ import type { Target } from '@/lib/data'
 import { applyGainResearchXP } from './ProgressionSystem'
 
 export const SURVEY_SCAN_DURATION_MS = 120_000
-export const SURVEY_SCAN_RESEARCH_XP = 12
-/** SSL-803: a finished scan sometimes asks the player to confirm it by hand in an instrument. */
-export const FOLLOW_UP_ONE_IN = 3
-export const FOLLOW_UP_BONUS_XP = 10
 export const FOLLOW_UP_BONUS_FRAGMENTS = 1
 export type FollowUpProject = 'tess' | 'asteroid' | 'saturn'
 
 export type ScanPlayer = Pick<Player, 'freeOperations' | 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'deepSpaceTelescopeLaunchedAt' | 'activeScan' | 'chartedBodies'>
-
-/** An owned telescope is what does the scanning. */
-export function scanInstrumentLaunched(player: ScanPlayer): boolean {
-  return !!player.freeOperations && !!(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt || player.deepSpaceTelescopeLaunchedAt)
-}
 
 export function scanProgress(player: Pick<Player, 'activeScan'>, now: number): number {
   const scan = player.activeScan
@@ -71,4 +62,16 @@ export function applyResolveScan(state: GameState, now: number = Date.now(), tar
     ? { targetId: scan.targetId, project: followUpProject(targets?.find(item => item.id === scan.targetId)), at: now }
     : state.player.scanFollowUp
   return applyGainResearchXP({ ...state, player: { ...state.player, activeScan: null, chartedBodies: charted, scanFollowUp } }, SURVEY_SCAN_RESEARCH_XP)
+}
+
+const SURVEY_SCAN_RESEARCH_XP = 12
+
+/** SSL-803: a finished scan sometimes asks the player to confirm it by hand in an instrument. */
+const FOLLOW_UP_ONE_IN = 3
+
+const FOLLOW_UP_BONUS_XP = 10
+
+/** An owned telescope is what does the scanning. */
+function scanInstrumentLaunched(player: ScanPlayer): boolean {
+  return !!player.freeOperations && !!(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt || player.deepSpaceTelescopeLaunchedAt)
 }

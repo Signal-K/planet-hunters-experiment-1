@@ -1,14 +1,4 @@
-/**
- * Base camera math (SSL-503). The base is authored to fit the viewport at zoom 1 (the whole-base view);
- * zooming in magnifies it and the camera pans over the larger world. Offsets are screen pixels applied
- * as `translate(x, y) scale(zoom)` with origin top-left, so the world is never smaller than the view.
- */
-export const MIN_ZOOM = 0.1
-/** Wheel and pinch never zoom out past the whole-base view: below it the strip stops covering the viewport. */
-export const GESTURE_MIN_ZOOM = 1
-export const MAX_ZOOM = 2.6
-/** How far past the hard edge a drag may stretch before it springs back, as a fraction of the viewport. */
-export const SOFT_EDGE = 0.08
+
 
 export interface BaseCameraState {
   x: number
@@ -29,10 +19,6 @@ export const BASE_CAMERA_HOME: BaseCameraState = { x: 0, y: 0, zoom: 1 }
 export function fitZoom(view: Viewport): number {
   const worldW = Math.max(view.worldW ?? view.w, view.w)
   return clampZoom(Math.min(1, view.w / worldW))
-}
-
-export function clampZoom(zoom: number): number {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
 }
 
 /** Hard pan limits for a zoom: the offset range that keeps the world covering the viewport. */
@@ -93,3 +79,22 @@ export function focusOn(point: { x: number; y: number }, zoom: number, view: Vie
   const z = clampZoom(zoom)
   return clampCamera({ zoom: z, x: view.w / 2 - point.x * z, y: view.h / 2 - point.y * z }, view)
 }
+
+/** Wheel and pinch never zoom out past the whole-base view: below it the strip stops covering the viewport. */
+const GESTURE_MIN_ZOOM = 1
+
+/** How far past the hard edge a drag may stretch before it springs back, as a fraction of the viewport. */
+const SOFT_EDGE = 0.08
+
+function clampZoom(zoom: number): number {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom))
+}
+
+/**
+ * Base camera math (SSL-503). The base is authored to fit the viewport at zoom 1 (the whole-base view);
+ * zooming in magnifies it and the camera pans over the larger world. Offsets are screen pixels applied
+ * as `translate(x, y) scale(zoom)` with origin top-left, so the world is never smaller than the view.
+ */
+const MIN_ZOOM = 0.1
+
+const MAX_ZOOM = 2.6

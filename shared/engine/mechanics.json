@@ -141,11 +141,10 @@
     },
     {
       "id": "economy",
-      "name": "Market, daily economy and refinery jobs",
+      "name": "Ore sales, rocket prices and daily economy",
       "web": [
         "web/lib/systems/EconomySystem.ts",
         "web/lib/systems/DailyEconomySystem.ts",
-        "web/lib/systems/MarketplaceSystem.ts",
         "web/lib/systems/DailyEconomyInput.ts"
       ],
       "native": [

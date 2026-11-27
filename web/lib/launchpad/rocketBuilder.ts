@@ -55,31 +55,8 @@ function channel(hex: number, shift: number): number {
   return (hex >> shift) & 255
 }
 
-/** Pull a palette colour toward blueprint paper so the pad stays a light scene. Orange leans are cooled toward blue. */
-export function liftColor(hex: number, whiteMix: number): string {
-  const mix = Math.min(1, Math.max(0, whiteMix))
-  let r = Math.round(channel(hex, 16) + (238 - channel(hex, 16)) * mix)
-  let g = Math.round(channel(hex, 8) + (243 - channel(hex, 8)) * mix)
-  let b = Math.round(channel(hex, 0) + (248 - channel(hex, 0)) * mix)
-  if (r > b + 24 && r >= g) {
-    const pull = Math.min(48, r - b)
-    r -= pull
-    b = Math.min(255, b + Math.round(pull * 0.4))
-  }
-  return `rgb(${r}, ${g}, ${b})`
-}
-
 export function asLoadout(parts: InstalledCustomizerPartsByKind | BuilderLoadout | null | undefined): BuilderLoadout {
   return { ...(parts ?? {}) }
-}
-
-export function partsForSlot(slot: BuilderSlot, missionsDone: number): CustomizerPart[] {
-  return CUSTOMIZER_PARTS.filter(part => {
-    if (part.kind !== slot.kind) return false
-    if ((part.unlockedAtMissions ?? 0) > missionsDone) return false
-    if (slot.match && !part.id.includes(slot.match)) return false
-    return true
-  })
 }
 
 /** Every part a slot can hold, in catalog order, whether or not it is unlocked yet. */
@@ -210,4 +187,27 @@ export function builderLandscape(target: Pick<Target, 'id' | 'type' | 'archetype
     period: layout.period,
     pieces: layout.pieces,
   }
+}
+
+/** Pull a palette colour toward blueprint paper so the pad stays a light scene. Orange leans are cooled toward blue. */
+function liftColor(hex: number, whiteMix: number): string {
+  const mix = Math.min(1, Math.max(0, whiteMix))
+  let r = Math.round(channel(hex, 16) + (238 - channel(hex, 16)) * mix)
+  let g = Math.round(channel(hex, 8) + (243 - channel(hex, 8)) * mix)
+  let b = Math.round(channel(hex, 0) + (248 - channel(hex, 0)) * mix)
+  if (r > b + 24 && r >= g) {
+    const pull = Math.min(48, r - b)
+    r -= pull
+    b = Math.min(255, b + Math.round(pull * 0.4))
+  }
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+function partsForSlot(slot: BuilderSlot, missionsDone: number): CustomizerPart[] {
+  return CUSTOMIZER_PARTS.filter(part => {
+    if (part.kind !== slot.kind) return false
+    if ((part.unlockedAtMissions ?? 0) > missionsDone) return false
+    if (slot.match && !part.id.includes(slot.match)) return false
+    return true
+  })
 }

@@ -18,8 +18,6 @@ export interface SuiteHop {
 
 export const SUITE_GARDEN_URL = 'https://starsailors.space/game'
 
-export const SUITE_HOP_SOURCE = 'landnam'
-
 function isHttpsUrl(value: string | undefined): value is string {
   if (!value) return false
   try {
@@ -60,3 +58,5 @@ export function getSuiteHops(spectraUrl: string | undefined = process.env.NEXT_P
 export function gardenCampLabel(signedIn: boolean): string | null {
   return signedIn ? 'SAME ACCOUNT' : null
 }
+
+const SUITE_HOP_SOURCE = 'landnam'

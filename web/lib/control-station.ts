@@ -8,6 +8,77 @@ export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelesco
 export { GROUND_TELESCOPE_STRUCTURE_ID } from '@/lib/systems/InstrumentFeedSystem'
 import { GROUND_TELESCOPE_STRUCTURE_ID, observingGroundTelescopes } from '@/lib/systems/InstrumentFeedSystem'
 
+const CONTROL_STATION_BODIES: readonly StationBody[] = [
+  { id: 'earth', name: 'Earth', x: 170, y: 150, r: 48, kind: 'planet' },
+  { id: 'saturn', name: 'Saturn', x: 490, y: 142, r: 36, kind: 'ringed' },
+]
+
+const CONTROL_STATION_LOCATIONS: readonly StationLocation[] = [
+  { id: 'earth-surface', bodyId: 'earth', zone: 'Surface', groupLabel: 'Earth · Surface' },
+  { id: 'earth-orbit', bodyId: 'earth', zone: 'Orbit', groupLabel: 'Earth · Orbit' },
+  { id: 'saturn', bodyId: 'saturn', zone: null, groupLabel: 'Saturn' },
+]
+
+const CONTROL_STATION_PROJECTS: readonly StationProject[] = [
+  { id: 'exoplanet-hunters', label: 'Exoplanet Hunters', signalKind: 'transit' },
+  { id: 'asteroid-discovery', label: 'Asteroid discovery', signalKind: 'deep-space' },
+  { id: 'saturn-storms', label: 'Saturn storms', signalKind: 'saturn' },
+]
+
+const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
+  {
+    id: 'ground-telescopes',
+    name: 'Ground telescopes',
+    locationId: 'earth-surface',
+    projectIds: ['asteroid-discovery'],
+    presence: 'built',
+    structureId: GROUND_TELESCOPE_STRUCTURE_ID,
+    // SSL-802: live once one stands on an annex slot; a new one in the Unplaced tray is standing by.
+    feedFlag: 'ground-observing',
+    observingLabel: 'Observing',
+    readyLabel: 'Observing',
+    standbyLabel: 'Standing by',
+    map: { x: 148, y: 172 },
+  },
+  {
+    id: 'transit-telescope',
+    name: 'Space Telescope',
+    locationId: 'earth-orbit',
+    projectIds: ['exoplanet-hunters'],
+    presence: 'transitSatelliteLaunchedAt',
+    feedFlag: 'transitSatelliteLaunchedAt',
+    observingLabel: 'Observing',
+    readyLabel: 'Observing',
+    standbyLabel: 'Standing by',
+    map: { x: 188, y: 68 },
+  },
+  {
+    id: 'deep-space-telescope',
+    name: 'Space Telescope',
+    locationId: 'earth-orbit',
+    projectIds: ['asteroid-discovery'],
+    presence: 'deepSpaceTelescopeBuilt',
+    feedFlag: 'deepSpaceTelescopeBuilt',
+    observingLabel: 'Observing',
+    readyLabel: 'Observing',
+    standbyLabel: 'Standing by',
+    map: { x: 252, y: 178 },
+  },
+  {
+    id: 'saturn-imager',
+    name: 'Saturn satellite',
+    locationId: 'saturn',
+    projectIds: ['saturn-storms'],
+    presence: 'saturnImagerLaunchedAt',
+    feedFlag: 'saturnImagerLaunchedAt',
+    observingLabel: 'Observing',
+    readyLabel: 'Frame ready',
+    standbyLabel: 'Standing by',
+    map: { x: 540, y: 96 },
+  },
+]
+
+
 export interface StationPlayer {
   freeOperations?: boolean
   placed?: readonly string[]
@@ -69,83 +140,6 @@ export interface ControlStationCatalog {
   locations: readonly StationLocation[]
   projects: readonly StationProject[]
   equipment: readonly StationEquipment[]
-}
-
-export const CONTROL_STATION_BODIES: readonly StationBody[] = [
-  { id: 'earth', name: 'Earth', x: 170, y: 150, r: 48, kind: 'planet' },
-  { id: 'saturn', name: 'Saturn', x: 490, y: 142, r: 36, kind: 'ringed' },
-]
-
-export const CONTROL_STATION_LOCATIONS: readonly StationLocation[] = [
-  { id: 'earth-surface', bodyId: 'earth', zone: 'Surface', groupLabel: 'Earth · Surface' },
-  { id: 'earth-orbit', bodyId: 'earth', zone: 'Orbit', groupLabel: 'Earth · Orbit' },
-  { id: 'saturn', bodyId: 'saturn', zone: null, groupLabel: 'Saturn' },
-]
-
-export const CONTROL_STATION_PROJECTS: readonly StationProject[] = [
-  { id: 'exoplanet-hunters', label: 'Exoplanet Hunters', signalKind: 'transit' },
-  { id: 'asteroid-discovery', label: 'Asteroid discovery', signalKind: 'deep-space' },
-  { id: 'saturn-storms', label: 'Saturn storms', signalKind: 'saturn' },
-]
-
-export const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
-  {
-    id: 'ground-telescopes',
-    name: 'Ground telescopes',
-    locationId: 'earth-surface',
-    projectIds: ['asteroid-discovery'],
-    presence: 'built',
-    structureId: GROUND_TELESCOPE_STRUCTURE_ID,
-    // SSL-802: live once one stands on an annex slot; a new one in the Unplaced tray is standing by.
-    feedFlag: 'ground-observing',
-    observingLabel: 'Observing',
-    readyLabel: 'Observing',
-    standbyLabel: 'Standing by',
-    map: { x: 148, y: 172 },
-  },
-  {
-    id: 'transit-telescope',
-    name: 'Space Telescope',
-    locationId: 'earth-orbit',
-    projectIds: ['exoplanet-hunters'],
-    presence: 'transitSatelliteLaunchedAt',
-    feedFlag: 'transitSatelliteLaunchedAt',
-    observingLabel: 'Observing',
-    readyLabel: 'Observing',
-    standbyLabel: 'Standing by',
-    map: { x: 188, y: 68 },
-  },
-  {
-    id: 'deep-space-telescope',
-    name: 'Space Telescope',
-    locationId: 'earth-orbit',
-    projectIds: ['asteroid-discovery'],
-    presence: 'deepSpaceTelescopeBuilt',
-    feedFlag: 'deepSpaceTelescopeBuilt',
-    observingLabel: 'Observing',
-    readyLabel: 'Observing',
-    standbyLabel: 'Standing by',
-    map: { x: 252, y: 178 },
-  },
-  {
-    id: 'saturn-imager',
-    name: 'Saturn satellite',
-    locationId: 'saturn',
-    projectIds: ['saturn-storms'],
-    presence: 'saturnImagerLaunchedAt',
-    feedFlag: 'saturnImagerLaunchedAt',
-    observingLabel: 'Observing',
-    readyLabel: 'Frame ready',
-    standbyLabel: 'Standing by',
-    map: { x: 540, y: 96 },
-  },
-]
-
-export const CONTROL_STATION_CATALOG: ControlStationCatalog = {
-  bodies: CONTROL_STATION_BODIES,
-  locations: CONTROL_STATION_LOCATIONS,
-  projects: CONTROL_STATION_PROJECTS,
-  equipment: CONTROL_STATION_EQUIPMENT,
 }
 
 export interface ControlStationProjectTag {
@@ -356,4 +350,11 @@ export function buildControlStation(input: {
 
   const skyBadges = WSW_EVENT_IDS.flatMap(id => wswChip(id, input.player.badges, now) ?? [])
   return { filters, activeBodyId, bodies, markers, groups, emptyLabel, skyBadges }
+}
+
+const CONTROL_STATION_CATALOG: ControlStationCatalog = {
+  bodies: CONTROL_STATION_BODIES,
+  locations: CONTROL_STATION_LOCATIONS,
+  projects: CONTROL_STATION_PROJECTS,
+  equipment: CONTROL_STATION_EQUIPMENT,
 }

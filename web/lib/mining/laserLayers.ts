@@ -5,9 +5,6 @@ import { PIECE_SIZE, layoutForPalette, type DepositKind, type TerrainPiece } fro
 
 export interface Obstacle { x: number; halfW: number; height: number; kind: TerrainPiece }
 
-/** Native laser kit is authored at 1px and drawn at 2. */
-export const LASER_PX = 2
-
 const KIT = '/game/assets/laser'
 
 function lerp(a: number, b: number, t: number): number {
@@ -491,3 +488,6 @@ export function depositTag(text: string, x: number, y: number): Container {
   tag.y = Math.round(y)
   return tag
 }
+
+/** Native laser kit is authored at 1px and drawn at 2. */
+const LASER_PX = 2

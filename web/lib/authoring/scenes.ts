@@ -40,26 +40,6 @@ export interface SceneSummary {
 
 const list = (value: unknown): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [])
 
-export function feedbackSummary(root: string, sceneId: string): FeedbackSummary {
-  const file = join(root, AUTHORING_DIR, 'feedback', `${sceneId}.toml`)
-  const none: FeedbackSummary = { exists: false, wrong: 0, keep: 0, unresolved: 0, inspiration: 0 }
-  if (!existsSync(file)) return none
-  const parsed = parseToml(readFileSync(file, 'utf8'))
-  if (!parsed.ok) return { ...none, exists: true }
-  // Feedback may be mid-edit and not schema-valid, so read it leniently.
-  const value = parsed.doc.value as Partial<FeedbackDoc>
-  const pins = Array.isArray(value.pins) ? value.pins : []
-  return {
-    exists: true,
-    status: value.status,
-    mode: value.mode,
-    wrong: pins.filter(p => p.kind === 'wrong').length,
-    keep: pins.filter(p => p.kind === 'keep').length,
-    unresolved: pins.filter(p => p.kind === 'wrong' && !p.resolved).length,
-    inspiration: Array.isArray(value.inspiration) ? value.inspiration.length : 0,
-  }
-}
-
 export function listScenes(root: string, context: AuthoringContext = loadContext(root)): SceneSummary[] {
   const dir = join(root, AUTHORING_DIR, 'scenes')
   if (!existsSync(dir)) return []
@@ -120,4 +100,24 @@ export function scenesForFile(scenes: SceneSummary[], file: string): string[] {
 export function scenesForTicket(scenes: SceneSummary[], ticket: string): string[] {
   const key = ticket.toUpperCase()
   return scenes.filter(s => s.tickets.includes(key)).map(s => s.id)
+}
+
+function feedbackSummary(root: string, sceneId: string): FeedbackSummary {
+  const file = join(root, AUTHORING_DIR, 'feedback', `${sceneId}.toml`)
+  const none: FeedbackSummary = { exists: false, wrong: 0, keep: 0, unresolved: 0, inspiration: 0 }
+  if (!existsSync(file)) return none
+  const parsed = parseToml(readFileSync(file, 'utf8'))
+  if (!parsed.ok) return { ...none, exists: true }
+  // Feedback may be mid-edit and not schema-valid, so read it leniently.
+  const value = parsed.doc.value as Partial<FeedbackDoc>
+  const pins = Array.isArray(value.pins) ? value.pins : []
+  return {
+    exists: true,
+    status: value.status,
+    mode: value.mode,
+    wrong: pins.filter(p => p.kind === 'wrong').length,
+    keep: pins.filter(p => p.kind === 'keep').length,
+    unresolved: pins.filter(p => p.kind === 'wrong' && !p.resolved).length,
+    inspiration: Array.isArray(value.inspiration) ? value.inspiration.length : 0,
+  }
 }

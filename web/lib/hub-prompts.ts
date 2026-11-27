@@ -11,10 +11,6 @@ export function signalPromptKey(signal: { kind: string; id: string }): HubPrompt
   return `signal:${signal.kind}:${signal.id}`
 }
 
-export function hubPromptValue(key: HubPromptKey, player: Pick<Player, 'transitSatelliteLaunchedAt'>): number {
-  return key === HUB_PROMPT_TRANSIT_TELESCOPE && player.transitSatelliteLaunchedAt ? 0 : 1
-}
-
 export function isHubPromptDismissed(
   player: Pick<Player, 'dismissedHubPrompts' | 'transitSatelliteLaunchedAt'>,
   key: HubPromptKey,
@@ -32,4 +28,8 @@ export function dismissHubPrompt(player: Player, key: HubPromptKey): Player {
       [key]: hubPromptValue(key, player),
     },
   }
+}
+
+function hubPromptValue(key: HubPromptKey, player: Pick<Player, 'transitSatelliteLaunchedAt'>): number {
+  return key === HUB_PROMPT_TRANSIT_TELESCOPE && player.transitSatelliteLaunchedAt ? 0 : 1
 }

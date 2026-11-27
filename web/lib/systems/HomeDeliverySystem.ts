@@ -30,16 +30,6 @@ export function siloRoomFor(player: GameState['player'], cargo: Record<string, n
   return { capacity, used, free: Math.max(0, capacity - used), limit: capacity, built }
 }
 
-/** SSL-845: older stock (stash minus this haul) that must be sold, cheapest first, to fit `siloUnits` of the haul. */
-export function displacedForSilo(stash: Record<string, number> | undefined, cargo: Record<string, number>, siloUnits: number, capacity: number): Record<string, number> {
-  const older: Record<string, number> = {}
-  for (const [id, n] of Object.entries(stash ?? {})) {
-    const kept = Math.max(0, n) - Math.max(0, cargo[id] ?? 0)
-    if (kept > 0) older[id] = kept
-  }
-  return pickOverflowFromHaul(older, Math.max(0, storedUnits(older) + siloUnits - capacity))
-}
-
 /** Sensible starting split: fill the contract first, then the silo, then sell the rest. */
 export function defaultHomeSplit(cargo: Record<string, number>, demand: Record<string, number>, siloFree: number): HomeSplit {
   const split: HomeSplit = {}
@@ -129,4 +119,14 @@ export function applyHomeSplit(s: GameState, split: HomeSplit, now = Date.now(),
     state: { ...sold, player: { ...sold.player, homeDeliveryPending: false, homeSettlement, cargoSettledOffworld: true, freeHaulDisposition: undefined } },
     consumed,
   }
+}
+
+/** SSL-845: older stock (stash minus this haul) that must be sold, cheapest first, to fit `siloUnits` of the haul. */
+function displacedForSilo(stash: Record<string, number> | undefined, cargo: Record<string, number>, siloUnits: number, capacity: number): Record<string, number> {
+  const older: Record<string, number> = {}
+  for (const [id, n] of Object.entries(stash ?? {})) {
+    const kept = Math.max(0, n) - Math.max(0, cargo[id] ?? 0)
+    if (kept > 0) older[id] = kept
+  }
+  return pickOverflowFromHaul(older, Math.max(0, storedUnits(older) + siloUnits - capacity))
 }

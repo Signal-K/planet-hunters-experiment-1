@@ -10,7 +10,8 @@
 import { ROCKET_MODELS } from './rockets'
 import { CARGO_BONUS_CAP, CONTRACT_FEES, CONTRACT_FEE_STEP } from './economy'
 
-export const MISSION_PAYOUT_FLOORS = CONTRACT_FEES
+const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.name === 'Prospector')?.costFrancs ?? 1_300_000_000
+
 
 export function missionPayoutFloor(sequence: number): number {
   if (sequence <= 1) return CONTRACT_FEES[1]
@@ -33,13 +34,6 @@ export function normalizeMissionPayout(raw: number, sequence: number): number {
   const fee = missionPayoutFloor(sequence)
   return Math.round(fee + Math.min(raw, fee * CARGO_BONUS_CAP))
 }
-
-// Cost of the Prospector — the heavier vehicle unlocked after the first
-// guided contract and used for the Transport lesson. Used as the reference
-// point for onboarding payout floors. The purchase sits between the two guided
-// contracts, so the first contract's floor alone has to cover it; the second
-// payout arrives too late to help fund it, and then funds the storage silo.
-export const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.name === 'Prospector')?.costFrancs ?? 1_300_000_000
 
 /** Onboarding floor: 1.05× the Prospector's cost for the first two missions. */
 const ONBOARDING_PAYOUT_FLOOR = Math.round(ONBOARDING_ROCKET_COST * 1.05)

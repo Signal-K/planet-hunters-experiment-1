@@ -33,11 +33,6 @@ const BASE_PLAYER: Player = {
   clientStreaks: {},
   clientCooldowns: {},
   researchAnnotations: 0,
-  refineryBuilt: false,
-  refineryUnlocked: false,
-  refineryUnlockNotified: false,
-  refineryQueue: [],
-  refinedGoods: {},
   launchpadUpgraded: false,
   loanDebt: 0,
   loanOffered: false,
@@ -379,7 +374,7 @@ function fixture(name: string): Partial<GameState> | null {
       const earthBiome = name.replace('hub-biome-', '') as Player['earthBiome']
       return {
         screen: 'hub',
-        player: { ...POST_ONBOARDING_PLAYER, earthBiome, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 } },
+        player: { ...POST_ONBOARDING_PLAYER, earthBiome, placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 } },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -390,7 +385,7 @@ function fixture(name: string): Partial<GameState> | null {
     case 'hub-pad-worn':
       return {
         screen: 'hub',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, padLaunches: 10 },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, padLaunches: 10 },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -403,7 +398,7 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...POST_ONBOARDING_PLAYER,
           francs: 11_500_000_000,
-          placed: ['launchpad', 'market', 'control-station', 'surface-silo', 'ground-telescope'],
+          placed: ['launchpad', 'control-station', 'surface-silo', 'ground-telescope'],
           placementPlots: { launchpad: 0, market: 1, 'surface-silo': 2, 'control-station': 3 },
         },
         tutorial: false, doneSteps: TRAINING_DONE,
@@ -425,7 +420,7 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...POST_ONBOARDING_PLAYER,
           francs: 80_000_000,
-          placed: ['launchpad', 'market', 'hangar', 'control-station'],
+          placed: ['launchpad', 'hangar', 'control-station'],
           placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
           buildingLevels: { launchpad: level, market: level, hangar: level, 'control-station': level },
           launchpadUpgraded: true,
@@ -435,7 +430,7 @@ function fixture(name: string): Partial<GameState> | null {
     case 'hub-pad-l3':
       return {
         screen: 'hub',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, buildingLevels: { launchpad: name === 'hub-pad-l3' ? 3 : 2 }, launchpadUpgraded: true, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, buildingLevels: { launchpad: name === 'hub-pad-l3' ? 3 : 2 }, launchpadUpgraded: true, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -457,7 +452,7 @@ function fixture(name: string): Partial<GameState> | null {
         screen: 'hub',
         player: {
           ...POST_ONBOARDING_PLAYER,
-          placed: ['launchpad', 'hangar', 'market'], placementPlots: { launchpad: 0, hangar: 1, market: 2 },
+          placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 },
           badges: { 'orionids-2026': { eventId: 'orionids-2026', tier: 'gold', earnedAt: 1 } },
         },
         tutorial: false, doneSteps: TRAINING_DONE,
@@ -774,7 +769,7 @@ function fixture(name: string): Partial<GameState> | null {
       // Launch review reached from the solar map: one rocket, the place, the work, the cargo. Agency mission (self-directed mining) at Mercury.
       return {
         screen: 'fab',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'market', 'hangar', 'control-station', 'surface-silo'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4 } },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar', 'control-station', 'surface-silo'], placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3, 'surface-silo': 4 } },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: SELF_DIRECTED_MINING_MISSION_ID,
@@ -1224,7 +1219,7 @@ function fixture(name: string): Partial<GameState> | null {
     case 'ui-surface-silo':
       return {
         screen: 'surface-silo',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'surface-silo', 'market'], stash: { iron: 18, aluminium: 9, silicon: 8, nickel: 6, carbon: 3, leonid_debris: 1 }, subsurfaceBuilt: ['mineral-vault'] },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'surface-silo'], stash: { iron: 18, aluminium: 9, silicon: 8, nickel: 6, carbon: 3, leonid_debris: 1 } },
         tutorial: false, doneSteps: TRAINING_DONE, missionId: null, targetId: null, lastCargo: null, popup: null,
       }
 
@@ -1320,7 +1315,7 @@ function fixture(name: string): Partial<GameState> | null {
         screen: 'hub',
         player: {
           ...base.player,
-          placed: ['launchpad', 'market', 'hangar', 'control-station'],
+          placed: ['launchpad', 'hangar', 'control-station'],
           placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
           freeOperations: true,
           transitSatelliteLaunchedAt: Date.now() - 86_400_000,
@@ -1495,8 +1490,7 @@ function fixture(name: string): Partial<GameState> | null {
           missionsDone: 8, francs: 120_000_000,
           placed: ['launchpad', 'transit-telescope', 'surface-silo'],
           placementPlots: { launchpad: 0, 'transit-telescope': 1, 'surface-silo': 2 },
-          refineryBuilt: true, refineryUnlocked: true,
-          stash: { iron: 40, nickel: 20, silicates: 15, copper: 8 },
+                  stash: { iron: 40, nickel: 20, silicates: 15, copper: 8 },
         },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
@@ -1510,10 +1504,9 @@ function fixture(name: string): Partial<GameState> | null {
         player: {
           ...ASTEROID_DISCOVERY_PLAYER,
           missionsDone: 20, francs: 600_000_000,
-          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo', 'market'],
+          placed: ['launchpad', 'transit-telescope', 'deep-space-telescope', 'surface-silo'],
           placementPlots: { launchpad: 0, 'transit-telescope': 1, 'deep-space-telescope': 2, 'surface-silo': 3, market: 4 },
-          refineryBuilt: true, refineryUnlocked: true, launchpadUpgraded: true,
-          clientMissions: { 'helios-propulsion-depot': 14, 'arcturus-battery-systems': 12 },
+                  clientMissions: { 'helios-propulsion-depot': 14, 'arcturus-battery-systems': 12 },
           stash: { iron: 120, nickel: 60, silicates: 40, copper: 30, gold: 6 },
         },
         tutorial: false, doneSteps: TRAINING_DONE,

@@ -55,15 +55,15 @@ export function mergeNightCatches(
   return local.night > incoming.night ? local : incoming
 }
 
-export function cargoMass(cargo: Record<string, number>): number {
-  return Object.entries(cargo).reduce((sum, [id, amount]) => {
-    if (amount <= 0) return sum
-    return sum + amount * cargoUnits(id)
-  }, 0)
-}
-
 /** True when one more unit of `adding` fits. A zero-weight fragment always fits. */
 export function holdHasRoom(cargo: Record<string, number>, capacity: number, adding?: string): boolean {
   if (adding && cargoUnits(adding) === 0) return true
   return cargoMass(cargo) < capacity
+}
+
+function cargoMass(cargo: Record<string, number>): number {
+  return Object.entries(cargo).reduce((sum, [id, amount]) => {
+    if (amount <= 0) return sum
+    return sum + amount * cargoUnits(id)
+  }, 0)
 }

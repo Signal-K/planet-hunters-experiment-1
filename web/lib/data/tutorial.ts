@@ -21,23 +21,6 @@ export interface TrainingTryStep {
   doneOn: 'mining-debriefed' | 'tess-classified' | 'part-tweaked'
 }
 
-/** The durable three-try plan. Steps are screen-local instructions; only the
- * named real game event completes a try. */
-export const TRAINING_TRIES: readonly TrainingTryStep[] = [
-  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
-  { id: 'mine-prepare', try: 'mining', screen: 'hub', objective: 'Prepare your first flight', radio: 'A short contract, destination and loadout are selected. Review them, then build the rocket and launch.', beacon: 'base-next-flight', doneOn: 'mining-debriefed' },
-  // The launchpad and other unlisted screens retain their normal contracts entry.
-  { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
-  { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
-  { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
-  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
-  { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
-  { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Data hub', radio: 'Your telescope sends its signals to the Data hub. Open it from the hub.', doneOn: 'tess-classified' },
-  { id: 'scan-classify', try: 'scan', screen: 'tess-discovery', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
-  { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'Your agency rocket gains capacity and range as you progress.', doneOn: 'part-tweaked' },
-  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Review your agency rocket', radio: 'Check capacity and range, then continue to your mission.', doneOn: 'part-tweaked' },
-]
-
 /** Screens that belong to a live cargo run. A scan or part try must not paste
  * its "open the Hangar / fit a module" line onto these; the player is flying
  * the mining loop, so the objective is that screen's mining step (SSL-478). */
@@ -204,3 +187,20 @@ export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
   if (stage === 'transport') return TRANSPORT_STEPS
   return []
 }
+
+/** The durable three-try plan. Steps are screen-local instructions; only the
+ * named real game event completes a try. */
+const TRAINING_TRIES: readonly TrainingTryStep[] = [
+  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
+  { id: 'mine-prepare', try: 'mining', screen: 'hub', objective: 'Prepare your first flight', radio: 'A short contract, destination and loadout are selected. Review them, then build the rocket and launch.', beacon: 'base-next-flight', doneOn: 'mining-debriefed' },
+  // The launchpad and other unlisted screens retain their normal contracts entry.
+  { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
+  { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
+  { id: 'mine-launch', try: 'mining', screen: 'fab', objective: 'Prepare the vehicle and launch', radio: 'Check the target, cargo and vehicle, then launch.', doneOn: 'mining-debriefed' },
+  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
+  { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
+  { id: 'scan-open', try: 'scan', screen: '*', objective: 'Open the Data hub', radio: 'Your telescope sends its signals to the Data hub. Open it from the hub.', doneOn: 'tess-classified' },
+  { id: 'scan-classify', try: 'scan', screen: 'tess-discovery', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
+  { id: 'part-open', try: 'part', screen: '*', objective: 'Open the Hangar from Base', radio: 'Your agency rocket gains capacity and range as you progress.', doneOn: 'part-tweaked' },
+  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Review your agency rocket', radio: 'Check capacity and range, then continue to your mission.', doneOn: 'part-tweaked' },
+]

@@ -3,8 +3,6 @@ import { NASA_SETTLED_DISPOSITIONS, type NeocpSourceRow, type TessToiSourceRow }
 export const NASA_TOI_TAP_URL = 'https://exoplanetarchive.ipac.caltech.edu/TAP/sync'
 export const MPC_NEOCP_JSON_URL = 'https://www.minorplanetcenter.net/Extended_Files/neocp.json'
 
-export const INGEST_USER_AGENT = 'LandnamSharedSubjectIngest/1.0 (SSL-323; https://github.com/Signal-K/planet-hunters-experiment-1)'
-
 export interface SourceFetch {
   fetch: typeof fetch
 }
@@ -126,3 +124,5 @@ export async function fetchOpenNeocpCandidates(client: SourceFetch, limit: numbe
   }
   return parseNeocpRows(await response.json()).slice(0, limit)
 }
+
+const INGEST_USER_AGENT = 'LandnamSharedSubjectIngest/1.0 (SSL-323; https://github.com/Signal-K/planet-hunters-experiment-1)'

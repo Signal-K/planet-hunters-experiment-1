@@ -17,8 +17,6 @@ import { putCaptureBlob } from './blobStore'
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
 import type { TransitRange } from '@/lib/data'
 
-export const CAPTURE_COLLECTION = 'platform_classification_captures'
-
 export type CaptureKind = 'tess' | 'neocp' | 'saturn' | 'radio-meteor'
 
 /** Markup the server draws onto source_url, in a width x height coordinate space. */
@@ -250,3 +248,5 @@ export async function snapshotSvg(svg: SVGSVGElement | null, width = 1200): Prom
     return null
   }
 }
+
+const CAPTURE_COLLECTION = 'platform_classification_captures'

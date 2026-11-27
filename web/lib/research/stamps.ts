@@ -132,9 +132,6 @@ export function researchMonthHistory(stamps: ResearchStamps | undefined, now: nu
   }
   return result
 }
-
-/** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
-export const COMMUNITY_GOAL = 100
 /** SSL-685: what a full monthly bar gives every player until the month ends. */
 export const COMMUNITY_REWARD = { salePct: 3, fuelPct: 7 } as const
 export const COMMUNITY_REWARD_TEXT = `+${COMMUNITY_REWARD.salePct}% Exchange prices, +${COMMUNITY_REWARD.fuelPct}% fuel efficiency`
@@ -163,24 +160,27 @@ export function communityBar(ownThisMonth: number, server?: CommunityResearch | 
   }
 }
 
-/** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
-export const DAILY_TASKS: readonly { kind: StampKind; label: string }[] = [
-  { kind: 'classification', label: 'Classify one item from your instruments' },
-  { kind: 'survey', label: 'Finish a survey scan' },
-  { kind: 'event', label: 'Catch debris during a sky event' },
-  { kind: 'review', label: 'Review another player\u2019s finding' },
-]
-
 /** SSL-674: a survey flight to a world the player discovered (runtimeCatalog `exo-survey-<target>`). */
 export function isDiscoveryMission(id: string | null | undefined): boolean {
   return !!id && id.startsWith('exo-survey-')
 }
-
-/** Shown only once a discovery has opened a survey flight, so a new player never sees a task they cannot do. */
-export const DISCOVERY_TASK = { kind: 'discovery-mission' as const, label: 'Fly a survey to a world you discovered' }
 
 export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind; label: string }[] {
   return hasDiscovery ? [...DAILY_TASKS, DISCOVERY_TASK] : DAILY_TASKS
 }
 
 export const RESEARCH_TITLE = 'Daily research'
+
+/** Mirrors pocketbase/research.go: every player's stamps this UTC month add to one bar. */
+const COMMUNITY_GOAL = 100
+
+/** Today's research tasks, one per stamp kind a player can earn now. Same copy on web and native. */
+const DAILY_TASKS: readonly { kind: StampKind; label: string }[] = [
+  { kind: 'classification', label: 'Classify one item from your instruments' },
+  { kind: 'survey', label: 'Finish a survey scan' },
+  { kind: 'event', label: 'Catch debris during a sky event' },
+  { kind: 'review', label: 'Review another player\u2019s finding' },
+]
+
+/** Shown only once a discovery has opened a survey flight, so a new player never sees a task they cannot do. */
+const DISCOVERY_TASK = { kind: 'discovery-mission' as const, label: 'Fly a survey to a world you discovered' }

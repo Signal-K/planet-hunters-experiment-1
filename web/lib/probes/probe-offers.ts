@@ -18,9 +18,6 @@ const CONTRACTS_PER_BODY = 3
 /** A client pays a quarter more for the first claim on a deposit a probe found. */
 const FIRST_CLAIM_PREMIUM = 1.25
 
-export const PROBE_RUN_PREFIX = 'self-directed-probe-'
-export const PROBE_CONTRACT_PREFIX = 'probe-contract-'
-
 export function probeRunId(targetId: string): string {
   return `${PROBE_RUN_PREFIX}${targetId}`
 }
@@ -96,3 +93,7 @@ export function probeContracts(target: Target, survey: readonly SurveyTotal[], f
   }
   return contracts
 }
+
+const PROBE_RUN_PREFIX = 'self-directed-probe-'
+
+const PROBE_CONTRACT_PREFIX = 'probe-contract-'

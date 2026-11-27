@@ -6,8 +6,6 @@
 // which mission, which ship), strips the context, and layers a setup on top: the things a scene script lets you switch on.
 import type { GameState } from '@/lib/game-types'
 
-export const SANDBOX_PREFIX = 'sandbox:'
-
 /** Money is never the point of a sandbox scene, and nothing in it should be out of reach. */
 export const SANDBOX_FRANCS = 5_000_000_000
 
@@ -123,3 +121,5 @@ export function resolveSandbox(name: string, resolveEntry: (key: string) => Part
   const neutral = sandboxify(base)
   return Object.keys(parsed.state).length ? mergeState(neutral, resolveTokens(parsed.state, now)) : neutral
 }
+
+const SANDBOX_PREFIX = 'sandbox:'

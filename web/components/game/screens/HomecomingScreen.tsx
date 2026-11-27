@@ -15,10 +15,6 @@ import {
 } from '@/lib/systems/HomeDeliverySystem'
 import { sellUnitPrice } from '@/lib/systems/EconomySystem'
 import styles from './HomecomingScreen.module.css'
-
-export const TOUCHDOWN_MS = 6200
-/** Cargo leaves the hold and the rocket is taken apart before the base returns. */
-export const SETTLE_MS = 2400
 const MAX_CRATES = 8
 
 interface Crate { id: string; kind: 'silo' | 'sell'; color: string; x: number; y: number; delay: number }
@@ -183,3 +179,8 @@ export default function HomecomingScreen({ player, mission, cargo, minerals, cli
     </div>
   )
 }
+
+const TOUCHDOWN_MS = 6200
+
+/** Cargo leaves the hold and the rocket is taken apart before the base returns. */
+const SETTLE_MS = 2400

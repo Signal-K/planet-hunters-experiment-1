@@ -30,10 +30,6 @@ export function isForbiddenHue(n: number): boolean {
 
 const BLUE = 0x31425b
 
-export function peacefulColor(n: number): number {
-  return isForbiddenHue(n) ? mix(n, BLUE, 0.72) : n
-}
-
 /** Night skies lift off pure black so the ridges still read. */
 export function skyColor(n: number): number {
   const p = peacefulColor(n)
@@ -108,4 +104,8 @@ export function bodyOutline(id: string, type: string, points = 14): [number, num
 export function bodyTones(tintHex: string | undefined): { lit: number; shade: number; rim: number } {
   const base = groundColor(tintHex)
   return { lit: mix(base, 0xe8eef5, 0.35), shade: mix(base, 0x0d1420, 0.45), rim: mix(base, 0xffffff, 0.6) }
+}
+
+function peacefulColor(n: number): number {
+  return isForbiddenHue(n) ? mix(n, BLUE, 0.72) : n
 }

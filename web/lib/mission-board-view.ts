@@ -246,41 +246,6 @@ function peakStepStatus(now: number): string {
   return 'passed'
 }
 
-export function spacetoberStrip(
-  now: number,
-  badges: Record<string, PlayerBadge> | undefined,
-  finds: Record<string, OrionidsFind> | undefined,
-  mastery = 0,
-): SpacetoberStrip {
-  const week = badges?.[SPACETOBER_WEEK_BADGE]
-  const peak = badges?.[SPACETOBER_PEAK_BADGE]
-  const weekTier = week?.tier === 'gold' || week?.tier === 'silver' ? week.tier : null
-  const peakTier = peak?.tier === 'gold' || peak?.tier === 'silver' ? peak.tier : null
-  return {
-    title: 'Spacetober',
-    detail: 'World Space Week, then the Orionids peak.',
-    steps: [
-      {
-        id: 'world-space-week',
-        name: 'World Space Week',
-        when: WSW_RANGE_LABEL,
-        status: wswBanner(badges, now).live ? 'live' : isWorldSpaceWeekUpcoming(now) ? 'upcoming' : 'ended',
-        tier: weekTier,
-      },
-      {
-        id: 'orionids-peak',
-        name: 'Orionids peak',
-        when: '21 Oct 18:00 – 22 Oct 06:00',
-        status: peakStepStatus(now),
-        tier: peakTier,
-      },
-    ],
-    links: [...WORLD_SPACE_WEEK_PLAYER_LINKS, ATLAS_ORIONIDS_CHECKIN],
-    vouchers: Object.values(finds ?? {}).map(find => ({ subjectId: find.subjectId, name: find.name, tier: find.tier })),
-    mastery,
-  }
-}
-
 function peakLabel(eventId: string): string {
   const peak = showerPreset(eventId)?.peakUtc
   if (!peak) return 'on now'
@@ -403,5 +368,40 @@ export function contractWswMark(
   return {
     label: `WSW ${banner.earned}/${banner.total}`,
     title: chips.map(chip => chip.label).join(' · '),
+  }
+}
+
+function spacetoberStrip(
+  now: number,
+  badges: Record<string, PlayerBadge> | undefined,
+  finds: Record<string, OrionidsFind> | undefined,
+  mastery = 0,
+): SpacetoberStrip {
+  const week = badges?.[SPACETOBER_WEEK_BADGE]
+  const peak = badges?.[SPACETOBER_PEAK_BADGE]
+  const weekTier = week?.tier === 'gold' || week?.tier === 'silver' ? week.tier : null
+  const peakTier = peak?.tier === 'gold' || peak?.tier === 'silver' ? peak.tier : null
+  return {
+    title: 'Spacetober',
+    detail: 'World Space Week, then the Orionids peak.',
+    steps: [
+      {
+        id: 'world-space-week',
+        name: 'World Space Week',
+        when: WSW_RANGE_LABEL,
+        status: wswBanner(badges, now).live ? 'live' : isWorldSpaceWeekUpcoming(now) ? 'upcoming' : 'ended',
+        tier: weekTier,
+      },
+      {
+        id: 'orionids-peak',
+        name: 'Orionids peak',
+        when: '21 Oct 18:00 – 22 Oct 06:00',
+        status: peakStepStatus(now),
+        tier: peakTier,
+      },
+    ],
+    links: [...WORLD_SPACE_WEEK_PLAYER_LINKS, ATLAS_ORIONIDS_CHECKIN],
+    vouchers: Object.values(finds ?? {}).map(find => ({ subjectId: find.subjectId, name: find.name, tier: find.tier })),
+    mastery,
   }
 }

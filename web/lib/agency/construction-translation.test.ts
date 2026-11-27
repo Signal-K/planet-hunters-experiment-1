@@ -80,7 +80,7 @@ describe('SSL-892 agency levels', () => {
     const before = upgraded().player
     const after = translateConstruction(upgraded()).player
     const gone = { ...after, placed: [] as string[] }
-    expect(storageCapacity({ ...gone, subsurfaceBuilt: [] })).toBe(storageCapacity({ ...before, subsurfaceBuilt: [] }))
+    expect(storageCapacity(gone)).toBe(storageCapacity(before))
     expect(rocketPrice({ costFrancs: 1000 }, gone as never)).toBe(rocketPrice({ costFrancs: 1000 }, before as never))
     expect(agencyLevel(gone, 'exchange')).toBe(2)
     expect(exchangeSaleBonus(agencyLevel(gone, 'exchange'))).toBe(0.03)

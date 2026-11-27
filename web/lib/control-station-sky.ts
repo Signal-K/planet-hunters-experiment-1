@@ -47,12 +47,6 @@ export interface StationTelescopeDef {
   finds: string
 }
 
-export const STATION_TELESCOPES: readonly StationTelescopeDef[] = [
-  { id: 'ground', name: 'Ground telescope', place: 'surface', equipmentIds: ['ground-telescopes'], finds: 'Asteroids' },
-  { id: 'space', name: 'Space telescope', place: 'orbit', equipmentIds: ['transit-telescope', 'deep-space-telescope'], finds: 'Planets · asteroids' },
-  { id: 'saturn', name: 'Saturn satellite', place: 'offworld', equipmentIds: ['saturn-imager'], finds: 'Storms' },
-]
-
 export interface CommunityInstrumentDef {
   id: string
   callsign: string
@@ -67,33 +61,6 @@ export interface CommunityInstrumentDef {
 
 /** Recordings Orionids mission 3 asks for (web lib/orionids/chain.ts). */
 const ORI1_MISSION_CHECKS = 3
-
-/** True once the shower's real activity window has opened. Receivers keep listening after it ends. */
-export function showerStarted(eventId: string, now: number): boolean {
-  const start = Date.parse(getSkyEvent(eventId)?.startUtc ?? '')
-  return Number.isFinite(start) && now >= start
-}
-
-export const COMMUNITY_INSTRUMENTS: readonly CommunityInstrumentDef[] = [
-  {
-    id: 'ori-1',
-    callsign: 'ORI-1',
-    finds: 'Meteor echoes',
-    screen: 'radio-meteors',
-    // ORI-1 goes up when the Orionids start (SSL-852), or for a save that reached Orionids mission 2 first.
-    launched: (player, now) => showerStarted('orionids-2026', now) || (player.orionidsEventStage ?? 0) >= 2,
-    owed: player => (player.orionidsEventStage === 2 ? Math.max(0, ORI1_MISSION_CHECKS - Object.keys(player.radioMeteorClassifications ?? {}).length) : 0),
-  },
-  {
-    // LEO-1 goes up when the Leonids start (SSL-852), or for a save whose shower run came home first (SSL-831).
-    id: 'leo-1',
-    callsign: 'LEO-1',
-    finds: 'Meteor echoes',
-    screen: 'radio-meteors',
-    launched: (player, now) => showerStarted(LEONIDS_CHAIN.eventId, now) || chainStage(player, LEONIDS_CHAIN.eventId) >= 1,
-    owed: player => (chainStage(player, LEONIDS_CHAIN.eventId) === 1 ? Math.max(0, LEONIDS_CHAIN.radioTarget - chainRecordings(player, LEONIDS_CHAIN)) : 0),
-  },
-]
 
 /** Which signal kinds each piece of equipment can see. Asteroids are seen from the ground and from orbit. */
 const EQUIPMENT_KINDS: Record<string, readonly InstrumentSignalKind[]> = {
@@ -159,12 +126,6 @@ function hash(id: string): number {
     h = Math.imul(h, 16777619)
   }
   return h >>> 0
-}
-
-/** A stable spot in the sky for an id, kept off the map's edges. */
-export function skySpot(id: string): { x: number; y: number } {
-  const h = hash(id)
-  return { x: 0.07 + ((h & 0xffff) / 0xffff) * 0.86, y: 0.12 + (((h >>> 16) & 0xffff) / 0xffff) * 0.76 }
 }
 
 const SHAPE_FOR_KIND: Record<InstrumentSignalKind, AnomalyShape> = { transit: 'planet', 'deep-space': 'asteroid', saturn: 'ringed' }
@@ -368,22 +329,6 @@ export function buildStationSky(input: {
 /** Where Saturn sits on the map when the Saturn satellite is on: the middle of the reticle. */
 export const SATURN_FOCUS = { x: 0.5, y: 0.5 }
 
-/**
- * SSL-826: switching the Saturn satellite on swings the map to Saturn. Saturn sits in the middle of the reticle in
- * every view, and the storm frames the satellite took sit in a ring around it, so the map shows where it is looking.
- */
-export function focusSaturn(items: readonly SkyAnomaly[], known: readonly SkyAnomaly[]): SkyAnomaly[] {
-  const body = known.find(item => item.id === 'body:saturn')
-  const rest = items.filter(item => item.id !== 'body:saturn')
-  const ring = rest.map((item, i) => {
-    const band = Math.floor(i / 6)
-    const angle = -Math.PI / 2 + ((i % 6) + band / 2) * (Math.PI / 3)
-    const r = 0.17 + 0.09 * band
-    return { ...item, x: SATURN_FOCUS.x + (Math.cos(angle) * r) / FIELD_ASPECT, y: SATURN_FOCUS.y + Math.sin(angle) * r }
-  })
-  return body ? [{ ...body, ...SATURN_FOCUS }, ...ring] : ring
-}
-
 /** The sky field is about this much wider than tall, so a gap across reads shorter than the same gap down. */
 const FIELD_ASPECT = 1.35
 /** About one 44px tap target on the iPad field. */
@@ -422,4 +367,59 @@ export function spreadSpots<T extends { x: number; y: number }>(items: readonly 
 export function stationHistory(player: SkyPlayer): StationHistory {
   const all = explored(player)
   return { total: all.length, recent: all.slice(0, 3).map(item => ({ id: item.id, label: item.label, detail: item.detail })) }
+}
+
+const STATION_TELESCOPES: readonly StationTelescopeDef[] = [
+  { id: 'ground', name: 'Ground telescope', place: 'surface', equipmentIds: ['ground-telescopes'], finds: 'Asteroids' },
+  { id: 'space', name: 'Space telescope', place: 'orbit', equipmentIds: ['transit-telescope', 'deep-space-telescope'], finds: 'Planets · asteroids' },
+  { id: 'saturn', name: 'Saturn satellite', place: 'offworld', equipmentIds: ['saturn-imager'], finds: 'Storms' },
+]
+
+const COMMUNITY_INSTRUMENTS: readonly CommunityInstrumentDef[] = [
+  {
+    id: 'ori-1',
+    callsign: 'ORI-1',
+    finds: 'Meteor echoes',
+    screen: 'radio-meteors',
+    // ORI-1 goes up when the Orionids start (SSL-852), or for a save that reached Orionids mission 2 first.
+    launched: (player, now) => showerStarted('orionids-2026', now) || (player.orionidsEventStage ?? 0) >= 2,
+    owed: player => (player.orionidsEventStage === 2 ? Math.max(0, ORI1_MISSION_CHECKS - Object.keys(player.radioMeteorClassifications ?? {}).length) : 0),
+  },
+  {
+    // LEO-1 goes up when the Leonids start (SSL-852), or for a save whose shower run came home first (SSL-831).
+    id: 'leo-1',
+    callsign: 'LEO-1',
+    finds: 'Meteor echoes',
+    screen: 'radio-meteors',
+    launched: (player, now) => showerStarted(LEONIDS_CHAIN.eventId, now) || chainStage(player, LEONIDS_CHAIN.eventId) >= 1,
+    owed: player => (chainStage(player, LEONIDS_CHAIN.eventId) === 1 ? Math.max(0, LEONIDS_CHAIN.radioTarget - chainRecordings(player, LEONIDS_CHAIN)) : 0),
+  },
+]
+
+/** A stable spot in the sky for an id, kept off the map's edges. */
+function skySpot(id: string): { x: number; y: number } {
+  const h = hash(id)
+  return { x: 0.07 + ((h & 0xffff) / 0xffff) * 0.86, y: 0.12 + (((h >>> 16) & 0xffff) / 0xffff) * 0.76 }
+}
+
+/**
+ * SSL-826: switching the Saturn satellite on swings the map to Saturn. Saturn sits in the middle of the reticle in
+ * every view, and the storm frames the satellite took sit in a ring around it, so the map shows where it is looking.
+ */
+function focusSaturn(items: readonly SkyAnomaly[], known: readonly SkyAnomaly[]): SkyAnomaly[] {
+  const body = known.find(item => item.id === 'body:saturn')
+  const rest = items.filter(item => item.id !== 'body:saturn')
+  const ring = rest.map((item, i) => {
+    const band = Math.floor(i / 6)
+    const angle = -Math.PI / 2 + ((i % 6) + band / 2) * (Math.PI / 3)
+    const r = 0.17 + 0.09 * band
+    return { ...item, x: SATURN_FOCUS.x + (Math.cos(angle) * r) / FIELD_ASPECT, y: SATURN_FOCUS.y + Math.sin(angle) * r }
+  })
+  return body ? [{ ...body, ...SATURN_FOCUS }, ...ring] : ring
+}
+
+/** True once the shower's real activity window has opened. Receivers keep listening after it ends. */
+function showerStarted(eventId: string, now: number): boolean {
+  const start = Date.parse(getSkyEvent(eventId)?.startUtc ?? '')
+  return Number.isFinite(start) && now >= start
 }

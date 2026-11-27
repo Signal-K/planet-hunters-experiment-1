@@ -3,9 +3,6 @@ import type { LaserPalette } from './laserPalette'
 /** Terrain and deposit art pieces (generated pixel art in /game/assets/mining). */
 export type TerrainPiece = 'mountain' | 'ridge' | 'strata'
 export type DepositKind = 'iron' | 'nickel' | 'ice' | 'cobalt'
-
-export const TERRAIN_PIECES: TerrainPiece[] = ['mountain', 'ridge', 'strata']
-export const DEPOSIT_KINDS: DepositKind[] = ['iron', 'nickel', 'ice', 'cobalt']
 /** Native pixel size of each piece. */
 export const PIECE_SIZE: Record<TerrainPiece, [number, number]> = { mountain: [128, 112], ridge: [128, 48], strata: [128, 56] }
 
@@ -93,3 +90,7 @@ export function landscapeLayout(spec: LandscapeSpec | undefined, targetKey: stri
 export function layoutForPalette(palette: Pick<LaserPalette, 'landscape'>, targetKey: string, period?: number): LandscapeLayout {
   return landscapeLayout(palette.landscape, targetKey, period)
 }
+
+const TERRAIN_PIECES: TerrainPiece[] = ['mountain', 'ridge', 'strata']
+
+const DEPOSIT_KINDS: DepositKind[] = ['iron', 'nickel', 'ice', 'cobalt']

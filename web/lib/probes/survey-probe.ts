@@ -7,8 +7,6 @@ import { probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'
-
-export const SURVEY_PROBE_INSTRUMENT_ID = 'survey-probe'
 /** Sectors across and down a body's map. */
 export const PROBE_COLS = 6
 export const PROBE_ROWS = 4
@@ -48,19 +46,8 @@ export interface ProbeRecord {
 
 export type ProbePlayer = Pick<Player, 'probes' | 'researchStamps'>
 
-export const PROBE_MISSION_PREFIX = 'probe-launch-'
-
-export function probeMissionId(targetId: string): string {
-  return `${PROBE_MISSION_PREFIX}${targetId}`
-}
-
 export function probeTargetForMission(missionId: string | null | undefined): string | null {
   return missionId?.startsWith(PROBE_MISSION_PREFIX) ? missionId.slice(PROBE_MISSION_PREFIX.length) : null
-}
-
-/** Bodies a probe can survey: real planets and asteroids with minerals, not shower fields or exoplanets. */
-export function probeableTargets(targets: readonly Target[]): Target[] {
-  return targets.filter(target => (target.type === 'planet' || target.type === 'asteroid') && target.minerals.length > 0)
 }
 
 /** The bodies offered a probe now: the nearest ones (by orbit) that have none yet. */
@@ -144,12 +131,6 @@ export function sectorDeposits(target: Pick<Target, 'id' | 'minerals'>, sectorId
   return minerals.filter(mineral => out.has(mineral))
 }
 
-/** Where a mineral's absorption band sits on the spectrum, in nm. Fixed per mineral, spread across the range. */
-export function mineralBand(mineral: string): number {
-  const span = BAND_MAX_NM - BAND_MIN_NM
-  return Math.round(BAND_MIN_NM + 120 + ((hash(`band:${mineral}`) % 1000) / 1000) * (span - 240))
-}
-
 /** Bands for the body's minerals, nudged apart so no two overlap on screen. */
 export function bodyBands(target: Pick<Target, 'minerals'>): Array<{ mineral: string; nm: number }> {
   const bands = target.minerals.map(mineral => ({ mineral, nm: mineralBand(mineral) })).sort((a, b) => a.nm - b.nm)
@@ -177,12 +158,6 @@ export function sectorSpectrum(target: Pick<Target, 'id' | 'minerals'>, sectorId
 
 /** How many tonnes of a mineral a sector holds. Fixed per body and sector; scarcer minerals come in smaller seams. */
 const TONNES: Record<string, [number, number]> = { common: [400, 1400], uncommon: [150, 600], rare: [20, 140], exotic: [5, 45] }
-export function depositTonnes(target: Pick<Target, 'id'>, sectorId: string, mineral: string, rarity = 'common'): number {
-  const [lo, hi] = TONNES[rarity] ?? TONNES.common
-  const r = seeded(`tonnes:${target.id}:${sectorId}:${mineral}`)
-  const raw = lo + r() * (hi - lo)
-  return Math.round(raw / (hi > 200 ? 10 : 1)) * (hi > 200 ? 10 : 1)
-}
 
 /** The order the probe maps sectors in: row by row, the way the orbit tracks across the body. */
 export function scanOrder(): string[] {
@@ -333,4 +308,30 @@ function mergeReadings(a: Record<string, ProbeReading> = {}, b: Record<string, P
     const analysis = [left.analysis, right.analysis].filter((row): row is NonNullable<ProbeReading['analysis']> => !!row).sort((x, y) => x.at - y.at)[0]
     return [id, { ...right, ...left, at: Math.min(left.at, right.at), ...(analysis ? { analysis } : {}) }]
   }))
+}
+
+const SURVEY_PROBE_INSTRUMENT_ID = 'survey-probe'
+
+const PROBE_MISSION_PREFIX = 'probe-launch-'
+
+function probeMissionId(targetId: string): string {
+  return `${PROBE_MISSION_PREFIX}${targetId}`
+}
+
+/** Bodies a probe can survey: real planets and asteroids with minerals, not shower fields or exoplanets. */
+function probeableTargets(targets: readonly Target[]): Target[] {
+  return targets.filter(target => (target.type === 'planet' || target.type === 'asteroid') && target.minerals.length > 0)
+}
+
+/** Where a mineral's absorption band sits on the spectrum, in nm. Fixed per mineral, spread across the range. */
+function mineralBand(mineral: string): number {
+  const span = BAND_MAX_NM - BAND_MIN_NM
+  return Math.round(BAND_MIN_NM + 120 + ((hash(`band:${mineral}`) % 1000) / 1000) * (span - 240))
+}
+
+function depositTonnes(target: Pick<Target, 'id'>, sectorId: string, mineral: string, rarity = 'common'): number {
+  const [lo, hi] = TONNES[rarity] ?? TONNES.common
+  const r = seeded(`tonnes:${target.id}:${sectorId}:${mineral}`)
+  const raw = lo + r() * (hi - lo)
+  return Math.round(raw / (hi > 200 ? 10 : 1)) * (hi > 200 ? 10 : 1)
 }

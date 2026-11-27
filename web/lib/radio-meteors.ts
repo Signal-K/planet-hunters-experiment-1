@@ -6,10 +6,6 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueUpsert } from '@/lib/offline/pbOutbox'
 import { pocketBaseId } from '@/lib/orionids/finds'
 
-export const RADIO_METEOR_PROJECT_ID = '2471'
-/** Used only when the live workflow cannot be looked up (Perseids 2026, opened 14 Oct 2026). */
-export const RADIO_METEOR_FALLBACK_WORKFLOW = '33017'
-
 const PANOPTES = 'https://www.zooniverse.org/api'
 const HEADERS = { Accept: 'application/vnd.api+json; version=1' }
 
@@ -61,17 +57,6 @@ async function panoptes<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-/** The project's live workflow (one per shower season). */
-export async function fetchActiveRadioWorkflow(): Promise<{ id: string; name: string }> {
-  try {
-    const data = await panoptes<{ workflows: Array<{ id: string; display_name: string; active: boolean; completeness: number }> }>(`/workflows?project_id=${RADIO_METEOR_PROJECT_ID}&active=true`)
-    const live = data.workflows.filter(w => w.active && w.completeness < 1)
-    const pick = live[live.length - 1]
-    if (pick) return { id: pick.id, name: pick.display_name }
-  } catch { /* fall through */ }
-  return { id: RADIO_METEOR_FALLBACK_WORKFLOW, name: 'Perseids 2026' }
-}
-
 /** Spectrograms the project still needs looked at, minus ones this player already did. */
 export async function fetchQueuedRadioSubjects(done: Record<string, unknown> = {}): Promise<RadioMeteorSubject[]> {
   const workflow = await fetchActiveRadioWorkflow()
@@ -111,3 +96,19 @@ export function queueRadioMeteorClassification(c: RadioMeteorClassification, eve
     pocketBaseId(`radio_meteor_classifications:${user}:${subjectId}`),
   )
 }
+
+const RADIO_METEOR_PROJECT_ID = '2471'
+
+/** The project's live workflow (one per shower season). */
+async function fetchActiveRadioWorkflow(): Promise<{ id: string; name: string }> {
+  try {
+    const data = await panoptes<{ workflows: Array<{ id: string; display_name: string; active: boolean; completeness: number }> }>(`/workflows?project_id=${RADIO_METEOR_PROJECT_ID}&active=true`)
+    const live = data.workflows.filter(w => w.active && w.completeness < 1)
+    const pick = live[live.length - 1]
+    if (pick) return { id: pick.id, name: pick.display_name }
+  } catch { /* fall through */ }
+  return { id: RADIO_METEOR_FALLBACK_WORKFLOW, name: 'Perseids 2026' }
+}
+
+/** Used only when the live workflow cannot be looked up (Perseids 2026, opened 14 Oct 2026). */
+const RADIO_METEOR_FALLBACK_WORKFLOW = '33017'

@@ -16,15 +16,6 @@ export class AuthTimeoutError extends Error {
   }
 }
 
-export function authFailureStatus(err: unknown): number | null {
-  if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
-  if (err instanceof Error) {
-    const match = /failed: (\d{3})\b/.exec(err.message)
-    if (match) return Number(match[1])
-  }
-  return null
-}
-
 export function isTransientAuthFailure(err: unknown): boolean {
   const status = authFailureStatus(err)
   if (status !== null && TRANSIENT_STATUSES.has(status)) return true
@@ -42,18 +33,6 @@ export function signInGateMessage(raw: string, err: unknown): string {
 
 function defaultSleep(ms: number): Promise<void> {
   return new Promise(resolve => { setTimeout(resolve, ms) })
-}
-
-export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new AuthTimeoutError()), timeoutMs)
-  })
-  try {
-    return await Promise.race([promise, timeout])
-  } finally {
-    if (timer) clearTimeout(timer)
-  }
 }
 
 export async function waitForBackendHealth(
@@ -116,4 +95,25 @@ export async function retryTransient<T>(
     }
   }
   throw last
+}
+
+function authFailureStatus(err: unknown): number | null {
+  if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
+  if (err instanceof Error) {
+    const match = /failed: (\d{3})\b/.exec(err.message)
+    if (match) return Number(match[1])
+  }
+  return null
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new AuthTimeoutError()), timeoutMs)
+  })
+  try {
+    return await Promise.race([promise, timeout])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }

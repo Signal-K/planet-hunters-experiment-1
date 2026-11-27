@@ -21,6 +21,8 @@
 import type { Target } from './types'
 import type { TargetArchetype } from './target-archetypes'
 
+
+
 export type BiomeId =
   // takeon built-ins
   | 'dust-basin'
@@ -129,11 +131,12 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   'crimson-bloom': { id: 'crimson-bloom', label: 'Crimson bloom', color: '#e0405a', shade: '#8a1f33', help: 'Red-pigmented alien vegetation adapted to a dim host star.', lifeCapacity: 3 },
 }
 
-export const BIOME_IDS = Object.keys(BIOME_META) as BiomeId[]
-export const TAKEON_BUILTIN_BIOME_IDS: readonly BiomeId[] = [
+const BIOME_IDS = Object.keys(BIOME_META) as BiomeId[]
+const TAKEON_BUILTIN_BIOME_IDS: readonly BiomeId[] = [
   'dust-basin', 'redrock-desert', 'crater-highlands', 'frozen-tundra', 'grassland-plains', 'temperate-forest',
   'icefield', 'cryovolcanic', 'carbonaceous-rubble', 'metallic-regolith', 'cloud-platform',
 ]
+
 export const LANDNAM_BIOME_IDS: readonly BiomeId[] = BIOME_IDS.filter(id => !TAKEON_BUILTIN_BIOME_IDS.includes(id))
 
 /** takeon body kind ids (world/kinds.js). */
@@ -419,10 +422,6 @@ export function estimateEquilibriumTempK(periodDays: number, starTeffK: number):
   return 278 * Math.pow(luminosity, 0.25) / Math.sqrt(Math.max(0.01, aAu))
 }
 
-/** Radius in Earth radii and equilibrium temperature bounds for a rocky, temperate candidate. */
-export const HABITABLE_RADIUS_EARTH = { min: 0.5, max: 1.8 }
-export const HABITABLE_TEMP_K = { min: 195, max: 335 }
-
 const SUBSURFACE_HABITABLE_TARGETS = new Set(['mars', 'europa', 'ceres'])
 
 export function habitabilityForTarget(target: Pick<Target, 'id' | 'type' | 'archetype' | 'planetRadiusEarth' | 'periodDays' | 'starTeffK'>): HabitabilityReport {
@@ -577,18 +576,6 @@ function valueNoise3(x: number, y: number, z: number, seed: number): number {
   return lerp(y0, y1, zf)
 }
 
-/** Fractal Brownian motion over the unit sphere, 0..1. */
-export function fbmOnSphere(px: number, py: number, pz: number, seed: number, roughness: number, octaves = 4): number {
-  let amp = 1, freq = 2.2, sum = 0, norm = 0
-  for (let i = 0; i < octaves; i++) {
-    sum += amp * valueNoise3(px * freq + 17.3, py * freq + 9.1, pz * freq + 4.7, seed + i * 101)
-    norm += amp
-    amp *= roughness
-    freq *= 2.1
-  }
-  return sum / norm
-}
-
 // ── Sampling ───────────────────────────────────────────────────────────────
 
 export interface SurfaceSample {
@@ -635,11 +622,6 @@ export function biomeIdsForTarget(target: SurfaceTarget, lifeStage: LifeStage = 
   return [...ids]
 }
 
-// ── Divisions ──────────────────────────────────────────────────────────────
-
-export const DIVISION_LAT_BANDS = 2
-export const DIVISION_LON_SECTORS = 4
-
 export interface TargetDivision {
   id: string
   targetId: string
@@ -658,15 +640,6 @@ export interface TargetDivision {
   biomeMix: Array<{ biome: BiomeId; share: number }>
   /** Highest life capacity of any biome in the division. */
   lifeCapacity: LifeCapacity
-}
-
-export function divisionId(targetId: string, band: number, sector: number): string {
-  return `${targetId}:${band}-${sector}`
-}
-
-export function divisionLabel(band: number, sector: number): string {
-  const hemi = band < DIVISION_LAT_BANDS / 2 ? 'S' : 'N'
-  return `${hemi}-${sector + 1}`
 }
 
 /** Fixed division grid for a target with a sampled dominant biome per cell. */
@@ -717,4 +690,37 @@ export function divisionAt(targetId: string, lat: number, lon: number): string {
   const wrapped = ((lon + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
   const sector = Math.min(DIVISION_LON_SECTORS - 1, Math.floor(wrapped / ((Math.PI * 2) / DIVISION_LON_SECTORS)))
   return divisionId(targetId, band, sector)
+}
+
+
+/** Radius in Earth radii and equilibrium temperature bounds for a rocky, temperate candidate. */
+const HABITABLE_RADIUS_EARTH = { min: 0.5, max: 1.8 }
+
+const HABITABLE_TEMP_K = { min: 195, max: 335 }
+
+/** Fractal Brownian motion over the unit sphere, 0..1. */
+function fbmOnSphere(px: number, py: number, pz: number, seed: number, roughness: number, octaves = 4): number {
+  let amp = 1, freq = 2.2, sum = 0, norm = 0
+  for (let i = 0; i < octaves; i++) {
+    sum += amp * valueNoise3(px * freq + 17.3, py * freq + 9.1, pz * freq + 4.7, seed + i * 101)
+    norm += amp
+    amp *= roughness
+    freq *= 2.1
+  }
+  return sum / norm
+}
+
+// ── Divisions ──────────────────────────────────────────────────────────────
+
+const DIVISION_LAT_BANDS = 2
+
+const DIVISION_LON_SECTORS = 4
+
+function divisionId(targetId: string, band: number, sector: number): string {
+  return `${targetId}:${band}-${sector}`
+}
+
+function divisionLabel(band: number, sector: number): string {
+  const hemi = band < DIVISION_LAT_BANDS / 2 ? 'S' : 'N'
+  return `${hemi}-${sector + 1}`
 }

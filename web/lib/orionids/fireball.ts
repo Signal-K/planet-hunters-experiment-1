@@ -76,11 +76,6 @@ export function fireballMomentMs(): number {
   return orionidsPeakReminderMs()
 }
 
-/** Peak night ends at local 22 Oct 06:00. */
-export function fireballWindowEndMs(): number {
-  return new Date(2026, 9, 22, 6, 0, 0, 0).getTime()
-}
-
 /** One fragment is due from 02:00 until 06:00 if this player has not caught it. */
 export function fireballDue(at: number, caughtAt: number | null | undefined): boolean {
   if (!Number.isFinite(at)) return false
@@ -165,4 +160,9 @@ export function sanitizeFireballSpotter(raw: unknown): FireballSpotterProgress {
     readAt: sanitizeFireballCaughtAt(row.readAt),
     passedAt: sanitizeFireballCaughtAt(row.passedAt),
   }
+}
+
+/** Peak night ends at local 22 Oct 06:00. */
+function fireballWindowEndMs(): number {
+  return new Date(2026, 9, 22, 6, 0, 0, 0).getTime()
 }

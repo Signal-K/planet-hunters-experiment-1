@@ -23,9 +23,6 @@ export interface LaunchPadLayout {
   towerHeight: number
 }
 
-/** Authored stack height in local pixels (engine exit at y=0, nose at -H). */
-export const LAUNCH_ROCKET_AUTHOR_HEIGHT = 248
-
 const ACCEL_DUR = 3.2
 const VMAX = 220
 
@@ -88,13 +85,6 @@ export function launchRocketScreenY(altitude: number, cameraY: number, rocketPad
   return rocketPadY - altitude + cameraY
 }
 
-export function launchPadOffsetY(cameraY: number): number {
-  // Positive Y is down in Pixi. The pad must recede toward the BOTTOM as the
-  // vehicle climbs, otherwise the Earth scene is shoved up and the rocket
-  // appears to fall into a pit (SSL-295).
-  return cameraY
-}
-
 export interface LaunchAscentFrame {
   altitude: number
   cameraY: number
@@ -117,4 +107,14 @@ export function launchAscentFrame(elapsed: number, W: number, H: number): Launch
     padOffsetY,
     padVisible: padDeckOnScreen < H && padDeckOnScreen > H * 0.08,
   }
+}
+
+/** Authored stack height in local pixels (engine exit at y=0, nose at -H). */
+const LAUNCH_ROCKET_AUTHOR_HEIGHT = 248
+
+function launchPadOffsetY(cameraY: number): number {
+  // Positive Y is down in Pixi. The pad must recede toward the BOTTOM as the
+  // vehicle climbs, otherwise the Earth scene is shoved up and the rocket
+  // appears to fall into a pit (SSL-295).
+  return cameraY
 }

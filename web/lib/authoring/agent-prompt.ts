@@ -2,8 +2,6 @@
 // so an agent that never sees this prompt can reach the same facts by reading them.
 import type { FeedbackDoc, SceneDoc, SceneObject, ScenePreset } from './docs.ts'
 
-export const VIEWPORT_NAMES = { ph: 'phone portrait 390x844', ls: 'phone landscape 926x428', dk: 'desktop 1440x900' } as const
-
 const MODES = {
   fix: 'I know what to do. Follow the pins and notes exactly and do not redesign anything I did not mention.',
   explore:
@@ -103,3 +101,5 @@ export function buildAgentPrompt({ scene, feedback, notes, origin, state, preset
   lines.push(`When done: update the scene script, set status = "addressed" in ${base}/feedback/${scene.id}.toml, write the handoff in the Linear ticket, and show screenshots at phone portrait 390x844, phone landscape 926x428 and desktop 1440x900. Web and native must match.`)
   return lines.join('\n')
 }
+
+const VIEWPORT_NAMES = { ph: 'phone portrait 390x844', ls: 'phone landscape 926x428', dk: 'desktop 1440x900' } as const

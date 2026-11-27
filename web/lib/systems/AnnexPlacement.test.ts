@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { ANNEX_SLOTS, homeCenter, placedAnnex, unplacedAnnexKinds, validateBaseSite } from '@/lib/scene/base-site'
-import { applyBuildGroundTelescope, applyPlaceAnnex } from './EconomySystem'
+import { ANNEX_SLOTS, homeCenter, unplacedAnnexKinds, validateBaseSite } from '@/lib/scene/base-site'
+import { applyBuildGroundTelescope } from './EconomySystem'
 
 // SSL-843: owned structures with no place on the Base wait in the Unplaced tray and go into annex slots.
 function state(placed: string[], placementPlots: Record<string, number> = {}, francs = 5_000_000): GameState {
@@ -21,24 +21,6 @@ describe('annex slots', () => {
     expect(unplacedAnnexKinds(built.player)).toEqual(['ground-telescope'])
   })
 
-  it('placing it is free and takes it out of the tray', () => {
-    const before = state(['launchpad', 'ground-telescope'], { launchpad: 0 })
-    const after = applyPlaceAnnex(before, 'ground-telescope', GATE.plot)
-    expect(after.player.francs).toBe(before.player.francs)
-    expect(after.player.placementPlots['ground-telescope']).toBe(GATE.plot)
-    expect(unplacedAnnexKinds(after.player)).toEqual([])
-    expect(placedAnnex(after.player).get(GATE.plot)).toBe('ground-telescope')
-  })
-
-  it('refuses an unowned kind, a main structure, an unknown slot and a taken slot', () => {
-    expect(applyPlaceAnnex(state(['launchpad']), 'ground-telescope', WEST.plot).player.placementPlots).toEqual({})
-    const owned = state(['launchpad', 'ground-telescope'], { launchpad: 0 })
-    expect(applyPlaceAnnex(owned, 'launchpad', WEST.plot)).toBe(owned)
-    expect(applyPlaceAnnex(owned, 'ground-telescope', 0)).toBe(owned)
-    const onWest = applyPlaceAnnex(owned, 'ground-telescope', WEST.plot)
-    expect(applyPlaceAnnex(onWest, 'ground-telescope', WEST.plot)).toBe(onWest)
-  })
-
   it('the camera frames a structure standing on an annex slot', () => {
     const without = homeCenter(['launchpad', 'market'], 1000)
     const withScope = homeCenter(['launchpad', 'market', 'ground-telescope'], 1000, null, { 'ground-telescope': WEST.plot })
@@ -51,8 +33,7 @@ describe('annex slots', () => {
     expect(one.player.placed).toContain('ground-telescope-2')
     expect(one.player.francs).toBe(3_000_000)
     expect(unplacedAnnexKinds(one.player)).toEqual(['ground-telescope-2'])
-    const placed = applyPlaceAnnex(one, 'ground-telescope-2', GATE.plot)
-    expect(placedAnnex(placed.player).get(GATE.plot)).toBe('ground-telescope-2')
-    expect(applyBuildGroundTelescope(placed)).toBe(placed)
+    const two = applyBuildGroundTelescope({ ...one, player: { ...one.player, placementPlots: { ...one.player.placementPlots, 'ground-telescope-2': GATE.plot } } })
+    expect(two).toBe(applyBuildGroundTelescope(two))
   })
 })

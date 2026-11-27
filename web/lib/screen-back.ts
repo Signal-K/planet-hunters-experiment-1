@@ -1,7 +1,4 @@
 import type { Screen } from '@/lib/game-types'
-
-/** Physical places that host overlay scenes. Overlays return here. */
-export const HOST_SCENES = ['hub', 'launchpad'] as const
 export type HostScene = (typeof HOST_SCENES)[number]
 
 export function isHostScene(screen: Screen): screen is HostScene {
@@ -65,3 +62,6 @@ export function resolveLogicalBack(input: {
 
   return lastHost
 }
+
+/** Physical places that host overlay scenes. Overlays return here. */
+const HOST_SCENES = ['hub', 'launchpad'] as const

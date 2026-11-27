@@ -18,7 +18,6 @@ import BlankSceneDiagnostics from '@/components/game/BlankSceneDiagnostics'
 import SceneErrorBoundary from '@/components/game/SceneErrorBoundary'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { notifyFiredAlert } from '@/lib/priceAlertNotify'
 import { captureGameEvent, captureScreenView, captureTutorialStepStarted, initPostHog } from '@/lib/posthog'
 import { scheduleOrionidsPeakReminder } from '@/lib/orionids/peak-reminder'
 import { pbLandnam } from '@/lib/pb-landnam'
@@ -363,26 +362,6 @@ function GameChrome({ children }: { children: ReactNode }) {
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'tess-discovery' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : 'hub'
-  // Price alerts fire when a spot price reaches the target, including as supply pressure recovers over time.
-  const hasPriceAlerts = (game.player.priceAlerts ?? []).some(a => a.firedAt == null)
-  const checkPriceAlerts = game.checkPriceAlerts
-  useEffect(() => {
-    if (!hasPriceAlerts) return
-    checkPriceAlerts()
-    const timer = window.setInterval(checkPriceAlerts, 30_000)
-    return () => window.clearInterval(timer)
-  }, [hasPriceAlerts, checkPriceAlerts, game.player.dailyEconomySnapshot])
-  const notifiedAlerts = useRef<Set<string>>(new Set((game.player.priceAlerts ?? []).filter(a => a.firedAt != null).map(a => `${a.id}:${a.firedAt}`)))
-  useEffect(() => {
-    for (const alert of game.player.priceAlerts ?? []) {
-      if (alert.firedAt == null) continue
-      const key = `${alert.id}:${alert.firedAt}`
-      if (notifiedAlerts.current.has(key)) continue
-      notifiedAlerts.current.add(key)
-      notifyFiredAlert(alert)
-    }
-  }, [game.player.priceAlerts])
-
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (programMenu.current?.open) return

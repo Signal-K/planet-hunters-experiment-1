@@ -64,18 +64,6 @@ export function mergeSkyMaps(local: SkyMap | undefined, remote: SkyMap | undefin
   return out
 }
 
-export function formatRa(ra: number): string {
-  const hours = wrapRa(ra) / 15
-  const h = Math.floor(hours)
-  const m = Math.floor((hours - h) * 60)
-  return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m`
-}
-
-export function formatDec(dec: number): string {
-  const d = Math.round(clampDec(dec))
-  return `${d < 0 ? '−' : '+'}${Math.abs(d)}°`
-}
-
 export function formatAim(aim: SkyAim): string {
   return `RA ${formatRa(aim.ra)} · DEC ${formatDec(aim.dec)}`
 }
@@ -114,4 +102,16 @@ export function landmarkNear(aim: SkyAim, within = 8): Landmark | null {
     if (d <= bestD) { best = l; bestD = d }
   }
   return best
+}
+
+function formatRa(ra: number): string {
+  const hours = wrapRa(ra) / 15
+  const h = Math.floor(hours)
+  const m = Math.floor((hours - h) * 60)
+  return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m`
+}
+
+function formatDec(dec: number): string {
+  const d = Math.round(clampDec(dec))
+  return `${d < 0 ? '−' : '+'}${Math.abs(d)}°`
 }

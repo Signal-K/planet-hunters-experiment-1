@@ -18,9 +18,6 @@
 
 import { STARTER_BASE_PLACED } from '@/lib/data/starter-base'
 
-export const LEDGER_SCALARS = ['francs', 'researchXP', 'researchAnnotations', 'missionsDone'] as const
-export const LEDGER_RECORDS = ['stash', 'refinedGoods'] as const
-
 export type Counters = Record<string, number>
 export interface DeviceEntry { seq: number; plus: Counters; minus: Counters }
 export interface SyncLedger { v: 1; base: Counters; devices: Record<string, DeviceEntry>; version: number }
@@ -28,23 +25,6 @@ export interface SyncLedger { v: 1; base: Counters; devices: Record<string, Devi
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PlayerLike = any
 type SaveLike = { player: PlayerLike; syncLedger?: SyncLedger | null }
-
-export function readCounters(player: PlayerLike): Counters {
-  const out: Counters = {}
-  for (const k of LEDGER_SCALARS) {
-    const v = player[k]
-    if (typeof v === 'number' && Number.isFinite(v)) out[k] = v
-  }
-  for (const r of LEDGER_RECORDS) {
-    const rec = player[r]
-    if (rec && typeof rec === 'object') {
-      for (const [id, v] of Object.entries(rec as Record<string, unknown>)) {
-        if (typeof v === 'number' && Number.isFinite(v)) out[`${r}.${id}`] = v
-      }
-    }
-  }
-  return out
-}
 
 export function ledgerValues(ledger: SyncLedger): Counters {
   const out: Counters = { ...ledger.base }
@@ -117,13 +97,34 @@ export function applyMergedLedger<S extends SaveLike>(merged: S, local: SaveLike
   return { ...merged, player: writeCounters(merged.player, ledgerValues(ledger)), syncLedger: ledger }
 }
 
-export function isUntouched(save: SaveLike): boolean {
+const LEDGER_SCALARS = ['francs', 'researchXP', 'researchAnnotations', 'missionsDone'] as const
+
+const LEDGER_RECORDS = ['stash', 'refinedGoods'] as const
+
+function readCounters(player: PlayerLike): Counters {
+  const out: Counters = {}
+  for (const k of LEDGER_SCALARS) {
+    const v = player[k]
+    if (typeof v === 'number' && Number.isFinite(v)) out[k] = v
+  }
+  for (const r of LEDGER_RECORDS) {
+    const rec = player[r]
+    if (rec && typeof rec === 'object') {
+      for (const [id, v] of Object.entries(rec as Record<string, unknown>)) {
+        if (typeof v === 'number' && Number.isFinite(v)) out[`${r}.${id}`] = v
+      }
+    }
+  }
+  return out
+}
+
+function isUntouched(save: SaveLike): boolean {
   const p = save.player ?? {}
   return ledgerWeight(save) === 0 && !(p.missionsDone > 0) && !(p.placed ?? []).some((kind: string) => !STARTER_BASE_PLACED.includes(kind))
 }
 
 /** Whether this save carries any progress worth protecting (an empty save never overwrites a richer one). */
-export function ledgerWeight(save: SaveLike): number {
+function ledgerWeight(save: SaveLike): number {
   const l = save.syncLedger
   return l ? Object.values(l.devices).reduce((n, d) => n + d.seq, 0) : 0
 }

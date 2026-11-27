@@ -41,25 +41,6 @@ const VERDICT_ACTIONS: Array<{ id: SaturnVerdict; label: string; mark: string }>
   { id: 'maybe', label: 'Maybe', mark: 'M' },
 ]
 
-/** The Saturn desk briefs the player on their first frame (notes/decisions "Instruments are controls you look through"). */
-export const SATURN_BRIEFING = [
-  'Saturn desk here. This is a real Cassini frame of Saturn\'s clouds, cut into nine squares. Your satellite sends one a day.',
-  'Tap a square to look at it. The white box shows the square you picked. Aim, zoom and exposure on the left help you see detail.',
-  'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap MARK STORM, then answer YES.',
-  'Smooth bands with no knot are NO. If you cannot tell, answer MAYBE. Each answer is saved straight away. Answer all nine squares to finish the frame.',
-] as const
-
-/**
- * SSL-745: false-colour maps for the greyscale Cassini frame. Brightness becomes colour, so a
- * bright storm knot stands out from the bands. Mirrored by native `SaturnPalette`.
- */
-export const SATURN_PALETTES = [
-  { id: 'clr', name: 'CLR', table: null },
-  { id: 'heat', name: 'HEAT', table: { r: '0 0.7 1 1', g: '0 0.1 0.65 1', b: '0 0.15 0.1 0.9' } },
-  { id: 'ice', name: 'ICE', table: { r: '0 0.05 0.4 1', g: '0 0.3 0.85 1', b: '0.08 0.7 1 1' } },
-  { id: 'mt', name: 'MT', table: { r: '0 0.45 0.95 1', g: '0 0.05 0.35 1', b: '0.1 0.6 0.9 1' } },
-] as const
-
 /** Inline SVG filters the frame and loupe read: one colour map per palette, plus an unsharp kernel. */
 function SaturnFilters() {
   return (
@@ -501,3 +482,22 @@ export default function SaturnStormSearchScreen({ player, inspectSubjectId, onBa
     />
   )
 }
+
+/** The Saturn desk briefs the player on their first frame (notes/decisions "Instruments are controls you look through"). */
+const SATURN_BRIEFING = [
+  'Saturn desk here. This is a real Cassini frame of Saturn\'s clouds, cut into nine squares. Your satellite sends one a day.',
+  'Tap a square to look at it. The white box shows the square you picked. Aim, zoom and exposure on the left help you see detail.',
+  'A storm is a bright, round knot or swirl in the cloud bands. If you see one, tap MARK STORM, then answer YES.',
+  'Smooth bands with no knot are NO. If you cannot tell, answer MAYBE. Each answer is saved straight away. Answer all nine squares to finish the frame.',
+] as const
+
+/**
+ * SSL-745: false-colour maps for the greyscale Cassini frame. Brightness becomes colour, so a
+ * bright storm knot stands out from the bands. Mirrored by native `SaturnPalette`.
+ */
+const SATURN_PALETTES = [
+  { id: 'clr', name: 'CLR', table: null },
+  { id: 'heat', name: 'HEAT', table: { r: '0 0.7 1 1', g: '0 0.1 0.65 1', b: '0 0.15 0.1 0.9' } },
+  { id: 'ice', name: 'ICE', table: { r: '0 0.05 0.4 1', g: '0 0.3 0.85 1', b: '0.08 0.7 1 1' } },
+  { id: 'mt', name: 'MT', table: { r: '0 0.45 0.95 1', g: '0 0.05 0.35 1', b: '0.1 0.6 0.9 1' } },
+] as const

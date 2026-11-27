@@ -37,10 +37,6 @@ export interface WswChip {
   label: string
 }
 
-export function isWswEvent(eventId: string): boolean {
-  return WSW_EVENT_IDS.includes(eventId)
-}
-
 const WSW_STARTS_UTC = Date.parse('2026-10-04T00:00:00Z')
 
 export function isWorldSpaceWeekLive(now: Date | number): boolean {
@@ -120,4 +116,8 @@ export function wswBanner(badges: Record<string, PlayerBadge> | undefined, now: 
     earned,
     total: WSW_EVENT_IDS.length,
   }
+}
+
+function isWswEvent(eventId: string): boolean {
+  return WSW_EVENT_IDS.includes(eventId)
 }

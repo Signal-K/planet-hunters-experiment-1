@@ -57,8 +57,96 @@ const OCEAN = ['#2f86d6', '#2468b8', '#1a4f98', '#133a78'].map(hex)
 const RIM = [hex('#d6f4ff'), hex('#7ccbf4')]
 const LAND = ['#4f9d3f', '#3f8f3a', '#5aa04a', '#35803a'].map(hex)
 
+/* ── the space telescope, as a sprite on the same grid ── */
+
+const SW = 33
+const SH = 20
+const PIVOT = { x: 16.5, y: 12 }
+
+function telescopeSprite() {
+  const c = makeCanvas(SW, SH)
+  const ctx = c?.getContext('2d')
+  if (!c || !ctx) return null
+  const box = (x: number, y: number, w: number, h: number, col: string) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h) }
+  // wings: outlined solar panels with cell lines
+  for (const x0 of [1, 21]) {
+    box(x0, 9, 11, 6, '#10284f')
+    box(x0 + 1, 10, 9, 4, '#2f6fc0')
+    for (let k = 0; k < 9; k += 3) box(x0 + 1 + k, 10, 1, 4, '#7db4ee')
+    box(x0 + 1, 11, 9, 1, '#4d8fd8')
+  }
+  box(12, 11, 1, 2, '#aab6c8'); box(20, 11, 1, 2, '#aab6c8')
+  // bus
+  box(12, 6, 9, 11, '#1c2a40')
+  box(13, 7, 7, 9, '#e3eaf5')
+  box(13, 7, 2, 9, '#a9b6cb')
+  box(13, 14, 7, 2, '#e2b64e')
+  box(13, 14, 7, 1, '#f3d27a')
+  // four cameras on the front
+  for (const x of [13, 15, 17, 19]) { box(x, 2, 1, 5, '#0d1424'); box(x, 1, 1, 1, '#9fd6e4') }
+  box(12, 6, 9, 1, '#6c7b92')
+  // high-gain dish
+  box(22, 17, 4, 1, '#6c7b92'); box(23, 18, 3, 1, '#e6edf7')
+  return c
+}
+
+/** A raster drawn on the view's grid, shown without smoothing. */
+export function PixelImage({ href, x, y, w, h, testId }: { href: string; x: number; y: number; w: number; h: number; testId?: string }) {
+  if (!href) return null
+  return <image href={href} x={x} y={y} width={w} height={h} preserveAspectRatio="none" style={{ imageRendering: 'pixelated' }} data-testid={testId} />
+}
+
+export function useEarthImage(W: number, H: number, earth: PixelEarth) {
+  return useMemo(() => drawEarth(W, H, earth), [W, H, earth.cx, earth.cy, earth.r]) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+export function useTelescopeImage(angle: number) {
+  const step = Math.round(angle / 6) * 6
+  return useMemo(() => ({ ...drawTelescope(step), step }), [step])
+}
+
+/** Square star: a single cell, or a plus when it is a bright one. Cells snap to the grid. */
+export function PixelStar({ x, y, tone = '#ffffff', big = false, opacity = 1 }: { x: number; y: number; tone?: string; big?: boolean; opacity?: number }) {
+  const cx = Math.round(x)
+  const cy = Math.round(y)
+  return (
+    <g fill={tone} opacity={opacity}>
+      <rect x={cx} y={cy} width="1" height="1" />
+      {big && (<><rect x={cx - 1} y={cy} width="1" height="1" /><rect x={cx + 1} y={cy} width="1" height="1" /><rect x={cx} y={cy - 1} width="1" height="1" /><rect x={cx} y={cy + 1} width="1" height="1" /></>)}
+    </g>
+  )
+}
+
+/* ── ground telescope: banded dusk sky, ridges, pines and the dome, all on the grid ── */
+
+export interface PixelGround { horizon: number; dome: { x: number; y: number } }
+
+const SKY = ['#050a1e', '#08122c', '#0c1c40', '#12294f', '#1c3a62', '#3b4f6e', '#6e5d6a'].map(hex)
+
+/* ── Saturn: banded globe, shaded by dithering, with rings that pass in front and behind ── */
+
+export interface PixelSaturn { cx: number; cy: number; R: number; tilt: number; k: number }
+
+const SAT_BANDS = ['#c8ab74', '#e9d5a2', '#b8935a', '#ecd9aa', '#c9a869', '#e4cd9a', '#a98456', '#8a6a3e'].map(hex)
+const RING_BANDS: [number, number, string][] = [
+  [1.24, 1.52, '#7a6446'], [1.52, 1.72, '#e6d1a3'], [1.72, 1.78, '#b59c70'], [1.78, 1.94, '#efdcb0'],
+  [2.03, 2.27, '#c4ad80'], [2.31, 2.35, '#e8dcc0'],
+].map(([a, b, col]) => [a as number, b as number, col as string])
+
+export function useGroundImage(W: number, H: number, geom: PixelGround, portrait: boolean) {
+  return useMemo(() => drawGround(W, H, geom, portrait), [W, H, geom.horizon, geom.dome.x, geom.dome.y, portrait]) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+export function useSaturnImage(W: number, H: number, s: PixelSaturn) {
+  return useMemo(() => drawSaturn(W, H, s), [W, H, s.cx, s.cy, s.R, s.tilt, s.k]) // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+export function useProbeImage() {
+  return useMemo(() => drawProbe(), [])
+}
+
 /** The visible slice of Earth: banded ocean, shallows, continents with desert, cloud streaks and a dithered night side. */
-export function drawEarth(W: number, H: number, earth: PixelEarth): string {
+function drawEarth(W: number, H: number, earth: PixelEarth): string {
   const w = Math.ceil(W)
   const h = Math.ceil(H)
   const c = makeCanvas(w, h)
@@ -118,41 +206,8 @@ export function drawEarth(W: number, H: number, earth: PixelEarth): string {
   return c.toDataURL()
 }
 
-/* ── the space telescope, as a sprite on the same grid ── */
-
-const SW = 33
-const SH = 20
-const PIVOT = { x: 16.5, y: 12 }
-
-function telescopeSprite() {
-  const c = makeCanvas(SW, SH)
-  const ctx = c?.getContext('2d')
-  if (!c || !ctx) return null
-  const box = (x: number, y: number, w: number, h: number, col: string) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h) }
-  // wings: outlined solar panels with cell lines
-  for (const x0 of [1, 21]) {
-    box(x0, 9, 11, 6, '#10284f')
-    box(x0 + 1, 10, 9, 4, '#2f6fc0')
-    for (let k = 0; k < 9; k += 3) box(x0 + 1 + k, 10, 1, 4, '#7db4ee')
-    box(x0 + 1, 11, 9, 1, '#4d8fd8')
-  }
-  box(12, 11, 1, 2, '#aab6c8'); box(20, 11, 1, 2, '#aab6c8')
-  // bus
-  box(12, 6, 9, 11, '#1c2a40')
-  box(13, 7, 7, 9, '#e3eaf5')
-  box(13, 7, 2, 9, '#a9b6cb')
-  box(13, 14, 7, 2, '#e2b64e')
-  box(13, 14, 7, 1, '#f3d27a')
-  // four cameras on the front
-  for (const x of [13, 15, 17, 19]) { box(x, 2, 1, 5, '#0d1424'); box(x, 1, 1, 1, '#9fd6e4') }
-  box(12, 6, 9, 1, '#6c7b92')
-  // high-gain dish
-  box(22, 17, 4, 1, '#6c7b92'); box(23, 18, 3, 1, '#e6edf7')
-  return c
-}
-
 /** The craft turned to `angle` degrees (clockwise from up), sampled nearest-neighbour so it stays on the pixel grid. */
-export function drawTelescope(angle: number): { src: string; size: number; px: number; py: number } {
+function drawTelescope(angle: number): { src: string; size: number; px: number; py: number } {
   const sprite = telescopeSprite()
   const size = 44
   const out = makeCanvas(size, size)
@@ -182,40 +237,7 @@ export function drawTelescope(angle: number): { src: string; size: number; px: n
   return { src: out.toDataURL(), size, px: mid, py: mid }
 }
 
-/** A raster drawn on the view's grid, shown without smoothing. */
-export function PixelImage({ href, x, y, w, h, testId }: { href: string; x: number; y: number; w: number; h: number; testId?: string }) {
-  if (!href) return null
-  return <image href={href} x={x} y={y} width={w} height={h} preserveAspectRatio="none" style={{ imageRendering: 'pixelated' }} data-testid={testId} />
-}
-
-export function useEarthImage(W: number, H: number, earth: PixelEarth) {
-  return useMemo(() => drawEarth(W, H, earth), [W, H, earth.cx, earth.cy, earth.r]) // eslint-disable-line react-hooks/exhaustive-deps
-}
-
-export function useTelescopeImage(angle: number) {
-  const step = Math.round(angle / 6) * 6
-  return useMemo(() => ({ ...drawTelescope(step), step }), [step])
-}
-
-/** Square star: a single cell, or a plus when it is a bright one. Cells snap to the grid. */
-export function PixelStar({ x, y, tone = '#ffffff', big = false, opacity = 1 }: { x: number; y: number; tone?: string; big?: boolean; opacity?: number }) {
-  const cx = Math.round(x)
-  const cy = Math.round(y)
-  return (
-    <g fill={tone} opacity={opacity}>
-      <rect x={cx} y={cy} width="1" height="1" />
-      {big && (<><rect x={cx - 1} y={cy} width="1" height="1" /><rect x={cx + 1} y={cy} width="1" height="1" /><rect x={cx} y={cy - 1} width="1" height="1" /><rect x={cx} y={cy + 1} width="1" height="1" /></>)}
-    </g>
-  )
-}
-
-/* ── ground telescope: banded dusk sky, ridges, pines and the dome, all on the grid ── */
-
-export interface PixelGround { horizon: number; dome: { x: number; y: number } }
-
-const SKY = ['#050a1e', '#08122c', '#0c1c40', '#12294f', '#1c3a62', '#3b4f6e', '#6e5d6a'].map(hex)
-
-export function drawGround(W: number, H: number, geom: PixelGround, portrait: boolean): string {
+function drawGround(W: number, H: number, geom: PixelGround, portrait: boolean): string {
   const w = Math.ceil(W)
   const h = Math.ceil(H)
   const c = makeCanvas(w, h)
@@ -285,17 +307,7 @@ export function drawGround(W: number, H: number, geom: PixelGround, portrait: bo
   return c.toDataURL()
 }
 
-/* ── Saturn: banded globe, shaded by dithering, with rings that pass in front and behind ── */
-
-export interface PixelSaturn { cx: number; cy: number; R: number; tilt: number; k: number }
-
-const SAT_BANDS = ['#c8ab74', '#e9d5a2', '#b8935a', '#ecd9aa', '#c9a869', '#e4cd9a', '#a98456', '#8a6a3e'].map(hex)
-const RING_BANDS: [number, number, string][] = [
-  [1.24, 1.52, '#7a6446'], [1.52, 1.72, '#e6d1a3'], [1.72, 1.78, '#b59c70'], [1.78, 1.94, '#efdcb0'],
-  [2.03, 2.27, '#c4ad80'], [2.31, 2.35, '#e8dcc0'],
-].map(([a, b, col]) => [a as number, b as number, col as string])
-
-export function drawSaturn(W: number, H: number, s: PixelSaturn): string {
+function drawSaturn(W: number, H: number, s: PixelSaturn): string {
   const w = Math.ceil(W)
   const h = Math.ceil(H)
   const c = makeCanvas(w, h)
@@ -351,7 +363,7 @@ export function drawSaturn(W: number, H: number, s: PixelSaturn): string {
 }
 
 /** The Saturn orbiter probe: a dish on a boxy bus with two boom arms, on the grid. */
-export function drawProbe(): { src: string; w: number; h: number } {
+function drawProbe(): { src: string; w: number; h: number } {
   const w = 28
   const h = 24
   const c = makeCanvas(w, h)
@@ -364,16 +376,4 @@ export function drawProbe(): { src: string; w: number; h: number } {
   for (let row = 0; row < 8; row++) { const half = 3 + row; box(14 - half, 12 - row, half * 2, 1, row === 7 ? '#0c1a2e' : '#e4e9ef') }
   box(13, 3, 2, 10, '#0c1a2e'); box(13, 4, 1, 9, '#8fa0b4')
   return { src: c.toDataURL(), w, h }
-}
-
-export function useGroundImage(W: number, H: number, geom: PixelGround, portrait: boolean) {
-  return useMemo(() => drawGround(W, H, geom, portrait), [W, H, geom.horizon, geom.dome.x, geom.dome.y, portrait]) // eslint-disable-line react-hooks/exhaustive-deps
-}
-
-export function useSaturnImage(W: number, H: number, s: PixelSaturn) {
-  return useMemo(() => drawSaturn(W, H, s), [W, H, s.cx, s.cy, s.R, s.tilt, s.k]) // eslint-disable-line react-hooks/exhaustive-deps
-}
-
-export function useProbeImage() {
-  return useMemo(() => drawProbe(), [])
 }

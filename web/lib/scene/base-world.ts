@@ -3,12 +3,7 @@ import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 /** Earth Base landscapes. Mountains and desert ship layer art; tundra and coast reuse those sets with a grade. */
 export const EARTH_BIOMES = ['mountains', 'desert', 'tundra', 'coast'] as const
 export type EarthBiomeId = (typeof EARTH_BIOMES)[number]
-
-export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
 export type Season = (typeof SEASONS)[number]
-
-/** Full day cycle. Dusk is one grade, not the only sky. */
-export const WORLD_TIME_GRADES = ['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night'] as const
 export type WorldTimeGrade = (typeof WORLD_TIME_GRADES)[number]
 
 export interface BiomeLayer {
@@ -212,3 +207,8 @@ export function structureTier(level: number): 1 | 2 | 3 {
   if (level >= 2) return 2
   return 1
 }
+
+const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
+
+/** Full day cycle. Dusk is one grade, not the only sky. */
+const WORLD_TIME_GRADES = ['dawn', 'morning', 'midday', 'afternoon', 'dusk', 'night'] as const

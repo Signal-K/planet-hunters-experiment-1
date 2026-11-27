@@ -1,11 +1,5 @@
 import type { Target } from '@/lib/data'
 
-// Synthetic gameplay taxonomy for KES-110. This deliberately does not include
-// AI4Mars/Zooniverse imagery or subject data while the source audit is open.
-// Real rover citizen science (AI4Mars, Planet Four) is the separate rover game
-// (SSL-777), not Landnám. This stays a small tapas taste of it.
-export const ROVER_TERRAIN_CLASSES = ['bedrock', 'float-rock', 'sand', 'pebbles', 'vein'] as const
-
 export type RoverTerrainClass = typeof ROVER_TERRAIN_CLASSES[number]
 
 export interface RoverScoutingResult {
@@ -38,3 +32,9 @@ export function deriveRoverScoutingResult(target: Target, terrain: RoverTerrainC
     cargoBonus: terrain === 'vein' ? 3 : 1,
   }
 }
+
+// Synthetic gameplay taxonomy for KES-110. This deliberately does not include
+// AI4Mars/Zooniverse imagery or subject data while the source audit is open.
+// Real rover citizen science (AI4Mars, Planet Four) is the separate rover game
+// (SSL-777), not Landnám. This stays a small tapas taste of it.
+const ROVER_TERRAIN_CLASSES = ['bedrock', 'float-rock', 'sand', 'pebbles', 'vein'] as const

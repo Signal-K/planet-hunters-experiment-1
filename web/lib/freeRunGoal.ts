@@ -8,11 +8,6 @@ export interface FreeRunGoal {
   amount: number
 }
 
-/** Cargo units one piece takes in the hold; event fragments take none and are never a goal. */
-export function unitsPerPiece(meta: MineralMeta | undefined): number {
-  return meta?.cargoUnits ?? 1
-}
-
 /** Most pieces of a mineral the rocket's hold can carry in one trip. The hold always caps the cargo. */
 export function maxGoalAmount(meta: MineralMeta | undefined, holdUnits: number): number {
   const per = unitsPerPiece(meta)
@@ -40,4 +35,9 @@ export function applyFreeRunGoal(mission: Mission, goal: FreeRunGoal | undefined
     },
     payout: mission.payout?.francs ? { ...mission.payout, francs: Math.round(meta.price * goal.amount) } : mission.payout,
   }
+}
+
+/** Cargo units one piece takes in the hold; event fragments take none and are never a goal. */
+function unitsPerPiece(meta: MineralMeta | undefined): number {
+  return meta?.cargoUnits ?? 1
 }

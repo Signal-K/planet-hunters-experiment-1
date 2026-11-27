@@ -4,9 +4,6 @@
  */
 export type HitKind = 'hit' | 'collect'
 
-/** Real-time freeze (seconds) applied to the whole scene when the laser connects. */
-export const HIT_STOP_SECONDS: Record<HitKind, number> = { hit: 0.04, collect: 0.09 }
-
 /** Hit-stop length, or 0 when the player asked for reduced motion. */
 export function hitStopSeconds(kind: HitKind, reducedMotion: boolean): number {
   return reducedMotion ? 0 : HIT_STOP_SECONDS[kind]
@@ -43,3 +40,6 @@ export function recoilOffset(t: number, kickPx = 5, settleSeconds = 0.18): numbe
   const k = 1 - t / settleSeconds
   return -kickPx * k * k
 }
+
+/** Real-time freeze (seconds) applied to the whole scene when the laser connects. */
+const HIT_STOP_SECONDS: Record<HitKind, number> = { hit: 0.04, collect: 0.09 }

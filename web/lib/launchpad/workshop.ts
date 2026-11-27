@@ -2,17 +2,11 @@ import { weeklyRocketPartById, weeklyRocketPart } from '@/lib/data/weeklyRocketP
 import type { Player } from '@/lib/game-types'
 import { customizerPartById } from '@/lib/data/shipCustomizer'
 import { allPartsForSlot, type BuilderSlot } from './rocketBuilder'
-
-/** Legacy catalog rewards already stored before SSL-849; new awards use weekly issue IDs. */
-export const WEEKLY_ROCKET_PARTS: Record<number, string> = {
-  2: 'storage-silo-t2', 4: 'fusion-thruster-t2', 5: 'ringed-laser-t3',
-}
 export const LIVERY_COLORS = {
   cream: 'var(--ln-blueprint-paper)', blue: 'var(--ln-blueprint-blue)',
   cyan: 'var(--ln-cyan)', ink: 'var(--ln-blueprint-ink)',
 } as const
 export type LiveryColor = keyof typeof LIVERY_COLORS
-export const LIVERY_DECALS = ['none', 'star', 'orbit', 'stripes'] as const
 export type RocketLivery = { hull: LiveryColor; trim: LiveryColor; decal: typeof LIVERY_DECALS[number]; updatedAt: number }
 export function sanitizeLivery(raw: Partial<RocketLivery> | undefined): RocketLivery {
   const color = (value: unknown, fallback: LiveryColor) => typeof value === 'string' && Object.hasOwn(LIVERY_COLORS, value) ? value as LiveryColor : fallback
@@ -33,3 +27,10 @@ export function workshopParts(slot: BuilderSlot, player: Pick<Player, 'missionsD
 export function workshopPartPrice(partId: string, player: Pick<Player, 'researchRocketParts' | 'researchPath' | 'badges'>): number {
   return earnedRocketParts(player).includes(partId) ? 0 : customizerPartById(partId)?.price ?? 0
 }
+
+/** Legacy catalog rewards already stored before SSL-849; new awards use weekly issue IDs. */
+const WEEKLY_ROCKET_PARTS: Record<number, string> = {
+  2: 'storage-silo-t2', 4: 'fusion-thruster-t2', 5: 'ringed-laser-t3',
+}
+
+const LIVERY_DECALS = ['none', 'star', 'orbit', 'stripes'] as const

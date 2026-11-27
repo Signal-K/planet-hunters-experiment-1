@@ -3,12 +3,6 @@
 import { sandboxName } from '../sandbox.ts'
 import type { Rect, SceneObject } from './docs.ts'
 import type { Setup } from './things.ts'
-
-export const VIEWPORTS = {
-  ph: { w: 390, h: 844, label: 'Phone', hint: 'portrait 390x844' },
-  ls: { w: 926, h: 428, label: 'Landscape', hint: 'phone 926x428' },
-  dk: { w: 1440, h: 900, label: 'Desktop', hint: '1440x900' },
-} as const
 export type ViewportKey = keyof typeof VIEWPORTS
 
 export const STEP = 0.005
@@ -138,3 +132,9 @@ export function scriptHref(hostRoot: string, file: string, line?: number): strin
   const root = hostRoot.replace(/\/+$/, '')
   return `cursor://file${root.startsWith('/') ? '' : '/'}${root}/${file}${line ? `:${line}:1` : ''}`
 }
+
+const VIEWPORTS = {
+  ph: { w: 390, h: 844, label: 'Phone', hint: 'portrait 390x844' },
+  ls: { w: 926, h: 428, label: 'Landscape', hint: 'phone 926x428' },
+  dk: { w: 1440, h: 900, label: 'Desktop', hint: '1440x900' },
+} as const

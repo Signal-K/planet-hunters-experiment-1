@@ -19,28 +19,11 @@ const SCENE_ID = /^[a-z0-9][a-z0-9-]*$/
 const WRITABLE = /\.(toml|md|jpg|jpeg|png|webp)$/
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024
 
-export const hashOf = (text: string): string => createHash('sha1').update(text).digest('hex').slice(0, 12)
-
-/** A path inside shared/authoring/ and nowhere else. Throws on anything that could escape it. */
-export function safeAuthoringPath(root: string, rel: string): string {
-  const clean = normalize(rel).split(sep).join('/')
-  if (!clean.startsWith(`${AUTHORING_DIR}/`) || clean.includes('..') || !WRITABLE.test(clean)) throw new Error(`refusing to touch ${rel}`)
-  return join(root, clean)
-}
-
 function atomicWrite(abs: string, content: string | Buffer): void {
   mkdirSync(dirname(abs), { recursive: true })
   const pending = `${abs}.${process.pid}.tmp`
   writeFileSync(pending, content)
   renameSync(pending, abs)
-}
-
-export function readDoc(root: string, file: string, context: AuthoringContext): DocBundle {
-  const abs = safeAuthoringPath(root, file)
-  if (!existsSync(abs)) return { file, exists: false, text: '', hash: hashOf(''), value: null, diagnostics: [] }
-  const text = readSceneText(root, file)
-  const { doc, diagnostics } = validateDocument(text, file, context)
-  return { file, exists: true, text, hash: hashOf(text), value: doc && docKindOf(file) === 'scene' ? withDials(doc.value as unknown as SceneDoc) as unknown as Record<string, unknown> : doc?.value ?? null, diagnostics: remapDiagnostics(text, diagnostics) }
 }
 
 /** Cheap change detector: a hash of every file behind a bundle. The Studio polls with it and only refetches on change. */
@@ -230,3 +213,20 @@ export function setFocus(root: string, scenes: string[], ticket?: string): Studi
 }
 
 export { hasErrors, loadContext }
+
+const hashOf = (text: string): string => createHash('sha1').update(text).digest('hex').slice(0, 12)
+
+/** A path inside shared/authoring/ and nowhere else. Throws on anything that could escape it. */
+function safeAuthoringPath(root: string, rel: string): string {
+  const clean = normalize(rel).split(sep).join('/')
+  if (!clean.startsWith(`${AUTHORING_DIR}/`) || clean.includes('..') || !WRITABLE.test(clean)) throw new Error(`refusing to touch ${rel}`)
+  return join(root, clean)
+}
+
+function readDoc(root: string, file: string, context: AuthoringContext): DocBundle {
+  const abs = safeAuthoringPath(root, file)
+  if (!existsSync(abs)) return { file, exists: false, text: '', hash: hashOf(''), value: null, diagnostics: [] }
+  const text = readSceneText(root, file)
+  const { doc, diagnostics } = validateDocument(text, file, context)
+  return { file, exists: true, text, hash: hashOf(text), value: doc && docKindOf(file) === 'scene' ? withDials(doc.value as unknown as SceneDoc) as unknown as Record<string, unknown> : doc?.value ?? null, diagnostics: remapDiagnostics(text, diagnostics) }
+}

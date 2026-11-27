@@ -43,13 +43,6 @@ export function resolveIngestEnv(env: NodeJS.ProcessEnv = process.env): IngestEn
   }
 }
 
-export function ingestLimitsFromEnv(env: IngestEnv): IngestLimits {
-  return {
-    tess: Number.isFinite(env.tessLimit) && (env.tessLimit ?? 0) > 0 ? Number(env.tessLimit) : DEFAULT_INGEST_LIMITS.tess,
-    neocp: Number.isFinite(env.neocpLimit) && (env.neocpLimit ?? 0) > 0 ? Number(env.neocpLimit) : DEFAULT_INGEST_LIMITS.neocp,
-  }
-}
-
 export function canWriteToSharedPool(env: IngestEnv): boolean {
   return Boolean(env.sharedPbUrl && env.adminEmail && env.adminPassword)
 }
@@ -81,17 +74,6 @@ function mapExistingAsteroids(records: Array<Record<string, unknown>>): Existing
     consensus: record.consensus,
     goldLabel: record.gold_label,
   })).filter(row => row.tempDesig)
-}
-
-export async function loadSharedPool(pb: PocketBase): Promise<IngestPool> {
-  const [tess, asteroids] = await Promise.all([
-    pb.collection(TESS_SUBJECTS_COLLECTION).getFullList({ sort: 'id', requestKey: null }),
-    pb.collection(ASTEROID_CANDIDATES_COLLECTION).getFullList({ sort: '-created', requestKey: null }),
-  ])
-  return {
-    tess: mapExistingTess(tess as unknown as Array<Record<string, unknown>>),
-    asteroids: mapExistingAsteroids(asteroids as unknown as Array<Record<string, unknown>>),
-  }
 }
 
 export async function writePlannedInserts(
@@ -156,4 +138,22 @@ export async function runSharedSubjectIngest(options: {
   const plan = planSharedSubjectIngest(tessRows, neocpRows, pool, limits)
   const written = await writePlannedInserts(pb, [...plan.tessInserted, ...plan.neocpInserted])
   return { mode: 'write', plan, written, skippedWriteReason: null }
+}
+
+function ingestLimitsFromEnv(env: IngestEnv): IngestLimits {
+  return {
+    tess: Number.isFinite(env.tessLimit) && (env.tessLimit ?? 0) > 0 ? Number(env.tessLimit) : DEFAULT_INGEST_LIMITS.tess,
+    neocp: Number.isFinite(env.neocpLimit) && (env.neocpLimit ?? 0) > 0 ? Number(env.neocpLimit) : DEFAULT_INGEST_LIMITS.neocp,
+  }
+}
+
+async function loadSharedPool(pb: PocketBase): Promise<IngestPool> {
+  const [tess, asteroids] = await Promise.all([
+    pb.collection(TESS_SUBJECTS_COLLECTION).getFullList({ sort: 'id', requestKey: null }),
+    pb.collection(ASTEROID_CANDIDATES_COLLECTION).getFullList({ sort: '-created', requestKey: null }),
+  ])
+  return {
+    tess: mapExistingTess(tess as unknown as Array<Record<string, unknown>>),
+    asteroids: mapExistingAsteroids(asteroids as unknown as Array<Record<string, unknown>>),
+  }
 }

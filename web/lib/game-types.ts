@@ -223,14 +223,10 @@ export interface Player {
   groundTelescopeGrandfathered?: boolean
   /** Ground telescope levels 1–3, independently upgraded with stored iron. */
   groundTelescopeLevels?: Record<string, number>
-  /** Left-to-right order of the movable structures along the Base (hangar, launchpad, control-station, market). Absent: authored order. */
-  baseArrangement?: string[]
   /** kind -> startedAt ms. Absence means the structure is fully built. */
   underConstruction?: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
-    /** Installed Laser Capacitor level (SSL-462), bought with hauled ore at Debrief. */
-  laserCapacitorLevel?: number
   freeOperations: boolean
   /** Durable three-try onboarding state, persisted and synced with the save. */
   flightPlan?: FlightPlanProgress
@@ -267,8 +263,6 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
-  /** Sell alerts set at a built Exchange; see MarketplaceSystem. */
-  priceAlerts?: import('@/lib/systems/MarketplaceSystem').PriceAlert[]
   /** Last published shared AEST price and client-demand snapshot. */
   dailyEconomySnapshot?: DailyEconomySnapshot
   /** Immutable evidence that a player-built client structure completed. */
@@ -278,13 +272,6 @@ export interface Player {
   clientStreaks?: Record<string, number>
   clientCooldowns: Record<string, number>
   researchAnnotations: number
-  refineryBuilt: boolean
-  refineryUnlocked?: boolean
-  refineryUnlockNotified?: boolean
-  refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]
-  /** Level 1 refinery can accept one shipment per UTC day. */
-  refineryLastStartedAt?: number
-  refinedGoods: Record<string, number>
   /** Raw ore stored at operational player-owned off-world silos, by target. */
   remoteStorage?: Record<string, Record<string, number>>
   /** Mirrors buildingLevels.launchpad >= 2; kept so older saves and clients keep working. */
@@ -324,11 +311,10 @@ export interface Player {
   }>
   clientTerritories?: Record<string, string[]>
   dailyClientPool?: DailyClientPool
-  // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
-  // each room must be built into it individually before it holds live
-  // inventory — mirrors the surface Build·Place cost shape.
-  subsurfaceExcavated?: boolean
-  subsurfaceBuilt?: string[]
+  /** Extra ore capacity carried over from the retired underground vaults (see save-migrations). */
+  storageBonus?: number
+  /** Save migrations already applied, so each pays out once. */
+  saveMigrations?: string[]
   // Purchased/earned integer levels, not XP tracks (STS-606 decision): each
   // is set/incremented directly by a build or mission event (EconomySystem,
   // useGameLoop), never accumulated as XP against a curve. Do not route these
@@ -597,24 +583,11 @@ export interface GameActions {
   completeStep: (id: number) => void
   resetGame: () => void
   signOut: () => void
-  upgradeLaunchpad: () => void
-  upgradeBuilding: (id: string) => void
   serviceLaunchpad: () => void
-  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
-  excavateSubsurface: () => void
-  /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
   buildGroundTelescope: () => boolean
+  /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
   /** SSL-843: stands an owned annex structure on a free annex slot; false when the slot is taken or the kind is not owned. */
-  placeAnnex: (kind: string, plot: number) => boolean
-  buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
-  buyMinerals: (mineralId: string, amount: number) => void
-  setPriceAlert: (mineralId: string, target: number) => void
-  removePriceAlert: (alertId: string) => void
-  checkPriceAlerts: () => void
-  sellRefinedGoods: (recipeId: string, amount: number) => void
-  onStartRefine: (recipeId: string) => void
-  onCollectRefined: (recipeId: string) => void
   abandonMission: (opts?: { confirmed?: boolean; waivePenalty?: boolean }) => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void

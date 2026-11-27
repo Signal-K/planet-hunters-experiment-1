@@ -18,7 +18,6 @@ export const SCROLL_SPEED = 56
 export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
-export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
@@ -1364,3 +1363,5 @@ export class MiningController extends ScriptBehaviour {
     return { x: SHIP_X - 20, y: SHIP_Y - 12, width: 56, height: 24 }
   }
 }
+
+const SHIP_X = 80

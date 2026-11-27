@@ -12,30 +12,9 @@ import type { Player } from '@/lib/game-types'
 export type ServicedCraftId = 'space-telescope' | 'saturn-satellite'
 export const SERVICED_CRAFT: readonly ServicedCraftId[] = ['space-telescope', 'saturn-satellite']
 
-/** Wear from use and time, in percent a day. */
-export const WEAR_PER_DAY = 1.5
-/** A storm day at Kp 5 (G1) and above costs (Kp - 4) x this, in percent. */
-export const STORM_WEAR_PER_KP = 6
-export const STORM_KP = 5
-/** At or above this a craft sends all its data. */
-export const FULL_DATA_AT = 50
-/** Below this a craft has failed and sends nothing. */
-export const FAILED_BELOW = 15
-/** A servicing mission is offered below this. */
-export const SERVICE_OFFER_BELOW = 75
-
 const DAY_MS = 86_400_000
 
 export type ConditionPlayer = Partial<Pick<Player, 'transitSatelliteLaunchedAt' | 'saturnImagerLaunchedAt' | 'craftServicedAt' | 'spaceStorms'>>
-
-/** When the craft went up, or null when the agency does not have it. */
-export function craftLaunchedAt(player: ConditionPlayer, craft: ServicedCraftId): number | null {
-  const at = craft === 'space-telescope' ? player.transitSatelliteLaunchedAt : player.saturnImagerLaunchedAt
-  return typeof at === 'number' && Number.isFinite(at) ? at : null
-}
-
-/** Wear began with the rule (17 Nov 2026): a craft launched before it starts from full on that day. */
-export const WEAR_STARTED_AT = Date.parse('2026-11-17T00:00:00Z')
 
 /** The last time the craft was put right: its last servicing mission, else its launch (or the day wear began). */
 export function craftServicedAt(player: ConditionPlayer, craft: ServicedCraftId): number | null {
@@ -47,16 +26,6 @@ export function craftServicedAt(player: ConditionPlayer, craft: ServicedCraftId)
 }
 
 const dayKey = (at: number) => new Date(at).toISOString().slice(0, 10)
-
-/** Storm days after `since`, up to and including `now`'s day, with their highest Kp. */
-export function stormDaysSince(storms: Record<string, number> | undefined, since: number, now: number): Array<{ day: string; kp: number }> {
-  const from = dayKey(since)
-  const to = dayKey(now)
-  return Object.entries(storms ?? {})
-    .filter(([day, kp]) => day > from && day <= to && Number.isFinite(kp) && kp >= STORM_KP)
-    .map(([day, kp]) => ({ day, kp }))
-    .sort((a, b) => a.day.localeCompare(b.day))
-}
 
 export interface CraftCondition {
   craft: ServicedCraftId
@@ -100,10 +69,6 @@ export function craftNeedingService(player: ConditionPlayer, now: number): Craft
 export function serviceCraft<T extends ConditionPlayer>(player: T, craft: ServicedCraftId, at: number): T {
   return { ...player, craftServicedAt: { ...(player.craftServicedAt ?? {}), [craft]: at } }
 }
-
-// ---- Storm days from NOAA ----------------------------------------------------------------------------------
-
-export const NOAA_KP_URL = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'
 
 /**
  * Storm days in NOAA's planetary K-index feed: each UTC day whose highest 3-hour Kp is 5 or more. Accepts the
@@ -171,3 +136,43 @@ export function fleetDataCount(player: ConditionPlayer & import('./fleet').Fleet
 export function fleetCondition(player: ConditionPlayer & import('./fleet').FleetPlayer, craft: ServicedCraftId, at: number): CraftCondition | null {
   return fleetLaunchTimes(player, craft).map(launchedAt => craftCondition({ ...player, [craft === 'space-telescope' ? 'transitSatelliteLaunchedAt' : 'saturnImagerLaunchedAt']: launchedAt }, craft, at)!).sort((a, b) => a.percent - b.percent)[0] ?? null
 }
+
+/** Wear from use and time, in percent a day. */
+const WEAR_PER_DAY = 1.5
+
+/** A storm day at Kp 5 (G1) and above costs (Kp - 4) x this, in percent. */
+const STORM_WEAR_PER_KP = 6
+
+const STORM_KP = 5
+
+/** At or above this a craft sends all its data. */
+const FULL_DATA_AT = 50
+
+/** Below this a craft has failed and sends nothing. */
+const FAILED_BELOW = 15
+
+/** A servicing mission is offered below this. */
+const SERVICE_OFFER_BELOW = 75
+
+/** When the craft went up, or null when the agency does not have it. */
+function craftLaunchedAt(player: ConditionPlayer, craft: ServicedCraftId): number | null {
+  const at = craft === 'space-telescope' ? player.transitSatelliteLaunchedAt : player.saturnImagerLaunchedAt
+  return typeof at === 'number' && Number.isFinite(at) ? at : null
+}
+
+/** Wear began with the rule (17 Nov 2026): a craft launched before it starts from full on that day. */
+const WEAR_STARTED_AT = Date.parse('2026-11-17T00:00:00Z')
+
+/** Storm days after `since`, up to and including `now`'s day, with their highest Kp. */
+function stormDaysSince(storms: Record<string, number> | undefined, since: number, now: number): Array<{ day: string; kp: number }> {
+  const from = dayKey(since)
+  const to = dayKey(now)
+  return Object.entries(storms ?? {})
+    .filter(([day, kp]) => day > from && day <= to && Number.isFinite(kp) && kp >= STORM_KP)
+    .map(([day, kp]) => ({ day, kp }))
+    .sort((a, b) => a.day.localeCompare(b.day))
+}
+
+// ---- Storm days from NOAA ----------------------------------------------------------------------------------
+
+const NOAA_KP_URL = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json'

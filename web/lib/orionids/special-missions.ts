@@ -11,11 +11,7 @@ import { SHOWERS, getShower } from '@/lib/data/showers'
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import type { Mission, Target } from '@/lib/data/types'
 import type { OrionidsFind } from './finds'
-
-export const SPECIAL_PREFIX = 'self-directed-special-'
 const UNITS_PER_MINERAL = 6
-/** Each Meteorite Mastery level adds this much to every special's payout, up to three levels. */
-export const MASTERY_BONUS_PER_LEVEL = 0.1
 const MASTERY_CAP = 3
 
 export type SpecialKey = 'badge' | 'gold' | 'mastery' | 'voucher'
@@ -137,3 +133,8 @@ export function specialMissions(targets: readonly Target[], player: SpecialPlaye
     return [mission]
   }))
 }
+
+const SPECIAL_PREFIX = 'self-directed-special-'
+
+/** Each Meteorite Mastery level adds this much to every special's payout, up to three levels. */
+const MASTERY_BONUS_PER_LEVEL = 0.1

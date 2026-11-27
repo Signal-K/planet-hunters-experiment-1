@@ -22,9 +22,20 @@ function cssToken(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
+export function installLandnamStructureGlyphs(engine: StructureGlyphEngine): void {
+  if (installed.has(engine)) return
+  const base = engine.getFlatPainter('structure')
+  if (!base) return
+  installed.add(engine)
+  engine.registerFlatPainter('structure', (ctx, entity, paint) => {
+    if (entity.variant === 'silo' && paintStorageSilo(ctx, paint)) return
+    base(ctx, entity, paint)
+  })
+}
+
 /** Top-down storage silo: a round tank with a hatch. Returns false when the
  *  theme tokens are unavailable so the caller can keep the built-in painter. */
-export function paintStorageSilo(ctx: CanvasRenderingContext2D, paint: { tile: number }): boolean {
+function paintStorageSilo(ctx: CanvasRenderingContext2D, paint: { tile: number }): boolean {
   const body = cssToken('--ln-text-dim')
   const ink = cssToken('--ln-void')
   if (!body || !ink) return false
@@ -46,15 +57,4 @@ export function paintStorageSilo(ctx: CanvasRenderingContext2D, paint: { tile: n
   ctx.fill()
   ctx.restore()
   return true
-}
-
-export function installLandnamStructureGlyphs(engine: StructureGlyphEngine): void {
-  if (installed.has(engine)) return
-  const base = engine.getFlatPainter('structure')
-  if (!base) return
-  installed.add(engine)
-  engine.registerFlatPainter('structure', (ctx, entity, paint) => {
-    if (entity.variant === 'silo' && paintStorageSilo(ctx, paint)) return
-    base(ctx, entity, paint)
-  })
 }

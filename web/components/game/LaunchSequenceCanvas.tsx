@@ -8,13 +8,6 @@ interface Props {
   targetName: string
   onComplete: () => void
 }
-
-// The launch plays on the launchpad the player is already looking at: the
-// rocket they built lifts off its own mount (the host animates it from
-// `data-launching`), and the sky closes into the black the flight scene opens
-// on. This layer only keeps time, captions the ascent and fades. It draws no
-// second pad and no second rocket (SSL-848).
-export const LAUNCH_IGNITION_MS = 900
 export const LAUNCH_COMPLETE_MS = 4_600
 const FADE_FROM_MS = 3_300
 const FAILSAFE_MS = 18_000
@@ -60,3 +53,10 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
     </div>
   )
 }
+
+// The launch plays on the launchpad the player is already looking at: the
+// rocket they built lifts off its own mount (the host animates it from
+// `data-launching`), and the sky closes into the black the flight scene opens
+// on. This layer only keeps time, captions the ascent and fades. It draws no
+// second pad and no second rocket (SSL-848).
+const LAUNCH_IGNITION_MS = 900

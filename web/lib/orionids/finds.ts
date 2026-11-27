@@ -10,10 +10,7 @@ import {
 } from '@/lib/data/sky-events'
 
 export const ORIONIDS_EVENT_ID = 'orionids-2026'
-export const ORIONIDS_FOUND_MARKER = 'orionids-found' as const
 export const ORIONIDS_SOURCE = 'landnam'
-export const ORIONIDS_VOUCHER = 'owned' as const
-export const METEORITE_MASTERY_LEVEL = 1
 export const SPACETOBER_WEEK_BADGE = 'spacetober-2026-week'
 export const SPACETOBER_PEAK_BADGE = 'spacetober-2026-peak'
 const TRAINING_PREFIX = 'training-'
@@ -34,10 +31,6 @@ export type FindPlayer = {
   meteoriteMastery?: number
   tessClassifications?: Record<string, { subjectId: string; verdict: string; submittedAt: number }>
   discoveredExoplanetTargets?: Record<string, { id: string; name: string }>
-}
-
-export function orionidsFindTier(at: number): BadgeTier | null {
-  return badgeTierFor(ORIONIDS_EVENT_ID, at)
 }
 
 function setBadge(
@@ -170,4 +163,14 @@ export function pocketBaseId(seed: string): string {
     n = Math.imul(n ^ (i + 1), 16777619) >>> 0
   }
   return out
+}
+
+const ORIONIDS_FOUND_MARKER = 'orionids-found' as const
+
+const ORIONIDS_VOUCHER = 'owned' as const
+
+const METEORITE_MASTERY_LEVEL = 1
+
+function orionidsFindTier(at: number): BadgeTier | null {
+  return badgeTierFor(ORIONIDS_EVENT_ID, at)
 }

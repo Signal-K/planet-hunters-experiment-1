@@ -1,15 +1,4 @@
-/**
- * The authoritative, once-per-AEST-day client and commodity cycle.
- *
- * This module is intentionally pure.  The scheduler owns persistence: it must
- * load the last published snapshot and the immutable build-completion events,
- * call `resolveDailyEconomy`, then atomically persist the returned snapshot
- * with `idempotencyKey` as its unique key.  Keeping the transition here makes
- * the daily result reproducible, auditable, and safe to retry.
- */
 
-export const DAILY_ECONOMY_SCHEMA_VERSION = 1
-export const CLIENT_EXPERIENCE_PER_LEVEL = 5
 export const DAILY_PRICE_MIN_MULTIPLIER = 0.85
 export const DAILY_PRICE_MAX_MULTIPLIER = 1.18
 
@@ -181,11 +170,6 @@ export function resolveDailyEconomy(input: DailyEconomyInput): DailyEconomySnaps
   }
 }
 
-export function dailyEconomyIdempotencyKey(snapshotDate: DateKey): string {
-  assertDateKey(snapshotDate, 'snapshotDate')
-  return `daily-economy:${snapshotDate}`
-}
-
 function createClientUpdate(client: DailyEconomyClient, completedBuilds: number, snapshotDate: DateKey): DailyClientUpdate {
   const experienceBefore = client.experience
   const experienceAfter = experienceBefore + completedBuilds
@@ -335,4 +319,23 @@ function clamp(value: number, min: number, max: number): number {
 function round(value: number, places: number): number {
   const multiplier = 10 ** places
   return Math.round(value * multiplier) / multiplier
+}
+
+/**
+ * The authoritative, once-per-AEST-day client and commodity cycle.
+ *
+ * This module is intentionally pure.  The scheduler owns persistence: it must
+ * load the last published snapshot and the immutable build-completion events,
+ * call `resolveDailyEconomy`, then atomically persist the returned snapshot
+ * with `idempotencyKey` as its unique key.  Keeping the transition here makes
+ * the daily result reproducible, auditable, and safe to retry.
+ */
+
+const DAILY_ECONOMY_SCHEMA_VERSION = 1
+
+const CLIENT_EXPERIENCE_PER_LEVEL = 5
+
+function dailyEconomyIdempotencyKey(snapshotDate: DateKey): string {
+  assertDateKey(snapshotDate, 'snapshotDate')
+  return `daily-economy:${snapshotDate}`
 }

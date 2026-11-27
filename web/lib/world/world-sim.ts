@@ -87,12 +87,6 @@ export interface WorldView {
   px?: number
 }
 
-/** Strip x that shows at a fraction across the view for an object at `depth` (parallax), in kit units. */
-export function stripXAt(view: WorldView, frac: number, depth: number): number {
-  const px = view.px ?? 2
-  return (frac * view.w * px - (view.camX ?? 0) * depth) / px
-}
-
 export interface World {
   entities: Entity[]
   time: number
@@ -307,4 +301,10 @@ export function advance(world: World, dt: number, carry = 0): number {
     acc -= step
   }
   return acc
+}
+
+/** Strip x that shows at a fraction across the view for an object at `depth` (parallax), in kit units. */
+function stripXAt(view: WorldView, frac: number, depth: number): number {
+  const px = view.px ?? 2
+  return (frac * view.w * px - (view.camX ?? 0) * depth) / px
 }

@@ -10,8 +10,6 @@ import { groundTelescopeLevel } from '@/lib/ground-telescope-upgrades'
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
 export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
-export const NEW_MOON_EXTRA_ASTEROID_CANDIDATES = 1
-
 /** Research XP the first classification of a transit subject pays. */
 export const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
 
@@ -311,3 +309,5 @@ export function collectInstrumentSignals(opts: {
   }
   return signals
 }
+
+const NEW_MOON_EXTRA_ASTEROID_CANDIDATES = 1

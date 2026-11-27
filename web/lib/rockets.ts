@@ -17,50 +17,8 @@ export function pastRocketTraining(player: Pick<Player, 'flightPlan' | 'missions
   return onboardingMissionDone(player.flightPlan) || (player.missionsDone ?? 0) > 0
 }
 
-/** Blueprint id a rocket researched early is stored under (player.unlockedBlueprints). */
-export function rocketResearchId(rocketId: string): string {
-  return `rocket:${rocketId}`
-}
-
-/** A rocket the player can build: announced, and either its mission count is met or it was researched. */
-export function rocketUnlocked(rocket: Pick<RocketModel, 'id' | 'locked' | 'missionsRequired'>, player: Pick<Player, 'missionsDone' | 'unlockedBlueprints'>): boolean {
-  if (rocket.locked) return false
-  return rocket.missionsRequired <= (player.missionsDone ?? 0) || !!player.unlockedBlueprints?.includes(rocketResearchId(rocket.id))
-}
-
-/**
- * What a rocket costs this player now. Liam, 01.11: after the tutorial a rocket ALWAYS costs something, so a
- * model listed at no cost (the starter Explorer) is charged a set build price once training is over.
- */
-/** Missions flown before a rocket starts costing more, and the extra per mission after that (SSL-892). Tunable. */
-export const ROCKET_PROGRESS_GRACE_MISSIONS = 10
-export const ROCKET_PROGRESS_STEP = 0.02
-export const ROCKET_PROGRESS_MAX_SURCHARGE = 1
-export const HARDWARE_PAYLOADS: readonly string[] = ['rover', 'lander']
-export const HARDWARE_PREMIUM = 3
-export const HARDWARE_PREMIUM_PER_LEVEL = 0.4
-
 export type RocketPriceContext = { payloadType?: string }
 type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
-
-/**
- * A factor applied to the list price. The list is open: the economy will grow more reasons for a rocket to cost
- * more or less (client contracts, manufacturing pipelines, events), so add an entry here rather than a branch in
- * `rocketPrice`. Each factor must be pure over the player and must never throw on an old save.
- */
-export const ROCKET_PRICE_MODIFIERS: ReadonlyArray<{ id: string; factor: (player: PricePlayer, context: RocketPriceContext) => number }> = [
-  // Rockets cost more the further the agency has progressed.
-  { id: 'progress', factor: player => 1 + Math.min(ROCKET_PROGRESS_MAX_SURCHARGE, Math.max(0, (player.missionsDone ?? 0) - ROCKET_PROGRESS_GRACE_MISSIONS) * ROCKET_PROGRESS_STEP) },
-  // Hardware missions (rovers; landers when they get their own payload type) cost a premium until the agency can
-  // manufacture: each refining and ore-storage level takes `HARDWARE_PREMIUM_PER_LEVEL` off, down to list price.
-  { id: 'hardware-premium', factor: (player, context) => {
-    if (!context.payloadType || !HARDWARE_PAYLOADS.includes(context.payloadType)) return 1
-    const capacity = agencyLevel(player, 'refining') + agencyLevel(player, 'ore-storage')
-    return Math.max(1, HARDWARE_PREMIUM - capacity * HARDWARE_PREMIUM_PER_LEVEL)
-  } },
-  // SSL-792: an upgraded hangar builds rockets for less.
-  { id: 'hangar-discount', factor: player => agencyLevel(player, 'rocket-discounts') > 0 ? 1 - hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 1 },
-]
 
 export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: PricePlayer, context: RocketPriceContext = {}): number {
   const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
@@ -101,11 +59,6 @@ export function unlockedRocketModels(missionsDone: number): RocketModel[] {
   return ROCKET_MODELS.filter(
     rocket => !rocket.locked && rocket.missionsRequired <= missionsDone,
   )
-}
-
-/** Cargo the vehicle must carry: mineral pickup plus any launch payload. */
-export function missionCargoNeed(mission: Mission): number {
-  return mission.requires.cargo_min + (mission.payload?.cargoCost ?? 0)
 }
 
 export interface RocketFitCheck {
@@ -193,3 +146,55 @@ export function rocketJobRoles(rockets: readonly RocketModel[], mission: Mission
   }
   return roles
 }
+
+/** A rocket the player can build: announced, and either its mission count is met or it was researched. */
+function rocketUnlocked(rocket: Pick<RocketModel, 'id' | 'locked' | 'missionsRequired'>, player: Pick<Player, 'missionsDone' | 'unlockedBlueprints'>): boolean {
+  if (rocket.locked) return false
+  return rocket.missionsRequired <= (player.missionsDone ?? 0) || !!player.unlockedBlueprints?.includes(rocketResearchId(rocket.id))
+}
+
+/**
+ * A factor applied to the list price. The list is open: the economy will grow more reasons for a rocket to cost
+ * more or less (client contracts, manufacturing pipelines, events), so add an entry here rather than a branch in
+ * `rocketPrice`. Each factor must be pure over the player and must never throw on an old save.
+ */
+const ROCKET_PRICE_MODIFIERS: ReadonlyArray<{ id: string; factor: (player: PricePlayer, context: RocketPriceContext) => number }> = [
+  // Rockets cost more the further the agency has progressed.
+  { id: 'progress', factor: player => 1 + Math.min(ROCKET_PROGRESS_MAX_SURCHARGE, Math.max(0, (player.missionsDone ?? 0) - ROCKET_PROGRESS_GRACE_MISSIONS) * ROCKET_PROGRESS_STEP) },
+  // Hardware missions (rovers; landers when they get their own payload type) cost a premium until the agency can
+  // manufacture: each refining and ore-storage level takes `HARDWARE_PREMIUM_PER_LEVEL` off, down to list price.
+  { id: 'hardware-premium', factor: (player, context) => {
+    if (!context.payloadType || !HARDWARE_PAYLOADS.includes(context.payloadType)) return 1
+    const capacity = agencyLevel(player, 'refining') + agencyLevel(player, 'ore-storage')
+    return Math.max(1, HARDWARE_PREMIUM - capacity * HARDWARE_PREMIUM_PER_LEVEL)
+  } },
+  // SSL-792: an upgraded hangar builds rockets for less.
+  { id: 'hangar-discount', factor: player => agencyLevel(player, 'rocket-discounts') > 0 ? 1 - hangarRocketDiscount(agencyLevel(player, 'rocket-discounts')) : 1 },
+]
+
+/** Cargo the vehicle must carry: mineral pickup plus any launch payload. */
+function missionCargoNeed(mission: Mission): number {
+  return mission.requires.cargo_min + (mission.payload?.cargoCost ?? 0)
+}
+
+/** Blueprint id a rocket researched early is stored under (player.unlockedBlueprints). */
+function rocketResearchId(rocketId: string): string {
+  return `rocket:${rocketId}`
+}
+
+/**
+ * What a rocket costs this player now. Liam, 01.11: after the tutorial a rocket ALWAYS costs something, so a
+ * model listed at no cost (the starter Explorer) is charged a set build price once training is over.
+ */
+/** Missions flown before a rocket starts costing more, and the extra per mission after that (SSL-892). Tunable. */
+const ROCKET_PROGRESS_GRACE_MISSIONS = 10
+
+const ROCKET_PROGRESS_STEP = 0.02
+
+const ROCKET_PROGRESS_MAX_SURCHARGE = 1
+
+const HARDWARE_PAYLOADS: readonly string[] = ['rover', 'lander']
+
+const HARDWARE_PREMIUM = 3
+
+const HARDWARE_PREMIUM_PER_LEVEL = 0.4

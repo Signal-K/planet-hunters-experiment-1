@@ -18,10 +18,6 @@ export const BASE_DAILY_SLOTS_PER_CLIENT = 3
 // total completed jobs, which never decreases).
 export const MAX_AFFINITY_BONUS_SLOTS = 5
 
-export function clientAffinityLevel(completedJobs: number): number {
-  return 1 + Math.floor(Math.max(0, completedJobs) / CLIENT_AFFINITY_MISSION_THRESHOLD)
-}
-
 export function affinityBonusSlots(completedJobs: number): number {
   return Math.min(MAX_AFFINITY_BONUS_SLOTS, clientAffinityLevel(completedJobs) - 1)
 }
@@ -43,14 +39,6 @@ function djb2(s: string): number {
   let h = 5381
   for (let i = 0; i < s.length; i++) h = (((h << 5) + h) ^ s.charCodeAt(i)) >>> 0
   return h
-}
-
-export function maxTierForProgress(missionsDone: number): number {
-  if (missionsDone >= 12) return 5
-  if (missionsDone >= 9) return 4
-  if (missionsDone >= 6) return 3
-  if (missionsDone >= 5) return 2
-  return 1
 }
 
 /** Construction jobs are mined on site, so ask only for materials some target in range holds together. The plan's
@@ -200,4 +188,16 @@ export function refreshPoolIfStale(
   const missions = generated.map(mission => kept.get(mission.id) ?? mission)
   const unchanged = missions.length === existing.missions.length && missions.every((mission, i) => mission === existing.missions[i])
   return unchanged ? existing : { ...existing, missions }
+}
+
+function clientAffinityLevel(completedJobs: number): number {
+  return 1 + Math.floor(Math.max(0, completedJobs) / CLIENT_AFFINITY_MISSION_THRESHOLD)
+}
+
+function maxTierForProgress(missionsDone: number): number {
+  if (missionsDone >= 12) return 5
+  if (missionsDone >= 9) return 4
+  if (missionsDone >= 6) return 3
+  if (missionsDone >= 5) return 2
+  return 1
 }

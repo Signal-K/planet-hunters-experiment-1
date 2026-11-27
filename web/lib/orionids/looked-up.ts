@@ -5,9 +5,6 @@
 
 import type { BadgeTier, PlayerBadge } from '@/lib/data/sky-events'
 import type { Player } from '@/lib/game-types'
-
-export const LOOKED_UP_EVENT_ID = 'orionids-2026'
-export const LOOKED_UP_SUBJECT_ID = 'check-in'
 export const LOOKED_UP_MARKER = 'after-moonset'
 export const LOOKED_UP_BADGE_ID = 'orionids-looked-up'
 /** Landnam's own badge row. Distinct from the Atlas check-in subject. */
@@ -45,3 +42,7 @@ export function grantLookedUp<T extends LookedUpPlayer>(player: T, at: number, t
     badges: { ...(player.badges ?? {}), [LOOKED_UP_BADGE_ID]: badge },
   }
 }
+
+const LOOKED_UP_EVENT_ID = 'orionids-2026'
+
+const LOOKED_UP_SUBJECT_ID = 'check-in'

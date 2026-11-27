@@ -6,14 +6,6 @@ export type OrionidsProgressEvidence = {
   completionAt: number | null
 }
 
-/**
- * Until 24 Oct 2026 the Orionids card on the Events board opened an ordinary Free Run, so players who
- * "did the event" in that window hauled hydrogen. A hydrogen haul finished while that was live counts as
- * an attempt. The credit only raises the event stage; it never lowers anything.
- */
-export const LEGACY_HYDROGEN_EVENT_START_MS = Date.UTC(2026, 9, 19, 0, 0, 0)
-export const LEGACY_HYDROGEN_EVENT_END_MS = Date.UTC(2026, 9, 24, 12, 0, 0)
-
 function isLegacyHydrogenEventRun(record: Partial<CompletedMissionRecord>): boolean {
   const at = record.completedAt
   return typeof at === 'number' && at >= LEGACY_HYDROGEN_EVENT_START_MS && at < LEGACY_HYDROGEN_EVENT_END_MS
@@ -45,3 +37,12 @@ export function detectOrionidsProgress(player: Pick<Player, 'completedMissions' 
       : latest, null)
   return { attempted, completed: completed.length > 0, completionAt }
 }
+
+/**
+ * Until 24 Oct 2026 the Orionids card on the Events board opened an ordinary Free Run, so players who
+ * "did the event" in that window hauled hydrogen. A hydrogen haul finished while that was live counts as
+ * an attempt. The credit only raises the event stage; it never lowers anything.
+ */
+const LEGACY_HYDROGEN_EVENT_START_MS = Date.UTC(2026, 9, 19, 0, 0, 0)
+
+const LEGACY_HYDROGEN_EVENT_END_MS = Date.UTC(2026, 9, 24, 12, 0, 0)

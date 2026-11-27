@@ -53,9 +53,6 @@ export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Rec
     payout: { francs: 0, affinity: 0 },
   }
 }
-export function plannerRockets(player: Player): RocketModel[] {
-  return [agencyRocket(player)]
-}
 export function plannerTargets(player: Player, catalog: Catalog, work: PlannedWork): Target[] {
   const range = Math.max(0, ...plannerRockets(player).map(model => rocketBuilderStats(rocketConfigForModel(model), asLoadout(player.shipCustomizerParts), catalog.parts, communityBonusRate(player).fuel).range))
   return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet'].includes(target.type) && target.orbit <= range
@@ -108,4 +105,8 @@ export function deliveryCache(player: Pick<Player, 'deliveryReceipts'>, targetId
   const cargo: Record<string, number> = {}
   for (const receipt of Object.values(player.deliveryReceipts ?? {})) if (receipt.targetId === targetId) for (const [id, n] of Object.entries(receipt.cargo)) cargo[id] = (cargo[id] ?? 0) + n
   return cargo
+}
+
+function plannerRockets(player: Player): RocketModel[] {
+  return [agencyRocket(player)]
 }

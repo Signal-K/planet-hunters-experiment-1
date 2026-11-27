@@ -10,13 +10,6 @@ export const ORIONIDS_ARCHIVE_ITEM_ID = 'orionids-archive'
 
 type AccessPlayer = Pick<Player, 'orionidsEventStage' | 'orionidsFragments' | 'badges' | 'researchPurchases'>
 
-/** True for anyone who started the Orionids while it was on. These fields only ever fill inside the window. */
-export function orionidsParticipated(player: Pick<AccessPlayer, 'orionidsEventStage' | 'orionidsFragments' | 'badges'>): boolean {
-  return (player.orionidsEventStage ?? 0) >= 1
-    || (player.orionidsFragments?.caught ?? 0) > 0
-    || !!player.badges?.['orionids-2026']
-}
-
 export function orionidsArchiveUnlocked(player: Pick<AccessPlayer, 'researchPurchases'>): boolean {
   return (player.researchPurchases?.[ORIONIDS_ARCHIVE_ITEM_ID] ?? 0) > 0
 }
@@ -34,4 +27,11 @@ export function orionidsSkyEarned(player: AccessPlayer): boolean {
 
 export function orionidsSkyOn(player: AccessPlayer & Pick<Player, 'orionidsSkyEffect'>): boolean {
   return player.orionidsSkyEffect === true && orionidsSkyEarned(player)
+}
+
+/** True for anyone who started the Orionids while it was on. These fields only ever fill inside the window. */
+function orionidsParticipated(player: Pick<AccessPlayer, 'orionidsEventStage' | 'orionidsFragments' | 'badges'>): boolean {
+  return (player.orionidsEventStage ?? 0) >= 1
+    || (player.orionidsFragments?.caught ?? 0) > 0
+    || !!player.badges?.['orionids-2026']
 }

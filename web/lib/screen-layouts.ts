@@ -17,10 +17,6 @@ export const SCREEN_LAYOUT_TYPES = [
   'takeon',
 ] as const
 export type ScreenLayoutType = typeof SCREEN_LAYOUT_TYPES[number]
-
-/** Mission setup and Post-mission summary keep their own screens but sit on
- * the same frame (no boxed card on desktop). */
-export const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const
 export type MissionSurface = typeof MISSION_SURFACES[number]
 
 /** Dev-only tooling (launcher, redirect shortcuts, Forge preview) renders no
@@ -135,3 +131,7 @@ export function surfaceForScreen(screen: Screen): Exclude<ScreenSurface, 'dev'> 
   const surface = SURFACE_BY_SCREEN.get(screen)
   return surface && surface !== 'dev' ? surface : 'home'
 }
+
+/** Mission setup and Post-mission summary keep their own screens but sit on
+ * the same frame (no boxed card on desktop). */
+const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const

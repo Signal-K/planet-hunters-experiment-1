@@ -28,3 +28,17 @@ Client contracts are kept as missions. They appear in a location's "Client missi
 ## Dead code swept out
 
 Commit 861b9488 deleted 24 components and helpers nothing imported (old flight sky, ship interior preview, mission flow preview, hangar bay, ground telescope upgrade sheet, and similar). Commit b9b17ebc deleted 122 exported functions and constants with no users, found by counting references across `web/`. The rocket builder is not a separate screen any more: the launch scene (`RocketBuilderScene`) is the launch review, and the ship customizer data and `shipCustomizerParts` state stay because saves and flight looks read them. The flight plan keeps its third training step, "Review your agency rocket", because saved plans store it.
+
+## Save migration: refinery, alerts, subsurface, laser capacitor, arrangement
+
+The code for these is deleted, and `web/lib/save-migrations.ts` converts old saves once on load (recorded in `saveMigrations`, so it never pays twice):
+
+| Retired | What a save gets |
+| --- | --- |
+| Refined goods and queued refinery jobs | Francs at each good's old sale price |
+| Laser capacitor level | The ore spent, refunded as iron (6 / 18 / 38 units) |
+| Mineral vault and deep vault | `storageBonus` of 120 / 300 ore units, added to storage capacity |
+| Price alerts, base arrangement, subsurface flags, refinery flags | Dropped (no value to carry) |
+| Exchange (`market`) in `placed` | Removed from the placed list |
+
+The mineral sell-price dip and the ground telescope purchase stay. Building upgrades, placement and base-level code remain only as far as agency levels read them.

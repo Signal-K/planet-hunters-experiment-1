@@ -1,8 +1,4 @@
 import { STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
-
-/** Upgradable Earth Base buildings. SSL-792 adds the hangar, the Exchange (`market`) and the control station, each with
- *  its own sprite per level. The Garage is a future-sprint structure and has no levels yet. */
-export const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery', 'hangar', 'market', 'control-station'] as const
 export type UpgradableBuildingId = typeof UPGRADABLE_BUILDINGS[number]
 
 export const MAX_BUILDING_LEVEL = 3
@@ -109,3 +105,7 @@ export const exchangeSaleBonus = (level: number) => EXCHANGE_SALE_BONUS[clampLev
 /** SSL-792: hours a probe launched at this control station level takes per sector. */
 export const probeSectorHours = (level: number) => PROBE_SECTOR_HOURS_BY_LEVEL[clampLevel(level) - 1]
 export const launchpadMissionFloor = (level: number) => LAUNCHPAD_MISSION_FLOOR[clampLevel(level) - 1]
+
+/** Upgradable Earth Base buildings. SSL-792 adds the hangar, the Exchange (`market`) and the control station, each with
+ *  its own sprite per level. The Garage is a future-sprint structure and has no levels yet. */
+const UPGRADABLE_BUILDINGS = ['launchpad', 'surface-silo', 'refinery', 'hangar', 'market', 'control-station'] as const

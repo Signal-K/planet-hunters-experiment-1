@@ -7,8 +7,6 @@ import type { Mission } from '@/lib/data/types'
  */
 export type ContractGroup = 'mining' | 'construction' | 'exploration'
 
-export const CONTRACT_GROUPS: readonly ContractGroup[] = ['mining', 'construction', 'exploration']
-
 type Groupable = Pick<Mission, 'construction' | 'payload' | 'survey' | 'tag'>
 
 export function contractGroup(mission: Groupable): ContractGroup {
@@ -25,3 +23,5 @@ export function contractGroupCounts(missions: readonly Groupable[]): { group: Co
     .map(group => ({ group, count: missions.filter(mission => contractGroup(mission) === group).length }))
     .filter(entry => entry.count > 0)
 }
+
+const CONTRACT_GROUPS: readonly ContractGroup[] = ['mining', 'construction', 'exploration']

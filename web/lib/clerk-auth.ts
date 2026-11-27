@@ -147,11 +147,6 @@ interface ClerkApiErrorShape {
   errors?: { code?: string; message?: string; longMessage?: string }[]
 }
 
-export function clerkErrorCode(e: unknown): string | null {
-  const err = e as ClerkApiErrorShape | null
-  return err?.errors?.[0]?.code ?? err?.code ?? null
-}
-
 const CLERK_MESSAGES: Record<string, string> = {
   form_password_incorrect: 'Wrong email or password.',
   form_identifier_not_found: 'Wrong email or password.',
@@ -169,4 +164,9 @@ export function clerkErrorMessage(e: unknown): string | null {
   const first = err?.errors?.[0]
   if (!first) return null
   return (first.code && CLERK_MESSAGES[first.code]) || first.longMessage || first.message || null
+}
+
+function clerkErrorCode(e: unknown): string | null {
+  const err = e as ClerkApiErrorShape | null
+  return err?.errors?.[0]?.code ?? err?.code ?? null
 }

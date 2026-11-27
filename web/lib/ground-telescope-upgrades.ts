@@ -1,6 +1,4 @@
 import type { Player } from './game-types'
-
-export const GROUND_SCOPE_IDS = ['ground-telescope', 'ground-telescope-2'] as const
 type ScopePlayer = Pick<Player, 'groundTelescopeLevels'>
 
 export function groundTelescopeLevel(player: ScopePlayer, id: string): number {
@@ -40,3 +38,5 @@ export function applyGroundTelescopeUpgrade(player: Player, id: string): Player 
     groundTelescopeLevels: { ...player.groundTelescopeLevels, [id]: level + 1 },
   }
 }
+
+const GROUND_SCOPE_IDS = ['ground-telescope', 'ground-telescope-2'] as const

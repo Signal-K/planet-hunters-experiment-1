@@ -186,21 +186,6 @@ interface DrillableGame {
 }
 
 /**
- * Drill the column ahead, or failing that whichever neighbour can be drilled, so the
- * player does not have to line the rover up first (Liam, 2026-10-30: easier Takeon).
- */
-export function drillAnySide(game: DrillableGame): boolean {
-  const rover = game.sim.rover
-  const start = rover.facing
-  for (let turn = 0; turn < 4; turn++) {
-    rover.facing = ((start + turn) % 4) as 0 | 1 | 2 | 3
-    if (game.mine()) return true
-  }
-  rover.facing = start
-  return false
-}
-
-/**
  * Give the rover enough climb to leave its landing site (see lib/takeon/drivable.ts).
  * Rough bodies keep their cliffs; the wheels just get one more step where they need it.
  */
@@ -210,11 +195,6 @@ function openLandingSite(game: unknown): void {
   const rover = sim?.rover
   if (!world || !rover?.pos || !rover.stats || typeof rover.stats.maxClimb !== 'number') return
   rover.stats.maxClimb = assistedClimb(world, rover.pos, rover.stats.maxClimb)
-}
-
-/** Keep the rover readable while leaving room to navigate around it. */
-export function fieldZoom(viewport: { width: number; height: number }): number {
-  return Math.min(viewport.width, viewport.height) < 500 ? 2.5 : 2.8
 }
 
 /**
@@ -229,12 +209,6 @@ function settleFieldView(game: unknown, viewport: { width: number; height: numbe
   if (renderer?.critters) renderer.critters.length = 0
   if (renderer?.flora) renderer.flora.length = 0
   if (renderer?.flyers) renderer.flyers.length = 0
-}
-
-/** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
-export function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
-  const delta = [[1, 0], [0, 1], [-1, 0], [0, -1]][facing] ?? [1, 0]
-  return { x: pos.x + delta[0], y: pos.y + delta[1] }
 }
 
 const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function TakeOnMount({
@@ -751,3 +725,29 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
 })
 
 export default TakeOnMount
+
+/**
+ * Drill the column ahead, or failing that whichever neighbour can be drilled, so the
+ * player does not have to line the rover up first (Liam, 2026-10-30: easier Takeon).
+ */
+function drillAnySide(game: DrillableGame): boolean {
+  const rover = game.sim.rover
+  const start = rover.facing
+  for (let turn = 0; turn < 4; turn++) {
+    rover.facing = ((start + turn) % 4) as 0 | 1 | 2 | 3
+    if (game.mine()) return true
+  }
+  rover.facing = start
+  return false
+}
+
+/** Keep the rover readable while leaving room to navigate around it. */
+function fieldZoom(viewport: { width: number; height: number }): number {
+  return Math.min(viewport.width, viewport.height) < 500 ? 2.5 : 2.8
+}
+
+/** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
+function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
+  const delta = [[1, 0], [0, 1], [-1, 0], [0, -1]][facing] ?? [1, 0]
+  return { x: pos.x + delta[0], y: pos.y + delta[1] }
+}

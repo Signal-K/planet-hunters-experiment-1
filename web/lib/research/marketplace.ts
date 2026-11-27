@@ -1,7 +1,5 @@
 import type { Player } from '@/lib/game-types'
 
-export const RESEARCH_FRAGMENT_CONVERSION_RATE = 10
-
 export type ResearchMarketplaceScope = 'location' | 'account'
 
 export interface ResearchMarketplaceItem {
@@ -15,55 +13,10 @@ export interface ResearchMarketplaceItem {
   costStep: number
 }
 
-export const RESEARCH_MARKETPLACE_ITEMS: readonly ResearchMarketplaceItem[] = [
-  {
-    id: 'research-ink',
-    kind: 'cosmetic',
-    name: 'Research ink',
-    description: 'Permanent badge mark.',
-    scope: 'Cosmetic',
-    baseCost: 8,
-    costStep: 0,
-  },
-  {
-    id: 'orionids-archive',
-    kind: 'unlock',
-    name: 'Orionids archive',
-    description: 'Reopens the finished Orionids shower run, and its sky.',
-    scope: 'Event archive',
-    baseCost: 20,
-    costStep: 0,
-  },
-  {
-    id: 'exchange-calibration',
-    kind: 'bonus',
-    name: 'Exchange calibration',
-    description: 'Permanent +2% sale value.',
-    scope: 'Exchange',
-    bonusRate: 0.02,
-    baseCost: 12,
-    costStep: 8,
-  },
-  {
-    id: 'research-network',
-    kind: 'bonus',
-    name: 'Research network',
-    description: 'Permanent +1% sale value.',
-    scope: 'Account',
-    bonusRate: 0.01,
-    baseCost: 18,
-    costStep: 12,
-  },
-]
-
 type ResearchPlayer = Pick<Player, 'researchFragments' | 'researchUniversalFragments' | 'researchPurchases' | 'researchCosmetics' | 'researchPermanentBonuses' | 'communityBonus'>
 
 export function researchItemById(id: string): ResearchMarketplaceItem | undefined {
   return RESEARCH_MARKETPLACE_ITEMS.find(item => item.id === id)
-}
-
-export function researchItemPurchaseCount(player: Pick<ResearchPlayer, 'researchPurchases'>, itemId: string): number {
-  return Math.max(0, Math.floor(player.researchPurchases?.[itemId] ?? 0))
 }
 
 export function researchItemCost(player: Pick<ResearchPlayer, 'researchPurchases'>, item: ResearchMarketplaceItem): number {
@@ -134,4 +87,51 @@ export function withCommunityBonus<T extends Pick<ResearchPlayer, 'communityBonu
   const have = player.communityBonus
   if (have && have.month === next.month && have.salePct === next.salePct && have.fuelPct === next.fuelPct && have.until === next.until) return player
   return { ...player, communityBonus: next }
+}
+
+const RESEARCH_FRAGMENT_CONVERSION_RATE = 10
+
+const RESEARCH_MARKETPLACE_ITEMS: readonly ResearchMarketplaceItem[] = [
+  {
+    id: 'research-ink',
+    kind: 'cosmetic',
+    name: 'Research ink',
+    description: 'Permanent badge mark.',
+    scope: 'Cosmetic',
+    baseCost: 8,
+    costStep: 0,
+  },
+  {
+    id: 'orionids-archive',
+    kind: 'unlock',
+    name: 'Orionids archive',
+    description: 'Reopens the finished Orionids shower run, and its sky.',
+    scope: 'Event archive',
+    baseCost: 20,
+    costStep: 0,
+  },
+  {
+    id: 'exchange-calibration',
+    kind: 'bonus',
+    name: 'Exchange calibration',
+    description: 'Permanent +2% sale value.',
+    scope: 'Exchange',
+    bonusRate: 0.02,
+    baseCost: 12,
+    costStep: 8,
+  },
+  {
+    id: 'research-network',
+    kind: 'bonus',
+    name: 'Research network',
+    description: 'Permanent +1% sale value.',
+    scope: 'Account',
+    bonusRate: 0.01,
+    baseCost: 18,
+    costStep: 12,
+  },
+]
+
+function researchItemPurchaseCount(player: Pick<ResearchPlayer, 'researchPurchases'>, itemId: string): number {
+  return Math.max(0, Math.floor(player.researchPurchases?.[itemId] ?? 0))
 }

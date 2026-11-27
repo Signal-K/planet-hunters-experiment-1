@@ -2,6 +2,16 @@ import type { FlightBodyLook, FlightCraftLook } from '@takeon/engine'
 import { flightBodySpec, type FlightBodyInput } from '@/lib/flight-body'
 import { customizerPartById, type InstalledCustomizerPartsByKind } from '@/lib/data/shipCustomizer'
 
+const PAD_ROCKET_PROFILE: ReadonlyArray<readonly [rows: number, tail: number, nose: number, paint: 'hull' | 'hullShade' | 'trim' | `#${string}`]> = [
+  [24, 18, 22, '#3e3e42'], [24, 29, 29, '#323136'],
+  [20, 29, 29, 'hull'], [10, 29, 29, 'trim'], [84, 29, 29, 'hull'], [4, 29, 29, 'hullShade'], [98, 29, 29, 'hull'],
+  [8, 29, 26, 'hull'], [8, 25, 22, 'hull'], [24, 22, 22, 'hull'],
+  [16, 22, 26, '#958e8f'],
+  [32, 26, 26, 'hull'], [8, 26, 23, 'hull'], [8, 23, 21, 'hull'], [8, 21, 19, 'hull'], [8, 19, 15, 'hull'], [8, 15, 13, 'hull'],
+  [8, 13, 9, 'hullShade'], [16, 8, 8, '#48454b'], [16, 9, 8, 'hullShade'], [4, 8, 3, '#8d9ab0'],
+]
+
+
 /**
  * SSL-848: what Takeon's flight view draws for a Landnam trip. The destination globe is generated from the same
  * palette the mining scene uses for that body, and the craft is the player's own rocket as hull sections.
@@ -54,21 +64,6 @@ export function flightDestinationLook(target: FlightBodyInput, returning: boolea
 
 /** Hull paint. The kit rocket is white panels with blue trim; the workshop (SSL-850) lets the player change it. */
 export interface RocketLivery { hull: string; trim: string }
-
-/**
- * The core stage of the rocket the player builds on the launchpad (art/scenes/launchpad/launchpad-rocket-multistage.png),
- * measured from that drawing tail first: [rows, half-width at the tail end, half-width at the nose end, paint]. The
- * flight view revolves this profile, so the rocket in space is the one that left the pad, seen from behind, and not a
- * second design. 'hull' and 'trim' take the livery; other paints are fixed. Re-measure if the launchpad rocket is redrawn.
- */
-export const PAD_ROCKET_PROFILE: ReadonlyArray<readonly [rows: number, tail: number, nose: number, paint: 'hull' | 'hullShade' | 'trim' | `#${string}`]> = [
-  [24, 18, 22, '#3e3e42'], [24, 29, 29, '#323136'],
-  [20, 29, 29, 'hull'], [10, 29, 29, 'trim'], [84, 29, 29, 'hull'], [4, 29, 29, 'hullShade'], [98, 29, 29, 'hull'],
-  [8, 29, 26, 'hull'], [8, 25, 22, 'hull'], [24, 22, 22, 'hull'],
-  [16, 22, 26, '#958e8f'],
-  [32, 26, 26, 'hull'], [8, 26, 23, 'hull'], [8, 23, 21, 'hull'], [8, 21, 19, 'hull'], [8, 19, 15, 'hull'], [8, 15, 13, 'hull'],
-  [8, 13, 9, 'hullShade'], [16, 8, 8, '#48454b'], [16, 9, 8, 'hullShade'], [4, 8, 3, '#8d9ab0'],
-]
 /** The launchpad rocket's own paint: warm white hull, blue trim. */
 export const DEFAULT_LIVERY: RocketLivery = { hull: '#dfd3cc', trim: '#2f6fd0' }
 

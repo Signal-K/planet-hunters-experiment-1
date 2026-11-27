@@ -7,7 +7,7 @@ import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
-import { isFreeHaulMission, isOwnProgramMission, laserCapacitorBonus, rocketDisplayForConfig } from '@/lib/data'
+import { isFreeHaulMission, isOwnProgramMission, rocketDisplayForConfig } from '@/lib/data'
 import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/missions'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
@@ -363,7 +363,6 @@ export default function MissionOperationRoutes({
           }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
-          laserBonusCharges={laserCapacitorBonus(game.player.laserCapacitorLevel)}
           laserTier={Math.max(game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1, loadoutBonuses(asLoadout(game.player.shipCustomizerParts)).laserTier ?? 0)}
           trainingMiningTry={trainingMiningTry}
           deliveryTargetName={deliveryTargetName}

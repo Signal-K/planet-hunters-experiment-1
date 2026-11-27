@@ -10,15 +10,3 @@ export interface LaserCapacitorTier {
   /** Total extra laser charges at this level, across every later run. */
   bonusCharges: number
 }
-
-export const LASER_CAPACITOR_TIERS: readonly LaserCapacitorTier[] = [
-  { level: 1, name: 'Laser Capacitor I', costUnits: 6, bonusCharges: 4 },
-  { level: 2, name: 'Laser Capacitor II', costUnits: 12, bonusCharges: 8 },
-  { level: 3, name: 'Laser Capacitor III', costUnits: 20, bonusCharges: 12 },
-]
-
-/** Extra laser charges granted by the installed capacitor level. */
-export function laserCapacitorBonus(level: number | undefined): number {
-  const owned = LASER_CAPACITOR_TIERS.filter(t => t.level <= (level ?? 0))
-  return owned.length > 0 ? owned[owned.length - 1].bonusCharges : 0
-}
