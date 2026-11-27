@@ -53,4 +53,23 @@ describe('versioned solar fields', () => {
     mocks.send.mockResolvedValue({ revision: 1, state: { ...state, id: solarFieldId('mars', 'west') } })
     await expect(new SolarFieldSync().loadMission(id)).rejects.toThrow('another location')
   })
+  it('transfers the saved hold into the active run using the field revision', async () => {
+    mocks.send.mockResolvedValueOnce({ revision: 1, state }).mockResolvedValueOnce({ site: id, runId: 'mission-run-1', cargo: { 'landnam:iron': 1 } })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    expect(await sync.transferToMission('mission-run-1')).toEqual({ iron: 1 })
+    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/mission-transfer', { method: 'POST', body: { site: id, revision: 1, runId: 'mission-run-1' } })
+  })
+
+  it('keeps the cargo in the field while an offline save is queued', async () => {
+    mocks.outbox.current = createOutbox({ store: memoryStore(), isOnline: () => false, execute: async () => ({ kind: 'offline' }) })
+    mocks.send.mockResolvedValueOnce({ revision: 0, state: null })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    await sync.saveMission(state, 'Rover')
+    await expect(sync.transferToMission('mission-run-1')).rejects.toThrow('Reconnect')
+    expect(mocks.send).toHaveBeenCalledTimes(1)
+    expect((mocks.outbox.current as ReturnType<typeof createOutbox>).pending()).toHaveLength(1)
+  })
+
 })

@@ -5,6 +5,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { missionZone } from '@/lib/data/mission-zone'
 import { LandnamSync } from './LandnamSync'
 import { readSolarFieldIdentity } from './solarFieldIdentity'
+import { mineralFromSolarResource } from './solarMining'
 
 /** New ids never collide with an older, target-keyed voxel_worlds save. */
 export function solarFieldId(bodyId: string, zone: unknown): string {
@@ -52,6 +53,27 @@ export class SolarFieldSync extends LandnamSync {
     this.site = id
     this.revision = result.revision
     return result.state
+  }
+
+  /** Wait for all field revisions before moving the hold into this mission. */
+  async transferToMission(runId: string): Promise<Record<string, number>> {
+    await this.tail
+    const owner = this.owner
+    const site = this.site
+    const revision = this.revision
+    if (!owner || !site || revision === null || pbLandnam.authStore.record?.id !== owner || !runId) throw new Error('Mission or account changed')
+    const outbox = getSolarFieldOutbox()
+    await outbox.flush()
+    if (await outbox.has(op => op.type === 'solar-field' && op.user === owner && op.site === site)) throw new Error('Reconnect and wait for the field to sync before returning')
+    const receipt = await pbLandnam.send<{ site: string; runId: string; cargo: Record<string, number> }>('/api/solar-fields/mission-transfer', { method: 'POST', body: { site, revision, runId } })
+    if (pbLandnam.authStore.record?.id !== owner || receipt.site !== site || receipt.runId !== runId || !receipt.cargo) throw new Error('Invalid cargo receipt')
+    const result: Record<string, number> = {}
+    for (const [key, amount] of Object.entries(receipt.cargo)) {
+      const mineral = mineralFromSolarResource(key)
+      if (!mineral || !Number.isSafeInteger(amount) || amount <= 0) throw new Error('Invalid cargo receipt')
+      result[mineral] = amount
+    }
+    return result
   }
 
   override async saveMission(state: MissionState, _roverName: string): Promise<void> {

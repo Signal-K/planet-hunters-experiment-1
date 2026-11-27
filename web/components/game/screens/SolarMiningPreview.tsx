@@ -22,9 +22,9 @@ function fixtureStorage(): Storage {
   }
 }
 
-/** A reviewable, account-free field; mission payouts are intentionally not invoked here. */
-export default function SolarMiningPreview({ target, zone, persistent = false, onPause, onComplete }: {
-  target: Target; zone: MissionZone; persistent?: boolean; onPause?: () => void; onComplete?: (cargo: Record<string, number>) => void
+/** Field operations for both the isolated fixture and account-backed missions. */
+export default function SolarMiningPreview({ target, zone, persistent = false, runId, onPause, onComplete }: {
+  target: Target; zone: MissionZone; persistent?: boolean; runId?: string; onPause?: () => void; onComplete?: (cargo: Record<string, number>) => void
 }) {
   const rover = useMemo(() => defaultSpec(), [])
   const adapter = useMemo(() => persistent
@@ -37,7 +37,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
   const [drillStatus, setDrillStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [mountKey, setMountKey] = useState(0)
-  const ready = useCallback((next: MissionState) => { setState(next); setError('') }, [])
+  const ready = useCallback((next: MissionState) => { setState(next) }, [])
   const receive = useCallback(() => { const next = ref.current?.currentState(); if (next) setState(next) }, [])
   const cargo = Object.entries(state?.rover.cargo ?? {}).flatMap(([resource, amount]) => {
     const mineral = mineralFromSolarResource(resource)
@@ -47,6 +47,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
   const pause = async () => {
     if (saving) return
     setSaving(true)
+    setError('')
     try {
       const saved = await ref.current?.saveNow()
       if (!saved) throw new Error('Field not ready')
@@ -59,9 +60,17 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
   const returnWithCargo = async () => {
     if (saving || !onComplete) return
     setSaving(true)
+    setError('')
     try {
       const saved = await ref.current?.saveNow()
       if (!saved) throw new Error('Field not ready')
+      if (persistent) {
+        if (!runId || !(adapter instanceof SolarFieldSync)) throw new Error('Mission is not ready')
+        await ref.current?.stopSaving()
+        const minerals = await adapter.transferToMission(runId)
+        onComplete(minerals)
+        return
+      }
       const minerals: Record<string, number> = {}
       for (const [resource, amount] of Object.entries(saved.rover.cargo)) {
         const mineral = mineralFromSolarResource(resource)
@@ -73,17 +82,17 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
       ref.current?.emptyCargo()
       if (!await ref.current?.saveNow()) throw new Error('Field not ready')
       onComplete(minerals)
-    } catch {
+    } catch (reason) {
       setMounted(false)
       setState(null)
       setMountKey(key => key + 1)
       setMounted(true)
-      setError('Could not save the field. Reopen it and try again.')
+      setError(reason instanceof Error ? `Could not return cargo: ${reason.message}. Reconnect and try again.` : 'Could not return cargo. Reconnect and try again.')
     }
     finally { setSaving(false) }
   }
   return <div className={styles.screen} data-testid="solar-mining-preview">
-    {mounted && <TakeOnMount key={mountKey} ref={ref} adapter={adapter} missionId={solarFieldId(target.id, zone)} bodyId={takeonBodyForTarget(target)}
+    {mounted && <div className={styles.field} inert={saving}><TakeOnMount key={mountKey} ref={ref} adapter={adapter} missionId={solarFieldId(target.id, zone)} bodyId={takeonBodyForTarget(target)}
       target={target} zone={zone} rover={rover} startView="iso" requireSolarTerrain allowSolarFieldCreation solarMining
       onReady={ready} onEvent={event => {
         if (event.type === 'mined') {
@@ -91,7 +100,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
           const mineral = event.payload.resource && mineralFromSolarResource(event.payload.resource)
           setDrillStatus(mineral ? `Collected ${event.payload.amount} ${mineral}.` : 'Surface cleared. Drill again to reach ore, or explore another spot.')
         }
-      }} onError={err => setError(err.message)} className={styles.field} />}
+      }} onError={err => setError(err.message)} className={styles.field} /></div>}
     <div className={styles.top}><strong>{target.name} · {zone} field</strong><span>{cargo.length ? cargo.join(' · ') : 'Hold empty'} · {edits} terrain edits</span></div>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {persistent && error && <SolarFieldConflictRecovery site={solarFieldId(target.id, zone)}
@@ -99,13 +108,13 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
       onResolved={() => { setError(''); setState(null); setMountKey(key => key + 1); setMounted(true) }} />}
     <div className={styles.controls}>
       {mounted ? <>
-        <div className={styles.dpad} aria-label="Move rover">
+        <div className={styles.dpad} aria-label="Move rover" inert={saving}>
           <button type="button" aria-label="Move up" onClick={() => ref.current?.move(3)}>↑</button>
           <button type="button" aria-label="Move left" onClick={() => ref.current?.move(2)}>←</button>
           <button type="button" aria-label="Move right" onClick={() => ref.current?.move(0)}>→</button>
           <button type="button" aria-label="Move down" onClick={() => ref.current?.move(1)}>↓</button>
         </div>
-        <button type="button" disabled={!state} onClick={() => {
+        <button type="button" disabled={saving || !state} onClick={() => {
           if (!ref.current?.mine()) setDrillStatus('Cannot drill here. Move the rover and try another spot.')
         }}>DRILL</button>
         {onComplete && <button type="button" disabled={saving || !state} onClick={() => void returnWithCargo()}>RETURN TO SHIP</button>}
@@ -115,6 +124,6 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
       </> : <button type="button" onClick={() => { setState(null); setMounted(true) }}>RETURN TO FIELD</button>}
     </div>
     {drillStatus && <p className={styles.status} role="status">{drillStatus}</p>}
-    <p className={styles.hint}>{persistent ? 'Preview: field changes are saved, but transferring cargo and completing this mission are not available yet.' : onComplete ? 'Playtest: drill through the surface to find ore, then return to your ship. Progress is isolated from your account.' : 'Drive with the arrows or tap the terrain. Drill through the surface to find ore.'}</p>
+    <p className={styles.hint}>{persistent ? 'Your field saves as you explore. Reconnect to transfer cargo to your ship.' : onComplete ? 'Playtest: drill through the surface to find ore, then return to your ship. Progress is isolated from your account.' : 'Drive with the arrows or tap the terrain. Drill through the surface to find ore.'}</p>
   </div>
 }

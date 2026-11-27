@@ -167,7 +167,7 @@ func extractSolarCargo(state json.RawMessage) (json.RawMessage, map[string]int64
 		return nil, nil, errSolarInvalid
 	}
 	var cargo, coreCargo map[string]int64
-	if json.Unmarshal(rover["cargo"], &cargo) != nil || json.Unmarshal(coreRover["cargo"], &coreCargo) != nil || len(cargo) == 0 || len(cargo) != len(coreCargo) {
+	if json.Unmarshal(rover["cargo"], &cargo) != nil || json.Unmarshal(coreRover["cargo"], &coreCargo) != nil || cargo == nil || coreCargo == nil || len(cargo) != len(coreCargo) {
 		return nil, nil, errSolarInvalid
 	}
 	var total int64
@@ -202,6 +202,10 @@ func extractSolarCargo(state json.RawMessage) (json.RawMessage, map[string]int64
 }
 
 func transferSolarField(app core.App, user string, in solarFieldTransfer) (solarTransferReceipt, error) {
+	return transferSolarFieldWithMission(app, user, in, false)
+}
+
+func transferSolarFieldWithMission(app core.App, user string, in solarFieldTransfer, attachMission bool) (solarTransferReceipt, error) {
 	var result solarTransferReceipt
 	if user == "" || !validSolarSite(in.Site) || in.Revision < 1 || len(in.RunID) < 8 || len(in.RunID) > 100 {
 		return result, errSolarInvalid
@@ -236,6 +240,11 @@ func transferSolarField(app core.App, user string, in solarFieldTransfer) (solar
 		if err != nil {
 			return err
 		}
+		if attachMission {
+			if err := attachSolarCargoToMission(tx, user, in, cargo); err != nil {
+				return err
+			}
+		}
 		result = solarTransferReceipt{Site: in.Site, RunID: in.RunID, Revision: in.Revision + 1, Cargo: cargo}
 		col, err := tx.FindCollectionByNameOrId("solar_field_transfers")
 		if err != nil {
@@ -258,6 +267,55 @@ func transferSolarField(app core.App, user string, in solarFieldTransfer) (solar
 		return tx.Save(field)
 	})
 	return result, err
+}
+
+// The field, durable receipt and active mission cargo commit together. Existing
+// save fields are retained, and a stale or unrelated run cannot receive a haul.
+func attachSolarCargoToMission(tx core.App, user string, in solarFieldTransfer, cargo map[string]int64) error {
+	record, err := tx.FindFirstRecordByFilter("game_states", "user = {:user}", dbx.Params{"user": user})
+	if errors.Is(err, sql.ErrNoRows) {
+		return errSolarConflict
+	}
+	if err != nil {
+		return err
+	}
+	raw, err := json.Marshal(record.GetRaw("state"))
+	if err != nil {
+		return err
+	}
+	var state map[string]json.RawMessage
+	var player map[string]json.RawMessage
+	var runID string
+	if json.Unmarshal(raw, &state) != nil || json.Unmarshal(state["player"], &player) != nil || player == nil || json.Unmarshal(player["missionRunId"], &runID) != nil || runID != in.RunID {
+		return errSolarConflict
+	}
+	var targetID string
+	if json.Unmarshal(state["targetId"], &targetID) != nil || !strings.HasPrefix(in.Site, "solar:"+targetID+":") {
+		return errSolarConflict
+	}
+	minerals := make(map[string]int64, len(cargo))
+	allowed := map[string]bool{"iron": true, "silicon": true, "ice": true, "carbon": true, "nickel": true, "cobalt": true, "copper": true, "aluminium": true, "hydrogen": true, "uranium": true, "platinum": true, "palladium": true, "iridium": true, "rhodium": true, "gold": true, "rare": true}
+	for key, amount := range cargo {
+		mineral := strings.TrimPrefix(key, "landnam:")
+		if !allowed[mineral] {
+			return errSolarInvalid
+		}
+		minerals[mineral] = amount
+	}
+	encoded, err := json.Marshal(minerals)
+	if err != nil {
+		return err
+	}
+	player["miningCargoInProgress"] = encoded
+	if state["player"], err = json.Marshal(player); err != nil {
+		return err
+	}
+	encoded, err = json.Marshal(state)
+	if err != nil {
+		return err
+	}
+	record.Set("state", encoded)
+	return tx.Save(record)
 }
 
 func registerSolarFieldRoutes(app core.App) {
@@ -296,6 +354,23 @@ func registerSolarFieldRoutes(app core.App) {
 			receipt, err := receiptFromRecord(record)
 			if err != nil {
 				return apis.NewApiError(http.StatusInternalServerError, "invalid transfer receipt", err)
+			}
+			return e.JSON(http.StatusOK, receipt)
+		})
+		group.POST("/mission-transfer", func(e *core.RequestEvent) error {
+			var body solarFieldTransfer
+			if err := e.BindBody(&body); err != nil {
+				return apis.NewBadRequestError("invalid transfer", err)
+			}
+			receipt, err := transferSolarFieldWithMission(app, e.Auth.Id, body, true)
+			if errors.Is(err, errSolarConflict) {
+				return apis.NewApiError(http.StatusConflict, errSolarConflict.Error(), nil)
+			}
+			if errors.Is(err, errSolarInvalid) {
+				return apis.NewBadRequestError("invalid transfer or field cargo", nil)
+			}
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "could not transfer field cargo", err)
 			}
 			return e.JSON(http.StatusOK, receipt)
 		})
