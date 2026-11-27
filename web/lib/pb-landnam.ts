@@ -1,6 +1,6 @@
 import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
-import { landnamPbUrl } from '@/lib/pb-config'
+import { landnamPbUrl, sharedPbUrl } from '@/lib/pb-config'
 
 // Explicit, distinct storage key — PocketBase's SDK defaults every client to
 // the same localStorage key ('pocketbase_auth') when none is given, so
@@ -27,6 +27,15 @@ export async function exchangeLandnamAuth(sharedToken: string): Promise<{
 }> {
   if (exchangeInFlight && exchangeInFlightFor === sharedToken) return exchangeInFlight
   const base = landnamPbUrl().replace(/\/$/, '')
+  // SSL-877 merged both backends into one instance (signal-k-pocketbase), whose
+  // build has no exchange route (404). There the shared session already is a
+  // session on the same `users` record the exchange would mint, so reuse it.
+  if (base === sharedPbUrl().replace(/\/$/, '')) {
+    const record = pbShared.authStore.record
+    if (pbShared.authStore.token === sharedToken && record) return { token: sharedToken, record }
+    const auth = await pbShared.collection('users').authRefresh()
+    return { token: auth.token, record: auth.record }
+  }
   exchangeInFlightFor = sharedToken
   exchangeInFlight = fetchWithWakeRetry(`${base}/api/landnam-auth/exchange`, {
     method: 'POST',
