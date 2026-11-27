@@ -562,6 +562,13 @@
    "tickets": ["SSL-891"]
   },
   {
+   "id": "solar-playtest",
+   "name": "Solar mission playtest",
+   "flow": "core-loop",
+   "web": "solar-playtest",
+   "tickets": ["SSL-891"]
+  },
+  {
    "id": "solar-site-delivery",
    "name": "Solar site delivery",
    "flow": "core-loop",

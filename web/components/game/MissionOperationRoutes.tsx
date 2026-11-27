@@ -282,7 +282,13 @@ export default function MissionOperationRoutes({
     case 'mining': {
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
       if (game.visualFixture === 'solar-mining' && game.mission.customPlan?.zone) {
-        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} />
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} onComplete={typeof window !== 'undefined' && window.location.pathname === '/game/stage' ? cargo => {
+          game.completeStep(6)
+          if (game.player.shipCustomizerParts?.lander) {
+            game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
+            game.go('landing')
+          } else game.onMiningDone(cargo)
+        } : undefined} />
       }
       // Kept opt-in until a transfer receipt can be applied to the game save
       // idempotently. Returning to base leaves the mission paused; this path

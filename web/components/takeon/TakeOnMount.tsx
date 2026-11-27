@@ -495,7 +495,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         if (disposed) return
 
         const savedSolar = readSolarFieldIdentity(resume?.coreSnapshot)
-        if (requireSolarTerrain && !savedSolar && (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW !== '1' || !currentTarget || resume || (!readOnly && !isSeeded && !allowSolarFieldCreation))) {
+        const solarPreviewEnabled = process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
+          || (solarMining && window.location.pathname === '/game/stage')
+        if (requireSolarTerrain && !savedSolar && (!solarPreviewEnabled || !currentTarget || resume || (!readOnly && !isSeeded && !allowSolarFieldCreation))) {
           throw new Error('This landing site is unavailable. Pause and try again when solar terrain is available.')
         }
         if (savedSolar) {
@@ -508,7 +510,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           fieldIdentity = savedSolar
         }
 
-        if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && currentTarget && !resume && (readOnly || isSeeded || allowSolarFieldCreation)) {
+        if (solarPreviewEnabled && currentTarget && !resume && (readOnly || isSeeded || allowSolarFieldCreation)) {
           try {
             const { loadLandingPreview } = await import('@/lib/takeon/solarLandingPreview')
             const { solarField } = await import('@/lib/takeon/solarField')

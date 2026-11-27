@@ -25,6 +25,7 @@ const SCREENS = [
   ['solar-site-delivery', 'solar-site-delivery'],
   ['solar-site-mining', 'solar-site-mining'],
   ['solar-field-mining', 'solar-field-mining'],
+  ['solar-playtest', 'solar-playtest'],
   ['research-passport', 'ui-research-passport'],
   ['passport-unconfirmed', 'ui-research-passport-unconfirmed'],
   ['passport-missed', 'ui-research-passport-missed'],
