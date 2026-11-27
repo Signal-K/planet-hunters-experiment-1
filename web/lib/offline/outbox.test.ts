@@ -19,6 +19,18 @@ const create: OutboxOp = { type: 'create', collection: 'mission_runs', id: 'aaaa
 const update: OutboxOp = { type: 'update', collection: 'mission_runs', id: 'aaaaaaaaaaaaaaa', data: { status: 'completed' } }
 
 describe('outbox', () => {
+  it('lets a write waiting for sign-in sit without holding back the writes behind it', async () => {
+    const h = harness([{ kind: 'signed-out' }, null])
+    await h.outbox.enqueue(create)
+    await h.outbox.enqueue(update)
+    await h.outbox.flush()
+    expect(h.calls).toHaveLength(2)
+    expect(h.outbox.pending()).toHaveLength(1)
+    expect(h.outbox.pending()[0]).toMatchObject({ attempts: 0, failed: false, needsSignIn: true })
+    await h.outbox.flush()
+    expect(h.outbox.pending()).toHaveLength(0)
+  })
+
   it('keeps only the latest snapshot of a keyed upsert', async () => {
     const h = harness([])
     const upsert = (time: number, filter = 'target_id = "t1"'): OutboxOp => ({ type: 'upsert', collection: 'voxel_worlds', id: 'bbbbbbbbbbbbbbb', filter, data: { time } })
@@ -143,7 +155,7 @@ describe('outbox', () => {
 
   it('classifies community HTTP statuses for retry', () => {
     expect(classifyHttpStatus(200)).toBeNull()
-    expect(classifyHttpStatus(401)).toEqual({ kind: 'offline' })
+    expect(classifyHttpStatus(401)).toEqual({ kind: 'signed-out' })
     expect(classifyHttpStatus(503)).toEqual({ kind: 'offline' })
     expect(classifyHttpStatus(400)).toMatchObject({ kind: 'invalid' })
     expect(classifyHttpStatus(500)).toMatchObject({ kind: 'rejected' })

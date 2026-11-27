@@ -56,3 +56,18 @@ export function ageLabel(createdAt: number, now: number): string {
   if (s < 86_400) return `${Math.round(s / 3600)} h ago`
   return `${Math.round(s / 86_400)} d ago`
 }
+
+/**
+ * What the tray says after Upload now leaves changes queued. "Could not reach
+ * the server" is only true when there is no connection or the server did not
+ * answer in time; a write waiting for sign-in or one the server refused says so.
+ */
+export function uploadProblemCopy(pending: OutboxItem[], { online, timedOut }: { online: boolean; timedOut: boolean }): string | null {
+  const queued = pending.filter(item => !item.conflicted)
+  if (queued.length === 0) return null
+  if (!online || timedOut) return 'Could not reach the server. Your changes stay on this device and upload by themselves when you reconnect.'
+  if (queued.some(item => item.needsSignIn)) return 'Waiting for you to be signed in to this account. Your changes stay on this device and upload by themselves once you are.'
+  const refused = queued.filter(item => item.lastError).length
+  if (refused > 0) return `The server has not accepted ${refused} ${refused === 1 ? 'change' : 'changes'} yet. They stay on this device and keep retrying by themselves.`
+  return 'Your changes are still queued on this device and keep retrying by themselves.'
+}

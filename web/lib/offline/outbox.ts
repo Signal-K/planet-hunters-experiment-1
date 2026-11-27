@@ -40,6 +40,8 @@ export interface OutboxItem {
   lastError?: string
   /** A local conflicting branch must be resolved by the player, never replayed. */
   conflicted?: boolean
+  /** Set while the last attempt had no usable session for this item's account. */
+  needsSignIn?: boolean
 }
 
 export interface OutboxSnapshot {
@@ -50,8 +52,14 @@ export interface OutboxSnapshot {
 
 /** How an executor reports a failed attempt. */
 export type OutboxFailure =
-  /** No connection or auth not ready: keep the item, do not burn an attempt, stop this flush. */
+  /** No connection: keep the item, do not burn an attempt, stop this flush. */
   | { kind: 'offline' }
+  /**
+   * No usable session for this item (signed out, expired, exchange pending or
+   * another account): keep it without burning an attempt and move on, so one
+   * write waiting for sign-in does not hold back every write queued after it.
+   */
+  | { kind: 'signed-out' }
   /** The server already has this record: the write counts as done. */
   | { kind: 'already-applied' }
   /** The server refused or errored: count an attempt and back off. */
@@ -286,10 +294,18 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
         continue
       }
       const failure = await execute(item.op)
+      if (failure?.kind === 'offline') break
+      if (failure?.kind === 'signed-out') {
+        if (solarKey) blockedSolarSites.add(solarKey)
+        if (item.needsSignIn) continue
+        item.needsSignIn = true
+        await persist()
+        emit()
+        continue
+      }
+      delete item.needsSignIn
       if (failure === null || failure.kind === 'already-applied') {
         items = items.filter(i => i !== item)
-      } else if (failure.kind === 'offline') {
-        break
       } else if (failure.kind === 'invalid') {
         // SSL-402: a rejected payload would loop forever and pin the sync banners.
         console.warn('[outbox] dropping write the server rejected', item.op, failure.message)

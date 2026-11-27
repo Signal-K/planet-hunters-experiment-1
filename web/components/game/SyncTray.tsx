@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Outbox, OutboxSnapshot } from '@/lib/offline/outbox'
-import { ageLabel, describeChange, syncTrayCopy, type SyncState } from '@/lib/offline/syncTray'
+import { ageLabel, describeChange, syncTrayCopy, uploadProblemCopy, type SyncState } from '@/lib/offline/syncTray'
 import styles from './SyncTray.module.css'
 
 const SHOWN = 6
@@ -25,8 +25,8 @@ export default function SyncTray({ state, outbox, box, solarBox, lastUpload, onl
   onClose: () => void
 }) {
   const [now, setNow] = useState(() => Date.now())
-  // A tap on Upload now that could not reach the server says so, instead of doing nothing visible.
-  const [unreachable, setUnreachable] = useState(false)
+  // A tap on Upload now that leaves changes queued says why, instead of doing nothing visible.
+  const [problem, setProblem] = useState<string | null>(null)
   const [trying, setTrying] = useState(false)
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 15_000); return () => window.clearInterval(t) }, [])
   // Not a modal: the scene stays live, and a tap anywhere outside (or Escape) folds the tray away.
@@ -66,15 +66,18 @@ export default function SyncTray({ state, outbox, box, solarBox, lastUpload, onl
           </ul>
         )}
         {lastUpload !== null && <p className={styles.meta}>Last upload {ageLabel(lastUpload, now)}</p>}
-        {unreachable && outbox.waiting > 0 && <p className={styles.meta} data-testid="sync-tray-unreachable">Could not reach the server. Your changes stay on this device and upload by themselves when you reconnect.</p>}
+        {problem && outbox.waiting > 0 && <p className={styles.meta} data-testid="sync-tray-unreachable">{problem}</p>}
         {canUpload && (
           <button type="button" className={styles.upload} data-testid="sync-tray-upload" disabled={trying} onClick={async () => {
-            setUnreachable(false)
+            setProblem(null)
             setTrying(true)
             // A request to an unreachable server can hang; give it a few seconds, then say so.
-            await Promise.race([Promise.all([box.flush(), solarBox?.flush()]).catch(() => {}), new Promise(resolve => window.setTimeout(resolve, 5_000))])
+            const timedOut = await Promise.race([
+              Promise.all([box.flush(), solarBox?.flush()]).catch(() => {}).then(() => false),
+              new Promise<boolean>(resolve => window.setTimeout(() => resolve(true), 5_000)),
+            ])
             setTrying(false)
-            setUnreachable(box.snapshot().waiting > 0 || (solarBox?.snapshot().waiting ?? 0) > 0)
+            setProblem(uploadProblemCopy([...box.pending(), ...(solarBox?.pending() ?? [])], { online: navigator.onLine !== false, timedOut }))
           }}>{trying ? 'Trying…' : 'Upload now'}</button>
         )}
       </section>,

@@ -22,7 +22,7 @@ function landnamBaseUrl(): string {
 async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>, retried = false): Promise<OutboxFailure | null> {
   const token = pbLandnam.authStore.token
   // No session yet (exchange pending): wait rather than burn an attempt on a guaranteed 401.
-  if (!token) return { kind: 'offline' }
+  if (!token) return { kind: 'signed-out' }
   let res: Response
   try {
     res = await fetch(`${landnamBaseUrl()}${op.path}`, {
@@ -41,7 +41,8 @@ async function executeHttp(op: Extract<OutboxOp, { type: 'http' }>, retried = fa
 
 export function classifyHttpStatus(status: number): OutboxFailure | null {
   if (status >= 200 && status < 300) return null
-  if (status === 401 || status === 403 || status === 408 || status === 429 || status >= 502) return { kind: 'offline' }
+  if (status === 401 || status === 403) return { kind: 'signed-out' }
+  if (status === 408 || status === 429 || status >= 502) return { kind: 'offline' }
   if (status === 400) return { kind: 'invalid', message: `${status}` }
   return { kind: 'rejected', message: `${status}` }
 }
@@ -78,7 +79,7 @@ export async function replayFieldSave(op: FieldSave, worlds: FieldCollection, co
 async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> {
   if (op.type === 'http') return executeHttp(op)
   if (op.type === 'solar-field') {
-    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
+    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'signed-out' }
     const result = await pbLandnam.send<{ revision: number }>('/api/solar-fields', {
       method: 'POST', body: { site: op.site, revision: op.revision, operationId: op.id, state: op.state },
     })
@@ -87,7 +88,7 @@ async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> 
   }
   if (op.type === 'field-save') {
     // Never replay one account's field using another account's session.
-    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
+    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'signed-out' }
     await replayFieldSave(op, pbLandnam.collection('voxel_worlds'), pbLandnam.collection('structures'))
     return null
   }
@@ -112,7 +113,7 @@ async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> 
 
 async function executeSharedCreate(op: Extract<OutboxOp, { type: 'shared-create' }>): Promise<OutboxFailure | null> {
   // Not signed in to the shared backend yet: wait rather than lose it.
-  if (!pbShared.authStore.token) return { kind: 'offline' }
+  if (!pbShared.authStore.token) return { kind: 'signed-out' }
   const body: Record<string, unknown> = { id: op.id, ...op.data }
   const keys = Object.values(op.files ?? {})
   for (const [field, key] of Object.entries(op.files ?? {})) {
@@ -136,7 +137,7 @@ export async function executeOnPocketBase(op: OutboxOp): Promise<OutboxFailure |
   // No Landnam session yet (shared-to-Landnam exchange pending). PocketBase
   // answers an unauthenticated create with 400 "create rule failure", which
   // would be classed as invalid and dropped, losing the write. Wait instead.
-  if (!pbLandnam.authStore.token) return { kind: 'offline' }
+  if (!pbLandnam.authStore.token) return { kind: 'signed-out' }
   try {
     return await executePocketBaseOp(op)
   } catch (error) {
@@ -219,11 +220,14 @@ export function queueUpdate(collection: string, id: string, data: Record<string,
 
 /** Turn a PocketBase error into the outbox's retry vocabulary. */
 function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
-  if (!(error instanceof ClientResponseError)) return { kind: 'offline' }
+  // Not a request failure (the SDK wraps those, status 0 included): a save that
+  // could not be verified or a client bug. Back off and surface it; reporting it
+  // as offline would stall the queue silently and blame the connection.
+  if (!(error instanceof ClientResponseError)) return { kind: 'rejected', message: error instanceof Error ? error.message : String(error) }
   // status 0 is fetch failing outright: offline, aborted, or backgrounded.
   if (error.status === 0) return { kind: 'offline' }
-  // The Landnam session is not ready (exchange pending): wait, do not burn attempts.
-  if (error.status === 401 || error.status === 403) return { kind: 'offline' }
+  // No usable Landnam session (exchange pending or expired): wait, do not burn attempts.
+  if (error.status === 401 || error.status === 403) return { kind: 'signed-out' }
   if (op.type === 'create' && (error.status === 400 || error.status === 409)) {
     const body = error.response as PbErrorBody
     if (body?.data?.id?.code === 'validation_not_unique') return { kind: 'already-applied' }

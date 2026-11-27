@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ageLabel, describeChange, syncState, syncTrayCopy } from './syncTray'
+import { ageLabel, describeChange, syncState, syncTrayCopy, uploadProblemCopy } from './syncTray'
 import type { OutboxItem } from './outbox'
 
 const item = (op: OutboxItem['op']): OutboxItem => ({ id: 'x', op, createdAt: 0, attempts: 0, nextAttemptAt: 0, failed: false })
@@ -21,5 +21,16 @@ describe('sync tray (SSL-729)', () => {
     expect(describeChange(item({ type: 'create', collection: 'community_contributions', id: 'abc', data: {} }))).toBe('Community Site')
     expect(ageLabel(0, 30_000)).toBe('just now')
     expect(ageLabel(0, 5 * 60_000)).toBe('5 min ago')
+  })
+
+  it('blames the connection only when the server could not be reached', () => {
+    const queued = item({ type: 'upsert', collection: 'game_states', id: 'a', filter: '', data: {} })
+    const reached = { online: true, timedOut: false }
+    expect(uploadProblemCopy([], reached)).toBeNull()
+    expect(uploadProblemCopy([queued], { online: false, timedOut: false })).toContain('Could not reach the server')
+    expect(uploadProblemCopy([queued], { online: true, timedOut: true })).toContain('Could not reach the server')
+    expect(uploadProblemCopy([{ ...queued, needsSignIn: true }], reached)).toContain('signed in')
+    expect(uploadProblemCopy([{ ...queued, lastError: '409' }], reached)).toContain('has not accepted 1 change')
+    expect(uploadProblemCopy([queued], reached)).not.toContain('Could not reach')
   })
 })
