@@ -24,3 +24,7 @@ Decided by Liam: building and construction (Hub placement, build screen, upgrade
 ## Client contracts stay, without their own screen
 
 Client contracts are kept as missions. They appear in a location's "Client missions" list on the solar-system map, next to its agency missions, with no separate menu, tab or screen. The old Contracts tab (paged offer strip, group filters) and the Program tab on the Mission Board are deleted (they were already unreachable); the commit is the one that added this section.
+
+## Dead code swept out
+
+Commit 861b9488 deleted 24 components and helpers nothing imported (old flight sky, ship interior preview, mission flow preview, hangar bay, ground telescope upgrade sheet, and similar). Commit b9b17ebc deleted 122 exported functions and constants with no users, found by counting references across `web/`. The rocket builder is not a separate screen any more: the launch scene (`RocketBuilderScene`) is the launch review, and the ship customizer data and `shipCustomizerParts` state stay because saves and flight looks read them. The flight plan keeps its third training step, "Review your agency rocket", because saved plans store it.
