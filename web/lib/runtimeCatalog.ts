@@ -1,6 +1,6 @@
 import { communityWorlds } from '@/lib/agency/community'
 import { missionFromPlan, sanitizeMissionPlans } from '@/lib/mission-planner'
-import { downloadedSurvey, probeMission, probeOffers, probeTargetForMission } from '@/lib/probes/survey-probe'
+import { downloadedSurvey, probeMission, probeableTargets, probeTargetForMission } from '@/lib/probes/survey-probe'
 import { probeContracts, probeRunMission } from '@/lib/probes/probe-offers'
 import { MINERAL_META } from '@/lib/data/minerals'
 import type { Catalog } from './catalog'
@@ -208,16 +208,29 @@ export function buildRuntimeCatalog({
   const serviceMissions: Mission[] = [...servicing].sort((a, b) => (a.percent ?? 100) - (b.percent ?? 100))
     .map(item => serviceMission(item.craft, item.percent, missionsDone + 1))
     .filter(mission => !existingMissionIds.has(mission.id))
-  // SSL-773: survey probes, from the control station like the satellites. The nearest bodies without a probe are
-  // offered; a probe already in flight keeps its mission so the run can finish.
+  // Keep a stable probe mission for each supported body so its location can
+  // show the orbit operation, its unlock state and any completed probe.
   const probeFlightTarget = probeTargetForMission(missionId)
   const probeTargets = [
-    ...(freeOperations && hasControlStation ? probeOffers(mergedTargets, player ?? {}) : []),
+    ...probeableTargets(mergedTargets).filter(target => !target.id.startsWith('earth-orbit-')),
     ...(probeFlightTarget ? mergedTargets.filter(target => target.id === probeFlightTarget) : []),
   ]
   const probeMissions: Mission[] = [...new Map(probeTargets.map(target => [target.id, target])).values()]
     .map(target => probeMission(target, missionsDone + 1))
     .filter(mission => !existingMissionIds.has(mission.id))
+  // A simple non-landing flight through the existing survey transit/debrief
+  // path. Stable ids let the normal completed-mission sync retain progress.
+  const flybyMissions: Mission[] = mergedTargets
+    .filter(target => (target.type === 'planet' || target.type === 'asteroid') && !target.id.startsWith('earth-orbit-'))
+    .map(target => ({
+      id: `flyby-${target.id}`, title: `${target.name} flyby`,
+      brief: `Fly to ${target.name} for a close pass. This flight does not land or collect ore.`,
+      tag: 'PROGRAM', difficulty: target.difficulty, locked: false, sequence: missionsDone + 1,
+      targetId: target.id, payload: { type: 'deep-space-survey' as const, name: 'Flyby instruments', cargoCost: 0 },
+      requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: target.orbit },
+      programReward: { researchXP: 0, outcome: `Flyby of ${target.name} completed` },
+      payout: { francs: 0, affinity: 0 },
+    })).filter(mission => !existingMissionIds.has(mission.id))
   // What each probe's downloaded survey opens: a free targeted run to the body and client contracts for its deposits.
   // A contract already flown is not offered again; the one in flight stays so the run can finish.
   const flown = new Set((player?.completedMissions ?? []).map(record => record.id).filter(id => id !== missionId))
@@ -301,7 +314,7 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...serviceMissions, ...siteMission, ...probeMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions, ...plannedMissions]),
+    missions: tagMissionCategories([...relationshipMissions, ...transitTelescopeMission, ...saturnImagerMission, ...serviceMissions, ...siteMission, ...probeMissions, ...flybyMissions, ...probeFollowUps, ...showerSpecials, ...surveyMissions, ...jointMissions, ...resourceFocusMissions, ...plannedMissions]),
   }
 }
 

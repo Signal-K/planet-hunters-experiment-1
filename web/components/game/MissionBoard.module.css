@@ -611,35 +611,18 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .rail { z-index: 3; top: 12px; }
 .gx {
   position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  background:
-    radial-gradient(ellipse 48% 58% at 76% 30%, rgba(22, 126, 185, 0.58), transparent 70%),
-    radial-gradient(ellipse 44% 54% at 24% 72%, rgba(86, 53, 151, 0.52), transparent 72%),
-    radial-gradient(ellipse 36% 48% at 96% 78%, rgba(132, 39, 112, 0.38), transparent 70%),
-    radial-gradient(ellipse 30% 40% at 48% 10%, rgba(51, 113, 181, 0.4), transparent 72%),
-    radial-gradient(ellipse 58% 60% at 52% 50%, rgba(17, 72, 126, 0.32), transparent 76%),
-    linear-gradient(135deg, #071225 0%, #0b2344 46%, #11142f 72%, #240f2f 100%);
+  background: radial-gradient(ellipse at 48% 42%, rgba(65, 99, 150, .32), transparent 48%), radial-gradient(ellipse at 88% 77%, rgba(100, 54, 91, .22), transparent 45%), linear-gradient(145deg, #0a172c, #142540 60%, #10182e);
 }
 .gx[data-view='belt'] {
-  background:
-    radial-gradient(ellipse 50% 54% at 25% 38%, rgba(42, 111, 184, 0.58), transparent 70%),
-    radial-gradient(ellipse 48% 52% at 80% 55%, rgba(117, 42, 126, 0.46), transparent 72%),
-    radial-gradient(ellipse 42% 46% at 54% 16%, rgba(19, 138, 180, 0.38), transparent 70%),
-    linear-gradient(140deg, #07162e 0%, #102d55 44%, #15163b 72%, #2b102f 100%);
+  background: linear-gradient(145deg, #09182d, #10283e);
 }
-.gx::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(112deg, transparent 18%, rgba(110, 185, 230, 0.08) 45%, transparent 70%); mix-blend-mode: screen; }
-.gx::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .34;
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(185, 229, 255, .7) 0 1px, transparent 1.7px),
-    radial-gradient(circle at 72% 68%, rgba(220, 201, 255, .58) 0 1px, transparent 1.8px),
-    repeating-linear-gradient(112deg, transparent 0 68px, rgba(114, 196, 237, .035) 69px 70px),
-    repeating-linear-gradient(18deg, transparent 0 104px, rgba(180, 144, 232, .028) 105px 106px);
-  background-size: 97px 83px, 131px 109px, auto, auto;
-  mix-blend-mode: screen;
-}
+.gx::after { content: none; }
+.gx::before { content: none; }
 .gx[data-mode='ambient'] { opacity: 0.72; }
 .gx > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.gxStar { position: absolute; border-radius: 50%; box-shadow: 0 0 8px 1px currentColor; }
+.gxStar { position: absolute; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
+.gxSystemOrbit, .gxBeltOrbit { fill: none; stroke: rgba(151, 201, 229, .22); stroke-width: .8; vector-effect: non-scaling-stroke; }
+.gxBeltOrbit { stroke: rgba(197, 210, 216, .28); stroke-dasharray: 1 5; }
 .gxRing { fill: none; stroke: rgba(118, 188, 228, 0.26); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .gxRegion { fill: rgba(21, 115, 174, .08); stroke: rgba(104, 202, 239, .24); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
 .gxLane { fill: none; stroke: rgba(144, 216, 244, .42); stroke-width: 1.15; stroke-dasharray: 1.5 4; filter: drop-shadow(0 0 3px rgba(55, 184, 231, .55)); vector-effect: non-scaling-stroke; }
@@ -647,7 +630,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .gxSpoke { fill: none; stroke: rgba(111, 198, 235, 0.52); stroke-width: 1.2; stroke-dasharray: 2 7; filter: drop-shadow(0 0 3px rgba(60, 176, 230, .45)); vector-effect: non-scaling-stroke; }
 @media (prefers-reduced-motion: reduce) { .gxRoute { animation: none; } }
 .gxRock { position: absolute; border-radius: 42% 58% 50% 50%; background: #a9bed2; box-shadow: 0 0 5px rgba(82, 170, 220, .5); transform: translate(-50%, -50%); }
-.gxSun { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%); background: #fff3ce; box-shadow: 0 0 14px 5px rgba(255, 224, 152, 0.85), 0 0 70px 26px rgba(75, 176, 231, 0.4); }
+.gxSun { position: absolute; width: 26px; height: 26px; border-radius: 50%; transform: translate(-50%, -50%); background: radial-gradient(circle at 40% 35%, #fffef3 5%, #fff3be 42%, #f3a84d 90%); box-shadow: 0 0 16px 5px rgba(255, 206, 118, .8), 0 0 70px 28px rgba(246, 162, 74, .22); }
 .gxRegionLabel { position: absolute; z-index: 0; transform: translate(-50%, -50%); color: rgba(169, 218, 241, .42); font: 800 14px/1 var(--ln-font-display); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; }
 
 .gxNode, .gxBelt, .gxBack {
@@ -660,6 +643,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .gxStaticNode { pointer-events: none; }
 .gxNode > i, .gxBelt > i { position: relative; flex: 0 0 auto; width: 12px; height: 12px; margin-left: 16px; border-radius: 50%; background: #d9f5ff; box-shadow: 0 0 9px 3px rgba(64, 198, 242, 0.7), 0 0 22px rgba(104, 117, 230, .5); }
 .gxNode > i.gxPlanet { width: 48px; height: 48px; margin-left: 3px; background: #25384a; box-shadow: 0 2px 12px rgba(0, 0, 0, .7), 0 0 18px rgba(104, 172, 204, .3); }
+.gxPlanetLight { position: absolute; z-index: 1; inset: 0; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.28), transparent 30%), linear-gradient(130deg, transparent 45%, rgba(3,9,22,.62) 100%); box-shadow: inset -5px -7px 10px rgba(0, 8, 22, .55), inset 2px 2px 4px rgba(223, 244, 255, .3); }
 .gxNode[data-lit] > i.gxPlanet, .gxNode[data-home] > i.gxPlanet { background: #4b5864; }
 .gxNode > i::after, .gxBelt > i::after { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid rgba(236, 235, 232, 0.4); }
 .gxNode > span, .gxBelt > span { padding: 4px 7px; border-radius: 4px; background: rgba(5, 16, 35, 0.78); border: 1px solid rgba(126, 205, 242, 0.38); box-shadow: 0 0 12px rgba(36, 132, 188, .14); white-space: nowrap; }
@@ -876,39 +860,43 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .agencyOverview { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0; color: var(--ln-text); font: 600 14px/1.35 var(--ln-font-body); }
 .agencyOverview strong { color: var(--ln-text); }
 .freeDock { left: 18px; right: auto; bottom: 18px; transform: none; width: auto; max-width: min(400px, calc(100% - 36px)); background: rgba(9, 24, 43, .72); border: 0; border-left: 3px solid #82c6df; border-radius: 0; }
-.gx[data-location-open] { right: min(380px, 39%); }
-.locationPanel { position: absolute; z-index: 2; inset: 0 0 0 auto; width: min(380px, 39%); display: flex; flex-direction: column; gap: 18px; padding: 22px 20px; color: #f4efe4; background: linear-gradient(155deg, #1b3048, #101b30 75%); border-left: 1px solid rgba(175, 221, 240, .3); }
+.gx[data-location-open] { right: 0; }
+.locationPanel { position: absolute; z-index: 13; inset: 0 0 0 auto; box-sizing: border-box; width: 50%; display: flex; flex-direction: column; gap: 18px; padding: 22px 20px; color: #f4efe4; background: linear-gradient(155deg, #1b3048, #101b30 75%); border-left: 1px solid rgba(175, 221, 240, .3); animation: locationSlideIn 180ms ease-out; }
+@keyframes locationSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.dispatch:has(.locationPanel) .eventsCorner { display: none; }
 .locationPanel .dockHead { align-items: center; }
 .locationWorld { position: relative; width: 66px; height: 66px; flex: 0 0 66px; }
 .locationWorld > i { display: block; position: absolute; inset: 0; border-radius: 50%; background: #4b5864; box-shadow: 0 0 22px rgba(106, 194, 227, .32); }
 .locationPanel .dockWho > h2 { font-size: 25px; }
-.locationPanel .clearFilter { padding: 0 10px; font-size: 12px; }
+.locationPanel .clearFilter { padding: 0 10px; font-size: 14px; }
 .locationMissions { min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 18px; padding-right: 3px; }
 .locationMissions section { display: grid; align-content: start; gap: 7px; }
-.locationMissions h3 { margin: 0; color: #a8c9d7; font: 800 12px/1.2 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.locationMissions h3 { margin: 0; color: #a8c9d7; font: 800 14px/1.2 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 .locationMissions p { margin: 0; color: #c9d0c2; font: 600 14px/1.35 var(--ln-font-body); }
 .locationMission { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 8px 10px; padding: 10px; border: 1px solid rgba(164, 207, 227, .18); border-radius: 8px; background: rgba(48, 84, 113, .35); }
 .locationIcon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #a7e5ef; background: rgba(93, 186, 210, .17); }
 .locationIcon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .locationIcon[data-kind="mining"] { color: #ffd395; background: rgba(220, 140, 63, .2); }
 .locationIcon[data-kind="construction"] { color: #d4bcff; background: rgba(163, 119, 217, .2); }
-.missionAtAGlance { display: flex; flex-wrap: wrap; gap: 3px 8px; color: #c6dae0; font: 600 13px/1.3 var(--ln-font-body); }
+.missionAtAGlance { display: flex; flex-wrap: wrap; gap: 3px 8px; color: #c6dae0; font: 600 14px/1.3 var(--ln-font-body); }
 .missionAtAGlance span:first-child { color: #9ce2ef; font-weight: 800; }
 .locationMission > div { min-width: 0; display: grid; gap: 3px; }
 .locationMission strong { font: 700 15px/1.2 var(--ln-font-body); }
-.locationMission small { color: #b6cbd1; font: 600 12px/1.3 var(--ln-font-body); }
-.locationMission button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: #ecebe8; color: #16171a; font: 800 12px/1 var(--ln-font-display); text-transform: uppercase; cursor: pointer; }
+.locationMission small { color: #b6cbd1; font: 600 14px/1.3 var(--ln-font-body); }
+.locationMission button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: #ecebe8; color: #16171a; font: 800 14px/1 var(--ln-font-display); text-transform: uppercase; cursor: pointer; }
 .locationMission button:disabled { opacity: .5; cursor: default; }
-.locationMission details { grid-column: 2 / -1; color: #b6cbd1; font: 600 12px/1.4 var(--ln-font-body); }
+.locationMission details { grid-column: 2 / -1; color: #b6cbd1; font: 600 14px/1.4 var(--ln-font-body); }
 .locationMission summary { cursor: pointer; }
-.locationMission details p { margin-top: 6px; font-size: 13px; }
-@media (orientation: portrait) and (max-width: 800px) {
-  .gx[data-location-open] { right: 0; bottom: 43%; }
-  .locationPanel { inset: auto 0 0; width: auto; height: 43%; gap: 8px; padding: 10px 14px; border-left: 0; border-top: 1px solid rgba(175, 221, 240, .3); }
+.locationMission details p { margin-top: 6px; font-size: 14px; }
+@media (orientation: portrait) and (max-width: 800px), (max-width: 700px) {
+  .gx[data-location-open] { right: 0; bottom: 0; }
+  .locationPanel { inset: auto 0 0; width: auto; height: 55%; gap: 8px; padding: 10px 14px; border-left: 0; border-top: 1px solid rgba(175, 221, 240, .3); animation-name: locationSlideUp; }
   .locationWorld { width: 42px; height: 42px; flex-basis: 42px; }
   .locationPanel .dockWho > h2 { font-size: 20px; }
   .locationMissions { gap: 12px; }
 }
+@keyframes locationSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .locationPanel { animation: none; } }
 .sourceSites { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid rgba(190, 205, 235, 0.22); }
 .sourceSites > b { margin-right: 4px; color: #ecebe8; font: 800 14px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 .sourceSites > span { color: #b9b8b3; font: 500 14px/1.3 var(--ln-font-body); }
@@ -1089,16 +1077,17 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
    labels and tap targets stay separated as the canvas changes shape. */
 @media (orientation: portrait) and (max-width: 700px) {
   .gx[data-view='system'] .gxRegionButton, .gx[data-view='system'] .gxRegionLabel { display: none; }
-  .gx[data-view='system'] .gxSun { left: 15% !important; top: 12% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 25% !important; top: 23% !important; }
-  .gx[data-view='system'] [data-testid='map-node-venus'] { left: 62% !important; top: 25% !important; }
-  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 50% !important; top: 36% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 62% !important; top: 43% !important; }
-  .gx[data-view='system'] [data-testid='map-belt'] { left: 30% !important; top: 49% !important; }
-  .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 25% !important; top: 60% !important; }
-  .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 62% !important; top: 61% !important; }
-  .gx[data-view='system'] [data-testid='map-node-uranus'] { left: 25% !important; top: 73% !important; }
-  .gx[data-view='system'] [data-testid='map-node-neptune'] { left: 62% !important; top: 74% !important; }
+  .gx[data-view='system'] .gxSystemOrbit, .gx[data-view='system'] .gxBeltOrbit { display: none; }
+  .gx[data-view='system'] .gxSun { left: 50% !important; top: 40% !important; }
+  .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 25% !important; top: 20% !important; }
+  .gx[data-view='system'] [data-testid='map-node-venus'] { left: 62% !important; top: 20% !important; }
+  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 22% !important; top: 34% !important; }
+  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 62% !important; top: 34% !important; }
+  .gx[data-view='system'] [data-testid='map-belt'] { left: 25% !important; top: 49% !important; }
+  .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 62% !important; top: 49% !important; }
+  .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 22% !important; top: 62% !important; }
+  .gx[data-view='system'] [data-testid='map-node-uranus'] { left: 62% !important; top: 62% !important; }
+  .gx[data-view='system'] [data-testid='map-node-neptune'] { left: 35% !important; top: 75% !important; }
   .gxShipWide { display: none; }
   .gxShipPortrait { display: inline; }
 }

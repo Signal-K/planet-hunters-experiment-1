@@ -24,6 +24,7 @@ import { SPACETOBER_PEAK_BADGE, SPACETOBER_WEEK_BADGE, type OrionidsFind } from 
 import { chainInstrument, chainRecordings, chainStage, getShowerChain, type TwoStepChain } from '@/lib/orionids/chain'
 import { showerPreset } from '@/lib/data/showers'
 import { probeTargetForMission } from '@/lib/probes/survey-probe'
+import { agencyTargets } from '@/lib/rockets'
 import { WSW_EVENT_IDS, WSW_RANGE_LABEL, isWorldSpaceWeekUpcoming, wswBanner, wswChipsForMission } from '@/lib/wsw'
 
 export type ProgramStepState = 'done' | 'current' | 'available' | 'locked'
@@ -163,14 +164,28 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
 
   // SSL-773: survey probes to the nearest bodies without one, after the telescopes.
   for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
+    const targetId = probeTargetForMission(mission.id)!
+    const alreadyOrbiting = !!player.probes?.[targetId]
+    const hasStation = player.placed.includes('control-station')
+    const reachable = agencyTargets(mission, catalog, player).length > 0
     steps.push({
       id: mission.id,
       title: mission.title,
       detail: mission.programReward?.outcome ?? mission.brief,
       brief: mission.brief,
-      lockLine: free ? null : (mission.unlockAt ?? 'Reach Free Operations'),
-      state: free ? 'available' : 'locked',
+      lockLine: alreadyOrbiting ? null : !free ? 'Complete the early missions first' : !hasStation ? 'Requires the control station' : !reachable ? 'Requires a rocket that can reach this location' : null,
+      state: alreadyOrbiting ? 'done' : free && hasStation && reachable ? 'available' : 'locked',
       kind: 'instrument',
+    })
+  }
+
+  for (const mission of catalog.missions.filter(item => item.id.startsWith('flyby-'))) {
+    const completed = player.completedMissions?.some(record => record.id === mission.id) ?? false
+    const reachable = agencyTargets(mission, catalog, player).length > 0
+    steps.push({
+      id: mission.id, title: mission.title, detail: mission.programReward?.outcome ?? mission.brief,
+      brief: mission.brief, lockLine: completed || reachable ? null : 'Requires a rocket that can reach this location',
+      state: completed ? 'done' : reachable ? 'available' : 'locked', kind: 'instrument',
     })
   }
 
