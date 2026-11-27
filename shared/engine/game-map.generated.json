@@ -10,7 +10,7 @@
   "counts": {
     "webRoutes": 27,
     "nativeScreenCases": 25,
-    "qaScenes": 103,
+    "qaScenes": 104,
     "authoredSceneFiles": 6,
     "authoredSceneScripts": 27,
     "authoringSources": 67,
@@ -27,7 +27,7 @@
     "mechanics": 19,
     "sharedLayoutObjects": 5,
     "hostLayoutObjects": 146,
-    "webGameComponents": 116,
+    "webGameComponents": 117,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -453,17 +453,6 @@
         ]
       },
       {
-        "id": "debrief-capacitor",
-        "name": "Debrief laser capacitor",
-        "flow": "core-loop",
-        "web": "m1-debrief",
-        "native": "debrief-capacitor-phone",
-        "tickets": [
-          "SSL-462"
-        ],
-        "note": "Web has no preset; needs 3 missions done"
-      },
-      {
         "id": "customiser",
         "name": "Ship customiser",
         "flow": "ship",
@@ -757,6 +746,24 @@
         "name": "Solar site mining",
         "flow": "core-loop",
         "web": "solar-site-mining",
+        "tickets": [
+          "SSL-891"
+        ]
+      },
+      {
+        "id": "solar-field-mining",
+        "name": "Solar field mining preview",
+        "flow": "core-loop",
+        "web": "solar-field-mining",
+        "tickets": [
+          "SSL-891"
+        ]
+      },
+      {
+        "id": "solar-playtest",
+        "name": "Solar mission playtest",
+        "flow": "core-loop",
+        "web": "solar-playtest",
         "tickets": [
           "SSL-891"
         ]
@@ -2473,6 +2480,7 @@
       "web/components/game/SettingsSheet.tsx",
       "web/components/game/ShipInteriorPreview.tsx",
       "web/components/game/SkyEventChip.tsx",
+      "web/components/game/SolarFieldConflictRecovery.tsx",
       "web/components/game/SuiteHopRail.tsx",
       "web/components/game/SyncTray.tsx",
       "web/components/game/TutorialCompleteSheet.tsx",
@@ -2527,7 +2535,6 @@
       "web/components/game/screens/IntroScreen.tsx",
       "web/components/game/screens/LandingScene.tsx",
       "web/components/game/screens/LandingScreen.tsx",
-      "web/components/game/screens/LaserCapacitorPanel.tsx",
       "web/components/game/screens/LaunchpadScreen.tsx",
       "web/components/game/screens/MiningCanvas.tsx",
       "web/components/game/screens/MiningControls.tsx",
@@ -2548,6 +2555,7 @@
       "web/components/game/screens/SkyPixels.tsx",
       "web/components/game/screens/SkyPointing.tsx",
       "web/components/game/screens/SkyScenes.tsx",
+      "web/components/game/screens/SolarMiningPreview.tsx",
       "web/components/game/screens/SolarOrbitGlobe.tsx",
       "web/components/game/screens/SolarSurface.tsx",
       "web/components/game/screens/TessDiscoveryScreen.tsx",
@@ -2709,6 +2717,8 @@
     "qaWithoutWebPreset": [],
     "qaWithoutNativeScene": [
       "solar-site-mining",
+      "solar-field-mining",
+      "solar-playtest",
       "solar-site-delivery"
     ],
     "scenesWithoutObjects": [],

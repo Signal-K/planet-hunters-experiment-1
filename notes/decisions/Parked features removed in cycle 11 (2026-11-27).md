@@ -19,6 +19,7 @@ Decided by Liam: building and construction (Hub placement, build screen, upgrade
 | Subsurface view (excavate, underground rooms, mineral vault) | this commit | `subsurfaceExcavated`, `subsurfaceBuilt` state and `SUBSURFACE_*` data stay. The Surface Silo panel stays. |
 | Scenes `build`, `hub-subsurface`/`subsurface`, `hub-structures`, `storage-build`, `hub-unplaced` tray, `hub-buildings-l2`, `hub-buildings-l3` | this commit | Fixtures `ui-build`, `ui-subsurface`, `ui-subsurface-dug-out`, `storage-hub`, `storage-build` deleted. |
 | Free Ops "Storage Silo" activity, the Exchange on the starter Base | this commit | New games start with launchpad, hangar, Agency Hub and silo. |
+| Laser capacitor purchase in the debrief | commit after 9d2350fd | `laserCapacitorLevel` state and `laserCapacitorBonus` stay, so a bought capacitor still gives its extra charges. |
 
 ## Client contracts stay, without their own screen
 

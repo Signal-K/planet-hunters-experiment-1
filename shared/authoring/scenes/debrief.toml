@@ -7,7 +7,7 @@ type = "travel"
 name = "Debrief"
 summary = "Payout and cargo settlement after a run, and the touchdown at home."
 tickets = ["SSL-462", "SSL-874"]
-qa = ["debrief", "debrief-capacitor", "first-home", "transport-debrief", "telescope-debrief"]
+qa = ["debrief", "first-home", "transport-debrief", "telescope-debrief"]
 
 [runtime]
 surface = "dom"

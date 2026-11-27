@@ -8,8 +8,7 @@ import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
-  MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
-  BASE_LASER_CHARGES, rocketModelForConfig, travelDurationMs, suggestBuild,
+  ROCKET_MODELS, rocketModelForConfig, travelDurationMs, suggestBuild,
   validateBuild, rocketConfigForModel,
   isOwnProgramMission,
   isFreeHaulMission,
@@ -20,7 +19,7 @@ import {
 import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyBuyLaserCapacitor, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
 import { agencyRocket, agencyTargets, pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
@@ -30,7 +29,7 @@ import type { Catalog } from '@/lib/catalog'
 import { missionPhaseScreen } from '@/lib/mission-resume'
 import type { GameState, Player, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import { collectProbeData as collectProbeDataFor, placeProbe, startProbeScan as startProbeScanFor, logProbeSpectrum as logProbeSpectrumFor } from '@/lib/probes/survey-probe'
-import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, ORIONIDS_CHAIN, receiverEventId } from '@/lib/orionids/chain'
+import { completeChainRadio, completeChainRun, completeRadioMission, getShowerChain, receiverEventId } from '@/lib/orionids/chain'
 import { badgeTierFor, grantBadge, isOrionidsWindow } from '@/lib/data/sky-events'
 import { resolveSaturnBadgeTier, isSaturnPoolCandidateId, grantBadgesForActivity, skyEventNow, grantWswBadge, wswMissionTypeFor, type SkyActivityKind, type WswMissionType } from '@/lib/data'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -51,7 +50,7 @@ import { applyLaunchCatch, combineFragments, redeemFragments, FRAGMENT_REDEEM_BA
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { clearActiveRunPlayer, isSettledMissionRun } from '@/lib/systems/MissionRunLifecycle'
 import { applyHomeSplit, clientDemand, clientPayout, type HomeSplit } from '@/lib/systems/HomeDeliverySystem'
-import { completeFlightPlanEvent, currentTrainingTry, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
+import { completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
 import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION } from '@/lib/systems/InstrumentFeedSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
@@ -1241,10 +1240,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     captureGameEvent('client_direct_sale', { client_id: clientId, mineral, amount })
   }, [setState])
 
-  const onBuyLaserCapacitor = useCallback((expectedLevel: number, reservedUnits: number) => {
-    setState(s => applyBuyLaserCapacitor(s, expectedLevel, reservedUnits))
-  }, [setState])
-
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell', exitId?: DebriefExitId) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
@@ -1625,7 +1620,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, prepareAgencyRocket, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onDismantleStagedRocket, onLaunch, onRedeemFragments, onCombineFragments, resumeMissionRun,
-    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onBuyLaserCapacitor, onSellToClient,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onDebriefDone, onHomeDelivery, onSellToClient,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, startSurveyScan, resolveSurveyScan, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification, submitSaturnClassification, submitRadioMeteorClassification, collectProbeData, startProbeScan, logProbeSpectrum,

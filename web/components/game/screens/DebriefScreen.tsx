@@ -17,7 +17,6 @@ import styles from './DebriefScreen.module.css'
 import { useHelp } from '@/components/ui/useHelp'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
-import LaserCapacitorPanel from '@/components/game/screens/LaserCapacitorPanel'
 import DestinationLandscape from '@/components/game/screens/DestinationLandscape'
 import { formatCurrency } from '@/lib/format'
 import type { PlayerBadge } from '@/lib/data/sky-events'
@@ -28,7 +27,7 @@ import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { chainInstrument, getShowerChain, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, onBuyLaserCapacitor, laserCapacitorLevel = 0, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -49,8 +48,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   storageUsed?: number
   haulMarketValue?: number
   initialDisposition?: 'store' | 'sell'
-  onBuyLaserCapacitor?: (expectedLevel: number, reservedUnits: number) => void
-  laserCapacitorLevel?: number
   stashUnits?: number
   badges?: Record<string, PlayerBadge>
   /** SSL-651: a filled Orionids shower run. Its francs are paid and its fragments kept, not sold. */
@@ -115,8 +112,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
     ? Object.values(requiredMaterials).reduce((sum, n) => sum + Math.max(0, n), 0)
     : 0
-  const showLaserCapacitor = !!onBuyLaserCapacitor && !isProgramOperation
-    && (!isFreeHaul || willStore) && (cargoEntries.length > 0 || stashUnits > 0)
   const result = debriefStatus({ shipDestroyed: !!shipDestroyed, orbitalDeployment: isOrbitalInstrumentDeployment, homeSettled: !!settled, dismantled })
 
   const collect = (next?: DebriefExitId) => {
@@ -314,15 +309,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </div>
           </section>
         ) : null}
-
-        {showLaserCapacitor && onBuyLaserCapacitor && (
-          <LaserCapacitorPanel
-            level={laserCapacitorLevel}
-            haulUnits={haulUnits}
-            spareUnits={Math.max(0, stashUnits - clientOwedUnits)}
-            onInstall={() => onBuyLaserCapacitor(laserCapacitorLevel, clientOwedUnits)}
-          />
-        )}
 
         {!settled && !isFreeHaul && !isProgramOperation && !delivered && (
           <section className={styles.card} data-surface="cream">

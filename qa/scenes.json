@@ -206,17 +206,6 @@
    ]
   },
   {
-   "id": "debrief-capacitor",
-   "name": "Debrief laser capacitor",
-   "flow": "core-loop",
-   "web": "m1-debrief",
-   "native": "debrief-capacitor-phone",
-   "tickets": [
-    "SSL-462"
-   ],
-   "note": "Web has no preset; needs 3 missions done"
-  },
-  {
    "id": "customiser",
    "name": "Ship customiser",
    "flow": "ship",
@@ -519,14 +508,18 @@
    "name": "Solar field mining preview",
    "flow": "core-loop",
    "web": "solar-field-mining",
-   "tickets": ["SSL-891"]
+   "tickets": [
+    "SSL-891"
+   ]
   },
   {
    "id": "solar-playtest",
    "name": "Solar mission playtest",
    "flow": "core-loop",
    "web": "solar-playtest",
-   "tickets": ["SSL-891"]
+   "tickets": [
+    "SSL-891"
+   ]
   },
   {
    "id": "solar-site-delivery",
