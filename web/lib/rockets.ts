@@ -8,7 +8,7 @@ import { communityBonusRate } from '@/lib/research/marketplace'
 import { rocketPadLevel } from '@/lib/data/rockets'
 import { buildingLevel, hangarRocketDiscount } from '@/lib/data/building-levels'
 import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
-import { ROCKET_PRICES, ROCKET_RESEARCH_XP } from '@/lib/data/economy'
+import { ROCKET_PRICES, } from '@/lib/data/economy'
 import type { Player } from '@/lib/game-types'
 import { onboardingMissionDone } from '@/lib/systems/FlightPlanSystem'
 
@@ -20,11 +20,6 @@ export function pastRocketTraining(player: Pick<Player, 'flightPlan' | 'missions
 /** Blueprint id a rocket researched early is stored under (player.unlockedBlueprints). */
 export function rocketResearchId(rocketId: string): string {
   return `rocket:${rocketId}`
-}
-
-/** Research XP to unlock this rocket before its mission count; 0 when it cannot be researched. */
-export function rocketResearchXp(rocket: Pick<RocketModel, 'id' | 'locked'>): number {
-  return rocket.locked ? 0 : ROCKET_RESEARCH_XP[rocket.id] ?? 0
 }
 
 /** A rocket the player can build: announced, and either its mission count is met or it was researched. */

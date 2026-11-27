@@ -445,9 +445,6 @@ export function orionidsPeakReminderMs(): number {
   return new Date(2026, 9, 22, 2, 0, 0, 0).getTime()
 }
 
-/** Resource units granted for one mined debris chunk. */
-export const DEBRIS_UNITS_PER_CHUNK = 1
-
 /** True from 7 Oct 2026 local until the shower opens at local midnight on the 19th. */
 export function isOrionidsTeaserWindow(now: Date | number): boolean {
   const t = toMs(now)
@@ -461,24 +458,6 @@ export function orionidsCountdown(now: Date | number): { days: number; hours: nu
   const remain = Math.max(0, orionidsLocalStartMs() - toMs(now))
   const totalHours = Math.floor(remain / 3_600_000)
   return { days: Math.floor(totalHours / 24), hours: totalHours % 24 }
-}
-
-/** Local calendar day, used so the teaser shows at most once per day. */
-export function orionidsTeaserDayKey(now: Date | number): string {
-  const d = new Date(toMs(now))
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${month}-${day}`
-}
-
-/**
- * Show the Base teaser. `forced` skips the window and the once-per-day cap
- * so a dev switch can open the coming-soon state on demand.
- */
-export function shouldShowOrionidsTeaser(now: Date | number, seenDay: string | null, forced: boolean): boolean {
-  if (forced) return true
-  if (!isOrionidsTeaserWindow(now)) return false
-  return seenDay !== orionidsTeaserDayKey(now)
 }
 
 /**
@@ -557,7 +536,6 @@ export function isNewMoonDay(dateKey: string): boolean {
 // ---- Dev clock -------------------------------------------------------------
 const ORIONIDS_FORCE_KEY = 'landnam.forceOrionids'
 const ORIONIDS_TEASER_FORCE_KEY = 'landnam.forceOrionidsTeaser'
-export const ORIONIDS_TEASER_SEEN_KEY = 'landnam.orionidsTeaserDay'
 
 /**
  * Local 21 Oct 2026, 23:00. Inside the Orionids window, on the peak night,

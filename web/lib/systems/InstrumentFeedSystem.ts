@@ -39,10 +39,6 @@ export function ownedGroundTelescopes(player: { placed?: readonly string[] }): s
   return GROUND_TELESCOPE_IDS.filter(id => player.placed?.includes(id))
 }
 
-export function groundTelescopeBuilt(player: { placed?: readonly string[] }): boolean {
-  return ownedGroundTelescopes(player).length > 0
-}
-
 /** The next telescope id to build, or null when every annex slot already has one. */
 export function nextGroundTelescopeId(player: { placed?: readonly string[] }): string | null {
   return GROUND_TELESCOPE_IDS.find(id => !player.placed?.includes(id)) ?? null

@@ -7,7 +7,7 @@ import { deviceId } from '@/lib/sync/deviceId'
 import { cacheSave, dropCachedSave, readCachedSave } from '@/lib/offline/stateCache'
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
-import { MISSIONS, TARGETS, BASE_LASER_CHARGES } from '@/lib/data'
+import { MISSIONS, TARGETS, } from '@/lib/data'
 import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair } from '@/lib/game-state'
 import { REMOTE_MERGED_EVENT, sameContent } from '@/lib/sync/casSave'
 import { useRuntimeCatalog } from '@/lib/contexts/useRuntimeCatalog'
@@ -207,7 +207,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
     if (!hydrated || isPreview.current) return
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
-
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
@@ -551,11 +550,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       {children}
     </GameContext.Provider>
   )
-}
-
-/** Like useGame, but null outside a GameProvider (screens rendered alone in tests or stories). */
-export function useOptionalGame() {
-  return useContext(GameContext)
 }
 
 export function useGame() {

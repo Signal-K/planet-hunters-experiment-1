@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PixelImage, PixelStar, useEarthImage, useGroundImage, useProbeImage, useSaturnImage, useTelescopeImage } from './SkyPixels'
 import type { InstrumentPointing } from '@/lib/research/paths'
 import styles from './SkyPointing.module.css'

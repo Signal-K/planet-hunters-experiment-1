@@ -155,13 +155,6 @@ export function sanitizeMeteoriteMastery(raw: unknown): number {
   return Math.max(0, Math.floor(raw))
 }
 
-export function orionidsFindForTarget(
-  finds: Record<string, OrionidsFind> | undefined,
-  targetId: string,
-): OrionidsFind | undefined {
-  return Object.values(finds ?? {}).find(find => find.targetId === targetId || find.subjectId === targetId)
-}
-
 /** PocketBase record ids are 15 chars from [a-z0-9]. Stable so a replay is the same row. */
 export function pocketBaseId(seed: string): string {
   let hash = 2166136261

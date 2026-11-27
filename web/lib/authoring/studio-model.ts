@@ -138,23 +138,3 @@ export function scriptHref(hostRoot: string, file: string, line?: number): strin
   const root = hostRoot.replace(/\/+$/, '')
   return `cursor://file${root.startsWith('/') ? '' : '/'}${root}/${file}${line ? `:${line}:1` : ''}`
 }
-
-/** The line of the `[[table]]` header whose entry has this `id`, so a link can open the file at that thing or preset. */
-export function lineOfId(text: string, table: string, id: string): number | undefined {
-  const lines = text.split('\n')
-  let header = 0
-  let inTable = false
-  for (let i = 0; i < lines.length; i++) {
-    const open = lines[i].match(/^\[\[([A-Za-z0-9_.-]+)\]\]/)
-    if (open) { inTable = open[1] === table; header = i + 1; continue }
-    if (lines[i].startsWith('[')) { inTable = false; continue }
-    if (inTable && new RegExp(`^id\\s*=\\s*"${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`).test(lines[i])) return header
-  }
-  return undefined
-}
-
-/** Focus ids may be scene script ids or qa/scenes.json ids; this maps them all to scene script ids, without repeats. */
-export function resolveFocusScenes(scenes: { id: string; qa: string[] }[], ids: string[]): string[] {
-  const resolved = ids.map(id => scenes.find(s => s.id === id)?.id ?? scenes.find(s => s.qa.includes(id))?.id).filter((id): id is string => !!id)
-  return [...new Set(resolved)]
-}

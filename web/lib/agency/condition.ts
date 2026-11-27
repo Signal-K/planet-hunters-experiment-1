@@ -12,11 +12,6 @@ import type { Player } from '@/lib/game-types'
 export type ServicedCraftId = 'space-telescope' | 'saturn-satellite'
 export const SERVICED_CRAFT: readonly ServicedCraftId[] = ['space-telescope', 'saturn-satellite']
 
-export const SERVICED_CRAFT_NAME: Record<ServicedCraftId, string> = {
-  'space-telescope': 'Space telescope',
-  'saturn-satellite': 'Saturn satellite',
-}
-
 /** Wear from use and time, in percent a day. */
 export const WEAR_PER_DAY = 1.5
 /** A storm day at Kp 5 (G1) and above costs (Kp - 4) x this, in percent. */
@@ -91,12 +86,6 @@ export function conditionedCount(count: number, condition: Pick<CraftCondition, 
   if (!condition || condition.state === 'good') return count
   if (condition.state === 'failed') return 0
   return Math.ceil(count / 2)
-}
-
-/** Condition at the end of a UTC digest day, for the daily feeds. */
-export function conditionOnDay(player: ConditionPlayer, craft: ServicedCraftId, dateKey: string): CraftCondition | null {
-  const end = Date.parse(`${dateKey}T23:59:59Z`)
-  return craftCondition(player, craft, Number.isFinite(end) ? end : Date.now())
 }
 
 /** Craft that need servicing now, worst first. */

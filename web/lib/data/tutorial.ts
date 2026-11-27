@@ -197,11 +197,6 @@ export const TRANSPORT_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
-export const PROGRESSION_STEPS: TutorialStep[] = [
-  ...EXTRACTION_STEPS,
-  ...TRANSPORT_STEPS,
-]
-
 /** Coach steps for an agency training stage. Launchpad placement is the
  *  first beat of the Extraction step list. Storage and Free Ops have no coach. */
 export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
@@ -209,9 +204,3 @@ export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
   if (stage === 'transport') return TRANSPORT_STEPS
   return []
 }
-
-// Compatibility exports for the retired GameApp route shell. The live shell
-// selects the same agency stages through trainingCoachSteps.
-export const M1_STEPS = EXTRACTION_STEPS
-export const M2_STEPS = TRANSPORT_STEPS
-export const M3_STEPS: TutorialStep[] = []

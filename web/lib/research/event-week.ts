@@ -22,23 +22,6 @@ export function liveEventWeek(now: number): EventWeek | null {
 
 export interface FeaturedEvent extends EventWeek { live: boolean; startsInDays: number }
 
-/** The flagship community research event: the shower running now, or the next one coming up. */
-export function featuredEventWeek(now: number): FeaturedEvent | null {
-  const live = liveEventWeek(now)
-  if (live) return { ...live, live: true, startsInDays: 0 }
-  const today = new Date(now)
-  const todayStart = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
-  let best: FeaturedEvent | null = null
-  for (const s of SKY_EVENTS.meteorShowers) {
-    const [sm, sd] = s.start.split('-').map(Number)
-    let startAt = Date.UTC(today.getUTCFullYear(), sm - 1, sd)
-    if (startAt < todayStart) startAt = Date.UTC(today.getUTCFullYear() + 1, sm - 1, sd)
-    const days = Math.round((startAt - todayStart) / DAY_MS)
-    if (!best || days < best.startsInDays) best = { id: s.id, name: s.name, start: s.start, end: s.end, daysLeft: 0, live: false, startsInDays: days }
-  }
-  return best
-}
-
 // SSL-775: the flagship event panel on Community research. Before a shower it previews what is coming and when,
 // during it counts down to the peak and says what to do, and for a week after it keeps the player's record.
 

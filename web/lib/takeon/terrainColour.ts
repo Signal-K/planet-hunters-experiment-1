@@ -145,18 +145,6 @@ function ramp(top: string): Ramp {
   return [top, mixHex(top, '#000000', 0.34), mixHex(top, '#000000', 0.58)]
 }
 
-/** Hide the blueprint grid in the surface scene; terrain retains its own texture and relief. */
-export const FIELD_GRID_LINE = 'rgba(0, 0, 0, 0)'
-
-/** True for Takeon's pale-cyan blueprint grid stroke (it vanished on light ground and glared on dark). */
-export function isBlueprintGridStroke(value: unknown): boolean {
-  if (typeof value !== 'string') return false
-  const m = /^rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\s*\)$/.exec(value)
-  if (!m) return false
-  const [r, g, b, a] = [Number(m[1]), Number(m[2]), Number(m[3]), Number(m[4])]
-  return r > 150 && g > 150 && b > 150 && a < 0.5
-}
-
 /** Relief for a Landnam body: rougher than Takeon's stock, and cratered when there is no air to erode them. */
 export function terrainRelief(look: Pick<TerrainLook, 'atmosphere'>, profileRoughness: number, base: { roughness: number; craters: number }): { roughness: number; craters: number } {
   const roughness = Math.min(0.85, Math.max(base.roughness, 0.45 + profileRoughness * 0.5))

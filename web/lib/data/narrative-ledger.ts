@@ -188,9 +188,3 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     implementation: 'Planned. Previously built on web and iOS: two own-programme build missions (a Mars settlement and a remote silo), the remote silo structure and an off-world refinery that recorded a target-specific deployment against an active build right. Only the generic client construction stays. Keep it minimal: anything larger belongs to the rover game (SSL-777).',
   },
 ]
-
-export const NARRATIVE_LEDGER_STATE_LABEL: Record<NarrativeLedgerState, string> = {
-  live: 'LIVE',
-  adapt: 'ADAPT',
-  planned: 'PLANNED',
-}

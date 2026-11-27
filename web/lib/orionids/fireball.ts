@@ -9,7 +9,7 @@ import {
   type BadgeTier,
   type PlayerBadge,
 } from '@/lib/data/sky-events'
-import { ORIONIDS_EVENT_ID, ORIONIDS_SOURCE } from './finds'
+import { ORIONIDS_EVENT_ID, } from './finds'
 
 export const FIREBALL_FRAGMENT_ID = 'fireball_fragment'
 export { FIREBALL_FRAGMENT_PRICE } from '@/lib/data/economy'
@@ -166,5 +166,3 @@ export function sanitizeFireballSpotter(raw: unknown): FireballSpotterProgress {
     passedAt: sanitizeFireballCaughtAt(row.passedAt),
   }
 }
-
-export const FIREBALL_BADGE_SOURCE = ORIONIDS_SOURCE

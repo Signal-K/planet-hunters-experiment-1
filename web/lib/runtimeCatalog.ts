@@ -10,7 +10,7 @@ import type { Player } from './game-types'
 import { tagMissionCategories } from './data/mission-generator'
 import { orionidsRunAvailable } from './orionids/access'
 import { specialMissions } from './orionids/special-missions'
-import { ORIONIDS_NIGHT_RUN_ID, ORIONIDS_SHOWER_TARGET_ID, orionidsNightRun, showerRunMission } from './data/missions'
+import { ORIONIDS_NIGHT_RUN_ID, orionidsNightRun, showerRunMission } from './data/missions'
 import { SHOWERS, ORIONIDS_SHOWER_ID, showerForRunMission } from './data/showers'
 import { DEBRIS_PRESETS, isDebrisEventActive } from './data/sky-events'
 import { fleetCondition, SERVICED_CRAFT, type ServicedCraftId } from './agency/condition'
@@ -34,16 +34,6 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
 // slot with no narrative reason it happened.
 export const DEEP_SPACE_TELESCOPE_TARGET_ID = 'earth-orbit-deep-space-telescope'
 export const DEEP_SPACE_TELESCOPE_MISSION_ID = 'story-deep-space-telescope-survey'
-
-export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
-  id: DEEP_SPACE_TELESCOPE_TARGET_ID,
-  name: 'Earth Orbit',
-  type: 'planet',
-  orbit: 1,
-  difficulty: 'L1',
-  brief: 'High-orbit survey lane for calibrating a long-baseline instrument against the Minor Planet Center feed.',
-  minerals: [],
-}
 
 // SSL-492: the Saturn satellite reuses the same launch -> flight -> debrief ->
 // Instrument Hub path as the telescopes. No payout; real Cassini frames.

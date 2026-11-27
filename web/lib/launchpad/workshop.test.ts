@@ -5,7 +5,6 @@ import { TARGETS } from '@/lib/data'
 import { loadoutBonuses } from './rocketBuilder'
 import { DEFAULT_STATE, normalizeAndRepair, mergeRemoteState } from '@/lib/game-state'
 import { applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
-import { claimResearchReward, traderSteps } from '@/lib/research/paths'
 import { BUILDER_SLOTS, installSlot, rocketBuilderStats } from './rocketBuilder'
 import { earnedRocketParts, sanitizeLivery, workshopParts } from './workshop'
 

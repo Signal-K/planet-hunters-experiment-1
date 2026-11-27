@@ -1,7 +1,6 @@
 import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { landnamPbUrl } from '@/lib/pb-config'
-import { isStagingPlaytestAccount } from '@/lib/staging-account'
 
 // Explicit, distinct storage key — PocketBase's SDK defaults every client to
 // the same localStorage key ('pocketbase_auth') when none is given, so
@@ -21,44 +20,6 @@ export const pbLandnam = new PocketBase(
 let exchangeInFlight: Promise<{ token: string; record: RecordModel }> | null = null
 let exchangeInFlightFor: string | null = null
 let refreshInFlight: Promise<boolean> | null = null
-
-/**
- * Exchanges a verified shared-backend session token for a real, native
- * PocketBase auth token scoped to Landnam's own "users" auth collection.
- *
- * Landnam's own PocketBase never sees the shared backend's session (players
- * authenticate against `pbShared`, not `pbLandnam`), so without this
- * exchange `@request.auth` is always empty here and ownership rules on
- * game_states/mission_log (`user = @request.auth.id`) can't be enforced.
- * Call this once the shared backend session is confirmed valid, then feed
- * the result into `pbLandnam.authStore.save(token, record)`.
- *
- * Throws on failure (network error, 401 from an invalid/expired shared
- * token, etc.) — callers should treat this the same as any other
- * offline-tolerant backend call.
- */
-export async function purgeStagingPlaytestAccount(): Promise<void> {
-  const email = pbShared.authStore.record?.email
-  if (typeof email !== 'string' || !isStagingPlaytestAccount(email)) {
-    throw new Error('Only @landnam.test playtest accounts can be purged')
-  }
-  const base = landnamPbUrl().replace(/\/$/, '')
-  const res = await fetch(`${base}/api/landnam-auth/purge-playtest`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${pbLandnam.authStore.token}` },
-  })
-  if (!res.ok) throw new Error(`purge-playtest failed: ${res.status}`)
-  const userId = pbShared.authStore.record?.id
-  if (userId) {
-    try {
-      await pbShared.collection('users').delete(userId)
-    } catch {
-      // Shared-backend delete may be denied by collection rules; Landnam data is already gone.
-    }
-  }
-  pbShared.authStore.clear()
-  pbLandnam.authStore.clear()
-}
 
 /**
  * The PocketBase machine on Fly stops when idle and takes a few seconds to

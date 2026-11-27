@@ -12,7 +12,6 @@
 
 import type { Container } from 'pixi.js'
 import type { Component, ComponentData, EntityData } from './types'
-import type { Scene } from './Scene'
 import { ShapeRenderer, type ShapeRendererData } from './components/ShapeRenderer'
 import { SpriteRenderer } from './components/SpriteRenderer'
 
@@ -121,23 +120,6 @@ export function readComponentNumber(entity: EntityData, type: string, field: str
 export function readComponentString(entity: EntityData, type: string, field: string, fallback: string): string {
   const value = readComponent(entity, type)?.[field]
   return typeof value === 'string' ? value : fallback
-}
-
-/**
- * Wire every renderer in a loaded scene, driven by the registry rather than by
- * one hardcoded function per component type. Controllers and markers are
- * skipped — see `ComponentCategory`.
- */
-export function wireSceneRenderers(container: Container, entityData: readonly EntityData[], scene: Scene): void {
-  for (const e of entityData) {
-    const obj = scene.find(e.id)
-    if (!obj) continue
-    for (const cd of e.components) {
-      const descriptor = BY_TYPE.get(cd.type)
-      if (!descriptor?.create) continue
-      obj.addComponent(descriptor.create(cd, container))
-    }
-  }
 }
 
 // Re-exported so a screen wiring sprites can reach the sprite path without

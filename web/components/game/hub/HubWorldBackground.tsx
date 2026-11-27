@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 import { TerrainScene } from '@/components/game/hub/TerrainScene'
 import { COMPOSITIONS, type CompositionId } from '@/lib/scene/compositions'

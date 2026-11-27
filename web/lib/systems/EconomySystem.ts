@@ -51,12 +51,6 @@ export function decayedUnitsSold(unitsSold: number, lastSoldAt: number | undefin
   return Math.max(0, unitsSold - recovered)
 }
 
-// Effective open-market unit price after the raw-sale discount and any
-// supply pressure built up from previous sales of this mineral.
-export function openMarketSellPrice(basePrice: number, unitsSold: number): number {
-  return Math.round(basePrice * OPEN_MARKET_SELL_RATE * supplyDipMultiplier(unitsSold))
-}
-
 /** What one unit of a mineral fetches right now, and why — the single source
  *  of truth for both the Commodity Exchange's quoted price and the francs
  *  `applySellMinerals` actually credits.
@@ -158,13 +152,6 @@ export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'subsur
     || (player.subsurfaceBuilt ?? []).includes('mineral-vault')
 }
 
-/** Number of Earth-side ore silos across the surface and underground tiers. */
-export function siloCount(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): number {
-  return ((player.placed ?? []).includes('surface-silo') ? 1 : 0)
-    + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? 1 : 0)
-    + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? 1 : 0)
-}
-
 /** Total ore units the player's silos can hold. 0 with no silo. */
 export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt' | 'buildingLevels' | 'agencyLevels'>): number {
   return (agencyLevel(player, 'ore-storage') > 0 ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(agencyLevel(player, 'ore-storage')) : 0)
@@ -251,7 +238,6 @@ export function pickSpillForStore(stash: Record<string, number>, haul: Record<st
   for (const [id, n] of Object.entries(fromHaul)) spill[id] = (spill[id] ?? 0) + n
   return spill
 }
-
 
 /** Sell collected refined goods at their recipe output value. */
 /** What one finished good sells for now: its recipe value, +3% inside the community research week (SSL-673). */

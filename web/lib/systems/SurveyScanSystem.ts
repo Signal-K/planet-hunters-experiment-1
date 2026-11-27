@@ -21,11 +21,6 @@ export function scanInstrumentLaunched(player: ScanPlayer): boolean {
   return !!player.freeOperations && !!(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt || player.deepSpaceTelescopeLaunchedAt)
 }
 
-/** Bodies a telescope can chart. Discovered exoplanets are charted by their discovery. */
-export function scannableTargets(targets: readonly Target[]): Target[] {
-  return targets.filter(target => target.type !== 'exoplanet')
-}
-
 export function scanProgress(player: Pick<Player, 'activeScan'>, now: number): number {
   const scan = player.activeScan
   if (!scan) return 0

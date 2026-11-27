@@ -1,4 +1,3 @@
-import { CONSTRUCTION_COMING_LATER } from './deferred-features'
 import type { Mission, Target } from './data'
 import type { Player, Screen } from './game-types'
 import { padNeedsService } from './data/building-levels'

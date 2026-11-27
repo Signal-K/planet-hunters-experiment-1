@@ -64,7 +64,3 @@ function isDeployedOrigin(): boolean {
 export function sharedBackendMisconfigured(): boolean {
   return isDeployedOrigin() && isLoopbackPbUrl(sharedPbUrl())
 }
-
-export function landnamBackendMisconfigured(): boolean {
-  return isDeployedOrigin() && isLoopbackPbUrl(landnamPbUrl())
-}

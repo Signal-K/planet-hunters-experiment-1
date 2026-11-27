@@ -109,12 +109,3 @@ export const exchangeSaleBonus = (level: number) => EXCHANGE_SALE_BONUS[clampLev
 /** SSL-792: hours a probe launched at this control station level takes per sector. */
 export const probeSectorHours = (level: number) => PROBE_SECTOR_HOURS_BY_LEVEL[clampLevel(level) - 1]
 export const launchpadMissionFloor = (level: number) => LAUNCHPAD_MISSION_FLOOR[clampLevel(level) - 1]
-
-export const BUILDING_NAMES: Record<UpgradableBuildingId, string> = {
-  launchpad: 'Launchpad',
-  'surface-silo': 'Surface Silo',
-  refinery: 'Refinery',
-  hangar: 'Hangar',
-  market: 'Exchange',
-  'control-station': 'Control Station',
-}

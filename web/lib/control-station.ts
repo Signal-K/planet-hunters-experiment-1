@@ -2,31 +2,6 @@ import type { InstrumentSignal, InstrumentSignalKind } from '@/lib/systems/Instr
 import type { PlayerBadge } from '@/lib/data/sky-events'
 import { WSW_EVENT_IDS, wswChip, wswEventIdsForInstrument, type WswChip } from '@/lib/wsw'
 
-/**
- * Data hub registry (SSL-496).
- *
- * Equipment, locations, and projects are data. A piece of equipment lists the
- * projects it feeds, and a project can be listed on more than one piece.
- * Adding a later citizen-science project is a new project row plus the
- * equipment that feeds it. The station screen does not grow a new layout.
- *
- * Map coordinates live in the 640 by 320 diagram. The screen scales that
- * diagram; it does not hard-code a second layout per body.
- *
- * Name collision: this station is the instrument-hub route. It is not the
- * retired job-board building stored on `player.controlBuilt`.
- *
- * Ground telescopes exist only once the player has built one (their structure id
- * is in `player.placed`). Until then the station shows a build prompt in their
- * place, not a standing row. A built ground telescope reads the same unresolved
- * NEOCP digest the Space Telescope publishes after the player launches it
- * (signal kind `deep-space`). Observing ground scopes, launched orbital craft and donated
- * community capacity feed the same project; programme.ts supplies fleet and contribution summaries.
- */
-
-export const MAP_WIDTH = 640
-export const MAP_HEIGHT = 320
-
 export type StationPlayerFlag = 'transitSatelliteLaunchedAt' | 'deepSpaceTelescopeBuilt' | 'saturnImagerLaunchedAt'
 
 /** Structure id a player places to own ground telescopes. */

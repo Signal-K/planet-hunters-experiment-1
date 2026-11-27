@@ -102,12 +102,6 @@ export const ROCKET_PRICES = {
   surveyor: 40_000_000,
 } as const
 
-/** Research XP to unlock a rocket before its mission count (Liam, 01.11: "an option to research or buy"). */
-export const ROCKET_RESEARCH_XP: Record<string, number> = {
-  prospector: 60,
-  surveyor: 150,
-}
-
 export const STRUCTURE_PRICES = {
   refinery: 8_000_000,
   garage: 6_000_000,
@@ -118,7 +112,6 @@ export const STRUCTURE_PRICES = {
   launchpadUpgrade: 10_000_000,
   deepSpaceTelescope: 15_000_000,
 } as const
-
 
 // Subsurface excavation + room construction (STS-633). Earth Base's surface
 // footprint is fixed — the below-soil deck is the player's only way to add
@@ -142,11 +135,7 @@ export const STARTING_FRANCS = 9_000_000
 
 // ── Credit ─────────────────────────────────────────────────────────────────
 
-
-
-
 // ── Daily rewards ──────────────────────────────────────────────────────────
-
 
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
 // A built Mineral Vault gives the player real Earth-side ore storage, drawn as
@@ -164,7 +153,6 @@ export const SURFACE_SILO_CAPACITY = 40
 export const SURFACE_SILO_PRICE = 2_000_000
 export const DEEP_MINERAL_SILO_CAPACITY = 300
 export const DEEP_MINERAL_SILO_PRICE = 8_000_000
-export const REMOTE_MINERAL_SILO_CAPACITY = 180
 
 // ── Market ─────────────────────────────────────────────────────────────────
 

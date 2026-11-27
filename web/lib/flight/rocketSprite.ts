@@ -1,6 +1,6 @@
 import type { FlightCraftLook, FlightSceneHandle } from '@takeon/flight-engine'
 import { authoredScene, resolvePrefab } from '@/lib/engine/SceneGraph'
-import { DEFAULT_LIVERY, type RocketLivery } from './looks'
+import { DEFAULT_LIVERY, } from './looks'
 
 // Use the launchpad's authored asset, including its panel lines and ink outline.
 // Coordinates isolate the surviving upper stage and exclude the drawing's callouts.

@@ -1,7 +1,6 @@
 'use client'
 
 import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
-import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
 import { rocketPadLevel } from '@/lib/data/rockets'

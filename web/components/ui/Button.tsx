@@ -96,44 +96,4 @@ export function GhostBtn({ children, onClick, disabled, full = true, testId }: B
   )
 }
 
-export function IconBtn({
-  children,
-  onClick,
-  ariaLabel,
-  testId,
-  color = 'var(--ln-text-dim)',
-  size = 44, // touch-target floor (Apple HIG / WCAG 2.5.5) — was 38
-}: {
-  children: React.ReactNode
-  onClick?: () => void
-  ariaLabel?: string
-  testId?: string
-  color?: string
-  size?: number
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={ariaLabel}
-      data-testid={testId}
-      style={{
-        width: size,
-        height: size,
-        flexShrink: 0,
-        borderRadius: 999,
-        background: 'var(--ln-panel-2)',
-        border: '1px solid var(--ln-cyan-border)',
-        color,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        padding: 0,
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
 export default PrimaryBtn

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { generateAvatarFacets } from '@/lib/friends/avatar'
 
 interface FriendAvatarProps {

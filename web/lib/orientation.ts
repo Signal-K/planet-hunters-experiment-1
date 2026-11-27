@@ -55,9 +55,3 @@ export function storeOrientation(pref: OrientationPreference): void {
   const orientation = currentOrientation()
   if (orientation) applyOrientation(pref, orientation)
 }
-
-export function applyStoredOrientation(): void {
-  const orientation = currentOrientation()
-  if (!orientation) return
-  applyOrientation(readStoredOrientation(), orientation)
-}

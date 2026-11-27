@@ -37,13 +37,6 @@ function hashId(id: string): number {
   return h >>> 0
 }
 
-export function nextUnclassifiedAsteroidCandidate(
-  candidates: AsteroidCandidate[],
-  classifications: Record<string, AsteroidClassification> = {}
-): AsteroidCandidate | null {
-  return candidates.find(candidate => !classifications[candidate.id]) ?? candidates[0] ?? null
-}
-
 // Deterministic UTC-daily pick, level-scaled — same convention as
 // dailyTessCandidates, but with no preferredId/pointing concept: asteroid
 // discovery is a passive digest, not a player-aimed instrument.

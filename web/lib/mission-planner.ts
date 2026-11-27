@@ -18,7 +18,6 @@ import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 export type PlannedWork = 'mine' | 'survey' | 'deliver'
 export interface MissionPlan { id: string; targetId: string; work: PlannedWork; mineral: string; amount: number; createdAt: number; zone?: MissionZone }
 export interface DeliveryReceipt { targetId: string; cargo: Record<string, number>; at: number }
-export const PLAN_PREFIX = 'self-plan-'
 export function sanitizeMissionPlans(raw: unknown): Record<string, MissionPlan> {
   if (!raw || typeof raw !== 'object') return {}
   return Object.fromEntries(Object.entries(raw).filter(([id, value]) => {

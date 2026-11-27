@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 
 export type TerrainKind = 'viable' | 'ore' | 'water' | 'rock' | 'built'
 

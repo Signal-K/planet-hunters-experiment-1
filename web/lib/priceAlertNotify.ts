@@ -5,12 +5,6 @@ import { MINERAL_META } from '@/lib/data'
 
 const supported = () => typeof window !== 'undefined' && 'Notification' in window
 
-export function requestAlertPermission(): void {
-  try {
-    if (supported() && Notification.permission === 'default') void Notification.requestPermission()
-  } catch { /* notifications are optional */ }
-}
-
 export function notifyFiredAlert(alert: PriceAlert): void {
   try {
     if (!supported() || Notification.permission !== 'granted' || !document.hidden) return

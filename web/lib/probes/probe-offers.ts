@@ -56,12 +56,6 @@ export function probeRunMission(target: Target, survey: readonly SurveyTotal[]):
   }
 }
 
-/** The mineral a contract is for, read back from its id. */
-export function probeContractMineral(missionId: string, targetId: string): string | null {
-  const prefix = `${PROBE_CONTRACT_PREFIX}${targetId}-`
-  return missionId.startsWith(prefix) ? missionId.slice(prefix.length) : null
-}
-
 /**
  * Client contracts for what the probe found: a client who wants a mineral the survey turned up asks for a load of
  * it from that body. Earth-abundant minerals are left out (nobody pays to haul them home), and contracts already

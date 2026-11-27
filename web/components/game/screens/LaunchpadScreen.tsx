@@ -1,7 +1,7 @@
 'use client'
 
 import { communityBonusRate } from '@/lib/research/marketplace'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { RocketConfig, Target } from '@/lib/data'

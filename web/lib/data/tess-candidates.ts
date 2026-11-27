@@ -90,10 +90,6 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   return points
 }
 
-export function nextUnclassifiedTessCandidate(candidates: TessCandidate[], classifications: Record<string, TessClassification> = {}): TessCandidate | null {
-  return candidates.find(candidate => !classifications[candidate.id]) ?? candidates[0] ?? null
-}
-
 // `preferredId` is the player's satellite-pointing choice (see
 // Player.satelliteTargetId) — if it's still in the reviewable pool, honour
 // it over the deterministic daily hash pick.
@@ -164,35 +160,10 @@ export function sectorWindows(points: LightcurvePoint[], sectorText: string): Se
   })
 }
 
-// ── Synthetic sky position (for the satellite-pointing map) ─────────────
-// The shared backend's subjects schema has no RA/Dec (or any spatial)
-// field — see backend/migrations/7_subjects_pipeline.go — so positions are
-// deterministic pseudo-random per candidate id, stable across renders/days,
-// not read from any real astrometry. Swap this out if/when real coordinates
-// land in the schema.
-export function candidateSkyPosition(candidate: TessCandidate): { x: number; y: number } {
-  const seed = hashId(candidate.id)
-  const rx = ((seed & 0xffff) / 0xffff) * 2 - 1
-  const ry = (((seed >>> 16) & 0xffff) / 0xffff) * 2 - 1
-  return { x: rx, y: ry }
-}
-
 // Sun's effective temperature (K) — fallback host for candidates whose
 // subject row predates the st_teff field, and the reference point "hot" vs
 // "cool" spectral classification is measured against below.
 export const SUN_TEFF_K = 5772
-
-// Real, standard main-sequence spectral boundaries (Teff in Kelvin) — see
-// e.g. Habets & Heintze (1981) or any modern stellar-classification table.
-export function spectralClassForTeff(teffK: number): 'M' | 'K' | 'G' | 'F' | 'A' | 'B' | 'O' {
-  if (teffK < 3700) return 'M'
-  if (teffK < 5200) return 'K'
-  if (teffK < 6000) return 'G'
-  if (teffK < 7500) return 'F'
-  if (teffK < 10000) return 'A'
-  if (teffK < 30000) return 'B'
-  return 'O'
-}
 
 // Maps a confirmed discovery's player-measured orbital period and host
 // star temperature onto the same C/S/M/icy/gas-giant taxonomy every other

@@ -7,13 +7,6 @@ export type InstrumentPointing = 'transit' | 'deep-space' | 'saturn'
 export type TelescopeAim = Partial<Record<InstrumentPointing, { week: string; aim?: SkyAim; /** Saturn only: the sector the orbiter was steered to (SkyTarget id). */ sector?: string }>>
 export interface ResearchPathChoice { week: string; path: ResearchPathId; claimedSteps?: number[]; pointing?: InstrumentPointing; /** Where in the sky the week's instrument was locked (SSL-788). */ aim?: SkyAim }
 
-/** What an Explorer can aim their instruments at for the week. */
-export const POINTING_OPTIONS: { id: InstrumentPointing; label: string; note: string }[] = [
-  { id: 'transit', label: 'Planet transits', note: 'Stars that dim as a world crosses them.' },
-  { id: 'deep-space', label: 'Moving objects', note: 'Asteroids drifting across the deep sky.' },
-  { id: 'saturn', label: 'Saturn storms', note: 'Cassini images of Saturn’s rings and clouds.' },
-]
-
 const DAY_MS = 86_400_000
 
 /** UTC day key of the Monday that starts the week containing `at`. Paths reset when this changes. */

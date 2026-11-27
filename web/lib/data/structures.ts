@@ -1,9 +1,8 @@
 // Landnam game data — structures, refinery recipes, market templates
 
-import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
+import type { StructureBlueprint, RefineryRecipe, } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
-import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -65,11 +64,6 @@ export const STRUCTURES: StructureBlueprint[] = [
   },
 ]
 
-/** One-off cost to permanently upgrade the launchpad. Previously duplicated as
- *  a magic number in EconomySystem and as three hardcoded "₣1B" strings in
- *  HubScreen's copy, which could drift apart silently. */
-export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
-
 /** Silo and Exchange appear once one run has been flown: before that there is no ore to store or sell, and they cost
  *  a fifth of the starting francs. (Free Ops itself opens with the launchpad.) */
 export const FIRST_STORAGE_MISSIONS_DONE = 1
@@ -84,28 +78,3 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   if (structure.unlockTrigger === 'always') return true
   return false
 }
-
-export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
-  if (opts.francs < structure.cost) return false
-  return Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (opts.stash?.[mineral] ?? 0) >= amount)
-}
-
-// Card UI dims an unaffordable structure identically whether it's short on
-// francs or short on a required mineral (e.g. Refinery's aluminium/copper),
-// with no way for the player to tell which — this names the actual shortfall
-// so the UI can surface it instead of a silent no-op.
-export function structureAffordabilityGaps(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): string[] {
-  const gaps: string[] = []
-  if (opts.francs < structure.cost) gaps.push(`₣${(structure.cost - opts.francs).toLocaleString()} more`)
-  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
-    const held = opts.stash?.[mineral] ?? 0
-    if (held < amount) gaps.push(`${amount - held} more ${mineral}`)
-  }
-  return gaps
-}
-
-export const MARKET_TEMPLATES: MarketTemplate[] = [
-  { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
-  { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
-  { id: 'bulk',     label: 'Bulk Rate',       currency: '₣', baseRate: 0.85, volatility: 0.08 },
-]

@@ -1,4 +1,3 @@
-import { ROCKET_ASSETS } from '../rocket-assets'
 
 export type ShipRoomKind =
   | 'engine'
@@ -44,20 +43,6 @@ export interface ShipInteriorLayout {
   slots: ShipRoomSlot[]
 }
 
-// Grid-cell footprint per room kind — how many cells a room's icon occupies
-// when placed, independent of its home position.
-export const SHIP_ROOM_FOOTPRINT: Record<ShipRoomKind, { w: number; h: number }> = {
-  cockpit: { w: 2, h: 2 },
-  payload: { w: 2, h: 2 },
-  booster: { w: 2, h: 1 },
-  engine: { w: 2, h: 1 },
-  'fuel-stage': { w: 2, h: 2 },
-  fairing: { w: 1, h: 1 },
-  'docking-port': { w: 1, h: 1 },
-  'heat-shield': { w: 1, h: 1 },
-  lander: { w: 2, h: 1 },
-}
-
 // Grid-cell icons: bold, single-shape, high-contrast, flat-camera renders
 // (`rooms.py`'s `*_icon` builds) sized for the customiser's small grid cells
 // (~70-142px, several visible at once). Kept deliberately separate from
@@ -92,30 +77,4 @@ export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
   'docking-port': '/game/assets/rooms/docking_port_t1.png',
   'heat-shield': '/game/assets/rooms/heat_shield_t1.png',
   lander: '/game/assets/rooms/lander_t1.png',
-}
-
-export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
-  explorer: {
-    rocketId: 'explorer',
-    exteriorSrc: ROCKET_ASSETS.explorer.exterior,
-    containerSrc: ROCKET_ASSETS.explorer.blueprint,
-    // 9x3 cell grid over the cutaway's opened bay (x 7–93%, y 13–84%) —
-    // one continuous Pixel-Starships-style grid rather than separate boxed
-    // compartments; rooms are dragged between cells within it.
-    grid: { cols: 9, rows: 3, area: { x: 7.0, y: 13.0, w: 86.0, h: 71.0 } },
-    slots: [
-      // x/y/w/h below are each room's home-cell rect in the same % units,
-      // kept only so existing bounds-checks/tests have a concrete rect.
-      { id: 'explorer-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 19.1, h: 47.3, gx: 0, gy: 0 },
-      { id: 'explorer-payload', kind: 'payload',  label: 'Payload Bay', x: 26.1, y: 13.0, w: 19.1, h: 47.3, gx: 2, gy: 0 },
-      { id: 'explorer-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },
-      { id: 'explorer-engine',  kind: 'engine',   label: 'Engine Room', x: 45.2, y: 36.7, w: 19.1, h: 23.7, gx: 4, gy: 1 },
-      // Post-onboarding bolt-ons — installed into the same grid, further aft.
-      { id: 'explorer-lander', kind: 'lander', label: 'Lander Module', x: 64.3, y: 36.7, w: 19.1, h: 23.7, gx: 6, gy: 1 },
-    ],
-  },
-}
-
-export function getShipInteriorLayout(rocketId: string): ShipInteriorLayout | undefined {
-  return SHIP_INTERIOR_LAYOUTS[rocketId] ?? (rocketId === 'sr1' ? SHIP_INTERIOR_LAYOUTS.explorer : undefined)
 }

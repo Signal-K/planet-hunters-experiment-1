@@ -9,12 +9,6 @@ export type ContractGroup = 'mining' | 'construction' | 'exploration'
 
 export const CONTRACT_GROUPS: readonly ContractGroup[] = ['mining', 'construction', 'exploration']
 
-export const CONTRACT_GROUP_LABEL: Record<ContractGroup, string> = {
-  mining: 'Mining',
-  construction: 'Construction',
-  exploration: 'Exploration',
-}
-
 type Groupable = Pick<Mission, 'construction' | 'payload' | 'survey' | 'tag'>
 
 export function contractGroup(mission: Groupable): ContractGroup {

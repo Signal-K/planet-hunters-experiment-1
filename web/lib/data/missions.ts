@@ -5,11 +5,9 @@ import type { Mission } from './types'
 import authoredDeclarations from './authored-missions.json'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
-import { ROCKET_MODELS } from './rockets'
 import { DEBRIS_PRESETS, isDebrisEventActive, isOrionidsWindow } from './sky-events'
-import { ORIONIDS_SHOWER_ID, getShower, showerForRunMission } from './showers'
+import { ORIONIDS_SHOWER_ID, getShower, } from './showers'
 import {
-  DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_MISSION_SEQUENCE,
   FREE_OPS_START_MISSIONS_DONE,
   OFFLINE_MISSION_COUNT,
@@ -20,7 +18,6 @@ import {
 
 export { FREE_OPS_MISSION_SEQUENCE, FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
 export { tutorialClientMissionOptions } from './mission-generator'
-export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
   // The Transport lesson is exclusively the authored transport-client list
@@ -51,11 +48,6 @@ export function generateSelfDirectedMiningPool(now: number = Date.now()): Missio
 // Read from the shower declaration (SSL-774), not written twice.
 export const ORIONIDS_NIGHT_RUN_ID = getShower(ORIONIDS_SHOWER_ID)!.runMissionId
 export const ORIONIDS_SHOWER_TARGET_ID = getShower(ORIONIDS_SHOWER_ID)!.targetId
-
-/** True for any shower's run mission (Orionids, Leonids, Geminids). */
-export function isShowerRunMission(missionId: string | null | undefined): boolean {
-  return !!showerForRunMission(missionId)
-}
 
 /** Fragments the shower run asks for. The 20 is catches stored on the player, any hour in the window. Fragments take no cargo. */
 export const ORIONIDS_FRAGMENT_GOAL = 20
@@ -146,7 +138,6 @@ export function authoredMission(id: string): Mission {
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
-
 
 export const AUTHORED_MISSIONS: Mission[] = [
   authoredMission('lnm_m3_relay_bennu_vesta'),

@@ -184,4 +184,3 @@ export function dailyTasksFor(hasDiscovery: boolean): readonly { kind: StampKind
 }
 
 export const RESEARCH_TITLE = 'Daily research'
-export const RESEARCH_BLURB = 'Do one research task a day to earn a stamp. Every stamp fills the community bar and helps unlock permanent research rewards. Miss a day and nothing is lost.'

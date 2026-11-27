@@ -113,20 +113,6 @@ export function DockWordButton({
   )
 }
 
-/** Coloured primary dock button. Icon plus label, at least 48px tall. */
-export function DockPrimaryButton({
-  className,
-  children,
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { children?: ReactNode }) {
-  return (
-    <button {...rest} type="button" className={dockClass('scene-dock-primary', className)}>
-      <DockLaserIcon />
-      <span>{children}</span>
-    </button>
-  )
-}
-
 function MissionIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -166,24 +152,6 @@ function SubsurfaceIcon() {
       <path d="M4 7h16M7 7v13h10V7M9 11h6M9 15h6" />
       <path d="M12 3v4" />
     </svg>
-  )
-}
-
-/** SSL-834: Subsurface is a round arrow in the bottom-left corner, not a dock word. Down goes below the base, up comes back. */
-export function SubsurfaceArrow({ subsurface, onClick }: { subsurface: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      className="hub-subsurface-arrow"
-      data-testid="hub-subsurface-btn"
-      data-subsurface={subsurface || undefined}
-      aria-label={subsurface ? 'Back to the surface' : 'Go below the base'}
-      onClick={onClick}
-    >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d={subsurface ? 'M12 19V5M6 11l6-6 6 6' : 'M12 5v14M6 13l6 6 6-6'} />
-      </svg>
-    </button>
   )
 }
 

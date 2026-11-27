@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { gardenCampLabel, getSuiteHops } from '@/lib/suite-hops'
 
 interface SuiteHopRailProps {

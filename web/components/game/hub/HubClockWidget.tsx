@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 
 function ClockGlyph() {

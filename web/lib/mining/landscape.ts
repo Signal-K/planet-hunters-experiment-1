@@ -8,7 +8,6 @@ export const TERRAIN_PIECES: TerrainPiece[] = ['mountain', 'ridge', 'strata']
 export const DEPOSIT_KINDS: DepositKind[] = ['iron', 'nickel', 'ice', 'cobalt']
 /** Native pixel size of each piece. */
 export const PIECE_SIZE: Record<TerrainPiece, [number, number]> = { mountain: [128, 112], ridge: [128, 48], strata: [128, 56] }
-export const DEPOSIT_SIZE: [number, number] = [28, 22]
 
 export interface LandscapeSpec {
   tint: string
@@ -90,8 +89,6 @@ export function landscapeLayout(spec: LandscapeSpec | undefined, targetKey: stri
   }
   return { tint: parseInt(s.tint.replace('#', ''), 16), shade: s.shade, period, pieces, deposits }
 }
-
-export const DEPOSIT_NAMES: Record<DepositKind, string> = { iron: 'Iron', nickel: 'Nickel', ice: 'Ice', cobalt: 'Cobalt' }
 
 export function layoutForPalette(palette: Pick<LaserPalette, 'landscape'>, targetKey: string, period?: number): LandscapeLayout {
   return landscapeLayout(palette.landscape, targetKey, period)

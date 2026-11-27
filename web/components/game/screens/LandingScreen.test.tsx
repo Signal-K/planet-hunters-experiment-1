@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import React, { act, StrictMode } from 'react'
+import { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TARGETS } from '@/lib/data'

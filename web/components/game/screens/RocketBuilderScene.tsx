@@ -12,7 +12,6 @@ import { sanitizeEarthBiome, type EarthBiomeId } from '@/lib/scene/base-world'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import styles from './RocketBuilderScene.module.css'
 import {
-  BLUEPRINT_MODULES,
   BUILDER_SLOTS,
   allPartsForSlot,
   asLoadout,

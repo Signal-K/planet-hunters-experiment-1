@@ -1,7 +1,4 @@
 import type { TessVerdict } from './tess-candidates'
-
-/** A late-game, evidence-led narrative interpretation of a real result. */
-export const ARTIFACT_NARRATIVE_KIND = 'artifact-signal'
 export const ARTIFACT_NARRATIVE_MIN_MONITORING_LEVEL = 3
 
 export function artifactNarrativeEligible({

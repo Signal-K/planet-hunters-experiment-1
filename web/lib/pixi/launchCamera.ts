@@ -118,17 +118,3 @@ export function launchAscentFrame(elapsed: number, W: number, H: number): Launch
     padVisible: padDeckOnScreen < H && padDeckOnScreen > H * 0.08,
   }
 }
-
-export function lerpColor(a: number, b: number, t: number): number {
-  const u = Math.max(0, Math.min(1, t))
-  const ar = (a >> 16) & 0xff
-  const ag = (a >> 8) & 0xff
-  const ab = a & 0xff
-  const br = (b >> 16) & 0xff
-  const bg = (b >> 8) & 0xff
-  const bb = b & 0xff
-  const r = Math.round(ar + (br - ar) * u)
-  const g = Math.round(ag + (bg - ag) * u)
-  const bl = Math.round(ab + (bb - ab) * u)
-  return (r << 16) | (g << 8) | bl
-}

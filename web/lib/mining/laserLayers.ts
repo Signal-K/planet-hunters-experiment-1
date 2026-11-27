@@ -469,22 +469,6 @@ export async function buildLaserField(opts: {
   return field
 }
 
-/** Height of the landscape above the surface line at a world x (0 when clear). Mountains are peaks, ridges domes, strata flat slabs. */
-export function obstacleHeightAt(field: Pick<LaserField, 'mid' | 'midW' | 'obstacles'>, worldX: number): number {
-  const local = worldX - field.mid.x
-  let best = 0
-  for (const o of field.obstacles) {
-    for (const shift of [-field.midW, 0, field.midW]) {
-      const dx = Math.abs(local - (o.x + shift))
-      if (dx >= o.halfW) continue
-      const t = dx / o.halfW
-      const h = o.kind === 'mountain' ? o.height * (1 - t) : o.kind === 'ridge' ? o.height * (1 - t * t) : (t < 0.85 ? o.height : 0)
-      if (h > best) best = h
-    }
-  }
-  return best
-}
-
 /** Which deposits-v2 art a mineral uses. */
 export function depositKindFor(mineral: string): DepositKind {
   const m = mineral.toLowerCase()

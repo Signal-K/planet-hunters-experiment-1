@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { BASE_DOCK_CONTROLS, BASE_DOCK_GAP, BASE_DOCK_PADDING, BaseDock } from './BaseDock'

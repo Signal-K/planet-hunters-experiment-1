@@ -12,13 +12,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   COMPONENT_REGISTRY,
-  componentDescriptor,
   readComponentNumber,
   readComponentString,
   unknownComponentTypes,
 } from './registry'
 import { PREFABS, buildPlotEntities, getPrefab, instantiate, prefabsWithUnregisteredComponents } from './prefabs'
-import { SCENES, KNOWN_SCENE_FILES, orphanedSceneFiles, getScene } from '@/lib/data/scenes'
+import { SCENES, KNOWN_SCENE_FILES, orphanedSceneFiles, } from '@/lib/data/scenes'
 import type { EntityData, SceneData } from './types'
 
 function loadSceneFile(publicPath: string): SceneData {

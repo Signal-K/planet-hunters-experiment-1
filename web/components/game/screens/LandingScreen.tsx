@@ -13,8 +13,6 @@ import {
 } from '@/lib/systems/LandingSystem'
 import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController'
 import { formatCountdown } from '@/lib/format'
-import TopBar from '@/components/ui/TopBar'
-import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import LandingScene from './LandingScene'
 import { SceneCard, SceneMeter, ScenePill, SceneTop, SceneVignette } from '@/components/game/hud/SceneChrome'
 import styles from './LandingScreen.module.css'

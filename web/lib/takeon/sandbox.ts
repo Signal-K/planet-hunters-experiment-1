@@ -148,11 +148,6 @@ export function registerLandnamSandbox(engine: SandboxEngine): void {
   }
 }
 
-/** Test hook: forget which engines were registered. */
-export function resetLandnamSandboxRegistry(): void {
-  registered = new WeakSet()
-}
-
 export function landnamBodyKindId(target: Pick<SurfaceTarget, 'id'>, lifeStage: LifeStage): string {
   return `landnam:${target.id}:${lifeStage}`
 }

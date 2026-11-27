@@ -1,4 +1,3 @@
-import { DEV_GROUPS, type DevGroup } from '@/lib/devPresets'
 
 export const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
   m1: 'm1-hub',
@@ -56,14 +55,6 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
 }
 
 const MISSION_LABELS = new Set(['Mission 1', 'Mission 2', 'Mission 3', 'First Satellite Launch'])
-
-export function missionGroups(): DevGroup[] {
-  return DEV_GROUPS.filter(group => MISSION_LABELS.has(group.label))
-}
-
-export function uiGroups(): DevGroup[] {
-  return DEV_GROUPS.filter(group => !MISSION_LABELS.has(group.label))
-}
 
 export function presetForMissionRoute(slug: string[] | undefined): string | null {
   if (!slug || slug.length === 0) return null

@@ -409,13 +409,6 @@ export interface HabitabilityReport {
   constraints: string[]
 }
 
-export const HABITABILITY_LABELS: Record<Habitability, string> = {
-  sterile: 'Sterile',
-  subsurface: 'Subsurface habitable',
-  candidate: 'Habitable candidate',
-  living: 'Living world',
-}
-
 /** Sun-normalised equilibrium temperature from period + host Teff. A heuristic, not astrophysics. */
 export function estimateEquilibriumTempK(periodDays: number, starTeffK: number): number {
   const teffRatio = starTeffK / 5772
@@ -509,13 +502,6 @@ export function biomeProfileForTarget(target: Pick<Target, 'id' | 'type' | 'arch
 // ── Life stage ─────────────────────────────────────────────────────────────
 
 export type LifeStage = 'sterile' | 'dormant' | 'blooming' | 'thriving'
-
-export const LIFE_STAGE_LABELS: Record<LifeStage, string> = {
-  sterile: 'Sterile',
-  dormant: 'Dormant',
-  blooming: 'Blooming',
-  thriving: 'Thriving',
-}
 
 /** Time after seeding before a body moves from blooming to thriving. */
 export const LIFE_THRIVE_AFTER_MS = 45 * 60 * 1000
@@ -730,18 +716,5 @@ export function divisionAt(targetId: string, lat: number, lon: number): string {
   const band = Math.min(DIVISION_LAT_BANDS - 1, Math.max(0, Math.floor((lat + Math.PI / 2) / (Math.PI / DIVISION_LAT_BANDS))))
   const wrapped = ((lon + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
   const sector = Math.min(DIVISION_LON_SECTORS - 1, Math.floor(wrapped / ((Math.PI * 2) / DIVISION_LON_SECTORS)))
-  return divisionId(targetId, band, sector)
-}
-
-/**
- * Map a takeon field tile to a division. The field is a small patch of the
- * body's surface; we treat the field origin as sitting in the division the
- * player chose (or N-1 by default) so claims made on the field register
- * against a real division.
- */
-export function divisionForFieldTile(targetId: string, tileX: number, tileY: number, homeDivision?: string): string {
-  if (homeDivision) return homeDivision
-  const sector = ((Math.floor(tileX / 64) % DIVISION_LON_SECTORS) + DIVISION_LON_SECTORS) % DIVISION_LON_SECTORS
-  const band = tileY < 0 ? 0 : DIVISION_LAT_BANDS - 1
   return divisionId(targetId, band, sector)
 }

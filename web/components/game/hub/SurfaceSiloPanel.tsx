@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { MINERAL_META, SURFACE_SILO_CAPACITY } from '@/lib/data'
 import { buildingLevel, siloCapacityMultiplier } from '@/lib/data/building-levels'
 import styles from './SurfaceSiloPanel.module.css'

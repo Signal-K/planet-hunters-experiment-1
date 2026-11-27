@@ -38,14 +38,6 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   market: { width: 128, height: 64 },
 }
 
-export function LaunchpadModules({ className = '', parts, rocket = false }: { className?: string; parts?: InstalledCustomizerPartsByKind | null; rocket?: boolean | 'core' }) {
-  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="launchpad" level={3} parts={parts} rocket={rocket} /></span>
-}
-
-export function HangarModules({ className = '' }: { className?: string }) {
-  return <span className={className} style={{ display: 'block', width: '100%', height: '100%' }}><PixelStructure kind="hangar" level={3} /></span>
-}
-
 /**
  * Layer-by-layer "3D-printer" construction rig: 4 growing scaffold bars, 2
  * threshold cross-braces, and 2 drifting drones, all keyed to one fixed
@@ -139,11 +131,6 @@ export function structureWidthPct(kind: string, level = 1): number {
 /** Sprite centre. Starter kinds use the approved anchors; everything else stays on its plot. */
 export function structureCenterPercent(kind: string, plotX: number, widthPct: number): number {
   return structureAnchorPercent(kind) ?? sceneXPercent(plotX, widthPct)
-}
-
-/** Half-width in hub scene units (the 402-wide plot space). */
-export function structureHalfScene(kind: string, level = 1, sceneWidth = 402): number {
-  return (structureWidthPct(kind, level) / 100) * sceneWidth / 2
 }
 
 const HIDDEN_BASE_KINDS = new Set(['command', 'refinery', 'garage', 'deep-space-telescope', 'transit-telescope', 'astronaut-academy'])

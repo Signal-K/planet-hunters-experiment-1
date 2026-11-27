@@ -34,15 +34,6 @@ export const BUILDER_SLOTS: readonly BuilderSlot[] = [
   { id: 'booster', label: 'BOOSTER', kind: 'booster', match: 'booster', module: 'booster', card: '/art/scenes/launchpad/launchpad-card-booster.png' },
 ]
 
-export const BLUEPRINT_MODULES: readonly { id: string; label: string }[] = [
-  { id: 'nose', label: 'NOSE' },
-  { id: 'mining-laser', label: 'MINING LASER' },
-  { id: 'cargo-hold', label: 'CARGO HOLD' },
-  { id: 'fuel-tank', label: 'FUEL TANK' },
-  { id: 'booster', label: 'BOOSTER' },
-  { id: 'engines', label: 'ENGINES' },
-]
-
 export interface RocketBuilderStats {
   capacity: number
   range: number

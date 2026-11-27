@@ -1,6 +1,6 @@
 // Landnam game data — minerals
 
-import type { MineralMeta, Mission } from './types'
+import type { MineralMeta, } from './types'
 import { FIREBALL_FRAGMENT_PRICE, MINERAL_VALUE, ORIONID_FRAGMENT_BOOK, type MineralRarity } from './economy.ts'
 
 // Ore shapes are chosen so that every mineral pool an archetype can actually
@@ -55,52 +55,8 @@ export const MINERAL_RARITY: Record<string, MineralRarity> = Object.fromEntries(
   Object.entries(MINERAL_META).map(([id, meta]) => [id, meta.rarity as MineralRarity]),
 )
 
-export const MINERAL_COLORS: Record<string, string> = {
-  platinum:  '#e3eef5',
-  palladium: '#ccdde8',
-  iridium:   '#a9c3dc',
-  rhodium:   '#d4e9f0',
-  gold:      '#79d1ec',
-  rare:      '#93cef0',
-  iron:      '#50d9bc',
-  silicon:   '#b9d8ff',
-  ice:       '#9becff',
-  carbon:    '#6a7280',
-  nickel:    '#b0b8c4',
-  cobalt:    '#4f9cf7',
-  copper:    '#4bc9c6',
-  aluminium: '#c7d0dc',
-  hydrogen:  '#9becff',
-  uranium:   '#8fd16a',
-  orionid_debris:  '#7fd8ff',
-  draconid_debris: '#b1d8f4',
-  leonid_debris:   '#9fd6e4',
-  geminid_debris:  '#b7e3ff',
-  fireball_fragment: '#b7e3ff',
-}
-
 /** Cargo units one piece occupies. Missing minerals count as 1. Fragments are 0. */
 export function cargoUnits(id: string, minerals: Record<string, MineralMeta> = MINERAL_META): number {
   const units = minerals[id]?.cargoUnits
   return typeof units === 'number' && units >= 0 ? units : 1
-}
-
-export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {
-  return Object.entries(cargo).reduce((sum, [k, v]) => {
-    const meta = minerals[k]
-    return sum + (meta ? meta.price * v : 0)
-  }, 0)
-}
-
-export function rateMission(opts: {
-  mission: Mission | null
-  cargo: Record<string, number>
-  elapsed: number
-}): number {
-  if (!opts.mission) return 0
-  const reqMet = Object.entries(opts.mission.requires.minerals).every(
-    ([k, v]) => (opts.cargo[k] ?? 0) >= v
-  )
-  if (!reqMet) return 1
-  return opts.elapsed < 30 ? 3 : opts.elapsed < 60 ? 2 : 1
 }

@@ -109,7 +109,3 @@ export function applyFireDueAlerts(s: GameState, now: number = Date.now()): Game
   if (due.size === 0) return s
   return { ...s, player: { ...s.player, priceAlerts: (s.player.priceAlerts ?? []).map(a => due.has(a.id) ? { ...a, firedAt: now } : a) } }
 }
-
-export function firedAlertCount(player: Pick<GameState['player'], 'priceAlerts'>): number {
-  return (player.priceAlerts ?? []).filter(a => a.firedAt != null).length
-}

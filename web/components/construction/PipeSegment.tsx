@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 
 interface PipeSegmentProps {
   /** SVG path `d` for the pipe run, e.g. "M24 40 H150 V110 H236". */

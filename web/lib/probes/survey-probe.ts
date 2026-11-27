@@ -3,7 +3,7 @@
 // Mapping cadence, baseline deposits and daily observation/classification stamps retain their existing rules.
 
 import { agencyLevel } from '@/lib/agency/construction-translation'
-import { buildingLevel, probeSectorHours } from '@/lib/data/building-levels'
+import { probeSectorHours } from '@/lib/data/building-levels'
 import type { Mission, Target } from '@/lib/data/types'
 import type { Player } from '@/lib/game-types'
 import { addStamp } from '@/lib/research/stamps'

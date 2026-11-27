@@ -1,12 +1,5 @@
 import site from './base-site.json'
 import type { EarthBiomeId, WorldTimeGrade } from './base-world'
-
-/**
- * Base site map (shared/layout/base-site.json, copied here by scripts/sync-base-site.mjs; native reads the
- * same file). The base is a paved launch complex on flat land. Every structure has one home site on a
- * 520-unit strip; a fresh base is the empty paved site with one marked pad site.
- */
-export const BASE_SITE = site
 export const STRIP_W = site.strip.width
 export const ASSET_ROOT = '/game/assets/'
 
@@ -78,12 +71,6 @@ export function homeCenter(kinds: readonly string[], viewUnits: number, order?: 
   const r = Math.max(...sites.map(s => s.x + s.half))
   if (r - l <= viewUnits) return (l + r) / 2
   return Math.min(Math.max((l + r) / 2, pad.x + pad.half - viewUnits / 2), pad.x - pad.half + viewUnits / 2)
-}
-
-/** Width in kit units of the stretch of the Base the given kinds stand on (at least the pad site), for fitting a fixed phone view. */
-export function builtSpan(kinds: readonly string[], order?: readonly string[] | null): number {
-  const sites = [...kinds.map(k => homeSite(k, order)), homeSite('launchpad', order) ?? siteById('pad')].filter((s): s is BaseSite => !!s && s.id !== 'shaft').map(displaySite)
-  return Math.max(...sites.map(s => s.x + s.half)) - Math.min(...sites.map(s => s.x - s.half))
 }
 
 export function structureSprite(kind: string, level = 1): StructureSprite | null {

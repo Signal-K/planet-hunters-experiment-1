@@ -174,12 +174,6 @@ export const STARS: Star[] = [
   { id: 'vega',    name: 'Vega',      x: 58, y: 76, kind: 'pale', dist: '25.0 ly' },
 ]
 
-export const STAR_LINKS: [string, string][] = [
-  ['sol', 'proxima'], ['sol', 'alpha'], ['sol', 'barnard'],
-  ['proxima', 'alpha'], ['alpha', 'barnard'], ['barnard', 'sirius'],
-  ['sol', 'tau'], ['tau', 'epsilon'], ['epsilon', 'vega'], ['sol', 'vega'],
-]
-
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
   // Explicit fixed-target missions: only the designated target is valid.
   if (mission.targetId) return targets.filter(t => t.id === mission.targetId && supportsMissionAtTarget(mission, t))

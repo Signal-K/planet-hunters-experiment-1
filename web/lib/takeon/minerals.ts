@@ -36,17 +36,3 @@ export const LANDNAM_TO_TAKEON_MINERAL: Record<string, ResourceKey> = {
   hydrogen: 'water',
   uranium: 'crystal',
 }
-
-/** Takeon ResourceKey -> Landnam mineral id, e.g. for interpreting `mined` events. */
-export const TAKEON_TO_LANDNAM_MINERAL: Record<string, string> = {
-  iron: 'iron',
-  silica: 'silicon',
-  copper: 'copper',
-  ice: 'ice',
-  crystal: 'rare',
-  stone: 'carbon',
-  titanium: 'nickel',
-  alloy: 'cobalt',
-  'iron-plate': 'aluminium',
-  water: 'hydrogen',
-}

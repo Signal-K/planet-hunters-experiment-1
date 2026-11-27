@@ -83,8 +83,3 @@ export function grantWswBadge<T extends Pick<Player, 'badges'>>(
   const badge: PlayerBadge = { eventId: badgeId, tier, earnedAt: at instanceof Date ? at.getTime() : at }
   return { player: { ...player, badges: { ...(player.badges ?? {}), [badgeId]: badge } }, granted: badge }
 }
-
-/** Display name for any badge key: a sky event or a WSW mission-type badge. */
-export function badgeDisplayName(badgeId: string, eventName?: string): string | undefined {
-  return eventName ?? getWswBadge(badgeId)?.name
-}

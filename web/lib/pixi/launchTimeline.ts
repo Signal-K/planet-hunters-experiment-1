@@ -12,9 +12,6 @@ export const LAUNCH_TIMELINE = {
   done: 15.0,
 } as const
 
-export const LAUNCH_W = 390
-export const LAUNCH_H = 780
-
 /** Wall-clock seconds for one launch tick, capped so a hitch cannot skip the cinematic. */
 export function launchFrameDt(deltaMS: number): number {
   if (!Number.isFinite(deltaMS) || deltaMS <= 0) return 0

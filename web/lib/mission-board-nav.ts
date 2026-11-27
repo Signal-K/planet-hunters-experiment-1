@@ -15,13 +15,6 @@ export function lastMissionBoardTab(): MissionBoardTab | null {
   return lastTab
 }
 
-/** Open the Free run map showing only the places that hold this mineral (e.g. "Find aluminium"). */
-export function requestMissionBoardMineral(mineralId: string): void {
-  pending = 'free'
-  pendingEvent = null
-  pendingMineral = mineralId
-}
-
 export function pendingMissionBoardMineral(): string | null {
   return pendingMineral
 }
