@@ -62,7 +62,7 @@ export function probeMission(target: Target, sequence: number): Mission {
   return {
     id: probeMissionId(target.id),
     title: `Survey probe to ${target.name}`,
-    brief: `Fly a survey probe to ${target.name} and leave it in orbit. It stays there and maps the surface after you press SCAN, one sector every ${PROBE_SECTOR_HOURS} hours, and sends every deposit it finds to your data hub.`,
+    brief: `Fly a survey probe to ${target.name} and leave it in orbit. After you press SCAN, it maps ${target.archetype === 'gas-giant' ? 'the atmosphere' : 'the surface'}, one sector every ${PROBE_SECTOR_HOURS} hours, and sends its findings to your data hub.`,
     tag: 'STORY',
     difficulty: target.difficulty,
     locked: false,

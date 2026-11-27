@@ -124,7 +124,7 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
   if (mission.payload?.instrumentId === 'survey-probe') {
     return {
       label: 'Survey probe',
-      summary: 'Carry your probe out and release it into orbit. It stays there and sends surface readings to your data hub. The ship flies home empty.',
+      summary: 'Carry your probe out and release it into orbit. It stays there and sends readings to your data hub.',
       steps: ['Launch', 'Release', 'Return'],
       owner,
     }
