@@ -1078,16 +1078,16 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 @media (orientation: portrait) and (max-width: 700px) {
   .gx[data-view='system'] .gxRegionButton, .gx[data-view='system'] .gxRegionLabel { display: none; }
   .gx[data-view='system'] .gxSystemOrbit, .gx[data-view='system'] .gxBeltOrbit { display: none; }
-  .gx[data-view='system'] .gxSun { left: 50% !important; top: 40% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 25% !important; top: 20% !important; }
-  .gx[data-view='system'] [data-testid='map-node-venus'] { left: 62% !important; top: 20% !important; }
-  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 22% !important; top: 34% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 62% !important; top: 34% !important; }
-  .gx[data-view='system'] [data-testid='map-belt'] { left: 25% !important; top: 49% !important; }
-  .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 62% !important; top: 49% !important; }
-  .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 22% !important; top: 62% !important; }
-  .gx[data-view='system'] [data-testid='map-node-uranus'] { left: 62% !important; top: 62% !important; }
-  .gx[data-view='system'] [data-testid='map-node-neptune'] { left: 35% !important; top: 75% !important; }
+    .gx[data-view='system'] .gxSun { left: 50% !important; top: 35% !important; }
+  .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 18% !important; top: 16% !important; }
+  .gx[data-view='system'] [data-testid='map-node-venus'] { left: 60% !important; top: 16% !important; }
+  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 18% !important; top: 28% !important; }
+  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 60% !important; top: 28% !important; }
+  .gx[data-view='system'] [data-testid='map-belt'] { left: 18% !important; top: 42% !important; }
+  .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 18% !important; top: 54% !important; }
+  .gx[data-view='system'] [data-testid='map-node-uranus'] { left: 60% !important; top: 54% !important; }
+  .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 18% !important; top: 66% !important; }
+  .gx[data-view='system'] [data-testid='map-node-neptune'] { left: 60% !important; top: 66% !important; }
   .gxShipWide { display: none; }
   .gxShipPortrait { display: inline; }
 }

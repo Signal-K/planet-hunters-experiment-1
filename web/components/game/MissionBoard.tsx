@@ -242,17 +242,17 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
           const destination = pos(target)
           const parentId = moonParent(target.id)
           const uprightPositions: Record<string, { x: number; y: number }> = {
-            mercury: { x: 25, y: 20 }, venus: { x: 62, y: 20 }, mars: { x: 62, y: 34 },
-            jupiter: { x: 62, y: 49 }, saturn: { x: 22, y: 62 }, uranus: { x: 62, y: 62 }, neptune: { x: 35, y: 75 },
+            mercury: { x: 18, y: 16 }, venus: { x: 60, y: 16 }, mars: { x: 60, y: 28 },
+            jupiter: { x: 18, y: 54 }, saturn: { x: 18, y: 66 }, uranus: { x: 60, y: 54 }, neptune: { x: 60, y: 66 },
           }
-          const uprightDestination = target.type === 'asteroid' ? { x: 25, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 22, y: 34 }
+          const uprightDestination = target.type === 'asteroid' ? { x: 18, y: 42 } : uprightPositions[parentId ?? target.id] ?? { x: 18, y: 28 }
           const ship = (path: string, className: string) => <g className={`${styles.gxShip} ${className}`} aria-label={`Ship toward ${target.name}`}>
             <path d="M-1.1,-0.65 L1.4,0 L-1.1,0.65 L-0.6,0 Z" />
             <animateMotion dur={`${14 + index * 3}s`} repeatCount="indefinite" rotate="auto" path={path} />
           </g>
           return <g key={`${id}-${index}`}>
             {ship(line([EARTH_POS, destination]), styles.gxShipWide)}
-            {ship(line([{ x: 22, y: 34 }, uprightDestination]), styles.gxShipPortrait)}
+            {ship(line([{ x: 18, y: 28 }, uprightDestination]), styles.gxShipPortrait)}
           </g>
         })}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
