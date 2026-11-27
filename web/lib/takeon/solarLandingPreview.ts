@@ -86,9 +86,28 @@ export async function loadSolarTransport(): Promise<SolarTransport> {
     const globals = globalThis as typeof globalThis & { Go?: new () => { importObject: WebAssembly.Imports; run(instance: WebAssembly.Instance): Promise<void> }; takeonCore?: SolarTransport }
     if (!globals.Go) throw new Error('Takeon Go shim unavailable')
     const go = new globals.Go()
-    const response = await fetch('/takeon-go/takeon.wasm')
-    if (!response.ok) throw new Error(`Takeon Go WASM failed to load (${response.status})`)
-    const { instance } = await WebAssembly.instantiate(await response.arrayBuffer(), go.importObject)
+    // Cloudflare limits individual static assets to 25 MiB. Deployments split
+    // the runtime into parts; local development can still use the single file.
+    const manifest = await fetch('/takeon-go/parts.json')
+    let bytes: ArrayBuffer
+    if (manifest.ok) {
+      const parts = await manifest.json() as { files: string[] }
+      if (!Array.isArray(parts.files) || !parts.files.length || parts.files.some(file => !/^takeon\.wasm\.part-[0-9]+$/.test(file))) throw new Error('Invalid Takeon WASM manifest')
+      const chunks = await Promise.all(parts.files.map(async file => {
+        const response = await fetch(`/takeon-go/${file}`)
+        if (!response.ok) throw new Error(`Takeon Go WASM part failed to load (${response.status})`)
+        return new Uint8Array(await response.arrayBuffer())
+      }))
+      const joined = new Uint8Array(chunks.reduce((length, chunk) => length + chunk.length, 0))
+      let offset = 0
+      for (const chunk of chunks) { joined.set(chunk, offset); offset += chunk.length }
+      bytes = joined.buffer
+    } else {
+      const response = await fetch('/takeon-go/takeon.wasm')
+      if (!response.ok) throw new Error(`Takeon Go WASM failed to load (${response.status})`)
+      bytes = await response.arrayBuffer()
+    }
+    const { instance } = await WebAssembly.instantiate(bytes, go.importObject)
     const previous = globals.takeonCore
     const running = go.run(instance)
     const transport = globals.takeonCore

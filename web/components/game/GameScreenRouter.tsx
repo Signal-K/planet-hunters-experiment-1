@@ -296,8 +296,8 @@ function ScreenBody({
               ...(biome ? { earthBiome: biome } : {}),
               ...(current.placed.length === 0 ? { placed: [...STARTER_BASE_PLACED], placementPlots: { ...STARTER_BASE_PLOTS } } : {}),
             }))
-            // Resume operations returns to the Base; only a new player places a launchpad.
-            game.go('hub')
+            // The solar system is the agency's home; Earth opens the Base.
+            game.go('missions')
           }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}

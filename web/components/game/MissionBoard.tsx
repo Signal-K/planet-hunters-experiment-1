@@ -85,7 +85,7 @@ type Target = Catalog['targets'][number]
 type MapView = 'system' | 'inner' | 'belt' | 'outer' | 'moons'
 type MapMode = 'route' | 'pick' | 'ambient'
 
-const SUN = { x: 4, y: 44 }
+const SUN = { x: 21, y: 47 }
 const UX = 10.5
 const UY = 4.4
 const BELT_R = 5
@@ -150,7 +150,7 @@ const ignoreGlobeReady = () => {}
 function MapGlobe({ target }: { target?: Target }) {
   const gasColours: Record<string, readonly [string, string, string]> = { jupiter: ['#d6b79a', '#b77c60', '#f0dcc4'], saturn: ['#e1cb9f', '#b59b70', '#f1e4bd'], uranus: ['#8bd5d6', '#5dabb6', '#c0e8e3'], neptune: ['#427cce', '#28529c', '#8bb8ef'] }
   const colours = target ? gasColours[target.id] ?? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
-  return <i className={styles.gxPlanet} data-planet={target?.id}>
+  return <i className={styles.gxPlanet} data-planet={target?.id ?? 'earth'} style={{ background: `radial-gradient(circle at 30% 25%, ${colours[2]}, ${colours[0]} 45%, ${colours[1]} 72%, #101a29 100%)` }}>
     <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />
   </i>
 }
@@ -190,7 +190,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
   // These are illustrative positions, not ephemerides. Separate the inner
   // planets so their globes and labels remain legible on their own rings.
-  const planetAngles: Record<string, number> = { mercury: -0.9, venus: 0.5, mars: 0.5 }
+  const planetAngles: Record<string, number> = { mercury: -0.9, venus: 0.5, mars: 0.5, jupiter: -0.55, saturn: 0.55, uranus: -0.85, neptune: 0.85 }
   const planetPos = (t: Target) => orbitPoint(t.orbit, planetAngles[t.id] ?? spread(t.id) * 0.85)
   const pos = (t: Target) => {
     const parentId = moonParent(t.id)
@@ -522,7 +522,8 @@ export default function MissionBoard({
         <header className={styles.dockHead}>{locationName && <div className={styles.locationWorld}><MapGlobe target={picked ?? undefined} /></div>}<div className={styles.dockWho}>
           <span>{locationName ? 'Location missions' : 'Solar system'}</span><h2>{locationName ?? 'Choose a location'}</h2>
         </div>{locationName && <button type="button" className={styles.clearFilter} aria-label="Close location missions" onClick={() => setPickedId(null)}>Close</button>}</header>
-        {!locationName && <p className={styles.dockBrief}>Select a planet to see its missions and moons, or open the asteroid belt.</p>}
+        {!locationName && <><p className={styles.dockBrief}>Select a planet to see its missions and moons, or open the asteroid belt.</p>
+          <p className={styles.agencyOverview} data-testid="map-agency-overview"><strong>Your agency</strong><span>{player.activeMission ? `Active: ${player.activeMission.mission?.title ?? player.activeMission.target?.name ?? 'Mission underway'}` : 'No active mission'} · {player.missionsDone} completed{(player.pausedMissionRuns?.length ?? 0) > 0 ? ` · ${player.pausedMissionRuns!.length} paused` : ''}</span></p></>}
         {sourceMineralName && <p className={styles.dockBrief}>Showing locations with {sourceMineralName}. <button type="button" onClick={() => setSourceMineral(null)}>Show all locations</button></p>}
         {locationName && <div className={styles.locationMissions}>
           <section aria-label="Agency missions" data-testid="location-agency-missions">

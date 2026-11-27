@@ -803,7 +803,7 @@ export function useAuthSync({
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [authUserId, backendReady, isPreview, persistRemoteState, stateRef])
 
-  // Signing in must always land the player on Earth Base, never wherever the
+  // Signing in lands the player on the solar system, never wherever the
   // auth gate happened to be sitting on top of (e.g. a deep-linked or
   // bookmarked /game/missions). The one exception is a genuinely resumable
   // in-flight mission, matching returningScreen's rule for the root /game
@@ -843,8 +843,8 @@ export function useAuthSync({
       router.replace(`/game/${firstTimeScreen}`)
       return
     }
-    if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
-    router.replace('/game/hub')
+    if (current.screen !== 'missions') setState(s => ({ ...s, screen: 'missions' }))
+    router.replace('/game/missions')
   }, [authUserId, router, setState, stateRef])
   routeLoadedState.current = landOnHubUnlessResumable
 

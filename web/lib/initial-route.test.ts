@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { isResumableMissionScreen, returningScreen } from './initial-route'
 
 describe('returning player entry route', () => {
-  it('opens Earth Base after a previous visit to Contracts', () => {
-    expect(returningScreen(JSON.stringify({ screen: 'missions' }))).toBe('hub')
+  it('opens the solar system after a previous visit to Contracts', () => {
+    expect(returningScreen(JSON.stringify({ screen: 'missions' }))).toBe('missions')
   })
 
   it('preserves an actionable mission flow', () => {
@@ -14,13 +14,13 @@ describe('returning player entry route', () => {
     }))).toBe('mining')
   })
 
-  it('sends a save resting on the retired build screen to the Base', () => {
-    expect(returningScreen(JSON.stringify({ screen: 'build', player: { placed: [] } }))).toBe('hub')
+  it('sends a save resting on the retired build screen to the map', () => {
+    expect(returningScreen(JSON.stringify({ screen: 'build', player: { placed: [] } }))).toBe('missions')
   })
 
-  it('falls back to Earth Base for malformed or non-home screens', () => {
-    expect(returningScreen('{broken')).toBe('hub')
-    expect(returningScreen(JSON.stringify({ screen: 'skills' }))).toBe('hub')
+  it('falls back to the map for malformed or non-home screens', () => {
+    expect(returningScreen('{broken')).toBe('missions')
+    expect(returningScreen(JSON.stringify({ screen: 'skills' }))).toBe('missions')
   })
 })
 
