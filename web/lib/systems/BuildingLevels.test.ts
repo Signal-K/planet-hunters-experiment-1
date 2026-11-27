@@ -7,7 +7,7 @@ import { rocketPadLevel, ROCKET_IDS } from '@/lib/data/rockets'
 import { applyServiceLaunchpad } from './EconomySystem'
 
 function state(player: Partial<GameState['player']> = {}): GameState {
-  return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery',], ...player } }
+  return { ...DEFAULT_STATE, player: { ...DEFAULT_STATE.player, francs: 1_000_000_000, placed: ['launchpad', 'surface-silo', 'refinery',], agencyUnlocks: ['launch', 'ore-storage', 'refining'], ...player } }
 }
 
 describe('building levels', () => {
@@ -66,7 +66,7 @@ describe('building levels', () => {
     expect(applyServiceLaunchpad(done)).toBe(done)
     const broke = state({ padLaunches: 10, francs: PAD_SERVICE_COST - 1 })
     expect(applyServiceLaunchpad(broke)).toBe(broke)
-    expect(applyServiceLaunchpad(state({ padLaunches: 10, placed: [] }))).toEqual(expect.objectContaining({ player: expect.objectContaining({ padLaunches: 10 }) }))
+    expect(applyServiceLaunchpad(state({ padLaunches: 10, placed: [], agencyUnlocks: [] }))).toEqual(expect.objectContaining({ player: expect.objectContaining({ padLaunches: 10 }) }))
   })
 
   it('keeps the local wear count on merge and cleans a bad saved value', () => {

@@ -51,7 +51,7 @@ describe('location mission list', () => {
   it('shows flyby and orbit missions when a player opens Mars', () => {
     const element = document.createElement('div')
     const root = createRoot(element)
-    const player = { ...DEFAULT_STATE.player, freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'] }
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], agencyUnlocks: ['launch', 'data-hub'] }
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player })
     const accept = vi.fn()
     act(() => root.render(<MissionBoard catalog={catalog} player={player} cards={[]} selectedIndex={0} onSelectRelative={() => {}} onSelectMission={() => {}} onAccept={accept} onClose={() => {}} onOpenLog={() => {}} onOpenEvent={() => {}} tutorialBlocked={false} onboardingComplete />))
@@ -64,7 +64,7 @@ describe('location mission list', () => {
     const flyby = element.querySelector('[data-testid="location-step-flyby-mercury"] button') as HTMLButtonElement
     expect(flyby.disabled).toBe(false)
     act(() => flyby.click())
-    expect(accept).toHaveBeenCalledWith('flyby-mercury', undefined)
+    expect(accept).toHaveBeenCalledWith('flyby-mercury')
     act(() => root.unmount())
   })
 })

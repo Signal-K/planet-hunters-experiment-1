@@ -17,7 +17,7 @@ function player(patch: Partial<Player> = {}): Player {
     ...DEFAULT_STATE.player,
     freeOperations: true,
     missionsDone: 3,
-    placed: ['launchpad', 'surface-silo', 'control-station'],
+    placed: ['launchpad', 'surface-silo', 'control-station'], agencyUnlocks: ['launch', 'ore-storage', 'data-hub'],
     ...patch,
   }
 }

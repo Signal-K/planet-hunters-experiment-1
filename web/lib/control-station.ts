@@ -82,6 +82,7 @@ const CONTROL_STATION_EQUIPMENT: readonly StationEquipment[] = [
 export interface StationPlayer {
   freeOperations?: boolean
   placed?: readonly string[]
+  agencyUnlocks?: readonly string[]
   placementPlots?: Record<string, number>
   groundTelescopeGrandfathered?: boolean
   badges?: Record<string, PlayerBadge>
@@ -201,7 +202,7 @@ function flagOn(player: StationPlayer, flag: StationEquipment['feedFlag']): bool
 
 function isBuilt(equipment: StationEquipment, player: StationPlayer): boolean {
   if (equipment.presence === 'standing') return true
-  if (equipment.presence === 'built') return !!equipment.structureId && !!player.placed?.includes(equipment.structureId)
+  if (equipment.presence === 'built') return !!equipment.structureId && (!!player.placed?.includes(equipment.structureId) || (equipment.structureId === 'ground-telescope' && !!player.agencyUnlocks?.includes('ground-telescope')))
   return flagOn(player, equipment.presence)
 }
 

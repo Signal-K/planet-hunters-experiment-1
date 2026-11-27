@@ -1,6 +1,6 @@
 'use client'
 
-import { agencyTier, type AgencyLevelId } from '@/lib/agency/construction-translation'
+import { agencyTier, hasAgencyUnlock, type AgencyLevelId } from '@/lib/agency/construction-translation'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -258,7 +258,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
   // After the first run the launchpad offers the space telescope, the one
   // prompt that used to live on a Home card. It is dismissible and goes away
   // once the satellite has launched.
-  const hasControlStation = placed.includes('control-station')
+  const hasControlStation = hasAgencyUnlock(player, 'data-hub')
   const offersTransitTelescope = !onboardingActive && !coachVisible && !player.activeMission && player.missionsDone > 0
     && !!player.freeOperations && !player.transitSatelliteLaunchedAt
     && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)

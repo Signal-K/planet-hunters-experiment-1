@@ -98,11 +98,17 @@ async function main() {
   const node = where(screen, `map-node-${PLACE}`)
   if (!node) return record(`Map has ${PLACE}`, `map-node-${PLACE}`, null, r)
   r = drive('tap', String(node[0]), String(node[1]))
-  screen = await waitFor('AGENCY MISSIONS', 30)
+  screen = await waitFor('AGENCY MISSIONS', 6)
+  // A planet with moons first shows its system; tapping the planet again opens its missions.
+  if (!screen) {
+    const again = where(look(), `map-node-${PLACE}`)
+    if (again) r = drive('tap', String(again[0]), String(again[1]))
+    screen = await waitFor('AGENCY MISSIONS', 30)
+  }
   if (!record(`${PLACE} lists its missions`, 'AGENCY MISSIONS', screen, r)) return
 
   // 4. Select the agency mining run
-  r = drive('click', 'SELECT')
+  r = drive('click', 'css=[data-testid^="location-accept-self-directed-freeops"]') // the free mining run, not the flyby or probe above it
   screen = await waitFor('review-launch', 30)
   if (!record('Launch review shows one rocket and the cargo', 'review-launch', screen, r)) return
   if (/₣/.test(screen.split('\n').find(l => l.includes('review-cargo')) ?? '')) {

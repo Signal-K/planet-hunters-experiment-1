@@ -10,6 +10,7 @@ vi.mock('react', async importOriginal => {
 
 import { STATIC_CATALOG } from './catalog'
 import { normalizeState, type PartialSave } from './game-state'
+import { translateConstruction } from './agency/construction-translation'
 import { buildRuntimeCatalog, TRANSIT_TELESCOPE_MISSION_ID } from './runtimeCatalog'
 import { useMissionRelayModels } from './hooks/useMissionRelayModels'
 import { freeOperationsUnlocked } from './systems/AgencyOnboardingSystem'
@@ -37,7 +38,7 @@ const fixtures: Array<[string, PartialSave]> = [
 
 describe('SSL-569 legacy players are in Free Ops', () => {
   it.each(fixtures)('%s', (_name, save) => {
-    const state = normalizeState(save)
+    const state = translateConstruction(normalizeState(save))
     expect(state.player.freeOperations).toBe(true)
     expect(state.tutorial).toBe(false)
     expect(Number.isFinite(state.player.missionsDone)).toBe(true)

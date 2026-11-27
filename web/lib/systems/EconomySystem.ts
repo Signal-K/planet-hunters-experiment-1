@@ -1,4 +1,4 @@
-import { agencyLevel } from '@/lib/agency/construction-translation'
+import { agencyLevel, hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
 import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
 import { MISSIONS } from '@/lib/data'
@@ -103,12 +103,12 @@ export function sellQuote(
 // a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = { placed?: string[]; storageBonus?: number; stash?: Record<string, number>; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
+type StoragePlayer = { placed?: string[]; agencyUnlocks?: string[]; storageBonus?: number; stash?: Record<string, number>; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
 
 /** True once any Earth-side silo is built — the prerequisite for keeping ore
  *  on Earth. Excavation alone is not enough; the room/building is the silo. */
-export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'storageBonus'>): boolean {
-  return (player.placed ?? []).includes('surface-silo')
+export function earthStorageBuilt(player: Pick<StoragePlayer, 'agencyUnlocks' | 'storageBonus'>): boolean {
+  return hasAgencyUnlock(player, 'ore-storage')
     || (player.storageBonus ?? 0) > 0
 }
 
@@ -331,7 +331,7 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
 
 /** Pay to service the launchpad: resets the launch count. No-op if the pad is not placed, unworn or unaffordable. */
 export function applyServiceLaunchpad(s: GameState): GameState {
-  if (!s.player.placed.includes('launchpad') || (s.player.padLaunches ?? 0) <= 0 || s.player.francs < PAD_SERVICE_COST) return s
+  if (!hasAgencyUnlock(s.player, 'launch') || (s.player.padLaunches ?? 0) <= 0 || s.player.francs < PAD_SERVICE_COST) return s
   return { ...s, player: { ...s.player, francs: s.player.francs - PAD_SERVICE_COST, padLaunches: 0 } }
 }
 

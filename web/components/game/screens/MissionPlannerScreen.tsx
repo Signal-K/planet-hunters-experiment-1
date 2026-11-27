@@ -1,5 +1,5 @@
 'use client'
-import { agencyTier } from '@/lib/agency/construction-translation'
+import { agencyTier, hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { useEffect, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
@@ -52,7 +52,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
     setDraft(next); setSavedId(null)
   }
   const save = () => { const plan = { ...draft, id: `self-plan-${crypto.randomUUID()}`, createdAt: Date.now() }; onSave(plan); setDraft(plan); setSavedId(plan.id) }
-  const probeHours = player.placed.includes('control-station') ? probeSectorHours(agencyTier(player, 'data-hub')) : 2
+  const probeHours = hasAgencyUnlock(player, 'data-hub') ? probeSectorHours(agencyTier(player, 'data-hub')) : 2
   return <div className={`${board.scene} ${styles.root}`} data-testid="mission-planner" data-screen="mission-planner">
     <header className={styles.header}><button onClick={onBack}>‹ Mission board</button><div><span>YOUR PROGRAM / FLIGHT PLANNING</span><h1>Plan your mission</h1></div></header>
     <main className={styles.layout}>

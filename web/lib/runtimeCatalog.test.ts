@@ -110,7 +110,7 @@ describe('buildRuntimeCatalog', () => {
       freeOperations: true,
       transitSatelliteLaunchedAt: null,
       missionsDone: 3,
-      player: { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'] },
+      player: { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'], agencyUnlocks: ['data-hub'] },
     })
 
     expect(catalog.targets.some(target => target.id === TRANSIT_TELESCOPE_TARGET_ID)).toBe(true)
@@ -140,7 +140,7 @@ describe('buildRuntimeCatalog', () => {
   })
 
   it('has no separate deep space telescope launch: one telescope covers transits and asteroids', () => {
-    const player = { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'] }
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, placed: ['control-station'], agencyUnlocks: ['data-hub'] }
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
 
     expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(false)

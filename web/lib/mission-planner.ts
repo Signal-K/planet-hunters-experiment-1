@@ -1,5 +1,5 @@
 import type { GameState, Player } from '@/lib/game-types'
-import { agencyTier } from '@/lib/agency/construction-translation'
+import { agencyTier, hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import type { Mission, MineralMeta, RocketModel, Target } from '@/lib/data/types'
 import type { Catalog } from '@/lib/catalog'
 import { rocketConfigForModel } from '@/lib/data/rockets'
@@ -73,7 +73,7 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   if (!Number.isInteger(plan.amount) || plan.amount < 1 || plan.amount > (plan.work === 'survey' ? 24 : 999)) issues.push(plan.work === 'survey' ? 'Choose 1–24 sectors.' : 'Choose a whole amount from 1 to 999.')
   if (plan.work !== 'survey' && !plannerMinerals(player, target, catalog, plan.work).includes(plan.mineral)) issues.push('Choose available ore for this work.')
   if (plan.work === 'deliver' && (player.stash?.[plan.mineral] ?? 0) < plan.amount) issues.push(`Earth stash has ${player.stash?.[plan.mineral] ?? 0}; delivery needs ${plan.amount}.`)
-  if (plan.work === 'survey' && !player.placed.includes('control-station')) issues.push('Build the control station to launch a survey probe.')
+  if (plan.work === 'survey' && !hasAgencyUnlock(player, 'data-hub')) issues.push('Build the control station to launch a survey probe.')
   if (plan.work === 'survey' && player.probes?.[plan.targetId]) issues.push('A probe already orbits this body. Open it at the Data hub.')
   const mission = target ? missionFromPlan(plan, target, catalog.minerals) : null
   const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: agencyTier(player, 'launch') }).ok) : []
@@ -86,7 +86,7 @@ export function loadPlannedCargo(state: GameState, mission: Mission): GameState 
   const plan = mission.customPlan
   if (!plan) return state
   if (!state.player.freeOperations || state.player.activeMission || (state.screen !== 'fab' && state.screen !== 'launchpad' && !(state.screen === 'rocket-buy' && state.player.stagedRockets?.some(vehicle => vehicle.id === state.player.selectedStagedRocketId && vehicle.location === 'launchpad')))) return null
-  if (plan.work === 'survey' && !state.player.placed.includes('control-station')) return null
+  if (plan.work === 'survey' && !hasAgencyUnlock(state.player, 'data-hub')) return null
   if (plan.work === 'survey' && state.player.probes?.[plan.targetId]) return null
   const stash = { ...(state.player.stash ?? {}) }
   if (plan.work === 'deliver') {

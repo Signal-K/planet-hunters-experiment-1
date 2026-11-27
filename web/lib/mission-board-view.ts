@@ -1,3 +1,4 @@
+import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { agencyProgramme } from '@/lib/agency/programme'
 import type { Catalog } from '@/lib/catalog'
 import type { Mission } from '@/lib/data/types'
@@ -166,7 +167,7 @@ export function programChain(catalog: Catalog, player: Player, now = Date.now())
   for (const mission of catalog.missions.filter(item => probeTargetForMission(item.id))) {
     const targetId = probeTargetForMission(mission.id)!
     const alreadyOrbiting = !!player.probes?.[targetId]
-    const hasStation = player.placed.includes('control-station')
+    const hasStation = hasAgencyUnlock(player, 'data-hub')
     const reachable = agencyTargets(mission, catalog, player).length > 0
     steps.push({
       id: mission.id,

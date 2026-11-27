@@ -1,3 +1,4 @@
+import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { communityWorlds } from '@/lib/agency/community'
 import { missionFromPlan, sanitizeMissionPlans } from '@/lib/mission-planner'
 import { downloadedSurvey, probeMission, probeableTargets, probeTargetForMission } from '@/lib/probes/survey-probe'
@@ -69,7 +70,7 @@ export function buildRuntimeCatalog({
   // Retain the target for a legacy trip already in progress. New telescope findings remain research records.
   const discoveredTargetList = [...Object.values(discoveredTargets), ...communityWorlds(player?.agencyCommunity).filter(target => !discoveredTargets[target.id])].filter(target => target.id === targetId)
   // A satellite or telescope is run from the control station, so none is offered until one is built.
-  const hasControlStation = !!player?.placed?.includes('control-station')
+  const hasControlStation = !!player && hasAgencyUnlock(player, 'data-hub')
   const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
