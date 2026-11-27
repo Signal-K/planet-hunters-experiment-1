@@ -260,15 +260,6 @@ export interface MissionTemplate {
   construction?: MissionConstructionPlan
 }
 
-export interface RefineryRecipe {
-  id: string
-  name: string
-  input: { mineral: string; amount: number }
-  output: { name: string; sym: string; color: string; price: number }
-  time: number
-  cost: number
-}
-
 export interface Star {
   id: string
   name: string

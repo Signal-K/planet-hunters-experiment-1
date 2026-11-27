@@ -126,8 +126,7 @@ enum AuthoredSceneDeclarations {
       "id": "construction",
       "name": "Base construction and upgrades",
       "web": [
-        "web/lib/systems/ConstructionSystem.ts",
-        "web/lib/systems/HubConstructionSystem.ts"
+        "web/lib/systems/ConstructionSystem.ts"
       ],
       "native": [
         "native/LandnamCore/Sources/LandnamCore/Industry/Construction.swift",

@@ -113,46 +113,16 @@ export const STRUCTURE_PRICES = {
   deepSpaceTelescope: 15_000_000,
 } as const
 
-// Subsurface excavation + room construction (STS-633). Earth Base's surface
-// footprint is fixed — the below-soil deck is the player's only way to add
-// more structure once the surface plots are full — so excavation is priced
-// well under a Refinery: it is the entry cost to a new build area, not a
-// structure in itself. Individual room builds sit near Refinery scale since
-// each one is a working facility.
-export const SUBSURFACE_EXCAVATION_COST = 2_000_000
-// 5 aluminium is ~₣5M of ore, about 2.5x the ₣2M fee, and fits one trip in the 6U starter rocket.
-export const SUBSURFACE_EXCAVATION_MATERIALS = { aluminium: 5 } as const
-export const SUBSURFACE_ROOM_PRICES = {
-  'mineral-vault': 3_000_000,
-  'parts-locker': 3_000_000,
-} as const
-
 export const LANDING_RESEARCH_XP_COST = 100
 export const LANDER_MODULE_PRICE = 5_500_000
 
 /** Starting francs. Below the Prospector's price on purpose — see the header. */
 export const STARTING_FRANCS = 9_000_000
 
-// ── Credit ─────────────────────────────────────────────────────────────────
-
-// ── Daily rewards ──────────────────────────────────────────────────────────
-
-// ── Earth-side ore storage (silos) ───────────────────────────────────────────
-// A built Mineral Vault gives the player real Earth-side ore storage, drawn as
-// a filling silo. One silo holds this many ore units; additional silos (a
-// follow-up) add capacity in multiples of this. Sized against typical hauls
-// (single- to low-double-digit units per run) so one silo fills over several
-// self-directed runs and "keep vs sell" becomes a genuine decision rather than
-// a formality. This is a soft cap: it governs the free-mission "store" path and
-// the silo fill visual, and never retroactively force-sells ore already held.
-export const MINERAL_SILO_CAPACITY = 120
-
 // The first silo is deliberately cheap and visible on the Earth Base surface;
 // underground rooms are the durable expansion path.
 export const SURFACE_SILO_CAPACITY = 40
 export const SURFACE_SILO_PRICE = 2_000_000
-export const DEEP_MINERAL_SILO_CAPACITY = 300
-export const DEEP_MINERAL_SILO_PRICE = 8_000_000
 
 // ── Market ─────────────────────────────────────────────────────────────────
 

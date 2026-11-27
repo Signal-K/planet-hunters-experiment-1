@@ -42,3 +42,11 @@ The code for these is deleted, and `web/lib/save-migrations.ts` converts old sav
 | Exchange (`market`) in `placed` | Removed from the placed list |
 
 The mineral sell-price dip and the ground telescope purchase stay. Building upgrades, placement and base-level code remain only as far as agency levels read them.
+
+## Save migration: building levels folded into agency levels
+
+`buildingLevels`, `launchpadUpgraded` and `underConstruction` are gone from the save. `save-migrations.ts` converts them into `agencyLevels` (max of the recorded level and the building's level, the launchpad flag counting as level 2, `controlBuilt` as data-hub 1), then drops them. `refinery` is also taken out of `placed`; its level survives as `agencyLevels.refining`.
+
+Deleted with it: building upgrade costs and effect text, `HubConstructionSystem` (build timers), the scaffold-and-drone construction animation, the "BUILDING · 8S" label, `components/construction/*`, the subsurface and refinery data, the Exchange, subsurface and plot-build art (and their manifest entries), the Hangar scene art, and the old builder photos.
+
+Still there: `placed`, `placementPlots` and `controlBuilt`, because the Base draws its structures, ground telescopes and probes from them. Level art for levels 2 and 3 stays so saves that earned them look the same.

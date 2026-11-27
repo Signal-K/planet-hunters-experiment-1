@@ -1,29 +1,31 @@
 'use client'
 
+import { agencyTier } from '@/lib/agency/construction-translation'
+import type { Player } from '@/lib/game-types'
 import { MINERAL_META, SURFACE_SILO_CAPACITY } from '@/lib/data'
-import { buildingLevel, siloCapacityMultiplier } from '@/lib/data/building-levels'
+import { siloCapacityMultiplier } from '@/lib/data/building-levels'
 import styles from './SurfaceSiloPanel.module.css'
 
 interface StoredMineral { id: string; amount: number; name: string; symbol: string; color: string; rarity: string }
 
 interface SurfaceSiloPanelProps {
   stash?: Record<string, number>
-  buildingLevels?: Record<string, number>
+  agencyLevels?: Player['agencyLevels']
   /** Opens the Exchange. Hidden when the Base has no way to sell. */
   onSell?: () => void
   onClose: () => void
 }
 
 /** Ore the Surface Silo holds at its current level. */
-export function surfaceSiloCapacity(buildingLevels?: Record<string, number>): number {
-  return SURFACE_SILO_CAPACITY * siloCapacityMultiplier(buildingLevel({ buildingLevels }, 'surface-silo'))
+export function surfaceSiloCapacity(agencyLevels?: Player['agencyLevels']): number {
+  return SURFACE_SILO_CAPACITY * siloCapacityMultiplier(agencyTier({ agencyLevels }, 'ore-storage'))
 }
 
 const titleCase = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
-export function SurfaceSiloPanel({ stash, buildingLevels, onSell, onClose }: SurfaceSiloPanelProps) {
-  const capacity = surfaceSiloCapacity(buildingLevels)
-  const level = buildingLevel({ buildingLevels }, 'surface-silo')
+export function SurfaceSiloPanel({ stash, agencyLevels, onSell, onClose }: SurfaceSiloPanelProps) {
+  const capacity = surfaceSiloCapacity(agencyLevels)
+  const level = agencyTier({ agencyLevels }, 'ore-storage')
   const { inSilo: minerals, held, total, beyond } = surfaceSiloContents(stash, capacity)
   const amounts = new Map(minerals.map(m => [m.id, m.amount]))
   const holdings = storedMinerals(stash)

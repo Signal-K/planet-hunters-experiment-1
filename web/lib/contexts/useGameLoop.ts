@@ -1,10 +1,11 @@
 import { recordAgencyLaunch } from '@/lib/agency/fleet'
+import { agencyTier } from '@/lib/agency/construction-translation'
 import { loadPlannedCargo } from '@/lib/mission-planner'
 import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
 import { MISSION_ORBIT_MS } from '@/lib/data/flight'
 import { addStamp, isDiscoveryMission, stampDayKey, type StampKind } from '@/lib/research/stamps'
 import { communityBonusRate } from '@/lib/research/marketplace'
-import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
+import { padNeedsService } from '@/lib/data/building-levels'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { useCallback, useRef } from 'react'
 import {
@@ -118,7 +119,7 @@ function stagedRocketSupportsMission(stagedRocket: StagedRocket, state: GameStat
     parts: catalog.parts,
     loadoutBonus: loadoutBonuses(asLoadout(state.player.shipCustomizerParts)),
     fuelFraction: communityBonusRate(state.player).fuel,
-    launchpadLevel: buildingLevel(state.player, 'launchpad'),
+    launchpadLevel: agencyTier(state.player, 'launch'),
   }).ok
 }
 
@@ -152,7 +153,7 @@ function pickTargetState(s: GameState, catalog: Catalog, id: string): GameState 
   const target = catalog.targets.find(t => t.id === id) ?? null
   if (!mission || !target) return s
   if (!agencyTargets(mission, catalog, s.player).some(item => item.id === id)) return s
-  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, launchpadLevel: buildingLevel(s.player, 'launchpad'), parts: catalog.parts })
+  const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadLevel: agencyTier(s.player, 'launch'), parts: catalog.parts })
   // SSL-450: Change never strands a rocket. A vehicle built for this job's old destination is re-aimed at the new
   // one when it can fly there. Liam, 01.11: rockets now always cost after the tutorial, so a paid vehicle is moved,
   // never thrown away; one that cannot reach the new body stays in the Hangar, and a still-free one is released.
@@ -424,7 +425,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
-        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: prepared.player.missionsDone, launchpadUpgraded: prepared.player.launchpadUpgraded, launchpadLevel: buildingLevel(prepared.player, 'launchpad'), parts: catalog.parts })
+        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: prepared.player.missionsDone, launchpadLevel: agencyTier(prepared.player, 'launch'), parts: catalog.parts })
         if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
         const stagedVehicle = stagedRocketForMission(prepared, mission.id, mission.targetId)
         const setup = {

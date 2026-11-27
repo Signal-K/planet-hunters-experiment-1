@@ -82,7 +82,7 @@ describe('daily rotation on the board (SSL-570)', () => {
         drill: PARTS.drill.filter(p => !p.locked && (p.missionsRequired ?? 0) <= done),
       }
       const missions = pool('2026-10-16', done)
-      const flyable = missions.filter(m => feasibleTargetsFor(m, TARGETS, parts, done, true, 1).length > 0)
+      const flyable = missions.filter(m => feasibleTargetsFor(m, TARGETS, parts, done, 1).length > 0)
       expect(flyable.length).toBeGreaterThanOrEqual(Math.ceil(missions.length / 2))
     }
   })
@@ -121,9 +121,9 @@ describe('construct client contracts (SSL-571)', () => {
     const parts = { chassis: PARTS.chassis.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6), propulsion: PARTS.propulsion.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6), drill: PARTS.drill.filter(p => !p.locked && (p.missionsRequired ?? 0) <= 6) }
     // Construction carries silo materials; the full fabrication load needs
     // the bulk hauler and level 3 pad, rather than an arbitrary ore target.
-    for (const m of builds) expect(feasibleTargetsFor(m, TARGETS, parts, 6, true, 3).length, m.id).toBeGreaterThan(0)
+    for (const m of builds) expect(feasibleTargetsFor(m, TARGETS, parts, 6, 3).length, m.id).toBeGreaterThan(0)
     const fabrication = builds.find(m => m.construction!.structureKind === 'fabrication-pad')!
-    expect(feasibleTargetsFor(fabrication, TARGETS, parts, 6, true, 1)).toEqual([])
+    expect(feasibleTargetsFor(fabrication, TARGETS, parts, 6, 1)).toEqual([])
   })
 
   it('places the client structure at the target when the job is completed', () => {

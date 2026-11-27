@@ -11,7 +11,7 @@ describe('resolveGameStateLoad', () => {
   it('loads an existing server record instead of merging in the sign-in default', () => {
     const saved: PartialSave = {
       screen: 'hub',
-      player: { missionsDone: 2, placed: ['launchpad', 'refinery'], francs: 900 },
+      player: { missionsDone: 2, placed: ['launchpad', 'hangar'], francs: 900 },
     }
 
     const result = resolveGameStateLoad(DEFAULT_STATE, saved, false)
@@ -19,7 +19,7 @@ describe('resolveGameStateLoad', () => {
     expect(result.shouldCreateRemote).toBe(false)
     expect(result.shouldWriteRemote).toBe(false)
     expect(result.state.screen).toBe('hub')
-    expect(result.state.player.placed).toEqual(['launchpad', 'refinery'])
+    expect(result.state.player.placed).toEqual(['launchpad', 'hangar'])
     expect(result.state.player.missionsDone).toBe(2)
   })
 
@@ -45,7 +45,7 @@ describe('resolveGameStateLoad', () => {
       screen: 'hub',
       player: {
         missionsDone: 3,
-        placed: ['launchpad', 'refinery'],
+        placed: ['launchpad', 'hangar'],
         francs: 1800,
         freeOperations: true,
         completedMissions: [],
@@ -61,7 +61,7 @@ describe('resolveGameStateLoad', () => {
     expect(decision.shouldCreateRemote).toBe(false)
     expect(decision.shouldWriteRemote).toBe(false)
     expect(decision.state.screen).toBe('hub')
-    expect(decision.state.player.placed).toEqual(['launchpad', 'refinery'])
+    expect(decision.state.player.placed).toEqual(['launchpad', 'hangar'])
     expect(decision.state.player.missionsDone).toBe(3)
     expect(isSignInPlaceholder(decision.state)).toBe(false)
     expect(mayOverwriteSavedRecord(DEFAULT_STATE, nativeSave)).toBe(false)
@@ -76,7 +76,7 @@ describe('resolveGameStateLoad', () => {
     }
     const remote: PartialSave = {
       screen: 'mining',
-      player: { placed: ['launchpad', 'refinery'], missionsDone: 2, francs: 700 },
+      player: { placed: ['launchpad', 'hangar'], missionsDone: 2, francs: 700 },
     }
 
     expect(localAccountSlotIsRealSave(JSON.stringify(localSave))).toBe(true)
@@ -85,7 +85,7 @@ describe('resolveGameStateLoad', () => {
 
     expect(decision.shouldCreateRemote).toBe(false)
     expect(decision.shouldWriteRemote).toBe(true)
-    expect(decision.state.player.placed).toEqual(expect.arrayContaining(['launchpad', 'refinery']))
+    expect(decision.state.player.placed).toEqual(expect.arrayContaining(['launchpad', 'hangar']))
     expect(decision.state.player.missionsDone).toBe(2)
     expect(mayOverwriteSavedRecord(DEFAULT_STATE, remote)).toBe(false)
   })

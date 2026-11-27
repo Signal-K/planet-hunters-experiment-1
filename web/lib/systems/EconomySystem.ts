@@ -1,7 +1,6 @@
 import { agencyLevel } from '@/lib/agency/construction-translation'
 import { weeklyRocketPartById } from '@/lib/data/weeklyRocketParts'
 import { earnedRocketParts, workshopPartPrice } from '@/lib/launchpad/workshop'
-import type { BuildingLevels } from '@/lib/data/building-levels'
 import { MISSIONS } from '@/lib/data'
 import { rocketPrice } from '@/lib/rockets'
 // Pure state-transition functions for the economy system.
@@ -54,7 +53,7 @@ export function decayedUnitsSold(unitsSold: number, lastSoldAt: number | undefin
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'> & Partial<Pick<GameState['player'], 'buildingLevels' | 'launchpadUpgraded' | 'agencyLevels'>>,
+  player: Pick<GameState['player'], 'placed' | 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot' | 'researchPermanentBonuses' | 'communityBonus'> & Partial<Pick<GameState['player'], 'agencyLevels'>>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean; bonusApplied: boolean } {
@@ -135,7 +134,7 @@ export function applySellMinerals(
 // a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = { placed?: string[]; storageBonus?: number; stash?: Record<string, number>; buildingLevels?: BuildingLevels; launchpadUpgraded?: boolean; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
+type StoragePlayer = { placed?: string[]; storageBonus?: number; stash?: Record<string, number>; controlBuilt?: boolean; agencyLevels?: GameState['player']['agencyLevels'] }
 
 /** True once any Earth-side silo is built — the prerequisite for keeping ore
  *  on Earth. Excavation alone is not enough; the room/building is the silo. */
@@ -145,7 +144,7 @@ export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'storag
 }
 
 /** Total ore units the player's silos can hold. 0 with no silo. */
-export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'storageBonus' | 'buildingLevels' | 'agencyLevels'>): number {
+export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'storageBonus' | 'agencyLevels'>): number {
   return (agencyLevel(player, 'ore-storage') > 0 ? SURFACE_SILO_CAPACITY * siloCapacityMultiplier(agencyLevel(player, 'ore-storage')) : 0)
     + Math.max(0, player.storageBonus ?? 0)
 }

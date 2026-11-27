@@ -1,4 +1,5 @@
 import { agencyLevel } from '@/lib/agency/construction-translation'
+import { agencyTier } from '@/lib/agency/construction-translation'
 import type { Catalog } from '@/lib/catalog'
 import { compatibleTargetsFor } from '@/lib/data/targets'
 import { rocketConfigForModel } from '@/lib/data/rockets'
@@ -6,7 +7,7 @@ import { validateBuild } from '@/lib/data/parts'
 import { asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { rocketPadLevel } from '@/lib/data/rockets'
-import { buildingLevel, hangarRocketDiscount } from '@/lib/data/building-levels'
+import { hangarRocketDiscount } from '@/lib/data/building-levels'
 import { ROCKET_MODELS, type Mission, type RocketModel } from '@/lib/data'
 import { ROCKET_PRICES, } from '@/lib/data/economy'
 import type { Player } from '@/lib/game-types'
@@ -18,7 +19,7 @@ export function pastRocketTraining(player: Pick<Player, 'flightPlan' | 'missions
 }
 
 export type RocketPriceContext = { payloadType?: string }
-type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
+type PricePlayer = Pick<Player, 'flightPlan' | 'missionsDone'> & Partial<Pick<Player, 'placed' | 'agencyLevels' | 'controlBuilt'>>
 
 export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: PricePlayer, context: RocketPriceContext = {}): number {
   const list = rocket.costFrancs > 0 ? rocket.costFrancs : pastRocketTraining(player) ? ROCKET_PRICES.explorerAfterTraining : 0
@@ -26,7 +27,7 @@ export function rocketPrice(rocket: Pick<RocketModel, 'costFrancs'>, player: Pri
 }
 
 export function agencyRocket(player: Player): RocketModel {
-  const pad = buildingLevel(player, 'launchpad')
+  const pad = agencyTier(player, 'launch')
   return ROCKET_MODELS.filter(model => rocketUnlocked(model, player) && rocketPadLevel(model) <= pad).reduce(
     (best, model) => model.tier > best.tier ? model : best, ROCKET_MODELS[0],
   )
@@ -40,7 +41,7 @@ export function agencyTargets(mission: Mission, catalog: Pick<Catalog, 'parts' |
     const staged = player.stagedRockets?.find(vehicle => vehicle.missionId === mission.id && vehicle.targetId === target.id)
     return validateBuild({
       mission, target, rocket: staged?.rocket ?? assigned, parts: catalog.parts,
-      launchpadLevel: buildingLevel(player, 'launchpad'),
+      launchpadLevel: agencyTier(player, 'launch'),
       loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel,
     }).ok
   })

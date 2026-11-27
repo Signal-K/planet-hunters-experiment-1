@@ -1,9 +1,7 @@
 // @vitest-environment jsdom
 
-import { act } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { createRoot } from 'react-dom/client'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { EarthBaseModules } from './EarthBaseModules'
 
 describe('EarthBaseModules', () => {
@@ -15,57 +13,11 @@ describe('EarthBaseModules', () => {
   })
 })
 
-const silo = {
-  kind: 'launchpad',
-  plotX: 154,
-  w: 120,
-  level: 1,
-}
-
-function mount(buildStartedAt: number) {
-  const container = document.createElement('div')
-  document.body.appendChild(container)
-  const root = createRoot(container)
-  act(() => {
-    root.render(<EarthBaseModules buildings={[{ ...silo, buildStartedAt }]} />)
-  })
-  return {
-    container,
-    unmount() {
-      act(() => {
-        root.unmount()
-      })
-      container.remove()
-    },
-  }
-}
-
-describe('EarthBaseModules surface silo construction', () => {
-  afterEach(() => {
-    vi.useRealTimers()
-    document.body.replaceChildren()
-  })
-
-  it('drops the cyan scaffold once the build time elapses and keeps the placed sprite', () => {
-    vi.useFakeTimers()
-    const view = mount(Date.now())
-    expect(view.container.querySelector('.hub-construction-rig')).not.toBeNull()
-    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')?.getAttribute('data-tier')).toBe('1')
-
-    act(() => {
-      vi.advanceTimersByTime(10_000)
-    })
-
-    expect(view.container.querySelector('.hub-construction-rig')).toBeNull()
-    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')).not.toBeNull()
-    view.unmount()
-  })
-
-  it('renders the finished sprite when the build already completed before mount', () => {
-    const view = mount(Date.now() - 20_000)
-    expect(view.container.querySelector('.hub-construction-rig')).toBeNull()
-    expect(view.container.querySelector('[data-pixel-structure="launchpad"]')).not.toBeNull()
-    view.unmount()
+describe('EarthBaseModules structures', () => {
+  it('draws a placed launchpad at its level, with no construction scaffold', () => {
+    const markup = renderToStaticMarkup(<EarthBaseModules buildings={[{ kind: 'launchpad', plotX: 154, w: 120, level: 1 }]} />)
+    expect(markup).toContain('data-pixel-structure="launchpad"')
+    expect(markup).not.toContain('hub-construction-rig')
   })
 
   it('draws the starter silo above ground, on its own site', () => {

@@ -34,7 +34,6 @@ function state(overrides: Partial<GameState> = {}): GameState {
       clientMissions: {},
       clientCooldowns: {},
       researchAnnotations: 0,
-      launchpadUpgraded: false,
       loanDebt: 0,
       loanOffered: false,
       headingToDelivery: true,

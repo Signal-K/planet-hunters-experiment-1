@@ -31,7 +31,6 @@ export function suggestBuild(opts: {
   mission: Mission | null
   target: Target | null
   missionsDone: number
-  launchpadUpgraded?: boolean
   /** Launchpad level 1-3; level 3 counts as two flown missions for part unlocks. */
   launchpadLevel?: number
   parts?: typeof PARTS
@@ -47,7 +46,7 @@ export function suggestBuild(opts: {
   )
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
-  const effectiveMissionsDone = Math.max(opts.missionsDone, opts.launchpadUpgraded ? 1 : 0, opts.launchpadLevel ? launchpadMissionFloor(opts.launchpadLevel) : 0)
+  const effectiveMissionsDone = Math.max(opts.missionsDone, opts.launchpadLevel ? launchpadMissionFloor(opts.launchpadLevel) : 0)
 
   const available = (p: Part) => {
     if (p.locked) return false

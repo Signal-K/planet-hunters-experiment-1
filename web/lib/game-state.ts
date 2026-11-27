@@ -12,7 +12,6 @@ import { mergeClientSales } from './client-sales'
 import { mergeStamps, sanitizeStamps } from '@/lib/research/stamps'
 import { applyMergedLedger } from './sync/ledger'
 import { STARTING_FRANCS } from '@/lib/data/economy'
-import { buildingLevel, mergeBuildingLevels, sanitizeBuildingLevels } from '@/lib/data/building-levels'
 import { canonicalSaturnLabel } from '@/lib/saturn-label'
 import { sanitizeBadges } from '@/lib/data/sky-events'
 import { reconcileOrionidsFinds, sanitizeMeteoriteMastery, sanitizeOrionidsFinds } from '@/lib/orionids/finds'
@@ -31,7 +30,6 @@ import { STARTER_BASE_PLACED, STARTER_BASE_PLOTS } from '@/lib/data/starter-base
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
-import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
@@ -76,8 +74,6 @@ export const DEFAULT_STATE: GameState = {
     clientCooldowns: {},
     researchAnnotations: 0,
     remoteStorage: {},
-    launchpadUpgraded: false,
-    buildingLevels: {},
     earthBiome: 'mountains',
     earthBiomeMoveUsed: false,
     skyEventLocation: null,
@@ -304,17 +300,6 @@ export function normalizeState(input: PartialSave): GameState {
   const placementPlots = Object.fromEntries(
     Object.entries(player.placementPlots ?? {}).filter(([kind]) => kind !== 'scan-station')
   )
-  // Drop completed construction entries at the same choke point everything
-  // else gets normalized, so `underConstruction` never grows unbounded with
-  // stale finished records.
-  const underConstruction = Object.fromEntries(
-    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind, undefined, buildingLevel(player, 'launchpad')))
-  )
-  // Levels 2-3 of upgradable buildings. Old saves have none (level 1); the legacy
-  // launchpad flag is level 2. Only the level map is touched, never `placed`, so a
-  // malformed value can never drop a building.
-  const buildingLevels = sanitizeBuildingLevels(player.buildingLevels, !!player.launchpadUpgraded)
-  const launchpadUpgraded = !!player.launchpadUpgraded || (buildingLevels.launchpad ?? 1) >= 2
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   // The transit and deep space telescopes are one instrument: either flag marks it launched.
   const telescopeLaunchedAt = player.transitSatelliteLaunchedAt ?? player.deepSpaceTelescopeLaunchedAt ?? null
@@ -348,7 +333,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, agencyLaunches: mergeAgencyLaunches(player.agencyLaunches, undefined), missionPlans: sanitizeMissionPlans(player.missionPlans), deliveryReceipts: sanitizeDeliveryReceipts(player.deliveryReceipts), rocketLivery: sanitizeLivery(player.rocketLivery), researchRocketParts: earnedRocketParts(player), probeObservations: mergeProbeObservations(player.probeObservations), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), groundTelescopeLevels: sanitizeGroundTelescopeLevels(player.groundTelescopeLevels), buildingLevels, launchpadUpgraded, padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, underConstruction, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), researchFirstStamps: sanitizeFirstStamps(player.researchFirstStamps), researchPassportWeeks: mergePassportWeeks(player.researchPassportWeeks, undefined), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
+    player: { ...DEFAULT_STATE.player, ...player, agencyLaunches: mergeAgencyLaunches(player.agencyLaunches, undefined), missionPlans: sanitizeMissionPlans(player.missionPlans), deliveryReceipts: sanitizeDeliveryReceipts(player.deliveryReceipts), rocketLivery: sanitizeLivery(player.rocketLivery), researchRocketParts: earnedRocketParts(player), probeObservations: mergeProbeObservations(player.probeObservations), missionsDone, freeOperations, flightPlan, completedMissions, clientStructures, clientBuildEvents, placed: placedList, groundTelescopeGrandfathered: typeof player.groundTelescopeGrandfathered === 'boolean' ? player.groundTelescopeGrandfathered : placedList.includes('ground-telescope'), groundTelescopeLevels: sanitizeGroundTelescopeLevels(player.groundTelescopeLevels), padLaunches: typeof player.padLaunches === 'number' && Number.isFinite(player.padLaunches) ? Math.max(0, Math.floor(player.padLaunches)) : 0, placementPlots, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, saturnClassifications, moonSurveyCharts, badges: reconciledFinds.badges ?? badges, orionidsFinds: reconciledFinds.orionidsFinds ?? {}, meteoriteMastery: reconciledFinds.meteoriteMastery ?? 0, fireball2026CaughtAt: sanitizeFireballCaughtAt(player.fireball2026CaughtAt), fireballSpotter: sanitizeFireballSpotter(player.fireballSpotter), orionidsFragments: fragmentsFromSave(player.orionidsFragments, sanitizeNightCatches(player.orionidsNightCatches)?.count), orionidsLookedUpAt: typeof player.orionidsLookedUpAt === 'number' && Number.isFinite(player.orionidsLookedUpAt) ? player.orionidsLookedUpAt : null, orionidsNightCatches: sanitizeNightCatches(player.orionidsNightCatches), roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, researchStamps: sanitizeStamps(player.researchStamps), researchFirstStamps: sanitizeFirstStamps(player.researchFirstStamps), researchPassportWeeks: mergePassportWeeks(player.researchPassportWeeks, undefined), dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel,
       orionidsEventStage,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
@@ -786,13 +771,6 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.player[field] = earliestStamp(current.player[field], remoteState.player?.[field])
   }
   merged.player.deepSpaceTelescopeBuilt = !!(current.player.deepSpaceTelescopeBuilt || remoteState.player?.deepSpaceTelescopeBuilt)
-  // Building levels only ever go up, so take the per-building max: a stale remote
-  // save on either side can never lower an upgrade the player paid for.
-  merged.player.buildingLevels = mergeBuildingLevels(
-    sanitizeBuildingLevels(current.player.buildingLevels, current.player.launchpadUpgraded),
-    sanitizeBuildingLevels(remoteState.player?.buildingLevels, remoteState.player?.launchpadUpgraded),
-  )
-  merged.player.launchpadUpgraded = !!current.player.launchpadUpgraded || !!remoteState.player?.launchpadUpgraded
   // Wear is this device's running count; a service resets it, so a stale remote value must not bring it back.
   merged.player.padLaunches = current.player.padLaunches ?? 0
   // Paused missions are independent runs, not a last-write-wins preference.

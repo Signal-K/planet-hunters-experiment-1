@@ -28,7 +28,6 @@ function makeState(overrides: GameStateOverrides = {}): GameState {
       clientStreaks: {},
       clientCooldowns: {},
       researchAnnotations: 0,
-      launchpadUpgraded: false,
       loanDebt: 0,
       loanOffered: false,
       seen_planets: [],

@@ -25,7 +25,7 @@ describe('Earth Base module composition', () => {
     expect(source).toContain('PixelStructure')
     expect(source).not.toContain('surface_silo_flat.png')
     expect(source).not.toContain('earth-base-silo-sprite')
-    expect(source).toContain('hub-construct-reveal')
+    expect(source).not.toContain('hub-construct-reveal')
     expect(source).toContain("building.kind === 'surface-silo'")
   })
 

@@ -11,34 +11,24 @@ describe('SSL-889 construction translation', () => {
   it('turns standing buildings into agency unlocks without touching progress', () => {
     const s = fresh()
     s.player.placed = ['launchpad', 'surface-silo', 'market', 'control-station']
-    s.player.buildingLevels = { launchpad: 3 }
+    s.player.agencyLevels = { launch: 3 }
     s.player.stash = { iron: 7 }
     s.player.remoteStorage = { eros: { nickel: 2 } }
     const t = translateConstruction(s)
     expect(t.player.agencyUnlocks).toEqual(['launch', 'heavy-hulls', 'bulk-hulls', 'ore-storage', 'exchange', 'data-hub', 'remote-storage'])
     const { agencyUnlocks, agencyLevels, ...rest } = t.player
-    expect(rest).toEqual(s.player)
+    const { agencyLevels: _recorded, ...before } = s.player
+    expect(rest).toEqual(before)
     expect(s.player.agencyUnlocks).toBeUndefined()
   })
 
-  it('reads the legacy flags: launchpadUpgraded and the retired controlBuilt', () => {
+  it('reads the retired controlBuilt flag', () => {
     const s = fresh()
     s.player.placed = ['launchpad']
-    s.player.launchpadUpgraded = true
     s.player.controlBuilt = true
-    expect(constructionUnlocks(s.player)).toEqual(['launch', 'heavy-hulls', 'data-hub'])
+    expect(constructionUnlocks(s.player)).toEqual(['launch', 'data-hub'])
   })
 
-  it('leaves an in-flight job alone and grants its unlock only once it completes', () => {
-    const s = fresh()
-    s.player.placed = ['launchpad', 'market']
-    s.player.underConstruction = { market: 123 }
-    const early = translateConstruction(s)
-    expect(early.player.agencyUnlocks).toEqual(['launch'])
-    expect(early.player.underConstruction).toEqual({ market: 123 })
-    const done = translateConstruction({ ...early, player: { ...early.player, underConstruction: {} } })
-    expect(done.player.agencyUnlocks).toEqual(['launch', 'exchange'])
-  })
 
   it('is idempotent and never takes an unlock away', () => {
     const s = fresh()
@@ -64,7 +54,7 @@ describe('SSL-892 agency levels', () => {
   const upgraded = () => {
     const s = fresh()
     s.player.placed = ['launchpad', 'surface-silo', 'market', 'hangar', 'control-station']
-    s.player.buildingLevels = { launchpad: 3, 'surface-silo': 3, market: 2, hangar: 3, 'control-station': 2 }
+    s.player.agencyLevels = { launch: 3, 'ore-storage': 3, exchange: 2, 'rocket-discounts': 3, 'data-hub': 2 }
     return s
   }
 
@@ -72,7 +62,6 @@ describe('SSL-892 agency levels', () => {
     const s = upgraded()
     const t = translateConstruction(s)
     expect(t.player.agencyLevels).toEqual({ launch: 3, 'ore-storage': 3, exchange: 2, 'rocket-discounts': 3, 'data-hub': 2 })
-    expect(t.player.buildingLevels).toEqual(s.player.buildingLevels)
     expect(t.player.placed).toEqual(s.player.placed)
   })
 
@@ -90,7 +79,6 @@ describe('SSL-892 agency levels', () => {
 
   it('gives an untranslated save exactly the effect it had', () => {
     const p = upgraded().player
-    expect(p.agencyLevels).toBeUndefined()
     expect(agencyLevel(p, 'ore-storage')).toBe(3)
     expect(agencyLevel(fresh().player, 'exchange')).toBe(0)
   })

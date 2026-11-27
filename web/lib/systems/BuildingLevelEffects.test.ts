@@ -17,16 +17,16 @@ describe('SSL-792: hangar, Exchange and control station levels', () => {
   it('an upgraded Exchange pays more and an upgraded hangar sells rockets for less', () => {
     const base = { placed: ['market'] }
     const l1 = sellUnitPrice('platinum', base, undefined, NOW).price
-    const l3 = sellUnitPrice('platinum', { ...base, buildingLevels: { market: 3 } }, undefined, NOW).price
+    const l3 = sellUnitPrice('platinum', { ...base, agencyLevels: { exchange: 3 } }, undefined, NOW).price
     expect(l3).toBe(Math.round(l1 * 1.06))
     const rocket = { costFrancs: 10_000_000 }
     const pilot = { missionsDone: 9 } as Parameters<typeof rocketPrice>[1]
-    expect(rocketPrice(rocket, { ...pilot, placed: ['hangar'], buildingLevels: { hangar: 2 } })).toBe(9_000_000)
-    expect(rocketPrice(rocket, { ...pilot, buildingLevels: { hangar: 2 } })).toBe(10_000_000)
+    expect(rocketPrice(rocket, { ...pilot, placed: ['hangar'], agencyLevels: { 'rocket-discounts': 2 } })).toBe(9_000_000)
+    expect(rocketPrice(rocket, { ...pilot })).toBe(10_000_000)
   })
 
   it('a probe launched from a level 3 control station maps a sector every hour', () => {
-    const fast = startProbeScan(placeProbe({ placed: ['control-station'], buildingLevels: { 'control-station': 3 } } as Parameters<typeof placeProbe>[0], 'eros', NOW), 'eros', NOW).probes!.eros
+    const fast = startProbeScan(placeProbe({ placed: ['control-station'], agencyLevels: { 'data-hub': 3 } } as Parameters<typeof placeProbe>[0], 'eros', NOW), 'eros', NOW).probes!.eros
     const slow = startProbeScan(placeProbe<Pick<import('@/lib/game-types').Player, 'probes'>>({}, 'eros', NOW), 'eros', NOW).probes!.eros
     expect(sectorsMapped(fast, NOW + 6 * 3_600_000)).toHaveLength(6)
     expect(sectorsMapped(slow, NOW + 6 * 3_600_000)).toHaveLength(3)

@@ -64,7 +64,6 @@ function player(overrides: Partial<Player> = {}): Player {
     clientMissions: {},
     clientCooldowns: {},
     researchAnnotations: 0,
-    launchpadUpgraded: false,
     loanDebt: 0,
     loanOffered: false,
     ...overrides,

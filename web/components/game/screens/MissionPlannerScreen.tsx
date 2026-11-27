@@ -1,11 +1,12 @@
 'use client'
+import { agencyTier } from '@/lib/agency/construction-translation'
 import { useEffect, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { formatCurrency } from '@/lib/format'
 import { plannerTargets, plannerMinerals, planQuote, deliveryCache, type MissionPlan, type PlannedWork } from '@/lib/mission-planner'
-import { probeSectorHours, buildingLevel } from '@/lib/data/building-levels'
+import { probeSectorHours } from '@/lib/data/building-levels'
 import { miningIntelligence } from '@/lib/probes/mining-intelligence'
 import { supportsSolarField } from '@/lib/takeon/solarField'
 import { MISSION_ZONES, type MissionZone } from '@/lib/data/mission-zone'
@@ -52,7 +53,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
     setDraft(next); setSavedId(null)
   }
   const save = () => { const plan = { ...draft, id: `self-plan-${crypto.randomUUID()}`, createdAt: Date.now() }; onSave(plan); setDraft(plan); setSavedId(plan.id) }
-  const probeHours = player.placed.includes('control-station') ? probeSectorHours(buildingLevel(player, 'control-station')) : 2
+  const probeHours = player.placed.includes('control-station') ? probeSectorHours(agencyTier(player, 'data-hub')) : 2
   return <div className={`${board.scene} ${styles.root}`} data-testid="mission-planner" data-screen="mission-planner">
     <header className={styles.header}><button onClick={onBack}>‹ Mission board</button><div><span>YOUR PROGRAM / FLIGHT PLANNING</span><h1>Plan your mission</h1></div></header>
     <main className={styles.layout}>

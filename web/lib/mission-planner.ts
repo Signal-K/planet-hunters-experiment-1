@@ -1,9 +1,9 @@
 import type { GameState, Player } from '@/lib/game-types'
+import { agencyTier } from '@/lib/agency/construction-translation'
 import type { Mission, MineralMeta, RocketModel, Target } from '@/lib/data/types'
 import type { Catalog } from '@/lib/catalog'
 import { rocketConfigForModel } from '@/lib/data/rockets'
 import { validateBuild } from '@/lib/data/parts'
-import { buildingLevel } from '@/lib/data/building-levels'
 import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { isArtifactMineralId } from '@/lib/data/minerals'
 import { agencyRocket } from '@/lib/rockets'
@@ -58,7 +58,7 @@ export function plannerTargets(player: Player, catalog: Catalog, work: PlannedWo
   return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet'].includes(target.type) && target.orbit <= range
     && supportsMissionAtTarget(missionFromPlan({ id: 'self-plan-range', targetId: target.id, work, mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target)
     && (work === 'survey' || target.id !== 'venus')
-    && plannerRockets(player).some(model => validateBuild({ mission: missionFromPlan({ id: 'self-plan-range', targetId: target.id, work: 'survey', mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok)).sort((a, b) => a.orbit - b.orbit || a.name.localeCompare(b.name))
+    && plannerRockets(player).some(model => validateBuild({ mission: missionFromPlan({ id: 'self-plan-range', targetId: target.id, work: 'survey', mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: agencyTier(player, 'launch') }).ok)).sort((a, b) => a.orbit - b.orbit || a.name.localeCompare(b.name))
 }
 export function plannerMinerals(player: Player, target: Target | undefined, catalog: Catalog, work: PlannedWork): string[] {
   if (work === 'survey') return []
@@ -77,7 +77,7 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   if (plan.work === 'survey' && !player.placed.includes('control-station')) issues.push('Build the control station to launch a survey probe.')
   if (plan.work === 'survey' && player.probes?.[plan.targetId]) issues.push('A probe already orbits this body. Open it at the Data hub.')
   const mission = target ? missionFromPlan(plan, target, catalog.minerals) : null
-  const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: buildingLevel(player, 'launchpad') }).ok) : []
+  const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: agencyTier(player, 'launch') }).ok) : []
   if (mission && !models.length) issues.push(`No available rocket fits: ${mission.requires.cargo_min} U cargo, orbit ${target!.orbit}, laser T${mission.requires.drill_tier}.`)
   return { target, mission, issues, rocket: models[0],
     outboundMs: target ? travelDurationMs(target, MISSION_ORBIT_MS) : 0,

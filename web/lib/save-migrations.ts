@@ -22,11 +22,46 @@ const LASER_CAPACITOR_ORE_SPENT = [0, 6, 18, 38]
 const SUBSURFACE_STORAGE: Record<string, number> = { 'mineral-vault': 120, 'deep-mineral-vault': 300 }
 
 const RETIRED_FIELDS = [
+  'buildingLevels', 'launchpadUpgraded', 'underConstruction',
   'refinedGoods', 'refineryQueue', 'refineryLastStartedAt', 'refineryBuilt', 'refineryUnlocked', 'refineryUnlockNotified', 'priceAlerts',
   'subsurfaceExcavated', 'subsurfaceBuilt', 'baseArrangement', 'laserCapacitorLevel',
 ] as const
 
-const RETIRED_PLACED = new Set(['market'])
+const RETIRED_PLACED = new Set(['market', 'refinery'])
+
+// Agency level each building gives (the same table the agency model has always used).
+const LEVEL_SOURCES: Record<string, string> = {
+  launch: 'launchpad',
+  'ore-storage': 'surface-silo',
+  refining: 'refinery',
+  exchange: 'market',
+  'rocket-discounts': 'hangar',
+  'data-hub': 'control-station',
+}
+
+function clampLevel(value: unknown, min: number): number {
+  const n = typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : min
+  return Math.min(3, Math.max(min, n))
+}
+
+/** Building levels, the launchpad flag and the control-station flag become agency levels (never lowering one). */
+function foldBuildingLevels(player: Loose): Record<string, number> {
+  const placed = Array.isArray(player.placed) ? player.placed as unknown[] : []
+  const levels = player.buildingLevels && typeof player.buildingLevels === 'object' ? player.buildingLevels as Loose : {}
+  const out: Record<string, number> = {}
+  const recorded = player.agencyLevels && typeof player.agencyLevels === 'object' ? player.agencyLevels as Loose : {}
+  for (const [id, kind] of Object.entries(LEVEL_SOURCES)) {
+    let level = clampLevel(recorded[id], 0)
+    if (placed.includes(kind)) {
+      let built = clampLevel(levels[kind], 1)
+      if (kind === 'launchpad' && player.launchpadUpgraded) built = Math.max(built, 2)
+      level = Math.max(level, built)
+    }
+    if (id === 'data-hub' && player.controlBuilt) level = Math.max(level, 1)
+    if (level > 0) out[id] = level
+  }
+  return out
+}
 
 type Loose = Record<string, unknown>
 
@@ -39,6 +74,8 @@ export function migrateSimplifiedSave<T extends Loose>(player: T): T {
     ? (player.saveMigrations as unknown[]).filter((m): m is string => typeof m === 'string')
     : []
   const next: Loose = { ...player }
+  const agencyLevels = foldBuildingLevels(player)
+  if (Object.keys(agencyLevels).length > 0) next.agencyLevels = agencyLevels
 
   if (!saved.includes(SIMPLIFY_2026_11)) {
     let francs = num(player.francs)

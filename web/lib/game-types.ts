@@ -2,7 +2,6 @@
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict, SaturnClassification, SaturnVerdict, MoonSurveyChart } from '@/lib/data'
-import type { BuildingLevels } from '@/lib/data/building-levels'
 import type { EarthBiomeId } from '@/lib/scene/base-world'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { SceneScope } from './scene-scope'
@@ -223,8 +222,6 @@ export interface Player {
   groundTelescopeGrandfathered?: boolean
   /** Ground telescope levels 1–3, independently upgraded with stored iron. */
   groundTelescopeLevels?: Record<string, number>
-  /** kind -> startedAt ms. Absence means the structure is fully built. */
-  underConstruction?: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
   freeOperations: boolean
@@ -274,12 +271,8 @@ export interface Player {
   researchAnnotations: number
   /** Raw ore stored at operational player-owned off-world silos, by target. */
   remoteStorage?: Record<string, Record<string, number>>
-  /** Mirrors buildingLevels.launchpad >= 2; kept so older saves and clients keep working. */
-  launchpadUpgraded: boolean
   /** Launches since the pad was last serviced (SSL-693). Absent means 0. */
   padLaunches?: number
-  /** Levels 2-3 of upgradable buildings; absent means level 1. Same JSON key as native. */
-  buildingLevels?: BuildingLevels
   /** Earth Base landscape. Missing saves read as mountains. */
   earthBiome?: EarthBiomeId
   /** Set after an existing player uses their one-time base relocation. */

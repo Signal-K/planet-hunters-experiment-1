@@ -79,13 +79,6 @@ export function structureSprite(kind: string, level = 1): StructureSprite | null
   return base && over ? { ...base, ...over } : base
 }
 
-/** A saved left-to-right order, or undefined when it is not a permutation of the movable kinds (then the authored order stands). */
-export function sanitizeArrangement(raw: unknown): string[] | undefined {
-  if (!Array.isArray(raw) || raw.length !== MOVABLE_KINDS.length) return undefined
-  const ok = MOVABLE_KINDS.every(kind => raw.includes(kind)) && new Set(raw).size === raw.length
-  return ok ? (raw as string[]) : undefined
-}
-
 const isAuthoredOrder = (order: readonly string[]) => MOVABLE_KINDS.every((kind, i) => order[i] === kind)
 
 /** Authored strip x for a movable kind in a rearranged order. The structures keep the span the authored Base covers
@@ -135,11 +128,11 @@ export interface AnnexKind { label: string; /** Name on the Base's ground label,
 export const ANNEX_SLOTS = site.annexSlots.slots as AnnexSlot[]
 export const ANNEX_KINDS = site.annexSlots.kinds as Record<string, AnnexKind>
 
-export function isAnnexKind(kind: string): boolean {
+function isAnnexKind(kind: string): boolean {
   return Object.prototype.hasOwnProperty.call(ANNEX_KINDS, kind)
 }
 
-export function annexSlotForPlot(plot: number | null | undefined): AnnexSlot | null {
+function annexSlotForPlot(plot: number | null | undefined): AnnexSlot | null {
   return plot == null ? null : ANNEX_SLOTS.find(s => s.plot === plot) ?? null
 }
 

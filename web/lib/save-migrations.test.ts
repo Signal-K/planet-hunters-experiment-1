@@ -40,4 +40,16 @@ describe('cycle 11 simplification save migration', () => {
     expect(p.placed).not.toContain('market')
     expect(p.placed).toContain('surface-silo')
   })
+
+  it('turns building levels and flags into agency levels, never lowering one', () => {
+    const p = normalizeState({ player: {
+      placed: ['launchpad', 'surface-silo', 'refinery', 'market', 'hangar', 'control-station'],
+      buildingLevels: { 'surface-silo': 3, market: 2, hangar: 3 },
+      launchpadUpgraded: true,
+      underConstruction: { hangar: 1 },
+      agencyLevels: { 'data-hub': 2 },
+    } } as never).player as unknown as Record<string, unknown>
+    expect(p.agencyLevels).toEqual({ launch: 2, 'ore-storage': 3, refining: 1, exchange: 2, 'rocket-discounts': 3, 'data-hub': 2 })
+    for (const f of ['buildingLevels', 'launchpadUpgraded', 'underConstruction']) expect(f in p).toBe(false)
+  })
 })

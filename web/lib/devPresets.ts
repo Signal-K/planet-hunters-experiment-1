@@ -33,7 +33,7 @@ const BASE_PLAYER: Player = {
   clientStreaks: {},
   clientCooldowns: {},
   researchAnnotations: 0,
-  launchpadUpgraded: false,
+  
   loanDebt: 0,
   loanOffered: false,
 }
@@ -422,15 +422,14 @@ function fixture(name: string): Partial<GameState> | null {
           francs: 80_000_000,
           placed: ['launchpad', 'hangar', 'control-station'],
           placementPlots: { launchpad: 0, market: 1, hangar: 2, 'control-station': 3 },
-          buildingLevels: { launchpad: level, market: level, hangar: level, 'control-station': level },
-          launchpadUpgraded: true,
+          agencyLevels: { launch: level, exchange: level, 'rocket-discounts': level, 'data-hub': level },
         },
       }
     }
     case 'hub-pad-l3':
       return {
         screen: 'hub',
-        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, buildingLevels: { launchpad: name === 'hub-pad-l3' ? 3 : 2 }, launchpadUpgraded: true, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
+        player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'hangar'], placementPlots: { launchpad: 0, hangar: 1, market: 2 }, agencyLevels: { launch: name === 'hub-pad-l3' ? 3 : 2 }, selectedStagedRocketId: 'pad-demo', stagedRockets: [{ id: 'pad-demo', rocketId: ROCKET_IDS.prospector, rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'launchpad', source: 'company', missionId: FIRST_MISSION.id, targetId: 'eros' }] },
         tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

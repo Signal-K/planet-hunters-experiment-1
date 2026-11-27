@@ -1,13 +1,9 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE, mergeRemoteState, normalizeState } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
-import { BUILDING_LEVEL_EFFECTS, BUILDING_UPGRADE_COSTS, buildingLevel, sanitizeBuildingLevels } from '@/lib/data'
 import { PARTS, suggestBuild, validateBuild } from '@/lib/data/parts'
-import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padBuildMultiplier, padLaunchesLeft, padNeedsService } from '@/lib/data/building-levels'
+import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padLaunchesLeft, padNeedsService } from '@/lib/data/building-levels'
 import { rocketPadLevel, ROCKET_IDS } from '@/lib/data/rockets'
-import { structureBuildMs, isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { applyServiceLaunchpad } from './EconomySystem'
 
 function state(player: Partial<GameState['player']> = {}): GameState {
@@ -15,22 +11,6 @@ function state(player: Partial<GameState['player']> = {}): GameState {
 }
 
 describe('building levels', () => {
-  it('treats old saves as level 1 and the legacy launchpad flag as level 2', () => {
-    const old = normalizeState({ player: { placed: ['launchpad', 'surface-silo'] } as GameState['player'] })
-    expect(old.player.buildingLevels).toEqual({})
-    expect(buildingLevel(old.player, 'surface-silo')).toBe(1)
-    const legacy = normalizeState({ player: { placed: ['launchpad'], launchpadUpgraded: true } as GameState['player'] })
-    expect(legacy.player.buildingLevels).toEqual({ launchpad: 2 })
-    expect(legacy.player.launchpadUpgraded).toBe(true)
-  })
-
-  it('sanitises malformed level data without touching placed buildings', () => {
-    expect(sanitizeBuildingLevels({ refinery: 9, 'surface-silo': -2, garage: 3, launchpad: 'x' })).toEqual({ refinery: 3 })
-    const s = normalizeState({ player: { placed: ['launchpad', 'refinery'], buildingLevels: 'junk' } as unknown as GameState['player'] })
-    expect(s.player.placed).toEqual(['launchpad', 'refinery'])
-    expect(s.player.buildingLevels).toEqual({})
-  })
-
   it('launchpad level 3 counts as two flown missions for part unlocks', () => {
     const parts = {
       chassis: [{ id: 'c1', name: 'c1', tier: 1, locked: false, img: '', mass: 1, cargo: 2 }, { id: 'c2', name: 'c2', tier: 2, locked: false, img: '', mass: 1, cargo: 6, missionsRequired: 2 }],
@@ -68,23 +48,13 @@ describe('building levels', () => {
     expect(at(2)).toBe('hull-mk3')
   })
 
-  it('structures build faster on a bigger launchpad', () => {
-    expect([1, 2, 3].map(padBuildMultiplier)).toEqual([1, 0.75, 0.5])
-    expect(structureBuildMs('refinery')).toBe(10_000)
-    expect(structureBuildMs('refinery', 2)).toBe(7_500)
-    expect(structureBuildMs('refinery', 3)).toBe(5_000)
-    const started = 1_000_000
-    expect(isUnderConstruction(started, 'refinery', started + 6_000, 1)).toBe(true)
-    expect(isUnderConstruction(started, 'refinery', started + 6_000, 3)).toBe(false)
-  })
-
   it('a bigger launchpad wears less and needs service less often (SSL-693)', () => {
     expect([...PAD_LAUNCHES_BETWEEN_SERVICE]).toEqual([10, 14, 20])
     expect(padLaunchesLeft({ padLaunches: 4 })).toBe(6)
-    expect(padLaunchesLeft({ padLaunches: 4, buildingLevels: { launchpad: 3 } })).toBe(16)
+    expect(padLaunchesLeft({ padLaunches: 4, agencyLevels: { launch: 3 } })).toBe(16)
     expect(padNeedsService({ padLaunches: 10 })).toBe(true)
-    expect(padNeedsService({ padLaunches: 10, buildingLevels: { launchpad: 2 } })).toBe(false)
-    expect(padNeedsService({ padLaunches: 14, buildingLevels: { launchpad: 2 } })).toBe(true)
+    expect(padNeedsService({ padLaunches: 10, agencyLevels: { launch: 2 } })).toBe(false)
+    expect(padNeedsService({ padLaunches: 14, agencyLevels: { launch: 2 } })).toBe(true)
     expect(padNeedsService({})).toBe(false)
   })
 
@@ -105,19 +75,5 @@ describe('building levels', () => {
     expect(merged.player.padLaunches).toBe(0)
     expect(normalizeState({ player: { padLaunches: -3 } as unknown as GameState['player'] }).player.padLaunches).toBe(0)
     expect(normalizeState({ player: { padLaunches: 7.9 } as unknown as GameState['player'] }).player.padLaunches).toBe(7)
-  })
-
-  it('merge never lowers a level from either side', () => {
-    const local = state({ buildingLevels: { refinery: 3 } })
-    const merged = mergeRemoteState(local, { player: { ...state().player, buildingLevels: { 'surface-silo': 2 }, missionsDone: local.player.missionsDone + 1 } })
-    expect(merged.player.buildingLevels).toEqual({ refinery: 3, 'surface-silo': 2 })
-    expect(merged.player.placed).toEqual(expect.arrayContaining(['launchpad', 'refinery']))
-  })
-
-  it('matches the cross-platform fixture shared with the native tests', () => {
-    const fixture = JSON.parse(readFileSync(path.resolve(process.cwd(), '../native/LandnamCore/Tests/LandnamCoreTests/Fixtures/building-levels.json'), 'utf8'))
-    expect(JSON.parse(JSON.stringify(BUILDING_UPGRADE_COSTS))).toEqual(fixture.costs)
-    expect(JSON.parse(JSON.stringify(BUILDING_LEVEL_EFFECTS))).toEqual(fixture.effects)
-    expect(normalizeState({ player: fixture.save }).player.buildingLevels).toEqual(fixture.levelsAfterNormalise)
   })
 })

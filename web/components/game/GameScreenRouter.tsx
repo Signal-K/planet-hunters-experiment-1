@@ -365,7 +365,7 @@ function ScreenBody({
     case 'surface-silo':
       return <SurfaceSiloPanel
         stash={game.player.stash}
-        buildingLevels={game.player.buildingLevels}
+        agencyLevels={game.player.agencyLevels}
         onClose={() => game.go('hub')}
       />
 

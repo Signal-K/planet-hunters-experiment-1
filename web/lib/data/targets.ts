@@ -205,7 +205,6 @@ export function feasibleTargetsFor(
   targets: Target[],
   parts: { chassis: Part[]; propulsion: Part[]; drill: Part[] },
   missionsDone: number,
-  launchpadUpgraded = false,
   launchpadLevel = 1,
 ): Target[] {
   const deliveryTarget = mission.deliveryTargetId
@@ -218,7 +217,6 @@ export function feasibleTargetsFor(
       target,
       deliveryTarget,
       missionsDone,
-      launchpadUpgraded,
       launchpadLevel,
       parts,
     })

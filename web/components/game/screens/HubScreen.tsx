@@ -1,5 +1,6 @@
 'use client'
 
+import { agencyTier, type AgencyLevelId } from '@/lib/agency/construction-translation'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
@@ -26,7 +27,6 @@ import { isGroundTelescopeId } from '@/lib/systems/InstrumentFeedSystem'
 import { AnnexStructures } from '@/components/game/hub/AnnexStructures'
 import { GROUND, STRIP_W, displaySite, homeCenter, placedAnnex, homeSite, kitScale, structureSprite, units } from '@/lib/scene/base-site'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { buildingLevel, isUpgradableBuilding, } from '@/lib/data'
 import { PAD_LAUNCHES_BETWEEN_SERVICE, PAD_SERVICE_COST, padNeedsService } from '@/lib/data/building-levels'
 import { formatCurrency } from '@/lib/format'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
@@ -37,7 +37,6 @@ import { HUB_PROMPT_POINT_TELESCOPE, HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDi
 import { openFriends, openSettings } from '@/lib/mining/openChrome'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
-import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 import { SCENE_NAMES } from '@/lib/ui-strings'
@@ -88,6 +87,10 @@ interface HubScreenProps {
   padLanding?: boolean
   /** SSL-553: back from a run: core stage on the pad, no craft chip. */
   homecoming?: boolean
+}
+
+const KIND_LEVEL: Record<string, AgencyLevelId | undefined> = {
+  launchpad: 'launch', 'surface-silo': 'ore-storage', hangar: 'rocket-discounts', 'control-station': 'data-hub', market: 'exchange', refinery: 'refining',
 }
 
 export default function HubScreen({ nextFlight, player, rocketVariant = 'explorer', onboardingActive, coachVisible, onFocusBuilding, onOpenScene, onPointTelescope, onDismissHubPrompt, onOpenEvents, communityResearch, onOpenCommunity, onServiceLaunchpad, padLanding = false, homecoming = false }: HubScreenProps) {
@@ -189,7 +192,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
       const site = authoredSite ? displaySite(authoredSite) : null
       const sprite = kind ? structureSprite(kind) : null
       if (!site) {
-        const widthPct = kind ? structureWidthPct(kind, isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1) : 0
+        const widthPct = kind ? structureWidthPct(kind, KIND_LEVEL[kind] ? agencyTier(player, KIND_LEVEL[kind]) : 1) : 0
         const center = kind ? structureCenterPercent(kind, e.transform.position.x, widthPct) : sceneXPercent(e.transform.position.x, widthPct)
         return { left: `${center}%`, width: `${widthPct}%`, minWidth: 44, bottom: 'var(--hub-ground)', transform: 'translateX(-50%)' } as React.CSSProperties
       }
@@ -230,24 +233,22 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
     return false
   }
-  const padLevel = buildingLevel(player, 'launchpad')
+  const padLevel = agencyTier(player, 'launch')
+
   const padWorn = padNeedsService(player)
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
-    const startedAt = player.underConstruction?.[kind]
     return [{
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
-      level: isUpgradableBuilding(kind) ? buildingLevel(player, kind) : 1,
+      level: KIND_LEVEL[kind] ? agencyTier(player, KIND_LEVEL[kind]) : 1,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
-      status: isUnderConstruction(startedAt, kind, undefined, padLevel) ? ('building' as const) : ('ok' as const),
-      padLevel,
+      status: 'ok' as const,
       dimmed: isDimmedBuildingKind(kind),
       landmark: kind === 'control-station' && agencyLandmark,
       active: activeBuilding === kind,
-      buildStartedAt: startedAt,
     }]
   })
   const sceneBuildings: HubBuildingDef[] = hubBuildings.filter(building => BASE_SCENE_KINDS.has(building.kind))
@@ -356,7 +357,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
       return {
         kind, label: 'Surface Silo',
-        sub: `${Math.min(used, surfaceSiloCapacity(player.buildingLevels))} / ${surfaceSiloCapacity(player.buildingLevels)} U`,
+        sub: `${Math.min(used, surfaceSiloCapacity(player.agencyLevels))} / ${surfaceSiloCapacity(player.agencyLevels)} U`,
         status: 'ok' as const,
         w: 62,
         // The Surface Silo stands above ground: it opens its own contents
@@ -513,10 +514,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
                 const kind = structureForPlot(plot)
                 if (kind && !BASE_SCENE_KINDS.has(kind)) return null
                 if (!kind) return null
-                const startedAt = player.underConstruction?.[kind]
-                const building = isUnderConstruction(startedAt, kind, undefined, padLevel)
-                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt, padLevel }
-                  : structureProps(kind)
+                const building = structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
                 const authoredSite = homeSite(kind, arrangement)

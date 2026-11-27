@@ -1,25 +1,7 @@
-// Landnam game data — structures, refinery recipes, market templates
+// Landnam game data — structures
 
-import type { StructureBlueprint, RefineryRecipe, } from './types'
-import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
-import { MINERAL_RARITY } from './minerals'
-
-// Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
-// for a cycle fee proportional to the input's value. Previously each recipe
-// carried three hand-set numbers (input cost, cycle cost, output price) whose
-// relationship to each other had drifted: the Refinery cost 800M to build and
-// produced goods worth ~1,760, so it would have taken ~450,000 cycles to pay
-// for itself.
-function refined(id: string, name: string, mineral: string, amount: number, sym: string, color: string, time: number): RefineryRecipe {
-  const inputValue = MINERAL_VALUE[MINERAL_RARITY[mineral]] * amount
-  return {
-    id, name,
-    input: { mineral, amount },
-    output: { name, sym, color, price: Math.round(inputValue * REFINING_VALUE_MULTIPLIER) },
-    time,
-    cost: Math.round(inputValue * REFINING_COST_RATE),
-  }
-}
+import type { StructureBlueprint } from './types'
+import { STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
@@ -54,17 +36,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Your agency headquarters. Holds the mission log and runs your satellites and telescopes. Build it before you launch one.',
   },
 ]
-
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; hasMiningSettlement?: boolean } = {}): boolean {
-  // SSL-332's storage silo is the only pre-Free-Ops construction step: it
-  // becomes available after Extraction and Transport, and placement opens
-  // Free Ops. Existing players retain access through their saved unlock.
-  if (structure.id === 'surface-silo') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
-  if (structure.id === 'market') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('market')
-  if (structure.id === 'control-station') return (opts.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE || !!opts.placed?.includes('control-station')
-  if (structure.unlockTrigger === 'always') return true
-  return false
-}
 
 /** Silo and Exchange appear once one run has been flown: before that there is no ore to store or sell, and they cost
  *  a fifth of the starting francs. (Free Ops itself opens with the launchpad.) */

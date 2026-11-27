@@ -80,7 +80,7 @@ export function probeMission(target: Target, sequence: number): Mission {
 export function placeProbe<T extends Pick<Player, 'probes'>>(player: T, targetId: string, at: number, goalSectors?: number): T {
   if (player.probes?.[targetId]) return player
   // SSL-792: an upgraded control station launches probes that map faster. The pace is fixed at launch.
-  const withLevels = player as T & Partial<Pick<Player, 'buildingLevels' | 'placed' | 'agencyLevels' | 'launchpadUpgraded' | 'controlBuilt'>>
+  const withLevels = player as T & Partial<Pick<Player, 'placed' | 'agencyLevels' | 'controlBuilt'>>
   const hours = agencyLevel(withLevels, 'data-hub') > 0 ? probeSectorHours(agencyLevel(withLevels, 'data-hub')) : PROBE_SECTOR_HOURS
   const base = { launchedAt: at, scanStartedAt: null, readings: {}, ...(hours === PROBE_SECTOR_HOURS ? {} : { sectorMs: hours * 3_600_000 }) }
   const record = goalSectors === undefined ? base : { ...base, goalSectors: Math.min(24, Math.max(1, Math.floor(goalSectors))) }

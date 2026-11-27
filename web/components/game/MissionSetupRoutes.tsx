@@ -1,7 +1,8 @@
 'use client'
 
+import { agencyTier } from '@/lib/agency/construction-translation'
 import { planQuote } from '@/lib/mission-planner'
-import { buildingLevel, padNeedsService } from '@/lib/data/building-levels'
+import { padNeedsService } from '@/lib/data/building-levels'
 import { communityBonusRate } from '@/lib/research/marketplace'
 import { useEffect } from 'react'
 import type { useGame } from '@/game-context'
@@ -78,7 +79,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   // SSL-750: check the rocket that would actually fly. A vehicle left on the pad from another contract keeps its own
   // parts, so the job is checked against it, not against the design the builder would make for this job.
   const flyingRocket = selectedVehicle?.rocket ?? game.rocket
-  const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)), fuelFraction: communityBonusRate(game.player).fuel, launchpadLevel: buildingLevel(game.player, 'launchpad') })
+  const check = validateBuild({ mission: game.mission, target, rocket: flyingRocket, parts: game.catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(game.player.shipCustomizerParts)), fuelFraction: communityBonusRate(game.player).fuel, launchpadLevel: agencyTier(game.player, 'launch') })
   const padWorn = padNeedsService(game.player)
   const customHold = game.mission.customPlan ? planQuote(game.mission.customPlan, game.player, game.catalog).issues[0] : undefined
   const launchReady = check.ok && !padWorn && !customHold

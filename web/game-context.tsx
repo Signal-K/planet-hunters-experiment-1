@@ -101,15 +101,12 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       const player = {
         ...DEFAULT_STATE.player,
         missionsDone: 1,
-        refineryBuilt: true,
         placed: ['launchpad', 'refinery'] as string[],
         placementPlots: { launchpad: 0, refinery: 1 } as Record<string, number>,
-        ...(art === 'empty' ? { placed: [] as string[], placementPlots: {}, buildingLevels: {} } : {}),
+        ...(art === 'empty' ? { placed: [] as string[], placementPlots: {} } : {}),
         ...(art === 'starter' ? {
           placed: ['hangar', 'launchpad', 'command', 'refinery'],
           placementPlots: { hangar: 0, launchpad: 1, command: 2, refinery: 3 },
-          buildingLevels: { hangar: 1, launchpad: 1, command: 1, refinery: 1 },
-          launchpadUpgraded: false,
         } : {}),
         ...(biomeParam ? { earthBiome: sanitizeEarthBiome(biomeParam) } : {}),
       }
@@ -138,18 +135,15 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
           player: {
             ...presetPlayer,
             ...(biomeParam ? { earthBiome: sanitizeEarthBiome(biomeParam) } : {}),
-            ...(art === 'empty' ? { placed: [], placementPlots: {}, buildingLevels: {} } : {}),
+            ...(art === 'empty' ? { placed: [], placementPlots: {} } : {}),
             ...(art === 'starter' ? {
               placed: ['hangar', 'launchpad', 'command', 'refinery'],
               placementPlots: { hangar: 0, launchpad: 1, command: 2, refinery: 3 },
-              buildingLevels: { hangar: 1, launchpad: 1, command: 1, refinery: 1 },
-              launchpadUpgraded: false,
             } : {}),
             ...(art === 'built' ? {
               placed: ['command', 'refinery', 'launchpad', 'surface-silo'],
               placementPlots: { command: 0, refinery: 1, launchpad: 3 },
-              buildingLevels: { launchpad: 3, refinery: 3, 'surface-silo': 3 },
-              launchpadUpgraded: true,
+              agencyLevels: { launch: 3, refining: 3, 'ore-storage': 3 },
             } : {}),
           },
         } : {}

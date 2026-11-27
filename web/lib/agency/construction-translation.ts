@@ -1,5 +1,5 @@
 import type { GameState, Player } from '@/lib/game-types'
-import { buildingLevel, MAX_BUILDING_LEVEL, type UpgradableBuildingId } from '@/lib/data/building-levels'
+import { MAX_BUILDING_LEVEL } from '@/lib/data/building-levels'
 import { GROUND_TELESCOPE_IDS } from '@/lib/systems/InstrumentFeedSystem'
 
 const AGENCY_LEVEL_SOURCES = {
@@ -9,15 +9,15 @@ const AGENCY_LEVEL_SOURCES = {
   exchange: 'market',
   'rocket-discounts': 'hangar',
   'data-hub': 'control-station',
-} as const satisfies Record<string, UpgradableBuildingId>
+} as const
 
 export type AgencyUnlockId = typeof AGENCY_UNLOCKS[number]
 
 type TranslatePlayer = Pick<Player,
-  'placed' | 'buildingLevels' | 'launchpadUpgraded' | 'controlBuilt' | 'underConstruction' | 'remoteStorage' | 'agencyUnlocks' | 'agencyLevels'>
+  'placed' | 'controlBuilt' | 'remoteStorage' | 'agencyUnlocks' | 'agencyLevels'>
 
 function standing(player: TranslatePlayer, kind: string): boolean {
-  return !!player.placed?.includes(kind) && !(player.underConstruction && kind in player.underConstruction)
+  return !!player.placed?.includes(kind)
 }
 
 /** The unlocks the Base currently earns, in a stable order. Pure over the player. */
@@ -25,14 +25,14 @@ export function constructionUnlocks(player: TranslatePlayer): AgencyUnlockId[] {
   const out = new Set<AgencyUnlockId>()
   if (standing(player, 'launchpad')) {
     out.add('launch')
-    const level = buildingLevel(player, 'launchpad')
+    const level = agencyLevel(player, 'launch')
     if (level >= 2) out.add('heavy-hulls')
     if (level >= 3) out.add('bulk-hulls')
   }
   if (standing(player, 'surface-silo')) out.add('ore-storage')
   if (standing(player, 'refinery')) out.add('refining')
   if (standing(player, 'market')) out.add('exchange')
-  if (standing(player, 'hangar') && buildingLevel(player, 'hangar') >= 2) out.add('rocket-discounts')
+  if (standing(player, 'hangar') && agencyLevel(player, 'rocket-discounts') >= 2) out.add('rocket-discounts')
   // The retired job-board flag is the oldest way to have had a control station.
   if (standing(player, 'control-station') || player.controlBuilt) out.add('data-hub')
   if (standing(player, 'control-station') && player.placed?.some(id => id.startsWith('probe'))) out.add('probe-fleet')
@@ -70,13 +70,13 @@ function clampAgencyLevel(value: unknown): number {
 }
 
 /** Levels the player's buildings give today. A building counts as soon as it is placed, which is what the economy has always read. */
-type LevelPlayer = Partial<Pick<TranslatePlayer, 'placed' | 'buildingLevels' | 'launchpadUpgraded' | 'controlBuilt' | 'agencyLevels'>>
+type LevelPlayer = Partial<Pick<TranslatePlayer, 'placed' | 'controlBuilt' | 'agencyLevels'>>
 
 function placedLevels(player: LevelPlayer): Partial<Record<AgencyLevelId, number>> {
   const out: Partial<Record<AgencyLevelId, number>> = {}
   for (const id of AGENCY_LEVEL_IDS) {
     const kind = AGENCY_LEVEL_SOURCES[id]
-    if (player.placed?.includes(kind)) out[id] = buildingLevel(player, kind)
+    if (player.placed?.includes(kind)) out[id] = 1
   }
   if (!out['data-hub'] && player.controlBuilt) out['data-hub'] = 1
   return out
@@ -96,6 +96,11 @@ export function mergeAgencyLevels(a: Partial<Record<string, number>> | undefined
  * The level of an agency capability: 0 when never earned. It is the higher of the recorded level and what the
  * buildings give right now, so a player whose save has not been translated yet gets exactly the effect they had.
  */
+/** Like agencyLevel, but never below 1: the tier an effect table is indexed by. */
+export function agencyTier(player: LevelPlayer, id: AgencyLevelId): number {
+  return Math.max(1, agencyLevel(player, id))
+}
+
 export function agencyLevel(player: LevelPlayer, id: AgencyLevelId): number {
   return Math.max(clampAgencyLevel(player.agencyLevels?.[id]), placedLevels(player)[id] ?? 0)
 }

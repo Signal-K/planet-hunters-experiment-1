@@ -131,6 +131,6 @@ it('assigns the strongest released hull supported by progress and the pad', () =
   expect(agencyRocket(player).id).toBe('explorer')
   expect(agencyRocket({ ...player, missionsDone: 1 }).id).toBe('prospector')
   expect(agencyRocket({ ...player, missionsDone: 6 }).id).toBe('prospector')
-  expect(agencyRocket({ ...player, missionsDone: 6, launchpadUpgraded: true }).id).toBe('surveyor')
+  expect(agencyRocket({ ...player, missionsDone: 6, agencyLevels: { launch: 2 } }).id).toBe('surveyor')
   expect(agencyRocket({ ...player, unlockedBlueprints: ['rocket:prospector'] }).id).toBe('prospector')
 })

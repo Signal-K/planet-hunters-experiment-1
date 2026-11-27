@@ -2,8 +2,6 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
-import { useSharedSecond } from '@/lib/hooks/useSharedSecond'
 import { holdSurveys } from '@/lib/survey-gating'
 
 /**
@@ -33,11 +31,7 @@ export interface BuildingProps {
   kind: string
   label: string
   sub: string
-  status: 'ok' | 'warn' | 'info' | 'building'
-  /** When `status` is 'building', the timestamp construction started — drives the countdown label. */
-  buildStartedAt?: number
-  /** Launchpad level, which sets how fast structures build (SSL-693). */
-  padLevel?: number
+  status: 'ok' | 'warn' | 'info'
   hot?: boolean
   w: number
   /**
@@ -94,7 +88,6 @@ const STATUS_COLOR: Record<BuildingProps['status'], string> = {
   ok:   'var(--dusk-cta)',
   warn: 'var(--dusk-warn)',
   info: 'var(--dusk-info)',
-  building: 'var(--dusk-info)',
 }
 
 function BellGlyph() {
@@ -114,15 +107,11 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, buildStartedAt, padLevel, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false, quiet = false, hitAspect }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
-  const now = useSharedSecond()
-  const buildRemainingS = status === 'building'
-    ? Math.max(0, Math.ceil(structureBuildMs(kind, padLevel) * (1 - hubConstructionProgress(buildStartedAt, kind, now || undefined, padLevel)) / 1000))
-    : 0
-  const displaySub = status === 'building' ? `BUILDING · ${buildRemainingS}S` : sub
+  const displaySub = sub
   // Hover (desktop) and press (mobile — there's no real :hover on touch) both
   // drive the same lift + glow, via one piece of state instead of two
   // separate code paths (KES-231/KES-263). The glow lands on the spacer,
