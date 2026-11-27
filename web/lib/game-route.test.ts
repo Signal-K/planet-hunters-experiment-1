@@ -30,7 +30,7 @@ describe('trayScreenFromPath', () => {
   it('keeps Subsurface on a cold load, nothing else', async () => {
     const { trayScreenFromPath } = await import('./game-route')
     expect(trayScreenFromPath('/game/market')).toBeNull()
-    expect(trayScreenFromPath('/game/hub-subsurface/')).toBe('hub-subsurface')
+    expect(trayScreenFromPath('/game/hub-subsurface/')).toBeNull()
     expect(trayScreenFromPath('/game/mission-history')).toBe('mission-history')
     expect(trayScreenFromPath('/game/missions')).toBeNull()
     expect(trayScreenFromPath('/game/hub')).toBeNull()
@@ -54,7 +54,7 @@ describe('entryScreenForPath (SSL-476)', () => {
   })
   it('keeps Base and the tray routes pinned', () => {
     expect(entryScreenForPath('/game/hub', [])).toBe('hub')
-    expect(entryScreenForPath('/game/hub-subsurface', [])).toBe('hub-subsurface')
+    expect(entryScreenForPath('/game/hub-subsurface', [])).not.toBe('hub-subsurface')
     expect(entryScreenForPath('/game/missions', ['launchpad'])).toBeNull()
   })
   it('lets the development follow route override the saved gameplay screen', () => {

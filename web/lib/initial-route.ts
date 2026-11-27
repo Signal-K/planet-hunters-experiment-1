@@ -2,7 +2,7 @@ import type { Screen } from '@/lib/game-types'
 import { migrateScreenId } from '@/lib/game-screens'
 
 const VALID_SCREENS = new Set<Screen>([
-  'intro', 'build', 'hub', 'missions', 'tess-discovery', 'targets', 'fab',
+  'intro', 'hub', 'missions', 'tess-discovery', 'targets', 'fab',
   'flight', 'mining', 'delivery', 'debrief',
   'hangar', 'rocket-buy',
   'launchpad',
@@ -56,10 +56,6 @@ export function returningScreen(raw: string | null): Screen {
 
     if (isResumableMissionScreen(screen, parsed.missionId as string | undefined, parsed.targetId as string | undefined)) {
       return screen as Screen
-    }
-
-    if (screen === 'build' && Array.isArray(parsed.player?.placed) && parsed.player.placed.length === 0) {
-      return 'build'
     }
 
     return 'hub'

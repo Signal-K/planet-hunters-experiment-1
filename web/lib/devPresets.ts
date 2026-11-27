@@ -126,14 +126,6 @@ export const DEV_GROUPS: DevGroup[] = [
     ],
   },
   {
-    label: 'Storage Silo',
-    color: '#39d3b4',
-    shots: [
-      { key: 'storage-hub',   label: 'Hub',   hint: 'Both guided missions done (missionsDone: 2), no silo yet — Storage coach active, Free Ops still locked', stage: 'tutorial' },
-      { key: 'storage-build', label: 'Build', hint: 'Build screen with the Surface Silo ready to place — placing it opens Free Ops', stage: 'tutorial' },
-    ],
-  },
-  {
     label: 'First Satellite Launch',
     color: '#f5d947',
     // Full walkable flow, in order: accept the fixed telescope story
@@ -162,7 +154,6 @@ export const DEV_GROUPS: DevGroup[] = [
     shots: [
       { key: 'ui-free-ops-fab', label: 'Free Ops launch', hint: 'Free Ops with no mission opens the launch route and lands on the Mission Board', stage: 'free-ops' },
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
-      { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Launch Review', hint: 'Launch review (the target picker is folded in) with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
@@ -226,10 +217,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'constellation-hub', label: 'Constellation Base', hint: 'Base after a completed mission, with the authored sky constellations visible', stage: 'free-ops' },
       { key: 'hub-pad-l2', label: 'Base: launchpad level 2', hint: 'Launchpad upgraded once: taller tower, five arms, flame trench (SSL-693)', stage: 'free-ops' },
       { key: 'hub-telescope-upgrades', label: 'Ground telescope upgrades', hint: 'SSL-855: owned unplaced telescope, 3 U iron for levels 2 and 3; open Build in Menu', stage: 'free-ops' },
-      { key: 'hub-unplaced', label: 'Base: unplaced structures tray', hint: 'Full Base with a ground telescope built from the Data hub but not yet placed: it waits in the Unplaced tray for an annex slot', stage: 'free-ops' },
-      { key: 'hub-buildings-l2', label: 'Base: buildings at level 2', hint: 'SSL-792: hangar, Exchange and control station at level 2 (gantry crane, second price board, second dish), launchpad level 2. Tap a building in Edit to see its next level', stage: 'free-ops' },
       { key: 'ui-surface-silo', label: 'Surface Silo contents', hint: 'Full contents page with mixed ore, overflow and Exchange access', stage: 'free-ops' },
-      { key: 'hub-buildings-l3', label: 'Base: buildings at level 3', hint: 'SSL-792: every Base building at level 3: beacon tower and solar, trading floor, relay mast, the full launchpad', stage: 'free-ops' },
       { key: 'hub-pad-l3', label: 'Base: launchpad level 3', hint: 'Launchpad fully upgraded: catch arms, landing legs, recovery loop (SSL-693)', stage: 'free-ops' },
       { key: 'hub-pad-worn', label: 'Base: launchpad needs service', hint: 'Level 1 pad after 10 launches: tap it to service for F1M, or launches stay held (SSL-693)', stage: 'free-ops' },
       { key: 'hub-first-run', label: 'Base: first run', hint: 'Only the launchpad is built: the line-art Agency building stands where the Data hub will go (SSL-785)', stage: 'free-ops' },
@@ -253,8 +241,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-landing-ascend', label: 'Landing: ascent', hint: 'Lift-off from Eros back to the orbiter, mid-mission', stage: 'tutorial' },
       { key: 'ui-rocket-buy', label: 'Rocket buy', hint: 'Rocket purchase list, post-onboarding with funds', stage: 'free-ops' },
       { key: 'ui-hangar-surveyor', label: 'Hangar: Surveyor', hint: 'Six missions done and funds in hand, so the tier 3 Surveyor is open in the hangar', stage: 'free-ops' },
-      { key: 'ui-subsurface', label: 'Subsurface', hint: 'Base subsurface view before excavation', stage: 'free-ops' },
-      { key: 'ui-subsurface-dug-out', label: 'Subsurface: dug out', hint: 'Excavated subsurface with a built Mineral Vault and stored cargo', stage: 'free-ops' },
       { key: 'cp-early', label: 'Checkpoint: early', hint: 'About 15 min in: 3 missions done, Free Ops unlocked, tier 2 parts', stage: 'free-ops' },
       { key: 'cp-mid', label: 'Checkpoint: mid', hint: 'About 35 min in: 8 missions done, silo and refinery built, tier 2 rocket', stage: 'free-ops' },
       { key: 'cp-late', label: 'Checkpoint: late', hint: 'About 55 min in: 20 missions done, tier 3 rocket, all buildings, rich stash', stage: 'free-ops' },
@@ -409,12 +395,6 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
-    case 'hub-telescope-upgrades': {
-      const base = fixture('hub-unplaced')!
-      return { ...base, player: { ...base.player!, stash: { iron: 3 }, groundTelescopeLevels: {}, groundTelescopeGrandfathered: false } }
-    }
-
-    case 'hub-pad-l2':
     case 'hub-unplaced':
       return {
         screen: 'hub',
@@ -429,7 +409,13 @@ function fixture(name: string): Partial<GameState> | null {
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
-    case 'hub-buildings-l2':
+
+    case 'hub-telescope-upgrades': {
+      const base = fixture('hub-unplaced')!
+      return { ...base, player: { ...base.player!, stash: { iron: 3 }, groundTelescopeLevels: {}, groundTelescopeGrandfathered: false } }
+    }
+
+    case 'hub-pad-l2':
     case 'hub-buildings-l3': {
       const level = name === 'hub-buildings-l3' ? 3 : 2
       return {
@@ -641,27 +627,6 @@ function fixture(name: string): Partial<GameState> | null {
       }
 
     // ── Storage Silo (last training step; placing it opens Free Ops) ──
-    case 'storage-hub':
-      return {
-        screen: 'hub',
-        player: { ...BASE_PLAYER, missionsDone: 2 },
-        tutorial: true, doneSteps: TRANSPORT_DONE,
-        missionId: null, targetId: null, deliveryTargetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'storage-build':
-      return {
-        screen: 'build',
-        player: { ...BASE_PLAYER, missionsDone: 2 },
-        tutorial: true, doneSteps: { ...TRANSPORT_DONE, 40: true },
-        missionId: null, targetId: null, deliveryTargetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    // ── First Satellite Launch (post-onboarding story mission) ──
     case 'telescope-hub':
       return {
         screen: 'hub',
@@ -773,25 +738,6 @@ function fixture(name: string): Partial<GameState> | null {
           freeOperations: true,
           clientMissions: { 'helios-propulsion-depot': 2, 'lumen-research': 1 },
           lastClient: 'helios-propulsion-depot',
-        },
-        tutorial: false,
-        doneSteps: TRANSPORT_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-build':
-      return {
-        screen: 'build',
-        player: {
-          ...POST_ONBOARDING_PLAYER,
-          francs: 1_000_000_000,
-          placed: ['launchpad', 'surface-silo'],
-          placementPlots: { launchpad: 0, 'surface-silo': 2 },
-          stash: { aluminium: 20, copper: 10 },
         },
         tutorial: false,
         doneSteps: TRANSPORT_DONE,
@@ -1522,40 +1468,6 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
-    case 'ui-subsurface':
-      return {
-        screen: 'hub-subsurface',
-        player: {
-          ...POST_ONBOARDING_PLAYER,
-          placed: ['launchpad', 'surface-silo'],
-          placementPlots: { launchpad: 0, 'surface-silo': 1 },
-          stash: { iron: 30, nickel: 12, silicates: 8 },
-        },
-        tutorial: false, doneSteps: TRAINING_DONE,
-        missionId: null, targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'ui-subsurface-dug-out':
-      return {
-        screen: 'hub-subsurface',
-        player: {
-          ...POST_ONBOARDING_PLAYER,
-          francs: 500_000_000,
-          placed: ['launchpad', 'surface-silo'],
-          placementPlots: { launchpad: 0, 'surface-silo': 1 },
-          subsurfaceExcavated: true,
-          subsurfaceBuilt: ['mineral-vault'],
-          stash: { iron: 46, nickel: 28, silicates: 12 },
-        },
-        tutorial: false, doneSteps: TRAINING_DONE,
-        missionId: null, targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    // Progress checkpoints: jump to roughly minute 15 / 35 / 55 of the playable hour without playing it.
     case 'cp-early':
       return {
         screen: 'hub',

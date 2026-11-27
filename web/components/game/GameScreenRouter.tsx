@@ -4,7 +4,6 @@ import { hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
 import { scienceAccessPlayer } from '@/lib/agency/community'
 
-import { applyGroundTelescopeUpgrade } from '@/lib/ground-telescope-upgrades'
 import { rocketPadLevel } from '@/lib/data/rockets'
 import { addStamp } from '@/lib/research/stamps'
 import { useEffect, useState, useCallback, useRef } from 'react'
@@ -13,26 +12,21 @@ import { requestConsensus } from '@/lib/community/client'
 import type { ConsensusProject, ConsensusQueueItem, ConsensusReadout } from '@/lib/community/consensus'
 import type { PendingConsensusReview } from '@/components/game/screens/CommunityConsensus'
 import { useGame } from '@/game-context'
-import { canAffordStructure, ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, structureAffordabilityGaps, structureUnlocked, SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
+import { ROCKET_MODELS, rocketDisplayForConfig, rocketModelForConfig, } from '@/lib/data'
 import { agencyRocket } from '@/lib/rockets'
-import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
-import { formatCurrency } from '@/lib/format'
-import { ORIONIDS_DEBRIS_PRESET, isDebrisEventActive } from '@/lib/data/sky-events'
-import { ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
 // renders one of them at a time, so there's no reason to ship all ~20
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
-import PageSurface from '@/components/ui/PageSurface'
 import { FLIGHT_ASSET_URLS } from '@/lib/offline/flight-assets'
 import { SurfaceSiloPanel } from '@/components/game/hub/SurfaceSiloPanel'
-import { buyBlocker, exchangeBuilt } from '@/lib/systems/MarketplaceSystem'
 import BaseNextFlight from '@/components/game/hub/BaseNextFlight'
-import HubScreen, { type HubBuildOption } from '@/components/game/screens/HubScreen'
+import { STARTER_BASE_PLACED, STARTER_BASE_PLOTS } from '@/lib/data/starter-base'
+import HubScreen from '@/components/game/screens/HubScreen'
 
 const ScreenLoading = () => (
   <div className="game-screen-loading" role="status" aria-label="Loading screen">
@@ -79,10 +73,10 @@ const MissionHistoryScreen = dynamic(loadMissionHistoryScreen, { loading: Screen
 const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { requestMissionBoardEvent, requestMissionBoardMineral, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
+import { requestMissionBoardEvent, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
 import { requestMiningPlan } from '@/lib/mission-planner-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
-import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
+import { captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
@@ -102,7 +96,6 @@ import { useResearchPassport } from '@/lib/research/useResearchPassport'
 import { withPassportRewards } from '@/lib/research/passport'
 import { useCommunityResearch } from '@/lib/research/useCommunityResearch'
 import { withCommunityBonus } from '@/lib/research/marketplace'
-import { buyResearchItem, convertResearchFragments } from '@/lib/research/marketplace'
 import { SkyPointingScreen } from '@/components/game/screens/SkyPointing'
 import { chainNextScreen, liveShowerChain, receiverEventId } from '@/lib/orionids/chain'
 import { skyEventNow } from '@/lib/data'
@@ -292,26 +285,20 @@ function ScreenBody({
     // newly unlocked structure.
   }, [screen, game.hydrated, game.player.placed.length, game.player.missionsDone, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
-  // HubScreen's surface/subsurface slide is driven by ephemeral UI state
-  // (game.subsurfaceView), not the route, so a real navigation into
-  // 'hub-subsurface' (e.g. Launchpad's "Open Subsurface") or plain 'hub'
-  // needs to seed/reset that state the same way the old per-mount
-  // `initialSubsurface` prop used to.
-  useEffect(() => {
-    if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    // Any other screen clears it, so a stale flag from a visit to
-    // Subsurface can't leak into /game/launchpad (SSL-476).
-    else game.setSubsurfaceView(false)
-  }, [screen, game.setSubsurfaceView])
 
   switch (screen) {
     case 'intro':
       return (
         <IntroScreen
           onBegin={biome => {
-            if (biome) game.setPlayer(current => ({ ...current, earthBiome: biome }))
+            // A game with no base yet (an old empty save) gets the starter Base now. Nobody places buildings.
+            game.setPlayer(current => ({
+              ...current,
+              ...(biome ? { earthBiome: biome } : {}),
+              ...(current.placed.length === 0 ? { placed: [...STARTER_BASE_PLACED], placementPlots: { ...STARTER_BASE_PLOTS } } : {}),
+            }))
             // Resume operations returns to the Base; only a new player places a launchpad.
-            game.go(game.player.missionsDone > 0 || game.player.placed.length > 0 ? 'hub' : 'build')
+            game.go('hub')
           }}
           returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
           missionsDone={game.player.missionsDone}
@@ -321,56 +308,11 @@ function ScreenBody({
         />
       )
 
-    case 'build':
-    case 'hub':
-    case 'hub-subsurface': {
-      const unlockOpts = {
-        refineryUnlocked: !!game.player.refineryUnlocked,
-        placed: game.player.placed,
-        freeOperations: game.player.freeOperations,
-        missionsDone: game.player.missionsDone,
-      }
-      const eventSiloFree = (game.missionId === ORIONIDS_NIGHT_RUN_ID || game.player.activeMission?.id === ORIONIDS_NIGHT_RUN_ID)
-        && isDebrisEventActive(ORIONIDS_DEBRIS_PRESET, Date.now())
-      // Only unlocked structures that are not already on the base are offered.
-      const buildOptions: HubBuildOption[] = game.catalog.structures
-        .filter(structure => structure.id !== 'garage' && structure.id !== 'astronaut-academy'
-          && !game.player.placed.includes(structure.id)
-          && (structureUnlocked(structure, unlockOpts) || (eventSiloFree && structure.id === 'surface-silo')))
-        .map(structure => {
-          const pricedStructure = eventSiloFree && structure.id === 'surface-silo' ? { ...structure, cost: 0 } : structure
-          const gaps = structureAffordabilityGaps(pricedStructure, { francs: game.player.francs, stash: game.player.stash })
-          const mineralCost = Object.entries(structure.costMaterials ?? {}).map(([mineral, amount]) => `${amount} ${mineral}`).join(' · ')
-          const francs = pricedStructure.cost === 0 ? 'Free' : formatCurrency(pricedStructure.cost, { compact: true })
-          return {
-            id: structure.id,
-            name: structure.name,
-            cost: mineralCost ? `${francs} · ${mineralCost}` : francs,
-            affordable: canAffordStructure(pricedStructure, { francs: game.player.francs, stash: game.player.stash }),
-            reason: gaps.length ? `Need ${gaps.join(', ')}` : undefined,
-          }
-        })
-      const placeStructureFromBase = (kind: string, plot: number): boolean => {
-        const structure = game.catalog.structures.find(s => s.id === kind)
-        const enteringFreeOps = !game.player.freeOperations
-          && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
-        const placed = game.placeStructure(structure, kind, plot)
-        if (!placed) return false
-        game.completeStep(0)
-        captureGameEvent('structure_placed', { structure_kind: kind })
-        if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
-        enqueueSurvey('lnm_base_building', 1200)
-        if (screen === 'build') game.go('hub')
-        return true
-      }
+    case 'hub': {
       const hub = (
         <HubScreen
           nextFlight={onService => <BaseNextFlight game={game} onService={onService} />}
           player={game.player}
-          placementMode={screen === 'build'}
-          buildOptions={buildOptions}
-          onPlaceStructure={placeStructureFromBase}
-          onPlaceAnnex={(kind, plot) => game.placeAnnex(kind, plot)}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           onboardingActive={onboardingActive}
           coachVisible={coachVisible}
@@ -381,10 +323,7 @@ function ScreenBody({
           }}
           onPointTelescope={instrument => { setPointingTarget(instrument); game.go('sky-pointing') }}
           onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
-          onUpgradeGroundTelescope={id => game.setPlayer(current => applyGroundTelescopeUpgrade(current, id))}
-          onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
-            if (building === 'build') return game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')
             if (building === 'control-station') return game.go('instrument-hub')
             // Mission first: the hangar opens on its rocket choice only once a mission and
             // destination are set up. Otherwise it starts at the contract board.
@@ -411,21 +350,7 @@ function ScreenBody({
               return game.openLaunchpad()
             }
           }}
-          onUpgradeBuilding={id => game.upgradeBuilding(id)}
           onServiceLaunchpad={game.serviceLaunchpad}
-          onExcavateSubsurface={() => game.excavateSubsurface()}
-          onExcavateSubsurfaceUnavailable={() => {
-            const cost = SUBSURFACE_EXCAVATE_COST
-            const missing = [
-              ...(game.player.francs < cost.cost ? [`${formatCurrency(cost.cost - game.player.francs)} more`] : []),
-              ...Object.entries(cost.costMaterials)
-                .map(([mineral, amount]) => ({ mineral, amount: amount - (game.player.stash?.[mineral] ?? 0) }))
-                .filter(({ amount }) => amount > 0)
-                .map(({ mineral, amount }) => `${amount} more ${mineral}`),
-            ]
-            game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
-          }}
-          onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={eventId => {
@@ -433,16 +358,6 @@ function ScreenBody({
             requestMissionBoardEvent(eventId ?? liveShowerChain(Date.now())?.eventId ?? 'orionids-2026')
             game.goToMissions()
           }}
-          onFocusResources={(label, minerals) => {
-            game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
-            // Open the map on the places that hold the first missing mineral, not the whole board (Liam, 31.10).
-            const short = Object.entries(minerals).find(([id, amount]) => (game.player.stash?.[id] ?? 0) < amount)?.[0]
-            if (short && game.player.freeOperations) requestMissionBoardMineral(short)
-            else requestMissionBoardTab('program')
-            game.goToMissions()
-          }}
-          subsurface={game.subsurfaceView}
-          onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}
         />
       )
       return hub
@@ -515,7 +430,7 @@ function ScreenBody({
             : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => leaveInstrument('tess')}
           onAgency={() => game.go('hub')}
-          onBuildStation={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
+          onBuildStation={() => game.go('hub')}
           onOpenProgram={() => { requestMissionBoardTab('program'); game.goToMissions() }}
           onSubmit={game.submitTessClassification}
           reviewing={reviewTarget?.project === 'tess'}
@@ -798,7 +713,7 @@ function ScreenBody({
             }
             game.resumeMissionRun(key)
           }}
-          onOpenSiloBuild={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
+          onOpenSiloBuild={() => game.go('hub')}
           onOpenControlStation={() => game.go('instrument-hub')}
           onAbandonMission={game.player.activeMission && !activeSettled ? () => game.abandonMission({ confirmed: true }) : undefined}
           missionsDone={game.player.missionsDone}

@@ -131,7 +131,7 @@ export default function OrionidsShowerChrome() {
   return (
     <>
       {/* The streaks belong in an open sky: the Base and the launchpad. Over a panel screen they crossed the content and the help sheet, and mining and the meteor radio draw their own (SSL-711, SSL-714). */}
-      {(game.screen === 'hub' || game.screen === 'build' || game.screen === 'launchpad') && (
+      {(game.screen === 'hub' || game.screen === 'launchpad') && (
         <div className={styles.haze} aria-hidden="true" data-testid="orionids-haze">
           <img className={styles.sky} src={art.sky} alt="" />
           <img className={styles.streak} src={art.streaks[0].file} alt="" />

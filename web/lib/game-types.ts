@@ -87,9 +87,7 @@ export interface MissionRunSnapshot {
 
 export type Screen =
   | 'intro'
-  | 'build'
   | 'hub'
-  | 'hub-subsurface'
   | 'surface-silo'
   | 'missions'
   | 'tess-discovery'
@@ -129,7 +127,6 @@ export type Screen =
 // See `.portrait-canvas--full-page` in globals.css.
 export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'hub',
-  'hub-subsurface',
   'surface-silo',
   'launchpad',
   'rocket-workshop',

@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 29,
+    "webRoutes": 27,
     "nativeScreenCases": 25,
-    "qaScenes": 111,
+    "qaScenes": 103,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 29,
-    "authoringSources": 69,
-    "authoredObjectNodes": 162,
-    "authoredGameObjects": 77,
-    "authoredUiElements": 85,
+    "authoredSceneScripts": 27,
+    "authoringSources": 67,
+    "authoredObjectNodes": 151,
+    "authoredGameObjects": 71,
+    "authoredUiElements": 80,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 29,
-    "compiledObjectNodes": 162,
+    "compiledScenes": 27,
+    "compiledObjectNodes": 151,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 157,
-    "webGameComponents": 119,
+    "hostLayoutObjects": 146,
+    "webGameComponents": 116,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -35,10 +35,6 @@
       {
         "route": "asteroid-discovery",
         "type": "exchange-lab"
-      },
-      {
-        "route": "build",
-        "type": "base"
       },
       {
         "route": "community-research",
@@ -66,10 +62,6 @@
       },
       {
         "route": "hub",
-        "type": "base"
-      },
-      {
-        "route": "hub-subsurface",
         "type": "base"
       },
       {
@@ -325,14 +317,6 @@
         ]
       },
       {
-        "id": "hub-structures",
-        "name": "Base with structures",
-        "flow": "core-loop",
-        "web": "storage-hub",
-        "native": "hub-structures-phone",
-        "tickets": []
-      },
-      {
         "id": "mission-board",
         "name": "Contract board",
         "flow": "core-loop",
@@ -478,16 +462,6 @@
           "SSL-462"
         ],
         "note": "Web has no preset; needs 3 missions done"
-      },
-      {
-        "id": "build",
-        "name": "Build",
-        "flow": "core-loop",
-        "web": "ui-build",
-        "native": "build-phone",
-        "tickets": [
-          "SSL-424"
-        ]
       },
       {
         "id": "customiser",
@@ -755,14 +729,6 @@
         "tickets": []
       },
       {
-        "id": "storage-build",
-        "name": "Build: place silo",
-        "flow": "core-loop",
-        "web": "storage-build",
-        "native": "storage-build-live",
-        "tickets": []
-      },
-      {
         "id": "transport-hub",
         "name": "Transport hub",
         "flow": "core-loop",
@@ -879,14 +845,6 @@
         ]
       },
       {
-        "id": "subsurface",
-        "name": "Subsurface",
-        "flow": "core-loop",
-        "web": "ui-subsurface",
-        "native": "hub-ug-built-phone",
-        "tickets": []
-      },
-      {
         "id": "cp-early",
         "name": "Checkpoint early (~15 min)",
         "flow": "core-loop",
@@ -948,14 +906,6 @@
         "flow": "ship",
         "web": "ui-hangar-assembly",
         "native": "hangar-workshop-phone",
-        "tickets": []
-      },
-      {
-        "id": "hub-subsurface",
-        "name": "Base Subsurface",
-        "flow": "core-loop",
-        "web": "ui-subsurface",
-        "native": "hub-silo-surface-phone",
         "tickets": []
       },
       {
@@ -1214,37 +1164,6 @@
         ]
       },
       {
-        "id": "hub-unplaced",
-        "name": "Base: unplaced structures tray",
-        "flow": "core-loop",
-        "web": "hub-unplaced",
-        "native": "hub-unplaced-phone",
-        "tickets": [
-          "SSL-843",
-          "SSL-844"
-        ]
-      },
-      {
-        "id": "hub-buildings-l2",
-        "name": "Base: buildings at level 2",
-        "flow": "core-loop",
-        "web": "hub-buildings-l2",
-        "tickets": [
-          "SSL-792"
-        ],
-        "native": "hub-structures-phone"
-      },
-      {
-        "id": "hub-buildings-l3",
-        "name": "Base: buildings at level 3",
-        "flow": "core-loop",
-        "web": "hub-buildings-l3",
-        "tickets": [
-          "SSL-792"
-        ],
-        "native": "hub-structures-phone"
-      },
-      {
         "id": "probe-watch",
         "name": "Field probe: watch the shower",
         "flow": "field",
@@ -1438,27 +1357,6 @@
         ]
       },
       {
-        "id": "build",
-        "path": "shared/authoring/scenes/build.toml",
-        "objects": 6,
-        "gameObjects": 3,
-        "uiElements": 3,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 6,
-        "mechanics": [
-          "construction",
-          "world"
-        ],
-        "web": [
-          "web/components/game/screens/HubScreen.tsx",
-          "web/components/game/GameScreenRouter.tsx"
-        ],
-        "native": [
-          "native/App/Screens/BuildScreen.swift"
-        ]
-      },
-      {
         "id": "community-research",
         "path": "shared/authoring/scenes/community-research.toml",
         "objects": 6,
@@ -1577,26 +1475,6 @@
         ],
         "native": [
           "native/App/Screens/HangarScreen.swift"
-        ]
-      },
-      {
-        "id": "hub-subsurface",
-        "path": "shared/authoring/scenes/hub-subsurface.toml",
-        "objects": 5,
-        "gameObjects": 3,
-        "uiElements": 2,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 5,
-        "mechanics": [
-          "construction",
-          "delivery"
-        ],
-        "web": [
-          "web/components/game/hub/HubSubsurfaceView.tsx"
-        ],
-        "native": [
-          "native/App/Screens/BaseUnderground.swift"
         ]
       },
       {
@@ -2017,10 +1895,6 @@
         "objects": 5
       },
       {
-        "id": "build",
-        "objects": 6
-      },
-      {
         "id": "community-research",
         "objects": 6
       },
@@ -2043,10 +1917,6 @@
       {
         "id": "hangar",
         "objects": 6
-      },
-      {
-        "id": "hub-subsurface",
-        "objects": 5
       },
       {
         "id": "hub",
@@ -2149,7 +2019,6 @@
         "BaseCamera"
       ],
       "scenes": [
-        "build",
         "hub",
         "intro",
         "launchpad"
@@ -2173,8 +2042,6 @@
         "BuildSiteInteraction"
       ],
       "scenes": [
-        "build",
-        "hub-subsurface",
         "hub",
         "intro"
       ]
@@ -2312,7 +2179,6 @@
       "scenes": [
         "debrief",
         "delivery",
-        "hub-subsurface",
         "hub",
         "mining",
         "surface-silo"
@@ -2599,7 +2465,6 @@
       "web/components/game/OrionidsTeaser.tsx",
       "web/components/game/PanHint.tsx",
       "web/components/game/PushOptIn.tsx",
-      "web/components/game/RearrangeBar.tsx",
       "web/components/game/SceneErrorBoundary.tsx",
       "web/components/game/ScenePanel.tsx",
       "web/components/game/SceneTransition.tsx",
@@ -2627,14 +2492,12 @@
       "web/components/game/hub/EarthBaseModules.tsx",
       "web/components/game/hub/GroundTelescopeUpgrade.tsx",
       "web/components/game/hub/HubClockWidget.tsx",
-      "web/components/game/hub/HubSubsurfaceView.tsx",
       "web/components/game/hub/HubWorldBackground.tsx",
       "web/components/game/hub/KitRocket.tsx",
       "web/components/game/hub/MeteorShowerWeather.tsx",
       "web/components/game/hub/PixelStructure.tsx",
       "web/components/game/hub/RoadRover.tsx",
       "web/components/game/hub/RocketRollout.tsx",
-      "web/components/game/hub/SiteMarker.tsx",
       "web/components/game/hub/SkyCraft.tsx",
       "web/components/game/hub/SurfaceSiloPanel.tsx",
       "web/components/game/hub/TerrainScene.tsx",
@@ -2804,14 +2667,12 @@
       "shared/authoring/missions/client-contract.toml",
       "shared/authoring/missions/free-mining.toml",
       "shared/authoring/scenes/asteroid-discovery.toml",
-      "shared/authoring/scenes/build.toml",
       "shared/authoring/scenes/community-research.toml",
       "shared/authoring/scenes/debrief.toml",
       "shared/authoring/scenes/delivery.toml",
       "shared/authoring/scenes/fab.toml",
       "shared/authoring/scenes/galaxy.toml",
       "shared/authoring/scenes/hangar.toml",
-      "shared/authoring/scenes/hub-subsurface.toml",
       "shared/authoring/scenes/hub.toml",
       "shared/authoring/scenes/instrument-hub.toml",
       "shared/authoring/scenes/intro.toml",
@@ -2864,14 +2725,12 @@
     "unownedDomainFiles": [],
     "compiledScenesWithoutRuntimeConsumer": [
       "asteroid-discovery",
-      "build",
       "community-research",
       "debrief",
       "delivery",
       "fab",
       "galaxy",
       "hangar",
-      "hub-subsurface",
       "hub",
       "instrument-hub",
       "intro",

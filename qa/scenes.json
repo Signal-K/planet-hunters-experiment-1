@@ -70,14 +70,6 @@
    ]
   },
   {
-   "id": "hub-structures",
-   "name": "Base with structures",
-   "flow": "core-loop",
-   "web": "storage-hub",
-   "native": "hub-structures-phone",
-   "tickets": []
-  },
-  {
    "id": "mission-board",
    "name": "Contract board",
    "flow": "core-loop",
@@ -223,16 +215,6 @@
     "SSL-462"
    ],
    "note": "Web has no preset; needs 3 missions done"
-  },
-  {
-   "id": "build",
-   "name": "Build",
-   "flow": "core-loop",
-   "web": "ui-build",
-   "native": "build-phone",
-   "tickets": [
-    "SSL-424"
-   ]
   },
   {
    "id": "customiser",
@@ -500,14 +482,6 @@
    "tickets": []
   },
   {
-   "id": "storage-build",
-   "name": "Build: place silo",
-   "flow": "core-loop",
-   "web": "storage-build",
-   "native": "storage-build-live",
-   "tickets": []
-  },
-  {
    "id": "transport-hub",
    "name": "Transport hub",
    "flow": "core-loop",
@@ -536,7 +510,9 @@
    "name": "Solar site mining",
    "flow": "core-loop",
    "web": "solar-site-mining",
-   "tickets": ["SSL-891"]
+   "tickets": [
+    "SSL-891"
+   ]
   },
   {
    "id": "solar-site-delivery",
@@ -622,14 +598,6 @@
    ]
   },
   {
-   "id": "subsurface",
-   "name": "Subsurface",
-   "flow": "core-loop",
-   "web": "ui-subsurface",
-   "native": "hub-ug-built-phone",
-   "tickets": []
-  },
-  {
    "id": "cp-early",
    "name": "Checkpoint early (~15 min)",
    "flow": "core-loop",
@@ -691,14 +659,6 @@
    "flow": "ship",
    "web": "ui-hangar-assembly",
    "native": "hangar-workshop-phone",
-   "tickets": []
-  },
-  {
-   "id": "hub-subsurface",
-   "name": "Base Subsurface",
-   "flow": "core-loop",
-   "web": "ui-subsurface",
-   "native": "hub-silo-surface-phone",
    "tickets": []
   },
   {
@@ -955,37 +915,6 @@
     "SSL-873",
     "SSL-875"
    ]
-  },
-  {
-   "id": "hub-unplaced",
-   "name": "Base: unplaced structures tray",
-   "flow": "core-loop",
-   "web": "hub-unplaced",
-   "native": "hub-unplaced-phone",
-   "tickets": [
-    "SSL-843",
-    "SSL-844"
-   ]
-  },
-  {
-   "id": "hub-buildings-l2",
-   "name": "Base: buildings at level 2",
-   "flow": "core-loop",
-   "web": "hub-buildings-l2",
-   "tickets": [
-    "SSL-792"
-   ],
-   "native": "hub-structures-phone"
-  },
-  {
-   "id": "hub-buildings-l3",
-   "name": "Base: buildings at level 3",
-   "flow": "core-loop",
-   "web": "hub-buildings-l3",
-   "tickets": [
-    "SSL-792"
-   ],
-   "native": "hub-structures-phone"
   },
   {
    "id": "probe-watch",

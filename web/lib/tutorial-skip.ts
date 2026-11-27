@@ -19,7 +19,7 @@ export function applyTutorialSkip(state: GameState, stepIds: number[]): GameStat
 
   return {
     ...state,
-    screen: state.screen === 'build' ? 'hub' : state.screen,
+    screen: state.screen,
     tutorial: false,
     doneSteps: skippedSteps,
     menuOpen: false,

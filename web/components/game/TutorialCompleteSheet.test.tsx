@@ -44,7 +44,6 @@ describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
       'free-ops-activity-client-work',
       'free-ops-activity-space-telescope',
       'free-ops-activity-transport',
-      'free-ops-activity-storage-silo',
     ])
     act(() => { (buttons[1] as HTMLButtonElement).click() })
     expect(chosen.map(activity => activity.id)).toEqual(['space-telescope'])

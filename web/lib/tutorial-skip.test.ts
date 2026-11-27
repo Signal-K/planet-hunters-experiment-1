@@ -3,7 +3,7 @@ import type { GameState } from '@/lib/game-types'
 import { applyTutorialSkip } from '@/lib/tutorial-skip'
 
 const baseState: GameState = {
-  screen: 'build',
+  screen: 'hub',
   player: {
     francs: 10_000_000_000,
     activeMission: null,

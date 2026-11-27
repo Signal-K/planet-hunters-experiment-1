@@ -198,7 +198,6 @@ query = { hud = "1" }
 [checkpoints]
 first-pad = { label = "First launchpad", preset = "m1-hub", note = "Launchpad built. The Extraction coach is active." }
 transport-lesson = { label = "Transport lesson", preset = "transport-hub", note = "One mission done. The Transport coach asks for a two-leg client job." }
-silo-next = { label = "Silo next", preset = "storage-hub", note = "Both guided missions done. No silo yet and Free Ops is still locked." }
 free-ops-telescope = { label = "Free Ops and telescope", preset = "telescope-hub", note = "Post-onboarding. Free Ops is unlocked and a telescope is built." }
 early = { label = "About 15 minutes in", preset = "cp-early" }
 mid = { label = "About 35 minutes in", preset = "cp-mid", note = "Silo, academy and refinery built." }

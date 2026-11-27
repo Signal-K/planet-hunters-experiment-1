@@ -13,7 +13,6 @@
 // three-mission onboarding keep it without a silo, so nobody loses an unlock.
 
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
-import { CONSTRUCTION_COMING_LATER } from '../deferred-features'
 import { isTrainingComplete, type FlightPlanProgress, type TrainingTryId } from './FlightPlanSystem'
 
 /** The structure whose placement completes the Storage stage. Kept here (not
@@ -108,7 +107,7 @@ export function agencyTrainingTrack(player: AgencyTrainingPlayer): AgencyTrainin
  *  from the menu (the replayable review of training). */
 export const AGENCY_TRAINING_POPUP = 'agency-training'
 
-export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'transport' | 'storage-silo'
+export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'transport'
 
 export interface FreeOpsActivity {
   id: FreeOpsActivityId
@@ -117,7 +116,7 @@ export interface FreeOpsActivity {
   cta: string
   /** Where the activity opens. The telescope starts at the Launchpad (where
    *  its launch lives) until one is in orbit. */
-  screen: 'missions' | 'launchpad' | 'instrument-hub' | 'build' | 'hub'
+  screen: 'missions' | 'launchpad' | 'instrument-hub'
 }
 
 export interface FreeOpsActivityPlayer {
@@ -151,15 +150,6 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
       body: 'Take a two-stop client haul when your program needs a change of pace.',
       cta: 'Open contracts',
       screen: 'missions',
-    },
-    {
-      id: 'storage-silo',
-      label: 'Storage Silo',
-      body: CONSTRUCTION_COMING_LATER
-        ? 'Earth-side storage expansion is coming later.'
-        : 'Build Earth-side storage before expanding your material operations.',
-      cta: CONSTRUCTION_COMING_LATER ? 'Open base' : 'Open build',
-      screen: CONSTRUCTION_COMING_LATER ? 'hub' : 'build',
     },
   ]
 }

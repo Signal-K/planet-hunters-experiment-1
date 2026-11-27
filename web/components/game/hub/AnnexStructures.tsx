@@ -1,7 +1,6 @@
 'use client'
 
-import { ANNEX_KINDS, ANNEX_SLOTS, aboveGround, displayX, units, type AnnexSlot } from '@/lib/scene/base-site'
-import { SiteMarker } from './SiteMarker'
+import { ANNEX_KINDS, ANNEX_SLOTS, aboveGround, displayX, units } from '@/lib/scene/base-site'
 import styles from './AnnexStructures.module.css'
 
 /** SSL-843: line-art ground telescope (observatory dome on a drum, the tube out of the slit), in the Base's kit look. */
@@ -41,9 +40,6 @@ export function AnnexArt({ kind, className }: { kind: string; className?: string
 interface AnnexStructuresProps {
   /** Annex kind standing on each slot, by slot plot. */
   standing: Map<number, string>
-  /** The tray item being placed, if any: free slots light up for it. */
-  placing: string | null
-  onPlace: (slot: AnnexSlot) => void
   onOpen: (kind: string) => void
   /** Hide the empty slot pads (first-run Base, subsurface). */
   quiet?: boolean
@@ -53,7 +49,7 @@ interface AnnexStructuresProps {
  * The annex row: every slot is a small paved pad on the ground, like a tree spot in a garden. A slot shows the
  * structure standing on it, an empty pad, or (while a tray item is being placed) a pulsing Place marker.
  */
-export function AnnexStructures({ standing, placing, onPlace, onOpen, quiet = false }: AnnexStructuresProps) {
+export function AnnexStructures({ standing, onOpen, quiet = false }: AnnexStructuresProps) {
   return (
     <>
       {ANNEX_SLOTS.map(raw => {
@@ -77,9 +73,6 @@ export function AnnexStructures({ standing, placing, onPlace, onOpen, quiet = fa
             </button>
           )
         }
-        if (placing) {
-          return <SiteMarker key={slot.id} site={slot} label={ANNEX_KINDS[placing]?.label ?? placing} compact onPlace={() => onPlace(raw)} />
-        }
         if (quiet) return null
         return (
           <span
@@ -92,35 +85,5 @@ export function AnnexStructures({ standing, placing, onPlace, onOpen, quiet = fa
         )
       })}
     </>
-  )
-}
-
-/** The Unplaced tray: structures the player owns that are not standing on the Base yet (Pixel Starships' room tray). */
-export function UnplacedTray({ kinds, placing, onPick, onCancel }: { kinds: string[]; placing: string | null; onPick: (kind: string) => void; onCancel: () => void }) {
-  if (kinds.length === 0) return null
-  return (
-    <div className={styles.tray} data-testid="unplaced-tray" role="group" aria-label="Unplaced structures">
-      {!placing && <span className={styles.trayTitle}>Unplaced</span>}
-      <span className="ln-sr-only" aria-live="polite">{placing ? `Tap a lit slot to place the ${ANNEX_KINDS[placing]?.label ?? placing}` : ''}</span>
-      <div className={styles.trayItems}>
-        {kinds.map(kind => (
-          <button
-            key={kind}
-            type="button"
-            className={styles.trayItem}
-            data-testid={`unplaced-${kind}`}
-            aria-pressed={placing === kind}
-            aria-label={ANNEX_KINDS[kind]?.label ?? kind}
-            onClick={() => (placing === kind ? onCancel() : onPick(kind))}
-          >
-            <AnnexArt kind={kind} className={styles.trayArt} />
-            <span>{ANNEX_KINDS[kind]?.short ?? kind}</span>
-          </button>
-        ))}
-        {placing && (
-          <button type="button" className={styles.trayCancel} data-testid="unplaced-cancel" onClick={onCancel}>Cancel</button>
-        )}
-      </div>
-    </div>
   )
 }

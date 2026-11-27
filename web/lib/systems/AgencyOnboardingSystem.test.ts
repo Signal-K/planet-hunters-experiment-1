@@ -78,8 +78,8 @@ describe('awaitingStorageSilo', () => {
 })
 
 describe('freeOpsActivities', () => {
-  it('offers client work, science, transport and storage suggestions', () => {
-    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'transport', 'storage-silo'])
+  it('offers client work, science and transport suggestions', () => {
+    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'transport'])
   })
 
   it('routes client work to the mission board', () => {

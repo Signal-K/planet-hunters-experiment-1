@@ -30,7 +30,7 @@ export function canonicalGamePath(state: RouteState): string {
 /** Trays (Subsurface, Mission Log) are stable URLs that open over the Base. A cold
  * load of one must keep that tray instead of restoring the saved screen, which
  * would make the state -> URL sync rewrite the path to the saved screen. */
-export const TRAY_ROUTE_SCREENS = new Set<Screen>(['hub-subsurface', 'mission-history'])
+export const TRAY_ROUTE_SCREENS = new Set<Screen>(['mission-history'])
 
 export function trayScreenFromPath(pathname: string): Screen | null {
   const match = /^\/game\/([^/]+)\/?$/.exec(pathname)

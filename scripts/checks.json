@@ -65,7 +65,7 @@
     ]
   },
   "friends-sheet": {
-    "route": "/game/stage?preset=storage-hub&menu=1",
+    "route": "/game/stage?preset=m1-hub&menu=1",
     "steps": [
       { "click": "Friends" },
       { "see": "Field comms", "within": 8000 }

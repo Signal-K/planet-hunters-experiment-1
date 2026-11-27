@@ -6,7 +6,7 @@ import type { FlightPlanProgress, TrainingTryId } from '@/lib/systems/FlightPlan
 import { TRAINING_TRY_IDS } from '@/lib/systems/FlightPlanSystem'
 import { captureGameEvent } from '@/lib/posthog'
 
-export type CoreLoopStep = 'base' | 'contract' | 'launch' | 'mine' | 'debrief' | 'build'
+export type CoreLoopStep = 'base' | 'contract' | 'launch' | 'mine' | 'debrief'
 
 const CORE_LOOP_SCREEN_STEPS: Partial<Record<Screen, CoreLoopStep>> = {
   hub: 'base',
@@ -17,7 +17,6 @@ const CORE_LOOP_SCREEN_STEPS: Partial<Record<Screen, CoreLoopStep>> = {
   flight: 'launch',
   mining: 'mine',
   debrief: 'debrief',
-  build: 'build',
 }
 
 export function coreLoopStepForScreen(screen: Screen): CoreLoopStep | null {

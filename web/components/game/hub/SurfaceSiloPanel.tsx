@@ -1,10 +1,22 @@
 'use client'
 
 import React from 'react'
-import { SURFACE_SILO_CAPACITY } from '@/lib/data'
+import { MINERAL_META, SURFACE_SILO_CAPACITY } from '@/lib/data'
 import { buildingLevel, siloCapacityMultiplier } from '@/lib/data/building-levels'
-import { storedMinerals } from '@/components/game/hub/HubSubsurfaceView'
 import styles from './SurfaceSiloPanel.module.css'
+
+interface StoredMineral { id: string; amount: number; name: string; symbol: string; color: string; rarity: string }
+
+/** The Earth stash as a list, largest first. */
+export function storedMinerals(stash: Record<string, number> = {}): StoredMineral[] {
+  return Object.entries(stash)
+    .filter(([, amount]) => amount > 0)
+    .map(([id, amount]) => {
+      const meta = MINERAL_META[id]
+      return { id, amount, name: meta?.name ?? id, symbol: meta?.sym ?? id.slice(0, 2).toUpperCase(), color: meta?.color ?? 'var(--ln-text-muted)', rarity: meta?.rarity ?? 'unclassified' }
+    })
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name))
+}
 
 interface SurfaceSiloPanelProps {
   stash?: Record<string, number>

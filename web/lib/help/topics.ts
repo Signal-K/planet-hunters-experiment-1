@@ -212,14 +212,6 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Next is the ground', body: 'Collect, then you are back on the ground. Spend the francs and ore on a build, or launch again. A new contract is optional.' },
     ],
   },
-  build: {
-    id: 'build',
-    title: 'Place a structure',
-    cards: [
-      { title: 'Spend what you hauled', body: 'Pick a structure and a plot. The card shows the francs and minerals it needs.' },
-      { title: 'Where a mineral comes from', body: 'If you are short, the card names the Free Ops bodies that carry that mineral. Mine it, return, then build.' },
-    ],
-  },
   hangar: {
     id: 'hangar',
     title: 'Hangar',

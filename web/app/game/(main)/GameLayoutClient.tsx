@@ -46,9 +46,7 @@ import { useSaturnFramePrefetch } from '@/lib/offline/scienceImages'
 
 const PROGRAM_PHASE = {
   'intro': 'Base',
-  'build': 'Base',
   'hub': 'Base',
-  'hub-subsurface': 'Base',
   'surface-silo': 'Base',
   'missions': 'Plan',
   'targets': 'Plan',
@@ -391,7 +389,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
         setSettingsOpen(false); setFriendsOpen(false)
-        if (currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
+        if (currentScreen === 'mission-history') game.goBack('hub')
       } else if (action === 'switch-operation') {
         resumeOperations()
       }

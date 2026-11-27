@@ -51,7 +51,7 @@ export function baseNextFlight(player: Player, setup: Mission | null, target: Ta
     screen: missionResumeScreen(player, now),
   }
   if (!player.placed.includes('launchpad')) return {
-    title: 'Your first launchpad', detail: 'Place the pad to start flying.', cta: CONSTRUCTION_COMING_LATER ? 'Open base' : 'Build launchpad', screen: CONSTRUCTION_COMING_LATER ? 'hub' : 'build',
+    title: 'Your first launchpad', detail: 'Place the pad to start flying.', cta: 'Open base', screen: 'hub',
   }
   if (padNeedsService(player)) return {
     title: 'Get the pad ready', detail: 'Service the launchpad before your next flight.', cta: 'Service pad', screen: 'hub',

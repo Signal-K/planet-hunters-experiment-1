@@ -9,7 +9,7 @@ type BaseDockProps = {
 
   onPrev: () => void
   onNext: () => void
-  onBuild: (event?: MouseEvent<HTMLButtonElement>) => void
+  onBuild?: (event?: MouseEvent<HTMLButtonElement>) => void
   onHub: () => void
   onSubsurface?: () => void
   subsurface?: boolean

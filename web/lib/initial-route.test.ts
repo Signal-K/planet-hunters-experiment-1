@@ -14,8 +14,8 @@ describe('returning player entry route', () => {
     }))).toBe('mining')
   })
 
-  it('keeps first-time placement available', () => {
-    expect(returningScreen(JSON.stringify({ screen: 'build', player: { placed: [] } }))).toBe('build')
+  it('sends a save resting on the retired build screen to the Base', () => {
+    expect(returningScreen(JSON.stringify({ screen: 'build', player: { placed: [] } }))).toBe('hub')
   })
 
   it('falls back to Earth Base for malformed or non-home screens', () => {

@@ -9,7 +9,6 @@ describe('core loop analytics', () => {
     ['flight', 'launch'],
     ['mining', 'mine'],
     ['debrief', 'debrief'],
-    ['build', 'build'],
   ] as const)('maps %s to the %s funnel step', (screen, step) => {
     expect(coreLoopStepForScreen(screen)).toBe(step)
   })

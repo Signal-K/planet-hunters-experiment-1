@@ -13,4 +13,9 @@ Decided by Liam: building and construction (Hub placement, build screen, upgrade
 
 | Feature | Removed in | Notes |
 | --- | --- | --- |
-| Refinery screen | see git log, subject "Refinery" | Recipes in `web/lib/data/structures.ts` and `refineryQueue` state stay. |
+| Refinery screen | commit 189d4860 | Recipes in `web/lib/data/structures.ts` and `refineryQueue` state stay. |
+| Exchange market screen, price alerts UI, `M` shortcut | commit 97310320 | Pricing in `EconomySystem` and `MarketplaceSystem`, and `priceAlerts` state stay. |
+| Build screen, placement mode, arrange, building upgrades, Unplaced tray, annex placing, Build menu entries | this commit | The Base is a fixed starter Base: launchpad, hangar, Agency Hub, silo. `placed`, `placementPlots`, `buildingLevels`, `baseArrangement` stay in saves and agency levels still read them. Old tutorial step "Place the launchpad" is gone. |
+| Subsurface view (excavate, underground rooms, mineral vault) | this commit | `subsurfaceExcavated`, `subsurfaceBuilt` state and `SUBSURFACE_*` data stay. The Surface Silo panel stays. |
+| Scenes `build`, `hub-subsurface`/`subsurface`, `hub-structures`, `storage-build`, `hub-unplaced` tray, `hub-buildings-l2`, `hub-buildings-l3` | this commit | Fixtures `ui-build`, `ui-subsurface`, `ui-subsurface-dug-out`, `storage-hub`, `storage-build` deleted. |
+| Free Ops "Storage Silo" activity, the Exchange on the starter Base | this commit | New games start with launchpad, hangar, Agency Hub and silo. |

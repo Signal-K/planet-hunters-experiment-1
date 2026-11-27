@@ -24,8 +24,7 @@ export interface TrainingTryStep {
 /** The durable three-try plan. Steps are screen-local instructions; only the
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
-  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it. The launchpad comes next.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
-  { id: 'mine-build', try: 'mining', screen: 'build', objective: 'Place the launchpad', radio: 'Tap the marked pad site. Every mission leaves from the pad.', beacon: 'build-plot-0|build-confirm', doneOn: 'mining-debriefed' },
+  { id: 'mine-intro', try: 'mining', screen: 'intro', objective: 'Choose where to build', radio: 'Pick a landscape for your base, then establish it.', beacon: 'intro-begin', doneOn: 'mining-debriefed' },
   { id: 'mine-prepare', try: 'mining', screen: 'hub', objective: 'Prepare your first flight', radio: 'A short contract, destination and loadout are selected. Review them, then build the rocket and launch.', beacon: 'base-next-flight', doneOn: 'mining-debriefed' },
   // The launchpad and other unlisted screens retain their normal contracts entry.
   { id: 'mine-contracts', try: 'mining', screen: '*', objective: 'Tap the tower to open client contracts', radio: 'Client contracts open from the tower.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
@@ -80,10 +79,10 @@ export function trainingStepOnPath(step: TrainingTryStep, screen: string): boole
   return step.screen === '*' && (screen === 'hub' || screen === 'launchpad')
 }
 
-/** Five stops on the first-run spine: place the pad, take a contract, launch,
+/** Five stops on the first-run spine: choose the base, take a contract, launch,
  * mine, debrief. Flight and landing carry no coach step. */
 const MINING_OPS_STEP_BY_SCREEN: Readonly<Record<string, number>> = {
-  intro: 1, build: 1,
+  intro: 1,
   hub: 2, launchpad: 2, missions: 2,
   'rocket-buy': 3, fab: 3, targets: 3,
   mining: 4,
@@ -116,13 +115,6 @@ export function trainingPatchProgress(
 }
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
-  { id: 0, screen: 'build',   title: 'Place the launchpad',
-    body: 'Your first structure. All missions launch from here.',
-    action: 'Tap the marked pad site',
-    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Place the launchpad',
-    desktopBody: 'Your first structure. All missions launch from here.',
-    desktopAction: 'Click the marked pad site',
-    desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Extraction',
     body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
     action: 'Tap the tower',

@@ -95,13 +95,12 @@ describe('FlightPlanSystem', () => {
     expect(trainingTryStep('mining', 'intro')?.objective).toBe('Choose where to build')
     // A screen with no step of its own (Control Station, Market) points back at the tower, not at a contracts button that is not there.
     expect(trainingTryStep('mining', 'instrument-hub')?.objective).toBe('Tap the tower to open client contracts')
-    expect(trainingTryStep('mining', 'build')?.objective).toBe('Place the launchpad')
     expect(trainingTryStep('mining', 'hub')?.beacon).toBe('base-next-flight')
   })
 
   it('SSL-675: puts the laser at stop 4 of the five-stop spine', () => {
     const position = (screen: string) => trainingTryPosition(trainingTryStep('mining', screen)!)
-    expect(position('build')).toEqual({ index: 1, total: 5 })
+    expect(position('intro')).toEqual({ index: 1, total: 5 })
     expect(position('missions')).toEqual({ index: 2, total: 5 })
     expect(position('fab')).toEqual({ index: 3, total: 5 })
     expect(position('targets')).toEqual({ index: 3, total: 5 })

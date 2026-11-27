@@ -838,7 +838,7 @@ export function useAuthSync({
     // Base would show the "Tap the Launchpad" coach over an empty scene. Keep
     // them on the intro/build flow instead (SSL-365).
     if (current.player.placed.length === 0 && !current.player.freeOperations) {
-      const firstTimeScreen = current.screen === 'intro' ? 'intro' : 'build'
+      const firstTimeScreen = 'intro'
       if (current.screen !== firstTimeScreen) setState(s => ({ ...s, screen: firstTimeScreen }))
       router.replace(`/game/${firstTimeScreen}`)
       return

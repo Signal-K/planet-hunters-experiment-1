@@ -7,9 +7,7 @@ import type { Screen } from '@/lib/game-types'
  */
 const SCREEN_LIST = {
   intro: true,
-  build: true,
   hub: true,
-  'hub-subsurface': true,
   'surface-silo': true,
   missions: true,
   'tess-discovery': true,
@@ -61,4 +59,4 @@ export function gameScreenParams(): { screen: Screen }[] {
  * Screens removed from the game (SSL-892, cycle 11). A save that rests on one of these lands on the Base
  * (`repairStateRoute`). Their saved fields stay in the data model. The code is in git tag `pre-simplification-cycle11`.
  */
-export const RETIRED_SCREENS = ['market', 'refinery'] as const
+export const RETIRED_SCREENS = ['hub-subsurface', 'build', 'market', 'refinery'] as const

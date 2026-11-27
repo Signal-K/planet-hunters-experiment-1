@@ -6,7 +6,6 @@ const survey = (region: string, body: string, preset: string): Path => ({ region
 export const missionTestPaths: Record<string, Path[]> = {
   'Regular play': [
     { region: 'Earth region', mission: 'Eros mining contract', steps: [['Prepare', 'm1-fab'], ['Extract', 'm1-mining'], ['Debrief', 'm1-debrief']] },
-    { region: 'Earth region', mission: 'Base construction', steps: [['Inspect base', 'storage-hub'], ['Place storage silo', 'storage-build']] },
     telescope, survey('Inner solar system', 'Mars', 'ui-probe-mars'),
     { region: 'Asteroid belt', mission: 'Bennu to Vesta delivery', steps: [['Prepare', 'transport-fab'], ['Load at Bennu', 'transport-mining'], ['Rover drop-off', 'transport-delivery'], ['Timed drop-off', 'transport-delivery-timed'], ['Debrief', 'transport-debrief']] },
     survey('Jovian', 'Europa', 'ui-probe-europa'),

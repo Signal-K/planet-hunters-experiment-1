@@ -62,7 +62,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       onClose={() => game.goBack()}
       onOpenPlanner={() => game.go('mission-planner')}
       onOpenLog={() => game.go('mission-history')}
-      onOpenBuild={() => game.go('build')}
+      onOpenBuild={() => game.go('hub')}
       onOpenEvent={screen => game.go(screen)}
       onPickTarget={game.onPickTarget}
       onRedeemFragments={game.onRedeemFragments}

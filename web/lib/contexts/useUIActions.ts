@@ -39,15 +39,13 @@ export function useUIActions(
 
   const rememberHost = useCallback((screen: Screen) => {
     if (isHostScene(screen)) lastHost.current = screen
-    else if (screen === 'hub-subsurface') lastHost.current = 'hub'
   }, [])
 
   // The underground tray is ephemeral UI, not the route. Any navigation that
   // leaves it (including a warm open of /game/launchpad) has to drop the
   // overlay in the same turn, or the Base stays buried under it (SSL-476).
   const syncSubsurface = useCallback((screen: Screen) => {
-    if (screen === 'hub-subsurface') setSubsurfaceView(true)
-    else if (screen !== 'mission-history') setSubsurfaceView(false)
+    if (screen !== 'mission-history') setSubsurfaceView(false)
   }, [])
 
   const go = useCallback((screen: Screen) => {
@@ -137,12 +135,7 @@ export function useUIActions(
   const setScreenFromUrl = useCallback((screen: Screen) => {
     let applied: Screen | null = null
     setState(s => {
-      // A bookmarked /game/build must not resurrect the transient plot picker
-      // for an operational base after hydration has already repaired it to
-      // Hub. Keep the URL-driven route in the same safe landing state.
-      const safeScreen = screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
-        ? 'hub'
-        : screen
+      const safeScreen = screen
       // Valid URL changes are already represented by the browser history and
       // should not be pushed back. A repaired route, however, must be written
       // back to the canonical URL instead of leaving /game/build rendering a

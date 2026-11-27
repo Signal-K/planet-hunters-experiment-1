@@ -45,16 +45,6 @@ export const SCENES: readonly SceneDefinition[] = [
     description: `The player's home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.`,
   },
   {
-    id: 'build-place',
-    name: 'Build & Place',
-    surface: 'canvas',
-    location: 'earth-base',
-    screen: 'build',
-    sceneFile: '/game/scenes/hub.scene.json',
-    entityTypes: ['BuildPlot'],
-    description: `Structure placement over the same ${SCENE_NAMES.base} plots. Note it loads the hub scene — \`build-place.scene.json\` is orphaned.`,
-  },
-  {
     id: 'subsurface',
     name: `${SCENE_NAMES.base} Subsurface`,
     surface: 'dom',

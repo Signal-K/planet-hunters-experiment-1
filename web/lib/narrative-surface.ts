@@ -14,9 +14,7 @@ export type NarrativeRole =
 
 export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   intro: 'base',
-  build: 'base',
   hub: 'base',
-  'hub-subsurface': 'service',
   'surface-silo': 'service',
   missions: 'plan',
   targets: 'plan',

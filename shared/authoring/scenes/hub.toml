@@ -7,9 +7,9 @@ format = 1
 id = "hub"
 type = "base"
 name = "Earth Base"
-summary = "The home base. Structures stand on fixed sites, can be tapped, and the dock leads to Build, the Menu and the other places."
+summary = "The home base. Structures stand on fixed sites, can be tapped, and the dock leads to the Map, the Menu and the other places."
 tickets = ["SSL-345", "SSL-451", "SSL-615", "SSL-641", "SSL-868", "SSL-855", "SSL-873", "SSL-875"]
-qa = ["hub-first-run", "ground-telescope-upgrades", "signal-dialogue", "hub", "hub-structures", "transport-hub", "telescope-hub", "cp-early", "cp-mid", "cp-late"]
+qa = ["hub-first-run", "ground-telescope-upgrades", "signal-dialogue", "hub", "transport-hub", "telescope-hub", "cp-early", "cp-mid", "cp-late"]
 
 [runtime]
 surface = "canvas"

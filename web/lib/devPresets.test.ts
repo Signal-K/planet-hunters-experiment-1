@@ -13,13 +13,12 @@ describe('DEV_GROUPS', () => {
     const labels = DEV_GROUPS.map(g => g.label)
     expect(labels).toContain('Extraction')
     expect(labels).toContain('Transport')
-    expect(labels).toContain('Storage Silo')
     // Post-onboarding story mission (telescope launch) — replayable once
     // free ops + the space telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
     expect(labels).toContain('Gaps and checkpoints')
-    expect(labels).toHaveLength(6)
+    expect(labels).toHaveLength(5)
     expect(labels).not.toContain('Mission 2')
   })
 
@@ -130,26 +129,6 @@ describe('resolvePreset — Transport arc (two-leg mine-then-deliver)', () => {
     expect(p.deliveryTargetId).toBe(TRANSPORT_MISSION.deliveryTargetId)
     expect(p.lastCargo).toEqual(TRANSPORT_MISSION.requires.minerals)
     expect(p.player!.missionsDone).toBe(1)
-  })
-})
-
-describe('resolvePreset — Storage Silo arc', () => {
-  it('storage-hub: both guided missions done, no silo, still in training', () => {
-    const p = resolvePreset('storage-hub')!
-    expect(p.screen).toBe('hub')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.player!.placed).not.toContain('surface-silo')
-    expect(p.player!.freeOperations).toBe(false)
-    expect(p.tutorial).toBe(true)
-    expect(p.doneSteps![40]).toBeUndefined()
-  })
-
-  it('storage-build: build screen with the hub silo step done', () => {
-    const p = resolvePreset('storage-build')!
-    expect(p.screen).toBe('build')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.doneSteps![40]).toBe(true)
-    expect(p.doneSteps![41]).toBeUndefined()
   })
 })
 
