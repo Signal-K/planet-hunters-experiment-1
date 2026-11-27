@@ -13,10 +13,11 @@ const SHOWN = 6
  * right now (this device or the account), lists every change still waiting in
  * plain words, and offers an upload when there is a connection.
  */
-export default function SyncTray({ state, outbox, box, lastUpload, online, anchor, onClose }: {
+export default function SyncTray({ state, outbox, box, solarBox, lastUpload, online, anchor, onClose }: {
   state: SyncState
   outbox: OutboxSnapshot
   box: Outbox
+  solarBox?: Outbox
   lastUpload: number | null
   online: boolean
   /** The chip's box: the tray opens just under it. */
@@ -40,7 +41,7 @@ export default function SyncTray({ state, outbox, box, lastUpload, online, ancho
     window.addEventListener('pointerdown', onPointer)
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('pointerdown', onPointer) }
   }, [onClose])
-  const items = box.pending()
+  const items = [...box.pending(), ...(solarBox?.pending() ?? [])].sort((a, b) => a.createdAt - b.createdAt)
   const copy = syncTrayCopy(state, outbox.waiting)
   const canUpload = online && outbox.waiting > 0
 
@@ -71,9 +72,9 @@ export default function SyncTray({ state, outbox, box, lastUpload, online, ancho
             setUnreachable(false)
             setTrying(true)
             // A request to an unreachable server can hang; give it a few seconds, then say so.
-            await Promise.race([box.flush().catch(() => {}), new Promise(resolve => window.setTimeout(resolve, 5_000))])
+            await Promise.race([Promise.all([box.flush(), solarBox?.flush()]).catch(() => {}), new Promise(resolve => window.setTimeout(resolve, 5_000))])
             setTrying(false)
-            setUnreachable(box.snapshot().waiting > 0)
+            setUnreachable(box.snapshot().waiting > 0 || (solarBox?.snapshot().waiting ?? 0) > 0)
           }}>{trying ? 'Trying…' : 'Upload now'}</button>
         )}
       </section>,

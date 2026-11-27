@@ -33,9 +33,10 @@ import { execFileSync, spawn, spawnSync } from 'node:child_process'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const shotsDir = join(root, '.scene-shots')
-const profileDir = join(root, '.scene-shots', '.browser')
 const offlineFile = join(root, '.scene-shots', '.offline')
 const PORT = Number(process.env.SCENE_DRIVE_PORT ?? 9333)
+// Each independent driver needs its own Chromium profile lock.
+const profileDir = join(root, '.scene-shots', `.browser-${PORT}`)
 const WEB = `http://localhost:${process.env.LANDNAM_WEB_PORT ?? 4320}`
 const VIEWPORTS = { phone: [390, 844], landscape: [926, 428], ipad: [1180, 820], 'ipad-portrait': [820, 1180], desktop: [1440, 900] }
 
@@ -53,6 +54,7 @@ if (command === 'serve') {
     viewport: { width: w, height: h },
     args: [`--remote-debugging-port=${PORT}`],
   })
+  context.on('close', () => process.exit(0))
   if (context.pages().length === 0) await context.newPage()
   // `offline on|off` flips a flag file; the browser's owner applies it, since
   // network emulation only lasts as long as the session that set it.
@@ -66,13 +68,13 @@ if (command === 'serve') {
 
 async function connect() {
   try {
-    return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`)
+    return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 1500 })
   } catch {
     mkdirSync(shotsDir, { recursive: true })
     spawn(process.execPath, [fileURLToPath(import.meta.url), 'serve', '--size', flag('--size') ?? '926x428'], { detached: true, stdio: 'ignore' }).unref()
     for (let i = 0; i < 40; i++) {
       await new Promise(r => setTimeout(r, 250))
-      try { return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`) } catch {}
+      try { return await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 1500 }) } catch {}
     }
     throw new Error('Browser did not start')
   }
@@ -117,8 +119,7 @@ async function settle(page) {
 }
 
 if (command === 'close') {
-  try { const b = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`); await b.contexts()[0]?.close() } catch {}
-  spawnSync('pkill', ['-f', 'scene-drive.mjs serve'])
+  try { const b = await chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 1500 }); await b.contexts()[0]?.close() } catch {}
   console.log('closed')
   process.exit(0)
 }
@@ -129,8 +130,21 @@ if (!command || command === 'help') {
 }
 
 if (command === 'open') {
-  const ensure = spawnSync(join(root, 'scripts', 'ensure-stack.sh'), { stdio: 'inherit' })
-  if (ensure.status !== 0) process.exit(ensure.status ?? 1)
+  // Account-free stage fixtures only need the web server. A missing backend
+  // must not hold the scene driver behind the full-stack startup lock.
+  const target = positional[0] ?? '/game/stage'
+  const route = resolveRoute(target)
+  let webReady = false
+  if (route.startsWith('/game/stage')) {
+    try {
+      const response = await fetch(WEB + route, { signal: AbortSignal.timeout(60000) })
+      webReady = response.ok
+    } catch { /* Fall back to starting the stack. */ }
+  }
+  if (!webReady) {
+    const ensure = spawnSync(join(root, 'scripts', 'ensure-stack.sh'), { stdio: 'inherit' })
+    if (ensure.status !== 0) process.exit(ensure.status ?? 1)
+  }
 }
 
 const browser = await connect()

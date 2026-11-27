@@ -12,13 +12,13 @@ if [ ! -f web/public/takeon-go/takeon.wasm ]; then
   echo "  Fix: git -C <takeon> worktree add ../takeon-kes551 origin/codex/kes-551-procedural-locations && TAKEON_GO_REPO=../takeon-kes551 npm --prefix web run sync:solar" >&2
 fi
 if healthy; then echo "Landnam stack already up on :${PORT}"; exit 0; fi
-LOCK=/tmp/landnam-ensure.lock
-if ! mkdir "$LOCK" 2>/dev/null; then
-  # Another session is starting it; wait for that rather than starting a second one.
-  for _ in $(seq 1 180); do healthy && { echo "Landnam stack up on :${PORT}"; exit 0; }; sleep 2; done
-  echo "Another session is starting the stack and it is not healthy yet. See /tmp/landnam-make-up.log" >&2; exit 1
+# Kernel-managed locks are released even if a previous starter crashes. Keep
+# ports independent so a different preview cannot block this one.
+exec 9>"/tmp/landnam-ensure-${PORT}.lock"
+if ! flock -w 60 9; then
+  echo "Timed out waiting for stack startup on :${PORT}." >&2; exit 1
 fi
-trap 'rmdir "$LOCK"' EXIT
+if healthy; then echo "Landnam stack already up on :${PORT}"; exit 0; fi
 if [ -f ../docker-compose.yml ] && docker info >/dev/null 2>&1; then
   make up >/tmp/landnam-make-up.log 2>&1
 else

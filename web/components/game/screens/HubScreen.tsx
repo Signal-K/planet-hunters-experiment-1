@@ -339,8 +339,8 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
     if (kind === 'control-station') {
       return {
         // SSL-834 (Liam, 13.11): this building is the Agency Hub. The Data hub is a panel, never a building.
-        kind, label: 'Agency hub',
-        sub: 'YOUR PROGRAM',
+        kind, label: agencyLandmark ? 'Agency hub site' : 'Agency hub',
+        sub: agencyLandmark ? ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE ? 'TAP TO BUILD' : 'FUTURE BUILD SITE') : 'YOUR PROGRAM',
         status: 'ok' as const,
         w: 60,
         // Sky prompts share one spot in open sky, so only one speaks at a time: the pad goes first.

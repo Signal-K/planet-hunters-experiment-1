@@ -9,7 +9,7 @@ import { pbShared } from '@/lib/pb'
 import { deleteCaptureBlobs, readCaptureBlob } from '@/lib/capture/blobStore'
 import { casUpdateGameState } from '@/lib/sync/casSave'
 import type { GameState } from '@/lib/game-types'
-import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
+import { createOutbox, createCoordinatedOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
 interface PbErrorBody {
   data?: Record<string, { code?: string } | undefined>
@@ -28,7 +28,7 @@ export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
   }
   const message = `${error.status} ${error.message} ${JSON.stringify(error.response?.data ?? {})}`
   // A validation failure is deterministic: replaying the same payload cannot succeed.
-  if (error.status === 400 && op.type !== 'field-save') return { kind: 'invalid', message }
+  if (error.status === 400 && op.type !== 'field-save' && op.type !== 'solar-field') return { kind: 'invalid', message }
   return { kind: 'rejected', message }
 }
 
@@ -94,6 +94,14 @@ export async function replayFieldSave(op: FieldSave, worlds: FieldCollection, co
 
 async function executePocketBaseOp(op: OutboxOp): Promise<OutboxFailure | null> {
   if (op.type === 'http') return executeHttp(op)
+  if (op.type === 'solar-field') {
+    if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
+    const result = await pbLandnam.send<{ revision: number }>('/api/solar-fields', {
+      method: 'POST', body: { site: op.site, revision: op.revision, operationId: op.id, state: op.state },
+    })
+    if (result.revision !== op.revision + 1) return { kind: 'rejected', message: 'Unexpected solar field revision' }
+    return null
+  }
   if (op.type === 'field-save') {
     // Never replay one account's field using another account's session.
     if (pbLandnam.authStore.record?.id !== op.user) return { kind: 'offline' }
@@ -173,8 +181,29 @@ export function getOutbox(): Outbox {
       execute: executeOnPocketBase,
       isOnline: () => typeof navigator === 'undefined' || navigator.onLine !== false,
     })
+    if (typeof window !== 'undefined') getSolarFieldOutbox()
   }
   return instance
+}
+
+let solarInstance: Outbox | null = null
+
+/** Field writes are isolated from older app versions and coordinated per origin. */
+export function getSolarFieldOutbox(): Outbox {
+  if (!solarInstance) {
+    solarInstance = createCoordinatedOutbox({
+      store: typeof window === 'undefined' ? memoryStore() : browserStore({ isolatedSolar: true }),
+      execute: executeOnPocketBase,
+      isOnline: () => typeof navigator === 'undefined' || navigator.onLine !== false,
+      exclusive: async work => {
+        if (typeof window === 'undefined') return work()
+        if (!navigator.locks) throw new Error('This browser cannot safely save a shared field across tabs.')
+        return navigator.locks.request('landnam-solar-outbox-v1', work)
+      },
+    })
+    solarInstance.start()
+  }
+  return solarInstance
 }
 
 export function queueCreate(collection: string, data: Record<string, unknown>, id: string = newRecordId()): string {

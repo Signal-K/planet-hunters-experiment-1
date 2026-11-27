@@ -1,0 +1,5 @@
+.recovery { position: absolute; z-index: 3; top: 112px; left: 16px; right: 16px; padding: 16px; max-width: 34rem; color: var(--ln-text); background: var(--ln-panel); border: 1px solid var(--ln-border); border-radius: var(--ln-r-md); font-size: 14px; }
+.recovery p { margin: 0 0 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions button { min-height: 44px; padding: 8px 14px; color: var(--ln-text); background: var(--ln-shell); border: 1px solid var(--ln-border); border-radius: var(--ln-r-md); font-size: 14px; }
+.actions button:disabled { opacity: .55; }

@@ -12,6 +12,7 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/mis
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
+import SolarMiningPreview from '@/components/game/screens/SolarMiningPreview'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
@@ -279,6 +280,26 @@ export default function MissionOperationRoutes({
 
     case 'mining': {
       if (!game.mission || !game.target) return <MissionRunUnavailable game={game} />
+      if (game.visualFixture === 'solar-mining' && game.mission.customPlan?.zone) {
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} onComplete={typeof window !== 'undefined' && window.location.pathname === '/game/stage' ? cargo => {
+          game.completeStep(6)
+          if (game.player.shipCustomizerParts?.lander) {
+            game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
+            game.go('landing')
+          } else game.onMiningDone(cargo)
+        } : undefined} />
+      }
+      // Kept opt-in until a transfer receipt can be applied to the game save
+      // idempotently. Returning to base leaves the mission paused; this path
+      // must not award or consume cargo before that guarantee exists.
+      if (process.env.NEXT_PUBLIC_SOLAR_FIELD_MISSIONS === '1'
+        && process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
+        && game.mission.customPlan?.work === 'mine' && game.mission.customPlan.zone) {
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} persistent onPause={() => {
+          game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+          game.go('hub')
+        }} />
+      }
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis

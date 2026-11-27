@@ -106,6 +106,8 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
       { key: 'solar-site-mining', label: 'Solar site mining', hint: 'Selected Mercury site with preserved cargo and charges', stage: 'free-ops' },
+      { key: 'solar-field-mining', label: 'Solar field mining', hint: 'Mine and revisit a generated Mercury field', stage: 'free-ops' },
+      { key: 'solar-playtest', label: 'Solar mission playtest', hint: 'Land, mine and return in an isolated test mission', stage: 'free-ops' },
       { key: 'ui-mining-survey', label: 'Mining mapped finds', hint: 'SSL-879: two Eros sectors, one aluminium haul; mapped mix plus required ore', stage: 'free-ops' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
       { key: 'm1-return', label: 'Return',  hint: 'Flying home with the haul', stage: 'tutorial' },
@@ -488,6 +490,12 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
+    case 'solar-playtest': {
+      const field = resolvePresetState('solar-site-mining')!
+      return { ...field, screen: 'landing', visualFixture: 'solar-mining', player: { ...field.player!, missionPhase: 'landing', landingStartedAt: Date.now(), miningCargoInProgress: undefined } }
+    }
+    case 'solar-field-mining':
+      return { ...resolvePresetState('solar-site-mining')!, visualFixture: 'solar-mining' }
     case 'solar-site-mining': {
       const plan: MissionPlan = { id: 'self-plan-fixture-mine', work: 'mine', targetId: 'mercury', mineral: 'iron', amount: 3, createdAt: 100, zone: 'east' }
       const target = TARGETS.find(body => body.id === plan.targetId)!

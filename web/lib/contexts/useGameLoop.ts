@@ -709,7 +709,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return applyMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
-    if (runId) {
+    if (runId && stateRef.current.visualFixture !== 'solar-mining') {
       queueUpdate('mission_runs', runId, {
         status: 'in_progress', phase: hasDelivery ? 'transit' : 'debrief', cargo,
       })
@@ -1499,6 +1499,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
     // The destination HUD/debrief presents the collected reward. Keeping a
     // second global confirmation leaks it over the following mission setup.
+    // The solar stage is an isolated playtest, even in a signed-in browser.
+    if (current.visualFixture === 'solar-mining') return
     const userId = pbShared.authStore.record?.id
     if (userId) {
       queueCreate('mission_log', {

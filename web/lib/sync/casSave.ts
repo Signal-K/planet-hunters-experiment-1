@@ -1,20 +1,11 @@
-/**
- * Optimistic-concurrency write of `game_states` (SSL-559), shared by the direct
- * save path and the outbox replay. Instead of last-write-wins it reads the
- * record, merges the server copy into ours (ledger + per-field merge), writes
- * with `syncLedger.version = server version + 1`, then re-reads: if another
- * device wrote in between (version moved), it merges again and retries.
- * PocketBase has no compare-and-swap, so the re-read check closes the window
- * to the time between two requests; a lost race is repaired by the next merge
- * because the ledger never loses a device's progress.
- */
+/** Transactional comparison of the complete server save before writing. */
 import type { GameState } from '@/lib/game-types'
 import { mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { SyncLedger } from './ledger'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 export interface GameStatesClient {
   getOne(id: string): Promise<{ id: string; state?: unknown }>
-  update(id: string, data: Record<string, unknown>): Promise<unknown>
 }
 
 export const REMOTE_MERGED_EVENT = 'landnam:remote-merged'
@@ -31,7 +22,9 @@ function versionOf(state: unknown): number {
   return typeof l?.version === 'number' ? l.version : 0
 }
 
-export async function casUpdateGameState(client: GameStatesClient, recordId: string, userId: string, local: GameState): Promise<GameState> {
+type CompareAndSave = (body: { recordId: string; expected: unknown; state: GameState; missionsDone: number }) => Promise<unknown>
+
+export async function casUpdateGameState(client: GameStatesClient, recordId: string, userId: string, local: GameState, save: CompareAndSave = body => pbLandnam.send('/api/game-state/compare-and-save', { method: 'POST', body })): Promise<GameState> {
   let mine = local
   for (let attempt = 0; attempt < MAX_TRIES; attempt += 1) {
     const existing = await client.getOne(recordId)
@@ -39,13 +32,17 @@ export async function casUpdateGameState(client: GameStatesClient, recordId: str
     const merged = remote && typeof remote === 'object' && remote.player ? mergeRemoteState(mine, remote) : mine
     const version = versionOf(remote) + 1
     const toWrite: GameState = { ...merged, syncLedger: merged.syncLedger ? { ...merged.syncLedger, version } : merged.syncLedger }
-    await client.update(recordId, { user: userId, state: toWrite, missions_done: toWrite.player.missionsDone })
-    const check = await client.getOne(recordId)
-    if (versionOf(check.state) === version) {
+    if (pbLandnam.authStore.record?.id && pbLandnam.authStore.record.id !== userId) throw new Error('Account changed while saving')
+    try {
+      await save({ recordId, expected: existing.state ?? null, state: toWrite, missionsDone: toWrite.player.missionsDone })
       if (typeof window !== 'undefined' && !sameContent(toWrite, local)) window.dispatchEvent(new CustomEvent(REMOTE_MERGED_EVENT, { detail: toWrite }))
       return toWrite
+    } catch (error) {
+      if ((error as { status?: number }).status !== 409) throw error
     }
     mine = toWrite
   }
-  return mine
+  // Let the caller retain the write in the outbox instead of acknowledging
+  // a save that we could not verify.
+  throw new Error('Game state changed repeatedly while saving; retry required')
 }
