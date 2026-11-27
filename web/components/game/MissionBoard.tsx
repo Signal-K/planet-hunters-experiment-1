@@ -85,10 +85,14 @@ type Target = Catalog['targets'][number]
 type MapView = 'system' | 'inner' | 'belt' | 'outer' | 'moons'
 type MapMode = 'route' | 'pick' | 'ambient'
 
-const SUN = { x: 21, y: 47 }
-const UX = 10.5
-const UY = 4.4
-const BELT_R = 5
+// A diagram of destinations, deliberately not orbital distances or positions.
+const SUN = { x: 9, y: 46 }
+const EARTH_POS = { x: 50, y: 46 }
+const SYSTEM_POSITIONS: Record<string, { x: number; y: number }> = {
+  mercury: { x: 18, y: 28 }, venus: { x: 28, y: 62 }, mars: { x: 39, y: 24 },
+  jupiter: { x: 65, y: 61 }, saturn: { x: 77, y: 35 }, uranus: { x: 76, y: 77 }, neptune: { x: 91, y: 58 },
+}
+const BELT_POS = { x: 58, y: 25 }
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
 function spread(id: string): number {
@@ -104,19 +108,13 @@ function lcg(seed: number) {
 
 const STARS = (() => {
   const rand = lcg(7)
-  return Array.from({ length: 56 }, () => ({
+  return Array.from({ length: 24 }, () => ({
     x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.3 + rand() * 0.6,
     tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
   }))
 })()
 
-const orbitPoint = (r: number, angle: number) => ({ x: SUN.x + r * UX * Math.cos(angle), y: SUN.y + r * UY * Math.sin(angle) })
-const EARTH_POS = orbitPoint(3, -0.4)
 const REGION_EARTH_POS = { x: 38, y: 42 }
-const BELT_ROCKS = (() => {
-  const rand = lcg(31)
-  return Array.from({ length: 96 }, () => ({ ...orbitPoint(BELT_R + (rand() - 0.5) * 1.1, (rand() * 2 - 1) * 1.4), size: 2 + rand() * 3.5, glow: 0.4 + rand() * 0.5 }))
-})()
 const BELT_FIELD = (() => {
   const rand = lcg(53)
   return Array.from({ length: 32 }, () => ({ x: 4 + rand() * 92, y: 14 + rand() * 56, size: 3 + rand() * 7, glow: 0.15 + rand() * 0.35 }))
@@ -187,11 +185,8 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const inner = regionLayout(innerPlanets)
   const outer = regionLayout(outerPlanets)
   const litAsteroid = asteroids.find(t => lit.has(t.id))
-  const anchor = litAsteroid ? orbitPoint(BELT_R, spread(litAsteroid.id) * 1.1) : orbitPoint(BELT_R, -0.75)
-  // These are illustrative positions, not ephemerides. Separate the inner
-  // planets so their globes and labels remain legible on their own rings.
-  const planetAngles: Record<string, number> = { mercury: -0.9, venus: 0.5, mars: 0.5, jupiter: -0.55, saturn: 0.55, uranus: -0.85, neptune: 0.85 }
-  const planetPos = (t: Target) => orbitPoint(t.orbit, planetAngles[t.id] ?? spread(t.id) * 0.85)
+  const anchor = BELT_POS
+  const planetPos = (t: Target) => SYSTEM_POSITIONS[t.id] ?? { x: 48 + spread(t.id) * 30, y: 48 + spread(`${t.id}y`) * 25 }
   const pos = (t: Target) => {
     const parentId = moonParent(t.id)
     const parentTarget = planets.find(planet => planet.id === parentId)
@@ -221,38 +216,30 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <ellipse cx="18" cy="44" rx="20" ry="17" className={styles.gxRegion} />
-        <ellipse cx="62" cy="44" rx="25" ry="24" className={styles.gxRegion} />
-        <ellipse cx="92" cy="44" rx="21" ry="29" className={styles.gxRegion} />
-        {[1, 2, 3, 4, 6, 7, 8, 9].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
         {mode === 'pick' && shipTargets.map((id, index) => {
           const target = real.find(body => body.id === id)
           if (!target) return null
           const destination = pos(target)
           const parentId = moonParent(target.id)
           const uprightPositions: Record<string, { x: number; y: number }> = {
-            mercury: { x: 25, y: 23 }, venus: { x: 62, y: 25 }, mars: { x: 62, y: 38 },
+            mercury: { x: 25, y: 23 }, venus: { x: 62, y: 25 }, mars: { x: 62, y: 43 },
             jupiter: { x: 25, y: 60 }, saturn: { x: 62, y: 61 }, uranus: { x: 25, y: 73 }, neptune: { x: 62, y: 74 },
           }
-          const uprightDestination = target.type === 'asteroid' ? { x: 30, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 25, y: 36 }
+          const uprightDestination = target.type === 'asteroid' ? { x: 30, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 50, y: 36 }
           const ship = (path: string, className: string) => <g className={`${styles.gxShip} ${className}`} aria-label={`Ship toward ${target.name}`}>
             <path d="M-1.1,-0.65 L1.4,0 L-1.1,0.65 L-0.6,0 Z" />
             <animateMotion dur={`${14 + index * 3}s`} repeatCount="indefinite" rotate="auto" path={path} />
           </g>
           return <g key={`${id}-${index}`}>
             {ship(line([EARTH_POS, destination]), styles.gxShipWide)}
-            {ship(line([{ x: 25, y: 36 }, uprightDestination]), styles.gxShipPortrait)}
+            {ship(line([{ x: 50, y: 36 }, uprightDestination]), styles.gxShipPortrait)}
           </g>
         })}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
           ? <path d={line(route)} className={styles.gxRoute} />
           : route.slice(1).map((p, i) => <path key={i} d={line([route[0], p])} className={styles.gxSpoke} />))}
       </svg>
-      {BELT_ROCKS.map((r, i) => <i key={i} className={styles.gxRock} style={{ ...style(r), width: r.size, height: r.size, opacity: r.glow }} />)}
       <i className={styles.gxSun} style={style(SUN)} />
-      <span className={styles.gxRegionLabel} style={{ left: '13%', top: '68%' }}>Inner system</span>
-      <span className={styles.gxRegionLabel} style={{ left: '54%', top: '73%' }}>Main belt</span>
-      <span className={styles.gxRegionLabel} style={{ left: '83%', top: '78%' }}>Outer system</span>
       {mode !== 'ambient' && <>
         {earth(EARTH_POS)}
         {shownPlanets.map(t => node(t, planetPos(t), t.name))}
@@ -260,8 +247,6 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
         </button>
       </>}
-        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-inner" style={{ left: '20%', top: '67%' }} onClick={() => onView('inner')}>Explore inner system</button>}
-        {mode === 'pick' && <button type="button" className={styles.gxRegionButton} data-testid="map-outer" style={{ left: '84%', top: '76%' }} onClick={() => onView('outer')}>Explore outer system</button>}
     </> : view === 'moons' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         <ellipse cx="42" cy="44" rx="27" ry="24" className={styles.gxRing} />
@@ -522,7 +507,7 @@ export default function MissionBoard({
         <header className={styles.dockHead}>{locationName && <div className={styles.locationWorld}><MapGlobe target={picked ?? undefined} /></div>}<div className={styles.dockWho}>
           <span>{locationName ? 'Location missions' : 'Solar system'}</span><h2>{locationName ?? 'Choose a location'}</h2>
         </div>{locationName && <button type="button" className={styles.clearFilter} aria-label="Close location missions" onClick={() => setPickedId(null)}>Close</button>}</header>
-        {!locationName && <><p className={styles.dockBrief}>Select a planet to see its missions and moons, or open the asteroid belt.</p>
+        {!locationName && <><p className={styles.dockBrief}>Select a world to see its missions and moons. Map positions are schematic.</p>
           <p className={styles.agencyOverview} data-testid="map-agency-overview"><strong>Your agency</strong><span>{player.activeMission ? `Active: ${player.activeMission.mission?.title ?? player.activeMission.target?.name ?? 'Mission underway'}` : 'No active mission'} · {player.missionsDone} completed{(player.pausedMissionRuns?.length ?? 0) > 0 ? ` · ${player.pausedMissionRuns!.length} paused` : ''}</span></p></>}
         {sourceMineralName && <p className={styles.dockBrief}>Showing locations with {sourceMineralName}. <button type="button" onClick={() => setSourceMineral(null)}>Show all locations</button></p>}
         {locationName && <div className={styles.locationMissions}>
