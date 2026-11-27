@@ -59,7 +59,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
       selectedIndex={relay.selectedIndex}
       onSelectRelative={relay.selectRelativeSignal}
       onSelectMission={relay.selectSignal}
-      onAccept={(id, disposition) => game.onPickMission(id, disposition)}
+      onAccept={id => game.onPickMission(id)}
       onClose={() => game.go('hub')}
       onOpenPlanner={() => game.go('mission-planner')}
       onOpenLog={() => game.go('mission-history')}

@@ -18,11 +18,9 @@ import { showerForRunMission, showerPreset } from '@/lib/data/showers'
 import { debrisNow, useDebrisEvent } from '@/lib/hooks/useDebrisEvent'
 import { DEBRIS_RESOURCE_IDS } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL } from '@/lib/data/missions'
-import { FIREBALL_FRAGMENT_ID, FIREBALL_FRAGMENT_PRICE, fireballDue } from '@/lib/orionids/fireball'
+import { FIREBALL_FRAGMENT_ID, fireballDue } from '@/lib/orionids/fireball'
 import { isProtectedEventReward } from '@/lib/orionids/rewards'
-import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { holdHasRoom } from '@/lib/orionids/night-catches'
-import gateStyles from './MiningStorageGate.module.css'
 import styles from './MiningTargetCue.module.css'
 import type { Player } from '@/lib/game-types'
 import { miningSeamPool } from '@/lib/probes/mining-intelligence'
@@ -59,12 +57,12 @@ function miningGuide(hasDelivery: boolean, action: MiningSecondaryAction | null)
 }
 
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, probeEvidence = {}, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, hasEarthStorage, storageFree, initialEarthDisposition, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onSwitchMission, onPersist, onAbandon, minerals, probeEvidence = {}, laserChargeCap, laserBonusCharges = 0, laserTier, trainingMiningTry = false, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, initialCharges, francs = 0, onSpendFrancs, isFreeHaulEligible, storageFree, onDebrisMined, onEventProof, fragmentCatches = 0, cargoCapacity, orionidsBadgeTier = null, fireballCaughtAt = null, onFireballCaught, skyEventLocation = null }: {
   mission: Mission
   target: Target
   probeEvidence?: Pick<Player, 'probes' | 'agencyCommunity'>
   rocketImageSrc?: string
-  onComplete: (cargo: Record<string, number>, earthDisposition?: 'store' | 'sell') => void
+  onComplete: (cargo: Record<string, number>) => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>, laserCharges: number) => void
   /** Leave the run (progress kept) and open the mission board. */
@@ -97,13 +95,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
    *  construction attached (KES-283) — the only case that gates on a storage
    *  destination before mining can begin. */
   isFreeHaulEligible?: boolean
-  /** Whether the player has a built Earth-side silo/vault to store into. */
-  hasEarthStorage?: boolean
   /** Units of silo room left. When 0, "Store on Earth" is offered as full instead of promising room the haul will not get. */
   storageFree?: number
-  /** Destination already chosen before a prior "Back to hub" pause on this
-   *  same mission — resuming must not ask again. */
-  initialEarthDisposition?: 'store' | 'sell'
   /** SSL-475: fired for every sky-event debris chunk mined (first one earns the badge). */
   onDebrisMined?: (resourceId: string) => void
   /** Captures the first rendered event body as an offline-safe proof. */
@@ -176,14 +169,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     cargoRef.current = next
     setCargo(next)
   }, [])
-  // KES-283: a self-directed run requires a storage destination before mining
-  // starts. A destination chosen before a prior back-to-hub pause carries
-  // over via initialEarthDisposition so resuming never asks twice.
-  const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
-  const gateOpen = !!isFreeHaulEligible && earthDisposition == null
-  const siloFull = !!hasEarthStorage && storageFree !== undefined && storageFree <= 0
-  // SSL-845: a full silo never blocks storing. The haul goes in and the cheapest stored ore is sold to make room.
-  const canStore = !!hasEarthStorage
+  // Free mining only ever stores: the haul goes into the Earth silo, and anything past its room is left behind.
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const steerRef = useRef<((dir: number) => void) | null>(null)
@@ -311,7 +297,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [fireballCaughtLocal, setFireballCaughtLocal] = useState(false)
   const [fireballCard, setFireballCard] = useState(false)
   const fireballMoment = fireballDue(debrisNow(), fireballCaughtAt) && !fireballCaughtLocal
-  const fireballWorth = formatCurrency(Math.round(FIREBALL_FRAGMENT_PRICE * OPEN_MARKET_SELL_RATE))
   const collectMineral = useCallback((mineral: string) => {
     // Shower debris rides in cargo when the hold has room. The night-run goal counts the catch either way.
     if (DEBRIS_RESOURCE_IDS.includes(mineral)) onDebrisMinedRef.current?.(mineral)
@@ -367,7 +352,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [trainingMiningTry, addToast, mission.requires.minerals, minerals, cargoCapacity, nightRun])
 
   function fireLaser(quiet = false) {
-    if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
+    if (sceneStatus !== 'ready' || laserCharges <= 0) return
     if (isCharging) {
       if (!quiet) queuedFireRef.current = true
       return
@@ -425,7 +410,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   function handleReturn() {
     if (isFreeHaulEligible || orderFilled || laserCharges <= 0) {
-      onComplete(cargoRef.current, earthDisposition ?? undefined)
+      onComplete(cargoRef.current)
       return
     }
     // SSL-411: a disabled RETURN swallowed taps (read as rageclicks on the
@@ -449,11 +434,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       catchesRef.current = ORIONIDS_FRAGMENT_GOAL
       setCatches(ORIONIDS_FRAGMENT_GOAL)
       cargoRef.current = { ...cargoRef.current, [fragmentId]: ORIONIDS_FRAGMENT_GOAL }
-      onComplete(cargoRef.current, earthDisposition ?? undefined)
+      onComplete(cargoRef.current)
       return
     }
     cargoRef.current = { ...cargoRef.current, ...mission.requires.minerals }
-    onComplete(cargoRef.current, earthDisposition ?? undefined)
+    onComplete(cargoRef.current)
   }
 
   // Downloaded/shared sectors supply the mix. Required ore still leads the field;
@@ -518,10 +503,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   // SSL-708: the goal is said once, in the middle of the scene, when the run starts; then the scene is clear.
   const [startBrief, setStartBrief] = useState(true)
   useEffect(() => {
-    if (!startBrief || sceneStatus !== 'ready' || gateOpen) return
+    if (!startBrief || sceneStatus !== 'ready') return
     const t = window.setTimeout(() => setStartBrief(false), 4000)
     return () => window.clearTimeout(t)
-  }, [startBrief, sceneStatus, gateOpen])
+  }, [startBrief, sceneStatus])
   const briefGoal = nightRun
     ? `Catch ${ORIONIDS_FRAGMENT_GOAL} fragments`
     : isFreeOps ? 'Mine any seam, then head home'
@@ -532,32 +517,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   return (
     <div className="game-screen mining-screen theme-blueprint" data-training-active={trainingMiningTry ? 'true' : 'false'} data-palette={palette.id} data-scroll={pinScroll ? String(scrollScreens) : undefined} style={{ background: palette.skyCss }}>
       {help.layer}
-
-      {/* KES-283: self-directed mining requires a storage destination before
-          the run can start — takes absolute precedence over every other
-          overlay (explainer/guide/success/failure/warning) since nothing
-          about the run can proceed while it's open. */}
-      {gateOpen && (
-        <div className={`mining-storage-gate-overlay ${gateStyles.overlay}`}>
-          <section className={gateStyles.gate} aria-label="Choose where this haul goes">
-            <span className={gateStyles.eyebrow}>Free run · your haul</span>
-            <h2>Where does it go?</h2>
-            <p>No client is owed this haul. Choose before you start mining.</p>
-            <div className={gateStyles.choices}>
-              <button type="button" className={gateStyles.choice} data-testid="mining-gate-sell" onClick={() => setEarthDisposition('sell')}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M14.5 9.5c-.6-.9-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 2.7 5.4 1.4 5.4 4 0 1.1-1.1 1.9-2.7 1.9-1.2 0-2.2-.5-2.8-1.4M12 6.5v11" /></svg>
-                <b>Sell on Earth</b>
-                <small>At market price</small>
-              </button>
-              <button type="button" className={gateStyles.choice} data-testid="mining-gate-store" onClick={() => canStore && setEarthDisposition('store')} disabled={!canStore}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5z" /><path d="M4 9 12 4l8 5M9 13h6" /></svg>
-                <b>Store on Earth</b>
-                <small>{!hasEarthStorage ? 'Needs a silo or vault' : siloFull ? 'Silo full: sells your cheapest stored ore to make room' : storageFree !== undefined ? `Into the silo · ${storageFree} free` : 'Into the silo'}</small>
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
 
       {devBars && (
         <button
@@ -576,9 +535,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               First Free Ops Haul Secured · {totalCollected}/{totalNeeded}
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
-              {earthDisposition === 'store'
-                ? 'This cargo is yours. Return to Earth and it goes into your silo instead of to a client.'
-                : 'This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.'}
+              This cargo is yours. Return to Earth and it goes into your silo, ready to craft with.
               {' '}The goal is {totalNeeded}. Keep mining, or return any time.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
@@ -631,12 +588,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       )}
       {/* SSL-708: nothing sits across the top of the mining scene but the menu button. */}
       <MiningBackButton open={guideOpen} onClick={() => setGuideOpen(o => !o)} />
-      {startBrief && sceneStatus === 'ready' && !gateOpen && activeOverlay == null && (
+      {startBrief && sceneStatus === 'ready' && activeOverlay == null && (
         <button type="button" className="mining-start-brief" data-testid="mining-start-brief" onClick={() => setStartBrief(false)}>
           <span className="mining-start-brief__eyebrow">{nightRun ? `${showerName} shower` : isFreeOps ? 'Free mining · no client' : mission.title}</span>
           <strong>{briefGoal}</strong>
           <span>{secondaryAction ? secondaryAction.brief
-            : isFreeOps ? (earthDisposition === 'store' ? 'Steer over any seam and fire. The haul goes into your Earth silo.' : 'Steer over any seam and fire. You sell the haul at market price on Earth.')
+            : isFreeOps ? (storageFree !== undefined ? `Steer over any seam and fire. The haul goes into your Earth silo · ${storageFree} free.` : 'Steer over any seam and fire. The haul goes into your Earth silo.')
             : 'Steer over a labelled seam, then press Fire.'}</span>
         </button>
       )}
@@ -657,7 +614,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <div className={styles.fireballCard} data-testid="fireball-reward" role="status" aria-label="Fireball caught">
             <strong>FIREBALL CAUGHT</strong>
             <p>Fireball fragment</p>
-            <p>Exchange worth {fireballWorth}</p>
             <button type="button" data-testid="fireball-reward-continue" onClick={() => setFireballCard(false)}>CONTINUE</button>
           </div>
         )}
@@ -835,7 +791,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           charging={isCharging}
           firing={firingHeld}
           ready={fireReady}
-          disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
+          disabled={sceneStatus !== 'ready' || laserCharges <= 0}
           onPress={() => { setFiringHeld(true); beginFireHold() }}
           onRelease={() => { setFiringHeld(false); endFireHold() }}
           onKeyFire={() => fireLaser()}
@@ -847,7 +803,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             keyLabel={secondaryAction.keyLabel}
             ready={catchReady}
             pressed={catchPressed}
-            disabled={gateOpen || sceneStatus !== 'ready'}
+            disabled={sceneStatus !== 'ready'}
             onPress={catchFragment}
           />
         ) : null}

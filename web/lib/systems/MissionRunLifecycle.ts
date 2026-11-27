@@ -47,11 +47,9 @@ export function clearActiveRunPlayer(player: Player): Player {
     homeDeliveryPending: false,
     homeSettlement: undefined,
     cargoSettledOffworld: false,
-    pendingRemoteDisposition: undefined,
     returningToEarth: false,
     headingToDelivery: false,
     shipDestroyed: false,
-    freeHaulDisposition: undefined,
   }
 }
 

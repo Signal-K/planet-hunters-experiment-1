@@ -58,7 +58,7 @@ export function isOwnProgramMission(mission: Mission): boolean {
  * True when a completed run's cargo is a *free haul* the player owns outright:
  * a self-directed mining run (own program, no client, no delivery drop, not a
  * construction haul) that actually came home with ore. This is the only case
- * that gets the Debrief store-vs-sell choice — client contracts and no-mineral
+ * that is stored in the silo on return — client contracts and no-mineral
  * runs (satellite, survey, rover deploy) are deliberately excluded, so for them
  * "nothing changes". Satellite/survey/rover runs also carry no ore and so fail
  * the units check regardless.
@@ -74,8 +74,7 @@ export function isFreeHaulMission(mission: Mission, cargo: Record<string, number
 /**
  * Same shape test as {@link isFreeHaulMission} but usable before any ore has
  * been collected — at mission start, not just at debrief. A self-directed
- * mining run matching this is the only case that gates on a storage
- * destination before mining begins (KES-283): client contracts, deliveries,
+ * mining run matching this is the only case that is store-only, and the haul is limited by silo room: client contracts, deliveries,
  * and construction hauls already have a fixed destination and must not be
  * interrupted with this choice.
  */
@@ -218,8 +217,8 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
   if (owner === 'self') {
     return {
       label: 'Self-directed run',
-      summary: 'No client and no order to fill. Pick any reachable target, mine what looks valuable, and sell the haul yourself.',
-      steps: ['Launch', 'Mine', 'Sell'],
+      summary: 'No client and no order to fill. Pick any reachable target, mine what looks valuable, and store the haul in your silo.',
+      steps: ['Launch', 'Mine', 'Store'],
       owner,
     }
   }

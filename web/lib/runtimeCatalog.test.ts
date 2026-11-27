@@ -86,7 +86,7 @@ describe('buildRuntimeCatalog', () => {
     const active = { ...DEFAULT_STATE, screen: 'mining' as const, missionId: first.id, targetId: source.id, player }
     const returned = applyReturnArrived(applyMiningDone(active, { aluminium: 6 }, null))
     expect(returned.player.stash?.aluminium).toBe(6)
-    const settled = applyHomeSplit(returned, { aluminium: { client: 0, silo: 6, sell: 0 } }).state
+    const settled = applyHomeSplit(returned, { aluminium: { client: 0, silo: 6 } }, { aluminium: 6 }).state
     expect(settled.player.stash?.aluminium).toBe(6)
     const second = build({ ...player, stash: settled.player.stash ?? {} }).missions.find(m => m.id === first.id)!
     expect(second.requires.minerals).toEqual({ aluminium: 6, copper: 2 })

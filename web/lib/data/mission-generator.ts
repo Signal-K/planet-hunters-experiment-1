@@ -334,7 +334,7 @@ const STARTER_HOLD_UNITS = 6
 // these are the player's own program, sold to market at plain price, so they
 // must never carry a client premium or earn client affinity (see
 // isOwnProgramMission in mission-primers.ts). Excludes scan-only templates
-// (cargoRange [0, 0]) since a self-directed *mining* run always has cargo to sell.
+// (cargoRange [0, 0]) since a self-directed *mining* run always has cargo to store.
 export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorInput): Mission[] {
   const templates = input.templates ?? DEFAULT_MISSION_TEMPLATES
   const freeOpsTemplates = templates.filter(t => t.id.startsWith('freeops-') && t.cargoRange[0] + t.cargoRange[1] > 0)
@@ -349,7 +349,7 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
     return {
       id: `self-directed-${template.id}-${index + 1}`,
       title: `${mineralName} self-directed run`,
-      brief: `No client, no daily limit. Mine ${amount} units of ${mineralName.toLowerCase()} and sell the haul yourself at market price.`,
+      brief: `No client, no daily limit. Mine ${amount} units of ${mineralName.toLowerCase()} and store the haul in your silo to craft with later.`,
       tag: 'FREE OPS',
       difficulty: template.difficulty,
       locked: false,
@@ -379,7 +379,7 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
       id: 'self-directed-freeops-aluminium-stock',
       survey: undefined,
       title: 'Aluminium stock run',
-      brief: `No client, no daily limit. Mine ${amount} units of aluminium, in one trip or several. Keep it for Base builds or sell it yourself at market price.`,
+      brief: `No client, no daily limit. Mine ${amount} units of aluminium, in one trip or several. Keep it in your silo for crafting.`,
       tag: 'FREE OPS',
       difficulty: 'L1',
       locked: false,

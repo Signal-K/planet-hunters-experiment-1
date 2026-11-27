@@ -98,37 +98,6 @@ export function sellQuote(
   )
 }
 
-export function applySellMinerals(
-  s: GameState,
-  mineralId: string,
-  amount: number,
-  now: number = Date.now(),
-  clientId?: string | null,
-): GameState {
-  const stash = { ...(s.player.stash ?? {}) }
-  const held = stash[mineralId] ?? 0
-  const sellAmount = Math.min(amount, held)
-  if (sellAmount <= 0) return s
-  if (!MINERAL_META[mineralId] || isArtifactMineralId(mineralId)) return s
-  const marketSupply = { ...(s.player.marketSupply ?? {}) }
-  const marketSupplyUpdatedAt = { ...(s.player.marketSupplyUpdatedAt ?? {}) }
-  const unitsSold = decayedUnitsSold(marketSupply[mineralId] ?? 0, marketSupplyUpdatedAt[mineralId], now)
-  // `null` explicitly means an open-market sale with no client premium. This
-  // matters for a self-directed haul after a client job: lastClient is a
-  // historical display context and must not leak a client's premium into the
-  // player's own sale. Omitting the argument entirely (the Market screen's
-  // "Sell" button) must resolve to the same client the screen quoted against
-  // — `player.lastClient` — or the credited amount silently undercuts the
-  // quote the player just saw.
-  const effectiveClientId = clientId === undefined ? s.player.lastClient : clientId ?? undefined
-  const revenue = sellUnitPrice(mineralId, s.player, effectiveClientId, now).price * sellAmount
-  marketSupply[mineralId] = unitsSold + sellAmount
-  marketSupplyUpdatedAt[mineralId] = now
-  stash[mineralId] = held - sellAmount
-  if (stash[mineralId] <= 0) delete stash[mineralId]
-  return { ...s, player: addStamp({ ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt }, 'exchange-sale', now) }
-}
-
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
 // A built Earth-side silo is what gives the player somewhere on Earth to KEEP
 // a self-directed haul rather than selling it on return. Storage capacity, the
@@ -154,21 +123,8 @@ export function storedUnits(stash: Record<string, number> | undefined): number {
   return Object.values(stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)
 }
 
-/** Sell an explicit set of ore units out of the stash at current market prices,
- *  crediting francs and applying supply pressure per mineral — the same path a
- *  manual Commodity Exchange sale takes, run once per mineral in the set. Used
- *  when a self-directed haul (or a silo overflow) is sold on return. */
-export function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
-  let next = s
-  for (const [id, amount] of Object.entries(haul)) {
-    if (amount > 0) next = applySellMinerals(next, id, amount, now, null)
-  }
-  return next
-}
-
-/** Pick which of a haul's units spill when a silo is over capacity: cheapest ore
- *  first, so the player keeps the valuable ore and only common ore is sold off.
- *  Never returns more units than the haul contains. */
+/** Which of a haul's units are left behind when the silo is over capacity: the cheapest ore first, so the
+ *  player keeps the valuable ore. Never returns more units than the haul contains. */
 export function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
   if (overflow <= 0) return {}
   const byCheapest = Object.entries(haul)
@@ -186,47 +142,29 @@ export function pickOverflowFromHaul(haul: Record<string, number>, overflow: num
 }
 
 /**
- * Resolve what happens to a self-directed ("free") mission's haul on return.
- * The haul is already in the stash by this point (the return leg stashes it),
- * so this only decides how much leaves again:
- *
- * - `sell` (or no vault built): sell the whole haul at market, crediting francs.
- * - `store` with a vault: the new haul goes into the silo. SSL-845 (Liam, 16 Nov:
- *   a full silo must never stop him storing what he mines): when it does not fit,
- *   the cheapest ore already in the silo is sold at market to make room, then (only
- *   if the haul alone is bigger than the silo) the haul's own cheapest ore.
+ * Settle a self-directed ("free") mission's haul on return. The haul is already in the stash (the return
+ * leg stashes it). Free mining only stores ore, never sells it, so what does not fit the silo is left behind:
+ * the new haul's cheapest ore goes first, then older stock only if the haul alone is not enough.
  */
-export function applyFreeHaulDisposition(
-  s: GameState,
-  haul: Record<string, number>,
-  disposition: 'store' | 'sell',
-  now: number = Date.now(),
-): GameState {
+export function applyFreeHaulStore(s: GameState, haul: Record<string, number>): GameState {
   if (!Object.values(haul).some(n => n > 0)) return s
-  const effective = earthStorageBuilt(s.player) ? disposition : 'sell'
-  if (effective === 'sell') {
-    return applySellHaul(s, haul, now)
-  }
   const overflow = Math.max(0, storedUnits(s.player.stash) - storageCapacity(s.player))
   if (overflow <= 0) return s
-  return applySellHaul(s, pickSpillForStore(s.player.stash ?? {}, haul, overflow), now)
-}
-
-/** SSL-845: what leaves the silo when a stored haul does not fit. Older stock goes first, cheapest ore first, so the
- *  haul the player chose to store stays; only a haul bigger than the whole silo spills its own cheapest ore. */
-export function pickSpillForStore(stash: Record<string, number>, haul: Record<string, number>, overflow: number): Record<string, number> {
-  if (overflow <= 0) return {}
   const older: Record<string, number> = {}
-  for (const [id, n] of Object.entries(stash)) {
+  for (const [id, n] of Object.entries(s.player.stash ?? {})) {
     const kept = Math.max(0, n) - Math.max(0, haul[id] ?? 0)
     if (kept > 0) older[id] = kept
   }
-  const fromOlder = pickOverflowFromHaul(older, overflow)
-  const rest = overflow - storedUnits(fromOlder)
-  const fromHaul = pickOverflowFromHaul(haul, rest)
-  const spill: Record<string, number> = { ...fromOlder }
-  for (const [id, n] of Object.entries(fromHaul)) spill[id] = (spill[id] ?? 0) + n
-  return spill
+  const fromHaul = pickOverflowFromHaul(haul, overflow)
+  const fromOlder = pickOverflowFromHaul(older, overflow - storedUnits(fromHaul))
+  const stash = { ...(s.player.stash ?? {}) }
+  for (const dropped of [fromHaul, fromOlder]) {
+    for (const [id, n] of Object.entries(dropped)) {
+      stash[id] = Math.max(0, (stash[id] ?? 0) - n)
+      if (stash[id] <= 0) delete stash[id]
+    }
+  }
+  return { ...s, player: { ...s.player, stash } }
 }
 
 export function applyBuildGroundTelescope(s: GameState): GameState {

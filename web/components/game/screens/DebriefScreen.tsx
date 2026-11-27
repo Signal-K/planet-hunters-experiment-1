@@ -27,11 +27,11 @@ import { SkyBadgeRow } from './SkyBadgeRow'
 import { withoutShowerFragments } from '@/lib/orionids/shower-run'
 import { chainInstrument, getShowerChain, ORIONIDS_CHAIN } from '@/lib/orionids/chain'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals: _minerals, clients, clientMissions: _clientMissions, freeOperations: _freeOperations, annotations: _annotations, missionsDone, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, storageCapacity, storageUsed, stashUnits = 0, badges, showerRun, homeSettlement, exits = [] }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
-  onDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: DebriefExitId) => void
+  onDone: (total: number, affinity: number, consumed?: Record<string, number>, next?: DebriefExitId) => void
   minerals: Record<string, MineralMeta>
   clients: Record<string, Client>
   clientMissions?: Record<string, number>
@@ -46,8 +46,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   hasEarthStorage?: boolean
   storageCapacity?: number
   storageUsed?: number
-  haulMarketValue?: number
-  initialDisposition?: 'store' | 'sell'
   stashUnits?: number
   badges?: Record<string, PlayerBadge>
   /** SSL-651: a filled Orionids shower run. Its francs are paid and its fragments kept, not sold. */
@@ -79,12 +77,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const help = useHelp('debrief')
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
-  const disposition = initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
-  // A filled shower run keeps its fragments, so only the rest of the haul is sold or stored.
+  // A filled shower run keeps its fragments, so only the rest of the haul is stored.
   const settledCargo = shownRun ? withoutShowerFragments(cargo, showerForRunMission(mission.id)?.id) : cargo
-  const settledUnits = Object.values(settledCargo).reduce((sum, n) => sum + Math.max(0, n), 0)
-  const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : settledUnits
+  const overflowUnits = Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0))
   const [scrapping, setScrapping] = useState(false)
   const [dismantled, setDismantled] = useState(false)
   const rocketDisplay = rocketDisplayForConfig(rocket)
@@ -108,7 +104,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
   const netTotal = total - vehicleCost
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
-  const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
   const clientOwedUnits = !isFreeHaul && !isTwoLegJob && delivered
     ? Object.values(requiredMaterials).reduce((sum, n) => sum + Math.max(0, n), 0)
     : 0
@@ -119,11 +114,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     collectingRef.current = true
     setCollecting(true)
     if (settled) {
-      onDone(settled.payout, settled.affinity, settled.consumed, undefined, next)
+      onDone(settled.payout, settled.affinity, settled.consumed, next)
     } else if (isFreeHaul) {
-      onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell', next)
+      onDone(0, 0, {}, next)
     } else {
-      onDone(total, affinityEarned, delivered ? requiredMaterials : {}, undefined, next)
+      onDone(total, affinityEarned, delivered ? requiredMaterials : {}, next)
     }
   }
 
@@ -268,11 +263,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         ) : isOrbitalInstrumentDeployment ? null : isFreeHaul ? (
           <CargoDestinationPanel
             cargo={settledCargo}
-            disposition={disposition}
-            hasEarthStorage={!!hasEarthStorage}
             storageUsed={storageUsed ?? 0}
             storageCapacity={storageCapacity ?? 0}
-            haulMarketValue={haulMarketValue ?? 0}
             overflowUnits={overflowUnits}
           />
         ) : isProgramOperation && mission.programReward ? (
@@ -375,57 +367,33 @@ function AnimatedFrancs({ value }: { value: number }) {
   return <span className={styles.net}>{formatCurrency(shown, { signed: true })}</span>
 }
 
-function CargoDestinationPanel({
-  cargo, disposition, hasEarthStorage, storageUsed, storageCapacity, haulMarketValue, overflowUnits,
-}: {
+function CargoDestinationPanel({ cargo, storageUsed, storageCapacity, overflowUnits }: {
   cargo: Record<string, number>
-  disposition: 'store' | 'sell'
-  hasEarthStorage: boolean
   storageUsed: number
   storageCapacity: number
-  haulMarketValue: number
   overflowUnits: number
 }) {
-  const store = disposition === 'store' && hasEarthStorage
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const priorUnits = Math.max(0, storageUsed - haulUnits)
   const cap = storageCapacity > 0 ? storageCapacity : 1
-  const miningFee = Math.round(haulMarketValue * 0.5)
-  const transportFee = haulMarketValue - miningFee
   return (
     <section className={styles.card} data-surface="cream">
-      <p className={styles.kicker}>Free Ops haul</p>
-      {haulMarketValue > 0 && (
-        <>
-          <PayRow testId="debrief-mining-fee" label="Mining fee · your program" value={miningFee} />
-          <PayRow testId="debrief-transport-fee" label="Transport fee · return" value={transportFee} />
-        </>
-      )}
-      <p className={styles.place}>{store ? 'Earth storage' : 'sell on Earth return'}</p>
-      {store ? (
-        <>
-          <div className={styles.row}>
-            <span>Silo</span>
-            <span>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
-          </div>
-          <div className={styles.bar} aria-hidden="true">
-            {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%` }} />}
-            {haulUnits > 0 && <span style={{ width: `${Math.min(100, (haulUnits / cap) * 100)}%` }} />}
-          </div>
-          {overflowUnits > 0 && <p className={styles.note}>{overflowUnits} units of the cheapest stored ore are sold to make room.</p>}
-        </>
-      ) : (
-        <div className={styles.netLine}>
-          <span className={styles.netLabel}>Sale value</span>
-          <AnimatedFrancs value={haulMarketValue} />
-        </div>
-      )}
-      {!hasEarthStorage && <p className={styles.note}>Build a Mineral Vault to keep ore on Earth.</p>}
+      <p className={styles.kicker}>Free mining haul</p>
+      <p className={styles.place}>Earth storage</p>
+      <div className={styles.row}>
+        <span>Silo</span>
+        <span>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
+      </div>
+      <div className={styles.bar} aria-hidden="true">
+        {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%` }} />}
+        {haulUnits > 0 && <span style={{ width: `${Math.min(100, (haulUnits / cap) * 100)}%` }} />}
+      </div>
+      {overflowUnits > 0 && <p className={styles.note}>{overflowUnits} units did not fit and are left behind. Free mining only stores ore.</p>}
     </section>
   )
 }
 
-/** SSL-751: the ledger for a haul split on the Homecoming sheet: client fee, market sale and silo, as settled there. */
+/** SSL-751: the ledger for a haul split on the Homecoming sheet: client fee and silo, as settled there. */
 function HomeSettlementLedger({ settlement, clientName, vehicleCost, vehicleName, freeHaul }: {
   settlement: HomeSettlement
   clientName?: string
@@ -434,17 +402,22 @@ function HomeSettlementLedger({ settlement, clientName, vehicleCost, vehicleName
   freeHaul: boolean
 }) {
   const units = (r: Record<string, number>) => Object.values(r).reduce((sum, n) => sum + Math.max(0, n), 0)
-  const soldUnits = units(settlement.sold)
+  const leftUnits = units(settlement.left ?? {})
   const siloUnits = units(settlement.siloed)
   const clientUnits = units(settlement.consumed)
-  const net = settlement.payout + settlement.soldFrancs - vehicleCost
+  const net = settlement.payout - vehicleCost
   return (
     <section className={styles.card} data-surface="cream" data-testid="debrief-home-ledger">
       <p className={styles.kicker}>Ledger</p>
       {!freeHaul && (settlement.payout > 0
         ? <PayRow testId="debrief-home-client" label={`Contract · ${clientName ?? 'Client'} · ${clientUnits} U`} value={settlement.payout} />
         : <p className={styles.note} data-testid="debrief-home-short">Order incomplete. The fee is paid on a full delivery.</p>)}
-      {soldUnits > 0 && <PayRow testId="debrief-home-sold" label={`Sold at market · ${soldUnits} U`} value={settlement.soldFrancs} />}
+      {leftUnits > 0 && (
+        <div className={styles.row} data-testid="debrief-home-left">
+          <span>Left behind</span>
+          <span>{leftUnits} U</span>
+        </div>
+      )}
       {siloUnits > 0 && (
         <div className={styles.row} data-testid="debrief-home-silo">
           <span>Kept in silo</span>

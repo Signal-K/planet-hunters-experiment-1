@@ -95,10 +95,10 @@ describe('MiningScreen guide', () => {
     const root = createRoot(host)
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     await act(async () => root.render(<MiningScreen mission={mission} target={TARGETS[0]} minerals={MINERAL_META}
-      initialCargo={{ aluminium: 6 }} initialEarthDisposition="store" isFreeHaulEligible cargoCapacity={6}
+      initialCargo={{ aluminium: 6 }} isFreeHaulEligible cargoCapacity={6}
       onComplete={onComplete} onBack={() => undefined} />))
     await act(async () => host.querySelector<HTMLButtonElement>('[data-testid="return-home-btn"]')?.click())
-    expect(onComplete).toHaveBeenCalledWith({ aluminium: 6 }, 'store')
+    expect(onComplete).toHaveBeenCalledWith({ aluminium: 6 })
     await act(async () => root.unmount())
   })
 })

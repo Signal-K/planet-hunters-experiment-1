@@ -9,16 +9,16 @@ import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems
 import type { FlightPlanProgress } from './systems/FlightPlanSystem'
 import type { FlightPlanEvent, TrainingTryId } from './systems/FlightPlanSystem'
 
-/** SSL-751: the Homecoming split, as the debrief ledger reads it. Market and silo shares are already settled. */
+/** SSL-751: the Homecoming split, as the debrief ledger reads it. The silo share is already settled. */
 export interface HomeSettlement {
   /** Francs the client pays (0 when the client share does not fill the contract). */
   payout: number
   affinity: number
   /** Client units the debrief ledger takes out of the stash. */
   consumed: Record<string, number>
-  sold: Record<string, number>
-  soldFrancs: number
   siloed: Record<string, number>
+  /** Units that fit neither the contract nor the silo. They stay behind. */
+  left: Record<string, number>
 }
 
 export interface DailyClientPool {
@@ -77,8 +77,6 @@ export interface MissionRunSnapshot {
   missionRocketSource?: 'company' | 'fabricated'
   debriefPending?: boolean
   cargoSettledOffworld?: boolean
-  pendingRemoteDisposition?: 'store' | 'sell'
-  freeHaulDisposition?: 'store' | 'sell'
   returningToEarth?: boolean
   headingToDelivery?: boolean
   shipDestroyed?: boolean
@@ -239,12 +237,10 @@ export interface Player {
   homeSettlement?: HomeSettlement
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
-  pendingRemoteDisposition?: 'store' | 'sell'
   /** Earth-side keep/sell choice made at the pre-mining storage gate (KES-283),
    *  before the haul exists. Debrief's store-vs-sell panel seeds its default
    *  from this so the pre-mining choice reads as a confirmation, not a second
    *  ask from scratch. */
-  freeHaulDisposition?: 'store' | 'sell'
   returningToEarth?: boolean
   shipDestroyed?: boolean
   // True while in transit toward a two-leg mission's deliveryTargetId, after
@@ -545,7 +541,7 @@ export interface GameActions {
   setMenuOpen: (v: boolean) => void
   subsurfaceView: boolean
   setSubsurfaceView: (v: boolean) => void
-  onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
+  onPickMission: (id: string) => void
   onPickTarget: (id: string) => void
   prepareAgencyRocket: () => void
   onPurchaseRocket: (rocketId: string) => void
@@ -558,15 +554,15 @@ export interface GameActions {
   onRedeemFragments: () => void
   onCombineFragments: () => void
   resumeMissionRun: (key: string) => void
-  onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
+  onMiningDone: (cargo: Record<string, number>) => void
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
   /** Spend hauled ore on the next Laser Capacitor level; no-ops unless the player is still at `expectedLevel` and has the ore spare beyond `reservedUnits`. */
   onSellToClient: (clientId: string, level: number, mineral: string, amount: number) => void
-  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell', next?: import('@/lib/debrief-exits').DebriefExitId) => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, next?: import('@/lib/debrief-exits').DebriefExitId) => void
   /** SSL-553: settle the return delivery sheet (client / silo / sell per mineral). */
-  onHomeDelivery: (split: Record<string, Record<'client' | 'silo' | 'sell', number>>) => void
+  onHomeDelivery: (split: Record<string, Record<'client' | 'silo', number>>) => void
   startFlightPlan: () => void
   completeFlightPlan: (event: FlightPlanEvent) => void
   showFlightPlanHint: () => void
@@ -580,7 +576,6 @@ export interface GameActions {
   buildGroundTelescope: () => boolean
   /** Builds the ground telescope from the control station; false when it cannot (owned, no station, short of francs). */
   /** SSL-843: stands an owned annex structure on a free annex slot; false when the slot is taken or the kind is not owned. */
-  sellMinerals: (mineralId: string, amount: number) => void
   abandonMission: (opts?: { confirmed?: boolean; waivePenalty?: boolean }) => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
@@ -593,7 +588,7 @@ export interface GameActions {
   startProbeScan: (targetId: string, level?: 1 | 2 | 3) => void
   logProbeSpectrum: (targetId: string, sector: string, wavelengths: number[]) => void
   onLandingTouchdown: () => void
-  onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
+  onRedockComplete: (cargo: Record<string, number>) => void
   reviewAgencyRocket: () => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   gainResearchXP: (amount: number) => void

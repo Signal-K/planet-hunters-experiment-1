@@ -59,14 +59,14 @@ describe('BaseDock', () => {
   })
 
   it('sizes the compact location action grid to the controls that are actually rendered', () => {
-    const threeActions = renderToStaticMarkup(
-      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} onSubsurface={vi.fn()} locationLabel="Earth" />,
+    const twoActions = renderToStaticMarkup(
+      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} locationLabel="Earth" />,
     )
-    const fourActions = renderToStaticMarkup(
-      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} onSubsurface={vi.fn()} onMission={vi.fn()} locationLabel="Earth" />,
+    const threeActions = renderToStaticMarkup(
+      <BaseDock onPrev={vi.fn()} onNext={vi.fn()} onBuild={vi.fn()} onHub={vi.fn()} onMission={vi.fn()} locationLabel="Earth" />,
     )
 
+    expect(twoActions).toContain('data-action-count="2"')
     expect(threeActions).toContain('data-action-count="3"')
-    expect(fourActions).toContain('data-action-count="4"')
   })
 })

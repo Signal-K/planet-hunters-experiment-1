@@ -688,9 +688,7 @@ function ScreenBody({
       return (
         <LaunchpadScreen
           onBack={() => game.goBack()}
-          onPick={(id, freeHaulDisposition) => {
-            game.onPickMission(id, freeHaulDisposition)
-          }}
+          onPick={id => { game.onPickMission(id) }}
           onViewContracts={() => game.goToMissions()}
           onLaunchpadAction={() => {
             if (game.player.pendingLaunch) return game.go('fab')

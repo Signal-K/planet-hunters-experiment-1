@@ -20,7 +20,7 @@ import {
 import { applyMiningDone, applyReturnArrived } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
-import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRocketStageRecovery, earthStorageBuilt, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulStore, applyPurchaseRocket, applyRocketStageRecovery, rocketPurchaseRefusal } from '@/lib/systems/EconomySystem'
 import { agencyRocket, agencyTargets, pastRocketTraining, rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
@@ -104,7 +104,6 @@ function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
     missionRocketSource: state.player.missionRocketSource,
     debriefPending: state.player.debriefPending,
     cargoSettledOffworld: state.player.cargoSettledOffworld,
-    freeHaulDisposition: state.player.freeHaulDisposition,
     returningToEarth: state.player.returningToEarth,
     headingToDelivery: state.player.headingToDelivery,
     shipDestroyed: state.player.shipDestroyed,
@@ -280,7 +279,6 @@ function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot):
       missionRocketSource: snapshot.missionRocketSource,
       debriefPending: snapshot.debriefPending,
       cargoSettledOffworld: snapshot.cargoSettledOffworld,
-      freeHaulDisposition: snapshot.freeHaulDisposition,
       returningToEarth: snapshot.returningToEarth,
       headingToDelivery: snapshot.headingToDelivery,
       shipDestroyed: snapshot.shipDestroyed,
@@ -361,7 +359,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [setState])
 
-  const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
+  const onPickMission = useCallback((id: string) => {
     // A launched run keeps its cargo and charges in pausedMissionRuns. Picking
     // another mission parks that run instead of replacing it. A collected run
     // is dropped, never parked, so it cannot be flown again.
@@ -419,7 +417,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...runPlayer,
           dailyClientPool,
           francs: runPlayer.francs - (mission.jointProject?.playerCost ?? 0),
-          freeHaulDisposition: freeHaulDisposition ?? runPlayer.freeHaulDisposition,
         },
       }
       if (mission?.targetId) {
@@ -1246,18 +1243,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     captureGameEvent('client_direct_sale', { client_id: clientId, mineral, amount })
   }, [setState])
 
-  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell', exitId?: DebriefExitId) => {
+  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, exitId?: DebriefExitId) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // SSL-714: each Orionids mission hands over to the next one on the Events board.
     const runShower = showerForRunMission(current.missionId)
     if (runShower) requestMissionBoardTab('events')
     if (runShower) stampResearch('event')
-    // A self-directed ("free") haul lands in the stash on return; here the
-    // player's Debrief choice decides whether it stays on Earth or is sold at
-    // market. Runs as its own state step before the payout/ledger update below
-    // so the sell revenue is on the balance the main update reads. Client
-    // contracts and no-mineral runs are untouched — nothing changes for them.
+    // A self-directed ("free") haul lands in the stash on return and stays on
+    // Earth; whatever does not fit the silo is left behind. Client contracts
+    // and no-mineral runs are untouched.
     //
     // SSL-651: a filled Orionids shower run pays its francs and keeps the
     // fragments as fragments. Read once up front, because settling resets the
@@ -1274,12 +1269,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? s.player.dailyClientPool?.missions.find(item => item.id === s.missionId)
         ?? null
       if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
-      const effective = disposition ?? s.player.freeHaulDisposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
       const haul = showerFilled ? withoutShowerFragments(s.lastCargo, runShower?.id) : s.lastCargo
-      const settled = applyFreeHaulDisposition(s, haul, effective, Date.now())
-      // Clear the pre-mining choice (KES-283) once it's been consumed here, so
-      // it never carries over and silently pre-picks the next free haul.
-      return settled.player.freeHaulDisposition ? { ...settled, player: { ...settled.player, freeHaulDisposition: undefined } } : settled
+      const settled = applyFreeHaulStore(s, haul)
+      return settled
     })
     const newMissionsDone = current.player.missionsDone + 1
     const completedMission = catalog.missions.find(m => m.id === current.missionId)
@@ -1292,7 +1284,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // the ledger drifting apart. Credit what the player was shown.
     //
     // A free haul is the exception: its francs and ore are fully settled by the
-    // disposition step above (sold at real market price, or kept in the silo),
+    // free-haul step above (kept in the silo),
     // so the main ledger update must neither credit a contract payout nor
     // consume the ore again. The screen passes 0/{} for these, but neutralize
     // here too so no code path can double-count the haul.
@@ -1606,7 +1598,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (newMissionsDone >= FREE_OPS_MISSION_SEQUENCE && !catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stampResearch, stateRef])
 
-  /** SSL-553: settle the delivery sheet. Market and silo shares settle here; the client share runs through the debrief ledger. */
+  /** SSL-553: settle the delivery sheet. The silo share settles here; the client share runs through the debrief ledger. */
   const onHomeDelivery = useCallback((split: HomeSplit) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.player.homeDeliveryPending || !current.lastCargo) return
@@ -1616,11 +1608,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const demand = clientDemand(mission, current.lastCargo)
     const payout = clientPayout(mission, split, demand, current.player.missionsDone)
     const affinity = payout > 0 && mission?.client ? Math.max(0, mission.payout.affinity) : 0
-    // SSL-751: settle the market and silo shares, then show the debrief. Closing the run here sent the
+    // SSL-751: settle the silo share, then show the debrief. Closing the run here sent the
     // contract to the log without its debrief; the debrief's Complete button now closes it.
     setState(s => (s.screen !== 'debrief' || !s.player.homeDeliveryPending || !s.lastCargo)
       ? s
-      : applyHomeSplit(s, split, Date.now(), { payout, affinity }).state)
+      : applyHomeSplit(s, split, s.lastCargo, { payout, affinity }).state)
   }, [catalog.missions, setState, stateRef])
 
   return {

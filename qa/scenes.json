@@ -125,11 +125,21 @@
    ]
   },
   {
+   "id": "play-loop",
+   "name": "Core loop start",
+   "flow": "core-loop",
+   "web": "loop-base",
+   "nativeDeferred": "Web only.",
+   "tickets": [
+    "SSL-892"
+   ]
+  },
+  {
    "id": "free-mining-silo-full",
    "name": "Free mining run, silo full",
    "flow": "core-loop",
    "web": "ui-free-mining-silo-full",
-   "nativeDeferred": "iOS settles with the same rule (Market, HomeDelivery); not built in the cloud session.",
+   "nativeDeferred": "Web only.",
    "tickets": [
     "SSL-845"
    ]

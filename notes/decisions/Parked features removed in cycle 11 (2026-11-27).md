@@ -50,3 +50,14 @@ The mineral sell-price dip and the ground telescope purchase stay. Building upgr
 Deleted with it: building upgrade costs and effect text, `HubConstructionSystem` (build timers), the scaffold-and-drone construction animation, the "BUILDING · 8S" label, `components/construction/*`, the subsurface and refinery data, the Exchange, subsurface and plot-build art (and their manifest entries), the Hangar scene art, and the old builder photos.
 
 Still there: `placed`, `placementPlots` and `controlBuilt`, because the Base draws its structures, ground telescopes and probes from them. Level art for levels 2 and 3 stays so saves that earned them look the same.
+
+## Ore is stored, never sold (27 Nov)
+
+Liam: free mining is limited. A player mines for a client, or mines to get resources to store and later craft. The Exchange and every way to sell ore are removed for now.
+
+- Free missions only store. The "Sell on Earth" choice before mining and the Sell option on the cargo-home sheet are gone. Ore that does not fit the silo is left behind.
+- The cargo-home sheet has two destinations, the client and the silo.
+- The debrief for a free haul shows the silo and any ore left behind. No francs.
+- Client missions still pay francs. The `exchange` agency level is kept and still raises client sale prices.
+- Parked in P-SSL-33: SSL-903 (Exchange and selling), SSL-904 (refinery), SSL-905 (laser capacitor), SSL-906 (Subsurface), SSL-907 (price alerts).
+- `scripts/loop-play.mjs` plays the whole loop and writes a contact sheet.

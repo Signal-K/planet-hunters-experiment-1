@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { applySellMinerals, applyServiceLaunchpad, applyBuildGroundTelescope, applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
+import { applyServiceLaunchpad, applyBuildGroundTelescope, applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
 import { applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { currentTrainingTry, completeFlightPlanEvent, earnsTrainingReplayReward, TRAINING_REPLAY_REWARD } from '@/lib/systems/FlightPlanSystem'
@@ -33,9 +33,6 @@ export function useEconomyActions(
     setState(s => currentTrainingTry(s.player.flightPlan) === 'part' ? finishRocketLesson(s) : s)
   }, [setState])
 
-  const sellMinerals = useCallback((mineralId: string, amount: number) => {
-    setState(s => applySellMinerals(s, mineralId, amount))
-  }, [setState])
 
   const serviceLaunchpad = useCallback(() => {
     setState(s => applyServiceLaunchpad(s))
@@ -99,7 +96,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, serviceLaunchpad, buildGroundTelescope,
+    serviceLaunchpad, buildGroundTelescope,
     abandonMission,
     reviewAgencyRocket, confirmShipCustomizerBuild,
   }

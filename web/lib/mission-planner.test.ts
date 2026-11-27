@@ -42,10 +42,7 @@ describe('self-planned missions', () => {
     expect(delivery.issues).toEqual([])
     expect(delivery.mission?.requires).toMatchObject({ cargo_min: 3, drill_tier: 1, max_orbit: 1 })
     expect(delivery.outboundMs).toBe(10_500)
-    expect(delivery.marketEstimate).toBe(0)
     expect(planQuote({ ...plan, amount: 13 }, p, catalog).issues).toContain('Earth stash has 12; delivery needs 13.')
-    const mine = planQuote({ ...plan, work: 'mine' }, p, catalog)
-    expect(mine.marketEstimate).toBeGreaterThan(0)
     expect(planQuote({ ...plan, work: 'survey', amount: 25 }, p, catalog).issues).toContain('Choose 1–24 sectors.')
   })
   it('restores a saved plan and generates the same normal-launch mission after a stale merge', () => {

@@ -1,7 +1,7 @@
 'use client'
 
 import type { useGame } from '@/game-context'
-import { ROCKET_MODELS, isOwnProgramMission } from '@/lib/data'
+import { ROCKET_MODELS, isFreeHaulEligibleMission, isOwnProgramMission } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import styles from './LaunchReviewPanel.module.css'
 
@@ -25,7 +25,7 @@ export default function LaunchReviewPanel({ game, blockedReason, launched, prima
   const vehicle = player.stagedRockets?.find(v => v.id === player.selectedStagedRocketId)
   const rocket = vehicle ? ROCKET_MODELS.find(model => model.id === vehicle.rocketId) : null
   const haul = Object.entries(mission.requires.minerals).map(([id, amount]) => `${game.catalog.minerals[id]?.name ?? id} ×${amount}`)
-  const pay = mission.payout?.francs ? formatCurrency(mission.payout.francs, { compact: true }) : null
+  const pay = mission.payout?.francs && !isFreeHaulEligibleMission(mission) ? formatCurrency(mission.payout.francs, { compact: true }) : null
   const cargo = mission.customPlan?.work === 'survey' ? `Probe mapping ${mission.customPlan.amount} sectors`
     : mission.customPlan?.work === 'deliver' ? `Forward cache at ${target.name}`
     : mission.payload?.name ?? ([haul.join(', '), pay].filter(Boolean).join(' · ') || 'Nothing')

@@ -37,7 +37,6 @@
 .choice { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 4px; align-items: center; padding: 8px; border-radius: 12px; border: 1.5px solid transparent; }
 .choice[data-kind='client'] { background: color-mix(in srgb, var(--ln-cyan) 12%, var(--ln-panel)); border-color: var(--ln-cyan-border); }
 .choice[data-kind='silo'] { background: color-mix(in srgb, var(--ln-cyan) 8%, var(--ln-panel)); border-color: var(--ln-cyan-border); }
-.choice[data-kind='sell'] { background: color-mix(in srgb, var(--ln-blueprint-blue) 20%, var(--ln-panel)); border-color: var(--ln-cyan-border); }
 .choice[data-disabled='true'] { border-style: dashed; }
 .choiceLabel { grid-column: 1; overflow-wrap: anywhere; font: 800 14px/1.25 var(--ln-font-display, system-ui); }
 .choiceNote { grid-column: 1; overflow-wrap: anywhere; font: 600 14px/1.3 var(--ln-font-body, system-ui); color: var(--ln-text-dim); }
@@ -75,9 +74,7 @@
   opacity: 0; pointer-events: none; animation-duration: 1.1s; animation-timing-function: steps(10, end); animation-fill-mode: both;
 }
 .crate[data-kind='silo'] { animation-name: crateStore; }
-.crate[data-kind='sell'] { animation-name: crateSell; }
 @keyframes crateStore { 0% { opacity: 1; transform: translate(0, 0); } 60% { opacity: 1; transform: translate(0, 70px); } 100% { opacity: 0; transform: translate(0, 110px) scale(0.5); } }
-@keyframes crateSell { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(60px, -160px) scale(0.6); } }
 .root[data-settling='true'] [data-testid='pad-rocket'] { animation: dismantle 1.6s 0.5s steps(8, end) both; }
 @keyframes dismantle { from { clip-path: inset(0 0 0 0); transform: none; } to { clip-path: inset(100% 0 0 0); transform: translateY(12px); } }
 .settleNote {

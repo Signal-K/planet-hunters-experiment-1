@@ -166,7 +166,6 @@
 .scene-location-actions .scene-dock-word span { overflow: visible; text-overflow: clip; white-space: nowrap; text-align: center; }
 .scene-location-action--build svg { color: var(--ln-world-trim-teal); }
 .scene-location-action--mission svg { color: var(--ln-cyan); }
-.scene-location-action--subsurface svg { color: var(--ln-world-hull-shade); }
 .scene-location-action--menu svg { color: var(--ln-world-glass); }
 .scene-location-action--mission {
   border-right-color: var(--ln-world-trim-blue) !important;

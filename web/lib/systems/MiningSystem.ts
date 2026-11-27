@@ -25,7 +25,6 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
       missionPhase: 'transit',
       miningCargoInProgress: undefined,
       miningLaserCharges: undefined,
-      pendingRemoteDisposition: undefined,
       landingReturnStartedAt: undefined,
       headingToDelivery: hasDelivery,
       debriefPending: !hasDelivery,

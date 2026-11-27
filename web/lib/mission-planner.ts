@@ -4,7 +4,6 @@ import type { Mission, MineralMeta, RocketModel, Target } from '@/lib/data/types
 import type { Catalog } from '@/lib/catalog'
 import { rocketConfigForModel } from '@/lib/data/rockets'
 import { validateBuild } from '@/lib/data/parts'
-import { OPEN_MARKET_SELL_RATE } from '@/lib/data/economy'
 import { isArtifactMineralId } from '@/lib/data/minerals'
 import { agencyRocket } from '@/lib/rockets'
 import { rocketBuilderStats, asLoadout, loadoutBonuses } from '@/lib/launchpad/rocketBuilder'
@@ -80,8 +79,7 @@ export function planQuote(plan: MissionPlan, player: Player, catalog: Catalog) {
   const models = mission && target ? plannerRockets(player).filter(model => validateBuild({ mission, target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: agencyTier(player, 'launch') }).ok) : []
   if (mission && !models.length) issues.push(`No available rocket fits: ${mission.requires.cargo_min} U cargo, orbit ${target!.orbit}, laser T${mission.requires.drill_tier}.`)
   return { target, mission, issues, rocket: models[0],
-    outboundMs: target ? travelDurationMs(target, MISSION_ORBIT_MS) : 0,
-    marketEstimate: plan.work === 'mine' ? Math.round((catalog.minerals[plan.mineral]?.price ?? 0) * plan.amount * OPEN_MARKET_SELL_RATE) : 0 }
+    outboundMs: target ? travelDurationMs(target, MISSION_ORBIT_MS) : 0 }
 }
 /** Load from Earth exactly at launch, after all launch guards. Plans never reserve ore. */
 export function loadPlannedCargo(state: GameState, mission: Mission): GameState | null {

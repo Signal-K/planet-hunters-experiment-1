@@ -22,6 +22,7 @@ const LASER_CAPACITOR_ORE_SPENT = [0, 6, 18, 38]
 const SUBSURFACE_STORAGE: Record<string, number> = { 'mineral-vault': 120, 'deep-mineral-vault': 300 }
 
 const RETIRED_FIELDS = [
+  'freeHaulDisposition', 'pendingRemoteDisposition',
   'buildingLevels', 'launchpadUpgraded', 'underConstruction',
   'refinedGoods', 'refineryQueue', 'refineryLastStartedAt', 'refineryBuilt', 'refineryUnlocked', 'refineryUnlockNotified', 'priceAlerts',
   'subsurfaceExcavated', 'subsurfaceBuilt', 'baseArrangement', 'laserCapacitorLevel',

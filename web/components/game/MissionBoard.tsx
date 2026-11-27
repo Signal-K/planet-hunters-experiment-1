@@ -49,7 +49,7 @@ interface MissionBoardProps {
   selectedIndex: number
   onSelectRelative: (offset: number) => void
   onSelectMission: (id: string) => void
-  onAccept: (id: string, disposition?: 'store' | 'sell') => void
+  onAccept: (id: string) => void
   onClose: () => void
   onOpenPlanner?: () => void
   onOpenLog: () => void
@@ -458,7 +458,7 @@ export default function MissionBoard({
 
   const startStep = (step: ProgramStep) => {
     if (step.state === 'locked' || step.state === 'done') return
-    onAccept(step.id, step.kind === 'focus' ? 'store' : undefined)
+    onAccept(step.id)
   }
 
   const openEvent = (event: SkyBoardCard) => {

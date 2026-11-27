@@ -115,10 +115,10 @@ describe('versioned solar fields', () => {
     const home = applyReturnArrived(reloaded)
     expect(home.player.stash?.nickel).toBe(2)
     expect(home.player.homeDeliveryPending).toBe(true)
-    const settled = applyHomeSplit(home, { nickel: { client: 0, silo: 0, sell: 2 } }, 1).state
+    const settled = applyHomeSplit(home, { nickel: { client: 0, silo: 0 } }, { nickel: 2 }).state
     expect(settled.player.stash?.nickel ?? 0).toBe(0)
-    expect(settled.player.francs).toBeGreaterThan(home.player.francs)
-    expect(settled.player.homeSettlement?.sold).toEqual({ nickel: 2 })
+    expect(settled.player.francs).toBe(home.player.francs)
+    expect(settled.player.homeSettlement?.left).toEqual({ nickel: 2 })
     expect(settled.player.homeDeliveryPending).toBe(false)
   })
 

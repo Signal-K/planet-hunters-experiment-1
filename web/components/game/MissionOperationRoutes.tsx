@@ -16,7 +16,7 @@ import SolarMiningPreview from '@/components/game/screens/SolarMiningPreview'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
-import { earthStorageBuilt, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { storageCapacity, storedUnits } from '@/lib/systems/EconomySystem'
 import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 import { DEBRIS_PRESETS, applyDebrisMined, getSkyEvent } from '@/lib/data/sky-events'
@@ -345,7 +345,7 @@ export default function MissionOperationRoutes({
             }))
             game.go('missions')
           }}
-          onComplete={(cargo, earthDisposition) => {
+          onComplete={cargo => {
             game.completeStep(6)
             if (game.player.shipCustomizerParts?.lander) {
               game.setPlayer(player => ({
@@ -353,12 +353,10 @@ export default function MissionOperationRoutes({
                 missionPhase: 'landing',
                 landingReturnStartedAt: Date.now(),
                 miningCargoInProgress: cargo,
-                freeHaulDisposition: earthDisposition ?? player.freeHaulDisposition,
               }))
               game.go('landing')
               return
             }
-            if (earthDisposition) game.setPlayer(player => ({ ...player, freeHaulDisposition: earthDisposition }))
             game.onMiningDone(cargo)
           }}
           minerals={game.catalog.minerals}
@@ -372,13 +370,8 @@ export default function MissionOperationRoutes({
             Object.keys(game.player.clientMissions ?? {}).length > 0
             || (game.player.dailyClientPool?.completedIds.length ?? 0) > 0
           }
-          // KES-283: gate a self-directed run on a storage destination before
-          // mining starts, unless one was already chosen before a prior
-          // back-to-hub pause on this same mission.
           isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
-          hasEarthStorage={earthStorageBuilt(game.player)}
           storageFree={Math.max(0, storageCapacity(game.player) - storedUnits(game.player.stash))}
-          initialEarthDisposition={game.player.freeHaulDisposition}
           orionidsBadgeTier={game.player.badges?.['orionids-2026']?.tier ?? null}
           fragmentCatches={showerRunCatches(game.player, showerForRunMission(game.mission.id)?.id)}
           cargoCapacity={limitedHold}
@@ -493,12 +486,9 @@ export default function MissionOperationRoutes({
           rocket={game.rocket}
           rocketSource={game.player.missionRocketSource}
           deliveryTargetName={deliveryTargetName}
-          hasEarthStorage={earthStorageBuilt(game.player)}
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}
-          haulMarketValue={sellQuote(showerRun && runShower ? withoutShowerFragments(debriefCargo, runShower.id) : debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
           showerRun={showerRun}
-          initialDisposition={game.player.freeHaulDisposition}
           exits={debriefExits({
             probeDeployment: game.mission.payload?.instrumentId === 'survey-probe',
             showerRun: !!showerRun,

@@ -15,7 +15,7 @@ interface LaunchpadScreenProps {
   onBack: () => void
   /** Tutorial player: the builder walks one slot at a time. */
   guided?: boolean
-  onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
+  onPick: (id: string) => void
   onViewContracts: () => void
   onLaunchpadAction: () => void
   onResumeMission?: () => void

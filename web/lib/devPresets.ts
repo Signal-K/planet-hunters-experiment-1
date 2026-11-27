@@ -1,3 +1,4 @@
+import { STARTER_BASE_PLACED, STARTER_BASE_PLOTS } from '@/lib/data/starter-base'
 import { completeChainRadio, getShowerChain } from '@/lib/orionids/chain'
 import { VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { rocketConfigForModel } from '@/lib/data/rockets'
@@ -166,8 +167,9 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 2 on ORI-1', stage: 'free-ops' },
       { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 2 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
-      { key: 'ui-free-mining-silo-full', label: 'Free mining run, silo full', hint: 'Free run with the 40-unit Surface Silo already full (iron, cobalt, nickel). Store on Earth stays open: the haul goes in and the cheapest stored ore is sold to make room. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything, then sell or send the haul to the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-free-mining-silo-full', label: 'Free mining run, silo full', hint: 'Free run with the 40-unit Surface Silo already full (iron, cobalt, nickel). Free mining only stores, so what does not fit is left behind. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'loop-base', label: 'Core loop start', hint: 'Starter Base (launchpad, hangar, control station, Surface Silo) with Free Ops unlocked: the start of the map → launch → mine → debrief loop', stage: 'free-ops' },
+      { key: 'ui-free-mining', label: 'Free mining run', hint: 'Self-directed Free Ops run at Itokawa: mine anything; the haul goes into the Earth silo (silo built). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-focus-run', label: 'Materials focus run', hint: 'SSL-840: a Mineral Vault focus (15 aluminium, 8 copper) with 6 aluminium already stored, mining at Itokawa in a 6-unit hull. Return with whatever the hold carries; the next trip asks only for what is still missing', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining-fresh', label: 'Shower run: mining, fresh', hint: 'Orionids shower run on Eros at 0 of 20. Fragments fall and collect on landing. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run near Earth at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -1174,6 +1176,16 @@ function fixture(name: string): Partial<GameState> | null {
       }
     }
 
+    case 'loop-base':
+      return {
+        screen: 'hub',
+        player: { ...POST_ONBOARDING_PLAYER, placed: [...STARTER_BASE_PLACED], placementPlots: { ...STARTER_BASE_PLOTS } },
+        tutorial: false, doneSteps: TRAINING_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
     case 'ui-free-mining-silo-full':
     case 'ui-free-mining':
       return {
@@ -1204,7 +1216,6 @@ function fixture(name: string): Partial<GameState> | null {
           resourceFocus: { label: 'Mineral Vault', minerals: { aluminium: 15, copper: 8 } },
           activeMission: { id: RESOURCE_FOCUS_MISSION_ID, label: 'Materials for Mineral Vault' },
           missionPhase: 'mining',
-          freeHaulDisposition: 'store',
         },
         tutorial: false,
         doneSteps: TRAINING_DONE,

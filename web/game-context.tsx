@@ -521,7 +521,6 @@ export function GameProvider({ children, urlSync = true }: { children: React.Rea
       openTrainingTry: tutorial.openTrainingTry,
       skipFlightPlan: tutorial.skipFlightPlan,
       // Economy
-      sellMinerals: economy.sellMinerals,
       serviceLaunchpad: economy.serviceLaunchpad,
       buildGroundTelescope: economy.buildGroundTelescope,
       abandonMission: economy.abandonMission,

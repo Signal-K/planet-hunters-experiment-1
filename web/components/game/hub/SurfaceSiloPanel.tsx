@@ -11,8 +11,6 @@ interface StoredMineral { id: string; amount: number; name: string; symbol: stri
 interface SurfaceSiloPanelProps {
   stash?: Record<string, number>
   agencyLevels?: Player['agencyLevels']
-  /** Opens the Exchange. Hidden when the Base has no way to sell. */
-  onSell?: () => void
   onClose: () => void
 }
 
@@ -23,7 +21,7 @@ export function surfaceSiloCapacity(agencyLevels?: Player['agencyLevels']): numb
 
 const titleCase = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
-export function SurfaceSiloPanel({ stash, agencyLevels, onSell, onClose }: SurfaceSiloPanelProps) {
+export function SurfaceSiloPanel({ stash, agencyLevels, onClose }: SurfaceSiloPanelProps) {
   const capacity = surfaceSiloCapacity(agencyLevels)
   const level = agencyTier({ agencyLevels }, 'ore-storage')
   const { inSilo: minerals, held, total, beyond } = surfaceSiloContents(stash, capacity)
@@ -40,11 +38,11 @@ export function SurfaceSiloPanel({ stash, agencyLevels, onSell, onClose }: Surfa
       </header>
       <div className={styles.contents}>
         <div className={styles.capacity}>
-          <span>STORAGE</span><strong>{held} / {capacity} U</strong>
+          <span>STORAGE</span><strong data-testid="silo-held">{held} / {capacity} U</strong>
           <meter min={0} max={capacity} value={held} aria-label="Surface Silo fill" />
         </div>
         {holdings.length === 0
-          ? <p>Empty. Ore you bring home from a mission is stored here.</p>
+          ? <p>Empty. Ore you mine on a free run is stored here.</p>
           : (
             <table className={styles.list}>
               <thead><tr><th scope="col">Mineral</th><th scope="col">In silo</th>{beyond > 0 && <th scope="col">Waiting</th>}</tr></thead>
@@ -58,11 +56,10 @@ export function SurfaceSiloPanel({ stash, agencyLevels, onSell, onClose }: Surfa
               })}</tbody>
             </table>
           )}
-        {beyond > 0 && <p>{`Full. ${beyond} U more is waiting with nowhere to go: sell it when you next fly.`}</p>}
+        {beyond > 0 && <p>{`Full. ${beyond} U more is waiting with nowhere to go: it is left behind when you next fly.`}</p>}
       </div>
       <footer className={styles.actions}>
         <p>{total} U held across Earth storage</p>
-        {onSell && total > 0 && <button type="button" onClick={onSell} data-testid="surface-silo-sell">SELL ORE</button>}
       </footer>
     </section>
   )

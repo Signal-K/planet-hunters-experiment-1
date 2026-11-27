@@ -110,7 +110,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     // Auth completion itself redirects to the saved/default screen. Let that
     // settle first, then replace it with the mission setup; otherwise the
     // auth redirect can win the same render and send a fresh player to Hub.
-    const start = window.setTimeout(() => game.onPickMission('self-directed-orionids-night-run', 'sell'), 500)
+    const start = window.setTimeout(() => game.onPickMission('self-directed-orionids-night-run'), 500)
     return () => window.clearTimeout(start)
   }, [game.authGateOpen, game.awaitingRemoteState, game.hydrated, game.missionId, game.onPickMission, game.player.activeMission?.id, game.screen, orionidsEntryActive])
 
