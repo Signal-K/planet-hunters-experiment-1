@@ -34,6 +34,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
   const [state, setState] = useState<MissionState | null>(null)
   const [mounted, setMounted] = useState(true)
   const [error, setError] = useState('')
+  const [drillStatus, setDrillStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [mountKey, setMountKey] = useState(0)
   const ready = useCallback((next: MissionState) => { setState(next); setError('') }, [])
@@ -58,7 +59,13 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
   return <div className={styles.screen} data-testid="solar-mining-preview">
     {mounted && <TakeOnMount key={mountKey} ref={ref} adapter={adapter} missionId={solarFieldId(target.id, zone)} bodyId={takeonBodyForTarget(target)}
       target={target} zone={zone} rover={rover} startView="iso" requireSolarTerrain allowSolarFieldCreation solarMining
-      onReady={ready} onEvent={event => { if (event.type === 'mined') receive() }} onError={err => setError(err.message)} className={styles.field} />}
+      onReady={ready} onEvent={event => {
+        if (event.type === 'mined') {
+          receive()
+          const mineral = event.payload.resource && mineralFromSolarResource(event.payload.resource)
+          setDrillStatus(mineral ? `Collected ${event.payload.amount} ${mineral}.` : 'Ground drilled. Keep exploring for ore.')
+        }
+      }} onError={err => setError(err.message)} className={styles.field} />}
     <div className={styles.top}><strong>{target.name} · {zone} field</strong><span>{cargo.length ? cargo.join(' · ') : 'Hold empty'} · {edits} terrain edits</span></div>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {persistent && error && <SolarFieldConflictRecovery site={solarFieldId(target.id, zone)}
@@ -72,12 +79,15 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
           <button type="button" aria-label="Move right" onClick={() => ref.current?.move(0)}>→</button>
           <button type="button" aria-label="Move down" onClick={() => ref.current?.move(1)}>↓</button>
         </div>
-        <button type="button" disabled={!state} onClick={() => ref.current?.mine()}>DRILL</button>
+        <button type="button" disabled={!state} onClick={() => {
+          if (!ref.current?.mine()) setDrillStatus('Cannot drill here. Move the rover and try another spot.')
+        }}>DRILL</button>
         <button type="button" disabled={saving || (!state && !persistent)} onClick={() => { if (!state && persistent) onPause?.(); else void pause() }}>
           {saving ? 'SAVING…' : persistent ? state ? 'SAVE & RETURN TO BASE' : 'RETURN TO BASE' : 'SAVE & LEAVE'}
         </button>
       </> : <button type="button" onClick={() => { setState(null); setMounted(true) }}>RETURN TO FIELD</button>}
     </div>
+    {drillStatus && <p className={styles.status} role="status">{drillStatus}</p>}
     <p className={styles.hint}>{persistent ? 'Preview: field changes are saved, but transferring cargo and completing this mission are not available yet.' : 'Drive with the arrows or tap the terrain. Drill the neighbouring ground to reveal ore.'}</p>
   </div>
 }

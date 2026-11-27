@@ -4,12 +4,10 @@ import { agencySummary } from '@/lib/agency/programme'
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { formatCurrency } from '@/lib/format'
-import { useHelp } from '@/components/ui/useHelp'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
 import { clientAffinityLevel } from '@/lib/data/daily-client-missions'
-import { clientRoster } from '@/lib/client-roster'
 import { FRANC, formatFrancs } from '@/lib/format'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import {
@@ -23,7 +21,6 @@ import {
 } from '@/lib/data/sky-events'
 import { ORIONIDS_FRAGMENT_GOAL, ORIONIDS_NIGHT_RUN_ID } from '@/lib/data/missions'
 import { getShower, showerForRunMission } from '@/lib/data/showers'
-import { CLIENT_SALE_LEVEL, CLIENT_SALE_PREMIUM, clientSaleOffer } from '@/lib/client-sales'
 import { SPECIAL_PREFIX, masteryBonus, showerSpecials, type SpecialView } from '@/lib/orionids/special-missions'
 import { chainNextScreen, getShowerChain } from '@/lib/orionids/chain'
 import { FRAGMENT_REDEEM_BATCH, FRAGMENTS_PER_FIREBALL, heldFragments } from '@/lib/orionids/fragments'
@@ -38,7 +35,7 @@ import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pen
 import ClientMark from '@/components/ui/ClientMark'
 import { CONTRACT_GROUPS, CONTRACT_GROUP_LABEL, contractGroup, contractGroupCounts, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
-import BoardFrame from '@/components/layout/frame/BoardFrame'
+import ScreenFrame from '@/components/layout/frame/ScreenFrame'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
@@ -67,8 +64,6 @@ interface MissionBoardProps {
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
-  /** SSL-734: sell surplus straight to a client at affinity level 3+. */
-  onSellToClient?: (clientId: string, level: number, mineral: string, amount: number) => void
   /** The rocket now stands on the pad in the scene behind the board. */
   rocketImg?: string
   tutorialBlocked: boolean
@@ -87,10 +82,6 @@ function ChartIcon() {
 
 function ClipboardIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="16" rx="2" /><path d="M9 4.5h6M9 9h6M9 13h6M9 17h4" /></svg>
-}
-
-function PeopleIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.3 2.7-6 6-6s6 2.7 6 6" /><circle cx="17" cy="9" r="2.6" /><path d="M16 13.2c2.8.2 5 2.6 5 5.8" /></svg>
 }
 
 function StarIcon() {
@@ -192,8 +183,9 @@ const shortName = (name: string) => name.replace(/^\d+\s+/, '')
 
 const ignoreGlobeReady = () => {}
 function MapGlobe({ target }: { target?: Target }) {
-  const colours = target ? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
-  return <i className={styles.gxPlanet}>
+  const gasColours: Record<string, readonly [string, string, string]> = { jupiter: ['#d6b79a', '#b77c60', '#f0dcc4'], saturn: ['#e1cb9f', '#b59b70', '#f1e4bd'], uranus: ['#8bd5d6', '#5dabb6', '#c0e8e3'], neptune: ['#427cce', '#28529c', '#8bb8ef'] }
+  const colours = target ? gasColours[target.id] ?? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
+  return <i className={styles.gxPlanet} data-planet={target?.id}>
     <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />
   </i>
 }
@@ -210,10 +202,11 @@ interface GalaxyMapProps {
   locationOpen?: boolean
   moonParentId?: string | null
   onOpenMoons?: (id: string) => void
+  shipTargets?: string[]
 }
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
-export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons }: GalaxyMapProps) {
+export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons, shipTargets = [] }: GalaxyMapProps) {
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')
@@ -257,7 +250,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <MapGlobe target={t} /><span>{label}</span>
     </div>
   const earth = (p: { x: number; y: number }) => pickable
-    ? <button type="button" className={styles.gxNode} data-home data-selected={selectedId === 'earth' || undefined} style={style(p)} aria-label="Earth" aria-pressed={selectedId === 'earth'} data-testid="map-node-earth" onClick={() => { onPick?.('earth'); if (view !== 'moons' && real.some(body => moonParent(body.id) === 'earth')) onOpenMoons?.('earth') }}><MapGlobe /><span>Earth</span></button>
+    ? <button type="button" className={styles.gxNode} data-home data-selected={selectedId === 'earth' || undefined} style={style(p)} aria-label="Earth" aria-pressed={selectedId === 'earth'} data-testid="map-node-earth" onClick={() => onPick?.('earth')}><MapGlobe /><span>Earth</span></button>
     : <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(p)} aria-label="Earth"><MapGlobe /><span>Earth</span></div>
   return <div className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
@@ -267,6 +260,25 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
         <ellipse cx="62" cy="44" rx="25" ry="24" className={styles.gxRegion} />
         <ellipse cx="92" cy="44" rx="21" ry="29" className={styles.gxRegion} />
         {[1, 2, 3, 4, 6, 7, 8, 9].map(o => <ellipse key={o} cx={SUN.x} cy={SUN.y} rx={o * UX} ry={o * UY} className={styles.gxRing} />)}
+        {mode === 'pick' && shipTargets.map((id, index) => {
+          const target = real.find(body => body.id === id)
+          if (!target) return null
+          const destination = pos(target)
+          const parentId = moonParent(target.id)
+          const uprightPositions: Record<string, { x: number; y: number }> = {
+            mercury: { x: 25, y: 23 }, venus: { x: 62, y: 25 }, mars: { x: 62, y: 38 },
+            jupiter: { x: 25, y: 60 }, saturn: { x: 62, y: 61 }, uranus: { x: 25, y: 73 }, neptune: { x: 62, y: 74 },
+          }
+          const uprightDestination = target.type === 'asteroid' ? { x: 30, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 25, y: 36 }
+          const ship = (path: string, className: string) => <g className={`${styles.gxShip} ${className}`} aria-label={`Ship toward ${target.name}`}>
+            <path d="M-1.1,-0.65 L1.4,0 L-1.1,0.65 L-0.6,0 Z" />
+            <animateMotion dur={`${14 + index * 3}s`} repeatCount="indefinite" rotate="auto" path={path} />
+          </g>
+          return <g key={`${id}-${index}`}>
+            {ship(line([EARTH_POS, destination]), styles.gxShipWide)}
+            {ship(line([{ x: 25, y: 36 }, uprightDestination]), styles.gxShipPortrait)}
+          </g>
+        })}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
           ? <path d={line(route)} className={styles.gxRoute} />
           : route.slice(1).map((p, i) => <path key={i} d={line([route[0], p])} className={styles.gxSpoke} />))}
@@ -397,36 +409,6 @@ function boardClock(): { now: number; orionidsNow: number } {
   return { now, orionidsNow: now }
 }
 
-function PickIcon() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4 20 10M4 20l9-9M9 5c3-2 7-1 10 2M5 9c-2 3-1 7 2 10" /></svg>
-}
-
-/**
- * SSL-734: at affinity level 3 a client buys surplus straight from the silo: only what it wants, a little over the
- * Exchange price, up to its daily demand. Below level 3 the card says what unlocks it.
- */
-function ClientSurplus({ player, catalog, clientId, clientName, level, onSell }: { player: Player; catalog: Catalog; clientId: string; clientName: string; level: number; onSell?: (clientId: string, level: number, mineral: string, amount: number) => void }) {
-  const offer = clientSaleOffer(player, clientId, level)
-  if (!offer.unlocked) {
-    return <p className={styles.surplusLocked} data-testid="client-surplus-locked">Reach affinity level {CLIENT_SALE_LEVEL} to sell surplus straight to {clientName}, above the Exchange price.</p>
-  }
-  return (
-    <section className={styles.surplus} data-testid="client-surplus" aria-label={`Sell surplus to ${clientName}`}>
-      <p className={styles.surplusHead}><b>Sell surplus</b><span>Takes {offer.left} more today · +{Math.round(CLIENT_SALE_PREMIUM * 100)}% over the Exchange</span></p>
-      {offer.rows.length === 0 && <p className={styles.surplusNone}>Nothing {clientName} wants is in your silo.</p>}
-      {offer.rows.map(row => {
-        const units = Math.min(row.held, offer.left)
-        return <div key={row.mineral} className={styles.surplusRow} data-testid={`client-surplus-${row.mineral}`}>
-          <span><b>{catalog.minerals[row.mineral]?.name ?? row.mineral}</b><small>{row.held} in silo · {formatCurrency(row.price, { compact: true })} each</small></span>
-          <button type="button" disabled={units <= 0 || !onSell} data-testid={`client-sell-${row.mineral}`} onClick={() => onSell?.(clientId, level, row.mineral, units)}>
-            {units > 0 ? `Sell ${units} · ${formatCurrency(row.price * units, { compact: true })}` : 'Full today'}
-          </button>
-        </div>
-      })}
-    </section>
-  )
-}
-
 /**
  * SSL-657: the special missions a finished shower unlocks. Gold opens more than silver; the Orionids voucher and
  * Meteorite Mastery each open one more, and Mastery raises what all of them pay. Shown once the player holds a key.
@@ -452,7 +434,7 @@ function EventSpecials({ eventId, player, onStart }: { eventId: string; player: 
 
 export default function MissionBoard({
   catalog, player, cards, selectedIndex, onSelectRelative, onSelectMission, onAccept, onClose, onOpenPlanner, onOpenLog, onOpenBuild, onOpenEvent, onPickTarget,
-  onRedeemFragments, onCombineFragments, onSellToClient, tutorialBlocked, onboardingComplete,
+  onRedeemFragments, onCombineFragments, tutorialBlocked, onboardingComplete,
 }: MissionBoardProps) {
   const [focusedEventId, setFocusedEventId] = useState(() => pendingMissionBoardEvent())
   const [requestedSite] = useState(() => pendingMissionBoardSite())
@@ -460,9 +442,8 @@ export default function MissionBoard({
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
   const [tab, setTab] = useState<MissionBoardTab>(() => {
     const requested = pendingMissionBoardTab() ?? lastMissionBoardTab()
-    return requested === 'events' || requested === 'clients' ? requested : 'free'
+    return requested === 'events' ? requested : 'free'
   })
-  const help = useHelp('missions')
   const { now, orionidsNow } = boardClock()
   const localOrionids = useMemo(() => localSkyEventWindow(ORIONIDS_EPHEMERIS, player.skyEventLocation), [player.skyEventLocation])
   const fleet = agencySummary(player, now)
@@ -476,12 +457,6 @@ export default function MissionBoard({
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [contractTargetId, setContractTargetId] = useState<string | null>(() => tab === 'contracts' ? requestedSite?.targetId ?? null : null)
   const [programStepId, setProgramStepId] = useState<string | null>(null)
-  const [clientFocusId, setClientFocusId] = useState<string | null>(null)
-  const roster = useMemo(
-    () => clientRoster(Object.values(catalog.clients), player.clientMissions ?? {}, cards.flatMap(item => (item.client ? [item.client.id] : []))),
-    [catalog.clients, player.clientMissions, cards],
-  )
-  const focusedStanding = roster.find(item => item.client.id === clientFocusId) ?? roster[0]
   const [requestedGroup, setContractGroupFilter] = useState<ContractGroup | null>(null)
   const siteCards = contractTargetId ? cards.filter(item => item.targetIds.includes(contractTargetId)) : cards
   const groupCounts = contractGroupCounts(siteCards.map(item => item.mission))
@@ -645,34 +620,18 @@ export default function MissionBoard({
   const signalColor = client?.color ?? 'var(--ln-board-amber)'
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
-  const tabButtons = <>
-    <button type="button" className={styles.tab} aria-label="Solar system" data-tab="free" data-active={tab === 'free'} data-testid="mission-board-tab-free" onClick={() => chooseTab('free')}><PickIcon /><span className={styles.tabLabel}>Solar system</span></button>
-    <button type="button" className={styles.tab} aria-label="Client relationships" data-tab="clients" data-active={tab === 'clients'} data-testid="mission-board-tab-clients" onClick={() => chooseTab('clients')}><PeopleIcon /><span className={styles.tabLabel}>Relationships</span></button>
-    <button type="button" className={styles.tab} aria-label="Events" data-tab="events" data-active={tab === 'events'} data-testid="mission-board-tab-events" onClick={() => chooseTab('events')}>
-      <StarIcon /><span className={styles.tabLabel}>Events</span>
-      {events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
-    </button>
-  </>
 
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-paging={paging ? 'true' : 'false'} data-tab={tab} data-contract-target={contractTargetId ?? undefined}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
-      <BoardFrame header={<div className={styles.boardHeader}>
-      <nav className={styles.rail} aria-label="Mission board">
-        <button type="button" className={`${styles.round} ${styles.railClose}`} data-testid="mission-board-close" aria-label="Close" onClick={onClose}><ArrowIcon direction="left" /></button>
-        {tabButtons}
-      </nav>
-      <div className={styles.railHelp}>
-        <button type="button" className={styles.log} data-testid="mission-board-log" aria-label="Mission log" onClick={onOpenLog}><span className={styles.logFull}>Mission log</span><span className={styles.logShort}>Log</span></button>
-        <span className={styles.balance} data-testid="mission-board-balance" aria-label={`Balance ${formatCurrency(player.francs ?? 0, { compact: true })}, stash ${Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} units`}>
-          <b>{formatCurrency(player.francs ?? 0, { compact: true })}</b>
-          <i>{Object.values(player.stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)} U</i>
-        </span>
-        {help.button}
-      </div>
-      </div>}>
-      <GalaxyMap targets={mapTargets} mode={mapMode} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
+      <ScreenFrame surface="mission-setup" chrome="floating">
+      <button type="button" className={styles.eventsCorner} data-testid="mission-board-tab-events" aria-label={tab === 'events' ? 'Return to solar system' : 'Events'} onClick={() => chooseTab(tab === 'events' ? 'free' : 'events')}>
+        {tab === 'events' ? <ArrowIcon direction="left" /> : <StarIcon />}<span>{tab === 'events' ? 'Map' : 'Events'}</span>
+        {tab !== 'events' && events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
+      </button>
+      <GalaxyMap targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }} stops={tab === 'contracts' ? routeIds : []} candidates={tab === 'contracts' ? candidateIds : []}
         selectedId={tab === 'contracts' ? contractTargetId : tab === 'free' ? pickedId : null} onPick={id => {
           if (tab === 'contracts') pickContractTarget(id)
+          else if (id === 'earth') onClose()
           else { setPickedId(id); setRunId(null) }
         }} />
       {tab === 'contracts' ? (card ? <>
@@ -816,55 +775,6 @@ export default function MissionBoard({
             </article>}
           </div>}
 
-          {tab === 'clients' && focusedStanding && <div className={styles.chain} data-testid="mission-board-clients">
-            <header className={styles.chainHead}>
-              <div>
-                <h2>Your clients</h2>
-                <p>Every job for a client raises their affinity: a higher level and a bigger payout bonus · {roster.filter(item => item.met).length} of {roster.length} met</p>
-              </div>
-            </header>
-            <div className={styles.clientList} role="list" aria-label="Clients">
-              {roster.map(item => <button key={item.client.id} type="button" role="listitem" className={styles.clientRow}
-                data-met={item.met || undefined} data-selected={item.client.id === focusedStanding.client.id || undefined}
-                data-testid={`client-row-${item.client.id}`} aria-pressed={item.client.id === focusedStanding.client.id}
-                onClick={() => setClientFocusId(item.client.id)}>
-                <ClientMark initial={item.client.initial} color={item.client.color} uiRole={item.client.uiRole} clientId={item.client.id} size={44} />
-                <span className={styles.clientCopy}>
-                  <strong>{item.client.name}</strong>
-                  <span>{item.met ? `L${item.level} · ${item.jobs} ${item.jobs === 1 ? 'job' : 'jobs'}${item.offers ? ` · ${item.offers} on the board` : ''}` : 'Not met yet'}</span>
-                </span>
-                <span className={styles.affinity} aria-hidden="true"><i style={{ width: `${(item.jobsInLevel / item.jobsPerLevel) * 100}%` }} /></span>
-              </button>)}
-            </div>
-            <article className={styles.clientDetail} data-testid="client-detail">
-              <header>
-                <ClientMark initial={focusedStanding.client.initial} color={focusedStanding.client.color} uiRole={focusedStanding.client.uiRole} clientId={focusedStanding.client.id} size={68} />
-                <div><span className={styles.kicker}>{focusedStanding.met ? `Affinity level ${focusedStanding.level}` : 'Not met yet'}</span><h3>{focusedStanding.client.name}</h3></div>
-              </header>
-              <p className={styles.skillBrief}>{focusedStanding.client.projectType}</p>
-              <div className={styles.gateMeter} role="progressbar" aria-label={`Affinity toward level ${focusedStanding.level + 1}`} aria-valuemin={0} aria-valuemax={focusedStanding.jobsPerLevel} aria-valuenow={focusedStanding.jobsInLevel}>
-                <i style={{ width: `${(focusedStanding.jobsInLevel / focusedStanding.jobsPerLevel) * 100}%` }} />
-                <em>{focusedStanding.jobsInLevel} of {focusedStanding.jobsPerLevel} jobs to level {focusedStanding.level + 1}</em>
-              </div>
-              <dl className={styles.clientFacts}>
-                <div><dt>Affinity bonus</dt><dd>+{Math.round(focusedStanding.bonus * 1000) / 10}%{focusedStanding.bonusMaxed ? ' (max)' : ''}</dd></div>
-                <div><dt>Client premium</dt><dd>+{Math.round(focusedStanding.client.payoutPremium * 100)}%</dd></div>
-                <div><dt>Wants</dt><dd>{focusedStanding.client.mineralPreferences.map(id => catalog.minerals[id]?.name ?? id).join(', ') || 'Any cargo'}</dd></div>
-              </dl>
-              <ClientSurplus player={player} catalog={catalog} clientId={focusedStanding.client.id} clientName={focusedStanding.client.name} level={focusedStanding.met ? focusedStanding.level : 0} onSell={onSellToClient} />
-              {focusedStanding.offers > 0 && <button type="button" className={styles.start} data-testid="client-see-contracts" onClick={() => {
-                const first = cards.find(item => item.client?.id === focusedStanding.client.id)
-                const destination = first?.targetIds[0]
-                if (destination) {
-                  const target = catalog.targets.find(item => item.id === destination)
-                  setPickedId(destination)
-                  if (target) setView(target.type === 'asteroid' ? 'belt' : target.orbit <= 4 ? 'inner' : 'outer')
-                }
-                chooseTab('free')
-              }}>FIND MISSIONS ON THE MAP</button>}
-            </article>
-          </div>}
-
           {tab === 'events' && <div className={styles.events} data-testid="mission-board-events">
             <nav className={styles.eventList} aria-label="Choose an event">
               {events.groups.map(group => <section key={group.status} aria-label={group.title} data-testid={`events-group-${group.status}`}>
@@ -911,8 +821,7 @@ export default function MissionBoard({
             </div>
           </div>}
       </div>}
-      </BoardFrame>
+      </ScreenFrame>
     </section>
-    {help.layer}
   </div>
 }
