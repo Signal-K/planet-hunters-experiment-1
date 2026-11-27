@@ -417,15 +417,6 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
         onClick: () => onFocusBuilding('market'),
       }
     }
-    if (kind === 'refinery') {
-      return {
-        kind, label: 'Refinery',
-        sub: 'ORE PROCESSING',
-        status: 'ok' as const,
-        w: 84,
-        onClick: () => onFocusBuilding('refinery'),
-      }
-    }
     if (kind === 'surface-silo') {
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
       return {

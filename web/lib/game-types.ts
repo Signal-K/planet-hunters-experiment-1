@@ -100,7 +100,6 @@ export type Screen =
   | 'mining'
   | 'delivery'
   | 'debrief'
-  | 'refinery'
   | 'market'
   | 'hangar'
   | 'rocket-buy'
@@ -141,7 +140,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'mining',
   'delivery',
   'probe-watch',
-  'refinery',
   'hangar',
   'tess-discovery',
   'asteroid-discovery',

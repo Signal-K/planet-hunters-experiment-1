@@ -42,7 +42,6 @@ const ScreenLoading = () => (
 
 const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
 const loadMissionOperationRoutes = () => import('@/components/game/MissionOperationRoutes')
-const loadRefineryScreen = () => import('@/components/game/screens/RefineryScreen')
 const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadMissionPlannerScreen = () => import('@/components/game/screens/MissionPlannerScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
@@ -60,7 +59,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // the service worker can keep them; otherwise a screen first opened offline
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
-  loadMissionSetupRoutes, loadMissionOperationRoutes, loadRefineryScreen, loadMarketScreen,
+  loadMissionSetupRoutes, loadMissionOperationRoutes, loadMarketScreen,
   loadMissionPlannerScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
@@ -68,7 +67,6 @@ const ALL_SCREEN_LOADERS = [
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
 const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: ScreenLoading })
-const RefineryScreen = dynamic(loadRefineryScreen, { loading: ScreenLoading })
 const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const MissionPlannerScreen = dynamic(loadMissionPlannerScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
@@ -283,10 +281,6 @@ function ScreenBody({
   const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
   useEffect(() => {
-    // Refining is commissioned at an approved off-world site. An old save
-    // that contains a Base refinery remains readable, but no unbuilt player
-    // can enter the retired Earth-refinery screen.
-    if (screen === 'refinery' && !game.player.refineryBuilt) game.go('hub')
     // The Build tab is a Free Ops entry point. Keep the onboarding assembly
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
@@ -393,7 +387,6 @@ function ScreenBody({
           onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')
-            if (building === 'refinery') return game.go('refinery')
             if (building === 'market') return game.go('market')
             if (building === 'control-station') return game.go('instrument-hub')
             // Mission first: the hangar opens on its rocket choice only once a mission and
@@ -638,24 +631,6 @@ function ScreenBody({
           deliveryTargetName={deliveryTargetName}
           originTargetName={originTargetName}
           rocketDisplay={rocketDisplay}
-        />
-      )
-
-    case 'refinery':
-      return (
-        <RefineryScreen
-          player={{
-            francs: game.player.francs,
-            stash: game.player.stash,
-            refineryQueue: game.player.refineryQueue,
-            refinedGoods: game.player.refinedGoods,
-            refineryLastStartedAt: game.player.refineryLastStartedAt,
-            researchPermanentBonuses: game.player.researchPermanentBonuses,
-            communityBonus: game.player.communityBonus,
-          }}
-          onBack={() => game.goBack()}
-          onStartRefine={game.onStartRefine}
-          onCollect={game.onCollectRefined}
         />
       )
 

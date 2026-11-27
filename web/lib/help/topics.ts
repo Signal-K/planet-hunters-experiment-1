@@ -260,14 +260,6 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'What the client wants', body: 'The order says how much of which ore the client needs. Bring all of it so the full payout lands.' },
     ],
   },
-  refinery: {
-    id: 'refinery',
-    title: 'Refinery',
-    cards: [
-      { title: 'Turn ore into goods', body: 'Pick a recipe. It takes the ore from your Surface Silo and runs for a set time. Check the inputs and the output value before you start.' },
-      { title: 'Collect when done', body: 'Finished goods wait for you. Collect them to add them to your Surface Silo. Nothing is lost while you are away.' },
-    ],
-  },
 }
 
 export function getHelpTopic(screen: Screen): HelpTopic | null {

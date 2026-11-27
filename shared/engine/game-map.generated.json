@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 31,
+    "webRoutes": 30,
     "nativeScreenCases": 25,
-    "qaScenes": 113,
+    "qaScenes": 112,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 31,
-    "authoringSources": 71,
-    "authoredObjectNodes": 172,
-    "authoredGameObjects": 81,
-    "authoredUiElements": 91,
+    "authoredSceneScripts": 30,
+    "authoringSources": 70,
+    "authoredObjectNodes": 167,
+    "authoredGameObjects": 79,
+    "authoredUiElements": 88,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 31,
-    "compiledObjectNodes": 172,
+    "compiledScenes": 30,
+    "compiledObjectNodes": 167,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 167,
-    "webGameComponents": 121,
+    "hostLayoutObjects": 162,
+    "webGameComponents": 120,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -122,10 +122,6 @@
       },
       {
         "route": "radio-meteors",
-        "type": "exchange-lab"
-      },
-      {
-        "route": "refinery",
         "type": "exchange-lab"
       },
       {
@@ -583,14 +579,6 @@
           "SSL-492"
         ],
         "aliasOf": "saturn-storm-search"
-      },
-      {
-        "id": "refinery",
-        "name": "Refinery",
-        "flow": "progression",
-        "web": "ui-refinery",
-        "native": "exchange-phone",
-        "tickets": []
       },
       {
         "id": "mission-log",
@@ -1919,23 +1907,6 @@
         "native": []
       },
       {
-        "id": "refinery",
-        "path": "shared/authoring/scenes/refinery.toml",
-        "objects": 5,
-        "gameObjects": 2,
-        "uiElements": 3,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 5,
-        "mechanics": [
-          "economy"
-        ],
-        "web": [
-          "web/components/game/screens/RefineryScreen.tsx"
-        ],
-        "native": []
-      },
-      {
         "id": "rocket-buy",
         "path": "shared/authoring/scenes/rocket-buy.toml",
         "objects": 5,
@@ -2163,10 +2134,6 @@
       {
         "id": "radio-meteors",
         "objects": 4
-      },
-      {
-        "id": "refinery",
-        "objects": 5
       },
       {
         "id": "rocket-buy",
@@ -2405,8 +2372,7 @@
       "components": [],
       "scenes": [
         "hub",
-        "market",
-        "refinery"
+        "market"
       ]
     },
     {
@@ -2747,7 +2713,6 @@
       "web/components/game/screens/ProbeSpectrumConsole.tsx",
       "web/components/game/screens/ProbeWatchScreen.tsx",
       "web/components/game/screens/RadioMeteorScreen.tsx",
-      "web/components/game/screens/RefineryScreen.tsx",
       "web/components/game/screens/ResearchPassport.tsx",
       "web/components/game/screens/ResearchReadout.tsx",
       "web/components/game/screens/RocketBuilderScene.tsx",
@@ -2898,7 +2863,6 @@
       "shared/authoring/scenes/probe-scan.toml",
       "shared/authoring/scenes/probe-watch.toml",
       "shared/authoring/scenes/radio-meteors.toml",
-      "shared/authoring/scenes/refinery.toml",
       "shared/authoring/scenes/rocket-buy.toml",
       "shared/authoring/scenes/rocket-workshop.toml",
       "shared/authoring/scenes/saturn-storm-search.toml",
@@ -2930,7 +2894,6 @@
       "probe-scan",
       "probe-watch",
       "radio-meteors",
-      "refinery",
       "rocket-workshop",
       "sky-pointing"
     ],
@@ -2960,7 +2923,6 @@
       "probe-scan",
       "probe-watch",
       "radio-meteors",
-      "refinery",
       "rocket-buy",
       "rocket-workshop",
       "saturn-storm-search",

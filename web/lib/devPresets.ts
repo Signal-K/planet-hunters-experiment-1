@@ -175,7 +175,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-radio-meteors', label: 'Meteor radio', hint: 'Real BRAMS radio spectrograms from Radio Meteor Zoo (live Panoptes queue): box the meteor echoes. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-saturn-storm-search', label: 'Saturn Storm Search', hint: 'Saturn satellite launched — Cassini frame classify screen. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-refinery', label: 'Refinery', hint: 'Refinery built with ore in stash and one batch queued. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-events-stage2', label: 'Orionids: radio step', hint: 'Mission board at event stage 2: the Orionids card opens mission 2 on ORI-1', stage: 'free-ops' },
       { key: 'ui-radio-meteors-last', label: 'Meteor radio: last check', hint: 'Orionids mission 2 with 2 of 3 recordings checked: the next send completes the chain and grades the badge', stage: 'free-ops' },
       { key: 'ui-orionids-ready', label: 'Orionids: ready', hint: 'Field guide complete, Orionids event focused, ready to choose the shower mission', stage: 'free-ops' },
@@ -1052,19 +1051,6 @@ function fixture(name: string): Partial<GameState> | null {
         screen: 'asteroid-discovery',
         visualFixture: 'asteroid',
         player: ASTEROID_DISCOVERY_PLAYER,
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
-      }
-
-    case 'ui-refinery':
-      return {
-        screen: 'refinery',
-        player: { ...POST_ONBOARDING_PLAYER, refineryBuilt: true, refineryUnlocked: true, stash: { iron: 40, nickel: 20 }, },
         tutorial: false,
         doneSteps: TRAINING_DONE,
         missionId: null,

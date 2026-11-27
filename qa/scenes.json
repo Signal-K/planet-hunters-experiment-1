@@ -322,14 +322,6 @@
    "aliasOf": "saturn-storm-search"
   },
   {
-   "id": "refinery",
-   "name": "Refinery",
-   "flow": "progression",
-   "web": "ui-refinery",
-   "native": "exchange-phone",
-   "tickets": []
-  },
-  {
    "id": "mission-log",
    "name": "Mission log",
    "flow": "records",

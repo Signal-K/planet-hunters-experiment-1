@@ -42,7 +42,7 @@ const SCREENS = [
   ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
-  ['refinery', 'ui-refinery'], ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
+  ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
   ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'], ['launch-review', 'ui-launch-review'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],
   ['site', 'ui-community-research-site'], ['event-before', 'ui-community-research-event-before'], ['leonids', 'ui-community-research-leonids'], ['event-after', 'ui-community-research-event-after'], ['leonids-run', 'ui-leonids-shower-mining-fresh'], ['leonids-events', 'ui-leonids-events'], ['clients-surplus', 'ui-clients-surplus'], ['specials-gold', 'ui-events-specials-gold'], ['specials-silver', 'ui-events-specials-silver'], ['leonids-debrief', 'ui-leonids-shower-debrief'], ['leo1', 'ui-radio-meteors-leo1'], ['geminids', 'ui-community-research-geminids'],

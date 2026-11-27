@@ -1,3 +1,4 @@
+import { RETIRED_SCREENS } from '@/lib/game-screens'
 import { communityWorlds, mergeAgencyCommunity } from '@/lib/agency/community'
 import { fleetLaunchTimes, mergeAgencyLaunches } from '@/lib/agency/fleet'
 import { mergeAgencyLevels, mergeAgencyUnlocks, translateConstruction } from '@/lib/agency/construction-translation'
@@ -509,9 +510,8 @@ function repairStateRoute(rawInput: GameState): GameState {
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {
     return { ...input, screen: 'hub' }
   }
-  if (input.screen === 'refinery' && !input.player.refineryBuilt) {
-    return { ...input, screen: 'hub' }
-  }
+  // Screens retired from the game (SSL-892, cycle 11): a save that rests on one lands on the Base. Saved fields stay.
+  if ((RETIRED_SCREENS as readonly string[]).includes(input.screen)) return { ...input, screen: 'hub' }
   // Repair the tutorial flag: during agency training (before Free Ops),
   // tutorial must always be active. It can become false if the catalog had no next-sequence
   // mission at the moment onDebriefDone ran, leaving the Transport or Storage coach permanently dark.

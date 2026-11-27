@@ -51,7 +51,6 @@ const PROGRAM_PHASE = {
   'hub-subsurface': 'Base',
   'surface-silo': 'Base',
   'market': 'Base',
-  'refinery': 'Base',
   'missions': 'Plan',
   'targets': 'Plan',
   'mission-planner': 'Plan',

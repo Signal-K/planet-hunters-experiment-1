@@ -114,7 +114,6 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
   { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'flight', entityTypes: [], description: 'Physical rocket flight, drawn in 3D by Takeon with a steerable rocket (SSL-848). Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
-  { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
