@@ -40,8 +40,20 @@ func ensureSolarFields(app core.App) error {
 		col.Fields.Add(&core.TextField{Name: "site", Required: true, Max: 100})
 		col.Fields.Add(&core.TextField{Name: "run_id", Required: true, Max: 100})
 		col.Fields.Add(&core.NumberField{Name: "revision", Required: true})
-		col.Fields.Add(&core.JSONField{Name: "cargo", Required: true, MaxSize: 8192})
+		col.Fields.Add(&core.JSONField{Name: "cargo", MaxSize: 8192})
 		col.AddIndex("idx_solar_transfer_owner_run", true, "user, run_id", "")
+		if err := app.Save(col); err != nil {
+			return err
+		}
+	}
+	// PocketBase considers {} blank for a required JSON field. An empty hold
+	// is a valid return and must still produce a durable, replayable receipt.
+	col, err := app.FindCollectionByNameOrId("solar_field_transfers")
+	if err != nil {
+		return err
+	}
+	if field, ok := col.Fields.GetByName("cargo").(*core.JSONField); ok && field.Required {
+		field.Required = false
 		if err := app.Save(col); err != nil {
 			return err
 		}

@@ -340,3 +340,151 @@ func TestSolarTransferAllowsEmptyHold(t *testing.T) {
 		t.Fatalf("empty return: %s %#v %v", cleared, cargo, err)
 	}
 }
+
+func TestSolarMissionTransferSignedInAndReceiptRecovery(t *testing.T) {
+	app := newLedgerTestApp(t)
+	userID := ledgerTestUser(t, app, "miner@example.test", "miner-solar")
+	otherID := ledgerTestUser(t, app, "other-miner@example.test", "other-miner-solar")
+	user, err := app.FindRecordById("users", userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, err := app.FindRecordById("users", otherID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token, err := user.NewAuthToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherToken, err := other.NewAuthToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	col, err := app.FindCollectionByNameOrId("game_states")
+	if err != nil {
+		t.Fatal(err)
+	}
+	save := core.NewRecord(col)
+	save.Set("user", userID)
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","francs":123}}`))
+	if err := app.Save(save); err != nil {
+		t.Fatal(err)
+	}
+	registerSolarFieldRoutes(app)
+	router, err := apis.NewRouter(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	event := &core.ServeEvent{App: app, Router: router}
+	err = app.OnServe().Trigger(event, func(e *core.ServeEvent) error {
+		mux, err := e.Router.BuildMux()
+		if err != nil {
+			return err
+		}
+		request := func(method, path, token, body string) *httptest.ResponseRecorder {
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(method, path, strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			if token != "" {
+				req.Header.Set("Authorization", token)
+			}
+			mux.ServeHTTP(rec, req)
+			return rec
+		}
+		state := json.RawMessage(`{"coreSnapshot":"{\"rover\":{\"cargo\":{\"landnam:nickel\":2},\"cargoUsed\":2}}","rover":{"cargo":{"landnam:nickel":2},"cargoUsed":2}}`)
+		if _, err := saveSolarField(app, userID, solarFieldWrite{Site: "solar:mars:east", OperationID: "operation-one", State: state}); err != nil {
+			t.Fatal(err)
+		}
+		body := `{"site":"solar:mars:east","revision":1,"runId":"mission-run-1"}`
+		if res := request("POST", "/api/solar-fields/mission-transfer", "", body); res.Code != 401 {
+			t.Fatalf("unsigned: %d", res.Code)
+		}
+		if res := request("POST", "/api/solar-fields/mission-transfer", otherToken, body); res.Code != 409 {
+			t.Fatalf("other user: %d %s", res.Code, res.Body.String())
+		}
+		for i := 0; i < 2; i++ {
+			if res := request("POST", "/api/solar-fields/mission-transfer", token, body); res.Code != 200 || !strings.Contains(res.Body.String(), `"landnam:nickel":2`) {
+				t.Fatalf("transfer/retry: %d %s", res.Code, res.Body.String())
+			}
+		}
+		if res := request("GET", "/api/solar-fields/transfer?runId=mission-run-1", token, ""); res.Code != 200 || !strings.Contains(res.Body.String(), `"landnam:nickel":2`) {
+			t.Fatalf("recovery: %d %s", res.Code, res.Body.String())
+		}
+		if res := request("GET", "/api/solar-fields/transfer?runId=mission-run-1", otherToken, ""); res.Code != 404 {
+			t.Fatalf("private receipt: %d", res.Code)
+		}
+		saved, err := app.FindRecordById("game_states", save.Id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := json.Marshal(saved.GetRaw("state"))
+		if !strings.Contains(string(raw), `"nickel":2`) {
+			t.Fatalf("mission cargo missing: %s", raw)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSolarMissionTransferEmptyHoldIsRecoverable(t *testing.T) {
+	app := newLedgerTestApp(t)
+	if err := ensureSolarFields(app); err != nil {
+		t.Fatal(err)
+	}
+	col, err := app.FindCollectionByNameOrId("game_states")
+	if err != nil {
+		t.Fatal(err)
+	}
+	save := core.NewRecord(col)
+	save.Set("user", "player-a")
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1"}}`))
+	if err := app.Save(save); err != nil {
+		t.Fatal(err)
+	}
+	state := json.RawMessage(`{"coreSnapshot":"{\"rover\":{\"cargo\":{},\"cargoUsed\":0}}","rover":{"cargo":{},"cargoUsed":0}}`)
+	if _, err := saveSolarField(app, "player-a", solarFieldWrite{Site: "solar:mars:east", OperationID: "operation-one", State: state}); err != nil {
+		t.Fatal(err)
+	}
+	req := solarFieldTransfer{Site: "solar:mars:east", Revision: 1, RunID: "mission-run-1"}
+	receipt, err := transferSolarFieldWithMission(app, "player-a", req, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retry, err := transferSolarFieldWithMission(app, "player-a", req, true)
+	if err != nil || retry.Revision != receipt.Revision || len(retry.Cargo) != 0 {
+		t.Fatalf("retry: %#v %v", retry, err)
+	}
+}
+
+func TestSolarTransferSchemaRepairsExistingRequiredCargo(t *testing.T) {
+	app, err := tests.NewTestApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Cleanup()
+	if err := ensureSolarFields(app); err != nil {
+		t.Fatal(err)
+	}
+	col, err := app.FindCollectionByNameOrId("solar_field_transfers")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cargo := col.Fields.GetByName("cargo").(*core.JSONField)
+	cargo.Required = true
+	if err := app.Save(col); err != nil {
+		t.Fatal(err)
+	}
+	if err := ensureSolarFields(app); err != nil {
+		t.Fatal(err)
+	}
+	col, err = app.FindCollectionByNameOrId("solar_field_transfers")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if col.Fields.GetByName("cargo").(*core.JSONField).Required {
+		t.Fatal("empty cargo is still rejected")
+	}
+}

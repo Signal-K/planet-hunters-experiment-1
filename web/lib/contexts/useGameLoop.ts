@@ -775,10 +775,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [addToast, setState])
 
   const onRedockComplete = useCallback((cargo: Record<string, number>) => {
-    let hasDelivery = false
+    const current = stateRef.current
+    if (current.screen !== 'landing' || current.player.landingReturnStartedAt == null || !current.missionId || !current.targetId) return
+    const hasDelivery = !!current.deliveryTargetId
     const transitStartedAt = Date.now()
     setState(s => {
-      hasDelivery = !!s.deliveryTargetId
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
@@ -789,8 +790,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : null
       return applyRedockComplete(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
+    const runId = current.player.missionRunId ?? missionRunIdRef.current
+    if (runId && current.visualFixture !== 'solar-mining') {
+      queueUpdate('mission_runs', runId, { status: 'in_progress', phase: 'transit', cargo })
+    }
     addToast(hasDelivery ? 'Redock complete — course set for delivery' : 'Redock complete — return to Earth for recovery', 'ok')
-  }, [addToast, catalog.targets, setState])
+  }, [addToast, catalog.targets, setState, stateRef])
 
   const onRedeemFragments = useCallback(() => {
     let did = false

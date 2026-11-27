@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionState } from '@takeon/engine'
 import { memoryStore, createOutbox } from '@/lib/offline/outbox'
 import { writeSolarFieldIdentity } from './solarFieldIdentity'
+import { DEFAULT_STATE, normalizeAndRepair } from '@/lib/game-state'
+import { applyRedockComplete } from '@/lib/systems/LandingSystem'
+import { applyReturnArrived } from '@/lib/systems/MiningSystem'
+import { applyHomeSplit } from '@/lib/systems/HomeDeliverySystem'
 
 const mocks = vi.hoisted(() => ({ send: vi.fn(), legacyHas: vi.fn(), outbox: { current: null as unknown } }))
 vi.mock('@/lib/pb-landnam', () => ({ pbLandnam: { authStore: { record: { id: 'player' }, token: 'token' }, send: mocks.send } }))
@@ -70,6 +74,52 @@ describe('versioned solar fields', () => {
     await expect(sync.transferToMission('mission-run-1')).rejects.toThrow('Reconnect')
     expect(mocks.send).toHaveBeenCalledTimes(1)
     expect((mocks.outbox.current as ReturnType<typeof createOutbox>).pending()).toHaveLength(1)
+  })
+
+  it('recovers a committed return after a lost response without moving the hold again', async () => {
+    mocks.send.mockResolvedValueOnce({ revision: 2, state }).mockResolvedValueOnce({ site: id, runId: 'mission-run-1', cargo: { 'landnam:iron': 1 } })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    expect(await sync.recoverMissionTransfer('mission-run-1')).toEqual({ iron: 1 })
+    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/transfer', { query: { runId: 'mission-run-1' } })
+    expect((mocks.outbox.current as ReturnType<typeof createOutbox>).pending()).toHaveLength(0)
+  })
+
+  it('distinguishes a new run with no receipt from a bad or unavailable receipt', async () => {
+    mocks.send.mockResolvedValueOnce({ revision: 1, state }).mockRejectedValueOnce({ status: 404 }).mockResolvedValueOnce({ site: 'solar:mars:west', runId: 'mission-run-1', cargo: { 'landnam:iron': 1 } }).mockRejectedValueOnce({ status: 0 })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    expect(await sync.recoverMissionTransfer('mission-run-1')).toBeNull()
+    await expect(sync.recoverMissionTransfer('mission-run-1')).rejects.toThrow('Invalid cargo receipt')
+    await expect(sync.recoverMissionTransfer('mission-run-1')).rejects.toEqual({ status: 0 })
+  })
+
+  it('recovers an empty return as a valid receipt', async () => {
+    mocks.send.mockResolvedValueOnce({ revision: 1, state }).mockResolvedValueOnce({ site: id, runId: 'mission-run-1', cargo: {} })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    expect(await sync.recoverMissionTransfer('mission-run-1')).toEqual({})
+  })
+
+  it('carries recovered account cargo through ascent, save/reload and Earth settlement', async () => {
+    mocks.send.mockResolvedValueOnce({ revision: 2, state }).mockResolvedValueOnce({ site: id, runId: 'mission-run-1', cargo: { 'landnam:nickel': 2 } })
+    const sync = new SolarFieldSync()
+    await sync.loadMission(id)
+    const cargo = await sync.recoverMissionTransfer('mission-run-1')
+    expect(cargo).toEqual({ nickel: 2 })
+    const ascent = { ...DEFAULT_STATE, screen: 'landing' as const, missionId: 'mine-mars', targetId: 'mars',
+      player: { ...DEFAULT_STATE.player, missionRunId: 'mission-run-1', landingReturnStartedAt: 1, miningCargoInProgress: cargo! } }
+    const flight = applyRedockComplete(ascent, cargo!, null, null)
+    expect(flight.lastCargo).toEqual({ nickel: 2 })
+    const reloaded = normalizeAndRepair(JSON.parse(JSON.stringify(flight)))
+    const home = applyReturnArrived(reloaded)
+    expect(home.player.stash?.nickel).toBe(2)
+    expect(home.player.homeDeliveryPending).toBe(true)
+    const settled = applyHomeSplit(home, { nickel: { client: 0, silo: 0, sell: 2 } }, 1).state
+    expect(settled.player.stash?.nickel ?? 0).toBe(0)
+    expect(settled.player.francs).toBeGreaterThan(home.player.francs)
+    expect(settled.player.homeSettlement?.sold).toEqual({ nickel: 2 })
+    expect(settled.player.homeDeliveryPending).toBe(false)
   })
 
 })
