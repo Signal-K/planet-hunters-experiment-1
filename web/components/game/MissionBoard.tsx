@@ -40,6 +40,7 @@ import { agencyStepLocation } from '@/lib/location-missions'
 import { missionTypePrimer } from '@/lib/data/mission-primers'
 import type { Mission } from '@/lib/data/types'
 import { moonParent } from '@/lib/solar-moons'
+import { supportsMissionAtTarget } from '@/lib/data/mission-locations'
 
 // The board stands on the live base: the same plots and kit the Hub draws.
 
@@ -434,7 +435,7 @@ export default function MissionBoard({
   const agencyCards = locationCards.filter(item => !item.client && !locationSteps.some(step => step.id === item.mission.id))
   const clientCards = locationCards.filter(item => item.client)
   // A run tied to one body (a probe's targeted run) is offered only there.
-  const pickedRuns = picked ? freeRuns.filter(run => (!run.targetId || run.targetId === picked.id) &&
+  const pickedRuns = picked ? freeRuns.filter(run => supportsMissionAtTarget(run, picked) && (!run.targetId || run.targetId === picked.id) &&
     (sourceMineral
       ? sourceMineral in run.requires.minerals && picked.minerals.includes(sourceMineral)
       : Object.keys(run.requires.minerals).some(m => picked.minerals.includes(m)))
@@ -533,7 +534,7 @@ export default function MissionBoard({
           <section aria-label="Agency missions" data-testid="location-agency-missions">
             <h3>Agency missions</h3>
             {locationSteps.length === 0 && agencyCards.length === 0 && pickedRuns.length === 0 && <p>No agency missions available here yet.</p>}
-            {locationSteps.map(step => { const mission = catalog.missions.find(item => item.id === step.id); return <article className={styles.locationMission} key={step.id}>
+            {locationSteps.map(step => { const mission = catalog.missions.find(item => item.id === step.id); return <article className={styles.locationMission} key={step.id} data-testid={`location-step-${step.id}`}>
               {mission ? <><span className={styles.locationIcon} data-kind={contractGroup(mission)}><MissionGlyph mission={mission} /></span><div><strong>{step.title}</strong><small>{STEP_STATE_LABEL[step.state]}</small><MissionAtAGlance mission={mission} /></div></> : <ProgramStepFallback step={step} />}
               <button type="button" disabled={step.state === 'locked' || step.state === 'done' || tutorialBlocked} onClick={() => startStep(step)}>{step.state === 'locked' ? 'Locked' : step.state === 'done' ? 'Done' : 'Select'}</button>
               <details><summary>Mission details</summary><p>{step.brief}</p><p>{step.state === 'locked' ? step.lockLine : step.detail}</p></details>

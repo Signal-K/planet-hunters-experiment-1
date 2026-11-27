@@ -23,6 +23,18 @@ function player(patch: Partial<Player> = {}): Player {
 }
 
 describe('mission board view', () => {
+  it('offers flybys and orbital probes at their destinations, preserving completed progress', () => {
+    const current = player({ completedMissions: [{ id: 'flyby-mars' }] as Player['completedMissions'] })
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: current })
+    const steps = programChain(catalog, current, NOW)
+    expect(catalog.missions.find(mission => mission.id === 'flyby-mars')?.targetId).toBe('mars')
+    expect(catalog.missions.find(mission => mission.id === 'flyby-jupiter')?.payload?.type).toBe('deep-space-survey')
+    expect(catalog.missions.find(mission => mission.id === 'probe-launch-jupiter')?.payload?.instrumentId).toBe('survey-probe')
+    expect(steps.find(step => step.id === 'flyby-mars')?.state).toBe('done')
+    expect(steps.find(step => step.id === 'flyby-jupiter')).toBeDefined()
+    expect(steps.find(step => step.id === 'probe-launch-jupiter')).toBeDefined()
+    expect(['available', 'current']).toContain(steps.find(step => step.id === 'flyby-mercury')?.state)
+  })
   it('keeps launches available after a craft is already up', () => {
     const current = player({ transitSatelliteLaunchedAt: 1 })
     const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: current })

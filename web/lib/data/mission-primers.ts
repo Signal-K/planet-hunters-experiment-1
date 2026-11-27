@@ -114,6 +114,10 @@ export function partitionByOwner<T>(items: T[], missionOf: (item: T) => Mission)
 export function missionTypePrimer(mission: Mission): MissionTypePrimer {
   const owner: MissionTypePrimer['owner'] = isOwnProgramMission(mission) ? 'self' : 'client'
 
+  if (mission.id.startsWith('flyby-')) {
+    return { label: 'Flyby', summary: 'Fly to the destination for a close pass without landing or collecting ore.', steps: ['Launch', 'Flyby', 'Debrief'], owner }
+  }
+
   // Your own orbital assets first — a satellite/telescope launch is never a
   // client job even when it is filed under Mission Control.
   // SSL-773: a survey probe is left at the body; it sends readings home instead of coming back.

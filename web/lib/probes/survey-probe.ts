@@ -319,7 +319,7 @@ function probeMissionId(targetId: string): string {
 }
 
 /** Bodies a probe can survey: real planets and asteroids with minerals, not shower fields or exoplanets. */
-function probeableTargets(targets: readonly Target[]): Target[] {
+export function probeableTargets(targets: readonly Target[]): Target[] {
   return targets.filter(target => (target.type === 'planet' || target.type === 'asteroid') && target.minerals.length > 0)
 }
 
