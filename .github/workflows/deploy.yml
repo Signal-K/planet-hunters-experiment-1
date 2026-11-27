@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Signal-K/takeon
-          ref: d079e94
+          ref: d079e94350fc47e877008389355b0f585a9687b0
           path: takeon-source
       - uses: actions/setup-go@v5
         with:
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Signal-K/takeon
-          ref: d079e94
+          ref: d079e94350fc47e877008389355b0f585a9687b0
           path: takeon-source
       - uses: actions/setup-go@v5
         with:
