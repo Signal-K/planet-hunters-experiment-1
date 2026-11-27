@@ -67,8 +67,19 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
         const mineral = mineralFromSolarResource(resource)
         if (mineral && typeof amount === 'number' && amount > 0) minerals[mineral] = (minerals[mineral] ?? 0) + amount
       }
+      // This path exists only in the isolated stage fixture. Keep the edited
+      // field but empty its hold before leaving, so a revisit cannot sell the
+      // same cargo again. Live transfers use the separate receipt mechanism.
+      ref.current?.emptyCargo()
+      if (!await ref.current?.saveNow()) throw new Error('Field not ready')
       onComplete(minerals)
-    } catch { setError('Could not save the field. Try again before leaving.') }
+    } catch {
+      setMounted(false)
+      setState(null)
+      setMountKey(key => key + 1)
+      setMounted(true)
+      setError('Could not save the field. Reopen it and try again.')
+    }
     finally { setSaving(false) }
   }
   return <div className={styles.screen} data-testid="solar-mining-preview">
@@ -78,7 +89,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
         if (event.type === 'mined') {
           receive()
           const mineral = event.payload.resource && mineralFromSolarResource(event.payload.resource)
-          setDrillStatus(mineral ? `Collected ${event.payload.amount} ${mineral}.` : 'Ground drilled. Keep exploring for ore.')
+          setDrillStatus(mineral ? `Collected ${event.payload.amount} ${mineral}.` : 'Surface cleared. Drill again to reach ore, or explore another spot.')
         }
       }} onError={err => setError(err.message)} className={styles.field} />}
     <div className={styles.top}><strong>{target.name} · {zone} field</strong><span>{cargo.length ? cargo.join(' · ') : 'Hold empty'} · {edits} terrain edits</span></div>
@@ -104,6 +115,6 @@ export default function SolarMiningPreview({ target, zone, persistent = false, o
       </> : <button type="button" onClick={() => { setState(null); setMounted(true) }}>RETURN TO FIELD</button>}
     </div>
     {drillStatus && <p className={styles.status} role="status">{drillStatus}</p>}
-    <p className={styles.hint}>{persistent ? 'Preview: field changes are saved, but transferring cargo and completing this mission are not available yet.' : onComplete ? 'Playtest: drive, drill, then return to your ship. Progress and rewards are isolated from your account.' : 'Drive with the arrows or tap the terrain. Drill the neighbouring ground to reveal ore.'}</p>
+    <p className={styles.hint}>{persistent ? 'Preview: field changes are saved, but transferring cargo and completing this mission are not available yet.' : onComplete ? 'Playtest: drill through the surface to find ore, then return to your ship. Progress is isolated from your account.' : 'Drive with the arrows or tap the terrain. Drill through the surface to find ore.'}</p>
   </div>
 }
