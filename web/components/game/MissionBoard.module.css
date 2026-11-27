@@ -1084,17 +1084,9 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
   .gx[data-view='system'] [data-testid='map-node-earth'] { left: 18% !important; top: 28% !important; }
   .gx[data-view='system'] [data-testid='map-node-mars'] { left: 60% !important; top: 28% !important; }
   .gx[data-view='system'] [data-testid='map-belt'] { left: 18% !important; top: 42% !important; }
-  .gx[data-view='system'] [data-testid='map-node-jupiter'] { left: 18% !important; top: 54% !important; }
-  .gx[data-view='system'] [data-testid='map-node-uranus'] { left: 60% !important; top: 54% !important; }
-  .gx[data-view='system'] [data-testid='map-node-saturn'] { left: 18% !important; top: 66% !important; }
-  .gx[data-view='system'] [data-testid='map-node-neptune'] { left: 60% !important; top: 66% !important; }
+  .gx[data-view='system'] [data-testid='map-gas-giants'] { left: 18% !important; top: 54% !important; }
   .gxShipWide { display: none; }
   .gxShipPortrait { display: inline; }
 }
 
 @media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
-/* Neptune sits at the far edge: put its label inward without moving its orbit marker. */
-.gx[data-view='system'] [data-testid='map-node-neptune'] { flex-direction: row-reverse; transform: translate(calc(-100% + 29px), -50%); }
-@media (orientation: portrait) and (max-width: 700px) {
-  .gx[data-view='system'] [data-testid='map-node-neptune'] { flex-direction: row; transform: translate(-22px, -50%); }
-}

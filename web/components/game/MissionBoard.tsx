@@ -90,14 +90,16 @@ type MapMode = 'route' | 'pick' | 'ambient'
 // The system is Sun-centred and in orbital order, with deliberately compressed
 // spacing and illustrative positions (not real-time ephemerides).
 const SUN = { x: 50, y: 46 }
-const ORBITS = [7, 12, 17, 22, 29, 35, 41, 47] as const
-const orbitPosition = (radius: number, angle: number) => ({ x: SUN.x + radius * Math.cos(angle), y: SUN.y + radius * .46 * Math.sin(angle) })
+const ORBITS = [10, 18, 26, 34] as const
+const orbitPosition = (radius: number, angle: number) => ({ x: SUN.x + radius * Math.cos(angle), y: SUN.y + radius * .55 * Math.sin(angle) })
 const EARTH_POS = orbitPosition(ORBITS[2], -.55)
 const SYSTEM_POSITIONS: Record<string, { x: number; y: number }> = {
-  mercury: orbitPosition(ORBITS[0], 2.5), venus: orbitPosition(ORBITS[1], -1.7), mars: orbitPosition(ORBITS[3], 1.7),
-  jupiter: orbitPosition(ORBITS[4], -2.4), saturn: orbitPosition(ORBITS[5], -.35), uranus: orbitPosition(ORBITS[6], 2.45), neptune: orbitPosition(ORBITS[7], .85),
+  mercury: orbitPosition(ORBITS[0], 3), venus: orbitPosition(ORBITS[1], -1.7), mars: orbitPosition(ORBITS[3], 1.7),
 }
-const BELT_POS = orbitPosition(25.5, .9)
+const BELT_POS = orbitPosition(42, .9)
+// The gas giants live on their own page, reached from this one entry on the system map.
+const GAS_POS = { x: 16, y: 58 }
+const isGasGiant = (t: { type: string; orbit: number }) => t.type !== 'asteroid' && t.orbit > 4
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
 function spread(id: string): number {
@@ -195,7 +197,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const outer = regionLayout(outerPlanets)
   const litAsteroid = asteroids.find(t => lit.has(t.id))
   const anchor = BELT_POS
-  const planetPos = (t: Target) => SYSTEM_POSITIONS[t.id] ?? { x: 48 + spread(t.id) * 30, y: 48 + spread(`${t.id}y`) * 25 }
+  const planetPos = (t: Target) => SYSTEM_POSITIONS[t.id] ?? (isGasGiant(t) ? GAS_POS : undefined) ?? { x: 48 + spread(t.id) * 30, y: 48 + spread(`${t.id}y`) * 25 }
   const pos = (t: Target) => {
     const parentId = moonParent(t.id)
     const parentTarget = planets.find(planet => planet.id === parentId)
@@ -234,8 +236,8 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        {ORBITS.map(radius => <ellipse key={radius} cx={SUN.x} cy={SUN.y} rx={radius} ry={radius * .46} className={styles.gxSystemOrbit} />)}
-        <ellipse cx={SUN.x} cy={SUN.y} rx="25.5" ry={25.5 * .46} className={styles.gxBeltOrbit} />
+        {ORBITS.map(radius => <ellipse key={radius} cx={SUN.x} cy={SUN.y} rx={radius} ry={radius * .55} className={styles.gxSystemOrbit} />)}
+        <ellipse cx={SUN.x} cy={SUN.y} rx="42" ry={42 * .55} className={styles.gxBeltOrbit} />
         {mode === 'pick' && shipTargets.map((id, index) => {
           const target = real.find(body => body.id === id)
           if (!target) return null
@@ -243,9 +245,9 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
           const parentId = moonParent(target.id)
           const uprightPositions: Record<string, { x: number; y: number }> = {
             mercury: { x: 18, y: 16 }, venus: { x: 60, y: 16 }, mars: { x: 60, y: 28 },
-            jupiter: { x: 18, y: 54 }, saturn: { x: 18, y: 66 }, uranus: { x: 60, y: 54 }, neptune: { x: 60, y: 66 },
           }
-          const uprightDestination = target.type === 'asteroid' ? { x: 18, y: 42 } : uprightPositions[parentId ?? target.id] ?? { x: 18, y: 28 }
+          const host = planets.find(body => body.id === (parentId ?? target.id))
+          const uprightDestination = target.type === 'asteroid' ? { x: 18, y: 42 } : host && isGasGiant(host) ? { x: 18, y: 54 } : uprightPositions[parentId ?? target.id] ?? { x: 18, y: 28 }
           const ship = (path: string, className: string) => <g className={`${styles.gxShip} ${className}`} aria-label={`Ship toward ${target.name}`}>
             <path d="M-1.1,-0.65 L1.4,0 L-1.1,0.65 L-0.6,0 Z" />
             <animateMotion dur={`${14 + index * 3}s`} repeatCount="indefinite" rotate="auto" path={path} />
@@ -262,7 +264,10 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <i className={styles.gxSun} style={style(SUN)} />
       {mode !== 'ambient' && <>
         {earth(EARTH_POS)}
-        {shownPlanets.map(t => node(t, planetPos(t), t.name))}
+        {shownPlanets.filter(t => !isGasGiant(t)).map(t => node(t, planetPos(t), t.name))}
+        <button type="button" className={styles.gxBelt} data-lit={shownPlanets.some(isGasGiant) && planets.some(t => isGasGiant(t) && lit.has(t.id)) ? true : undefined} style={style(GAS_POS)} data-testid="map-gas-giants" onClick={() => onView('outer')}>
+          <i /><span>Gas giants<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg></span>
+        </button>
         <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
         </button>
@@ -301,7 +306,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <i className={styles.gxSun} style={{ left: '50%', top: '44%' }} />
       {view === 'inner' && earth(REGION_EARTH_POS)}
       {(view === 'inner' ? innerPlanets : outerPlanets).map(target => node(target, (view === 'inner' ? inner : outer)[target.id], target.name))}
-      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Outer system'}</span>
+      <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Gas giants'}</span>
       {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </>}
   </div>
