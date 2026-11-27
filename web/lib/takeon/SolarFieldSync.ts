@@ -1,5 +1,5 @@
 import type { MissionState } from '@takeon/engine'
-import { getOutbox } from '@/lib/offline/pbOutbox'
+import { getOutbox, getSolarFieldOutbox } from '@/lib/offline/pbOutbox'
 import { newRecordId } from '@/lib/offline/outbox'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { missionZone } from '@/lib/data/mission-zone'
@@ -23,7 +23,12 @@ export class SolarFieldSync extends LandnamSync {
     await this.tail
     const owner = pbLandnam.authStore.record?.id
     if (!owner) throw new Error('Sign in to open this field')
-    const outbox = getOutbox()
+    // Earlier builds used the general queue. Let that queue replay first;
+    // starting a second revision chain here would risk overwriting the field.
+    if (await getOutbox().has(op => op.type === 'solar-field' && op.user === owner && op.site === id)) {
+      throw new Error('An earlier field save is still syncing. Reconnect and wait before opening this field.')
+    }
+    const outbox = getSolarFieldOutbox()
     await outbox.has(op => op.type === 'solar-field' && op.user === owner && op.site === id)
     const pending = outbox.pending().filter(item => item.op.type === 'solar-field' && item.op.user === owner && item.op.site === id)
     if (pending.some(item => item.failed || item.lastError?.includes('409'))) throw new Error('This field changed on another device. Your local changes are retained; resolve the sync problem before continuing.')
@@ -56,7 +61,7 @@ export class SolarFieldSync extends LandnamSync {
       if (!owner || revision === null || this.site !== state.id || pbLandnam.authStore.record?.id !== owner) throw new Error('Field account or location changed')
       const identity = readSolarFieldIdentity(state.coreSnapshot)
       if (!identity || solarFieldId(identity.bodyId, identity.zone) !== state.id) throw new Error('Invalid solar field snapshot')
-      await getOutbox().enqueue({ type: 'solar-field', id: newRecordId(), user: owner, site: state.id, revision, state: state as unknown as Record<string, unknown> })
+      await getSolarFieldOutbox().enqueue({ type: 'solar-field', id: newRecordId(), user: owner, site: state.id, revision, state: state as unknown as Record<string, unknown> })
       this.revision = revision + 1
     })
     this.tail = save.catch(() => {})

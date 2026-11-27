@@ -38,6 +38,8 @@ export interface OutboxItem {
    */
   failed: boolean
   lastError?: string
+  /** A local conflicting branch must be resolved by the player, never replayed. */
+  conflicted?: boolean
 }
 
 export interface OutboxSnapshot {
@@ -92,9 +94,9 @@ const DB_STORE = 'queue'
 const DB_KEY = 'items'
 const MIRROR_KEY = 'landnam-outbox-v1'
 
-function openDb(): Promise<IDBDatabase> {
+function openDb(name = DB_NAME): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
+    const req = indexedDB.open(name, 1)
     req.onupgradeneeded = () => req.result.createObjectStore(DB_STORE)
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
@@ -112,19 +114,19 @@ function storedQueue(value: unknown): StoredQueue | null {
   return null
 }
 
-function readMirror(): StoredQueue | null {
+function readMirror(key = MIRROR_KEY): StoredQueue | null {
   try {
-    const raw = window.localStorage.getItem(MIRROR_KEY)
+    const raw = window.localStorage.getItem(key)
     return raw ? storedQueue(JSON.parse(raw)) : null
   } catch {
     return null
   }
 }
 
-function writeMirror(queue: StoredQueue): boolean {
+function writeMirror(queue: StoredQueue, key = MIRROR_KEY, legacy = false): boolean {
   try {
     // Preserve an empty version too, so a stale DB cannot resurrect a write.
-    window.localStorage.setItem(MIRROR_KEY, JSON.stringify(queue))
+    window.localStorage.setItem(key, JSON.stringify(legacy ? queue.items : queue))
     return true
   } catch {
     // Storage full or blocked: IndexedDB is still the primary copy.
@@ -134,18 +136,22 @@ function writeMirror(queue: StoredQueue): boolean {
 
 /**
  * IndexedDB is the primary store; a localStorage mirror covers Safari private
- * windows and eviction edge cases where one of the two is unavailable. On
- * Versioned copies let a successful removal beat a stale longer mirror.
- * Older unversioned queues still use the longer copy during migration.
+ * windows and eviction edge cases where one of the two is unavailable.
+ * Solar copies use versions so removals beat stale mirrors. The main queue
+ * keeps the original array format for older clients and reads envelopes from
+ * the briefly shipped versioned format during migration.
  */
-export function browserStore(): OutboxStore {
+export function browserStore(options: { isolatedSolar?: boolean } = {}): OutboxStore {
+  const dbName = options.isolatedSolar ? 'landnam-solar-outbox-v1' : DB_NAME
+  const mirrorKey = options.isolatedSolar ? 'landnam-solar-outbox-v1' : MIRROR_KEY
+  const legacy = !options.isolatedSolar
   let version = 0
   let writeTail: Promise<void> = Promise.resolve()
   return {
     async load() {
-      const mirror = readMirror()
+      const mirror = readMirror(mirrorKey)
       try {
-        const db = await openDb()
+        const db = await openDb(dbName)
         const fromDb = await new Promise<StoredQueue | null>((resolve, reject) => {
           const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(DB_KEY)
           req.onsuccess = () => resolve(storedQueue(req.result))
@@ -165,12 +171,12 @@ export function browserStore(): OutboxStore {
       const copy = JSON.parse(JSON.stringify(items)) as OutboxItem[]
       const write = writeTail.catch(() => {}).then(async () => {
         const queue = { version: ++version, items: copy }
-        const mirrored = writeMirror(queue)
+        const mirrored = writeMirror(queue, mirrorKey, legacy)
         try {
-          const db = await openDb()
+          const db = await openDb(dbName)
           await new Promise<void>((resolve, reject) => {
             const tx = db.transaction(DB_STORE, 'readwrite')
-            tx.objectStore(DB_STORE).put(queue, DB_KEY)
+            tx.objectStore(DB_STORE).put(legacy ? queue.items : queue, DB_KEY)
             tx.oncomplete = () => resolve()
             tx.onerror = () => reject(tx.error)
           })
@@ -186,7 +192,7 @@ export function browserStore(): OutboxStore {
 }
 
 export interface Outbox {
-  enqueue(op: OutboxOp): Promise<void>
+  enqueue(op: OutboxOp, options?: { conflict?: boolean }): Promise<void>
   flush(): Promise<void>
   snapshot(): OutboxSnapshot
   subscribe(listener: (snapshot: OutboxSnapshot) => void): () => void
@@ -198,6 +204,8 @@ export interface Outbox {
   has(match: (op: OutboxOp) => boolean): Promise<boolean>
   /** Drops matching items, e.g. a game_states save for an account that was just reset. */
   discard(match: (op: OutboxOp) => boolean): Promise<number>
+  /** Drop only if the exact selected operations still match a backed-up snapshot. */
+  discardIfUnchanged(match: (op: OutboxOp) => boolean, expectedIds: string[]): Promise<boolean>
 }
 
 export interface OutboxOptions {
@@ -229,7 +237,7 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
   const emit = () => { const s = snapshot(); listeners.forEach(l => l(s)) }
   const persist = () => store.save(items)
 
-  async function enqueue(op: OutboxOp) {
+  async function enqueue(op: OutboxOp, options?: { conflict?: boolean }) {
     await ensureLoaded()
     // Only the latest snapshot of a keyed upsert matters; drop superseded ones.
     if (op.type === 'upsert') {
@@ -248,7 +256,7 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
         return true
       })
     }
-    const item = { id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false }
+    const item: OutboxItem = { id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: options?.conflict ?? false, ...(options?.conflict ? { lastError: '409: Field changed in another tab', conflicted: true } : {}) }
     items.push(item)
     try { await persist() } catch (error) {
       // A field save that never reached either durable store must not later
@@ -272,6 +280,7 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
       // user-visible warning threshold, not a terminal state.
       const solarKey = item.op.type === 'solar-field' ? `${item.op.user}:${item.op.site}` : null
       if (solarKey && blockedSolarSites.has(solarKey)) continue
+      if (item.conflicted) { if (solarKey) blockedSolarSites.add(solarKey); continue }
       if (item.nextAttemptAt > now()) {
         if (solarKey) blockedSolarSites.add(solarKey)
         continue
@@ -345,6 +354,15 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
       await ensureLoaded()
       return items.some(i => match(i.op))
     },
+    async discardIfUnchanged(match, expectedIds) {
+      await ensureLoaded()
+      const matching = items.filter(item => match(item.op))
+      if (matching.length !== expectedIds.length || matching.some((item, index) => item.id !== expectedIds[index])) return false
+      items = items.filter(item => !match(item.op))
+      await persist()
+      emit()
+      return true
+    },
     async discard(match) {
       await ensureLoaded()
       const before = items.length
@@ -356,5 +374,71 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
       }
       return dropped
     },
+  }
+}
+
+/**
+ * A separate, lock-coordinated queue for revisioned fields. Every operation
+ * reloads inside the origin-wide lock, so another tab cannot overwrite its
+ * queue using a stale in-memory copy. Legacy app tabs never see this queue.
+ */
+export function createCoordinatedOutbox(options: OutboxOptions & {
+  exclusive: <T>(work: () => Promise<T>) => Promise<T>
+}): Outbox {
+  let items: OutboxItem[] = []
+  let busy = false
+  const listeners = new Set<(snapshot: OutboxSnapshot) => void>()
+  const snapshot = () => ({ waiting: items.filter(i => !i.failed).length, failed: items.filter(i => i.failed).length, flushing: busy })
+  const emit = () => { const state = snapshot(); listeners.forEach(listener => listener(state)) }
+  async function transact<T>(action: (box: Outbox) => Promise<T>): Promise<T> {
+    return options.exclusive(async () => {
+      const box = createOutbox({ ...options, isOnline: () => false })
+      try { return await action(box) } finally {
+        await box.has(() => false)
+        items = box.pending()
+        emit()
+      }
+    })
+  }
+  async function flush() {
+    busy = true; emit()
+    try { await transact(box => box.flush()) } finally { busy = false; emit() }
+  }
+  const online = options.isOnline ?? (() => true)
+  return {
+    async enqueue(op) {
+      await transact(async box => {
+        if (op.type === 'solar-field') {
+          await box.has(() => false)
+          const previousItem = box.pending().filter(item => item.op.type === 'solar-field' && item.op.user === op.user && item.op.site === op.site).at(-1)
+          const previous = previousItem?.op
+          if (previousItem && previous?.type === 'solar-field' && (previousItem.failed || previousItem.lastError?.includes('409') || previous.revision + 1 !== op.revision)) {
+            // Preserve this tab's complete snapshot as a separate conflicted
+            // branch before reporting the conflict to the active scene.
+            await box.enqueue(op, { conflict: true })
+            throw new Error('This field changed in another tab. Your local field was saved for recovery.')
+          }
+        }
+        await box.enqueue(op)
+      })
+      if (online()) void flush().catch(() => {})
+    },
+    flush,
+    snapshot,
+    subscribe(listener) { listeners.add(listener); listener(snapshot()); return () => { listeners.delete(listener) } },
+    start() {
+      if (typeof window === 'undefined') return () => {}
+      const kick = () => { if (online()) void flush().catch(() => {}) }
+      const visible = () => { if (document.visibilityState === 'visible') kick() }
+      window.addEventListener('online', kick); window.addEventListener('pageshow', kick)
+      document.addEventListener('visibilitychange', visible)
+      const timer = window.setInterval(kick, FLUSH_INTERVAL_MS)
+      kick()
+      return () => { window.removeEventListener('online', kick); window.removeEventListener('pageshow', kick); document.removeEventListener('visibilitychange', visible); window.clearInterval(timer) }
+    },
+    pending: () => items.map(i => ({ ...i })),
+    has: match => transact(box => box.has(match)),
+    discard: match => transact(box => box.discard(match)),
+    discardIfUnchanged: (match, expectedIds) => transact(box => box.discardIfUnchanged(match, expectedIds)),
   }
 }

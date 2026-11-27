@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -18,20 +20,33 @@ import (
 // single versioned document contains the complete field and its rover: a
 // client never observes terrain from one save and structures from another.
 func ensureSolarFields(app core.App) error {
-	if _, err := app.FindCollectionByNameOrId("solar_fields"); err == nil {
-		return nil
+	if _, err := app.FindCollectionByNameOrId("solar_fields"); err != nil {
+		col := core.NewBaseCollection("solar_fields")
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		col.Fields.Add(&core.TextField{Name: "site", Required: true, Max: 100})
+		col.Fields.Add(&core.NumberField{Name: "revision", Required: true})
+		col.Fields.Add(&core.TextField{Name: "operation_id", Required: true, Max: 80})
+		col.Fields.Add(&core.TextField{Name: "operation_hash", Required: true, Max: 64})
+		col.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 4_000_000})
+		col.AddIndex("idx_solar_field_owner_site", true, "user, site", "")
+		if err := app.Save(col); err != nil {
+			return err
+		}
 	}
-	col := core.NewBaseCollection("solar_fields")
-	// The collection has no public CRUD rules; only the authenticated route
-	// below may read or write it, so all writers use the revision check.
-	col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
-	col.Fields.Add(&core.TextField{Name: "site", Required: true, Max: 100})
-	col.Fields.Add(&core.NumberField{Name: "revision", Required: true})
-	col.Fields.Add(&core.TextField{Name: "operation_id", Required: true, Max: 80})
-	col.Fields.Add(&core.TextField{Name: "operation_hash", Required: true, Max: 64})
-	col.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 4_000_000})
-	col.AddIndex("idx_solar_field_owner_site", true, "user, site", "")
-	return app.Save(col)
+	if _, err := app.FindCollectionByNameOrId("solar_field_transfers"); err != nil {
+		col := core.NewBaseCollection("solar_field_transfers")
+		// Private: receipt creation and access are through the authenticated route.
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		col.Fields.Add(&core.TextField{Name: "site", Required: true, Max: 100})
+		col.Fields.Add(&core.TextField{Name: "run_id", Required: true, Max: 100})
+		col.Fields.Add(&core.NumberField{Name: "revision", Required: true})
+		col.Fields.Add(&core.JSONField{Name: "cargo", Required: true, MaxSize: 8192})
+		col.AddIndex("idx_solar_transfer_owner_run", true, "user, run_id", "")
+		if err := app.Save(col); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type solarFieldWrite struct {
@@ -112,6 +127,139 @@ func saveSolarField(app core.App, user string, in solarFieldWrite) (int, error) 
 	return revision, err
 }
 
+// A transfer removes cargo and records its immutable receipt in one database
+// transaction. A retry of a previously completed run returns the same receipt.
+// The caller must separately apply the receipt idempotently to game progress.
+type solarFieldTransfer struct {
+	Site     string `json:"site"`
+	Revision int    `json:"revision"`
+	RunID    string `json:"runId"`
+}
+type solarTransferReceipt struct {
+	Site     string           `json:"site"`
+	Revision int              `json:"revision"`
+	RunID    string           `json:"runId"`
+	Cargo    map[string]int64 `json:"cargo"`
+}
+
+func solarTransferRecord(app core.App, user, run string) (*core.Record, error) {
+	return app.FindFirstRecordByFilter("solar_field_transfers", "user = {:user} && run_id = {:run}", dbx.Params{"user": user, "run": run})
+}
+
+func receiptFromRecord(record *core.Record) (solarTransferReceipt, error) {
+	result := solarTransferReceipt{Site: record.GetString("site"), RunID: record.GetString("run_id"), Revision: record.GetInt("revision")}
+	raw, _ := json.Marshal(record.GetRaw("cargo"))
+	if err := json.Unmarshal(raw, &result.Cargo); err != nil || result.Cargo == nil {
+		return result, errSolarInvalid
+	}
+	return result, nil
+}
+
+// Decode the core snapshot as JSON, preserving unknown fields as raw JSON. Do
+// not transfer if the core and host copies disagree: that would mint or lose ore.
+func extractSolarCargo(state json.RawMessage) (json.RawMessage, map[string]int64, error) {
+	var doc map[string]json.RawMessage
+	var rover, coreRover, snapshot map[string]json.RawMessage
+	var rawSnapshot string
+	if json.Unmarshal(state, &doc) != nil || json.Unmarshal(doc["rover"], &rover) != nil || rover == nil ||
+		json.Unmarshal(doc["coreSnapshot"], &rawSnapshot) != nil || json.Unmarshal([]byte(rawSnapshot), &snapshot) != nil || snapshot == nil ||
+		json.Unmarshal(snapshot["rover"], &coreRover) != nil || coreRover == nil {
+		return nil, nil, errSolarInvalid
+	}
+	var cargo, coreCargo map[string]int64
+	if json.Unmarshal(rover["cargo"], &cargo) != nil || json.Unmarshal(coreRover["cargo"], &coreCargo) != nil || len(cargo) == 0 || len(cargo) != len(coreCargo) {
+		return nil, nil, errSolarInvalid
+	}
+	var total int64
+	for key, amount := range cargo {
+		if !strings.HasPrefix(key, "landnam:") || len(key) <= len("landnam:") || amount <= 0 || amount > 1000000 || coreCargo[key] != amount {
+			return nil, nil, errSolarInvalid
+		}
+		total += amount
+	}
+	var used, coreUsed int64
+	if json.Unmarshal(rover["cargoUsed"], &used) != nil || json.Unmarshal(coreRover["cargoUsed"], &coreUsed) != nil || used != total || coreUsed != total {
+		return nil, nil, errSolarInvalid
+	}
+	rover["cargo"], coreRover["cargo"] = json.RawMessage(`{}`), json.RawMessage(`{}`)
+	rover["cargoUsed"], coreRover["cargoUsed"] = json.RawMessage(`0`), json.RawMessage(`0`)
+	var err error
+	if doc["rover"], err = json.Marshal(rover); err != nil {
+		return nil, nil, err
+	}
+	if snapshot["rover"], err = json.Marshal(coreRover); err != nil {
+		return nil, nil, err
+	}
+	encodedSnapshot, err := json.Marshal(snapshot)
+	if err != nil {
+		return nil, nil, err
+	}
+	if doc["coreSnapshot"], err = json.Marshal(string(encodedSnapshot)); err != nil {
+		return nil, nil, err
+	}
+	newState, err := json.Marshal(doc)
+	return newState, cargo, err
+}
+
+func transferSolarField(app core.App, user string, in solarFieldTransfer) (solarTransferReceipt, error) {
+	var result solarTransferReceipt
+	if user == "" || !validSolarSite(in.Site) || in.Revision < 1 || len(in.RunID) < 8 || len(in.RunID) > 100 {
+		return result, errSolarInvalid
+	}
+	err := app.RunInTransaction(func(tx core.App) error {
+		existing, err := solarTransferRecord(tx, user, in.RunID)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
+		if existing != nil {
+			result, err = receiptFromRecord(existing)
+			if err == nil && result.Site != in.Site {
+				return errSolarConflict
+			}
+			return err
+		}
+		field, err := solarFieldRecord(tx, user, in.Site)
+		if errors.Is(err, sql.ErrNoRows) {
+			return errSolarConflict
+		}
+		if err != nil {
+			return err
+		}
+		if field.GetInt("revision") != in.Revision {
+			return errSolarConflict
+		}
+		rawState, err := json.Marshal(field.GetRaw("state"))
+		if err != nil {
+			return err
+		}
+		newState, cargo, err := extractSolarCargo(rawState)
+		if err != nil {
+			return err
+		}
+		result = solarTransferReceipt{Site: in.Site, RunID: in.RunID, Revision: in.Revision + 1, Cargo: cargo}
+		col, err := tx.FindCollectionByNameOrId("solar_field_transfers")
+		if err != nil {
+			return err
+		}
+		receipt := core.NewRecord(col)
+		receipt.Set("user", user)
+		receipt.Set("site", in.Site)
+		receipt.Set("run_id", in.RunID)
+		receipt.Set("revision", result.Revision)
+		receipt.Set("cargo", cargo)
+		if err := tx.Save(receipt); err != nil {
+			return err
+		}
+		hash := sha256.Sum256(newState)
+		field.Set("revision", result.Revision)
+		field.Set("operation_id", fmt.Sprintf("transfer:%s", receipt.Id))
+		field.Set("operation_hash", hex.EncodeToString(hash[:]))
+		field.Set("state", newState)
+		return tx.Save(field)
+	})
+	return result, err
+}
+
 func registerSolarFieldRoutes(app core.App) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		if err := ensureSolarFields(app); err != nil {
@@ -132,6 +280,46 @@ func registerSolarFieldRoutes(app core.App) {
 				return apis.NewApiError(http.StatusInternalServerError, "could not read field", err)
 			}
 			return e.JSON(http.StatusOK, map[string]any{"revision": record.GetInt("revision"), "state": record.GetRaw("state")})
+		})
+		group.GET("/transfer", func(e *core.RequestEvent) error {
+			runID := e.Request.URL.Query().Get("runId")
+			if len(runID) < 8 || len(runID) > 100 {
+				return apis.NewBadRequestError("invalid run", nil)
+			}
+			record, err := solarTransferRecord(app, e.Auth.Id, runID)
+			if errors.Is(err, sql.ErrNoRows) {
+				return apis.NewNotFoundError("transfer not found", nil)
+			}
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "could not read transfer", err)
+			}
+			receipt, err := receiptFromRecord(record)
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "invalid transfer receipt", err)
+			}
+			return e.JSON(http.StatusOK, receipt)
+		})
+		group.POST("/transfer", func(e *core.RequestEvent) error {
+			// Do not remove cargo until the client can apply receipts to player
+			// progress idempotently across devices and interrupted saves.
+			if os.Getenv("LANDNAM_SOLAR_TRANSFER_ENABLED") != "1" {
+				return apis.NewApiError(http.StatusServiceUnavailable, "solar cargo transfer is not available yet", nil)
+			}
+			var body solarFieldTransfer
+			if err := e.BindBody(&body); err != nil {
+				return apis.NewBadRequestError("invalid transfer", err)
+			}
+			receipt, err := transferSolarField(app, e.Auth.Id, body)
+			if errors.Is(err, errSolarConflict) {
+				return apis.NewApiError(http.StatusConflict, errSolarConflict.Error(), nil)
+			}
+			if errors.Is(err, errSolarInvalid) {
+				return apis.NewBadRequestError("invalid transfer or field cargo", nil)
+			}
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "could not transfer field cargo", err)
+			}
+			return e.JSON(http.StatusOK, receipt)
 		})
 		group.POST("", func(e *core.RequestEvent) error {
 			var body solarFieldWrite

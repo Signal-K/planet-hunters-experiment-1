@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { syncLabel } from '@/components/game/LandnamSyncStatus'
-import { backoffMs, createOutbox, MAX_ATTEMPTS, memoryStore, newRecordId, type OutboxFailure, type OutboxOp } from './outbox'
+import { backoffMs, browserStore, createOutbox, createCoordinatedOutbox, MAX_ATTEMPTS, memoryStore, newRecordId, type OutboxFailure, type OutboxOp } from './outbox'
 import { classifyHttpStatus, replayFieldSave } from './pbOutbox'
 
 function harness(results: Array<OutboxFailure | null>) {
@@ -257,5 +257,74 @@ describe('outbox', () => {
     expect(syncLabel(false, { waiting: 0, failed: 0, flushing: false })).toBe('NOT SYNCED')
     expect(syncLabel(true, { waiting: 0, failed: 0, flushing: false }, false)).toBe('OFFLINE')
     expect(syncLabel(true, { waiting: 2, failed: 0, flushing: false }, false)).toBe('OFFLINE · 2')
+  })
+})
+
+
+describe('coordinated solar outbox', () => {
+  it('preserves writes from two tabs and refuses duplicate site revisions', async () => {
+    const store = memoryStore()
+    let tail = Promise.resolve()
+    const exclusive = <T>(work: () => Promise<T>): Promise<T> => {
+      const run = tail.then(work)
+      tail = run.then(() => {}, () => {})
+      return run
+    }
+    const make = () => createCoordinatedOutbox({ store, exclusive, execute: async () => null, isOnline: () => false })
+    const a = make(), b = make()
+    const save = (site: string, revision: number): OutboxOp => ({ type: 'solar-field', id: `operation-${site}-${revision}`, user: 'player', site, revision, state: {} })
+    await Promise.all([a.enqueue(save('mars', 0)), b.enqueue(save('moon', 0))])
+    await a.has(() => false)
+    expect(a.pending()).toHaveLength(2)
+    await expect(b.enqueue(save('mars', 0))).rejects.toThrow('another tab')
+    await a.has(() => false)
+    expect(a.pending().some(item => item.failed && item.op.type === 'solar-field' && item.op.site === 'mars')).toBe(true)
+    // Remove the backed-up branch to exercise a normal revision chain.
+    await a.discard(op => op.type === 'solar-field' && op.site === 'mars')
+    await a.enqueue(save('mars', 0))
+    await b.enqueue(save('mars', 1))
+    await a.has(() => false)
+    expect(a.pending()).toHaveLength(3)
+    const staleBackup = a.pending().filter(item => item.op.type === 'solar-field' && item.op.site === 'mars').map(item => item.id)
+    await b.enqueue(save('mars', 2))
+    expect(await a.discardIfUnchanged(op => op.type === 'solar-field' && op.site === 'mars', staleBackup)).toBe(false)
+    await b.discard(op => op.type === 'solar-field' && op.site === 'moon')
+    await a.has(() => false)
+    expect(a.pending()).toHaveLength(3)
+  })
+})
+
+
+describe('conflicting branches', () => {
+  it('retains a stale snapshot without replaying it after the original succeeds', async () => {
+    const store = memoryStore()
+    let tail = Promise.resolve()
+    const exclusive = <T>(work: () => Promise<T>): Promise<T> => { const task = tail.then(work); tail = task.then(() => {}, () => {}); return task }
+    const sent: string[] = []
+    const make = () => createCoordinatedOutbox({ store, exclusive, execute: async op => { if (op.type === 'solar-field') sent.push(op.id); return null }, isOnline: () => false })
+    const first = make(), second = make()
+    const base = { type: 'solar-field' as const, user: 'u', site: 'mars', revision: 0, state: {} }
+    await first.enqueue({ ...base, id: 'first' })
+    await expect(second.enqueue({ ...base, id: 'second' })).rejects.toThrow('saved for recovery')
+    await first.flush()
+    await second.has(() => false)
+    expect(sent).toEqual(['first'])
+    expect(second.pending()).toMatchObject([{ op: { id: 'second' }, conflicted: true }])
+  })
+})
+
+describe('legacy queue migration', () => {
+  it('reads the shipped versioned envelope and writes the legacy array format', async () => {
+    const values = new Map<string, string>()
+    const item = { id: 'queued', op: create, createdAt: 1, attempts: 0, nextAttemptAt: 0, failed: false }
+    values.set('landnam-outbox-v1', JSON.stringify({ version: 7, items: [item] }))
+    vi.stubGlobal('window', { localStorage: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) } })
+    vi.stubGlobal('indexedDB', undefined)
+    try {
+      const store = browserStore()
+      expect(await store.load()).toEqual([item])
+      await store.save([item])
+      expect(JSON.parse(values.get('landnam-outbox-v1')!)).toEqual([item])
+    } finally { vi.unstubAllGlobals() }
   })
 })

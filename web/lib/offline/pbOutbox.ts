@@ -9,7 +9,7 @@ import { pbShared } from '@/lib/pb'
 import { deleteCaptureBlobs, readCaptureBlob } from '@/lib/capture/blobStore'
 import { casUpdateGameState } from '@/lib/sync/casSave'
 import type { GameState } from '@/lib/game-types'
-import { createOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
+import { createOutbox, createCoordinatedOutbox, browserStore, memoryStore, newRecordId, type Outbox, type OutboxFailure, type OutboxOp } from './outbox'
 
 interface PbErrorBody {
   data?: Record<string, { code?: string } | undefined>
@@ -181,8 +181,29 @@ export function getOutbox(): Outbox {
       execute: executeOnPocketBase,
       isOnline: () => typeof navigator === 'undefined' || navigator.onLine !== false,
     })
+    if (typeof window !== 'undefined') getSolarFieldOutbox()
   }
   return instance
+}
+
+let solarInstance: Outbox | null = null
+
+/** Field writes are isolated from older app versions and coordinated per origin. */
+export function getSolarFieldOutbox(): Outbox {
+  if (!solarInstance) {
+    solarInstance = createCoordinatedOutbox({
+      store: typeof window === 'undefined' ? memoryStore() : browserStore({ isolatedSolar: true }),
+      execute: executeOnPocketBase,
+      isOnline: () => typeof navigator === 'undefined' || navigator.onLine !== false,
+      exclusive: async work => {
+        if (typeof window === 'undefined') return work()
+        if (!navigator.locks) throw new Error('This browser cannot safely save a shared field across tabs.')
+        return navigator.locks.request('landnam-solar-outbox-v1', work)
+      },
+    })
+    solarInstance.start()
+  }
+  return solarInstance
 }
 
 export function queueCreate(collection: string, data: Record<string, unknown>, id: string = newRecordId()): string {

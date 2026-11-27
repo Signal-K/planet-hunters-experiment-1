@@ -284,6 +284,17 @@ export default function MissionOperationRoutes({
       if (game.visualFixture === 'solar-mining' && game.mission.customPlan?.zone) {
         return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} />
       }
+      // Kept opt-in until a transfer receipt can be applied to the game save
+      // idempotently. Returning to base leaves the mission paused; this path
+      // must not award or consume cargo before that guarantee exists.
+      if (process.env.NEXT_PUBLIC_SOLAR_FIELD_MISSIONS === '1'
+        && process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
+        && game.mission.customPlan?.work === 'mine' && game.mission.customPlan.zone) {
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} persistent onPause={() => {
+          game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+          game.go('hub')
+        }} />
+      }
       const miningTargetId = game.target.id
       const chassis = game.catalog.parts.chassis.find(part => part.id === game.rocket.chassis)
       const limitedHold = (showerForRunMission(game.mission.id) || game.mission.id === RESOURCE_FOCUS_MISSION_ID) && chassis

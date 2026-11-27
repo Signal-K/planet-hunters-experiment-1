@@ -3,9 +3,9 @@ import type { MissionState } from '@takeon/engine'
 import { memoryStore, createOutbox } from '@/lib/offline/outbox'
 import { writeSolarFieldIdentity } from './solarFieldIdentity'
 
-const mocks = vi.hoisted(() => ({ send: vi.fn(), outbox: { current: null as unknown } }))
+const mocks = vi.hoisted(() => ({ send: vi.fn(), legacyHas: vi.fn(), outbox: { current: null as unknown } }))
 vi.mock('@/lib/pb-landnam', () => ({ pbLandnam: { authStore: { record: { id: 'player' }, token: 'token' }, send: mocks.send } }))
-vi.mock('@/lib/offline/pbOutbox', () => ({ getOutbox: () => mocks.outbox.current, isQueuedUpsert: () => false }))
+vi.mock('@/lib/offline/pbOutbox', () => ({ getSolarFieldOutbox: () => mocks.outbox.current, getOutbox: () => ({ has: mocks.legacyHas }), isQueuedUpsert: () => false }))
 
 import { SolarFieldSync, solarFieldId } from './SolarFieldSync'
 
@@ -16,10 +16,16 @@ const state = { id, coreSnapshot: snapshot, rover: { cargo: { 'landnam:iron': 1 
 
 beforeEach(() => {
   mocks.send.mockReset()
+  mocks.legacyHas.mockResolvedValue(false)
   mocks.outbox.current = createOutbox({ store: memoryStore(), isOnline: () => false, execute: async () => null })
 })
 
 describe('versioned solar fields', () => {
+  it('does not open a second revision chain while an older save is queued', async () => {
+    mocks.legacyHas.mockResolvedValue(true)
+    await expect(new SolarFieldSync().loadMission(id)).rejects.toThrow('earlier field save')
+    expect(mocks.send).not.toHaveBeenCalled()
+  })
   it('queues consecutive edits with the account, location and revisions intact', async () => {
     mocks.send.mockResolvedValue({ revision: 0, state: null })
     const sync = new SolarFieldSync()

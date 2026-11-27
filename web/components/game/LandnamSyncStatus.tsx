@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useGame } from '@/game-context'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { getOutbox } from '@/lib/offline/pbOutbox'
+import { getOutbox, getSolarFieldOutbox } from '@/lib/offline/pbOutbox'
 import type { OutboxSnapshot } from '@/lib/offline/outbox'
 import { syncState } from '@/lib/offline/syncTray'
 import SyncTray from './SyncTray'
@@ -37,7 +37,9 @@ export default function LandnamSyncStatus({ preview = false }: { preview?: boole
   // hydration pass itself always null on both sides; only fine to differ
   // once React is done reconciling.
   const [mounted, setMounted] = useState(false)
-  const [outbox, setOutbox] = useState<OutboxSnapshot>({ waiting: 0, failed: 0, flushing: false })
+  const [mainOutbox, setMainOutbox] = useState<OutboxSnapshot>({ waiting: 0, failed: 0, flushing: false })
+  const [solarOutbox, setSolarOutbox] = useState<OutboxSnapshot>({ waiting: 0, failed: 0, flushing: false })
+  const outbox = useMemo(() => ({ waiting: mainOutbox.waiting + solarOutbox.waiting, failed: mainOutbox.failed + solarOutbox.failed, flushing: mainOutbox.flushing || solarOutbox.flushing }), [mainOutbox, solarOutbox])
   useEffect(() => setMounted(true), [])
   const [online, setOnline] = useState(true)
   useEffect(() => {
@@ -63,9 +65,11 @@ export default function LandnamSyncStatus({ preview = false }: { preview?: boole
   }, [outbox, online, hadWaiting])
   useEffect(() => {
     const box = getOutbox()
-    const unsubscribe = box.subscribe(setOutbox)
+    const unsubscribe = box.subscribe(setMainOutbox)
+    const solar = getSolarFieldOutbox()
+    const unsubscribeSolar = solar.subscribe(setSolarOutbox)
     const stop = box.start()
-    return () => { unsubscribe(); stop() }
+    return () => { unsubscribe(); unsubscribeSolar(); stop() }
   }, [])
   const [trayOpen, setTrayOpen] = useState(false)
   const [anchor, setAnchor] = useState<{ left: number; bottom: number } | null>(null)
@@ -97,7 +101,7 @@ export default function LandnamSyncStatus({ preview = false }: { preview?: boole
   return (
     <>
       {host ? createPortal(chip, host) : chip}
-      {trayOpen && <SyncTray state={state} outbox={outbox} box={getOutbox()} lastUpload={lastUpload} online={online} anchor={anchor} onClose={() => setTrayOpen(false)} />}
+      {trayOpen && <SyncTray state={state} outbox={outbox} box={getOutbox()} solarBox={getSolarFieldOutbox()} lastUpload={lastUpload} online={online} anchor={anchor} onClose={() => setTrayOpen(false)} />}
     </>
   )
 }

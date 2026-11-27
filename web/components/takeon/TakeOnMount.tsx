@@ -59,6 +59,8 @@ export interface TakeOnRoverPose {
 }
 
 export interface TakeOnMountHandle {
+  /** Stop future saves before discarding this mount's conflicted local field. */
+  stopSaving: () => Promise<void>
   /** Snapshot and durably queue the current field before leaving it. */
   saveNow: () => Promise<MissionState | null>
   currentState: () => MissionState | null
@@ -264,6 +266,8 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   const gameRef = useRef<RoverGame | null>(null)
   const snapshotRef = useRef<(() => MissionState | null) | null>(null)
   const saveRef = useRef<(() => Promise<MissionState | null>) | null>(null)
+  const stopSavingRef = useRef(false)
+  const pendingSavesRef = useRef(new Set<Promise<unknown>>())
   const adapter = useMemo(
     () => suppliedAdapter ?? new LandnamSync(),
     [suppliedAdapter]
@@ -339,6 +343,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   }, [readOnly])
 
   useImperativeHandle(ref, () => ({
+    stopSaving: async () => {
+      stopSavingRef.current = true
+      await Promise.allSettled([...pendingSavesRef.current])
+    },
     saveNow: () => saveRef.current?.() ?? Promise.resolve(null),
     currentState: () => snapshotRef.current?.() ?? null,
     deposit: () => gameRef.current?.deposit() ?? 0,
@@ -429,13 +437,17 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
       }
     }
 
-    const save = async (): Promise<MissionState | null> => {
+    const save = (): Promise<MissionState | null> => {
       // Seeded cargo/cache belongs to the host mission, not a persistent
       // field. Saving it here could overwrite a real field under this id.
-      if (readOnly || seedCargoRef.current || seedCacheRef.current) return null
-      const state = snapshot()
-      if (state) await adapter.saveMission(state, roverName ?? 'Rover')
-      return state
+      if (stopSavingRef.current || readOnly || seedCargoRef.current || seedCacheRef.current) return Promise.resolve(null)
+      let state: MissionState | null
+      try { state = snapshot() } catch (error) { return Promise.reject(error) }
+      if (!state) return Promise.resolve(null)
+      const pending = adapter.saveMission(state, roverName ?? 'Rover').then(() => state)
+      pendingSavesRef.current.add(pending)
+      void pending.then(() => pendingSavesRef.current.delete(pending), () => pendingSavesRef.current.delete(pending))
+      return pending
     }
     snapshotRef.current = snapshot
     saveRef.current = save
