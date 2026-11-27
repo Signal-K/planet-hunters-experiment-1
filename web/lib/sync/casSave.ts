@@ -4,9 +4,9 @@
  * record, merges the server copy into ours (ledger + per-field merge), writes
  * with `syncLedger.version = server version + 1`, then re-reads: if another
  * device wrote in between (version moved), it merges again and retries.
- * PocketBase has no compare-and-swap, so the re-read check closes the window
- * to the time between two requests; a lost race is repaired by the next merge
- * because the ledger never loses a device's progress.
+ * This is a best-effort check, not a server-side compare-and-swap. A later
+ * write can still overwrite an acknowledged save, so it must not be used as
+ * the guarantee for irreversible rewards or transfers.
  */
 import type { GameState } from '@/lib/game-types'
 import { mergeRemoteState, type PartialSave } from '@/lib/game-state'
@@ -41,11 +41,13 @@ export async function casUpdateGameState(client: GameStatesClient, recordId: str
     const toWrite: GameState = { ...merged, syncLedger: merged.syncLedger ? { ...merged.syncLedger, version } : merged.syncLedger }
     await client.update(recordId, { user: userId, state: toWrite, missions_done: toWrite.player.missionsDone })
     const check = await client.getOne(recordId)
-    if (versionOf(check.state) === version) {
+    if (versionOf(check.state) === version && check.state && sameContent(check.state as GameState, toWrite)) {
       if (typeof window !== 'undefined' && !sameContent(toWrite, local)) window.dispatchEvent(new CustomEvent(REMOTE_MERGED_EVENT, { detail: toWrite }))
       return toWrite
     }
     mine = toWrite
   }
-  return mine
+  // Let the caller retain the write in the outbox instead of acknowledging
+  // a save that we could not verify.
+  throw new Error('Game state changed repeatedly while saving; retry required')
 }

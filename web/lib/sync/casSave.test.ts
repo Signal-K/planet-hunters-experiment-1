@@ -28,6 +28,38 @@ describe('optimistic game_states write', () => {
     expect(result.player.francs).toBe(1300)
     expect((server as GameState).player.francs).toBe(1300)
   })
+
+  it('does not accept a different write with the same version', async () => {
+    const base = seed()
+    const a = stampLedger({ ...base, player: { ...base.player, francs: 1500 } }, 'A')
+    const b = stampLedger({ ...base, player: { ...base.player, francs: 800 } }, 'B')
+    let server: GameState = base
+    let raced = false
+    const result = await casUpdateGameState({
+      async getOne(id) { return { id, state: server } },
+      async update(_id, data) {
+        server = data.state as GameState
+        if (!raced) {
+          raced = true
+          server = { ...b, syncLedger: { ...b.syncLedger!, version: server.syncLedger!.version } }
+        }
+      },
+    }, 'r', 'u', a)
+    expect(result.player.francs).toBe(1300)
+    expect(server.player.francs).toBe(1300)
+  })
+
+  it('rejects after repeated conflicts so the caller can retry', async () => {
+    const base = seed()
+    let server: GameState = base
+    await expect(casUpdateGameState({
+      async getOne(id) { return { id, state: server } },
+      async update(_id, data) {
+        const written = data.state as GameState
+        server = { ...written, player: { ...written.player, francs: written.player.francs + 1 } }
+      },
+    }, 'r', 'u', base)).rejects.toThrow('retry required')
+  })
 })
 
 describe('sameContent', () => {
