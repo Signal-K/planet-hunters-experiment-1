@@ -276,3 +276,67 @@ func TestSolarTransferRealEngineSnapshot(t *testing.T) {
 		t.Fatal("host cargo remains")
 	}
 }
+
+func TestSolarMissionTransferCommitsCargoAndFieldTogether(t *testing.T) {
+	app := newLedgerTestApp(t)
+	if err := ensureSolarFields(app); err != nil {
+		t.Fatal(err)
+	}
+	col, err := app.FindCollectionByNameOrId("game_states")
+	if err != nil {
+		t.Fatal(err)
+	}
+	save := core.NewRecord(col)
+	save.Set("user", "player-a")
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","francs":123}}`))
+	if err := app.Save(save); err != nil {
+		t.Fatal(err)
+	}
+	state := json.RawMessage(`{"id":"solar:mars:east","coreSnapshot":"{\"rover\":{\"cargo\":{\"landnam:iron\":2},\"cargoUsed\":2}}","rover":{"cargo":{"landnam:iron":2},"cargoUsed":2}}`)
+	if _, err := saveSolarField(app, "player-a", solarFieldWrite{Site: "solar:mars:east", OperationID: "operation-one", State: state}); err != nil {
+		t.Fatal(err)
+	}
+	request := solarFieldTransfer{Site: "solar:mars:east", Revision: 1, RunID: "mission-run-1"}
+	wrong := request
+	wrong.RunID = "other-run-1"
+	if _, err := transferSolarFieldWithMission(app, "player-a", wrong, true); !errors.Is(err, errSolarConflict) {
+		t.Fatalf("wrong mission: %v", err)
+	}
+	field, _ := solarFieldRecord(app, "player-a", request.Site)
+	if field.GetInt("revision") != 1 {
+		t.Fatal("failed transfer changed field")
+	}
+	receipt, err := transferSolarFieldWithMission(app, "player-a", request, true)
+	if err != nil || receipt.Cargo["landnam:iron"] != 2 {
+		t.Fatalf("transfer: %#v %v", receipt, err)
+	}
+	saved, err := app.FindRecordById("game_states", save.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := json.Marshal(saved.GetRaw("state"))
+	var result struct {
+		Player struct {
+			Cargo  map[string]int `json:"miningCargoInProgress"`
+			Francs int            `json:"francs"`
+		} `json:"player"`
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Player.Cargo["iron"] != 2 || result.Player.Francs != 123 {
+		t.Fatalf("mission progress: %s", raw)
+	}
+	retry, err := transferSolarFieldWithMission(app, "player-a", request, true)
+	if err != nil || retry.Revision != receipt.Revision || retry.Cargo["landnam:iron"] != 2 {
+		t.Fatalf("retry: %#v %v", retry, err)
+	}
+}
+
+func TestSolarTransferAllowsEmptyHold(t *testing.T) {
+	state := json.RawMessage(`{"coreSnapshot":"{\"rover\":{\"cargo\":{},\"cargoUsed\":0}}","rover":{"cargo":{},"cargoUsed":0}}`)
+	cleared, cargo, err := extractSolarCargo(state)
+	if err != nil || len(cargo) != 0 || len(cleared) == 0 {
+		t.Fatalf("empty return: %s %#v %v", cleared, cargo, err)
+	}
+}

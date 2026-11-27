@@ -289,13 +289,17 @@ export default function MissionOperationRoutes({
           } else game.onMiningDone(cargo)
         } : undefined} />
       }
-      // Kept opt-in until a transfer receipt can be applied to the game save
-      // idempotently. Returning to base leaves the mission paused; this path
-      // must not award or consume cargo before that guarantee exists.
+      // Opt-in while the account-backed field flow is being rolled out.
       if (process.env.NEXT_PUBLIC_SOLAR_FIELD_MISSIONS === '1'
         && process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
         && game.mission.customPlan?.work === 'mine' && game.mission.customPlan.zone) {
-        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} persistent onPause={() => {
+        return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} persistent runId={game.player.missionRunId} onComplete={cargo => {
+          game.completeStep(6)
+          if (game.player.shipCustomizerParts?.lander) {
+            game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
+            game.go('landing')
+          } else game.onMiningDone(cargo)
+        }} onPause={() => {
           game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
           game.go('hub')
         }} />
