@@ -47,6 +47,9 @@ body:has([data-screen="hub"]) {
 .portrait-canvas:has(.theme-blueprint) .flight-plan-skip,
 .portrait-canvas:has(.theme-blueprint) .flight-plan-chip { color: #175f9b; border-color: rgba(23, 95, 155, 0.45); }
 .portrait-canvas:has(.theme-blueprint) .flight-plan-btn.is-primary { background: #175f9b; color: #ffffff; }
+.portrait-canvas:has(.theme-blueprint) .flight-plan .flight-plan-kicker,
+.portrait-canvas:has(.theme-blueprint) .flight-plan .flight-plan-action,
+.portrait-canvas:has(.theme-blueprint) .flight-plan .flight-plan-line { color: var(--ln-blueprint-ink); }
 .portrait-canvas:has(.theme-blueprint) .flight-plan-radio p { color: var(--ln-blueprint-ink); }
 
 /* Shared chrome while a loop screen is up: paper bar, 44px taps. */

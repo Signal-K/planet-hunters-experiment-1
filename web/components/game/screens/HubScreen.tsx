@@ -113,8 +113,12 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
   // painted ground line and the DOM structures' --hub-ground rise by the same share so the buildings stay on the apron.
   const BASE_ROW_LIFT = 0.12
   const groundLine = portraitPhone ? 0.46 : GROUND.lineFromBottom + BASE_ROW_LIFT
-  const worldW = STRIP_W * px
-  const camera = useBaseCamera({ worldWidth: worldW, homeX: homeCenter(standingKinds, viewSize.w / px, arrangement, player.placementPlots) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
+  const stripW = STRIP_W * px
+  // The painted world must cover the viewport even when the fixed-width kit
+  // is narrower. Keep the authored sites centred in that extra space.
+  const worldW = Math.max(stripW, viewSize.w)
+  const stripOffset = (worldW - stripW) / 2
+  const camera = useBaseCamera({ worldWidth: worldW, homeX: stripOffset + homeCenter(standingKinds, viewSize.w / px, arrangement, player.placementPlots) * px, locked: phoneView && !portraitPhone, portraitZoom: !portraitPhone })
   const cameraTravel = Math.max(0, worldW * camera.cam.zoom - viewSize.w)
   const overviewPosition = cameraTravel === 0 ? 0 : Math.max(0, Math.min(1, -camera.cam.x / cameraTravel))
   const moveBase = (delta: number) => camera.setPosition(overviewPosition + delta)
@@ -458,6 +462,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
           {/* The world itself: sky, steppe, paved ground, weather and sky events as game objects, behind the camera's DOM layer. */}
           <div data-testid="base-camera-world" data-world-width={worldW} style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: worldW, transformOrigin: '0 0', transform: camera.transform, willChange: 'transform' }}>
           <BaseWorldCanvas px={px} groundLine={groundLine} camera={{ x: 0, y: 0, zoom: 1 }} time={skyGrade} biome={sanitizeEarthBiome(player.earthBiome)} launchTags extraSky={orionidsSkyOn(player) ? ['meteors'] : undefined} />
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: stripOffset, width: stripW }}>
           <BaseConstellations player={player} visible={skyGrade === 'night' || skyGrade === 'dusk' || skyGrade === 'dawn'} />
           {/* Silo surface pieces on the strip. */}
           <BaseLayerScene
@@ -524,6 +529,7 @@ export default function HubScreen({ nextFlight, player, rocketVariant = 'explore
                 return <Building key={kind} {...building} quiet hitAspect={!pad && aspect ? `${aspect.width} / ${aspect.height}` : undefined} hitH={silo ? 72 : pad ? 260 : (HIT_H[kind] ?? 60)} active={activeBuilding === kind} disableHover={pad} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
             </div>
+          </div>
           </div>
           </div>
           {/* The craft fly across the view, not the pannable world, so they cross the screen on every layout. */}
