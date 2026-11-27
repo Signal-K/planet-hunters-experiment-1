@@ -34,6 +34,7 @@ import ScreenFrame from '@/components/layout/frame/ScreenFrame'
 import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
+import MapPlanet3D from './screens/MapPlanet3D'
 import { terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { agencyStepLocation } from '@/lib/location-missions'
 import { missionTypePrimer } from '@/lib/data/mission-primers'
@@ -85,14 +86,17 @@ type Target = Catalog['targets'][number]
 type MapView = 'system' | 'inner' | 'belt' | 'outer' | 'moons'
 type MapMode = 'route' | 'pick' | 'ambient'
 
-// A diagram of destinations, deliberately not orbital distances or positions.
-const SUN = { x: 9, y: 46 }
-const EARTH_POS = { x: 50, y: 46 }
+// The system is Sun-centred and in orbital order, with deliberately compressed
+// spacing and illustrative positions (not real-time ephemerides).
+const SUN = { x: 50, y: 46 }
+const ORBITS = [7, 12, 17, 22, 29, 35, 41, 47] as const
+const orbitPosition = (radius: number, angle: number) => ({ x: SUN.x + radius * Math.cos(angle), y: SUN.y + radius * .46 * Math.sin(angle) })
+const EARTH_POS = orbitPosition(ORBITS[2], -.55)
 const SYSTEM_POSITIONS: Record<string, { x: number; y: number }> = {
-  mercury: { x: 18, y: 28 }, venus: { x: 28, y: 62 }, mars: { x: 39, y: 24 },
-  jupiter: { x: 65, y: 61 }, saturn: { x: 77, y: 35 }, uranus: { x: 76, y: 77 }, neptune: { x: 91, y: 58 },
+  mercury: orbitPosition(ORBITS[0], 2.5), venus: orbitPosition(ORBITS[1], -1.7), mars: orbitPosition(ORBITS[3], 1.7),
+  jupiter: orbitPosition(ORBITS[4], -2.4), saturn: orbitPosition(ORBITS[5], -.35), uranus: orbitPosition(ORBITS[6], 2.45), neptune: orbitPosition(ORBITS[7], .85),
 }
-const BELT_POS = { x: 58, y: 25 }
+const BELT_POS = orbitPosition(25.5, .9)
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
 function spread(id: string): number {
@@ -108,8 +112,8 @@ function lcg(seed: number) {
 
 const STARS = (() => {
   const rand = lcg(7)
-  return Array.from({ length: 24 }, () => ({
-    x: rand() * 100, y: rand() * 100, size: 1.5 + rand() * 2.5, glow: 0.3 + rand() * 0.6,
+  return Array.from({ length: 70 }, () => ({
+    x: rand() * 100, y: rand() * 100, size: 0.8 + rand() * 1.5, glow: 0.2 + rand() * 0.6,
     tint: STAR_TINTS[Math.floor(rand() * STAR_TINTS.length)],
   }))
 })()
@@ -146,10 +150,14 @@ const shortName = (name: string) => name.replace(/^\d+\s+/, '')
 
 const ignoreGlobeReady = () => {}
 function MapGlobe({ target }: { target?: Target }) {
+  const [meshReady, setMeshReady] = useState(false)
+  useEffect(() => setMeshReady(false), [target?.id])
   const gasColours: Record<string, readonly [string, string, string]> = { jupiter: ['#d6b79a', '#b77c60', '#f0dcc4'], saturn: ['#e1cb9f', '#b59b70', '#f1e4bd'], uranus: ['#8bd5d6', '#5dabb6', '#c0e8e3'], neptune: ['#427cce', '#28529c', '#8bb8ef'] }
   const colours = target ? gasColours[target.id] ?? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
   return <i className={styles.gxPlanet} data-planet={target?.id ?? 'earth'} style={{ background: `radial-gradient(circle at 30% 25%, ${colours[2]}, ${colours[0]} 45%, ${colours[1]} 72%, #101a29 100%)` }}>
-    <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />
+    {!meshReady && <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />}
+    <MapPlanet3D targetId={target?.id ?? 'earth'} colours={colours} onReady={setMeshReady} />
+    <b className={styles.gxPlanetLight} aria-hidden="true" />
   </i>
 }
 
@@ -216,23 +224,25 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        {ORBITS.map(radius => <ellipse key={radius} cx={SUN.x} cy={SUN.y} rx={radius} ry={radius * .46} className={styles.gxSystemOrbit} />)}
+        <ellipse cx={SUN.x} cy={SUN.y} rx="25.5" ry={25.5 * .46} className={styles.gxBeltOrbit} />
         {mode === 'pick' && shipTargets.map((id, index) => {
           const target = real.find(body => body.id === id)
           if (!target) return null
           const destination = pos(target)
           const parentId = moonParent(target.id)
           const uprightPositions: Record<string, { x: number; y: number }> = {
-            mercury: { x: 25, y: 23 }, venus: { x: 62, y: 25 }, mars: { x: 62, y: 43 },
-            jupiter: { x: 25, y: 60 }, saturn: { x: 62, y: 61 }, uranus: { x: 25, y: 73 }, neptune: { x: 62, y: 74 },
+            mercury: { x: 25, y: 20 }, venus: { x: 62, y: 20 }, mars: { x: 62, y: 34 },
+            jupiter: { x: 62, y: 49 }, saturn: { x: 22, y: 62 }, uranus: { x: 62, y: 62 }, neptune: { x: 35, y: 75 },
           }
-          const uprightDestination = target.type === 'asteroid' ? { x: 30, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 50, y: 36 }
+          const uprightDestination = target.type === 'asteroid' ? { x: 25, y: 49 } : uprightPositions[parentId ?? target.id] ?? { x: 22, y: 34 }
           const ship = (path: string, className: string) => <g className={`${styles.gxShip} ${className}`} aria-label={`Ship toward ${target.name}`}>
             <path d="M-1.1,-0.65 L1.4,0 L-1.1,0.65 L-0.6,0 Z" />
             <animateMotion dur={`${14 + index * 3}s`} repeatCount="indefinite" rotate="auto" path={path} />
           </g>
           return <g key={`${id}-${index}`}>
             {ship(line([EARTH_POS, destination]), styles.gxShipWide)}
-            {ship(line([{ x: 50, y: 36 }, uprightDestination]), styles.gxShipPortrait)}
+            {ship(line([{ x: 22, y: 34 }, uprightDestination]), styles.gxShipPortrait)}
           </g>
         })}
         {mode !== 'ambient' && route.length > 1 && (stops.length > 0
