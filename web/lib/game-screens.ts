@@ -20,7 +20,6 @@ const SCREEN_LIST = {
   mining: true,
   delivery: true,
   debrief: true,
-  market: true,
   hangar: true,
   'rocket-buy': true,
   launchpad: true,
@@ -62,4 +61,4 @@ export function gameScreenParams(): { screen: Screen }[] {
  * Screens removed from the game (SSL-892, cycle 11). A save that rests on one of these lands on the Base
  * (`repairStateRoute`). Their saved fields stay in the data model. The code is in git tag `pre-simplification-cycle11`.
  */
-export const RETIRED_SCREENS = ['refinery'] as const
+export const RETIRED_SCREENS = ['market', 'refinery'] as const

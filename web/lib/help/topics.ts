@@ -228,14 +228,6 @@ export const HELP_TOPICS: Partial<Record<Screen, HelpTopic>> = {
       { title: 'Staged vehicles', body: 'Assemble a staged vehicle here, then transfer it to the pad. Parts you have not unlocked stay greyed.' },
     ],
   },
-  market: {
-    id: 'market',
-    title: 'Sell the haul',
-    cards: [
-      { title: 'Sell the haul', body: 'Ore you brought home sells here for francs. The price on the card is the price you are paid.' },
-      { title: 'Build from a recipe', body: 'Road Segment and Surface Silo show BUILD when you can afford them. Short cards name where to mine the missing material in Free Ops.' },
-    ],
-  },
   flight: {
     id: 'transit',
     title: 'In flight',

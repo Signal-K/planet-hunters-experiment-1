@@ -1,7 +1,6 @@
 'use client'
 
 import { CONSTRUCTION_COMING_LATER } from '@/lib/deferred-features'
-import { firedAlertCount } from '@/lib/systems/MarketplaceSystem'
 import { captureGameEvent } from '@/lib/posthog'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
@@ -408,15 +407,6 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
         onClick: agencyLandmark ? () => { if ((player.missionsDone ?? 0) >= FIRST_STORAGE_MISSIONS_DONE) onBuild?.() } : () => onOpenScene('mission-history'),
       }
     }
-    if (kind === 'market') {
-      return {
-        kind, label: 'Exchange',
-        sub: 'SELL ORE',
-        status: 'ok' as const,
-        w: 150,
-        onClick: () => onFocusBuilding('market'),
-      }
-    }
     if (kind === 'surface-silo') {
       const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
       return {
@@ -507,7 +497,6 @@ export default function HubScreen({ nextFlight, player, onBuild, onArrange, plac
   const liveSkyEvent = liveEventWeek(Date.now())
   const menuItems: BaseMenuItem[] = [
     { id: 'build', icon: 'build', primary: true, label: CONSTRUCTION_COMING_LATER ? 'Build: coming later' : 'Build', detail: CONSTRUCTION_COMING_LATER ? 'Coming later' : 'New structures and launch support', disabled: CONSTRUCTION_COMING_LATER, onSelect: () => { setPlaceNote(null); setArrangeKind(null); setEditMode(true) } },
-    { id: 'market', icon: 'market', primary: true, label: 'Marketplace', detail: firedAlertCount(player) > 0 ? `${firedAlertCount(player)} price alert${firedAlertCount(player) === 1 ? '' : 's'} hit` : player.placed.includes('market') ? 'Spot prices, sell, buy and alerts' : 'Spot prices and selling', onSelect: () => { if (onOpenMarket) onOpenMarket() } },
     { id: 'subsurface', icon: 'subsurface', label: CONSTRUCTION_COMING_LATER ? 'Subsurface: coming later' : 'Subsurface', detail: CONSTRUCTION_COMING_LATER ? 'Coming later' : 'Excavate below the base and build underground rooms', disabled: CONSTRUCTION_COMING_LATER, onSelect: () => setSubsurface(true) },
     ...(
       hasControlStation || ownsOrbitalInstrument

@@ -185,7 +185,6 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-leonids-shower-mining-fresh', label: 'Leonids run: mining, fresh', hint: 'Leonids shower run near Earth at 0 of 20, with 40 Orionid catches in the save. Only Leonid fragments count. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-mining', label: 'Shower run: mining', hint: 'Orionids shower run on Eros with the order filled (20 caught since accept, 25 in the ledger). Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-orionids-shower-debrief', label: 'Shower run: debrief', hint: 'Filled shower run back home: run payout card, fragments kept, haul to sell. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-market', label: 'Market', hint: 'Marketplace panel with the Exchange and a silo built and a stocked stash. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-launch-review', label: 'Launch review (single rocket)', hint: 'Single-rocket launch review reached from the solar map: place, work, cargo, rocket, Launch. Starter Base, Free Ops', stage: 'free-ops' },
       { key: 'ui-mission-log', label: 'Mission Log', hint: 'Mission Log tray over Base. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-ledger', label: 'Ledger', hint: 'Narrative ledger. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -1273,19 +1272,6 @@ function fixture(name: string): Partial<GameState> | null {
         screen: 'surface-silo',
         player: { ...POST_ONBOARDING_PLAYER, placed: ['launchpad', 'surface-silo', 'market'], stash: { iron: 18, aluminium: 9, silicon: 8, nickel: 6, carbon: 3, leonid_debris: 1 }, subsurfaceBuilt: ['mineral-vault'] },
         tutorial: false, doneSteps: TRAINING_DONE, missionId: null, targetId: null, lastCargo: null, popup: null,
-      }
-
-    case 'ui-market':
-      return {
-        screen: 'market',
-        player: { ...POST_ONBOARDING_PLAYER, placed: [...POST_ONBOARDING_PLAYER.placed, 'market', 'surface-silo'], stash: { iron: 20, nickel: 10, silicates: 5 }, },
-        tutorial: false,
-        doneSteps: TRAINING_DONE,
-        missionId: null,
-        targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null,
-        popup: null,
       }
 
     case 'ui-mission-log':

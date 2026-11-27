@@ -42,7 +42,6 @@ const ScreenLoading = () => (
 
 const loadMissionSetupRoutes = () => import('@/components/game/MissionSetupRoutes')
 const loadMissionOperationRoutes = () => import('@/components/game/MissionOperationRoutes')
-const loadMarketScreen = () => import('@/components/game/screens/MarketScreen')
 const loadMissionPlannerScreen = () => import('@/components/game/screens/MissionPlannerScreen')
 const loadLaunchpadScreen = () => import('@/components/game/screens/LaunchpadScreen')
 const loadInstrumentHubScreen = () => import('@/components/game/screens/InstrumentHubScreen')
@@ -59,7 +58,7 @@ const loadNarrativeLedgerScreen = () => import('@/components/game/screens/Narrat
 // the service worker can keep them; otherwise a screen first opened offline
 // has no script to load and renders blank.
 const ALL_SCREEN_LOADERS = [
-  loadMissionSetupRoutes, loadMissionOperationRoutes, loadMarketScreen,
+  loadMissionSetupRoutes, loadMissionOperationRoutes,
   loadMissionPlannerScreen, loadLaunchpadScreen, loadInstrumentHubScreen, loadTessDiscoveryScreen,
   loadRadioMeteorScreen, loadProbeScanScreen, loadSaturnStormSearchScreen, loadAsteroidDiscoveryScreen,
   loadMissionHistoryScreen, loadCommunityResearchScreen, loadNarrativeLedgerScreen,
@@ -67,7 +66,6 @@ const ALL_SCREEN_LOADERS = [
 
 const MissionSetupRoutes = dynamic(loadMissionSetupRoutes, { loading: ScreenLoading })
 const MissionOperationRoutes = dynamic(loadMissionOperationRoutes, { loading: ScreenLoading })
-const MarketScreen = dynamic(loadMarketScreen, { loading: ScreenLoading })
 const MissionPlannerScreen = dynamic(loadMissionPlannerScreen, { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(loadLaunchpadScreen, { loading: ScreenLoading })
 const InstrumentHubScreen = dynamic(loadInstrumentHubScreen, { loading: ScreenLoading })
@@ -181,7 +179,7 @@ function ScreenBody({
   }
   const passport = useResearchPassport(['hub', 'community-research', 'rocket-workshop'].includes(screen), game.player.researchStamps, game.authUserId)
   useEffect(() => { if (passport.data) game.setPlayer(current => withPassportRewards(current, passport.data)) }, [passport.data]) // eslint-disable-line react-hooks/exhaustive-deps
-  const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'market' || screen === 'community-research')
+  const communityResearch = useCommunityResearch(screen === 'hub' || screen === 'instrument-hub' || screen === 'community-research')
 
   // SSL-685: when the server says the month's goal is reached, the Exchange and fuel reward lives on the player until the month ends.
   useEffect(() => {
@@ -387,7 +385,6 @@ function ScreenBody({
           onArrange={order => game.setPlayer(current => ({ ...current, baseArrangement: order }))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')
-            if (building === 'market') return game.go('market')
             if (building === 'control-station') return game.go('instrument-hub')
             // Mission first: the hangar opens on its rocket choice only once a mission and
             // destination are set up. Otherwise it starts at the contract board.
@@ -429,7 +426,6 @@ function ScreenBody({
             game.addToast(`Cannot excavate: need ${missing.join(' and ')}`, 'warn')
           }}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
-          onOpenMarket={() => game.go('market')}
           communityResearch={communityResearch}
           onOpenCommunity={() => game.go('community-research')}
           onOpenEvents={eventId => {
@@ -458,7 +454,6 @@ function ScreenBody({
         buildingLevels={game.player.buildingLevels}
         subsurfaceBuilt={game.player.subsurfaceBuilt}
         onClose={() => game.go('hub')}
-        onSell={hasAgencyUnlock(game.player, 'exchange') ? () => game.go('market') : undefined}
       />
 
     case 'mission-history':
@@ -634,38 +629,6 @@ function ScreenBody({
         />
       )
 
-    case 'market':
-      return (
-        <MarketScreen
-          stash={game.player.stash ?? {}}
-          marketSupply={game.player.marketSupply ?? {}}
-          marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
-          dailyEconomySnapshot={game.player.dailyEconomySnapshot}
-          researchFragments={game.player.researchFragments ?? 0}
-          researchUniversalFragments={game.player.researchUniversalFragments ?? 0}
-          researchPurchases={game.player.researchPurchases}
-          researchPermanentBonuses={game.player.researchPermanentBonuses}
-          communityBonus={game.player.communityBonus}
-          francs={game.player.francs}
-          exchangeBuilt={exchangeBuilt(game.player)}
-          priceAlerts={game.player.priceAlerts}
-          buyBlocker={(id, amount) => buyBlocker(game.player, id, amount)}
-          onSell={game.sellMinerals}
-          onBuy={game.buyMinerals}
-          onSetAlert={game.setPriceAlert}
-          onRemoveAlert={game.removePriceAlert}
-          refinedGoods={game.player.refinedGoods}
-          onSellRefined={game.sellRefinedGoods}
-          onBack={() => game.goBack()}
-          onBuild={() => game.go(CONSTRUCTION_COMING_LATER ? 'hub' : 'build')}
-          onHub={() => game.go('instrument-hub')}
-          onNext={() => game.go(game.player.activeMission ? 'launchpad' : 'missions')}
-          onConvertResearchFragments={() => game.setPlayer(current => convertResearchFragments(current))}
-          onBuyResearchItem={itemId => game.setPlayer(current => buyResearchItem(current, itemId))}
-          clientId={game.player.lastClient}
-        />
-      )
-
     case 'mission-planner':
       return <MissionPlannerScreen player={game.player} catalog={game.catalog} initialPlan={game.mission?.customPlan}
         onBack={() => game.go('missions')}
@@ -761,7 +724,6 @@ function ScreenBody({
               requestMissionBoardTab('program')
             }
             else if (kind === 'discovery-mission') requestMissionBoardTab('free')
-            else if (kind === 'exchange-sale' || kind === 'price-alert') return game.go('market')
             else if (kind === 'contract-run') requestMissionBoardTab('contracts')
             else if (kind === 'survey') {
               if (Object.keys(game.player.probes ?? {}).length || Object.keys(game.player.agencyCommunity?.surveys ?? {}).length) return game.go('probe-scan')

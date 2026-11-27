@@ -17,7 +17,6 @@ describe('core loop analytics', () => {
   it('does not treat screens outside the six-step loop as funnel steps', () => {
     expect(coreLoopStepForScreen('tess-discovery')).toBeNull()
     expect(coreLoopStepForScreen('hangar')).toBeNull()
-    expect(coreLoopStepForScreen('market')).toBeNull()
   })
 
   it('reports only newly completed training tries', () => {

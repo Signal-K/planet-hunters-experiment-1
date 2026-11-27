@@ -30,7 +30,6 @@ export const NARRATIVE_ROLE: Record<Screen, NarrativeRole> = {
   mining: 'work',
   delivery: 'work',
   debrief: 'result',
-  market: 'service',
   hangar: 'service',
   'mission-history': 'service',
   'narrative-ledger': 'service',

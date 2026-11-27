@@ -8,26 +8,26 @@
     "compiledScenes": "shared/engine/authored-scenes.json"
   },
   "counts": {
-    "webRoutes": 30,
+    "webRoutes": 29,
     "nativeScreenCases": 25,
-    "qaScenes": 112,
+    "qaScenes": 111,
     "authoredSceneFiles": 6,
-    "authoredSceneScripts": 30,
-    "authoringSources": 70,
-    "authoredObjectNodes": 167,
-    "authoredGameObjects": 79,
-    "authoredUiElements": 88,
+    "authoredSceneScripts": 29,
+    "authoringSources": 69,
+    "authoredObjectNodes": 162,
+    "authoredGameObjects": 77,
+    "authoredUiElements": 85,
     "authoredPrefabInstances": 5,
-    "compiledScenes": 30,
-    "compiledObjectNodes": 167,
+    "compiledScenes": 29,
+    "compiledObjectNodes": 162,
     "webRuntimeSceneConsumers": 1,
     "nativeRuntimeSceneConsumers": 1,
     "webRuntimeScenes": 1,
     "nativeRuntimeScenes": 1,
     "mechanics": 19,
     "sharedLayoutObjects": 5,
-    "hostLayoutObjects": 162,
-    "webGameComponents": 120,
+    "hostLayoutObjects": 157,
+    "webGameComponents": 119,
     "nativeAppComponents": 58
   },
   "scenes": {
@@ -87,10 +87,6 @@
       {
         "route": "launchpad",
         "type": "base"
-      },
-      {
-        "route": "market",
-        "type": "exchange-lab"
       },
       {
         "route": "mining",
@@ -685,14 +681,6 @@
         "tickets": [
           "SSL-790"
         ]
-      },
-      {
-        "id": "market",
-        "name": "Market",
-        "flow": "progression",
-        "web": "ui-market",
-        "native": "exchange-phone",
-        "tickets": []
       },
       {
         "id": "mission-planner",
@@ -1732,25 +1720,6 @@
         ]
       },
       {
-        "id": "market",
-        "path": "shared/authoring/scenes/market.toml",
-        "objects": 5,
-        "gameObjects": 2,
-        "uiElements": 3,
-        "prefabs": 0,
-        "sharedLayoutObjects": 0,
-        "hostLayoutObjects": 5,
-        "mechanics": [
-          "economy"
-        ],
-        "web": [
-          "web/components/game/screens/MarketScreen.tsx"
-        ],
-        "native": [
-          "native/App/Screens/MarketScene.swift"
-        ]
-      },
-      {
         "id": "mining",
         "path": "shared/authoring/scenes/mining.toml",
         "objects": 10,
@@ -2100,10 +2069,6 @@
         "objects": 14
       },
       {
-        "id": "market",
-        "objects": 5
-      },
-      {
         "id": "mining",
         "objects": 10
       },
@@ -2371,8 +2336,7 @@
       "note": "Refinery has native domain code but no native route or screen. Daily economy needs command-trace comparison.",
       "components": [],
       "scenes": [
-        "hub",
-        "market"
+        "hub"
       ]
     },
     {
@@ -2702,7 +2666,6 @@
       "web/components/game/screens/LandingScreen.tsx",
       "web/components/game/screens/LaserCapacitorPanel.tsx",
       "web/components/game/screens/LaunchpadScreen.tsx",
-      "web/components/game/screens/MarketScreen.tsx",
       "web/components/game/screens/MiningCanvas.tsx",
       "web/components/game/screens/MiningControls.tsx",
       "web/components/game/screens/MiningScreen.tsx",
@@ -2854,7 +2817,6 @@
       "shared/authoring/scenes/intro.toml",
       "shared/authoring/scenes/landing.toml",
       "shared/authoring/scenes/launchpad.toml",
-      "shared/authoring/scenes/market.toml",
       "shared/authoring/scenes/mining.toml",
       "shared/authoring/scenes/mission-history.toml",
       "shared/authoring/scenes/mission-planner.toml",
@@ -2914,7 +2876,6 @@
       "instrument-hub",
       "intro",
       "landing",
-      "market",
       "mining",
       "mission-history",
       "mission-planner",

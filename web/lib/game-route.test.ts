@@ -27,9 +27,9 @@ describe('canonical mission setup route', () => {
 })
 
 describe('trayScreenFromPath', () => {
-  it('keeps Market and Subsurface on a cold load, nothing else', async () => {
+  it('keeps Subsurface on a cold load, nothing else', async () => {
     const { trayScreenFromPath } = await import('./game-route')
-    expect(trayScreenFromPath('/game/market')).toBe('market')
+    expect(trayScreenFromPath('/game/market')).toBeNull()
     expect(trayScreenFromPath('/game/hub-subsurface/')).toBe('hub-subsurface')
     expect(trayScreenFromPath('/game/mission-history')).toBe('mission-history')
     expect(trayScreenFromPath('/game/missions')).toBeNull()

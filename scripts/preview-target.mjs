@@ -39,7 +39,7 @@ const SCREENS = [
   ['tess-receipt', 'ui-tess-receipt'],
   ['probe-receipt', 'ui-probe-receipt'],
   ['probespectrum', 'ui-probe-science'], ['probe-science', 'ui-probe-science'], ['probe-subsurface', 'ui-probe-subsurface'], ['probescan', 'ui-probe-scan'],
-  ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['market', 'ui-market'], ['launchpad', 'ui-launchpad'],
+  ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
   ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
@@ -51,7 +51,7 @@ const SCREENS = [
 
 const ROUTE_PRESETS = {
   'surface-silo': 'ui-surface-silo',
-  hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', market: 'ui-market', launchpad: 'ui-launchpad',
+  hub: 'cp-mid', mining: 'm1-mining', hangar: 'ui-hangar-assembly', launchpad: 'ui-launchpad',
   transit: 'sandbox-transit', landing: 'ui-landing', delivery: 'transport-delivery', debrief: 'm1-debrief',
   'probe-watch': 'ui-probe-watch', 'instrument-hub': 'ui-instrument-hub', 'second-ground-telescope': 'ui-second-ground-telescope', 'flight-return': 'ui-flight-return', 'craft-service': 'ui-craft-service', 'agency-programme': 'ui-agency-programme', 'agency-research': 'ui-agency-research', refinery: 'ui-refinery', missions: 'ui-mission-board', galaxy: 'ui-tess-discovery',
   targets: 'ui-target-picker', build: 'ui-build', intro: 'm1-intro',

@@ -50,7 +50,6 @@ const PROGRAM_PHASE = {
   'hub': 'Base',
   'hub-subsurface': 'Base',
   'surface-silo': 'Base',
-  'market': 'Base',
   'missions': 'Plan',
   'targets': 'Plan',
   'mission-planner': 'Plan',
@@ -392,9 +391,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
         setSettingsOpen(false); setFriendsOpen(false)
-        if (currentScreen === 'market' || currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
-      } else if (action === 'open-market') {
-        if (game.player.freeOperations) game.go('market')
+        if (currentScreen === 'hub-subsurface' || currentScreen === 'mission-history') game.goBack('hub')
       } else if (action === 'switch-operation') {
         resumeOperations()
       }
@@ -531,7 +528,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             onClose={() => game.setPopup(null)}
           />
         )}
-        {game.popup && game.popup !== 'tutorial-complete' && game.popup !== AGENCY_TRAINING_POPUP && currentScreen !== 'market' && !game.authGateOpen && (
+        {game.popup && game.popup !== 'tutorial-complete' && game.popup !== AGENCY_TRAINING_POPUP && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

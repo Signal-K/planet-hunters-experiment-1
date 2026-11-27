@@ -63,7 +63,7 @@ interface MissionBoardProps {
   onOpenPlanner?: () => void
   onOpenLog: () => void
   onOpenBuild: () => void
-  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors' | 'market') => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors') => void
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void

@@ -428,14 +428,6 @@
    ]
   },
   {
-   "id": "market",
-   "name": "Market",
-   "flow": "progression",
-   "web": "ui-market",
-   "native": "exchange-phone",
-   "tickets": []
-  },
-  {
    "id": "mission-planner",
    "name": "Mission planner",
    "flow": "core-loop",

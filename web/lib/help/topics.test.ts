@@ -26,7 +26,6 @@ describe('help topic registry (SSL-432)', () => {
 
   it('has a TESS topic with a Show me run and none for unlisted screens', () => {
     expect(getHelpTopic('tess-discovery')?.coach?.length).toBeGreaterThan(0)
-    expect(getHelpTopic('market')?.title).toBe('Sell the haul')
     expect(getHelpTopic('flight')?.title).toBe('In flight')
   })
 })

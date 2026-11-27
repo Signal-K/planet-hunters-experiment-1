@@ -100,7 +100,6 @@ export type Screen =
   | 'mining'
   | 'delivery'
   | 'debrief'
-  | 'market'
   | 'hangar'
   | 'rocket-buy'
   | 'launchpad'
@@ -145,7 +144,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'asteroid-discovery',
   'saturn-storm-search',
   'instrument-hub',
-  'market',
   // Mission Log is a tray over the still-mounted Base (SSL-347), so the Base
   // must keep its full-viewport frame while the tray is open.
   'mission-history',

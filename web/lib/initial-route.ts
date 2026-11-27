@@ -3,7 +3,7 @@ import { migrateScreenId } from '@/lib/game-screens'
 
 const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'tess-discovery', 'targets', 'fab',
-  'flight', 'mining', 'delivery', 'debrief', 'market',
+  'flight', 'mining', 'delivery', 'debrief',
   'hangar', 'rocket-buy',
   'launchpad',
   'mission-history',
