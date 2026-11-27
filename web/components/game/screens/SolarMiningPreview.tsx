@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defaultSpec, LocalSync, type MissionState } from '@takeon/engine'
 import type { Target } from '@/lib/data'
 import type { MissionZone } from '@/lib/data/mission-zone'
@@ -36,16 +36,36 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
   const [error, setError] = useState('')
   const [drillStatus, setDrillStatus] = useState('')
   const [saving, setSaving] = useState(false)
+  const [checkingReceipt, setCheckingReceipt] = useState(persistent)
+  const completeRef = useRef(onComplete)
+  completeRef.current = onComplete
   const [mountKey, setMountKey] = useState(0)
   const ready = useCallback((next: MissionState) => { setState(next) }, [])
   const receive = useCallback(() => { const next = ref.current?.currentState(); if (next) setState(next) }, [])
+  const fieldReady = state !== null
+  useEffect(() => {
+    if (!persistent || !(adapter instanceof SolarFieldSync) || !fieldReady) return
+    if (!runId) { setCheckingReceipt(false); return }
+    let active = true
+    setCheckingReceipt(true)
+    void adapter.recoverMissionTransfer(runId).then(async cargo => {
+      if (!active || cargo === null) return
+      // Do not allow an old autosave to restore a hold already transferred.
+      await ref.current?.stopSaving()
+      if (active) completeRef.current?.(cargo)
+    }).catch(() => {
+      if (active) setError('Could not check for a previous return. Your field is saved; reconnect before transferring cargo.')
+    }).finally(() => { if (active) setCheckingReceipt(false) })
+    return () => { active = false }
+  }, [adapter, fieldReady, persistent, runId])
+  const busy = saving || checkingReceipt
   const cargo = Object.entries(state?.rover.cargo ?? {}).flatMap(([resource, amount]) => {
     const mineral = mineralFromSolarResource(resource)
     return mineral && amount ? [`${mineral} ${amount}`] : []
   })
   const edits = Object.keys(state?.edits ?? {}).length
   const pause = async () => {
-    if (saving) return
+    if (busy) return
     setSaving(true)
     setError('')
     try {
@@ -58,7 +78,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
     finally { setSaving(false) }
   }
   const returnWithCargo = async () => {
-    if (saving || !onComplete) return
+    if (busy || !onComplete) return
     setSaving(true)
     setError('')
     try {
@@ -92,7 +112,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
     finally { setSaving(false) }
   }
   return <div className={styles.screen} data-testid="solar-mining-preview">
-    {mounted && <div className={styles.field} inert={saving}><TakeOnMount key={mountKey} ref={ref} adapter={adapter} missionId={solarFieldId(target.id, zone)} bodyId={takeonBodyForTarget(target)}
+    {mounted && <div className={styles.field} inert={busy}><TakeOnMount key={mountKey} ref={ref} adapter={adapter} missionId={solarFieldId(target.id, zone)} bodyId={takeonBodyForTarget(target)}
       target={target} zone={zone} rover={rover} startView="iso" requireSolarTerrain allowSolarFieldCreation solarMining
       onReady={ready} onEvent={event => {
         if (event.type === 'mined') {
@@ -108,18 +128,18 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
       onResolved={() => { setError(''); setState(null); setMountKey(key => key + 1); setMounted(true) }} />}
     <div className={styles.controls}>
       {mounted ? <>
-        <div className={styles.dpad} aria-label="Move rover" inert={saving}>
+        <div className={styles.dpad} aria-label="Move rover" inert={busy}>
           <button type="button" aria-label="Move up" onClick={() => ref.current?.move(3)}>↑</button>
           <button type="button" aria-label="Move left" onClick={() => ref.current?.move(2)}>←</button>
           <button type="button" aria-label="Move right" onClick={() => ref.current?.move(0)}>→</button>
           <button type="button" aria-label="Move down" onClick={() => ref.current?.move(1)}>↓</button>
         </div>
-        <button type="button" disabled={saving || !state} onClick={() => {
+        <button type="button" disabled={busy || !state} onClick={() => {
           if (!ref.current?.mine()) setDrillStatus('Cannot drill here. Move the rover and try another spot.')
         }}>DRILL</button>
-        {onComplete && <button type="button" disabled={saving || !state} onClick={() => void returnWithCargo()}>RETURN TO SHIP</button>}
-        <button type="button" disabled={saving || (!state && !persistent)} onClick={() => { if (!state && persistent) onPause?.(); else void pause() }}>
-          {saving ? 'SAVING…' : persistent ? state ? 'SAVE & RETURN TO BASE' : 'RETURN TO BASE' : 'SAVE & LEAVE'}
+        {onComplete && <button type="button" disabled={busy || !state} onClick={() => void returnWithCargo()}>RETURN TO SHIP</button>}
+        <button type="button" disabled={saving || (checkingReceipt && !!state) || (!state && !persistent)} onClick={() => { if (!state && persistent) onPause?.(); else void pause() }}>
+          {checkingReceipt && state ? 'CHECKING RETURN…' : saving ? 'SAVING…' : persistent ? state ? 'SAVE & RETURN TO BASE' : 'RETURN TO BASE' : 'SAVE & LEAVE'}
         </button>
       </> : <button type="button" onClick={() => { setState(null); setMounted(true) }}>RETURN TO FIELD</button>}
     </div>
