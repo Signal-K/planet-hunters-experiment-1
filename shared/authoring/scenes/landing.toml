@@ -6,7 +6,8 @@ id = "landing"
 type = "travel"
 name = "Landing"
 summary = "Touchdown at the target before mining begins."
-qa = ["landing"]
+tickets = ["SSL-898"]
+qa = ["landing", "solar-visual"]
 
 [runtime]
 surface = "canvas"
@@ -59,3 +60,9 @@ parent = "landing-world"
 layout = "host"
 mechanics = ["landing"]
 note = "Pause at the hub without discarding the operation."
+
+[[objects]]
+id = "solar-body-coverage"
+kind = "world"
+layout = "host"
+note = "SSL-898: the existing solar visual fixture reviews planets, parented major moons and asteroid locations with shared Takeon radius/biome samples. Orbit and landing keep a common site; gas giants are orbit-only. The observed-imagery control labels absent data and does not claim measured procedural terrain."

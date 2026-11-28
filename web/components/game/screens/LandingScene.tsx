@@ -17,6 +17,7 @@ interface Props {
   mode: LandingSequenceMode
   realism?: number
   zone?: MissionZone
+  onReady?: (ready: boolean) => void
 }
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -36,7 +37,7 @@ function rng(seed0: number) {
  * in space) to 0 (surface: the field fills the view). No rover is passed, so
  * Takeon draws none: a landing has no vehicle on the ground yet.
  */
-export default function LandingScene({ target, progress, mode, realism = 0, zone }: Props) {
+export default function LandingScene({ target, progress, mode, realism = 0, zone, onReady }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 160, h: 100 })
   const [tick, setTick] = useState(0)
@@ -47,6 +48,7 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
   // Switch both views together: showing one generated layer with an unrelated
   // fallback layer would make the apparent landing location jump on descent.
   const solarReady = globeReady && surfaceReady
+  useEffect(() => { onReady?.(solarReady) }, [solarReady, onReady])
 
   useEffect(() => {
     const el = ref.current
@@ -146,7 +148,7 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
       {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <SolarOrbitGlobe targetId={target.id} zone={zone} colours={ground} realism={realism} scale={lerp(1, 12, t * t)} opacity={solarReady ? worldOpacity : 0} onReady={onGlobeReady} />}
 
       <div style={{ position: 'absolute', inset: 0, transform: `scale(${lerp(0.82, 1.08, low)})`, transformOrigin: '50% 64%', opacity: fieldOpacity, WebkitMaskImage: mask, maskImage: mask, pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 0 : 1 }}><TakeOnMount
+        {!solarReady && fieldOpacity > 0 && <div style={{ position: 'absolute', inset: 0 }}><TakeOnMount
           missionId={`landing-${target.id}`}
           bodyId={takeonBodyForTarget(target)}
           target={target}
@@ -154,7 +156,7 @@ export default function LandingScene({ target, progress, mode, realism = 0, zone
           startView="iso"
           readOnly
           className={styles.field}
-        /></div>
+        /></div>}
         {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && <div style={{ position: 'absolute', inset: 0, opacity: solarReady ? 1 : 0 }}><SolarSurface targetId={target.id} zone={zone} ground={ground} realism={realism} onReady={onSurfaceReady} /></div>}
       </div>
 

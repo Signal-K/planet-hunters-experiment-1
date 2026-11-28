@@ -507,6 +507,14 @@
    "tickets": []
   },
   {
+   "id": "solar-visual",
+   "name": "Solar body and surface coverage",
+   "flow": "field",
+   "web": "solar-visual",
+   "tickets": ["SSL-898"],
+   "objective": "Review the supported bodies through shared Takeon orbit and surface samples; compare observed imagery only where available."
+  },
+  {
    "id": "solar-site-mining",
    "name": "Solar site mining",
    "flow": "core-loop",

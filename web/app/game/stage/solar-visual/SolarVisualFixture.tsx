@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import SolarOrbitGlobe from '@/components/game/screens/SolarOrbitGlobe'
 import { terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import LandingScene from '@/components/game/screens/LandingScene'
@@ -11,10 +11,24 @@ import TakeOnMount from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from '@/lib/takeon/bodies'
 
 const stages = [0, 0.35, 0.6, 0.85, 1]
-const reviewTargets = TARGETS
+const reviewTargets = [{ id: 'earth', name: 'Earth', type: 'planet', orbit: 3, difficulty: 'L1', brief: '' } as typeof TARGETS[number], ...TARGETS]
 
 /** Account-free, stationary views of the real landing scene for visual review. */
 export default function SolarVisualFixture() {
+  const [queryReady, setQueryReady] = useState(false)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('target')
+    if (reviewTargets.some(body => body.id === id)) setTargetId(id!)
+    const stage = Number(params.get('progress'))
+    if (Number.isFinite(stage)) setProgress(Math.max(0, Math.min(1, stage)))
+    const blend = Number(params.get('realism'))
+    if (Number.isFinite(blend)) setRealism(Math.max(0, Math.min(1, blend)))
+    const location = params.get('zone') as MissionZone
+    if (MISSION_ZONES.includes(location)) setZone(location)
+    setShowField(params.get('field') === '1')
+    setQueryReady(true)
+  }, [])
   const [targetId, setTargetId] = useState('mars')
   const [progress, setProgress] = useState(0)
   const [realism, setRealism] = useState(0)
@@ -24,13 +38,13 @@ export default function SolarVisualFixture() {
   const cloudOnly = ['jupiter', 'saturn', 'uranus', 'neptune'].includes(target.id)
   const [globeReady, setGlobeReady] = useState(false)
   const onGlobeReady = useCallback((ready: boolean) => setGlobeReady(ready), [])
-  return <main style={{ position: 'fixed', inset: 0, overflow: 'auto', zIndex: 1000, background: '#111a2a', color: '#fff', padding: 16, fontFamily: 'system-ui' }}>
+  return <main data-stage-ready={queryReady && (globeReady || process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW !== '1')} data-testid="solar-body-coverage" style={{ position: 'fixed', inset: 0, overflow: 'auto', zIndex: 1000, background: '#111a2a', color: '#fff', padding: 16, fontFamily: 'system-ui' }}>
     <h1>Orbit to surface visual test</h1>
     <p>Review an orbital view or a frozen descent over generated terrain.</p>
-    <label>Destination{' '}<select value={target.id} onChange={event => setTargetId(event.target.value)} style={{ minHeight: 44, fontSize: 16 }}>
+    <label style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>Destination{' '}<select value={target.id} onChange={event => setTargetId(event.target.value)} style={{ minHeight: 44, fontSize: 16, maxWidth: '100%' }}>
       {reviewTargets.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
     </select></label>
-    <label> Preview location{' '}<select value={zone} onChange={event => setZone(event.target.value as MissionZone)} style={{ minHeight: 44, fontSize: 16 }}>
+    <label style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginLeft: 8 }}> Preview location{' '}<select value={zone} onChange={event => setZone(event.target.value as MissionZone)} style={{ minHeight: 44, fontSize: 16, maxWidth: '100%' }}>
       {MISSION_ZONES.map(item => <option key={item} value={item}>{item}</option>)}
     </select></label>
     <div style={{ marginTop: 12 }}>
@@ -44,10 +58,10 @@ export default function SolarVisualFixture() {
     </div>}
     {!cloudOnly && <button onClick={() => setShowField(value => !value)} style={{ minHeight: 44, padding: '0 16px', fontSize: 16 }}>{showField ? 'Show descent' : 'Show engine field'}</button>}
     <div style={{ position: 'relative', width: 'min(100%, 1100px)', aspectRatio: '16 / 9', overflow: 'hidden' }}>
-      {showField && !cloudOnly ? <div style={{ position: 'absolute', inset: 0 }}><TakeOnMount missionId={`solar-review-${target.id}-${zone}`} bodyId={takeonBodyForTarget(target)} target={target} zone={zone} readOnly startView="iso" /></div> : cloudOnly ? <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 60%, #172438, #02040b 70%)' }}>
+      {showField && !cloudOnly ? <div style={{ position: 'absolute', inset: 0 }}><TakeOnMount missionId={`solar-review-${target.id}-${zone}`} bodyId={takeonBodyForTarget(target)} target={target} zone={zone} readOnly startView="iso" onReady={() => setGlobeReady(true)} /></div> : cloudOnly ? <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 60%, #172438, #02040b 70%)' }}>
         {!globeReady && <p style={{ padding: 16 }}>Loading orbital view…</p>}
         <SolarOrbitGlobe targetId={target.id} zone={zone} colours={terrainLookForTarget(target).ground} scale={1} opacity={1} landable={false} realism={observedCoverage(target.id) === 'none' ? 0 : realism} onReady={onGlobeReady} />
-      </div> : <LandingScene target={target} zone={zone} mode="descend" progress={progress} realism={observedCoverage(target.id) === 'none' ? 0 : realism} />}
+      </div> : <LandingScene target={target} zone={zone} mode="descend" progress={progress} onReady={onGlobeReady} realism={observedCoverage(target.id) === 'none' ? 0 : realism} />}
     </div>
   </main>
 }

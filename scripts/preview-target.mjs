@@ -27,6 +27,7 @@ const SCREENS = [
   ['mission-planner', 'ui-mission-planner'],
   ['planner-survey', 'ui-mission-planner-survey'],
   ['planner-delivery', 'ui-mission-planner-delivery'],
+  ['solarvisualfixture', 'solar-visual'], ['solar-visual', 'solar-visual'],
   ['solar-site-delivery', 'solar-site-delivery'],
   ['solar-site-mining', 'solar-site-mining'],
   ['solar-field-mining', 'solar-field-mining'],

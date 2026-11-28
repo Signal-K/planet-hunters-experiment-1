@@ -24,6 +24,12 @@ describe('terrainLookForTarget', () => {
     expect(light(europa.sky)).toBeLessThan(80)
   })
 
+  it('keeps the four gas giants visually distinct through the shared orbit/map palette', () => {
+    const worlds = ['jupiter', 'saturn', 'uranus', 'neptune'].map(id => terrainLookForTarget({ id, type: 'planet', archetype: 'gas-giant' }))
+    expect(new Set(worlds.map(look => look.ground[0])).size).toBe(4)
+    expect(worlds.every(look => look.atmosphere === 'thick')).toBe(true)
+  })
+
   it('makes a carbonaceous asteroid darker than a stony one', () => {
     const c = terrainLookForTarget(body('bennu', 'asteroid', 'C')).ground[0]
     const s = terrainLookForTarget(body('eros', 'asteroid', 'S')).ground[0]

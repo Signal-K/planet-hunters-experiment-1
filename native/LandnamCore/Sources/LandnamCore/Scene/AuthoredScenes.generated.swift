@@ -1324,6 +1324,12 @@ enum AuthoredSceneDeclarations {
             "landing"
           ],
           "note": "Pause at the hub without discarding the operation."
+        },
+        {
+          "id": "solar-body-coverage",
+          "kind": "world",
+          "layout": "host",
+          "note": "SSL-898: the existing solar visual fixture reviews planets, parented major moons and asteroid locations with shared Takeon radius/biome samples. Orbit and landing keep a common site; gas giants are orbit-only. The observed-imagery control labels absent data and does not claim measured procedural terrain."
         }
       ]
     },

@@ -41,6 +41,11 @@ interface Composition {
 /** What each biome profile is made of. Real bodies with their own profile come first. */
 const COMPOSITION: Record<string, Composition> = {
   // Solar system bodies (PROFILE_BY_TARGET overrides).
+  earth: { ground: '#719854', rock: '#675b4f', atmosphere: 'thick', sky: '#79acd8' },
+  jupiter: { ground: '#d6b79a', rock: '#b77c60', atmosphere: 'thick', sky: '#d2bb94' },
+  saturn: { ground: '#e1cb9f', rock: '#b59b70', atmosphere: 'thick', sky: '#d2bb94' },
+  uranus: { ground: '#8bd5d6', rock: '#5dabb6', atmosphere: 'thick', sky: '#8bd5d6' },
+  neptune: { ground: '#427cce', rock: '#28529c', atmosphere: 'thick', sky: '#427cce' },
   mars: { ground: '#b0603a', rock: '#7c4632', atmosphere: 'thin', sky: '#c49a72' },
   venus: { ground: '#8c6a44', rock: '#5c4636', atmosphere: 'thick', sky: '#d5ad62' },
   io: { ground: '#cdb84e', rock: '#8a6e36', atmosphere: 'none' },
@@ -166,7 +171,7 @@ export function scorchAmount(temperature: number): number {
 /** The look of a Landnam target's surface, from its composition and probable conditions. */
 export function terrainLookForTarget(target: SurfaceTarget): TerrainLook {
   const profile = biomeProfileForTarget(target)
-  const comp = COMPOSITION[profile.id] ?? FALLBACK
+  const comp = COMPOSITION[target.id] ?? COMPOSITION[profile.id] ?? FALLBACK
   const frost = frostAmount(profile.temperature, !!comp.volatiles)
   const scorch = scorchAmount(profile.temperature)
   const condition = (hex: string) => mixHex(mixHex(hex, FROST, frost), SCORCH, scorch)

@@ -7,7 +7,7 @@ import { mixHex, type Ramp } from './terrainColour'
 const BODIES = ['mercury', 'venus', 'mars', 'eros', 'vesta', 'itokawa', 'ryugu', 'psyche', 'bennu', 'ceres', 'lutetia', 'europa'] as const
 // New fields reuse a material slot: each engine instance has one body, and
 // persisted solar snapshots carry their own palette. Existing IDs stay fixed.
-const ADDITIONAL_BODIES = ['moon', 'phobos', 'deimos', 'io', 'ganymede', 'callisto', 'titan', 'enceladus', 'mimas', 'tethys', 'dione', 'rhea', 'iapetus', 'miranda', 'ariel', 'umbriel', 'titania', 'oberon', 'triton'] as const
+const ADDITIONAL_BODIES = ['earth', 'moon', 'phobos', 'deimos', 'io', 'ganymede', 'callisto', 'titan', 'enceladus', 'mimas', 'tethys', 'dione', 'rhea', 'iapetus', 'miranda', 'ariel', 'umbriel', 'titania', 'oberon', 'triton'] as const
 export function supportsSolarField(bodyId: string): boolean { return BODIES.includes(bodyId as typeof BODIES[number]) || ADDITIONAL_BODIES.includes(bodyId as typeof ADDITIONAL_BODIES[number]) }
 const GROUPS = ['regolith', 'ice', 'ice-ridges', 'tundra', 'ocean', 'grassland', 'drylands', 'methane-lakes', 'sulfur-plains', 'highlands', 'dark-regolith', 'volcanic-highlands'] as const
 const BIOMES: Record<string, typeof GROUPS[number]> = {

@@ -89,13 +89,13 @@ type MapMode = 'route' | 'pick' | 'ambient'
 
 // Fixed schematic itinerary; slots are empty until the server publishes a target.
 const SUN = { x: 4, y: 32 }
-const EARTH_POS = { x: 13, y: 32 }
+const EARTH_POS = { x: 32, y: 32 }
 const SYSTEM_POSITIONS: Record<string, { x: number; y: number }> = {
- mercury: {x:7,y:72}, venus:{x:23,y:76}, mars:{x:31,y:32},
- jupiter:{x:48,y:48}, saturn:{x:65,y:29}, uranus:{x:79,y:57}, neptune:{x:93,y:34},
+ mercury: {x:10,y:52}, venus:{x:21,y:68}, mars:{x:43,y:58},
+ jupiter:{x:61,y:40}, saturn:{x:72,y:62}, uranus:{x:83,y:34}, neptune:{x:94,y:58},
 }
-export const ANOMALY_SLOTS = [32,46,59,72,85,95].map((x,slot)=>({slot,x,y:slot % 2 ? 82 : 68}))
-const BELT_POS = {x:40,y:18}
+export const ANOMALY_SLOTS = [32,46,59,72,85,95].map((x,slot)=>({slot,x,y:slot % 2 ? 90 : 68}))
+const BELT_POS = {x:52,y:20}
 const isGasGiant = (t: { type: string; orbit: number }) => t.type !== 'asteroid' && t.orbit > 4
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
@@ -152,12 +152,11 @@ const ignoreGlobeReady = () => {}
 function MapGlobe({ target }: { target?: Target }) {
   const [meshReady, setMeshReady] = useState(false)
   useEffect(() => setMeshReady(false), [target?.id])
-  const gasColours: Record<string, readonly [string, string, string]> = { jupiter: ['#d6b79a', '#b77c60', '#f0dcc4'], saturn: ['#e1cb9f', '#b59b70', '#f1e4bd'], uranus: ['#8bd5d6', '#5dabb6', '#c0e8e3'], neptune: ['#427cce', '#28529c', '#8bb8ef'] }
-  const colours = target ? gasColours[target.id] ?? terrainLookForTarget(target).ground : ['#4c9172', '#326d9f', '#b6d5ce']
-  return <i className={styles.gxPlanet} data-planet={target?.id ?? 'earth'} style={{ background: `radial-gradient(circle at 30% 25%, ${colours[2]}, ${colours[0]} 45%, ${colours[1]} 72%, #101a29 100%)` }}>
+  const colours = terrainLookForTarget(target ?? { id: 'earth', type: 'planet' }).ground
+  return <i className={styles.gxPlanet} data-planet={target?.id ?? 'earth'} style={{ background: meshReady ? 'transparent' : `radial-gradient(circle at 30% 25%, ${colours[2]}, ${colours[0]} 45%, ${colours[1]} 72%, #101a29 100%)` }}>
     {!meshReady && <SolarOrbitGlobe targetId={target?.id ?? 'earth'} colours={colours} scale={1} opacity={1} landable={target?.archetype !== 'gas-giant'} mapIcon onReady={ignoreGlobeReady} />}
     <MapPlanet3D targetId={target?.id ?? 'earth'} colours={colours} onReady={setMeshReady} />
-    <b className={styles.gxPlanetLight} aria-hidden="true" />
+    {!meshReady && <b className={styles.gxPlanetLight} aria-hidden="true" />}
   </i>
 }
 
@@ -187,6 +186,20 @@ interface GalaxyMapProps {
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
 export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons, shipTargets = [], anomalies = [], onAnomaly, anomalyNow = Date.now(), liveEvent }: GalaxyMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || mode !== 'pick') return
+    const centerMap = () => {
+      const center = view === 'system' ? EARTH_POS.x : 42
+      map.scrollLeft = Math.max(0, map.scrollWidth * center / 100 - map.clientWidth / 2)
+    }
+    centerMap()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(centerMap)
+    observer.observe(map)
+    return () => observer.disconnect()
+  }, [view, mode])
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')
@@ -238,12 +251,12 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const earth = (p: { x: number; y: number }) => pickable
     ? <button type="button" className={styles.gxNode} data-home data-selected={selectedId === 'earth' || undefined} style={style(p)} aria-label="Earth" aria-pressed={selectedId === 'earth'} data-testid="map-node-earth" onClick={() => chooseLocation('earth')}><MapGlobe /><span>Earth</span></button>
     : <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(p)} aria-label="Earth"><MapGlobe /><span>Earth</span></div>
-  return <div className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" tabIndex={pickable ? 0 : undefined} aria-label={pickable ? "Space map. Scroll to explore, or Tab to a destination." : undefined} aria-hidden={mode === 'ambient' || undefined}>
+  return <div ref={mapRef} className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" tabIndex={pickable ? 0 : undefined} aria-label={pickable ? "Space map. Scroll to explore, or Tab to a destination." : undefined} aria-hidden={mode === 'ambient' || undefined}>
     <div className={styles.mapSpace}>
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path className={`${styles.gxSpoke} ${styles.gxShipWide}`} d={line([SUN,EARTH_POS,...['mars','jupiter','saturn','uranus','neptune'].map(id=>SYSTEM_POSITIONS[id])])} />
+        <path className={`${styles.gxSpoke} ${styles.gxShipWide}`} d={line([SUN, SYSTEM_POSITIONS.mercury, SYSTEM_POSITIONS.venus, EARTH_POS, ...['mars','jupiter','saturn','uranus','neptune'].map(id=>SYSTEM_POSITIONS[id])])} />
         <path className={`${styles.gxSpoke} ${styles.gxShipPortrait}`} d="M7 17 L22 17 L72 17 L22 33 L72 33 L22 49 L72 49" />
         {mode === 'pick' && shipTargets.map((id, index) => {
           const target = real.find(body => body.id === id)

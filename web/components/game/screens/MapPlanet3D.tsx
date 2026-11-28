@@ -59,6 +59,7 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
       if (!context.getProgramParameter(program, context.LINK_STATUS)) throw new Error('Unable to link planet program')
       const positions: number[] = [], coloursRGB: number[] = [], indices: number[] = []
       const columns = 64, rows = 32
+      const extent = Math.max(1, ...orbit.patch.map(sample => sample.radius))
       const ramp = palette.split(',') as unknown as Ramp
       for (let y = 0; y <= rows; y++) {
         const latitude = (y / rows - .5) * Math.PI
@@ -69,7 +70,7 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
           const sx = Math.round((Math.asin(Math.sin(longitude)) / Math.PI + .5) * (orbit.width - 1))
           const sy = Math.round((latitude / Math.PI + .5) * (orbit.height - 1))
           const sample = orbit.patch[sy * orbit.width + sx]
-          const relief = Math.max(.98, Math.min(1.02, sample.radius))
+          const relief = sample.radius / extent
           positions.push(Math.cos(latitude) * Math.sin(longitude) * relief, Math.sin(latitude) * relief, Math.cos(latitude) * Math.cos(longitude) * relief)
           const hex = solarBiomeColour(sample.biome, ramp).slice(1)
           coloursRGB.push(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255))

@@ -9,6 +9,7 @@ const sample: SolarLandingPreview = { bodyId: 'mars', seed: 1, styleVersion: 1, 
 
 describe('solar field material handoff', () => {
   it('offers a field for each catalogued solid destination, and none for gas giants', () => {
+    expect(supportsSolarField('earth')).toBe(true)
     for (const target of TARGETS) {
       expect(supportsSolarField(target.id), target.id).toBe(target.archetype !== 'gas-giant')
     }

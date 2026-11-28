@@ -18,6 +18,7 @@ import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { OPEN_FRIENDS_EVENT, OPEN_SETTINGS_EVENT } from '@/lib/mining/openChrome'
 import { SANDBOX_NOW, isSandboxName } from '@/lib/sandbox'
 import { HUB_PROMPT_TRANSIT_TELESCOPE } from '@/lib/hub-prompts'
+import SolarVisualFixture from './solar-visual/SolarVisualFixture'
 import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 
 // In the sandbox the base shows the scene, not the player's situation: no clock, no balance, no cargo count.
@@ -188,5 +189,9 @@ function Stage() {
 }
 
 export default function StageClient() {
+  const [solarReview, setSolarReview] = useState<boolean | null>(null)
+  useEffect(() => { setSolarReview(new URLSearchParams(window.location.search).get('preset')?.replace(/^sandbox:/, '') === 'solar-visual') }, [])
+  if (solarReview === null) return null
+  if (solarReview) return <SolarVisualFixture />
   return <GameProvider urlSync={false}><Stage /></GameProvider>
 }
