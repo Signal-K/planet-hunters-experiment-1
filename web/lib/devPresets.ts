@@ -1123,16 +1123,20 @@ function fixture(name: string): Partial<GameState> | null {
         },
       }
     }
+    case 'ui-map-live-event':
+    case 'ui-map-event-expired':
     case 'ui-leonids-events':
     case 'ui-leonids-events-leo1': {
       const runAt = Date.now() - 3_600_000
       const leo1 = name === 'ui-leonids-events-leo1'
+      const expiredMap = name === 'ui-map-event-expired'
       return {
         screen: 'missions',
         player: {
           ...POST_ONBOARDING_PLAYER,
           fireballSpotter: { readAt: 1, passedAt: 1 },
           orionidsEventStage: 3,
+          ...(expiredMap ? { badges: { 'leonids-2026': { eventId: 'leonids-2026', tier: 'gold' as const, earnedAt: runAt } }, showerChains: { 'leonids-2026': { stage: 2, at: runAt } } } : {}),
           ...(leo1 ? {
             showerChains: { 'leonids-2026': { stage: 1, at: runAt } },
             showerFragments: { 'leonids-2026': { caught: 20, redeemed: 0 } },

@@ -33,6 +33,7 @@ import { contractGroup, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
 import ScreenFrame from '@/components/layout/frame/ScreenFrame'
 import styles from './MissionBoard.module.css'
+import discoveryStyles from './control-station/ControlStationConsole.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
 import MapPlanet3D from './screens/MapPlanet3D'
@@ -91,14 +92,14 @@ type MapView = 'system' | 'inner' | 'belt' | 'outer' | 'moons'
 type MapMode = 'route' | 'pick' | 'ambient'
 
 // Fixed schematic itinerary; slots are empty until the server publishes a target.
-const SUN = { x: 7, y: 25 }
-const EARTH_POS = { x: 20, y: 25 }
+const SUN = { x: 4, y: 32 }
+const EARTH_POS = { x: 13, y: 32 }
 const SYSTEM_POSITIONS: Record<string, { x: number; y: number }> = {
- mercury: {x:10,y:52}, venus:{x:10,y:70}, mars:{x:34,y:25},
- jupiter:{x:48,y:25}, saturn:{x:62,y:25}, uranus:{x:76,y:25}, neptune:{x:90,y:25},
+ mercury: {x:7,y:72}, venus:{x:23,y:76}, mars:{x:31,y:32},
+ jupiter:{x:48,y:48}, saturn:{x:65,y:29}, uranus:{x:79,y:57}, neptune:{x:93,y:34},
 }
-export const ANOMALY_SLOTS = [27,41,55,69,83,94].map((x,slot)=>({slot,x,y:slot===5?48:25}))
-const BELT_POS = {x:41,y:55}
+export const ANOMALY_SLOTS = [32,46,59,72,85,95].map((x,slot)=>({slot,x,y:slot % 2 ? 82 : 68}))
+const BELT_POS = {x:40,y:18}
 const isGasGiant = (t: { type: string; orbit: number }) => t.type !== 'asteroid' && t.orbit > 4
 const STAR_TINTS = ['#ecebe8', '#ecebe8', '#bcd2ff', '#ffd9e6', '#d9c8ff', '#b9eaf5']
 
@@ -185,10 +186,11 @@ interface GalaxyMapProps {
   anomalies?: Anomaly[]
   onAnomaly?: (id: string) => void
   anomalyNow?: number
+  liveEvent?: { name: string; onOpen: () => void }
 }
 
 /** The whole screen: sun, orbits, planets and an asteroid belt you can zoom into. Controls are drawn over it. */
-export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons, shipTargets = [], anomalies = [], onAnomaly, anomalyNow = Date.now() }: GalaxyMapProps) {
+export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates = [], selectedId = null, onPick, locationOpen = false, moonParentId = null, onOpenMoons, shipTargets = [], anomalies = [], onAnomaly, anomalyNow = Date.now(), liveEvent }: GalaxyMapProps) {
   const lit = new Set([...stops, ...candidates, ...(selectedId ? [selectedId] : [])])
   const pickable = mode === 'pick'
   const real = targets.filter(t => t.type !== 'exoplanet')
@@ -240,7 +242,8 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
   const earth = (p: { x: number; y: number }) => pickable
     ? <button type="button" className={styles.gxNode} data-home data-selected={selectedId === 'earth' || undefined} style={style(p)} aria-label="Earth" aria-pressed={selectedId === 'earth'} data-testid="map-node-earth" onClick={() => chooseLocation('earth')}><MapGlobe /><span>Earth</span></button>
     : <div className={`${styles.gxNode} ${styles.gxStaticNode}`} data-home style={style(p)} aria-label="Earth"><MapGlobe /><span>Earth</span></div>
-  return <div className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" aria-hidden={mode === 'ambient' || undefined}>
+  return <div className={styles.gx} data-view={view} data-mode={mode} data-location-open={locationOpen || undefined} data-testid="galaxy-map" tabIndex={pickable ? 0 : undefined} aria-label={pickable ? "Space map. Scroll to explore, or Tab to a destination." : undefined} aria-hidden={mode === 'ambient' || undefined}>
+    <div className={styles.mapSpace}>
     {STARS.map((s, i) => <i key={i} className={styles.gxStar} style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.glow, background: s.tint, color: s.tint }} />)}
     {view === 'system' ? <>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -273,6 +276,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       {anomalies.map(a => { const p = ANOMALY_SLOTS[a.slot]; return p && <button key={a.id} type="button" className={styles.anomalyNode} data-slot={a.slot} style={style(p)} onClick={()=>onAnomaly?.(a.id)} aria-label={`${a.type}, ${remaining(a.expires-anomalyNow)} left`}><span>{a.type==='comet'?'☄':'◆'}</span><small>{remaining(a.expires-anomalyNow)}</small></button> })}
       {mode !== 'ambient' && <>
         {earth(EARTH_POS)}
+        {pickable && liveEvent && <button type="button" className={styles.liveEventMarker} style={style(EARTH_POS)} data-testid="map-live-event" aria-label={`${liveEvent.name} · live at Earth orbit`} onClick={liveEvent.onOpen}><span className={styles.liveEventName}>{liveEvent.name} · </span>Live</button>}
         {shownPlanets.map(t => node(t, planetPos(t), t.name))}
         <button type="button" className={styles.gxBelt} data-lit={litAsteroid ? true : undefined} style={style(anchor)} data-testid="map-belt" onClick={() => onView('belt')}>
           <i /><span>Asteroid belt<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" /><path d="m15 15 5 5M10.5 8v5M8 10.5h5" /></svg></span>
@@ -315,6 +319,7 @@ export function GalaxyMap({ targets, mode, view, onView, stops = [], candidates 
       <span className={styles.gxRegionLabel} style={{ left: '50%', top: '77%' }}>{view === 'inner' ? 'Inner system' : 'Gas giants'}</span>
       {mode !== 'ambient' && <button type="button" className={styles.gxBack} onClick={() => onView('system')} data-testid="map-back" aria-label="Solar system"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg><span className={styles.gxBackLabel}>Solar system</span></button>}
     </>}
+    </div>
   </div>
 }
 
@@ -431,6 +436,7 @@ export default function MissionBoard({
   useEffect(()=>{
     // Disposable authored fixtures never read claims or write a real treasury.
     const preset = new URLSearchParams(window.location.search).get('preset')?.replace(/^sandbox:/, '')
+    if (window.location.pathname === '/game/stage' && (preset === 'ui-map-live-event' || preset === 'ui-map-event-expired')) return
     if (window.location.pathname === '/game/stage' && (preset === 'ui-timed-asteroid' || preset === 'ui-timed-comet')) {
       const kind = preset === 'ui-timed-comet' ? 'comet' : 'asteroid'
       const id = `preview-${kind}`
@@ -483,6 +489,7 @@ export default function MissionBoard({
     } catch(error) { setAnomalyError(error instanceof Error ? error.message : 'Please try again.') }
     finally { setAnomalyBusy(false) }
   }
+  const [mapEventOpen, setMapEventOpen] = useState(false)
   const [focusedEventId, setFocusedEventId] = useState(() => pendingMissionBoardEvent())
   const [requestedSite] = useState(() => pendingMissionBoardSite())
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
@@ -496,9 +503,10 @@ export default function MissionBoard({
   const steps = useMemo(() => programChain(catalog, player, now).filter(step => step.kind !== 'mining' && step.kind !== 'focus'), [catalog, player, now])
   const events = useMemo(
     () => eventsBoard(now, player.badges, orionidsNow, player.orionidsFinds, player.meteoriteMastery ?? 0, player.orionidsEventStage ?? 0, orionidsRunAvailable(player, orionidsNow), player),
-    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases],
+    [now, orionidsNow, player.badges, player.meteoriteMastery, player.orionidsEventStage, player.orionidsFinds, player.orionidsFragments, player.researchPurchases, player.showerChains, player.radioMeteorClassifications],
   )
   const eventCards = events.groups.flatMap(group => group.cards)
+  const liveMapEvent = eventCards.find(card => card.status === 'live' && !!getShower(card.id))
   const event = eventCards.find(item => item.id === focusedEventId) ?? eventCards[0]
   const freeRuns = useMemo(() => catalog.missions.filter(m => m.id.startsWith('self-directed-') && !m.locked), [catalog.missions])
   const [view, setView] = useState<MapView>(() => {
@@ -594,6 +602,18 @@ export default function MissionBoard({
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
 
+  if (mapEventOpen && liveMapEvent) return <article className={`${discoveryStyles.workspace} ${discoveryStyles.discoveryScene}`} data-testid="map-event-readout">
+    <nav className={discoveryStyles.rail}><button type="button" aria-label="Back to map" onClick={() => setMapEventOpen(false)}>‹</button></nav>
+    <div className={discoveryStyles.discoverySpace}><div className={styles.eventWorld}><MapGlobe /></div></div>
+    <section className={discoveryStyles.discoveryCopy} aria-live="polite">
+      <span>Live · Earth orbit</span>
+      <h1>{liveMapEvent.name}</h1>
+      <p data-testid="map-event-objective">{liveMapEvent.steps?.find(step => step.state === 'next')?.label ?? liveMapEvent.blurb}</p>
+      <p data-testid="map-event-result">{liveMapEvent.steps?.filter(step => step.state === 'done').length ?? 0} / {liveMapEvent.steps?.length ?? 1} activities complete · {liveMapEvent.rewardLabel}</p>
+      <button type="button" className={discoveryStyles.discoveryAction} data-testid="map-event-start" onClick={() => openEvent(liveMapEvent)}>{liveMapEvent.actionLabel}</button>
+    </section>
+  </article>
+
   if (anomalyId) {
     const working = !!selectedClaim?.challenge_start && !selectedClaim.collected && selectedClaim.hits < 3
     const ready = (selectedClaim?.hits ?? 0) >= 3
@@ -622,10 +642,10 @@ export default function MissionBoard({
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <ScreenFrame surface="mission-setup" chrome="floating">
       <button type="button" className={styles.eventsCorner} data-testid="mission-board-tab-events" aria-label={tab === 'events' ? 'Return to solar system' : 'Events'} onClick={() => chooseTab(tab === 'events' ? 'free' : 'events')}>
-        {tab === 'events' ? <ArrowIcon direction="left" /> : <StarIcon />}<span>{tab === 'events' ? 'Map' : `Events · ${liveAnomalies.length} targets`}</span>
+        {tab === 'events' ? <ArrowIcon direction="left" /> : <StarIcon />}<span>{tab === 'events' ? 'Map' : 'Events'}</span>
         {tab !== 'events' && events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
       </button>
-      <GalaxyMap anomalies={liveAnomalies} onAnomaly={chooseAnomaly} anomalyNow={anomalyNow} targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setPickedId(null); setRunId(null); setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }}
+      <GalaxyMap liveEvent={tab === 'free' && liveMapEvent ? { name: liveMapEvent.name, onOpen: () => setMapEventOpen(true) } : undefined} anomalies={liveAnomalies} onAnomaly={chooseAnomaly} anomalyNow={anomalyNow} targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setPickedId(null); setRunId(null); setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }}
         selectedId={tab === 'free' ? pickedId : null} onPick={id => {
           if (id === 'earth') onClose()
           else { setPickedId(id); setRunId(null) }
@@ -633,14 +653,16 @@ export default function MissionBoard({
       {tab==='free' && <aside className={styles.anomalyTrips} aria-label="Mining trips">
         {claims.filter(c=>!c.collected).map(c=><button key={c.id} onClick={()=>chooseAnomaly(c.anomaly)}>Ship · {c.hits>=3?'Haul ready':`${c.hits ?? 0}/3 pockets`}</button>)}
         {anomalyError && !anomalyId && <button onClick={()=>void loadAnomalies().then(()=>setAnomalyError('')).catch(()=>{})}>{anomalyError}</button>}
-        {isDevLauncherEnabled() && <details><summary>Dev targets</summary><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'asteroid'})}>Spawn asteroid</button><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'comet',seconds:30})}>30s comet</button></details>}
       </aside>}
       {tab === 'free' ? <article className={locationName ? styles.locationPanel : `${styles.dock} ${styles.freeDock}`} data-testid="mission-board-solar">
         <header className={styles.dockHead}>{locationName && <div className={styles.locationWorld}><MapGlobe target={picked ?? undefined} /></div>}<div className={styles.dockWho}>
           <span>{locationName ? 'Location missions' : 'Solar system'}</span><h2>{locationName ?? 'Choose a location'}</h2>
         </div>{locationName && <button type="button" className={styles.clearFilter} aria-label="Close location missions" onClick={() => setPickedId(null)}>Close</button>}</header>
-        {!locationName && <><p className={styles.dockBrief}>Select a world to see its missions and moons. Map positions are schematic.</p>
-          <p className={styles.agencyOverview} data-testid="map-agency-overview"><strong>Your agency</strong><span>{player.activeMission ? `Active: ${player.activeMission.mission?.title ?? player.activeMission.target?.name ?? 'Mission underway'}` : 'No active mission'} · {player.missionsDone} completed{(player.pausedMissionRuns?.length ?? 0) > 0 ? ` · ${player.pausedMissionRuns!.length} paused` : ''}</span></p></>}
+        {!locationName && <>
+          <p className={styles.dockBrief}>Select a world. Swipe or scroll sideways to explore.</p>
+          <details className={styles.mapExtras}><summary>Your agency</summary><p data-testid="map-agency-overview">{player.activeMission ? `Active: ${player.activeMission.mission?.title ?? player.activeMission.target?.name ?? 'Mission underway'}` : 'No active mission'} · {player.missionsDone} completed{(player.pausedMissionRuns?.length ?? 0) > 0 ? ` · ${player.pausedMissionRuns!.length} paused` : ''}</p></details>
+          {isDevLauncherEnabled() && <details className={styles.mapExtras}><summary>Dev targets</summary><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'asteroid'})}>Spawn asteroid</button><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'comet',seconds:30})}>30s comet</button></details>}
+        </>}
         {sourceMineralName && <p className={styles.dockBrief}>Showing locations with {sourceMineralName}. <button type="button" onClick={() => setSourceMineral(null)}>Show all locations</button></p>}
         {locationName && <div className={styles.locationMissions}>
           <section aria-label="Agency missions" data-testid="location-agency-missions">

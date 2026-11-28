@@ -49,6 +49,7 @@ const SCREENS = [
   ['probe-watch', 'ui-probe-watch'], ['mining', 'm1-mining'], ['loop', 'loop-base'], ['freemining', 'ui-free-mining'], ['focusrun', 'ui-focus-run'], ['silofull', 'ui-free-mining-silo-full'], ['radiometeors', 'ui-radio-meteors'], ['hangar', 'ui-hangar-assembly'], ['launchpad', 'ui-launchpad'],
   ['transit', 'sandbox-transit'], ['landing', 'ui-landing'], ['landing-ascend', 'ui-landing-ascend'], ['delivery', 'transport-delivery'], ['debrief', 'm1-debrief'],
   ['instrumenthub', 'ui-instrument-hub'], ['instrumentviewport', 'ui-instrument-hub'],
+  ['map-live-event', 'ui-map-live-event'], ['map-event-expired', 'ui-map-event-expired'],
   ['missionboard', 'ui-mission-board'], ['missions', 'ui-mission-board'],
   ['galaxy', 'ui-tess-discovery'], ['tesstraining', 'ui-tess-training'], ['targets', 'ui-target-picker'], ['launch-review', 'ui-launch-review'],
   ['shower-run', 'ui-orionids-shower-debrief'], ['orionids', 'ui-orionids-ready'], ['skyevent', 'ui-orionids-ready'],

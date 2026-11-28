@@ -57,6 +57,10 @@ function Stage() {
         return key.startsWith('ln-help-seen:') ? '1' : read.call(this, key)
       }
     }
+    const preset = params.get('preset')
+    if (preset === 'ui-map-live-event' || preset === 'ui-map-event-expired') {
+      w.__LANDNAM_DEV_NOW = Date.parse(preset === 'ui-map-live-event' ? '2026-11-17T12:00:00Z' : '2026-12-01T12:00:00Z')
+    }
     if (sandbox && shower) w.__LANDNAM_FORCE_ORIONIDS = true
     setMode({ sandbox, shower, hud: params.get('hud') === '1' })
   }, [])

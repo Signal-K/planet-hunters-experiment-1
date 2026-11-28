@@ -6,8 +6,8 @@ id = "missions"
 type = "menu"
 name = "Mission Board"
 summary = "The live list of client contracts and Free Ops work to choose from."
-tickets = ["SSL-425", "SSL-876"]
-qa = ["mission-board"]
+tickets = ["SSL-425", "SSL-876", "SSL-890"]
+qa = ["mission-board", "map-live-event", "map-event-expired"]
 
 [runtime]
 surface = "dom"
@@ -73,3 +73,10 @@ id = "planning-and-log"
 kind = "ui"
 mechanics = ["mission-planning"]
 note = "On portrait phones, own-flight planning, mission log and balance have distinct grid cells and 44px controls. Narrow portrait tablets retain the current tab name and other tab icons so their toolbar cannot overlap these controls. Free Run keeps a compact, accessible Solar system back control at the left of the second row, clear of planning and destination nodes. Other viewports retain their normal toolbar."
+
+[[objects]]
+id = "map-live-event"
+kind = "button"
+parent = "mission-board"
+layout = "host"
+note = "One currently live shower at Earth opens a focused objective, participation and reward readout, then its existing activity. Expiry hides the marker and preserves rewards."

@@ -68,3 +68,34 @@ describe('location mission list', () => {
     act(() => root.unmount())
   })
 })
+
+describe('live event map handoff', () => {
+  it('opens the real shower without awarding a preview reward and hides its marker after expiry', () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-11-17T12:00:00Z'))
+    const element = document.createElement('div')
+    const root = createRoot(element)
+    const player = { ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, orionidsEventStage: 3 as const }
+    const before = structuredClone(player)
+    const accept = vi.fn()
+    const render = (p: typeof player) => act(() => root.render(<MissionBoard catalog={buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: p })} player={p} cards={[]} selectedIndex={0} onSelectRelative={() => {}} onSelectMission={() => {}} onAccept={accept} onClose={() => {}} onOpenLog={() => {}} onOpenEvent={() => {}} tutorialBlocked={false} onboardingComplete />))
+    const click = (testId: string) => act(() => (element.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement).click())
+    try {
+      render(player)
+      click('map-live-event')
+      expect(element.querySelector('[data-testid="map-event-objective"]')?.textContent).toContain('catch 20 fragments')
+      expect(element.querySelector('[data-testid="map-event-result"]')?.textContent).toContain('0 / 2')
+      expect(player).toEqual(before)
+      click('map-event-start')
+      expect(accept).toHaveBeenCalledWith('self-directed-leonids-shower-run')
+      clock.mockReturnValue(Date.parse('2026-12-01T12:00:00Z'))
+      const earned = { ...player, badges: { 'leonids-2026': { eventId: 'leonids-2026', tier: 'gold' as const, earnedAt: 100 } }, showerChains: { 'leonids-2026': { stage: 2 as const, at: 100 } } }
+      render(earned)
+      expect(element.querySelector('[data-testid="map-live-event"]')).toBeNull()
+      expect(element.querySelector('[data-testid="map-event-readout"]')).toBeNull()
+      click('mission-board-tab-events')
+      click('event-select-leonids-2026')
+      expect(element.querySelector('[data-testid="events-card-leonids-2026"]')?.textContent).toContain('GOLD BADGE EARNED')
+      expect(earned.badges['leonids-2026'].tier).toBe('gold')
+    } finally { act(() => root.unmount()); clock.mockRestore() }
+  })
+})

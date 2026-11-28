@@ -1075,38 +1075,12 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 
 @media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
 
-/* The constellation keeps the same fixed chain at every aspect ratio. */
-.gx[data-view='system'] .gxNode { flex-direction: column; gap: 3px; transform: translate(-50%, -25px); font-size: 14px; letter-spacing: 0; }
-.gx[data-view='system'] .gxNode > i.gxPlanet { margin: 0; width: 38px; height: 38px; }
-.gx[data-view='system'] .gxNode > span { padding: 2px; }
 .anomalyNode { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; min-width:44px; min-height:44px; pointer-events:auto; border:0; border-radius:8px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:700 14px var(--ln-font-body); z-index:3; }
 .anomalyNode small { font-size:14px; }
 .anomalyTrips { position:absolute; right:16px; top:80px; display:flex; flex-direction:column; gap:6px; z-index:5; max-width:220px; }
 .anomalyTrips button, .anomalySheet button { min-height:44px; padding:8px 12px; border:1px solid var(--signal); border-radius:12px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:700 14px var(--ln-font-body); cursor:pointer; }
 .anomalySheet { display:grid; gap:12px; position:absolute; z-index:20; inset:15% auto auto 50%; transform:translateX(-50%); width:min(420px,90%); padding:20px; border:1px solid var(--signal); border-radius:20px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:400 16px/1.5 var(--ln-font-body); pointer-events:auto; }
 .anomalySheet button:disabled { opacity:.5; cursor:default; }
-@media (orientation:portrait) and (max-width:700px) {
- .gx[data-view='system'] .gxNode > i.gxPlanet { width:28px; height:28px; }
- .gx[data-view='system'] .gxNode { font-size:14px; }
- .gx[data-view='system'] [data-testid='map-node-earth'] { left:22%!important; top:17%!important; }
- .gx[data-view='system'] [data-testid='map-node-mars'] { left:72%!important; top:17%!important; }
- .gx[data-view='system'] [data-testid='map-node-jupiter'] { left:22%!important; top:33%!important; }
- .gx[data-view='system'] [data-testid='map-node-saturn'] { left:72%!important; top:33%!important; }
- .gx[data-view='system'] [data-testid='map-node-uranus'] { left:22%!important; top:49%!important; }
- .gx[data-view='system'] [data-testid='map-node-neptune'] { left:72%!important; top:49%!important; }
- .gx[data-view='system'] [data-testid='map-node-mercury'], .gx[data-view='system'] [data-testid='map-node-venus'] { display:none; }
- .gx[data-view='system'] .gxSun { left:7%!important; top:17%!important; }
- .gxShipWide { display:none; }
- .gxShipPortrait { display:inline; }
- .anomalyNode[data-slot='0'] { left:47%!important; top:17%!important; }
- .anomalyNode[data-slot='1'] { left:47%!important; top:25%!important; }
- .anomalyNode[data-slot='2'] { left:47%!important; top:33%!important; }
- .anomalyNode[data-slot='3'] { left:47%!important; top:41%!important; }
- .anomalyNode[data-slot='4'] { left:47%!important; top:49%!important; }
- .anomalyNode[data-slot='5'] { left:47%!important; top:57%!important; }
- .anomalyTrips { top:65px; right:8px; max-width:160px; }
-}
-
 /* Dedicated Takeon scene: controls occupy rows, never cover the field. */
 .pocketScreen { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(120px, 1fr) auto; overflow: auto; min-width: 0; color: var(--ln-board-paper); background: var(--ln-board-ink); font: 400 16px/1.4 var(--ln-font-body); }
 .pocketHeader { display: flex; align-items: center; gap: 12px; padding: 12px; flex-wrap: wrap; min-width: 0; }
@@ -1136,20 +1110,45 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 :global(body):has(.pocketScreen) :global(.sync-chip--floating) { display: none; }
 :global(body) :global(.game-stage-main):has(.scene) :global(.flight-plan-slot) > :global(.flight-plan-chip) { top: calc(env(safe-area-inset-top, 0px) + 68px); bottom: auto; }
 
-/* Trips and dev actions share one horizontally scrollable rail above the
-   first orbit. Opening dev actions cannot cover a planet or the Menu. */
-.anomalyTrips { top: 64px; left: 64px; right: 12px; max-width: none; height: 44px; max-height: 44px; flex-direction: row; align-items: center; gap: 8px; overflow: auto; }
-.anomalyTrips > * { flex-shrink: 0; }
-.anomalyTrips details { white-space: nowrap; }
-.anomalyTrips summary { display: inline-flex; align-items: center; padding: 0 12px; min-height: 44px; cursor: pointer; }
-.anomalyTrips details button { margin-left: 8px; }
-
-/* A short viewport scrolls the map and its information in normal flow.
-   Neither the header rail nor the location information can cover a target. */
-.scene[data-tab='free']:not(:has(.locationPanel)) :global([data-frame-slot='main']) { display: flex; flex-direction: column; padding-top: 112px; overflow-y: auto; }
-.scene[data-tab='free']:not(:has(.locationPanel)) .gx { position: relative; inset: auto; flex: 1 0 360px; min-height: 360px; width: 100%; }
-.scene[data-tab='free'] .freeDock { position: relative; inset: auto; transform: none; flex-shrink: 0; margin: 18px; width: auto; max-width: min(400px, calc(100% - 36px)); }
-
 /* Framework debug chrome follows the project's devIndicators:false setting;
    runtime errors still reach the terminal and the game's error boundary. */
 :global(body):has(:is(.scene, .pocketScreen)) :global(nextjs-portal) { display: none; }
+
+/* One live shower at Earth; its details stay off the map until selected. */
+.liveEventMarker { pointer-events:auto; position:absolute; z-index:4; transform:translate(-50%,-108px); white-space:nowrap; min-height:44px; min-width:70px; padding:8px 12px; border:1px solid var(--ln-payout); border-radius:24px; background:var(--ln-world-dusk-top); color:var(--dusk-ink); font:600 14px/1.3 var(--ln-font-body); cursor:pointer; }
+.liveEventMarker:focus-visible { outline:3px solid var(--ln-cyan); outline-offset:3px; }
+.eventWorld { display:grid; place-items:center; width:clamp(140px,28vmin,240px); aspect-ratio:1; }
+.eventWorld > .gxPlanet { position:relative; display:block; border-radius:50%; width:100%; height:100%; margin:0; }
+
+
+.gx[data-view='system'] .gxNode { flex-direction: column; gap: 3px; transform: translate(-50%, -25px); font-size: 14px; letter-spacing: 0; }
+.gx[data-view='system'] .gxNode > i.gxPlanet { margin: 0; width: 38px; height: 38px; }
+.gx[data-view='system'] .gxNode > span { padding: 2px; }
+
+/* Keep worlds at a readable scale. Small screens explore the same map by
+   scrolling, rather than compressing every destination into an icon grid. */
+.mapSpace { position: relative; width: 100%; height: 100%; }
+.mapSpace > svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gx[data-view='system'][data-mode='pick'] { overflow: auto; pointer-events: auto; overscroll-behavior-x: contain; }
+.gx[data-view='system'][data-mode='pick'] .mapSpace { min-width: 1120px; min-height: 360px; }
+.gx[data-view='system'][data-mode='pick'] .gxNode { flex-direction: column; gap: 12px; transform: translate(-50%, -50%); letter-spacing: 0; text-transform: none; }
+.gx[data-view='system'][data-mode='pick'] .gxNode > i.gxPlanet { width: 76px; height: 76px; margin: 0; box-shadow: none; }
+.gx[data-view='system'][data-mode='pick'] .gxNode > i::after { content: none; }
+.gx[data-view='system'][data-mode='pick'] .gxNode > span { padding: 4px 8px; background: none; border: 0; box-shadow: none; font-weight: 500; }
+.gx[data-view='system'][data-mode='pick'] .gxNode:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 8px; border-radius: 8px; }
+.gx[data-view='system'][data-mode='pick'] .gxSpoke { opacity: .2; }
+.gxShipPortrait { display: none; }
+.gxShipWide { display: inline; }
+.scene[data-tab='free']:not(:has(.locationPanel)) :global([data-frame-slot='main']) { display: flex; flex-direction: column; padding-top: 64px; overflow-y: auto; }
+.scene[data-tab='free']:not(:has(.locationPanel)) .gx { position: relative; inset: auto; flex: 1 0 360px; min-height: 360px; width: 100%; }
+.scene[data-tab='free'] .freeDock { position: relative; inset: auto; transform: none; flex-shrink: 0; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin: 0; padding: 16px 24px; width: 100%; max-width: none; box-sizing: border-box; border: 0; background: var(--ln-world-dusk-top); }
+.freeDock .dockHead { display: none; }
+.freeDock .dockBrief { display: block; margin: 0; flex: 1 1 100%; overflow: visible; }
+.mapExtras { font: 400 14px/1.5 var(--ln-font-body); color: var(--dusk-ink); max-width: 100%; }
+.mapExtras summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.mapExtras p { overflow-wrap: anywhere; }
+.mapExtras button { min-height: 44px; padding: 8px 12px; background: transparent; color: inherit; border: 1px solid var(--ln-text-muted); }
+.anomalyTrips { top: 64px; left: 16px; right: 16px; max-width: none; display: flex; flex-direction: row; gap: 8px; overflow: auto; }
+.anomalyTrips > * { flex-shrink: 0; }
+.eventsCorner { right: 120px; top: 12px; }
+.scene[data-tab='free']:has(.anomalyTrips > button):not(:has(.locationPanel)) :global([data-frame-slot='main']) { padding-top: 120px; }
