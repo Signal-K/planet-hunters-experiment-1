@@ -67,8 +67,14 @@ export function buildRuntimeCatalog({
   missionsDone,
   player,
 }: RuntimeCatalogOpts): Catalog {
-  // Retain the target for a legacy trip already in progress. New telescope findings remain research records.
-  const discoveredTargetList = [...Object.values(discoveredTargets), ...communityWorlds(player?.agencyCommunity).filter(target => !discoveredTargets[target.id])].filter(target => target.id === targetId)
+  // Only confirmed shared worlds with a saved orbital survey become new flight destinations.
+  const confirmedWorlds = communityWorlds(player?.agencyCommunity)
+  const discoveredTargetList = [
+    ...Object.values(discoveredTargets).filter(target => !confirmedWorlds.some(world => world.id === target.id)),
+    ...confirmedWorlds,
+  ].filter(target => target.id === targetId || (target.type === 'exoplanet'
+    && confirmedWorlds.some(world => world.id === target.id)
+    && (!!player?.probes?.[target.id] || Object.values(player?.missionPlans ?? {}).some(plan => plan.targetId === target.id && plan.work === 'survey'))))
   // A satellite or telescope is run from the control station, so none is offered until one is built.
   const hasControlStation = !!player && hasAgencyUnlock(player, 'data-hub')
   const shouldOfferTransitTelescopeMission = freeOperations && hasControlStation
@@ -238,7 +244,7 @@ export function buildRuntimeCatalog({
   const probeFollowUps: Mission[] = freeOperations
     ? Object.entries(player?.probes ?? {}).flatMap(([id, record]) => {
         const target = mergedTargets.find(item => item.id === id)
-        if (!target) return []
+        if (!target || target.type === 'exoplanet') return []
         const survey = downloadedSurvey(target, record, mineral => MINERAL_META[mineral]?.rarity)
         const run = probeRunMission(target, survey)
         return [...(run ? [run] : []), ...probeContracts(target, survey, flown)]
@@ -249,6 +255,7 @@ export function buildRuntimeCatalog({
     ? specialMissions(mergedTargets, player ?? {}, flown).filter(mission => !existingMissionIds.has(mission.id))
     : []
   const surveyMissions: Mission[] = discoveredTargetList
+    .filter(target => missionId === `exo-survey-${target.id}`)
     .map(target => ({
       id: `exo-survey-${target.id}`,
       title: `${target.name} survey flight`,

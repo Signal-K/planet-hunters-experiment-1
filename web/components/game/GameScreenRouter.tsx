@@ -73,7 +73,7 @@ const CommunityResearchScreen = dynamic(loadCommunityResearchScreen, { loading: 
 const NarrativeLedgerScreen = dynamic(loadNarrativeLedgerScreen, { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { requestMissionBoardEvent, requestMissionBoardSite, requestMissionBoardTab } from '@/lib/mission-board-nav'
-import { requestMiningPlan } from '@/lib/mission-planner-nav'
+import { requestMiningPlan, requestSurveyPlan } from '@/lib/mission-planner-nav'
 import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
@@ -390,6 +390,8 @@ function ScreenBody({
           player={game.player}
           communityResearch={communityResearch}
           targets={game.catalog.targets}
+          catalog={game.catalog}
+          onFollowUp={targetId => { requestSurveyPlan(targetId); game.go('mission-planner') }}
           onStartScan={game.startSurveyScan}
           onResolveScan={game.resolveSurveyScan}
           onBack={() => game.goBack()}

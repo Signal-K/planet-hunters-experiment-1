@@ -854,6 +854,8 @@ function fixture(name: string): Partial<GameState> | null {
 
     // SSL-852: craft wear. Serviced 25 and 55 days ago, with a Kp 6.67 storm three days ago: the space telescope is
     // worn (half data) and the Saturn satellite has failed. Both offer a servicing mission.
+    case 'ui-discovery-follow-up':
+    case 'ui-discovery-follow-up-readings':
     case 'ui-agency-programme':
     case 'ui-agency-research': {
       const hub = instrumentHubFixture()
@@ -861,6 +863,8 @@ function fixture(name: string): Partial<GameState> | null {
       const world = { id: 'exo-shared-852', name: 'Community transit candidate', type: 'exoplanet' as const, orbit: 5, difficulty: 'L2' as const, minerals: ['iron', 'silicon'], brief: 'Stage fixture for a community-verified transit world.' }
       return { ...hub, screen: name === 'ui-agency-research' ? 'community-research' : 'instrument-hub', player: {
         ...hub.player!,
+        ...(name.startsWith('ui-discovery-follow-up') ? { francs: 150_000_000, agencyUnlocks: [...new Set([...(hub.player!.agencyUnlocks ?? []), 'data-hub' as const])] } : {}),
+        ...(name === 'ui-discovery-follow-up-readings' ? { probes: { [world.id]: { launchedAt: now - 86400000, goalSectors: 6, readings: Object.fromEntries(['0_0', '1_0'].map(id => [id, { at: now, marked: [], deposits: sectorDeposits(world, id) }])) } } } : {}),
         placed: ['launchpad', 'control-station', 'surface-silo', 'ground-telescope'], placementPlots: { launchpad: 0, 'control-station': 1, 'surface-silo': 6, 'ground-telescope': 10 }, groundTelescopeLevels: { 'ground-telescope': 2 },
         transitSatelliteLaunchedAt: now - 86400000, saturnImagerLaunchedAt: now - 86400000,
         telescopeAim: { transit: { week: weekKey(now) }, 'deep-space': { week: weekKey(now) }, saturn: { week: weekKey(now) } },

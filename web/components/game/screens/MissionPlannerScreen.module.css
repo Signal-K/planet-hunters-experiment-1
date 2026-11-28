@@ -58,3 +58,11 @@
 
 .mapViewport { position:relative; height:100%; min-height:280px; }
 .chart > summary { position:relative; z-index:3; min-height:44px; padding:12px; cursor:pointer; }
+
+.root { --ln-blueprint-ink:var(--ln-world-dusk-top); --ln-blueprint-paper:var(--dusk-ink); --ln-blueprint-blue:var(--ln-world-dusk-mid); }
+
+.followUp { padding:24px; }
+.followUpBrief { width:100%; max-width:440px; margin:auto; display:flex; flex-direction:column; gap:16px; padding:24px 0; }
+.followUpBrief h1 { margin:0; font-size:28px; overflow-wrap:anywhere; }
+.followUpBrief p { margin:0; font-size:16px; }
+.root .followUpBrief > button { min-height:48px; border-radius:24px; background:var(--ln-blueprint-paper); color:var(--ln-blueprint-ink); }

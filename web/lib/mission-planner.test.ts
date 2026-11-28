@@ -1,3 +1,4 @@
+import type { AgencyCommunity } from './agency/community'
 import { describe, expect, it } from 'vitest'
 import { missionSiteCredit } from './community/site'
 import { STATIC_CATALOG } from './catalog'
@@ -10,9 +11,36 @@ import { applyReturnArrived } from './systems/MiningSystem'
 import { placeProbe, startProbeScan, sectorsMapped, nextSector, probeSectorGoal } from './probes/survey-probe'
 const plan: MissionPlan = { id: 'self-plan-test', targetId: 'mercury', work: 'deliver', mineral: 'iron', amount: 3, createdAt: 100 }
 const target = STATIC_CATALOG.targets.find(target => target.id === plan.targetId)!
-const player = () => ({ ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], stash: { iron: 12 } })
+const player = () => ({ ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, placed: ['launchpad', 'control-station'], agencyUnlocks: ['data-hub' as const], stash: { iron: 12 } })
 
 describe('self-planned missions', () => {
+  it('prepares only confirmed reachable worlds, grants no viewing reward and prevents a second probe', () => {
+    const world = { ...target, id: 'exo-confirmed', type: 'exoplanet' as const, orbit: 1 }
+    const unconfirmed = { ...world, id: 'exo-unconfirmed' }
+    const far = { ...world, id: 'exo-far', orbit: 100 }
+    const community: AgencyCommunity = { projects: {} as AgencyCommunity['projects'], surveys: {}, worlds: { [world.id]: world, [far.id]: far }, siteUnlocks: [] }
+    const p = { ...player(), agencyCommunity: community }
+    const catalog = { ...STATIC_CATALOG, targets: [...STATIC_CATALOG.targets, unconfirmed] }
+    expect(plannerTargets(p, catalog, 'survey').filter(body => body.type === 'exoplanet')).toEqual([world])
+    expect(plannerTargets(p, catalog, 'mine').some(body => body.type === 'exoplanet')).toBe(false)
+    const followUp: MissionPlan = { ...plan, targetId: world.id, work: 'survey', mineral: '', amount: 6 }
+    const quote = planQuote(followUp, p, catalog)
+    expect(quote.issues).toEqual([])
+    expect(quote.mission?.payload?.instrumentId).toBe('survey-probe')
+    expect(quote.mission?.payout.francs).toBe(0)
+    expect(quote.mission?.programReward?.researchXP).toBe(0)
+    expect(planQuote(followUp, { ...p, agencyUnlocks: [], placed: [] }, catalog).issues).toContain('Build the control station to launch a survey probe.')
+    const deployed = placeProbe(p, world.id, 1000, 6)
+    expect(placeProbe(deployed, world.id, 2000, 6)).toBe(deployed)
+    expect(planQuote(followUp, deployed, catalog).issues).toContain('A probe already orbits this body. Open it at the Data hub.')
+    const runtime = buildRuntimeCatalog({ catalog, freeOperations: true, missionsDone: 3, player: { ...p, missionPlans: { [followUp.id]: followUp } } })
+    expect(runtime.targets.some(body => body.id === world.id)).toBe(true)
+    expect(runtime.missions.find(mission => mission.id === followUp.id)?.payload?.instrumentId).toBe('survey-probe')
+    expect(runtime.missions.some(mission => mission.id === `exo-survey-${world.id}`)).toBe(false)
+    expect(p.probes?.[world.id]).toBeUndefined()
+    expect(p.francs).toBe(player().francs)
+  })
+
   it('resumes a chosen delivery site through descent and settles its cargo once', () => {
     const sitePlan = { ...plan, zone: 'east' as const }
     const mission = missionFromPlan(sitePlan, target, STATIC_CATALOG.minerals)

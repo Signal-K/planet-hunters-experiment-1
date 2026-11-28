@@ -1055,6 +1055,26 @@
    ],
    "aliasOf": "radio-meteors",
    "nativeDeferred": "Radio meteor gameplay has no supported iOS adapter; companion scope remains deferred."
+  },
+  {
+   "id": "discovery-follow-up",
+   "name": "Confirmed discovery follow-up",
+   "flow": "core-loop",
+   "web": "ui-discovery-follow-up",
+   "tickets": [
+    "SSL-880"
+   ],
+   "objective": "Select the community-verified world on the instrument sky; prepare a six-sector orbital survey through normal flight checks."
+  },
+  {
+   "id": "discovery-follow-up-readings",
+   "name": "Discovery follow-up readings",
+   "flow": "core-loop",
+   "web": "ui-discovery-follow-up-readings",
+   "tickets": [
+    "SSL-880"
+   ],
+   "objective": "Select the verified world again; open its existing probe readings without granting another reward."
   }
  ],
  "missions": [

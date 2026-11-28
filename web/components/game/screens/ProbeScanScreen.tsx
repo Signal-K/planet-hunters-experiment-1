@@ -4,6 +4,7 @@ import ProbeSpectrumConsole from './ProbeSpectrumConsole'
 import { useContributionReadout } from '@/lib/research/useContributionReadout'
 import InstrumentFrame from '@/components/layout/frame/InstrumentFrame'
 
+import { pendingProbeReadings, clearProbeReadings } from '@/lib/mission-planner-nav'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { GalaxyMap } from '@/components/game/MissionBoard'
 import { MINERAL_META, type Target } from '@/lib/data'
@@ -26,6 +27,8 @@ import {
 } from '@/lib/probes/survey-probe'
 import board from '@/components/game/MissionBoard.module.css'
 import styles from './ProbeScanScreen.module.css'
+import discoveryStyles from '@/components/game/control-station/ControlStationConsole.module.css'
+import { SkyMapBase } from '@/components/game/sky/SkyMapBase'
 
 interface ProbeScanScreenProps {
   player: Player
@@ -109,6 +112,8 @@ function Satellite() {
  * readout says what was found and offers a free targeted run there and the client contracts the finds opened.
  */
 export default function ProbeScanScreen({ player, targets, onBack, onCollect, onStartScan, onLogSpectrum, onHub, onPlanRun, onPlanMineral, onViewContracts }: ProbeScanScreenProps) {
+  const [allProbeControls, setAllProbeControls] = useState(false)
+  const [worldReadout, setWorldReadout] = useState(false)
   const [page, setPage] = useState<'map' | 'readout' | 'spectrum' | 'contribution'>('map')
   const [mineralPage, setMineralPage] = useState(0)
   const [now, setNow] = useState(() => Date.now())
@@ -116,7 +121,8 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
     () => Object.keys({ ...player.agencyCommunity?.surveys, ...player.probes }).map(id => targets.find(target => target.id === id)).filter((target): target is Target => !!target).sort((a, b) => (player.probes?.[b.id]?.launchedAt ?? 0) - (player.probes?.[a.id]?.launchedAt ?? 0)),
     [player.probes, player.agencyCommunity, targets],
   )
-  const [bodyId, setBodyId] = useState<string | null>(bodies[0]?.id ?? null)
+  const [bodyId, setBodyId] = useState<string | null>(() => pendingProbeReadings() ?? bodies[0]?.id ?? null)
+  useEffect(() => { clearProbeReadings() }, [])
   const body = bodies.find(target => target.id === bodyId) ?? bodies[0] ?? null
   const sourceRecord = body ? player.probes?.[body.id] : undefined
   const [scanLevel, setScanLevel] = useState<1 | 2 | 3>(1)
@@ -201,8 +207,8 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
   const known = new Set(body ? surveyOf(body, scanOrder().slice(0, before)).map(row => row.mineral) : [])
   const newTypes = survey.filter(row => !known.has(row.mineral)).map(row => row.mineral)
   const flown = new Set((player.completedMissions ?? []).map(item => item.id))
-  const run = body && !playing ? probeRunMission(body, survey) : null
-  const contracts = body && !playing ? probeContracts(body, survey, flown) : []
+  const run = body && body.type !== 'exoplanet' && !playing ? probeRunMission(body, survey) : null
+  const contracts = body && body.type !== 'exoplanet' && !playing ? probeContracts(body, survey, flown) : []
   const newContracts = contracts.filter(contract => newTypes.some(mineral => contract.requires.minerals[mineral])).length
   const total = probeSectorGoal(record)
   const [tone, shade] = body ? BODY_TONES[body.id] ?? ASTEROID_TONE : ASTEROID_TONE
@@ -218,6 +224,18 @@ export default function ProbeScanScreen({ player, targets, onBack, onCollect, on
     : mapped.length === 0 ? `Probe in orbit at ${body.name}. The first sector is mapped in ${next ? inTime(next.at - now) : 'a moment'}.`
     : !next ? `${body.name}: the planned ${total} sectors are mapped. Their deposits are on file.`
     : `Nothing new since you last looked. Sector ${sectorName(next.sector)} is done in ${inTime(next.at - now)}.`
+
+  if (body?.type === 'exoplanet' && !allProbeControls) return <article className={`${discoveryStyles.workspace} ${discoveryStyles.discoveryScene}`} data-testid="probe-scan-screen" data-screen="probe-scan">
+    <nav className={discoveryStyles.rail}><button type="button" aria-label="Back to base" onClick={onHub}>‹</button></nav>
+    <button type="button" className={discoveryStyles.otherInstruments} onClick={() => setAllProbeControls(true)}>Other probes</button>
+    <div className={discoveryStyles.discoverySpace}><SkyMapBase grid={false} /><button type="button" className={discoveryStyles.discoveryWorld} aria-label={`View readings for ${body.name}`} onClick={() => setWorldReadout(!worldReadout)} /></div>
+    <section className={discoveryStyles.discoveryCopy} aria-live="polite">
+      <h1 data-testid="probe-body">{body.name}</h1>
+      <p data-testid="probe-progress">{Object.keys(sourceRecord?.readings ?? {}).length} / {total} sectors downloaded{waiting ? ' · ready to scan' : next ? ` · next in ${inTime(next.at - now)}` : ' · survey complete'}</p>
+      {worldReadout ? survey.length ? <ul>{survey.map(row => <li key={row.mineral}>{MINERAL_META[row.mineral]?.name ?? row.mineral} · {row.tonnes.toLocaleString('en-GB')} t mapped</li>)}</ul> : <p>No readings yet. The probe maps one sector every {sectorMsOf(record) / 3600000} h.</p> : <p>Tap the world to view its readings.</p>}
+      {waiting ? <button type="button" className={discoveryStyles.discoveryAction} data-testid="probe-start" onClick={() => onStartScan(body.id, 1)}>Start mapping</button> : <button type="button" className={discoveryStyles.discoveryAction} onClick={onHub}>Return to base</button>}
+    </section>
+  </article>
 
   if (page === 'spectrum' && body && sourceRecord && unlocked === 4) return <ProbeSpectrumConsole player={player} onAgency={onHub} target={body} record={sourceRecord} onBack={() => setPage('map')} onLog={(sector, marks) => onLogSpectrum(body.id, sector, marks)} />
 

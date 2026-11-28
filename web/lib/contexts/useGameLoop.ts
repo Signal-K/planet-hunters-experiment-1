@@ -1,3 +1,4 @@
+import { communityWorlds } from '@/lib/agency/community'
 import { recordAgencyLaunch } from '@/lib/agency/fleet'
 import { agencyTier } from '@/lib/agency/construction-translation'
 import { loadPlannedCargo } from '@/lib/mission-planner'
@@ -386,7 +387,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? entryMission
         ?? null
-      if (!mission || catalog.targets.some(target => target.type === 'exoplanet' && target.id === mission.targetId)) return s
+      if (!mission) return s
+      const exoplanet = catalog.targets.some(target => target.type === 'exoplanet' && target.id === mission.targetId)
+      if (exoplanet && !(mission.customPlan?.work === 'survey' && communityWorlds(s.player.agencyCommunity).some(world => world.id === mission.targetId))) return s
       const nextDailyPool = s.player.dailyClientPool
       if (mission.jointProject && s.player.francs < mission.jointProject.playerCost) return s
       const ownOperation = isOwnProgramMission(mission)

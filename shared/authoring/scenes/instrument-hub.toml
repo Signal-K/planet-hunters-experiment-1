@@ -6,8 +6,8 @@ id = "instrument-hub"
 type = "exchange-lab"
 name = "Data hub"
 summary = "Agency instruments, projects, daily data, contributions, shared capacity and craft condition. Open a waiting item on its instrument."
-tickets = ["SSL-496", "SSL-663", "SSL-852"]
-qa = ["control-station", "agency-programme", "craft-service"]
+tickets = ["SSL-496", "SSL-663", "SSL-852", "SSL-880"]
+qa = ["control-station", "agency-programme", "craft-service", "discovery-follow-up", "discovery-follow-up-readings"]
 
 [runtime]
 surface = "dom"
@@ -91,3 +91,10 @@ parent = "research-calendar"
 layout = "host"
 mechanics = ["community-research"]
 note = "Current implementation uses local contribution data. Server aggregation and reward settlement remain gaps, not verified gameplay."
+
+[[objects]]
+id = "discovery-follow-up"
+kind = "button"
+parent = "control-station"
+layout = "host"
+note = "Select a community-verified world to prepare a six-sector orbital probe survey with normal rocket checks; an existing probe opens its readings instead. Viewing grants nothing."

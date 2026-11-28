@@ -59,6 +59,7 @@ interface ControlStationConsoleProps {
   conditions?: Partial<Record<string, CraftCondition>>
   /** Opens the servicing mission for a worn craft (the Program tab). */
   onService?: () => void
+  discoveryFollowUp?: (id: string) => { label: string; detail: string; onOpen: () => void } | null
 }
 
 const EMPTY: Record<SkyView, string> = {
@@ -197,11 +198,16 @@ export function ControlStationConsole({
   donations,
   onDonation,
   onService,
+  discoveryFollowUp,
 }: ControlStationConsoleProps) {
+  const [allInstruments, setAllInstruments] = useState(false)
+  const discovery = anomalies.find(item => discoveryFollowUp?.(item.id))
+  const [discoveryInspected, setDiscoveryInspected] = useState(false)
   const [inspectedId, setInspectedId] = useState<string | null>(null)
   const shownInstrument = inspectedId ?? telescopeId ?? telescopes[0]?.id
   const [pickedId, setPickedId] = useState<string | null>(null)
   const picked = anomalies.find(item => item.id === pickedId) ?? null
+  const followUp = picked ? discoveryFollowUp?.(picked.id) : null
   const active = telescopes.find(item => item.id === telescopeId) ?? null
   const waiting = anomalies.filter(item => item.state === 'unexplored').length
   const toggle = (id: string) => { setPickedId(null); onTelescope(telescopeId === id ? null : id) }
@@ -211,9 +217,27 @@ export function ControlStationConsole({
   const online = telescopes.filter(item => item.live).length
   const status = acquiring ? 'Acquiring' : waiting > 0 ? 'Scanning' : 'Standby'
 
+  if (discovery && !allInstruments) {
+    const action = discoveryFollowUp?.(discovery.id)
+    return <article className={`${styles.workspace} ${styles.discoveryScene}`} data-testid="control-station">
+      {rail}
+      <button type="button" className={styles.otherInstruments} onClick={() => setAllInstruments(true)}>Other instruments</button>
+      <div className={styles.discoverySpace}>
+        <SkyMapBase grid={false} />
+        <button type="button" className={styles.discoveryWorld} aria-label={`Inspect ${discovery.label}`} data-testid="discovery-world" onClick={() => setDiscoveryInspected(true)} />
+      </div>
+      <section className={styles.discoveryCopy} aria-live="polite">
+        <h1>{discoveryInspected ? discovery.label : 'A confirmed world'}</h1>
+        <p>{discoveryInspected ? action?.detail : 'Tap the world to inspect it.'}</p>
+        {discoveryInspected && action && <button type="button" className={styles.discoveryAction} data-testid="discovery-follow-up" onClick={action.onOpen}>{action.label}</button>}
+      </section>
+    </article>
+  }
+
   return (
     <article className={styles.workspace} data-testid="control-station">
       {rail}
+      {discovery && <button type="button" className={styles.otherInstruments} onClick={() => setAllInstruments(false)}>Confirmed world</button>}
       <section className={styles.sky} aria-label="Sky map">
         <ViewSwitch view={view} onView={next => { setPickedId(null); onView(next) }} />
         <div className={styles.scope} data-testid="control-station-map">
@@ -259,13 +283,14 @@ export function ControlStationConsole({
             ))}
             {anomalies.length === 0 && <p className={styles.fieldEmpty}>{acquiring ? 'Acquiring signal…' : EMPTY[view]}</p>}
           </div>
+        </div>
           {picked && (
             <div className={styles.readout} role="status" data-testid="control-station-readout">
               <b>{picked.label}</b>
               <span>{picked.detail}</span>
+              {followUp && <><span>{followUp.detail}</span><button type="button" data-testid="discovery-follow-up" onClick={followUp.onOpen}>{followUp.label}</button></>}
             </div>
           )}
-        </div>
         <div className={styles.horizon} data-testid="control-station-horizon">
           <svg className={styles.earth} viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
             <ellipse className={styles.orbitLine} cx="300" cy="300" rx="470" ry="270" />

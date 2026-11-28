@@ -25,7 +25,10 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import { wswBanner } from '@/lib/wsw'
 import { fleetCondition, type CraftCondition } from '@/lib/agency/condition'
 import { agencyProgramme } from '@/lib/agency/programme'
-import { scienceAccessPlayer } from '@/lib/agency/community'
+import { communityWorlds, scienceAccessPlayer } from '@/lib/agency/community'
+import type { Catalog } from '@/lib/catalog'
+import { requestProbeReadings } from '@/lib/mission-planner-nav'
+import { plannerTargets } from '@/lib/mission-planner'
 import type { OrbitalCraft } from '@/lib/agency/fleet'
 import styles from './InstrumentHubScreen.module.css'
 
@@ -48,18 +51,20 @@ interface InstrumentHubScreenProps {
   communityResearch?: CommunityResearch | null
   /** SSL-852: opens the Program tab, where a worn craft's servicing mission waits. */
   onOpenProgram?: () => void
+  catalog?: Catalog
+  onFollowUp?: (targetId: string) => void
 }
 
 /**
  * Data hub. The route id stays `instrument-hub` so existing entry
  * points land here. This is the equipment station, not `player.controlBuilt`.
  */
-export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch, onOpenProgram, onDonation }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenScreen, onBuildGroundTelescope, targets = [], onStartScan, onResolveScan, communityResearch, onOpenProgram, onDonation, catalog, onFollowUp }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [view, setView] = useState<SkyView>('all')
   const [telescopeId, setTelescopeId] = useState<string | null>(null)
   const [logbookOpen, setLogbookOpen] = useState(false)
-  const help = useHelp('instrument-hub', { firstVisit: !onboardingMissionDone(player.flightPlan) })
+  const help = useHelp('instrument-hub', { firstVisit: !communityWorlds(player.agencyCommunity).length && !onboardingMissionDone(player.flightPlan) })
   const [justBuilt, setJustBuilt] = useState(false)
   const groundCost = STRUCTURE_PRICES.groundTelescope
   const buildShortfall = player.francs < groundCost ? `${formatCurrency(groundCost - player.francs, { compact: true })} more` : null
@@ -136,6 +141,13 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onOpenS
           donations={player.agencyDonations}
           onDonation={onDonation}
           onService={onOpenProgram}
+          discoveryFollowUp={id => {
+            const world = communityWorlds(player.agencyCommunity).find(world => `exo:${world.id}` === id)
+            if (!world || !catalog || !onFollowUp) return null
+            if (player.probes?.[world.id]) return { label: 'Open probe readings', detail: 'Community-verified · your probe is in orbit.', onOpen: () => { requestProbeReadings(world.id); onOpenScreen('probe-scan') } }
+            const reachable = plannerTargets(player, catalog, 'survey').some(target => target.id === world.id)
+            return { label: reachable ? 'Prepare follow-up' : 'Review flight requirements', detail: reachable ? 'Community-verified. Send a probe to map six sectors.' : 'Community-verified. Review rocket range and launch requirements.', onOpen: () => onFollowUp(world.id) }
+          }}
           notice={player.scanFollowUp ? (() => {
             const followTarget = targets.find(item => item.id === player.scanFollowUp?.targetId)
             const screen = ({ tess: 'tess-discovery', asteroid: 'asteroid-discovery', saturn: 'saturn-storm-search' } as const)[player.scanFollowUp.project]

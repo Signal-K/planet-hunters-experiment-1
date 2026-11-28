@@ -1,3 +1,4 @@
+import { communityWorlds } from '@/lib/agency/community'
 import type { GameState, Player } from '@/lib/game-types'
 import { agencyTier, hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import type { Mission, MineralMeta, RocketModel, Target } from '@/lib/data/types'
@@ -54,7 +55,9 @@ export function missionFromPlan(plan: MissionPlan, target: Target, minerals: Rec
 }
 export function plannerTargets(player: Player, catalog: Catalog, work: PlannedWork): Target[] {
   const range = Math.max(0, ...plannerRockets(player).map(model => rocketBuilderStats(rocketConfigForModel(model), asLoadout(player.shipCustomizerParts), catalog.parts, communityBonusRate(player).fuel).range))
-  return catalog.targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet'].includes(target.type) && target.orbit <= range
+  const confirmed = work === 'survey' ? communityWorlds(player.agencyCommunity) : []
+  const targets = [...catalog.targets.filter(target => target.type !== 'exoplanet'), ...confirmed]
+  return targets.filter(target => target.minerals.length > 0 && ['asteroid', 'planet', 'exoplanet'].includes(target.type) && target.orbit <= range
     && supportsMissionAtTarget(missionFromPlan({ id: 'self-plan-range', targetId: target.id, work, mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target)
     && (work === 'survey' || target.id !== 'venus')
     && plannerRockets(player).some(model => validateBuild({ mission: missionFromPlan({ id: 'self-plan-range', targetId: target.id, work: 'survey', mineral: '', amount: 1, createdAt: 0 }, target, catalog.minerals), target, rocket: rocketConfigForModel(model), parts: catalog.parts, loadoutBonus: loadoutBonuses(asLoadout(player.shipCustomizerParts)), fuelFraction: communityBonusRate(player).fuel, launchpadLevel: agencyTier(player, 'launch') }).ok)).sort((a, b) => a.orbit - b.orbit || a.name.localeCompare(b.name))

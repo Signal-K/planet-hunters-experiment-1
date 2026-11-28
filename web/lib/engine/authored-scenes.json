@@ -1190,6 +1190,13 @@
             "community-research"
           ],
           "note": "Current implementation uses local contribution data. Server aggregation and reward settlement remain gaps, not verified gameplay."
+        },
+        {
+          "id": "discovery-follow-up",
+          "kind": "button",
+          "parent": "control-station",
+          "layout": "host",
+          "note": "Select a community-verified world to prepare a six-sector orbital probe survey with normal rocket checks; an existing probe opens its readings instead. Viewing grants nothing."
         }
       ]
     },

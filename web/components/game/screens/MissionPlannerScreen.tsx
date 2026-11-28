@@ -1,4 +1,5 @@
 'use client'
+import { communityWorlds } from '@/lib/agency/community'
 import { agencyTier, hasAgencyUnlock } from '@/lib/agency/construction-translation'
 import { useEffect, useState } from 'react'
 import type { Catalog } from '@/lib/catalog'
@@ -24,7 +25,7 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
   const [selection] = useState(pendingMiningPlan)
   useEffect(() => { clearMiningPlan() }, [])
   const [draft, setDraft] = useState<MissionPlan>(() => selection
-    ? { id: 'self-plan-draft', ...selection, work: 'mine', amount: 3, createdAt: Date.now() }
+    ? { id: 'self-plan-draft', ...selection, work: selection.work ?? 'mine', amount: selection.work === 'survey' ? 6 : 3, createdAt: Date.now() }
     : initialPlan ?? { id: 'self-plan-draft', targetId: first.find(target => target.id === 'eros')?.id ?? first[0]?.id ?? '', work: 'mine', mineral: 'nickel', amount: 3, createdAt: Date.now() })
   const [savedId, setSavedId] = useState<string | null>(selection ? null : initialPlan?.id ?? null)
   const mapView = (id: string): 'inner' | 'outer' | 'belt' | 'moons' => { const body = catalog.targets.find(target => target.id === id); return moonParent(id) ? 'moons' : body?.type === 'asteroid' ? 'belt' : (body?.orbit ?? 0) <= 4 ? 'inner' : 'outer' }
@@ -33,7 +34,8 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
   const targets = plannerTargets(player, catalog, draft.work)
   const parentIds = new Set(targets.flatMap(body => moonParent(body.id) ?? []))
   const mapTargets = [...targets, ...catalog.targets.filter(body => parentIds.has(body.id) && !targets.some(target => target.id === body.id))]
-  const target = targets.find(target => target.id === draft.targetId)
+  const sourceWorld = communityWorlds(player.agencyCommunity).find(world => world.id === draft.targetId)
+  const target = targets.find(target => target.id === draft.targetId) ?? sourceWorld
   const minerals = plannerMinerals(player, target, catalog, draft.work)
   const intelligence = target ? miningIntelligence(player, target, id => catalog.minerals[id]?.rarity) : null
   const quote = planQuote(draft, player, catalog)
@@ -53,6 +55,18 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
   }
   const save = () => { const plan = { ...draft, id: `self-plan-${crypto.randomUUID()}`, createdAt: Date.now() }; onSave(plan); setDraft(plan); setSavedId(plan.id) }
   const probeHours = hasAgencyUnlock(player, 'data-hub') ? probeSectorHours(agencyTier(player, 'data-hub')) : 2
+  if (sourceWorld && draft.work === 'survey') return <div className={`${board.scene} ${styles.root} ${styles.followUp}`} data-testid="mission-planner" data-screen="mission-planner">
+    <header className={styles.header}><button onClick={onBack}>‹ Back</button></header>
+    <main className={styles.followUpBrief}>
+      <span data-testid="planner-discovery-source">Community-verified discovery</span>
+      <h1>{sourceWorld.name}</h1>
+      <p>One orbital probe · {draft.amount} sectors · first data in {probeHours} h</p>
+      <p>{quote.rocket?.name ?? 'No available rocket fits'} · orbit {sourceWorld.orbit}</p>
+      {quote.issues.length > 0 && <ul className={styles.issues} role="status">{quote.issues.map(issue => <li key={issue}>{issue}</li>)}</ul>}
+      <p>Review your rocket and launch cost next.</p>
+      <button className={styles.primary} data-testid={savedId ? 'planner-review' : 'planner-save'} disabled={!!quote.issues.length || (!!savedId && !player.missionPlans?.[savedId])} onClick={() => savedId ? onReview(savedId) : save()}>{savedId ? 'Review & launch →' : 'Save flight'}</button>
+    </main>
+  </div>
   return <div className={`${board.scene} ${styles.root}`} data-testid="mission-planner" data-screen="mission-planner">
     <header className={styles.header}><button onClick={onBack}>‹ Mission board</button><div><span>YOUR PROGRAM / FLIGHT PLANNING</span><h1>Plan your mission</h1></div></header>
     <main className={styles.layout}>
@@ -62,8 +76,9 @@ export default function MissionPlannerScreen({ player, catalog, initialPlan, onB
       </div></details>
       <section className={styles.console} aria-label="Mission plan controls">
         <details><summary>Saved plans</summary><label>Saved plans<select aria-label="Saved plans" value={savedId && player.missionPlans?.[savedId] ? savedId : ''} onChange={event => { const plan = player.missionPlans?.[event.target.value]; if (plan) { setDraft(plan); setSavedId(plan.id); setMoonParentId(moonParent(plan.targetId) ?? null); setView(mapView(plan.targetId)) } else setSavedId(null) }}><option value="">New plan</option>{saved.map(plan => <option key={plan.id} value={plan.id}>{plan.work} · {catalog.targets.find(target => target.id === plan.targetId)?.name ?? plan.targetId} · {plan.amount}</option>)}</select></label></details>
+        {sourceWorld && <p data-testid="planner-discovery-source"><strong>{sourceWorld.name}</strong> · Community-verified transit discovery. Follow up with an orbital probe; downloaded readings appear at the Data hub. No reward for viewing or saving.</p>}
         <fieldset><legend>Work</legend><div className={styles.work}>{(['mine', 'survey', 'deliver'] as PlannedWork[]).map(work => <button key={work} data-testid={`planner-work-${work}`} aria-pressed={draft.work === work} onClick={() => change({ work, amount: work === 'survey' ? 6 : 3 })}>{work}</button>)}</div></fieldset>
-        <label>Destination<select aria-label="Destination" data-testid="planner-destination" value={draft.targetId} onChange={event => change({ targetId: event.target.value })}>{targets.map(target => <option key={target.id} value={target.id}>{target.name} · orbit {target.orbit}</option>)}</select></label>
+        <label>Destination<select aria-label="Destination" data-testid="planner-destination" value={draft.targetId} onChange={event => change({ targetId: event.target.value })}>{sourceWorld && !targets.some(target => target.id === sourceWorld.id) && <option value={sourceWorld.id} disabled>{sourceWorld.name} · requirements not met</option>}{targets.map(target => <option key={target.id} value={target.id}>{target.name} · orbit {target.orbit}</option>)}</select></label>
         {process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1' && draft.work !== 'survey' && supportsSolarField(draft.targetId) && <label>Landing site<select aria-label="Landing site" data-testid="planner-zone" value={draft.zone ?? ''} onChange={event => change({ zone: event.target.value ? event.target.value as MissionZone : undefined })}><option value="">Standard site</option>{MISSION_ZONES.map(site => <option key={site} value={site}>{({ prime: 'Prime meridian · 0°', east: 'East · 90°', opposite: 'Far side · 180°', west: 'West · 90°' })[site]}</option>)}</select></label>}
         {draft.work === 'mine' && intelligence && <details className={styles.intelligence} data-testid="planner-probe-findings"><summary>Probe findings</summary>
           <h2>Probe findings</h2>
