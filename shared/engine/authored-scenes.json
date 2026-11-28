@@ -519,6 +519,12 @@
             "records"
           ],
           "note": "SSL-852: the Agency path, third on the picker. Its steps come from the agency programme (web/lib/agency/programme.ts): launch or build the next craft (a `launch` stamp), work the fleet's data, clear the feed on 3 days, review a finding, Breakthrough. A line under the title lists the craft the agency has up, items of data a day and contributions. GO on the launch step opens the Data hub for a ground telescope and the Program tab for anything launched. The path links out to instruments; it holds no instrument tools."
+        },
+        {
+          "id": "research-events",
+          "kind": "button",
+          "layout": "host",
+          "note": "Browse existing event activities and rewards from Community Research; the main map has no persistent Events control. Live targets remain selectable in-world. The event browser returns to Research."
         }
       ]
     },

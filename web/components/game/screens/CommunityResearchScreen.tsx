@@ -28,6 +28,7 @@ import styles from './CommunityResearchScreen.module.css'
 interface CommunityResearchScreenProps {
   passportStatus?: 'loading' | 'live' | 'offline' | 'signed-out'
   onWorkshop?: () => void
+  onOpenEvents?: () => void
   /** SSL-746: a reviewer back from the instrument with their own readout, or null. */
   pendingReview?: PendingConsensusReview | null
   /** Opens the instrument on a queued subject so the reviewer does their own work first. */
@@ -202,7 +203,7 @@ function contributionTimes(player: Player): number[] {
 }
 
 /** Community research as a mission board: research tasks on the left, the chosen one in the middle, your week and the way in on the right. */
-function ResearchActivities({ player, passportStatus, onWorkshop, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
+function ResearchActivities({ onOpenEvents, player, passportStatus, onWorkshop, communityResearch, onBack, onChoosePath, onClaimReward, onGo, pendingReview, onStartReview, onFinishReview }: CommunityResearchScreenProps) {
   const now = Date.now()
   const event = liveEventWeek(now)
   const panel = eventPanel(now)
@@ -275,6 +276,7 @@ function ResearchActivities({ player, passportStatus, onWorkshop, communityResea
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3" /></svg>
             <span className={board.tabLabel}>Community research</span>
           </button>
+          {onOpenEvents && <button type="button" className={styles.eventsLink} data-testid="research-events" onClick={onOpenEvents}>Events</button>}
         </nav>
         </div>}>
 

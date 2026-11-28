@@ -28,7 +28,7 @@ import {
   type ProgramStep,
   type SkyBoardCard,
 } from '@/lib/mission-board-view'
-import { clearMissionBoardTab, lastMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardSite, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
+import { clearMissionBoardTab, rememberMissionBoardTab, pendingMissionBoardEvent, pendingMissionBoardMineral, pendingMissionBoardSite, pendingMissionBoardTab, type MissionBoardTab } from '@/lib/mission-board-nav'
 import { contractGroup, type ContractGroup } from '@/lib/contract-groups'
 import { orionidsArchiveUnlocked, orionidsRunAvailable } from '@/lib/orionids/access'
 import ScreenFrame from '@/components/layout/frame/ScreenFrame'
@@ -59,7 +59,7 @@ interface MissionBoardProps {
   onClose: () => void
   onOpenPlanner?: () => void
   onOpenLog: () => void
-  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors') => void
+  onOpenEvent: (screen: 'launchpad' | 'asteroid-discovery' | 'saturn-storm-search' | 'radio-meteors' | 'community-research') => void
   onPickTarget?: (id: string) => void
   onRedeemFragments?: () => void
   onCombineFragments?: () => void
@@ -73,10 +73,6 @@ function ArrowIcon({ direction }: { direction: 'left' | 'right' }) {
   return direction === 'left'
     ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6" /></svg>
     : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
-}
-
-function StarIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 6.4H21l-5.4 4 2 6.6L12 16.8 6.4 20l2-6.6L3 9.4h6.8L12 3z" /></svg>
 }
 
 const STEP_KIND_LABEL: Record<ProgramStep['kind'], string> = { instrument: 'Instrument', mining: 'Mining', focus: 'Focus' }
@@ -495,7 +491,7 @@ export default function MissionBoard({
   // "Find aluminium" and other build shortfalls open the Free run map on the places that hold that mineral.
   const [sourceMineral, setSourceMineral] = useState<string | null>(() => pendingMissionBoardMineral())
   const [tab, setTab] = useState<MissionBoardTab>(() => {
-    const requested = pendingMissionBoardTab() ?? lastMissionBoardTab()
+    const requested = pendingMissionBoardTab()
     return requested === 'events' ? requested : 'free'
   })
   const { now, orionidsNow } = boardClock()
@@ -641,10 +637,9 @@ export default function MissionBoard({
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-tab={tab}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <ScreenFrame surface="mission-setup" chrome="floating">
-      <button type="button" className={styles.eventsCorner} data-testid="mission-board-tab-events" aria-label={tab === 'events' ? 'Return to solar system' : 'Events'} onClick={() => chooseTab(tab === 'events' ? 'free' : 'events')}>
-        {tab === 'events' ? <ArrowIcon direction="left" /> : <StarIcon />}<span>{tab === 'events' ? 'Map' : 'Events'}</span>
-        {tab !== 'events' && events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
-      </button>
+      {tab === 'events' && <button type="button" className={styles.eventsCorner} data-testid="events-back-research" aria-label="Back to community research" onClick={() => { chooseTab('free'); onOpenEvent('community-research') }}>
+        <ArrowIcon direction="left" /><span>Research</span>
+      </button>}
       <GalaxyMap liveEvent={tab === 'free' && liveMapEvent ? { name: liveMapEvent.name, onOpen: () => setMapEventOpen(true) } : undefined} anomalies={liveAnomalies} onAnomaly={chooseAnomaly} anomalyNow={anomalyNow} targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setPickedId(null); setRunId(null); setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }}
         selectedId={tab === 'free' ? pickedId : null} onPick={id => {
           if (id === 'earth') onClose()

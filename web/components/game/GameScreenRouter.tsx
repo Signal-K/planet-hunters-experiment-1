@@ -598,6 +598,7 @@ function ScreenBody({
     case 'community-research':
       return (
         <CommunityResearchScreen
+          onOpenEvents={() => { requestMissionBoardTab('events'); game.goToMissions() }}
           passportStatus={passport.status}
           onWorkshop={() => game.go('rocket-workshop')}
           player={game.player}

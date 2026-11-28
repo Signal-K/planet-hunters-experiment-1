@@ -6,6 +6,7 @@ import { TARGETS } from '@/lib/data/targets'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
+import { requestMissionBoardEvent } from '@/lib/mission-board-nav'
 import MissionBoard, { GalaxyMap } from './MissionBoard'
 
 vi.mock('./screens/SolarOrbitGlobe', () => ({ default: () => null }))
@@ -77,7 +78,8 @@ describe('live event map handoff', () => {
     const player = { ...structuredClone(DEFAULT_STATE.player), freeOperations: true, missionsDone: 3, orionidsEventStage: 3 as const }
     const before = structuredClone(player)
     const accept = vi.fn()
-    const render = (p: typeof player) => act(() => root.render(<MissionBoard catalog={buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: p })} player={p} cards={[]} selectedIndex={0} onSelectRelative={() => {}} onSelectMission={() => {}} onAccept={accept} onClose={() => {}} onOpenLog={() => {}} onOpenEvent={() => {}} tutorialBlocked={false} onboardingComplete />))
+    const open = vi.fn()
+    const render = (p: typeof player) => act(() => root.render(<MissionBoard catalog={buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player: p })} player={p} cards={[]} selectedIndex={0} onSelectRelative={() => {}} onSelectMission={() => {}} onAccept={accept} onClose={() => {}} onOpenLog={() => {}} onOpenEvent={open} tutorialBlocked={false} onboardingComplete />))
     const click = (testId: string) => act(() => (element.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement).click())
     try {
       render(player)
@@ -92,10 +94,14 @@ describe('live event map handoff', () => {
       render(earned)
       expect(element.querySelector('[data-testid="map-live-event"]')).toBeNull()
       expect(element.querySelector('[data-testid="map-event-readout"]')).toBeNull()
-      click('mission-board-tab-events')
+      act(() => root.render(null))
+      requestMissionBoardEvent('leonids-2026')
+      render(earned)
       click('event-select-leonids-2026')
       expect(element.querySelector('[data-testid="events-card-leonids-2026"]')?.textContent).toContain('GOLD BADGE EARNED')
       expect(earned.badges['leonids-2026'].tier).toBe('gold')
+      click('events-back-research')
+      expect(open).toHaveBeenCalledWith('community-research')
     } finally { act(() => root.unmount()); clock.mockRestore() }
   })
 })

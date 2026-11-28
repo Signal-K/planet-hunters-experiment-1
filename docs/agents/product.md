@@ -138,3 +138,5 @@ A mining run, catch or other scene objective should finish in about one minute o
 - Session rule (Liam, 2026-11-28): every button must remain clickable and all text readable at every screen size. Timed asteroid/comet mining uses Takeon’s procedural generator and lit-body renderer in a dedicated scene, with controls in separate rows; never replace the target with an SVG UI panel.
 
 - Maps need space (Liam, 28 Nov): keep rendered worlds large and separated; explore a scrollable map on small screens instead of compressing destinations into an icon grid. Reveal details on selection, with short instructions and secondary information collapsed. See notes/decisions/Maps keep space for worlds, details open on selection (2026-11-28).md.
+
+- Events navigation belongs in Community Research (Liam, 28 Nov), not as a persistent button on the main map. Live event and mining targets remain clickable in-world.
