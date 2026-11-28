@@ -1070,7 +1070,6 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 /* Launched craft are schematic: their animation indicates a route, not live telemetry. */
 .gxShipPortrait { display: none; }
 .gxShip { fill: #f8f2d5; stroke: #163953; stroke-width: .25; filter: drop-shadow(0 0 3px #77dfff); }
-.gxPlanet[data-planet='saturn']::before { content: ''; position: absolute; z-index: 1; left: -28%; top: 36%; width: 156%; height: 24%; border: 3px solid rgba(233, 212, 169, .8); border-radius: 50%; transform: rotate(-22deg); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
 
 @media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }

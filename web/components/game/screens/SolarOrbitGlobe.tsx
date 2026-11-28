@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { loadLandingPreview } from '@/lib/takeon/solarLandingPreview'
-import { loadOrbitPreview, orbitMesh } from '@/lib/takeon/solarOrbit'
+import { loadOrbitPreview, orbitMesh, gasGiantPoint, gasGiantRings } from '@/lib/takeon/solarOrbit'
 import { loadObservedPatch, observedCoverage, observedHex } from '@/lib/takeon/solarObserved'
-import { solarBiomeColour } from '@/lib/takeon/solarBiomeColour'
+import { solarBiomeColour, gasGiantColour } from '@/lib/takeon/solarBiomeColour'
 import { mixHex, type Ramp } from '@/lib/takeon/terrainColour'
 import type { MissionZone } from '@/lib/data/mission-zone'
 
@@ -41,11 +41,14 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
       if (!canvas || !ctx) throw new Error('Canvas unavailable')
       // Smooth between sampled biomes instead of painting flat triangles.
       // Interpolation improves presentation; it does not add measured detail.
-      const radius = canvas.width * 180 / 512
+      const radius = canvas.width * (targetId === 'saturn' ? 103 : 180) / 512
       const center = canvas.width / 2
       const colours = palette.split(',') as unknown as Ramp
+      const gas = gasGiantColour(targetId, 0, 0) !== null
       const rgb = orbit.patch.map((sample, index) => {
-        const base = solarBiomeColour(sample.biome, colours)
+        const latitude = ((index / orbit.width | 0) - (orbit.height - 1) / 2) * orbit.stepDegrees * Math.PI / 180
+        const longitude = (index % orbit.width - (orbit.width - 1) / 2) * orbit.stepDegrees * Math.PI / 180
+        const base = gasGiantColour(targetId, latitude, longitude) ?? solarBiomeColour(sample.biome, colours)
         const hex = (observed ? mixHex(base, observedHex(observed[index]), realism) : base).slice(1)
         return [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16))
       })
@@ -56,11 +59,12 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
       const extent = Math.max(1, ...orbit.patch.map(sample => sample.radius))
       const vertices = mesh.map((point, index) => {
         const sample = orbit.patch[index]
-        const nx = point.x / sample.radius, ny = point.y / sample.radius
-        const diffuse = Math.max(0, -nx * .48 - ny * .42 + point.depth * .77)
-        const light = mapIcon ? .30 + diffuse * .78 : Math.max(.42, .64 + point.depth * .3 + (sample.radius - 1) * 1.5)
-        return { x: center + point.x * radius / extent, y: center + point.y * radius / extent,
-          z: point.depth * sample.radius, colour: rgb[index].map(value => value * light) }
+        const p = gasGiantPoint(targetId, point.x / extent, -point.y / extent, point.depth * sample.radius / extent)
+        const normalLength = Math.hypot(p.x, p.y, p.z)
+        const diffuse = Math.max(0, (-p.x * .48 + p.y * .42 + p.z * .77) / normalLength)
+        const light = mapIcon || gas ? .24 + diffuse * .82 : Math.max(.42, .64 + point.depth * .3 + (sample.radius - 1) * 1.5)
+        return { x: center + p.x * radius, y: center - p.y * radius,
+          z: p.z, colour: rgb[index].map(value => value * light) }
       })
       const depth = new Float32Array(canvas.width * canvas.height).fill(-Infinity)
       const triangle = (ia: number, ib: number, ic: number) => {
@@ -88,6 +92,22 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
         triangle(i, i + 1, i + orbit.width)
         triangle(i + 1, i + orbit.width + 1, i + orbit.width)
       }
+      // Rings use the same depth buffer: the far arc passes behind the globe.
+      for (const ring of gasGiantRings(targetId)) {
+        for (let segment = 0; segment < 256; segment++) {
+          const first = vertices.length
+          for (const [r, a] of [[ring.inner, segment], [ring.outer, segment], [ring.inner, segment + 1], [ring.outer, segment + 1]]) {
+            const theta = a / 256 * Math.PI * 2
+            const p = gasGiantPoint(targetId, r * Math.cos(theta), 0, r * Math.sin(theta))
+            const shadow = p.z < 0 && Math.abs(p.x) < .9 ? .45 : .9
+            const hex = ring.colour.slice(1)
+            vertices.push({ x: center + p.x * radius, y: center - p.y * radius, z: p.z,
+              colour: [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) * shadow) })
+          }
+          triangle(first, first + 1, first + 2)
+          triangle(first + 1, first + 3, first + 2)
+        }
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.putImageData(image, 0, 0)
       onReady(true)
@@ -101,5 +121,5 @@ export default function SolarOrbitGlobe({ targetId, zone, colours, scale, opacit
     return () => { cancelled = true; onReady(false) }
   }, [targetId, zone, palette, realism, landable, onReady, mapIcon])
 
-  return <canvas ref={canvasRef} width={mapIcon ? 256 : 512} height={mapIcon ? 256 : 512} aria-hidden="true" data-testid="solar-orbit-globe" style={mapIcon ? { position: 'absolute', inset: '-21%', width: '142%', height: '142%', opacity: failed ? 0 : opacity, pointerEvents: 'none' } : { position: 'absolute', width: '60%', height: 'auto', left: '20%', top: '58%', transform: `translateY(-50%) scale(${scale})`, opacity: failed ? 0 : opacity, pointerEvents: 'none' }} />
+  return <canvas ref={canvasRef} width={mapIcon ? 256 : ['jupiter', 'saturn', 'uranus', 'neptune'].includes(targetId) ? 1024 : 512} height={mapIcon ? 256 : ['jupiter', 'saturn', 'uranus', 'neptune'].includes(targetId) ? 1024 : 512} aria-hidden="true" data-testid="solar-orbit-globe" style={mapIcon ? { position: 'absolute', inset: '-21%', width: '142%', height: '142%', opacity: failed ? 0 : opacity, pointerEvents: 'none' } : { position: 'absolute', width: '60%', height: 'auto', left: '20%', top: '58%', transform: `translateY(-50%) scale(${scale})`, opacity: failed ? 0 : opacity, pointerEvents: 'none' }} />
 }

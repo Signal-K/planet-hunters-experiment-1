@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { loadOrbitPreview } from '@/lib/takeon/solarOrbit'
-import { solarBiomeColour } from '@/lib/takeon/solarBiomeColour'
+import { loadOrbitPreview, gasGiantPoint, gasGiantRings } from '@/lib/takeon/solarOrbit'
+import { solarBiomeColour, gasGiantColour } from '@/lib/takeon/solarBiomeColour'
 import type { Ramp } from '@/lib/takeon/terrainColour'
 
 /** A small WebGL globe built from Takeon's orbital samples. */
@@ -36,12 +36,12 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
       }
       const vertex = compile(context.VERTEX_SHADER, `
         attribute vec3 position; attribute vec3 colour;
-        uniform float angle; varying vec3 normal; varying vec3 surface;
+        uniform float angle; uniform float bodyScale; varying vec3 normal; varying vec3 surface;
         void main() {
           float c = cos(angle), s = sin(angle);
           vec3 p = vec3(position.x*c + position.z*s, position.y, -position.x*s + position.z*c);
           normal = normalize(p); surface = colour;
-          gl_Position = vec4(p.xy * .92, -p.z * .5, 1.0);
+          gl_Position = vec4(p.xy * bodyScale, -p.z * .35, 1.0);
         }`)
       const fragment = compile(context.FRAGMENT_SHADER, `
         precision mediump float; varying vec3 normal; varying vec3 surface;
@@ -58,7 +58,8 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
       context.deleteShader(vertex); context.deleteShader(fragment)
       if (!context.getProgramParameter(program, context.LINK_STATUS)) throw new Error('Unable to link planet program')
       const positions: number[] = [], coloursRGB: number[] = [], indices: number[] = []
-      const columns = 64, rows = 32
+      const gas = gasGiantColour(targetId, 0, 0) !== null
+      const columns = gas ? 192 : 64, rows = gas ? 96 : 32
       const extent = Math.max(1, ...orbit.patch.map(sample => sample.radius))
       const ramp = palette.split(',') as unknown as Ramp
       for (let y = 0; y <= rows; y++) {
@@ -71,13 +72,27 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
           const sy = Math.round((latitude / Math.PI + .5) * (orbit.height - 1))
           const sample = orbit.patch[sy * orbit.width + sx]
           const relief = sample.radius / extent
-          positions.push(Math.cos(latitude) * Math.sin(longitude) * relief, Math.sin(latitude) * relief, Math.cos(latitude) * Math.cos(longitude) * relief)
-          const hex = solarBiomeColour(sample.biome, ramp).slice(1)
+          const p = gasGiantPoint(targetId, Math.cos(latitude) * Math.sin(longitude) * relief, Math.sin(latitude) * relief, Math.cos(latitude) * Math.cos(longitude) * relief)
+          positions.push(p.x, p.y, p.z)
+          const hex = (gasGiantColour(targetId, latitude, longitude) ?? solarBiomeColour(sample.biome, ramp)).slice(1)
           coloursRGB.push(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255))
           if (x < columns && y < rows) {
             const i = y * (columns + 1) + x
             indices.push(i, i + 1, i + columns + 1, i + 1, i + columns + 2, i + columns + 1)
           }
+        }
+      }
+      for (const ring of gasGiantRings(targetId)) {
+        for (let segment = 0; segment < 256; segment++) {
+          const first = positions.length / 3
+          for (const [r, a] of [[ring.inner, segment], [ring.outer, segment], [ring.inner, segment + 1], [ring.outer, segment + 1]]) {
+            const theta = a / 256 * Math.PI * 2
+            const p = gasGiantPoint(targetId, r * Math.cos(theta), 0, r * Math.sin(theta))
+            positions.push(p.x, p.y, p.z)
+            const hex = ring.colour.slice(1)
+            coloursRGB.push(...[0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255))
+          }
+          indices.push(first, first + 1, first + 2, first + 1, first + 3, first + 2)
         }
       }
       const attribute = (name: string, values: number[]) => {
@@ -95,14 +110,15 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
       context.bufferData(context.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), context.STATIC_DRAW)
       context.enable(context.DEPTH_TEST); context.clearColor(0, 0, 0, 0)
       const angle = context.getUniformLocation(program, 'angle')
+      context.uniform1f(context.getUniformLocation(program, 'bodyScale'), targetId === 'saturn' ? .43 : .92)
       const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       const draw = (time: number) => {
         if (cancelled || contextLost) return
         context.viewport(0, 0, context.drawingBufferWidth, context.drawingBufferHeight)
         context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT)
-        context.uniform1f(angle, still ? 0 : time * .000025)
+        context.uniform1f(angle, still || gas ? 0 : time * .000025)
         context.drawElements(context.TRIANGLES, indices.length, context.UNSIGNED_SHORT, 0)
-        if (!still) frame = requestAnimationFrame(draw)
+        if (!still && !gas) frame = requestAnimationFrame(draw)
       }
       draw(0); onReady(true)
     }
@@ -113,5 +129,5 @@ export default function MapPlanet3D({ targetId, colours, onReady }: { targetId: 
     }
   }, [targetId, palette, onReady])
 
-  return <canvas ref={ref} width={128} height={128} aria-hidden="true" style={{ position: 'absolute', inset: '-4%', width: '108%', height: '108%', pointerEvents: 'none' }} />
+  return <canvas ref={ref} width={128} height={128} aria-hidden="true" style={{ position: 'absolute', inset: targetId === 'saturn' ? '-28%' : '-4%', width: targetId === 'saturn' ? '156%' : '108%', height: targetId === 'saturn' ? '156%' : '108%', pointerEvents: 'none' }} />
 }

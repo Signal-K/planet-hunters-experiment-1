@@ -38,3 +38,27 @@ export function loadOrbitPreview(targetId: string, zone?: MissionZone): Promise<
   }
   return orbit
 }
+
+/** Illustrative axial orientation and measured approximate polar/equatorial ratio. */
+export function gasGiantPoint(id: string, x: number, y: number, z: number) {
+  const shape: Record<string, readonly [number, number]> = {
+    jupiter: [3, .935], saturn: [27, .902], uranus: [82, .977], neptune: [28, .983],
+  }
+  const [degrees, flattening] = shape[id] ?? [0, 1]
+  const angle = degrees * Math.PI / 180
+  // Tip the pole slightly toward the viewer, exposing Saturn's ring plane.
+  const pole = id === 'saturn' ? .35 : id === 'uranus' ? .2 : 0
+  const py = y * flattening * Math.cos(pole) - z * Math.sin(pole)
+  const pz = y * flattening * Math.sin(pole) + z * Math.cos(pole)
+  return { x: x * Math.cos(angle) - py * Math.sin(angle), y: x * Math.sin(angle) + py * Math.cos(angle), z: pz }
+}
+
+/** Saturn's main rings, including the Cassini gap, in equatorial-radius units. */
+export function gasGiantRings(id: string) {
+  if (id !== 'saturn') return []
+  return [
+    { inner: 1.24, outer: 1.52, colour: '#8d8576' },
+    { inner: 1.52, outer: 1.95, colour: '#d4c6a4' },
+    { inner: 2.03, outer: 2.27, colour: '#b9ad90' },
+  ]
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { orbitMesh, requestOrbitPreview } from './solarOrbit'
+import { orbitMesh, requestOrbitPreview, gasGiantPoint, gasGiantRings } from './solarOrbit'
 import { previewLandingRequest } from './solarLandingPreview'
 
 describe('orbital terrain handoff', () => {
@@ -22,4 +22,13 @@ describe('orbital terrain handoff', () => {
       return JSON.stringify({ ok: true, value: { bodyId: solar.id, seed: solar.seed, styleVersion: solar.styleVersion, latitude: solar.latitude, longitude: solar.longitude, stepDegrees: solar.step, width: solar.width, height: solar.height, center: { radius: 1, biome: 'ice' }, patch: Array.from({ length: solar.width * solar.height }, () => ({ radius: 1, biome: 'rock' })) } })
     }, 'mars')).toThrow('Invalid Takeon orbital preview')
   })
+})
+
+it('keeps non-gas geometry unchanged and puts Saturn ring arcs in front and behind', () => {
+  expect(gasGiantPoint('mars', .2, .3, .4)).toEqual({ x: .2, y: .3, z: .4 })
+  const rings = gasGiantRings('saturn')
+  expect(rings[1].outer).toBeLessThan(rings[2].inner)
+  expect(gasGiantPoint('saturn', 0, 0, rings[0].outer).z).toBeGreaterThan(0)
+  expect(gasGiantPoint('saturn', 0, 0, -rings[0].outer).z).toBeLessThan(0)
+  expect(gasGiantRings('mars')).toEqual([])
 })
