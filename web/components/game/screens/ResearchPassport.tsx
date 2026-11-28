@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { pbLandnam } from '@/lib/pb-landnam'
 import type { Player } from '@/lib/game-types'
 import { customizerPartById } from '@/lib/data/shipCustomizer'
 import { weeklyRocketPart } from '@/lib/data/weeklyRocketParts'
@@ -20,6 +21,16 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
   const weeks = passportWeekRange(player, now)
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null)
   const week = selectedWeek && weeks.includes(selectedWeek) ? selectedWeek : weekKey(now)
+  const [treasury,setTreasury] = useState<{week:string; minerals:Record<string,number>}|null>(null)
+  const [treasuryUnavailable,setTreasuryUnavailable] = useState(false)
+  useEffect(()=>{
+    let active=true
+    setTreasury(null);setTreasuryUnavailable(false)
+    const load=()=>{void pbLandnam.send<{week:string;minerals:Record<string,number>}>(`/api/anomalies/treasury?week=${week}`,{requestKey:null}).then(data=>{if(active){setTreasury(data);setTreasuryUnavailable(false)}}).catch(()=>{if(active)setTreasuryUnavailable(true)})}
+    load();const poll=setInterval(load,15000)
+    window.addEventListener('landnam:mining-treasury',load)
+    return ()=>{active=false;clearInterval(poll);window.removeEventListener('landnam:mining-treasury',load)}
+  },[week])
   const index = weeks.indexOf(week)
   const current = week === weekKey(now)
   const days = passportDays(player, week, now)
@@ -44,6 +55,11 @@ export default function ResearchPassport({ player, onGo, onReview, onWorkshop, s
           <div><span>{current ? 'THIS WEEK' : 'PASSPORT ARCHIVE'}</span><h2>{date(week)} – {date(days[6].key)}</h2></div>
           <button aria-label="Next week" disabled={index <= 0} onClick={() => setSelectedWeek(weeks[index - 1])}>›</button>
         </nav>
+        <div className={styles.bar} aria-label="Weekly mineral treasury">
+          <strong>Community treasury · this page’s week</strong>
+          {treasury?.week===week ? <p>{treasury.minerals.iron ?? 0} iron · {treasury.minerals.hydrogen ?? 0} hydrogen</p> : <p>{treasuryUnavailable?'Treasury unavailable · retrying when connected':'Loading treasury…'}</p>}
+          <small>Mining hauls · contributions recorded for future community projects</small>
+        </div>
         <p className={styles.hint}>Your first research action each day inks that day. Extra work keeps helping.</p>
         <ol className={styles.stamps} aria-label="Seven daily stamp places" data-testid="community-research-week">
           {days.map((day, i) => <li key={day.key} className={styles.stamp} data-stamped={!!day.kind} data-today={day.today} data-future={day.future} title={day.kind ? player.researchStampProjects?.[day.key]?.[day.kind]?.replaceAll('-', ' ') : undefined} aria-label={`${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i]}, ${date(day.key)}: ${day.kind ? label(day) : day.future ? 'not yet open' : 'empty'}`}>

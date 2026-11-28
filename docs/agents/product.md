@@ -132,3 +132,5 @@ A mining run, catch or other scene objective should finish in about one minute o
 - iOS is out of scope for three weeks (Liam 2026-11-26): web only, no Swift, and never mention iOS status in tickets, comments or reports. Note: notes/decisions/iOS is out of scope for three weeks (2026-11-26).md
 
 - Probe scanning (SSL-832, Liam, 24 Nov): SCAN starts timed mapping; levels 2 and 3 are shallow and deeper subsurface passes, each manually started; full citizen science readings begin at level 4 and use the citizen science modules. Existing probes retain progress. See notes/decisions/Probe scans start manually; subsurface before citizen science (2026-11-24).md.
+
+- Timed mining (Liam, 28 Nov): prominent limited map targets reveal details on tap; a short challenge earns minerals for the weekly community treasury shown in Community Research. Keep per-contribution receipts for future content. See notes/decisions/Timed mining contributes minerals to the weekly treasury (2026-11-28).md. This supersedes the flat personal-cash payout in SSL-912.

@@ -69,6 +69,9 @@ test:
 scene:
 	@node scripts/scene.mjs $(NAME) $(CHECK)
 
+dev-mining:
+	LANDNAM_MINING_DEV=1 ./scripts/dev-local.sh
+
 dev:
 	./scripts/dev-local.sh
 

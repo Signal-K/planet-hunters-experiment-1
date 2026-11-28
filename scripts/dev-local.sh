@@ -12,6 +12,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SHARED_PORT="${SHARED_PB_PORT:-8090}"
 LANDNAM_PORT="${LANDNAM_PB_DEV_PORT:-8096}"
 WEB_PORT="${LANDNAM_WEB_PORT:-4320}"
+MINING_DEV="${LANDNAM_MINING_DEV:-0}"
+DATA="$ROOT/pocketbase/pb_data"
+SHARED_DATA="$ROOT/pocketbase/pb_data_shared"
+if [ "$MINING_DEV" = 1 ]; then
+ DATA="$DATA/mining-dev"
+ SHARED_DATA="$SHARED_DATA/mining-dev"
+ export LANDNAM_DEV_ANOMALIES=1
+fi
 BIN="$ROOT/pocketbase/.bin"
 SUPERUSER_EMAIL="liam@skinetics.tech"
 SUPERUSER_PASSWORD="ThisIsATestPassword"
@@ -39,15 +47,29 @@ done
 mkdir -p "$BIN"
 (cd "$ROOT/pocketbase" && go build -o "$BIN/shared-dev" ./cmd/shared-dev && go build -o "$BIN/landnam-pb" .)
 
-"$BIN/shared-dev" serve --http="127.0.0.1:$SHARED_PORT" --dir="$ROOT/pocketbase/pb_data_shared" &
+"$BIN/shared-dev" serve --http="127.0.0.1:$SHARED_PORT" --dir="$SHARED_DATA" &
 pids+=($!)
 wait_healthy "$SHARED_PORT"
 
-"$BIN/landnam-pb" superuser upsert "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD" --dir="$ROOT/pocketbase/pb_data" >/dev/null
+"$BIN/landnam-pb" superuser upsert "$SUPERUSER_EMAIL" "$SUPERUSER_PASSWORD" --dir="$DATA" >/dev/null
 SHARED_PB_URL="http://127.0.0.1:$SHARED_PORT" \
-  "$BIN/landnam-pb" serve --http="127.0.0.1:$LANDNAM_PORT" --dir="$ROOT/pocketbase/pb_data" &
+  "$BIN/landnam-pb" serve --http="127.0.0.1:$LANDNAM_PORT" --dir="$DATA" &
 pids+=($!)
 wait_healthy "$LANDNAM_PORT"
+
+if [ "$MINING_DEV" = 1 ]; then
+ (
+  cd "$ROOT/web"
+  for preset in ui-mission-board telescope-hub; do
+   SHARED_PB_SEED_URL="http://127.0.0.1:$SHARED_PORT" LANDNAM_PB_URL_OVERRIDE="http://127.0.0.1:$LANDNAM_PORT" \
+    npx --yes tsx scripts/seed-dev-presets.ts "$preset"
+  done
+ )
+ LANDNAM_PB_DEV_PORT="$LANDNAM_PORT" node "$ROOT/scripts/seed-mining-dev.mjs"
+ echo "Mining: http://localhost:$WEB_PORT/game?dev=1"
+ echo "Pilot A: dev-preset-ui-mission-board@example.com / DevPreset123!"
+ echo "Pilot B: dev-preset-telescope-hub@example.com / DevPreset123!"
+fi
 
 echo "Shared PB:   http://localhost:$SHARED_PORT/_/"
 echo "Landnam PB:  http://localhost:$LANDNAM_PORT/_/"
@@ -57,6 +79,9 @@ echo "Superuser:   $SUPERUSER_EMAIL / $SUPERUSER_PASSWORD (both)"
 
 cd "$ROOT/web"
 PORT="$WEB_PORT" \
+NEXT_PUBLIC_LANDNAM_ENV=development \
+NEXT_PUBLIC_PB_ALLOW_LOOPBACK=1 \
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="" \
 NEXT_PUBLIC_SHARED_PB_URL="http://localhost:$SHARED_PORT" \
 NEXT_PUBLIC_LANDNAM_PB_URL="http://localhost:$LANDNAM_PORT" \
   npm run dev

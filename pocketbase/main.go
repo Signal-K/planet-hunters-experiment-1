@@ -53,6 +53,7 @@ func main() {
 	registerSiteLedger(app)
 	registerAgencyProgramme(app)
 	registerTreasuryRoutes(app)
+	registerAnomalyRoutes(app)
 	registerSolarFieldRoutes(app)
 	registerGameStateCASRoute(app)
 

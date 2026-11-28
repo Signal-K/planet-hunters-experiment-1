@@ -1062,7 +1062,7 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .eventDetail .eventSteps li[data-state='done'] { color: var(--dusk-info); }
 
 /* Compact map control; events opens over the same scene. */
-.eventsCorner { position: absolute; z-index: 12; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 1px solid rgba(210,230,245,.55); border-radius: 999px; background: rgba(12,25,44,.9); color: #fff; font: 700 14px/1 var(--ln-font-display); cursor: pointer; }
+.eventsCorner { position: absolute; z-index: 12; top: 12px; right: 120px; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border: 1px solid rgba(210,230,245,.55); border-radius: 999px; background: rgba(12,25,44,.9); color: #fff; font: 700 14px/1 var(--ln-font-display); cursor: pointer; }
 .eventsCorner svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 .eventsCorner .dot { position: absolute; top: 1px; right: 2px; }
 .scene .sheet { top: 62px; }
@@ -1073,20 +1073,43 @@ button.take:disabled { background: #34363c; color: #a3a29d; }
 .gxPlanet[data-planet='saturn']::before { content: ''; position: absolute; z-index: 1; left: -28%; top: 36%; width: 156%; height: 24%; border: 3px solid rgba(233, 212, 169, .8); border-radius: 50%; transform: rotate(-22deg); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
 
-/* The system overview uses a vertical itinerary on narrow upright screens;
-   labels and tap targets stay separated as the canvas changes shape. */
-@media (orientation: portrait) and (max-width: 700px) {
-  .gx[data-view='system'] .gxRegionButton, .gx[data-view='system'] .gxRegionLabel { display: none; }
-  .gx[data-view='system'] .gxSystemOrbit, .gx[data-view='system'] .gxBeltOrbit { display: none; }
-    .gx[data-view='system'] .gxSun { left: 50% !important; top: 35% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mercury'] { left: 18% !important; top: 16% !important; }
-  .gx[data-view='system'] [data-testid='map-node-venus'] { left: 60% !important; top: 16% !important; }
-  .gx[data-view='system'] [data-testid='map-node-earth'] { left: 18% !important; top: 28% !important; }
-  .gx[data-view='system'] [data-testid='map-node-mars'] { left: 60% !important; top: 28% !important; }
-  .gx[data-view='system'] [data-testid='map-belt'] { left: 18% !important; top: 42% !important; }
-  .gx[data-view='system'] [data-testid='map-gas-giants'] { left: 18% !important; top: 54% !important; }
-  .gxShipWide { display: none; }
-  .gxShipPortrait { display: inline; }
+@media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
+
+/* The constellation keeps the same fixed chain at every aspect ratio. */
+.gx[data-view='system'] .gxNode { flex-direction: column; gap: 3px; transform: translate(-50%, -25px); font-size: 14px; letter-spacing: 0; }
+.gx[data-view='system'] .gxNode > i.gxPlanet { margin: 0; width: 38px; height: 38px; }
+.gx[data-view='system'] .gxNode > span { padding: 2px; }
+.anomalyNode { position: absolute; transform: translate(-50%,-50%); display: flex; flex-direction: column; align-items: center; min-width:44px; min-height:44px; pointer-events:auto; border:0; border-radius:8px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:700 14px var(--ln-font-body); z-index:3; }
+.anomalyNode small { font-size:14px; }
+.anomalyTrips { position:absolute; right:16px; top:80px; display:flex; flex-direction:column; gap:6px; z-index:5; max-width:220px; }
+.anomalyTrips button, .anomalySheet button { min-height:44px; padding:8px 12px; border:1px solid var(--signal); border-radius:12px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:700 14px var(--ln-font-body); cursor:pointer; }
+.anomalySheet { display:grid; gap:12px; position:absolute; z-index:20; inset:15% auto auto 50%; transform:translateX(-50%); width:min(420px,90%); padding:20px; border:1px solid var(--signal); border-radius:20px; background:var(--ln-board-ink); color:var(--ln-board-paper); font:400 16px/1.5 var(--ln-font-body); pointer-events:auto; }
+.anomalySheet button:disabled { opacity:.5; cursor:default; }
+@media (orientation:portrait) and (max-width:700px) {
+ .gx[data-view='system'] .gxNode > i.gxPlanet { width:28px; height:28px; }
+ .gx[data-view='system'] .gxNode { font-size:14px; }
+ .gx[data-view='system'] [data-testid='map-node-earth'] { left:22%!important; top:17%!important; }
+ .gx[data-view='system'] [data-testid='map-node-mars'] { left:72%!important; top:17%!important; }
+ .gx[data-view='system'] [data-testid='map-node-jupiter'] { left:22%!important; top:33%!important; }
+ .gx[data-view='system'] [data-testid='map-node-saturn'] { left:72%!important; top:33%!important; }
+ .gx[data-view='system'] [data-testid='map-node-uranus'] { left:22%!important; top:49%!important; }
+ .gx[data-view='system'] [data-testid='map-node-neptune'] { left:72%!important; top:49%!important; }
+ .gx[data-view='system'] [data-testid='map-node-mercury'], .gx[data-view='system'] [data-testid='map-node-venus'] { display:none; }
+ .gx[data-view='system'] .gxSun { left:7%!important; top:17%!important; }
+ .gxShipWide { display:none; }
+ .gxShipPortrait { display:inline; }
+ .anomalyNode[data-slot='0'] { left:47%!important; top:17%!important; }
+ .anomalyNode[data-slot='1'] { left:47%!important; top:25%!important; }
+ .anomalyNode[data-slot='2'] { left:47%!important; top:33%!important; }
+ .anomalyNode[data-slot='3'] { left:47%!important; top:41%!important; }
+ .anomalyNode[data-slot='4'] { left:47%!important; top:49%!important; }
+ .anomalyNode[data-slot='5'] { left:47%!important; top:57%!important; }
+ .anomalyTrips { top:65px; right:8px; max-width:160px; }
 }
 
-@media (prefers-reduced-motion: reduce) { .gxShip { display: none; } }
+.miningSweep { position:relative; height:64px; background:color-mix(in srgb,var(--signal) 12%,transparent); overflow:hidden; border-radius:12px; }
+.miningPocket { position:absolute; left:30%; width:40%; height:100%; background:color-mix(in srgb,var(--signal) 50%,transparent); }
+.miningSweep > i { position:absolute; top:0; height:100%; width:6px; background:var(--ln-board-paper); transform:translateX(-50%); }
+
+.anomalyNode > span { color:var(--ln-board-gold); font-size:24px; }
+.anomalyTrips summary { color:var(--ln-board-paper); min-height:44px; }

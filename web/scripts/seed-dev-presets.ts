@@ -32,7 +32,7 @@ import { DEFAULT_STATE, normalizeAndRepair } from '../lib/game-state.ts'
 import { MISSIONS } from '../lib/data.ts'
 import type { GameState } from '../lib/game-types.ts'
 
-const SHARED_URL = 'http://localhost:8090'
+const SHARED_URL = process.env.SHARED_PB_SEED_URL ?? 'http://localhost:8090'
 const LANDNAM_URL = process.env.LANDNAM_PB_URL_OVERRIDE ?? 'http://localhost:8095'
 const SUPERUSER_EMAIL = 'liam@skinetics.tech'
 const SUPERUSER_PASSWORD = 'ThisIsATestPassword'
