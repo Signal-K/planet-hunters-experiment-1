@@ -134,3 +134,5 @@ A mining run, catch or other scene objective should finish in about one minute o
 - Probe scanning (SSL-832, Liam, 24 Nov): SCAN starts timed mapping; levels 2 and 3 are shallow and deeper subsurface passes, each manually started; full citizen science readings begin at level 4 and use the citizen science modules. Existing probes retain progress. See notes/decisions/Probe scans start manually; subsurface before citizen science (2026-11-24).md.
 
 - Timed mining (Liam, 28 Nov): prominent limited map targets reveal details on tap; a short challenge earns minerals for the weekly community treasury shown in Community Research. Keep per-contribution receipts for future content. See notes/decisions/Timed mining contributes minerals to the weekly treasury (2026-11-28).md. This supersedes the flat personal-cash payout in SSL-912.
+
+- Session rule (Liam, 2026-11-28): every button must remain clickable and all text readable at every screen size. Timed asteroid/comet mining uses Takeon’s procedural generator and lit-body renderer in a dedicated scene, with controls in separate rows; never replace the target with an SVG UI panel.

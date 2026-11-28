@@ -68,3 +68,5 @@ Stop with Ctrl+C. Ports must be free before startup. Override with
 The first run downloads Go modules and the existing preset seeder's `tsx`
 runner. The mining challenge works without optional Takeon terrain assets;
 map globes use their existing fallback appearance when those assets are absent.
+
+Account-free Takeon mining previews: [asteroid](http://localhost:4320/game/stage?preset=ui-timed-asteroid) · [comet](http://localhost:4320/game/stage?preset=ui-timed-comet). These disposable scenes never write to the weekly treasury.

@@ -24,6 +24,8 @@
   ]
  },
  "scenes": [
+  {"id":"timed-asteroid","name":"Timed asteroid mining","flow":"core-loop","web":"ui-timed-asteroid","tickets":["SSL-911","SSL-912"],"objective":"Send, time three cuts on the Takeon asteroid, deliver the preview cargo. No account or real treasury writes."},
+  {"id":"timed-comet","name":"Timed comet gas capture","flow":"core-loop","web":"ui-timed-comet","tickets":["SSL-911","SSL-912"],"objective":"Send, capture three gas pockets from the Takeon comet, deliver the preview cargo. No account or real treasury writes."},
   {
    "id": "intro",
    "name": "Intro",

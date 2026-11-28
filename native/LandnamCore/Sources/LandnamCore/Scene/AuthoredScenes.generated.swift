@@ -2357,6 +2357,34 @@ enum AuthoredSceneDeclarations {
       ]
     },
     {
+      "id": "timed-asteroid",
+      "type": "menu",
+      "route": "missions",
+      "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/MissionBoard.tsx",
+          "web/components/takeon/TakeOnPocket.tsx"
+        ]
+      },
+      "objects": []
+    },
+    {
+      "id": "timed-comet",
+      "type": "menu",
+      "route": "missions",
+      "surface": "canvas",
+      "runtime": {
+        "surface": "canvas",
+        "web": [
+          "web/components/game/MissionBoard.tsx",
+          "web/components/takeon/TakeOnPocket.tsx"
+        ]
+      },
+      "objects": []
+    },
+    {
       "id": "transit",
       "type": "travel",
       "route": "flight",

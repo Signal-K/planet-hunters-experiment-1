@@ -1,0 +1,16 @@
+#:schema ../schema/scene.schema.json
+format = 1
+id = "timed-asteroid"
+type = "menu"
+name = "Timed asteroid mining"
+summary = "Time three captures on a Takeon-generated target, then deliver the cargo. The isolated preview does not write a treasury."
+tickets = ["SSL-911", "SSL-912"]
+qa = ["timed-asteroid"]
+
+[runtime]
+surface = "canvas"
+web = ["web/components/game/MissionBoard.tsx", "web/components/takeon/TakeOnPocket.tsx"]
+
+[preview]
+route = "missions"
+state = "ui-timed-asteroid"

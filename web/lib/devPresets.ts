@@ -731,6 +731,9 @@ function fixture(name: string): Partial<GameState> | null {
         lastCargo: null,
         popup: null,
       }
+    case 'ui-timed-asteroid':
+    case 'ui-timed-comet':
+      return fixture('ui-mission-board')
     case 'ui-mission-board':
       return {
         screen: 'missions',

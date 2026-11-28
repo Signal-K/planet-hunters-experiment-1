@@ -18,6 +18,9 @@ const pending = `${out}.${process.pid}.tmp`
 // touched. These fixtures are deliberately representative rather than saved
 // campaign state; use `node scripts/scene.mjs <id>` for an authored scene.
 const SCREENS = [
+  ['takeonpocket', 'ui-timed-asteroid'],
+  ['timed-asteroid', 'ui-timed-asteroid'],
+  ['timed-comet', 'ui-timed-comet'],
   ['mining-survey', 'ui-mining-survey'],
   ['mission-planner', 'ui-mission-planner'],
   ['planner-survey', 'ui-mission-planner-survey'],

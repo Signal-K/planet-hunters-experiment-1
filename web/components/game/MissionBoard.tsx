@@ -1,7 +1,7 @@
 'use client'
 
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { formatCurrency } from '@/lib/format'
 import type { Catalog } from '@/lib/catalog'
@@ -36,6 +36,8 @@ import styles from './MissionBoard.module.css'
 import { formatViewingWindow, localSkyEventWindow, ORIONIDS_EPHEMERIS } from '@/lib/data/sky-event-window'
 import SolarOrbitGlobe from './screens/SolarOrbitGlobe'
 import MapPlanet3D from './screens/MapPlanet3D'
+import TakeOnPocket from '@/components/takeon/TakeOnPocket'
+import { stableSeed } from '@/lib/data/biomes'
 import { terrainLookForTarget } from '@/lib/takeon/terrainColour'
 import { agencyStepLocation } from '@/lib/location-missions'
 import { missionTypePrimer } from '@/lib/data/mission-primers'
@@ -166,11 +168,6 @@ interface Anomaly { id: string; type: 'asteroid'|'comet'; slot: number; expires:
 interface AnomalyClaim { id: string; anomaly: string; collected: boolean; challenge_start: number; hits: number; mineral: string; units: number; kind: string }
 const remaining = (ms: number) => { const seconds=Math.max(0,Math.ceil(ms/1000)); return seconds>=3600 ? `${Math.floor(seconds/3600)}h ${Math.floor(seconds%3600/60)}m` : `${Math.floor(seconds/60)}m ${seconds%60}s` }
 
-function MiningSweep({start}:{start:number}) {
-  const [sweep,setSweep]=useState(0)
-  useEffect(()=>{const timer=setInterval(()=>setSweep(((Date.now()-start)%2000)/2000*100),40);return()=>clearInterval(timer)},[start])
-  return <div className={styles.miningSweep} role="img" aria-label="Moving marker; highlighted pocket spans the middle of the track"><span className={styles.miningPocket}/><i style={{left:`${sweep}%`}} /></div>
-}
 
 interface GalaxyMapProps {
   targets: Target[]
@@ -421,6 +418,9 @@ export default function MissionBoard({
   const [anomalyError,setAnomalyError] = useState('')
   const [anomalyBusy,setAnomalyBusy] = useState(false)
   const [strikeFeedback,setStrikeFeedback] = useState('')
+  const [pocketReady,setPocketReady] = useState(false)
+  const [pocketFixture,setPocketFixture] = useState<'asteroid'|'comet'|null>(null)
+  const pocketInput = useRef<HTMLButtonElement>(null)
   const loadAnomalies = async () => {
     const [targets,trips] = await Promise.all([
       pbLandnam.collection('anomalies').getFullList<Anomaly>({filter:`expires > ${Date.now()} && left > 0`,requestKey:null}),
@@ -429,6 +429,16 @@ export default function MissionBoard({
     setAnomalies(targets); setClaims(trips)
   }
   useEffect(()=>{
+    // Disposable authored fixtures never read claims or write a real treasury.
+    const preset = new URLSearchParams(window.location.search).get('preset')?.replace(/^sandbox:/, '')
+    if (window.location.pathname === '/game/stage' && (preset === 'ui-timed-asteroid' || preset === 'ui-timed-comet')) {
+      const kind = preset === 'ui-timed-comet' ? 'comet' : 'asteroid'
+      const id = `preview-${kind}`
+      setPocketFixture(kind)
+      setAnomalies([{id,type:kind,slot:0,expires:Date.now()+3600000,left:2}])
+      setAnomalyId(id)
+      return
+    }
     let active=true
     const load=()=>{ if(active) void loadAnomalies().catch(()=>{if(active)setAnomalyError('Targets unavailable · Retry')}) }
     load()
@@ -439,15 +449,36 @@ export default function MissionBoard({
   const liveAnomalies=anomalies.filter(a=>a.left>0 && a.expires>anomalyNow)
   const selectedAnomaly=liveAnomalies.find(a=>a.id===anomalyId)
   const selectedClaim=claims.find(c=>c.anomaly===anomalyId)
+  const selectedKind = selectedClaim?.kind === 'comet' || selectedAnomaly?.type === 'comet' ? 'comet' : 'asteroid'
+  useEffect(()=>{ if (!anomalyBusy && selectedClaim?.challenge_start && !selectedClaim.collected && selectedClaim.hits < 3) pocketInput.current?.focus() },[selectedClaim?.challenge_start,selectedClaim?.collected,pocketReady,anomalyBusy])
+  const chooseAnomaly = (id:string) => { setAnomalyId(id); setStrikeFeedback(''); setAnomalyError(''); setPocketReady(false) }
   const actOnAnomaly=async (path:string,body?:object)=>{
     setAnomalyBusy(true);setAnomalyError('')
     try {
+      if (pocketFixture) {
+        const now = Date.now()
+        if (path.endsWith('/send')) setClaims([{id:'preview-claim',anomaly:anomalyId!,kind:pocketFixture,mineral:pocketFixture==='comet'?'hydrogen':'iron',units:10,hits:0,collected:false,challenge_start:0}])
+        else if (path.endsWith('/collect')) setClaims(old=>old.map(c=>({...c,collected:true})))
+        else if (selectedClaim && path.endsWith('/strike')) {
+          if (!selectedClaim.challenge_start) setClaims(old=>old.map(c=>({...c,challenge_start:now})))
+          else {
+            const phase = (now-selectedClaim.challenge_start)%2000
+            const hit = phase>=600 && phase<=1400
+            setClaims(old=>old.map(c=>({...c,hits:Math.min(3,c.hits+(hit?1:0))})))
+            setStrikeFeedback(hit?'Pocket secured':'Miss — try the next pass')
+          }
+        }
+        return
+      }
       const result=await pbLandnam.send<AnomalyClaim & {receipt?:{week:string}}>(`/api/anomalies/${path}`,{method:'POST',body})
       if(result.id) {
         setClaims(old=>[...old.filter(c=>c.id!==result.id),result])
         if(path.endsWith('/strike') && selectedClaim?.challenge_start) setStrikeFeedback(result.hits>selectedClaim.hits?'Pocket secured':'Miss — try the next pass')
       }
-      if(result.receipt) window.dispatchEvent(new Event('landnam:mining-treasury'))
+      if(result.receipt) {
+        setClaims(old=>old.map(claim=>claim.id===path.split('/')[0]?{...claim,collected:true}:claim))
+        window.dispatchEvent(new Event('landnam:mining-treasury'))
+      }
       await loadAnomalies()
     } catch(error) { setAnomalyError(error instanceof Error ? error.message : 'Please try again.') }
     finally { setAnomalyBusy(false) }
@@ -563,6 +594,30 @@ export default function MissionBoard({
   const atlasEventLink = events.spacetober.links.find(link => link.href === ATLAS_ORIONIDS_CHECKIN.href)
   const chooseTab = (next: MissionBoardTab) => { rememberMissionBoardTab(next); setTab(next) }
 
+  if (anomalyId) {
+    const working = !!selectedClaim?.challenge_start && !selectedClaim.collected && selectedClaim.hits < 3
+    const ready = (selectedClaim?.hits ?? 0) >= 3
+    const mineral = selectedKind === 'comet' ? 'hydrogen' : 'iron'
+    return <section className={styles.pocketScreen} data-screen="timed-mining" aria-label="Timed mining">
+      <header className={styles.pocketHeader}>
+        <button type="button" onClick={()=>{setAnomalyId(null);setAnomalyError('')}}>← Map</button>
+        <div><strong>{selectedKind === 'comet' ? 'Comet · gas capture' : 'Asteroid · seam mining'}</strong><span>{pocketFixture ? 'Isolated preview' : selectedClaim ? 'Share reserved' : selectedAnomaly ? `${remaining(selectedAnomaly.expires-anomalyNow)} · ${selectedAnomaly.left} shares` : 'Target out of range'}</span></div>
+        <span className={styles.pocketCount} aria-label={`${selectedClaim?.hits ?? 0} of 3 pockets secured`}>{selectedClaim?.hits ?? 0}/3</span>
+      </header>
+      <button type="button" ref={pocketInput} className={styles.pocketCanvas} disabled={!working || anomalyBusy || !pocketReady}
+        aria-label={selectedKind === 'comet' ? 'Capture gas' : 'Cut seam'} aria-describedby="pocket-instruction"
+        onClick={()=>void actOnAnomaly(`${selectedClaim?.id}/strike`)}>
+        <TakeOnPocket kind={selectedKind} seed={stableSeed(anomalyId)} start={selectedClaim?.challenge_start ?? 0}
+          hits={selectedClaim?.hits ?? 0} active={working} onReady={()=>setPocketReady(true)} onError={setAnomalyError}/>
+      </button>
+      <footer className={styles.pocketControls}>
+        <p id="pocket-instruction" aria-live="polite">{!pocketReady && !anomalyError ? 'Generating target…' : selectedClaim?.collected ? pocketFixture ? 'Preview delivered · no treasury was changed.' : `10 ${mineral} delivered · logged in Community Research.` : ready ? 'Cargo secured. Deliver it to this week’s community treasury.' : working ? strikeFeedback || 'Tap the target as the beam crosses the glowing pockets.' : `Secure three pockets · 10 ${mineral} for this week’s treasury.`}</p>
+        {anomalyError && <p role="alert">{anomalyError}</p>}
+        {selectedClaim ? selectedClaim.collected ? <button type="button" onClick={()=>setAnomalyId(null)}>Return to map</button> : ready ? <button disabled={anomalyBusy} onClick={()=>void actOnAnomaly(`${selectedClaim.id}/collect`)}>Deliver 10 {mineral}</button> : !working ? <button disabled={anomalyBusy || !pocketReady} onClick={()=>void actOnAnomaly(`${selectedClaim.id}/strike`)}>Begin mining</button> : <span className={styles.pocketHint}>Tap target · Space / Enter when focused</span> : <button disabled={anomalyBusy || !selectedAnomaly || !pocketReady} onClick={()=>void actOnAnomaly(`${anomalyId}/send`)}>Send ship</button>}
+      </footer>
+    </section>
+  }
+
   return <div className={styles.scene} data-testid="mission-setup-scaffold" data-screen="missions" data-tab={tab}>
     <section className={styles.dispatch} style={{ '--signal': signalColor } as CSSProperties} data-testid="mission-board" aria-label="Mission board">
       <ScreenFrame surface="mission-setup" chrome="floating">
@@ -570,29 +625,16 @@ export default function MissionBoard({
         {tab === 'events' ? <ArrowIcon direction="left" /> : <StarIcon />}<span>{tab === 'events' ? 'Map' : `Events · ${liveAnomalies.length} targets`}</span>
         {tab !== 'events' && events.attention && <i className={styles.dot} data-testid="mission-board-events-dot" aria-label="Event live or upcoming" />}
       </button>
-      <GalaxyMap anomalies={liveAnomalies} onAnomaly={setAnomalyId} anomalyNow={anomalyNow} targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setPickedId(null); setRunId(null); setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }}
+      <GalaxyMap anomalies={liveAnomalies} onAnomaly={chooseAnomaly} anomalyNow={anomalyNow} targets={mapTargets} mode={mapMode} shipTargets={[...(player.activeMission && (player.missionRunId || player.missionPhase) ? [player.activeMission.target?.id ?? player.activeMission.mission?.targetId] : []), ...(player.pausedMissionRuns ?? []).map(run => run.targetId)].filter((id): id is string => !!id)} view={view} moonParentId={moonParentId} onOpenMoons={tab === 'free' ? id => { setPickedId(null); setRunId(null); setMoonParentId(id); setView('moons') } : undefined} locationOpen={tab === 'free' && !!locationName} onView={next => { setView(next); if (tab === 'free') setPickedId(null) }}
         selectedId={tab === 'free' ? pickedId : null} onPick={id => {
           if (id === 'earth') onClose()
           else { setPickedId(id); setRunId(null) }
         }} />
       {tab==='free' && <aside className={styles.anomalyTrips} aria-label="Mining trips">
-        {claims.filter(c=>!c.collected).map(c=><button key={c.id} onClick={()=>setAnomalyId(c.anomaly)}>Ship · {c.hits>=3?'Haul ready':`${c.hits ?? 0}/3 pockets`}</button>)}
+        {claims.filter(c=>!c.collected).map(c=><button key={c.id} onClick={()=>chooseAnomaly(c.anomaly)}>Ship · {c.hits>=3?'Haul ready':`${c.hits ?? 0}/3 pockets`}</button>)}
         {anomalyError && !anomalyId && <button onClick={()=>void loadAnomalies().then(()=>setAnomalyError('')).catch(()=>{})}>{anomalyError}</button>}
         {isDevLauncherEnabled() && <details><summary>Dev targets</summary><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'asteroid'})}>Spawn asteroid</button><button disabled={anomalyBusy} onClick={()=>void actOnAnomaly('spawn',{type:'comet',seconds:30})}>30s comet</button></details>}
       </aside>}
-      {anomalyId && <section className={styles.anomalySheet} role="dialog" aria-modal="true" aria-label="Timed mining target">
-        <button onClick={()=>{setAnomalyId(null);setAnomalyError('')}}>Close</button>
-        <h2>{selectedAnomaly?.type==='comet'?'Comet · volatile gas':selectedAnomaly?'Asteroid · close approach':'Mining trip'}</h2>
-        {selectedAnomaly ? <p>{remaining(selectedAnomaly.expires-anomalyNow)} reachable · {selectedAnomaly.left} shares left</p>:<p>This target has left or all shares are reserved.</p>}
-        <p>10 units of {selectedClaim?.mineral ?? (selectedAnomaly?.type==='comet'?'hydrogen':'iron')} → weekly community treasury</p>
-        {selectedClaim ? selectedClaim.collected ? <p>Delivered · recorded in Community Research.</p> : selectedClaim.hits>=3 ? <button disabled={anomalyBusy} onClick={()=>void actOnAnomaly(`${selectedClaim.id}/collect`)}>Deliver 10 units</button> : !selectedClaim.challenge_start ? <button disabled={anomalyBusy} onClick={()=>void actOnAnomaly(`${selectedClaim.id}/strike`)}>Begin mining</button> : <>
-          <p>Stop in the pocket · {selectedClaim.hits}/3 secured</p>
-          <MiningSweep start={selectedClaim.challenge_start}/>
-          <button disabled={anomalyBusy} onClick={()=>void actOnAnomaly(`${selectedClaim.id}/strike`)}>{selectedClaim.kind==='comet'?'Capture gas':'Cut seam'}</button>
-          <p aria-live="polite">{strikeFeedback || 'Tap as the marker crosses the highlighted pocket.'}</p>
-        </> : <button disabled={anomalyBusy || !selectedAnomaly} onClick={()=>void actOnAnomaly(`${anomalyId}/send`)}>Send ship</button>}
-        {anomalyError && <p role="alert">{anomalyError}</p>}
-      </section>}
       {tab === 'free' ? <article className={locationName ? styles.locationPanel : `${styles.dock} ${styles.freeDock}`} data-testid="mission-board-solar">
         <header className={styles.dockHead}>{locationName && <div className={styles.locationWorld}><MapGlobe target={picked ?? undefined} /></div>}<div className={styles.dockWho}>
           <span>{locationName ? 'Location missions' : 'Solar system'}</span><h2>{locationName ?? 'Choose a location'}</h2>
