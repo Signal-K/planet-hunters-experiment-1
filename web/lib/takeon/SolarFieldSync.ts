@@ -54,7 +54,7 @@ export class SolarFieldSync extends LandnamSync {
       result = { revision: latest.revision + 1, state: latest.state as unknown as MissionState }
     } else {
       if (!pbLandnam.authStore.token) throw new Error('Reconnect to open this field')
-      result = await pbLandnam.send<{ revision: number; state: MissionState | null }>('/api/solar-fields', { query: { site: id } })
+      result = await pbLandnam.send<{ revision: number; state: MissionState | null }>('/api/solar-fields', { query: { site: id }, requestKey: null })
     }
     if (pbLandnam.authStore.record?.id !== owner) throw new Error('Account changed while opening the field')
     if (!Number.isSafeInteger(result.revision) || result.revision < 0 || (!!result.state !== (result.revision > 0))) throw new Error('Invalid field response')
@@ -75,10 +75,13 @@ export class SolarFieldSync extends LandnamSync {
     const site = this.site
     const revision = this.revision
     if (!owner || !site || revision === null || pbLandnam.authStore.record?.id !== owner || !runId) throw new Error('Mission or account changed')
+    // The launched run and its selected zone must reach the server first.
+    await getOutbox().flush()
+    if (await getOutbox().has(op => op.type === 'upsert' && op.collection === 'game_states' && op.data.user === owner)) throw new Error('Reconnect and sync mission progress before returning')
     const outbox = getSolarFieldOutbox()
     await outbox.flush()
     if (await outbox.has(op => op.type === 'solar-field' && op.user === owner && op.site === site)) throw new Error('Reconnect and wait for the field to sync before returning')
-    const receipt = await pbLandnam.send<SolarReceipt>('/api/solar-fields/mission-transfer', { method: 'POST', body: { site, revision, runId } })
+    const receipt = await pbLandnam.send<SolarReceipt>('/api/solar-fields/mission-transfer', { method: 'POST', body: { site, revision, runId }, requestKey: null })
     if (pbLandnam.authStore.record?.id !== owner) throw new Error('Account changed while transferring cargo')
     return receiptCargo(receipt, site, runId)
   }
@@ -90,7 +93,7 @@ export class SolarFieldSync extends LandnamSync {
     if (!owner || !site || pbLandnam.authStore.record?.id !== owner || !runId) throw new Error('Mission or account changed')
     let receipt: SolarReceipt
     try {
-      receipt = await pbLandnam.send<SolarReceipt>('/api/solar-fields/transfer', { query: { runId } })
+      receipt = await pbLandnam.send<SolarReceipt>('/api/solar-fields/transfer', { query: { runId }, requestKey: null })
     } catch (error) {
       if ((error as { status?: number }).status === 404) return null
       throw error

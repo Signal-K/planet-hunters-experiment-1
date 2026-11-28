@@ -431,7 +431,7 @@ function GameChrome({ children }: { children: ReactNode }) {
               </SceneErrorBoundary>
             )}
           </div>
-          {!game.authGateOpen && (
+          {!game.authGateOpen && currentScreen !== 'mining' && (
             <footer className="program-footer">
               <button onClick={() => programMenu.current?.showModal()}>Menu</button>
               {currentScreen === 'hub' && <button className="program-new-mission" onClick={resumeOperations}>{game.player.activeMission ? 'Resume mission' : 'New mission'}</button>}
@@ -452,7 +452,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         <BackendStatus />
         <div className="flight-plan-slot" data-testid="flight-plan-slot">
         {/* The intro's own heading already says what to do; the strip would sit over it. */}
-        {coach && !game.popup && !game.authGateOpen && game.screen !== 'intro' && (
+        {coach && !game.popup && !game.authGateOpen && game.screen !== 'intro' && game.screen !== 'mining' && (
           <FlightPlan
             key={coach.id}
             stepIndex={coachIndex}

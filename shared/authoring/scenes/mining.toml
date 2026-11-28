@@ -6,8 +6,8 @@ id = "mining"
 type = "field"
 name = "Mining Run"
 summary = "Side-on laser extraction at the target. Ore nodes are spawned by the controller, not authored. The same scene serves every mining location with different ore and visuals."
-tickets = ["SSL-411", "SSL-430", "SSL-708", "SSL-863", "SSL-709", "SSL-879"]
-qa = ["mining", "mining-survey", "mining-actions", "transport-mining"]
+tickets = ["SSL-411", "SSL-430", "SSL-708", "SSL-863", "SSL-709", "SSL-879", "SSL-897"]
+qa = ["mining", "mining-survey", "mining-actions", "transport-mining", "solar-field-mining", "solar-playtest"]
 
 [runtime]
 surface = "canvas"
@@ -100,3 +100,10 @@ parent = "mining-field"
 layout = "host"
 mechanics = ["training"]
 note = "Optional flight-plan overlay."
+
+[[objects]]
+id = "persistent-location-rover"
+kind = "world"
+layout = "host"
+mechanics = ["laser-mining"]
+note = "SSL-897: selected solid-body location missions reuse Takeon rover fields. Menu holds cargo, instructions, save/pause and return to ship. Field revision, emptied hold, return receipt and mission ascent commit together; retries recover that same return. Legacy laser missions keep their original route."

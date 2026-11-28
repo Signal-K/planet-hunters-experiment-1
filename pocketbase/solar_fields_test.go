@@ -288,7 +288,7 @@ func TestSolarMissionTransferCommitsCargoAndFieldTogether(t *testing.T) {
 	}
 	save := core.NewRecord(col)
 	save.Set("user", "player-a")
-	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","francs":123}}`))
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","missionPhase":"mining","activeMission":{"mission":{"customPlan":{"work":"mine","targetId":"mars","zone":"east"}}},"francs":123}}`))
 	if err := app.Save(save); err != nil {
 		t.Fatal(err)
 	}
@@ -305,6 +305,11 @@ func TestSolarMissionTransferCommitsCargoAndFieldTogether(t *testing.T) {
 	field, _ := solarFieldRecord(app, "player-a", request.Site)
 	if field.GetInt("revision") != 1 {
 		t.Fatal("failed transfer changed field")
+	}
+	wrongSite := request
+	wrongSite.Site = "solar:mars:west"
+	if _, err := transferSolarFieldWithMission(app, "player-a", wrongSite, true); !errors.Is(err, errSolarConflict) {
+		t.Fatalf("wrong site: %v", err)
 	}
 	receipt, err := transferSolarFieldWithMission(app, "player-a", request, true)
 	if err != nil || receipt.Cargo["landnam:iron"] != 2 {
@@ -323,6 +328,20 @@ func TestSolarMissionTransferCommitsCargoAndFieldTogether(t *testing.T) {
 	}
 	if err := json.Unmarshal(raw, &result); err != nil {
 		t.Fatal(err)
+	}
+	var durable struct {
+		Screen string
+		Player struct {
+			MissionPhase           string
+			LandingReturnStartedAt int64
+			SolarCargoReturn       struct {
+				RunID string
+				Site  string
+			}
+		}
+	}
+	if err := json.Unmarshal(raw, &durable); err != nil || durable.Screen != "landing" || durable.Player.MissionPhase != "landing" || durable.Player.LandingReturnStartedAt == 0 || durable.Player.SolarCargoReturn.RunID != request.RunID || durable.Player.SolarCargoReturn.Site != request.Site {
+		t.Fatalf("return state not committed: %s %v", raw, err)
 	}
 	if result.Player.Cargo["iron"] != 2 || result.Player.Francs != 123 {
 		t.Fatalf("mission progress: %s", raw)
@@ -367,7 +386,7 @@ func TestSolarMissionTransferSignedInAndReceiptRecovery(t *testing.T) {
 	}
 	save := core.NewRecord(col)
 	save.Set("user", userID)
-	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","francs":123}}`))
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","missionPhase":"mining","activeMission":{"mission":{"customPlan":{"work":"mine","targetId":"mars","zone":"east"}}},"francs":123}}`))
 	if err := app.Save(save); err != nil {
 		t.Fatal(err)
 	}
@@ -440,7 +459,7 @@ func TestSolarMissionTransferEmptyHoldIsRecoverable(t *testing.T) {
 	}
 	save := core.NewRecord(col)
 	save.Set("user", "player-a")
-	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1"}}`))
+	save.Set("state", json.RawMessage(`{"targetId":"mars","player":{"missionRunId":"mission-run-1","missionPhase":"mining","activeMission":{"mission":{"customPlan":{"work":"mine","targetId":"mars","zone":"east"}}}}}`))
 	if err := app.Save(save); err != nil {
 		t.Fatal(err)
 	}

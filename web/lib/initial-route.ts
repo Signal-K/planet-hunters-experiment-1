@@ -3,14 +3,14 @@ import { migrateScreenId } from '@/lib/game-screens'
 
 const VALID_SCREENS = new Set<Screen>([
   'intro', 'hub', 'missions', 'tess-discovery', 'targets', 'fab',
-  'flight', 'mining', 'delivery', 'debrief',
+  'flight', 'landing', 'mining', 'delivery', 'debrief',
   'hangar', 'rocket-buy',
   'launchpad',
   'mission-history',
 ])
 
 const RESUMABLE_MISSION_SCREENS = new Set<Screen>([
-  'targets', 'rocket-buy', 'fab', 'flight', 'mining',
+  'targets', 'rocket-buy', 'fab', 'flight', 'landing', 'mining',
   'delivery', 'debrief',
 ])
 

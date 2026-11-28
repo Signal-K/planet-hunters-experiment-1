@@ -1,20 +1,20 @@
-.screen { position: relative; width: 100%; height: 100%; min-height: 420px; background: var(--ln-shell); overflow: hidden; color: var(--ln-text); }
+.screen { position: relative; width: 100%; height: 100%; min-height: 280px; background: var(--ln-shell); overflow: hidden; color: var(--ln-text); }
 .field { position: absolute; inset: 0; height: 100%; border: 0; border-radius: 0; }
-.top { position: absolute; top: 16px; left: 16px; display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; background: var(--ln-panel); border-radius: var(--ln-r-md); font-size: 14px; }
-.controls { position: absolute; inset: auto 16px 22px; display: flex; align-items: end; gap: 12px; }
-.controls button { min-width: 48px; min-height: 48px; padding: 8px 14px; color: var(--ln-text); background: var(--ln-panel); border: 1px solid var(--ln-border); border-radius: var(--ln-r-md); font-size: 14px; font-weight: 700; }
-.dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(2, 48px); gap: 3px; margin-right: auto; }
+.screen button { min-width: 44px; min-height: 44px; padding: 8px 14px; color: var(--ln-text); background: var(--ln-panel); border: 1px solid var(--ln-border); border-radius: var(--ln-r-md); font-size: 14px; font-weight: 700; }
+.screen button:disabled { opacity: .5; }
+.menuButton { position: absolute; z-index: 4; top: 12px; left: 12px; }
+.menu { position: absolute; z-index: 4; top: 64px; left: 12px; width: min(320px, calc(100% - 24px)); max-height: calc(100% - 76px); overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--ln-border); border-radius: var(--ln-r-md); background: var(--ln-panel); font-size: 14px; }
+.menu p { margin: 0; overflow-wrap: anywhere; }
+.controls { position: absolute; inset: auto 12px 12px; display: flex; align-items: end; justify-content: space-between; gap: 16px; pointer-events: none; }
+.controls > * { pointer-events: auto; }
+.controls > button { width: 80px; height: 80px; border-radius: 50%; }
+.dpad { display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 44px); gap: 4px; }
+.dpad button { padding: 0; }
 .dpad button:nth-child(1) { grid-column: 2; }
 .dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
 .dpad button:nth-child(3) { grid-column: 3; grid-row: 2; }
 .dpad button:nth-child(4) { grid-column: 2; grid-row: 2; }
-.hint { position: absolute; right: 16px; top: 16px; max-width: 300px; padding: 8px 12px; background: var(--ln-panel); border-radius: var(--ln-r-md); font-size: 14px; }
-.status { position: absolute; left: 16px; bottom: 135px; max-width: min(300px, calc(100% - 32px)); padding: 8px 12px; background: var(--ln-panel); border-radius: var(--ln-r-md); font-size: 14px; }
-.error { position: absolute; top: 75px; left: 16px; padding: 12px; background: var(--ln-panel); color: var(--ln-crit); }
-@media (max-width: 600px) {
-  .hint { top: 80px; left: 16px; right: 16px; max-width: none; }
-  .controls { gap: 6px; }
-  .controls button { padding-inline: 8px; }
-  .dpad { grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(2, 48px); gap: 2px; }
-  .dpad button { min-width: 44px; }
-}
+.status, .error { position: absolute; left: 12px; right: 12px; bottom: 116px; margin: 0; width: fit-content; max-width: calc(100% - 24px); max-height: calc(100% - 180px); overflow: auto; padding: 8px 12px; background: var(--ln-panel); border-radius: var(--ln-r-md); font-size: 14px; }
+.error { z-index: 3; color: var(--ln-crit); }
+
+.menu > section { position: static; padding: 0; border: 0; max-width: 100%; }

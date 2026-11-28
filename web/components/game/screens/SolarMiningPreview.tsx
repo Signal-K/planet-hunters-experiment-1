@@ -34,6 +34,7 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
   const [state, setState] = useState<MissionState | null>(null)
   const [mounted, setMounted] = useState(true)
   const [error, setError] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
   const [drillStatus, setDrillStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [checkingReceipt, setCheckingReceipt] = useState(persistent)
@@ -121,12 +122,25 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
           setDrillStatus(mineral ? `Collected ${event.payload.amount} ${mineral}.` : 'Surface cleared. Drill again to reach ore, or explore another spot.')
         }
       }} onError={err => setError(err.message)} className={styles.field} /></div>}
-    <div className={styles.top}><strong>{target.name} · {zone} field</strong><span>{cargo.length ? cargo.join(' · ') : 'Hold empty'} · {edits} terrain edits</span></div>
-    {error && <p className={styles.error} role="alert">{error}</p>}
-    {persistent && error && <SolarFieldConflictRecovery site={solarFieldId(target.id, zone)}
+    <button type="button" className={styles.menuButton} aria-expanded={menuOpen} onClick={() => setMenuOpen(open => !open)}>MENU</button>
+    {menuOpen && <div className={styles.menu}>
+      <strong>{target.name} · {zone}</strong>
+      <p>{cargo.length ? cargo.join(' · ') : 'Hold empty'} · {edits} terrain edits</p>
+      <p>Move with arrows or tap the terrain. Drill through the surface to reach ore.</p>
+      {error && <p role="alert">{error}</p>}
+      {persistent && error && <SolarFieldConflictRecovery site={solarFieldId(target.id, zone)}
       onBeforeResolve={async () => { await ref.current?.stopSaving(); setMounted(false) }}
       onResolved={() => { setError(''); setState(null); setMountKey(key => key + 1); setMounted(true) }} />}
-    <div className={styles.controls}>
+      {onComplete && <button type="button" disabled={busy || !state} onClick={() => void returnWithCargo()}>RETURN TO SHIP</button>}
+      <button type="button" disabled={saving || (checkingReceipt && !!state) || (!state && !persistent)} onClick={() => { if (!state && persistent) onPause?.(); else void pause() }}>
+        {checkingReceipt && state ? 'CHECKING RETURN…' : saving ? 'SAVING…' : persistent ? state ? 'SAVE & RETURN TO BASE' : 'RETURN TO BASE' : 'SAVE & LEAVE'}
+      </button>
+      <button type="button" onClick={() => setMenuOpen(false)}>CONTINUE MINING</button>
+    </div>}
+    {!state && !error && !menuOpen && <p className={styles.status} role="status">Preparing landing site…</p>}
+    {error && !menuOpen && <p className={styles.error} role="alert">{error}</p>}
+
+    {!menuOpen && <div className={styles.controls}>
       {mounted ? <>
         <div className={styles.dpad} aria-label="Move rover" inert={busy}>
           <button type="button" aria-label="Move up" onClick={() => ref.current?.move(3)}>↑</button>
@@ -137,13 +151,10 @@ export default function SolarMiningPreview({ target, zone, persistent = false, r
         <button type="button" disabled={busy || !state} onClick={() => {
           if (!ref.current?.mine()) setDrillStatus('Cannot drill here. Move the rover and try another spot.')
         }}>DRILL</button>
-        {onComplete && <button type="button" disabled={busy || !state} onClick={() => void returnWithCargo()}>RETURN TO SHIP</button>}
-        <button type="button" disabled={saving || (checkingReceipt && !!state) || (!state && !persistent)} onClick={() => { if (!state && persistent) onPause?.(); else void pause() }}>
-          {checkingReceipt && state ? 'CHECKING RETURN…' : saving ? 'SAVING…' : persistent ? state ? 'SAVE & RETURN TO BASE' : 'RETURN TO BASE' : 'SAVE & LEAVE'}
-        </button>
+
       </> : <button type="button" onClick={() => { setState(null); setMounted(true) }}>RETURN TO FIELD</button>}
-    </div>
-    {drillStatus && <p className={styles.status} role="status">{drillStatus}</p>}
-    <p className={styles.hint}>{persistent ? 'Your field saves as you explore. Reconnect to transfer cargo to your ship.' : onComplete ? 'Playtest: drill through the surface to find ore, then return to your ship. Progress is isolated from your account.' : 'Drive with the arrows or tap the terrain. Drill through the surface to find ore.'}</p>
+    </div>}
+    {drillStatus && !menuOpen && <p className={styles.status} role="status">{drillStatus}</p>}
+
   </div>
 }

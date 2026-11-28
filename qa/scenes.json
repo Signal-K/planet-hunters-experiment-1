@@ -529,7 +529,8 @@
    "flow": "core-loop",
    "web": "solar-field-mining",
    "tickets": [
-    "SSL-891"
+    "SSL-891",
+    "SSL-897"
    ]
   },
   {
@@ -538,7 +539,8 @@
    "flow": "core-loop",
    "web": "solar-playtest",
    "tickets": [
-    "SSL-891"
+    "SSL-891",
+    "SSL-897"
    ]
   },
   {

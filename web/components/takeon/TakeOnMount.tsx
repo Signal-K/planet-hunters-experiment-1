@@ -427,8 +427,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     saveRef.current = save
 
     const reportError = (reason: unknown) => {
+      if (disposed) return
       const nextError = reason instanceof Error ? reason : new Error(String(reason))
-      if (!disposed) setError(nextError.message)
+      setError(nextError.message)
       callbacksRef.current.onError?.(nextError)
     }
 

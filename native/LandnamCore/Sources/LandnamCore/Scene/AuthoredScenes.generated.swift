@@ -1707,6 +1707,15 @@ enum AuthoredSceneDeclarations {
             "training"
           ],
           "note": "Optional flight-plan overlay."
+        },
+        {
+          "id": "persistent-location-rover",
+          "kind": "world",
+          "layout": "host",
+          "mechanics": [
+            "laser-mining"
+          ],
+          "note": "SSL-897: selected solid-body location missions reuse Takeon rover fields. Menu holds cargo, instructions, save/pause and return to ship. Field revision, emptied hold, return receipt and mission ascent commit together; retries recover that same return. Legacy laser missions keep their original route."
         }
       ]
     },

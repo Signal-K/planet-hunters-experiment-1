@@ -67,6 +67,8 @@ export interface MissionRunSnapshot {
   missionRunId?: string
   missionStartedAt?: number | null
   missionPhase?: MissionPhase
+  /** Durable field return; shared with the atomic server transfer. */
+  solarCargoReturn?: { runId: string; site: string; cargo: Record<string, number>; startedAt: number }
   miningCargoInProgress?: Record<string, number>
   miningLaserCharges?: number
   deliveryUnloadStartedAt?: number
@@ -174,6 +176,8 @@ export interface Player {
   // already-collected cargo (that cargo only lived in MiningScreen's local
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
+  /** Durable field return; shared with the atomic server transfer. */
+  solarCargoReturn?: { runId: string; site: string; cargo: Record<string, number>; startedAt: number }
   miningCargoInProgress?: Record<string, number>
   // Laser charges left in the paused mining run (SSL-512). Without it, leaving
   // and resuming refilled the magazine, a free recharge.

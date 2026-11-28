@@ -12,6 +12,7 @@ import { ORIONIDS_NIGHT_RUN_ID, RESOURCE_FOCUS_MISSION_ID } from '@/lib/data/mis
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
+import { supportsSolarField } from '@/lib/takeon/solarField'
 import SolarMiningPreview from '@/components/game/screens/SolarMiningPreview'
 import HomecomingScreen from '@/components/game/screens/HomecomingScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
@@ -289,16 +290,16 @@ export default function MissionOperationRoutes({
           } else game.onMiningDone(cargo)
         } : undefined} />
       }
-      // Opt-in while the account-backed field flow is being rolled out.
-      if (process.env.NEXT_PUBLIC_SOLAR_FIELD_MISSIONS === '1'
-        && process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
+      // Only explicitly selected solar sites use persistent rover fields.
+      if (process.env.NEXT_PUBLIC_TAKEON_SOLAR_PREVIEW === '1'
+        && supportsSolarField(game.target.id)
+        // Finish an older laser haul in its original screen; never replace its hold.
+        && !Object.values(game.player.miningCargoInProgress ?? {}).some(amount => amount > 0)
         && game.mission.customPlan?.work === 'mine' && game.mission.customPlan.zone) {
         return <SolarMiningPreview target={game.target} zone={game.mission.customPlan.zone} persistent runId={game.player.missionRunId} onComplete={cargo => {
           game.completeStep(6)
-          if (game.player.shipCustomizerParts?.lander) {
-            game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
-            game.go('landing')
-          } else game.onMiningDone(cargo)
+          game.setPlayer(player => ({ ...player, missionPhase: 'landing', landingReturnStartedAt: Date.now(), miningCargoInProgress: cargo }))
+          game.go('landing')
         }} onPause={() => {
           game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
           game.go('hub')

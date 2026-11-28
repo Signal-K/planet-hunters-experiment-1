@@ -2,14 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MissionState } from '@takeon/engine'
 import { memoryStore, createOutbox } from '@/lib/offline/outbox'
 import { writeSolarFieldIdentity } from './solarFieldIdentity'
-import { DEFAULT_STATE, normalizeAndRepair } from '@/lib/game-state'
+import { DEFAULT_STATE, normalizeAndRepair, mergeRemoteState } from '@/lib/game-state'
 import { applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyReturnArrived } from '@/lib/systems/MiningSystem'
+import { returningScreen } from '@/lib/initial-route'
+import { stampLedger } from '@/lib/sync/ledger'
 import { applyHomeSplit } from '@/lib/systems/HomeDeliverySystem'
 
 const mocks = vi.hoisted(() => ({ send: vi.fn(), legacyHas: vi.fn(), outbox: { current: null as unknown } }))
 vi.mock('@/lib/pb-landnam', () => ({ pbLandnam: { authStore: { record: { id: 'player' }, token: 'token' }, send: mocks.send } }))
-vi.mock('@/lib/offline/pbOutbox', () => ({ getSolarFieldOutbox: () => mocks.outbox.current, getOutbox: () => ({ has: mocks.legacyHas }), isQueuedUpsert: () => false }))
+vi.mock('@/lib/offline/pbOutbox', () => ({ getSolarFieldOutbox: () => mocks.outbox.current, getOutbox: () => ({ has: mocks.legacyHas, flush: async () => {} }), isQueuedUpsert: () => false }))
 
 import { SolarFieldSync, solarFieldId } from './SolarFieldSync'
 
@@ -62,7 +64,7 @@ describe('versioned solar fields', () => {
     const sync = new SolarFieldSync()
     await sync.loadMission(id)
     expect(await sync.transferToMission('mission-run-1')).toEqual({ iron: 1 })
-    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/mission-transfer', { method: 'POST', body: { site: id, revision: 1, runId: 'mission-run-1' } })
+    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/mission-transfer', { method: 'POST', body: { site: id, revision: 1, runId: 'mission-run-1' }, requestKey: null })
   })
 
   it('keeps the cargo in the field while an offline save is queued', async () => {
@@ -81,7 +83,7 @@ describe('versioned solar fields', () => {
     const sync = new SolarFieldSync()
     await sync.loadMission(id)
     expect(await sync.recoverMissionTransfer('mission-run-1')).toEqual({ iron: 1 })
-    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/transfer', { query: { runId: 'mission-run-1' } })
+    expect(mocks.send).toHaveBeenLastCalledWith('/api/solar-fields/transfer', { query: { runId: 'mission-run-1' }, requestKey: null })
     expect((mocks.outbox.current as ReturnType<typeof createOutbox>).pending()).toHaveLength(0)
   })
 
@@ -122,4 +124,23 @@ describe('versioned solar fields', () => {
     expect(settled.player.homeDeliveryPending).toBe(false)
   })
 
+})
+
+
+it('a queued pre-return save adopts committed ascent without duplicating settled cargo', () => {
+  const activeMission = { id: 'mine-mars', label: 'Mine Mars' }
+  const mining = { ...DEFAULT_STATE, screen: 'mining' as const, missionId: 'mine-mars', targetId: 'mars',
+    player: { ...DEFAULT_STATE.player, activeMission, missionRunId: 'mission-run-1', missionPhase: 'mining' as const } }
+  const returned = { runId: 'mission-run-1', site: id, cargo: { nickel: 2 }, startedAt: 123 }
+  const remote = { ...mining, screen: 'landing' as const, player: { ...mining.player, solarCargoReturn: returned, missionPhase: 'landing' as const, landingReturnStartedAt: 123, miningCargoInProgress: returned.cargo } }
+  const merged = mergeRemoteState(mining, remote)
+  expect(merged.screen).toBe('landing')
+  expect(returningScreen(JSON.stringify(merged))).toBe('landing')
+  expect(merged.player.miningCargoInProgress).toEqual({ nickel: 2 })
+  expect(merged.player.landingReturnStartedAt).toBe(123)
+  expect(mergeRemoteState({ ...mining, screen: 'hub' }, remote).screen).toBe('hub')
+  const flight = applyRedockComplete(merged, returned.cargo, null, null)
+  const home = stampLedger(applyReturnArrived(mergeRemoteState(flight, remote)), 'test-device')
+  expect(home.player.stash?.nickel).toBe(2)
+  expect(applyReturnArrived(mergeRemoteState(home, remote)).player.stash?.nickel).toBe(2)
 })

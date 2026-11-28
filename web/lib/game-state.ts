@@ -44,8 +44,8 @@ import { mergeSkyMaps } from '@/lib/research/sky-map'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'targets', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'rocket-buy', 'fab', 'flight', 'mining', 'delivery', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'targets', 'rocket-buy', 'fab', 'flight', 'landing', 'mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-workshop', 'rocket-buy', 'fab', 'flight', 'landing', 'mining', 'delivery', 'debrief'])
 // Runs built at runtime by buildRuntimeCatalog, so a saved flight to one is not a lost mission on reload.
 const RUNTIME_MISSION_IDS = new Set(['community-science-launch', 'service-space-telescope', 'service-saturn-satellite', 'story-transit-telescope-launch', 'story-deep-space-telescope-survey', 'story-saturn-imager-launch', ORIONIDS_NIGHT_RUN_ID, ...SHOWERS.map(shower => shower.runMissionId), RESOURCE_FOCUS_MISSION_ID])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope', 'earth-orbit-deep-space-telescope', 'earth-orbit-saturn-imager', ORIONIDS_SHOWER_TARGET_ID, ...SHOWERS.map(shower => shower.targetId)])
@@ -855,6 +855,20 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       current.player.completedMissions,
       remoteState.player?.completedMissions,
     )
+  }
+
+  // An acknowledged field return wins over a queued save from before transfer.
+  // Preserve explicit Base navigation while keeping the run resumable at ascent.
+  const returned = remoteState.player?.solarCargoReturn
+  if (returned && returned.runId === current.player.missionRunId && returned.runId === remoteState.player?.missionRunId) {
+    merged.player.solarCargoReturn = returned
+    if (current.player.missionPhase === 'mining' || (current.player.missionPhase === 'landing' && current.player.landingReturnStartedAt == null)) {
+      merged.player.miningCargoInProgress = returned.cargo
+      merged.player.missionPhase = 'landing'
+      merged.player.landingReturnStartedAt = returned.startedAt
+      merged.player.landingStartedAt = undefined
+      if (current.screen === 'mining' || current.screen === 'landing') merged.screen = 'landing'
+    }
   }
 
   // SSL-559: additive progress (francs, XP, missions done, stash, refined goods) from the CRDT ledger,

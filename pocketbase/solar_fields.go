@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
@@ -305,6 +306,30 @@ func attachSolarCargoToMission(tx core.App, user string, in solarFieldTransfer, 
 	if json.Unmarshal(state["targetId"], &targetID) != nil || !strings.HasPrefix(in.Site, "solar:"+targetID+":") {
 		return errSolarConflict
 	}
+	var active struct {
+		Mission struct {
+			CustomPlan struct{ Work, Zone, TargetID string } `json:"customPlan"`
+		} `json:"mission"`
+	}
+	var phase string
+	if json.Unmarshal(player["activeMission"], &active) != nil || json.Unmarshal(player["missionPhase"], &phase) != nil || phase != "mining" || active.Mission.CustomPlan.Work != "mine" || active.Mission.CustomPlan.TargetID != targetID || in.Site != "solar:"+targetID+":"+active.Mission.CustomPlan.Zone {
+		return errSolarConflict
+	}
+	switch targetID {
+	case "jupiter", "saturn", "uranus", "neptune":
+		return errSolarInvalid
+	}
+	var previousCargo map[string]int64
+	if len(player["miningCargoInProgress"]) > 0 {
+		if json.Unmarshal(player["miningCargoInProgress"], &previousCargo) != nil {
+			return errSolarInvalid
+		}
+		for _, amount := range previousCargo {
+			if amount > 0 {
+				return errSolarConflict
+			}
+		}
+	}
 	minerals := make(map[string]int64, len(cargo))
 	allowed := map[string]bool{"iron": true, "silicon": true, "ice": true, "carbon": true, "nickel": true, "cobalt": true, "copper": true, "aluminium": true, "hydrogen": true, "uranium": true, "platinum": true, "palladium": true, "iridium": true, "rhodium": true, "gold": true, "rare": true}
 	for key, amount := range cargo {
@@ -319,6 +344,13 @@ func attachSolarCargoToMission(tx core.App, user string, in solarFieldTransfer, 
 		return err
 	}
 	player["miningCargoInProgress"] = encoded
+	// Returning to the ship is part of the same commit as emptying the field.
+	// A lost response must resume ascent, never an empty mining run.
+	startedAt := time.Now().UnixMilli()
+	player["solarCargoReturn"], _ = json.Marshal(map[string]any{"runId": in.RunID, "site": in.Site, "cargo": minerals, "startedAt": startedAt})
+	player["missionPhase"] = json.RawMessage(`"landing"`)
+	player["landingReturnStartedAt"], _ = json.Marshal(startedAt)
+	state["screen"] = json.RawMessage(`"landing"`)
 	if state["player"], err = json.Marshal(player); err != nil {
 		return err
 	}
